@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3 uid="uid://bm4x7kpqr2n5"]
+
+[ext_resource type="Script" uid="uid://c8nt3vhqw6y1" path="res://scripts/hud.gd" id="1_hudgd"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_hudgd")
+
+[node name="Panel" type="Panel" parent="."]
+anchors_preset = -1
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -150.0
+offset_right = 320.0
+offset_bottom = -10.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+theme_override_constants/separation = 6
+
+[node name="HealthBar" type="ProgressBar" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 28)
+size_flags_horizontal = 3
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="StaminaBar" type="ProgressBar" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 28)
+size_flags_horizontal = 3
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="ManaBar" type="ProgressBar" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 28)
+size_flags_horizontal = 3
+max_value = 100.0
+value = 100.0
+show_percentage = false

@@ -17,5 +17,7 @@
 - Prefer signals over direct node references for cross-scene communication
 
 ## What I'm building
+- The game is similar to EverQuest.
+- Tab targeting.
+- User interface overlay during game play.
 - Please don't change anything above this PROJECTS folder.
-[one or two sentences about your game]
