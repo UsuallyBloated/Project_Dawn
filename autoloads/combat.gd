@@ -46,8 +46,9 @@ func _on_auto_attack() -> void:
 	var dist: float = _player.global_position.distance_to(current_target.global_position)
 	if dist > 3.0:
 		return
-	var damage: int = _calc_damage()
+	var damage: int = calc_damage()
 	current_target.take_damage(damage)
+	CombatLog.add_damage_out(current_target.mob_name, damage)
 
-func _calc_damage() -> int:
+func calc_damage() -> int:
 	return PlayerStats.strength / 2 + randi_range(1, 8)

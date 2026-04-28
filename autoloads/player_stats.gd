@@ -48,9 +48,31 @@ func gain_xp(amount: int) -> void:
 func _level_up() -> void:
 	level += 1
 	xp_to_next = int(xp_to_next * 1.5)
-	max_hp += 10.0
-	max_mp += 10.0
-	max_stamina += 5.0
+
+	match player_class:
+		"Warrior":
+			strength += 2
+			constitution += 2
+			max_hp += 20.0
+			max_stamina += 8.0
+			max_mp += 2.0
+		"Mage":
+			intelligence += 3
+			wisdom += 2
+			max_mp += 25.0
+			max_hp += 5.0
+			max_stamina += 2.0
+		"Rogue":
+			dexterity += 2
+			agility += 2
+			max_hp += 12.0
+			max_stamina += 10.0
+			max_mp += 3.0
+		_:
+			max_hp += 10.0
+			max_mp += 10.0
+			max_stamina += 5.0
+
 	set_hp(max_hp)
 	set_mp(max_mp)
 	set_stamina(max_stamina)

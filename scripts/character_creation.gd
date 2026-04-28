@@ -3,7 +3,7 @@ extends Control
 # ── Data ──────────────────────────────────────────────────────────────────────
 
 const RACES: Array[String] = [
-	"Human", "Elf", "Dark Elf", "Gnome",
+	"Human", "Elf", "Dark Elf", "Wood Elf", "Gnome",
 	"Halfling", "Dwarf", "Half-Elf", "Ogre", "Troll"
 ]
 
@@ -33,6 +33,10 @@ const RACE_DATA: Dictionary = {
 	"Dwarf": {
 		"desc": "Hardy mountainfolk, nearly unbreakable. Exceptional constitution and wisdom.",
 		"bonuses": {"constitution": 15, "strength": 5, "wisdom": 5, "charisma": -5, "agility": -5}
+	},
+	"Wood Elf": {
+		"desc": "Children of the forest, swift and sure-eyed. Exceptional hunters and rangers.",
+		"bonuses": {"dexterity": 10, "agility": 10, "wisdom": 5, "intelligence": -5, "charisma": -5}
 	},
 	"Half-Elf": {
 		"desc": "Blending elven grace with human resilience. Well-rounded and adaptable.",
@@ -329,6 +333,8 @@ func _on_confirm() -> void:
 	PlayerStats.set_mp(PlayerStats.max_mp)
 	PlayerStats.set_stamina(PlayerStats.max_stamina)
 
+	Skills.setup_for_class(selected_class)
+	Spells.setup_for_class(selected_class)
 	get_tree().change_scene_to_file("res://node_3d.tscn")
 
 # ── Helpers ────────────────────────────────────────────────────────────────────

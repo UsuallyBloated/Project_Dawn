@@ -89,11 +89,11 @@ func _toggle_crouch() -> void:
 	var shape := collision_shape.shape as CapsuleShape3D
 	if is_crouching:
 		shape.height = CROUCH_HEIGHT
-		position.y -= (STAND_HEIGHT - CROUCH_HEIGHT) / 2.0
+		collision_shape.position.y = CROUCH_HEIGHT / 2.0
 		camera_pivot.position.y = CROUCH_CAMERA_Y
 	else:
 		shape.height = STAND_HEIGHT
-		position.y += (STAND_HEIGHT - CROUCH_HEIGHT) / 2.0
+		collision_shape.position.y = STAND_HEIGHT / 2.0
 		camera_pivot.position.y = STAND_CAMERA_Y
 
 func _physics_process(delta: float) -> void:

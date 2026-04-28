@@ -37,13 +37,20 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
+	if not is_on_floor():
+		velocity.y += GRAVITY * delta
+	else:
+		velocity.y = 0.0
 	match state:
 		State.IDLE:
 			_tick_idle()
 		State.AGGRO:
 			_tick_aggro(delta)
+	move_and_slide()
 
 func _tick_idle() -> void:
+	velocity.x = 0.0
+	velocity.z = 0.0
 	if _player == null:
 		_player = get_tree().get_first_node_in_group("player")
 	if _player == null:
@@ -54,18 +61,15 @@ func _tick_idle() -> void:
 func _tick_aggro(delta: float) -> void:
 	if _player == null or not is_instance_valid(_player):
 		state = State.IDLE
+		velocity.x = 0.0
+		velocity.z = 0.0
 		return
 	var dist := global_position.distance_to(_player.global_position)
 	if dist > AGGRO_RANGE * 2.0:
 		state = State.IDLE
 		velocity.x = 0.0
 		velocity.z = 0.0
-		move_and_slide()
 		return
-
-	if not is_on_floor():
-		velocity.y += GRAVITY * delta
-
 	if dist > MELEE_RANGE:
 		var dir := (_player.global_position - global_position)
 		dir.y = 0.0
@@ -84,16 +88,17 @@ func _tick_aggro(delta: float) -> void:
 			_attack_cooldown = ATTACK_INTERVAL
 			_attack_player()
 
-	move_and_slide()
-
 func _attack_player() -> void:
 	PlayerStats.set_hp(PlayerStats.hp - base_damage)
+	if _player != null:
+		DamageNumbers.spawn(_player.global_position, base_damage, true)
 
 func take_damage(amount: int) -> void:
 	if is_dead:
 		return
 	hp = maxf(hp - amount, 0.0)
 	hp_changed.emit(hp, max_hp)
+	DamageNumbers.spawn(global_position, amount, false)
 	if state == State.IDLE:
 		state = State.AGGRO
 	if hp <= 0.0:
