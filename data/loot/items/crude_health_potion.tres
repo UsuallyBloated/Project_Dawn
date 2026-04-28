@@ -1,0 +1,8 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Crude Health Potion"
+description = "A murky red liquid. Restores a small amount of health."
+type = 9
+rarity = 0
+stack_size = 10

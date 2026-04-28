@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Splintered Staff"
+description = "A wooden staff cracked near the base, still usable."
+type = 0
+rarity = 0
+stack_size = 1
+bonus_intelligence = 1

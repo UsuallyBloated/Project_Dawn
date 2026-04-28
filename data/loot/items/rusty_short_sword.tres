@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Rusty Short Sword"
+description = "A battered blade barely fit for combat."
+type = 0
+rarity = 0
+stack_size = 1
+bonus_strength = 1

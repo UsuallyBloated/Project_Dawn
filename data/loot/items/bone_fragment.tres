@@ -1,0 +1,8 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Bone Fragment"
+description = "A shard of bone. Useful for crafting or grinding into powder."
+type = 10
+rarity = 0
+stack_size = 20

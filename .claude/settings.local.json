@@ -10,6 +10,9 @@
       "PowerShell(python -m pip install anthropic flask 2>&1)",
       "PowerShell(cd \"f:\\\\Projects\\\\Project_Dawn\\\\HTML_LOW_POLY_TOOL\"; $env:ANTHROPIC_API_KEY=\"test-key-smoke\"; python -c \"import flask, anthropic; print\\('imports OK'\\)\")",
       "PowerShell(python -m pip install python-dotenv 2>&1)"
+    ],
+    "additionalDirectories": [
+      "f:\\Projects\\Project_Dawn"
     ]
   }
 }

@@ -1,18 +1,19 @@
 """
-Low-Poly Model Generator — local server (Ollama backend)
-No API key required. Runs the model entirely on your machine.
+Low-Poly Model Generator — local server (Ollama + vision backend)
+No API key required. Runs entirely on your machine.
 
-Setup (one-time):
-  1. Install Ollama from https://ollama.com
-  2. Run:  ollama pull llama3.2
-  3. Start this server:  python server.py
-  4. Open:  http://localhost:3000
+Setup:
+  1. ollama pull llama3.2-vision
+  2. ollama serve            (keep running in a separate terminal)
+  3. python server.py
+  4. Open http://localhost:3000
 
-To use a different model, set OLLAMA_MODEL in .env:
-  OLLAMA_MODEL=mistral
-  OLLAMA_MODEL=llama3.1:8b
+Optional .env settings:
+  OLLAMA_MODEL=llama3.2-vision
+  OLLAMA_URL=http://127.0.0.1:11434
 """
 
+import base64
 import json
 import os
 import re
@@ -24,38 +25,62 @@ from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, send_from_directory
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR      = Path(__file__).parent
+REFERENCE_DIR = BASE_DIR / "reference_images"
+REFERENCE_DIR.mkdir(exist_ok=True)
+
 load_dotenv(BASE_DIR / ".env")
 
 OLLAMA_URL   = os.environ.get("OLLAMA_URL",   "http://127.0.0.1:11434")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2-vision")
+
+ALLOWED_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 
 app = Flask(__name__, static_folder=str(BASE_DIR))
 
-SYSTEM_PROMPT = """You are a 3D low-poly model generator. When given a description, output ONLY a valid JSON object — no explanation, no markdown, no code fences.
+# ── System prompts ────────────────────────────────────────────────────────────
+
+SYSTEM_TEXT = """You are a 3D low-poly model generator. Output ONLY a valid JSON object — no markdown, no explanation, no code fences.
 
 JSON format:
 {
   "name": "short descriptive name",
   "vertices": [[x, y, z], ...],
-  "faces": [
-    {"indices": [a, b, c], "color": "#RRGGBB"},
-    ...
-  ]
+  "faces": [{"indices": [a, b, c], "color": "#RRGGBB"}, ...]
 }
 
 Rules:
-- 150-350 vertices; all faces are triangles (3 zero-based indices)
-- Vertices fit within [-1.5, 1.5] on all axes, centered near origin
-- 300-700 faces; use enough geometry that the object is clearly recognizable
-- Break up large flat areas with extra edge loops so the silhouette reads well
-- Adjacent faces should use slightly different shades for depth and visual interest
-- Colors must be harmonious hex strings like "#a34f2b"
-- Output ONLY the JSON object, nothing else"""
+- 60-120 vertices; triangles only (3 zero-based indices per face)
+- Vertices within [-1.5, 1.5] on all axes, centered at origin
+- 80-200 faces; capture the main silhouette and key features clearly
+- Adjacent faces use slightly different shades for visual depth
+- Colors are harmonious hex strings appropriate to the object
+- Output ONLY the JSON object"""
 
+SYSTEM_VISION = """You are a 3D low-poly model generator. Reference images are attached — look at them to understand the object's silhouette, proportions, and key features.
+
+Output ONLY a valid JSON object — no markdown, no explanation, no code fences.
+
+JSON format:
+{
+  "name": "short descriptive name",
+  "vertices": [[x, y, z], ...],
+  "faces": [{"indices": [a, b, c], "color": "#RRGGBB"}, ...]
+}
+
+Rules:
+- Use the reference images to get proportions and silhouette right
+- 60-120 vertices; triangles only (3 zero-based indices per face)
+- Vertices within [-1.5, 1.5] on all axes, centered at origin
+- 80-200 faces; make the shape recognizable from the reference
+- Adjacent faces use slightly different shades for visual depth
+- Sample colors from the reference images where possible
+- Output ONLY the JSON object"""
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def ollama_available():
-    """Return list of pulled model names, or None if Ollama isn't running."""
     try:
         with urllib.request.urlopen(f"{OLLAMA_URL}/api/tags", timeout=3) as r:
             data = json.loads(r.read())
@@ -64,20 +89,39 @@ def ollama_available():
         return None
 
 
+def load_reference_images():
+    """Return list of (filename, base64_string) for all images in REFERENCE_DIR."""
+    images = []
+    for p in sorted(REFERENCE_DIR.iterdir()):
+        if p.suffix.lower() in ALLOWED_EXTS:
+            images.append((p.name, base64.b64encode(p.read_bytes()).decode()))
+    return images
+
+
 def call_ollama(description: str, style: str) -> dict:
+    refs = load_reference_images()
+    has_refs = len(refs) > 0
+    system = SYSTEM_VISION if has_refs else SYSTEM_TEXT
+
     user_msg = f"Generate a low-poly 3D model of: {description}"
     if style:
         user_msg += f"\nStyle: {style}"
+    if has_refs:
+        user_msg += f"\n\n{len(refs)} reference image(s) attached. Use them to guide the geometry and proportions."
+
+    user_message = {"role": "user", "content": user_msg}
+    if has_refs:
+        # llama3.2-vision only supports one image — use the first reference
+        user_message["images"] = [refs[0][1]]
 
     payload = json.dumps({
-        "model": OLLAMA_MODEL,
+        "model":   OLLAMA_MODEL,
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user",   "content": user_msg},
+            {"role": "system", "content": system},
+            user_message,
         ],
-        "stream": False,
-        "format": "json",          # Ollama constrains output to valid JSON
-        "options": {"temperature": 0.7},
+        "stream":  False,
+        "options": {"temperature": 0.6, "num_predict": 8192},
     }).encode()
 
     req = urllib.request.Request(
@@ -88,16 +132,21 @@ def call_ollama(description: str, style: str) -> dict:
     )
 
     try:
-        with urllib.request.urlopen(req, timeout=180) as r:
+        with urllib.request.urlopen(req, timeout=600) as r:
             result = json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        body = e.read().decode(errors="replace")
+        print(f"  Ollama HTTP {e.code}: {body}")
+        raise RuntimeError(f"Ollama rejected the request (HTTP {e.code}): {body}") from e
+    except TimeoutError as e:
+        raise RuntimeError("Generation timed out (10 min limit). Try a simpler description.") from e
     except urllib.error.URLError as e:
-        raise RuntimeError(
-            "Cannot reach Ollama. Is it running? Start it with:  ollama serve"
-        ) from e
+        if "timed out" in str(e).lower():
+            raise RuntimeError("Generation timed out. Try a simpler description.") from e
+        raise RuntimeError(f"Cannot reach Ollama: {e.reason}") from e
 
     raw = result.get("message", {}).get("content", "").strip()
 
-    # Extract JSON even if the model wrapped it in fences
     match = re.search(r"\{[\s\S]*\}", raw)
     if not match:
         raise ValueError("Model returned no JSON object — try regenerating.")
@@ -108,8 +157,12 @@ def call_ollama(description: str, style: str) -> dict:
        not isinstance(model_data.get("faces"), list):
         raise ValueError("Model data is missing vertices or faces.")
 
+    model_data["_vision"] = has_refs
+    model_data["_refs"]   = len(refs)
     return model_data
 
+
+# ── Routes ────────────────────────────────────────────────────────────────────
 
 @app.route("/")
 def index():
@@ -125,14 +178,52 @@ def status():
     if not has_model:
         return jsonify({
             "ok": False,
-            "error": f'Model "{OLLAMA_MODEL}" not pulled yet. Run: ollama pull {OLLAMA_MODEL}',
+            "error": f'Model "{OLLAMA_MODEL}" not pulled. Run: ollama pull {OLLAMA_MODEL}',
         }), 503
-    return jsonify({"ok": True, "model": OLLAMA_MODEL, "models": models})
+    refs = load_reference_images()
+    return jsonify({"ok": True, "model": OLLAMA_MODEL, "refs": len(refs)})
+
+
+@app.route("/api/references", methods=["GET"])
+def list_references():
+    refs = []
+    for p in sorted(REFERENCE_DIR.iterdir()):
+        if p.suffix.lower() in ALLOWED_EXTS:
+            b64 = base64.b64encode(p.read_bytes()).decode()
+            mime = "image/jpeg" if p.suffix.lower() in {".jpg", ".jpeg"} else "image/png"
+            refs.append({"name": p.name, "src": f"data:{mime};base64,{b64}"})
+    return jsonify(refs)
+
+
+@app.route("/api/references", methods=["POST"])
+def upload_reference():
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+    f = request.files["file"]
+    ext = Path(f.filename).suffix.lower()
+    if ext not in ALLOWED_EXTS:
+        return jsonify({"error": f"Unsupported format. Use: {', '.join(ALLOWED_EXTS)}"}), 400
+    # Sanitise filename
+    safe = re.sub(r"[^\w.\-]", "_", f.filename)
+    dest = REFERENCE_DIR / safe
+    f.save(dest)
+    print(f"  Reference saved: {safe}")
+    return jsonify({"ok": True, "name": safe})
+
+
+@app.route("/api/references/<filename>", methods=["DELETE"])
+def delete_reference(filename):
+    safe = re.sub(r"[^\w.\-]", "_", filename)
+    target = REFERENCE_DIR / safe
+    if target.exists() and target.parent == REFERENCE_DIR:
+        target.unlink()
+        return jsonify({"ok": True})
+    return jsonify({"error": "File not found"}), 404
 
 
 @app.route("/api/generate", methods=["POST"])
 def generate():
-    body = request.get_json(force=True, silent=True) or {}
+    body        = request.get_json(force=True, silent=True) or {}
     description = (body.get("description") or "").strip()
     style       = (body.get("style")       or "").strip()
 
@@ -141,7 +232,8 @@ def generate():
 
     try:
         model_data = call_ollama(description, style)
-        print(f'  Generated: "{model_data.get("name")}" — '
+        vision_tag = " [vision]" if model_data.get("_vision") else ""
+        print(f'  Generated{vision_tag}: "{model_data.get("name")}" — '
               f'{len(model_data["vertices"])}v {len(model_data["faces"])}f')
         return jsonify(model_data)
 
@@ -151,19 +243,21 @@ def generate():
         return jsonify({"error": str(e)}), 500
 
 
+# ── Startup ───────────────────────────────────────────────────────────────────
+
 if __name__ == "__main__":
     print(f"\n  Checking Ollama…")
     models = ollama_available()
     if models is None:
-        print("  WARNING: Ollama doesn't appear to be running.")
-        print("           Start it with:  ollama serve\n")
+        print("  WARNING: Ollama not running — start it with: ollama serve\n")
     else:
         has_model = any(OLLAMA_MODEL in m for m in models)
         if not has_model:
-            print(f"  WARNING: Model '{OLLAMA_MODEL}' not found.")
-            print(f"           Pull it with:  ollama pull {OLLAMA_MODEL}\n")
+            print(f"  WARNING: '{OLLAMA_MODEL}' not found — run: ollama pull {OLLAMA_MODEL}\n")
         else:
-            print(f"  Ollama ready — model: {OLLAMA_MODEL}")
+            refs = load_reference_images()
+            ref_note = f" · {len(refs)} reference image(s) loaded" if refs else " · no reference images"
+            print(f"  Ollama ready — model: {OLLAMA_MODEL}{ref_note}")
 
     port = int(os.environ.get("PORT", 3000))
     print(f"\n  Low-Poly Model Generator → http://localhost:{port}\n")

@@ -1,21 +1,14 @@
-extends Panel
+extends DraggablePanel
 
 const SLOT_SIZE := 48
 const COLS := 8
 const ROWS := 5
 
-const C_BG       := Color(0.07, 0.06, 0.04, 0.95)
-const C_BORDER   := Color(0.30, 0.22, 0.08)
-const C_SLOT_BG  := Color(0.12, 0.10, 0.07)
-const C_SLOT_HL  := Color(0.30, 0.22, 0.08)
-const C_TITLE    := Color(0.95, 0.78, 0.25)
-const C_TEXT     := Color(0.90, 0.82, 0.65)
-const C_TOOLTIP  := Color(0.04, 0.03, 0.02, 0.95)
+const C_BG := Color(0.07, 0.06, 0.04, 0.95)
 
 var _slot_cells: Array = []
 var _tooltip: Panel = null
 var _tooltip_label: Label = null
-var _dragging_from: int = -1
 
 func _ready() -> void:
 	_build_ui()
@@ -25,7 +18,7 @@ func _ready() -> void:
 func _build_ui() -> void:
 	var style := StyleBoxFlat.new()
 	style.bg_color = C_BG
-	style.border_color = C_BORDER
+	style.border_color = UITheme.C_BORDER
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(4)
 	add_theme_stylebox_override("panel", style)
@@ -44,7 +37,7 @@ func _build_ui() -> void:
 
 	var title := Label.new()
 	title.text = "Inventory"
-	title.add_theme_color_override("font_color", C_TITLE)
+	title.add_theme_color_override("font_color", UITheme.C_TITLE)
 	title.add_theme_font_size_override("font_size", 14)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
@@ -52,7 +45,7 @@ func _build_ui() -> void:
 	var close_btn := Button.new()
 	close_btn.text = "✕"
 	close_btn.flat = true
-	close_btn.add_theme_color_override("font_color", C_TEXT)
+	close_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	close_btn.pressed.connect(func(): visible = false)
 	header.add_child(close_btn)
 
@@ -67,31 +60,16 @@ func _build_ui() -> void:
 		grid.add_child(cell)
 		_slot_cells.append(cell)
 
-	_tooltip = Panel.new()
-	_tooltip.visible = false
-	_tooltip.z_index = 10
-	var tip_style := StyleBoxFlat.new()
-	tip_style.bg_color = C_TOOLTIP
-	tip_style.border_color = C_BORDER
-	tip_style.set_border_width_all(1)
-	tip_style.set_corner_radius_all(3)
-	tip_style.content_margin_left = 8
-	tip_style.content_margin_top = 6
-	tip_style.content_margin_right = 8
-	tip_style.content_margin_bottom = 6
-	_tooltip.add_theme_stylebox_override("panel", tip_style)
-	_tooltip_label = Label.new()
-	_tooltip_label.add_theme_font_size_override("font_size", 12)
-	_tooltip_label.add_theme_color_override("font_color", C_TEXT)
-	_tooltip.add_child(_tooltip_label)
-	add_child(_tooltip)
+	var tip := _make_tooltip()
+	_tooltip = tip[0]
+	_tooltip_label = tip[1]
 
 func _make_slot_cell(index: int) -> Panel:
 	var cell := Panel.new()
 	cell.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
 	var s := StyleBoxFlat.new()
-	s.bg_color = C_SLOT_BG
-	s.border_color = C_SLOT_HL
+	s.bg_color = UITheme.C_SLOT_BG
+	s.border_color = UITheme.C_BORDER
 	s.set_border_width_all(1)
 	s.set_corner_radius_all(2)
 	cell.add_theme_stylebox_override("panel", s)
@@ -146,18 +124,6 @@ func _on_slot_hover(index: int) -> void:
 	_tooltip.size = Vector2.ZERO
 	_tooltip.visible = true
 
-func _append_stat_lines(item: ItemData, lines: Array) -> void:
-	var checks := [
-		["bonus_strength", "STR"], ["bonus_dexterity", "DEX"], ["bonus_agility", "AGI"],
-		["bonus_intelligence", "INT"], ["bonus_wisdom", "WIS"], ["bonus_charisma", "CHA"],
-		["bonus_constitution", "CON"], ["bonus_max_hp", "Max HP"],
-		["bonus_max_mp", "Max MP"], ["bonus_max_stamina", "Max ST"],
-	]
-	for pair in checks:
-		var val = item.get(pair[0])
-		if val != 0:
-			lines.append(("%s +%s" if val > 0 else "%s %s") % [pair[1], val])
-
 func _on_slot_input(event: InputEvent, index: int) -> void:
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
@@ -171,8 +137,3 @@ func _on_slot_input(event: InputEvent, index: int) -> void:
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			Inventory.remove_at(index)
 
-func _find_meta_child(parent: Node, meta_key: String) -> Node:
-	for child in parent.get_children():
-		if child.has_meta(meta_key):
-			return child
-	return null

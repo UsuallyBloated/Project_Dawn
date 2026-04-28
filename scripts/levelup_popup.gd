@@ -12,7 +12,7 @@ func _ready() -> void:
 	_label = Label.new()
 	_label.text = "LEVEL UP!"
 	_label.add_theme_font_size_override("font_size", 42)
-	_label.add_theme_color_override("font_color", Color(0.95, 0.78, 0.25))
+	_label.add_theme_color_override("font_color", UITheme.C_TITLE)
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.anchor_left  = 0.5
 	_label.anchor_right = 0.5

@@ -1,0 +1,8 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Stale Bread"
+description = "Hard and unpleasant, but it will keep you going."
+type = 9
+rarity = 0
+stack_size = 20

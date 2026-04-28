@@ -16,7 +16,7 @@ const CROUCH_CAMERA_Y = 0.7
 
 var is_crouching := false
 var is_camera_active := false
-var _tab_target_index := 0
+var _is_local := false
 
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
@@ -24,11 +24,44 @@ var _tab_target_index := 0
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 
 func _ready() -> void:
+	var peer_id := str(name).to_int() if str(name).is_valid_int() else 1
+	set_multiplayer_authority(peer_id)
+	_setup_sync()
+
+	_is_local = is_multiplayer_authority()
+	if not _is_local:
+		camera.current = false
+		set_physics_process(false)
+		set_process_unhandled_input(false)
+		return
+
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	spring_arm.spring_length = THIRD_PERSON_DISTANCE
 	add_to_group("player")
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(55.0)
+	PlayerDeath.set_respawn_point(global_position)
+	PlayerDeath.register_player(self)
+	Targeting.register_camera(camera)
+	Targeting.register_player(self)
+	Combat.register_player(self)
+	Regen.register_player(self)
+
+func _setup_sync() -> void:
+	var sync := MultiplayerSynchronizer.new()
+	var config := SceneReplicationConfig.new()
+	config.add_property(NodePath(".:position"))
+	config.add_property(NodePath(".:rotation"))
+	sync.replication_config = config
+	add_child(sync)
+
+func _exit_tree() -> void:
+	if not _is_local:
+		return
+	Combat.unregister_player()
+	Regen.unregister_player()
+	PlayerDeath.unregister_player()
+	Targeting.unregister_player()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -47,42 +80,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventKey and event.keycode == KEY_X and event.pressed and not event.echo:
 		_toggle_crouch()
-
-	if event is InputEventKey and event.keycode == KEY_TAB and event.pressed and not event.echo:
-		_cycle_target()
-
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_click_target(event.position)
-
-func _click_target(mouse_pos: Vector2) -> void:
-	var space := get_world_3d().direct_space_state
-	var origin := camera.project_ray_origin(mouse_pos)
-	var end := origin + camera.project_ray_normal(mouse_pos) * 100.0
-	var params := PhysicsRayQueryParameters3D.create(origin, end)
-	var result := space.intersect_ray(params)
-	if result.is_empty():
-		Combat.set_target(null)
-		return
-	var body = result["collider"]
-	if body.is_in_group("enemies") and not body.is_dead:
-		Combat.set_target(body)
-	else:
-		Combat.set_target(null)
-
-func _cycle_target() -> void:
-	var enemies: Array = get_tree().get_nodes_in_group("enemies")
-	enemies = enemies.filter(func(e): return is_instance_valid(e) and not e.is_dead)
-	if enemies.is_empty():
-		Combat.set_target(null)
-		return
-	enemies.sort_custom(func(a, b):
-		return global_position.distance_to(a.global_position) < global_position.distance_to(b.global_position)
-	)
-	if Combat.current_target == null or not enemies.has(Combat.current_target):
-		_tab_target_index = 0
-	else:
-		_tab_target_index = (enemies.find(Combat.current_target) + 1) % enemies.size()
-	Combat.set_target(enemies[_tab_target_index])
 
 func _toggle_crouch() -> void:
 	is_crouching = !is_crouching

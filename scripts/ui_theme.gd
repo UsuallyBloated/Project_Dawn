@@ -1,0 +1,49 @@
+class_name UITheme
+
+# Shared color palette used across all UI windows and the character creation screen.
+# Reference these constants instead of hardcoding colors in individual scripts.
+
+# Common window chrome
+const C_BORDER       := Color(0.30, 0.22, 0.08)
+const C_GOLDEN_BORDER := Color(0.55, 0.40, 0.10)  # loot window, confirm button
+const C_TITLE        := Color(0.95, 0.78, 0.25)
+const C_TEXT         := Color(0.90, 0.82, 0.65)
+
+# Panel backgrounds (vary slightly by window type)
+const C_WINDOW_BG  := Color(0.07, 0.06, 0.04, 0.95)  # inventory, paperdoll, loot
+const C_SCREEN_BG  := Color(0.04, 0.03, 0.02)          # character creation full-screen
+const C_PANEL_BG   := Color(0.10, 0.08, 0.06)          # raised section panels
+
+# Slot cells (inventory grid, equipment frames)
+const C_SLOT_BG := Color(0.12, 0.10, 0.07)
+
+# Tooltip / overlay
+const C_TOOLTIP := Color(0.04, 0.03, 0.02, 0.95)
+
+# Character creation — selection states
+const C_SELECTED  := Color(0.60, 0.44, 0.12)
+const C_BTN_NORM  := Color(0.14, 0.11, 0.07)
+const C_BTN_HOVER := Color(0.22, 0.17, 0.09)
+
+# Character creation — locked (unavailable) race/class buttons
+const C_BTN_LOCKED_BG     := Color(0.07, 0.05, 0.04)
+const C_BTN_LOCKED_BORDER := Color(0.22, 0.12, 0.10)
+const C_BTN_LOCKED_TEXT   := Color(0.38, 0.26, 0.22)
+
+# Character creation — "Begin Adventure" confirm button states
+const C_CONFIRM_BG          := Color(0.18, 0.12, 0.03)
+const C_CONFIRM_BG_HOVER    := Color(0.35, 0.25, 0.07)
+const C_CONFIRM_BG_DISABLED := Color(0.10, 0.08, 0.04)
+const C_CONFIRM_BORDER_DISABLED := Color(0.25, 0.18, 0.06)
+
+# Stat delta colours
+const C_POSITIVE := Color(0.40, 0.90, 0.40)
+const C_NEGATIVE := Color(0.90, 0.35, 0.35)
+const C_NEUTRAL  := Color(0.75, 0.70, 0.55)
+
+# Resource bars
+const C_BAR_HP      := Color(0.80, 0.10, 0.10)
+const C_BAR_STAMINA := Color(0.85, 0.75, 0.00)
+const C_BAR_MANA    := Color(0.10, 0.30, 0.90)
+const C_BAR_XP      := Color(0.65, 0.50, 0.10)
+const C_BAR_BG      := Color(0.08, 0.08, 0.08, 0.90)

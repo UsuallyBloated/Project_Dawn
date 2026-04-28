@@ -87,7 +87,7 @@ func _rebuild() -> void:
 		return
 
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.96, 0.88, 0.62, 1)
+	mat.albedo_color = Color(0.22, 0.42, 0.12, 1)
 	mat.roughness = 0.9
 
 	var st := SurfaceTool.new()

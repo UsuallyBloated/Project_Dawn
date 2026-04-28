@@ -34,28 +34,18 @@ func unequip(slot: String) -> ItemData:
 	return item
 
 func _apply_stat_bonuses(item: ItemData) -> void:
-	PlayerStats.strength     += item.bonus_strength
-	PlayerStats.dexterity    += item.bonus_dexterity
-	PlayerStats.agility      += item.bonus_agility
-	PlayerStats.intelligence += item.bonus_intelligence
-	PlayerStats.wisdom       += item.bonus_wisdom
-	PlayerStats.charisma     += item.bonus_charisma
-	PlayerStats.constitution += item.bonus_constitution
-	PlayerStats.max_hp       += item.bonus_max_hp
-	PlayerStats.max_mp       += item.bonus_max_mp
-	PlayerStats.max_stamina  += item.bonus_max_stamina
+	PlayerStats.apply_item_bonuses(item)
 
 func _remove_stat_bonuses(item: ItemData) -> void:
-	PlayerStats.strength     -= item.bonus_strength
-	PlayerStats.dexterity    -= item.bonus_dexterity
-	PlayerStats.agility      -= item.bonus_agility
-	PlayerStats.intelligence -= item.bonus_intelligence
-	PlayerStats.wisdom       -= item.bonus_wisdom
-	PlayerStats.charisma     -= item.bonus_charisma
-	PlayerStats.constitution -= item.bonus_constitution
-	PlayerStats.max_hp       = maxf(PlayerStats.max_hp - item.bonus_max_hp, 1.0)
-	PlayerStats.max_mp       = maxf(PlayerStats.max_mp - item.bonus_max_mp, 0.0)
-	PlayerStats.max_stamina  = maxf(PlayerStats.max_stamina - item.bonus_max_stamina, 1.0)
+	PlayerStats.remove_item_bonuses(item)
+
+func get_total_armor() -> int:
+	var total := 0
+	for slot in equipped:
+		var item = equipped[slot]
+		if item != null:
+			total += item.bonus_armor
+	return total
 
 func _slot_for_type(type: ItemData.Type) -> String:
 	match type:

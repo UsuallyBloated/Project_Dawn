@@ -9,6 +9,13 @@ const SIT_MULTIPLIER  := 3.0   # regen bonus while sitting
 
 var _tick_timer: float = 0.0
 var _in_combat: bool = false
+var _player: Node3D = null
+
+func register_player(node: Node3D) -> void:
+	_player = node
+
+func unregister_player() -> void:
+	_player = null
 
 func _ready() -> void:
 	Combat.target_changed.connect(_on_target_changed)
@@ -23,8 +30,7 @@ func _do_regen() -> void:
 	if _in_combat:
 		return
 
-	var player: Node3D = get_tree().get_first_node_in_group("player")
-	var is_sitting := player != null and player.get("is_crouching") == true
+	var is_sitting: bool = is_instance_valid(_player) and _player.get("is_crouching") == true
 	var mult := SIT_MULTIPLIER if is_sitting else 1.0
 
 	var hp_rate  := _hp_regen_per_tick()  * mult

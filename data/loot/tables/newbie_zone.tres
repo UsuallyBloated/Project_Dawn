@@ -1,0 +1,154 @@
+[gd_resource type="LootTable" load_steps=64 format=3]
+
+[ext_resource type="Resource" path="res://data/loot/items/rusty_short_sword.tres" id="1"]
+[ext_resource type="Resource" path="res://data/loot/items/bent_dagger.tres" id="2"]
+[ext_resource type="Resource" path="res://data/loot/items/cracked_wooden_club.tres" id="3"]
+[ext_resource type="Resource" path="res://data/loot/items/splintered_staff.tres" id="4"]
+[ext_resource type="Resource" path="res://data/loot/items/tattered_cloth_tunic.tres" id="5"]
+[ext_resource type="Resource" path="res://data/loot/items/frayed_cloth_pants.tres" id="6"]
+[ext_resource type="Resource" path="res://data/loot/items/worn_cloth_cap.tres" id="7"]
+[ext_resource type="Resource" path="res://data/loot/items/torn_cloth_gloves.tres" id="8"]
+[ext_resource type="Resource" path="res://data/loot/items/patched_cloth_boots.tres" id="9"]
+[ext_resource type="Resource" path="res://data/loot/items/cracked_leather_vest.tres" id="10"]
+[ext_resource type="Resource" path="res://data/loot/items/rough_leather_bracers.tres" id="11"]
+[ext_resource type="Resource" path="res://data/loot/items/scraped_leather_boots.tres" id="12"]
+[ext_resource type="Resource" path="res://data/loot/items/tattered_pelt.tres" id="13"]
+[ext_resource type="Resource" path="res://data/loot/items/damaged_wolf_pelt.tres" id="14"]
+[ext_resource type="Resource" path="res://data/loot/items/bat_wing.tres" id="15"]
+[ext_resource type="Resource" path="res://data/loot/items/bone_fragment.tres" id="16"]
+[ext_resource type="Resource" path="res://data/loot/items/gnoll_tooth.tres" id="17"]
+[ext_resource type="Resource" path="res://data/loot/items/stale_bread.tres" id="18"]
+[ext_resource type="Resource" path="res://data/loot/items/crude_health_potion.tres" id="19"]
+[ext_resource type="Resource" path="res://data/loot/items/rusted_buckle.tres" id="20"]
+[ext_resource type="Resource" path="res://data/loot/items/worn_coin_purse.tres" id="21"]
+
+[sub_resource type="LootEntry" id="LootEntry_1"]
+item = ExtResource("1")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_2"]
+item = ExtResource("2")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_3"]
+item = ExtResource("3")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_4"]
+item = ExtResource("4")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_5"]
+item = ExtResource("5")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_6"]
+item = ExtResource("6")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_7"]
+item = ExtResource("7")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_8"]
+item = ExtResource("8")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_9"]
+item = ExtResource("9")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_10"]
+item = ExtResource("10")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_11"]
+item = ExtResource("11")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_12"]
+item = ExtResource("12")
+weight = 1.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_13"]
+item = ExtResource("13")
+weight = 4.0
+min_count = 1
+max_count = 3
+
+[sub_resource type="LootEntry" id="LootEntry_14"]
+item = ExtResource("14")
+weight = 4.0
+min_count = 1
+max_count = 3
+
+[sub_resource type="LootEntry" id="LootEntry_15"]
+item = ExtResource("15")
+weight = 4.0
+min_count = 1
+max_count = 3
+
+[sub_resource type="LootEntry" id="LootEntry_16"]
+item = ExtResource("16")
+weight = 4.0
+min_count = 1
+max_count = 3
+
+[sub_resource type="LootEntry" id="LootEntry_17"]
+item = ExtResource("17")
+weight = 4.0
+min_count = 1
+max_count = 3
+
+[sub_resource type="LootEntry" id="LootEntry_18"]
+item = ExtResource("18")
+weight = 3.0
+min_count = 1
+max_count = 2
+
+[sub_resource type="LootEntry" id="LootEntry_19"]
+item = ExtResource("19")
+weight = 2.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_20"]
+item = ExtResource("20")
+weight = 5.0
+min_count = 1
+max_count = 1
+
+[sub_resource type="LootEntry" id="LootEntry_21"]
+item = ExtResource("21")
+weight = 5.0
+min_count = 1
+max_count = 1
+
+[resource]
+entries = [SubResource("LootEntry_1"), SubResource("LootEntry_2"), SubResource("LootEntry_3"), SubResource("LootEntry_4"), SubResource("LootEntry_5"), SubResource("LootEntry_6"), SubResource("LootEntry_7"), SubResource("LootEntry_8"), SubResource("LootEntry_9"), SubResource("LootEntry_10"), SubResource("LootEntry_11"), SubResource("LootEntry_12"), SubResource("LootEntry_13"), SubResource("LootEntry_14"), SubResource("LootEntry_15"), SubResource("LootEntry_16"), SubResource("LootEntry_17"), SubResource("LootEntry_18"), SubResource("LootEntry_19"), SubResource("LootEntry_20"), SubResource("LootEntry_21")]
+rolls = 2
+empty_weight = 3.0

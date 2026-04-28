@@ -8,6 +8,13 @@ const XP_LOSS_PERCENT := 0.05   # lose 5% of current XP on death
 
 var is_dead: bool = false
 var _respawn_position: Vector3 = Vector3.ZERO
+var _player: Node3D = null
+
+func register_player(node: Node3D) -> void:
+	_player = node
+
+func unregister_player() -> void:
+	_player = null
 
 func _ready() -> void:
 	PlayerStats.hp_changed.connect(_on_hp_changed)
@@ -34,9 +41,8 @@ func _respawn() -> void:
 	PlayerStats.set_mp(PlayerStats.max_mp * 0.25)
 	PlayerStats.set_stamina(PlayerStats.max_stamina * 0.50)
 
-	var player: Node3D = get_tree().get_first_node_in_group("player")
-	if player != null:
-		player.global_position = _respawn_position
-		player.velocity = Vector3.ZERO
+	if is_instance_valid(_player):
+		_player.global_position = _respawn_position
+		_player.velocity = Vector3.ZERO
 
 	player_respawned.emit()

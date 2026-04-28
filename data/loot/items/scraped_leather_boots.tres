@@ -1,0 +1,8 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Scraped Leather Boots"
+description = "Boots with deep gouges across the surface."
+type = 5
+rarity = 0
+stack_size = 1

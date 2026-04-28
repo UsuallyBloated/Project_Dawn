@@ -4,10 +4,14 @@ extends Control
 
 const RACES: Array[String] = [
 	"Human", "Elf", "Dark Elf", "Wood Elf", "Gnome",
-	"Halfling", "Dwarf", "Half-Elf", "Ogre", "Troll"
+	"Halfling", "Dwarf", "Half-Elf", "Ogre", "Troll",
+	"Iksar", "Minotaur", "Revenant", "Fae", "Vah Shir", "Kobold", "Half-Ogre"
 ]
 
-const CLASSES: Array[String] = ["Warrior", "Mage", "Rogue"]
+const CLASSES: Array[String] = [
+	"Warrior", "Mage", "Rogue", "Cleric", "Druid", "Shaman", "Blood Mage",
+	"Paladin", "Shadow Knight", "Necromancer", "Enchanter", "Bard", "Ranger", "Monk", "Witch Hunter"
+]
 
 const RACE_DATA: Dictionary = {
 	"Human": {
@@ -50,6 +54,34 @@ const RACE_DATA: Dictionary = {
 		"desc": "Savage regenerators with extraordinary endurance. Fearsome but repugnant.",
 		"bonuses": {"constitution": 20, "strength": 10, "charisma": -15, "wisdom": -10, "intelligence": -5}
 	},
+	"Iksar": {
+		"desc": "Ancient lizardfolk from a fallen empire. Cold-blooded and calculating, their natural scales make them fearsome survivors.",
+		"bonuses": {"constitution": 15, "strength": 8, "charisma": -15, "wisdom": -5}
+	},
+	"Minotaur": {
+		"desc": "Bull-headed titans who carry the weight of generations in bondage. Their rage is matched only by their grief.",
+		"bonuses": {"strength": 20, "constitution": 10, "charisma": -10, "intelligence": -8, "agility": -5}
+	},
+	"Revenant": {
+		"desc": "The returned dead. Neither fully alive nor fully gone, immune to fear and numb to pain.",
+		"bonuses": {"intelligence": 10, "constitution": 10, "strength": 5, "charisma": -15, "wisdom": -5}
+	},
+	"Fae": {
+		"desc": "Ageless creatures of pure magic from the hidden world. Impossibly small, impossibly old, impossibly powerful.",
+		"bonuses": {"intelligence": 20, "wisdom": 10, "agility": 15, "charisma": 5, "strength": -15, "constitution": -10}
+	},
+	"Vah Shir": {
+		"desc": "Proud feline warriors from a distant land. Graceful, deadly, and deeply tribal. They treat combat as an art form.",
+		"bonuses": {"dexterity": 12, "agility": 12, "constitution": 5, "wisdom": -5, "intelligence": -5, "charisma": -5}
+	},
+	"Kobold": {
+		"desc": "Dog-faced scavengers with bat ears and wiry fur, scrappy and relentlessly underestimated. Kobolds survive through cunning, traps, and sheer stubborn spite.",
+		"bonuses": {"dexterity": 10, "intelligence": 8, "agility": 5, "strength": -8, "constitution": -5, "charisma": -10}
+	},
+	"Half-Ogre": {
+		"desc": "Born between brutality and humanity. Too large for one world, too feeling for the other.",
+		"bonuses": {"strength": 15, "constitution": 8, "charisma": -8, "intelligence": -3, "wisdom": -3}
+	},
 }
 
 const CLASS_DATA: Dictionary = {
@@ -68,6 +100,95 @@ const CLASS_DATA: Dictionary = {
 		"bonuses": {"dexterity": 15, "agility": 10},
 		"hp_bonus": 20.0, "mp_bonus": 0.0, "stamina_bonus": 20.0
 	},
+	"Cleric": {
+		"desc": "Devoted healers armored in faith. Divine magic mends wounds and smites the wicked.",
+		"bonuses": {"wisdom": 12, "constitution": 8},
+		"hp_bonus": 30.0, "mp_bonus": 60.0, "stamina_bonus": 0.0
+	},
+	"Druid": {
+		"desc": "Guardians of the natural world. They balance potent nature spells with restorative magic.",
+		"bonuses": {"wisdom": 10, "intelligence": 8},
+		"hp_bonus": 10.0, "mp_bonus": 70.0, "stamina_bonus": 0.0
+	},
+	"Shaman": {
+		"desc": "Spiritual warriors who commune with ancestors. Blend melee combat with healing and spirit magic.",
+		"bonuses": {"wisdom": 10, "constitution": 8, "strength": 5},
+		"hp_bonus": 30.0, "mp_bonus": 40.0, "stamina_bonus": 15.0
+	},
+	"Blood Mage": {
+		"desc": "Masters of dark vitomancy. They drain life from enemies and bend mortal flesh to their will.",
+		"bonuses": {"intelligence": 15, "constitution": 5},
+		"hp_bonus": 0.0, "mp_bonus": 80.0, "stamina_bonus": 0.0
+	},
+	"Paladin": {
+		"desc": "A holy warrior armored in faith. Divine strikes, protective auras, and battlefield healing define their calling.",
+		"bonuses": {"strength": 10, "wisdom": 8, "constitution": 5},
+		"hp_bonus": 40.0, "mp_bonus": 30.0, "stamina_bonus": 15.0
+	},
+	"Shadow Knight": {
+		"desc": "A dark champion fueled by death and suffering. Lifetap strikes and shadow magic sustain them in battle.",
+		"bonuses": {"strength": 10, "intelligence": 8, "constitution": 5},
+		"hp_bonus": 35.0, "mp_bonus": 30.0, "stamina_bonus": 10.0
+	},
+	"Necromancer": {
+		"desc": "Masters of death magic. They raise the fallen as servants and drain life with corrupting curses.",
+		"bonuses": {"intelligence": 15, "wisdom": 5},
+		"hp_bonus": -10.0, "mp_bonus": 100.0, "stamina_bonus": 0.0
+	},
+	"Enchanter": {
+		"desc": "Wielders of illusion and mental magic. Unmatched crowd control and mana restoration, but they never throw the first punch.",
+		"bonuses": {"intelligence": 12, "charisma": 12, "wisdom": 5},
+		"hp_bonus": -10.0, "mp_bonus": 90.0, "stamina_bonus": 0.0
+	},
+	"Bard": {
+		"desc": "Wandering storytellers who weave magic through music. Their songs reshape the battlefield while their blades keep them in it.",
+		"bonuses": {"dexterity": 8, "charisma": 12, "agility": 5},
+		"hp_bonus": 20.0, "mp_bonus": 30.0, "stamina_bonus": 20.0
+	},
+	"Ranger": {
+		"desc": "Hunters and trackers of the wild. Swift with both blade and bow, they read the land like a second language.",
+		"bonuses": {"dexterity": 12, "agility": 8, "wisdom": 5},
+		"hp_bonus": 20.0, "mp_bonus": 20.0, "stamina_bonus": 20.0
+	},
+	"Monk": {
+		"desc": "Unarmed masters of discipline. No armor, no weapons — only speed, technique, and unbreakable focus.",
+		"bonuses": {"strength": 8, "dexterity": 8, "agility": 8},
+		"hp_bonus": 25.0, "mp_bonus": 10.0, "stamina_bonus": 30.0
+	},
+	"Witch Hunter": {
+		"desc": "Relentless pursuers of the arcane and the corrupted. Expert at unraveling dark magic and those who wield it.",
+		"bonuses": {"intelligence": 8, "constitution": 8, "wisdom": 8},
+		"hp_bonus": 20.0, "mp_bonus": 40.0, "stamina_bonus": 10.0
+	},
+}
+
+const LOCKED_COMBOS: Dictionary = {
+	"Dark Elf":  ["Paladin"],
+	"Wood Elf":  ["Necromancer"],
+	"Halfling":  ["Shadow Knight"],
+	"Dwarf":     ["Necromancer"],
+	"Troll":     ["Paladin", "Monk"],
+	"Iksar":     ["Paladin"],
+	"Fae":       ["Shadow Knight", "Monk"],
+	"Kobold":    ["Paladin"],
+}
+
+const CLASS_STARTING_ALIGNMENT: Dictionary = {
+	"Paladin":       500,
+	"Cleric":        400,
+	"Monk":          100,
+	"Witch Hunter":  100,
+	"Warrior":       0,
+	"Mage":          0,
+	"Rogue":         0,
+	"Druid":         0,
+	"Shaman":        0,
+	"Ranger":        0,
+	"Bard":          0,
+	"Enchanter":     0,
+	"Blood Mage":   -500,
+	"Shadow Knight": -1600,
+	"Necromancer":   -1600,
 }
 
 const STAT_KEYS: Array[String] = [
@@ -84,17 +205,17 @@ const BASE_ST: float = 100.0
 
 # ── Colors ─────────────────────────────────────────────────────────────────────
 
-const C_BG        := Color(0.04, 0.03, 0.02)
-const C_PANEL     := Color(0.10, 0.08, 0.06)
-const C_BORDER    := Color(0.30, 0.22, 0.08)
-const C_TEXT      := Color(0.90, 0.82, 0.65)
-const C_TITLE     := Color(0.95, 0.78, 0.25)
-const C_SELECTED  := Color(0.60, 0.44, 0.12)
-const C_BTN_NORM  := Color(0.14, 0.11, 0.07)
-const C_BTN_HOVER := Color(0.22, 0.17, 0.09)
-const C_POS       := Color(0.40, 0.90, 0.40)
-const C_NEG       := Color(0.90, 0.35, 0.35)
-const C_NEUTRAL   := Color(0.75, 0.70, 0.55)
+const C_BG        := UITheme.C_SCREEN_BG
+const C_PANEL     := UITheme.C_PANEL_BG
+const C_BORDER    := UITheme.C_BORDER
+const C_TEXT      := UITheme.C_TEXT
+const C_TITLE     := UITheme.C_TITLE
+const C_SELECTED  := UITheme.C_SELECTED
+const C_BTN_NORM  := UITheme.C_BTN_NORM
+const C_BTN_HOVER := UITheme.C_BTN_HOVER
+const C_POS       := UITheme.C_POSITIVE
+const C_NEG       := UITheme.C_NEGATIVE
+const C_NEUTRAL   := UITheme.C_NEUTRAL
 
 # ── State ──────────────────────────────────────────────────────────────────────
 
@@ -162,10 +283,15 @@ func _build_race_panel(parent: Control) -> void:
 
 	vbox.add_child(_make_label("— RACE —", 14, C_TITLE, HORIZONTAL_ALIGNMENT_CENTER))
 
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(scroll)
+
 	var btn_box := VBoxContainer.new()
-	btn_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	btn_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_box.add_theme_constant_override("separation", 4)
-	vbox.add_child(btn_box)
+	scroll.add_child(btn_box)
 
 	for race in RACES:
 		var btn := _make_select_btn(race)
@@ -192,10 +318,15 @@ func _build_class_panel(parent: Control) -> void:
 
 	vbox.add_child(_make_label("— CLASS —", 14, C_TITLE, HORIZONTAL_ALIGNMENT_CENTER))
 
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(scroll)
+
 	var btn_box := VBoxContainer.new()
-	btn_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	btn_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn_box.add_theme_constant_override("separation", 4)
-	vbox.add_child(btn_box)
+	scroll.add_child(btn_box)
 
 	for cls in CLASSES:
 		var btn := _make_select_btn(cls)
@@ -259,17 +390,54 @@ func _on_race_selected(race: String) -> void:
 	for r in RACES:
 		_set_btn_selected(_race_btns[r], r == race)
 	_race_desc_lbl.text = RACE_DATA[race]["desc"]
+	_update_class_locks(race)
 	_refresh_stats()
 	_update_confirm()
 
 
 func _on_class_selected(cls: String) -> void:
 	selected_class = cls
+	var locked_for_race := LOCKED_COMBOS.get(selected_race, []) as Array
 	for c in CLASSES:
-		_set_btn_selected(_class_btns[c], c == cls)
+		if not locked_for_race.has(c):
+			_set_btn_selected(_class_btns[c], c == cls)
 	_class_desc_lbl.text = CLASS_DATA[cls]["desc"]
+	_update_race_locks(cls)
 	_refresh_stats()
 	_update_confirm()
+
+
+func _update_class_locks(race: String) -> void:
+	var locked := LOCKED_COMBOS.get(race, []) as Array
+	if selected_class in locked:
+		selected_class = ""
+		_class_desc_lbl.text = ""
+	for cls in CLASSES:
+		var btn: Button = _class_btns[cls]
+		var is_locked: bool = cls in locked
+		btn.disabled = is_locked
+		if is_locked:
+			_style_btn_locked(btn)
+		else:
+			_set_btn_selected(btn, cls == selected_class)
+
+
+func _update_race_locks(cls: String) -> void:
+	var locked_races: Array = []
+	for race in LOCKED_COMBOS:
+		if cls in LOCKED_COMBOS[race]:
+			locked_races.append(race)
+	if selected_race in locked_races:
+		selected_race = ""
+		_race_desc_lbl.text = ""
+	for race in RACES:
+		var btn: Button = _race_btns[race]
+		var is_locked: bool = race in locked_races
+		btn.disabled = is_locked
+		if is_locked:
+			_style_btn_locked(btn)
+		else:
+			_set_btn_selected(btn, race == selected_race)
 
 
 func _refresh_stats() -> void:
@@ -326,13 +494,15 @@ func _on_confirm() -> void:
 	PlayerStats.constitution = BASE + rb.get("constitution", 0) + cb.get("constitution", 0)
 
 	var cd: Dictionary = CLASS_DATA[selected_class]
-	PlayerStats.max_hp      = max(50.0,  BASE_HP + cd["hp_bonus"])
+	var con_hp_bonus := (PlayerStats.constitution - 10) * 5.0
+	PlayerStats.max_hp      = max(50.0,  BASE_HP + cd["hp_bonus"] + con_hp_bonus)
 	PlayerStats.max_mp      = max(20.0,  BASE_MP + cd["mp_bonus"])
 	PlayerStats.max_stamina = max(20.0,  BASE_ST + cd["stamina_bonus"])
 	PlayerStats.set_hp(PlayerStats.max_hp)
 	PlayerStats.set_mp(PlayerStats.max_mp)
 	PlayerStats.set_stamina(PlayerStats.max_stamina)
 
+	PlayerStats.set_alignment(CLASS_STARTING_ALIGNMENT.get(selected_class, 0))
 	Skills.setup_for_class(selected_class)
 	Spells.setup_for_class(selected_class)
 	get_tree().change_scene_to_file("res://node_3d.tscn")
@@ -363,10 +533,10 @@ func _make_margin(parent: Control, m: int) -> MarginContainer:
 	return mc
 
 
-func _make_label(text: String, size: int, color: Color, align: HorizontalAlignment) -> Label:
+func _make_label(text: String, font_size: int, color: Color, align: HorizontalAlignment) -> Label:
 	var lbl := Label.new()
 	lbl.text = text
-	lbl.add_theme_font_size_override("font_size", size)
+	lbl.add_theme_font_size_override("font_size", font_size)
 	lbl.add_theme_color_override("font_color", color)
 	lbl.horizontal_alignment = align
 	return lbl
@@ -406,6 +576,22 @@ func _style_btn(btn: Button, is_selected: bool) -> void:
 	btn.add_theme_stylebox_override("hover", h)
 
 
+func _style_btn_locked(btn: Button) -> void:
+	var s := StyleBoxFlat.new()
+	s.bg_color     = UITheme.C_BTN_LOCKED_BG
+	s.border_color = UITheme.C_BTN_LOCKED_BORDER
+	s.set_border_width_all(1)
+	s.set_corner_radius_all(3)
+	s.content_margin_left   = 10
+	s.content_margin_top    = 5
+	s.content_margin_right  = 10
+	s.content_margin_bottom = 5
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		btn.add_theme_stylebox_override(state, s)
+	btn.add_theme_color_override("font_color", UITheme.C_BTN_LOCKED_TEXT)
+	btn.add_theme_color_override("font_disabled_color", UITheme.C_BTN_LOCKED_TEXT)
+
+
 func _make_confirm_btn() -> Button:
 	var btn := Button.new()
 	btn.text = "Begin Adventure"
@@ -418,8 +604,8 @@ func _make_confirm_btn() -> Button:
 	btn.pressed.connect(_on_confirm)
 
 	var norm := StyleBoxFlat.new()
-	norm.bg_color     = Color(0.18, 0.12, 0.03)
-	norm.border_color = Color(0.55, 0.40, 0.10)
+	norm.bg_color     = UITheme.C_CONFIRM_BG
+	norm.border_color = UITheme.C_GOLDEN_BORDER
 	norm.set_border_width_all(2)
 	norm.set_corner_radius_all(6)
 	norm.content_margin_left   = 24
@@ -429,13 +615,13 @@ func _make_confirm_btn() -> Button:
 	btn.add_theme_stylebox_override("normal", norm)
 
 	var hover := norm.duplicate() as StyleBoxFlat
-	hover.bg_color     = Color(0.35, 0.25, 0.07)
+	hover.bg_color     = UITheme.C_CONFIRM_BG_HOVER
 	hover.border_color = C_TITLE
 	btn.add_theme_stylebox_override("hover", hover)
 
 	var dis := norm.duplicate() as StyleBoxFlat
-	dis.bg_color     = Color(0.10, 0.08, 0.04)
-	dis.border_color = Color(0.25, 0.18, 0.06)
+	dis.bg_color     = UITheme.C_CONFIRM_BG_DISABLED
+	dis.border_color = UITheme.C_CONFIRM_BORDER_DISABLED
 	dis.set_border_width_all(1)
 	btn.add_theme_stylebox_override("disabled", dis)
 

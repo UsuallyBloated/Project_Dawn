@@ -11,11 +11,25 @@ config_version=5
 [application]
 
 config/name="Project_Dawn"
-run/main_scene="res://scenes/character_creation.tscn"
+run/main_scene="res://scenes/lobby.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
+Network="*res://autoloads/network.gd"
 PlayerStats="*res://autoloads/player_stats.gd"
 Combat="*res://autoloads/combat.gd"
+Inventory="*res://autoloads/inventory.gd"
+Equipment="*res://autoloads/equipment.gd"
+Skills="*res://autoloads/skills.gd"
+Spells="*res://autoloads/spells.gd"
+DamageNumbers="*res://autoloads/damage_numbers.gd"
+PlayerDeath="*res://autoloads/player_death.gd"
+Regen="*res://autoloads/regen.gd"
+TimeOfDay="*res://autoloads/time_of_day.gd"
+CombatLog="*res://scripts/combat_log.gd"
+Targeting="*res://autoloads/targeting.gd"
+Loot="*res://autoloads/loot.gd"
+Crafting="*res://autoloads/crafting.gd"
+Transformations="*res://autoloads/transformations.gd"

@@ -4,3 +4,4 @@
 
 # Local secrets — never commit
 HTML_LOW_POLY_TOOL/.env
+HTML_LOW_POLY_TOOL/reference_images/

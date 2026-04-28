@@ -22,3 +22,10 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 @export var bonus_max_hp: float = 0.0
 @export var bonus_max_mp: float = 0.0
 @export var bonus_max_stamina: float = 0.0
+
+# Weapon stats (weapons only)
+@export var weapon_damage_min: int = 0
+@export var weapon_damage_max: int = 0
+
+# Physical damage reduction when equipped (armor pieces)
+@export var bonus_armor: int = 0

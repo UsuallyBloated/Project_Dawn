@@ -17,7 +17,7 @@ func add_item(item: ItemData, count: int = 1) -> bool:
 	if item.stack_size > 1:
 		for i in MAX_SLOTS:
 			if slots[i] != null and slots[i]["item"] == item:
-				var space := item.stack_size - slots[i]["count"]
+				var space: int = item.stack_size - (slots[i]["count"] as int)
 				if space > 0:
 					var add := mini(count, space)
 					slots[i]["count"] += add

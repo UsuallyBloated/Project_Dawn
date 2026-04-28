@@ -1,0 +1,8 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Gnoll Tooth"
+description = "A sharp fang from a gnoll. Some merchants pay for these."
+type = 10
+rarity = 0
+stack_size = 20

@@ -86,7 +86,7 @@ Concept portraits written as oil painting descriptions. Intended as reference fo
 
 **Composition:** Low, wide shot — crouched at the waterline of a dark swamp, perfectly still, watching something off-canvas. He occupies the bottom third of the frame; the dark water and mist fill the rest.
 
-**Detail:** Regenerating flesh is visible at a poorly-bandaged arm wound — unsettling, almost beautiful, like watching time-lapse growth. Moss and algae cling to him not as filth but as camouflage, deliberately applied. His eyes are the only light in the painting — a faint bioluminescent yellow-green, reflected in the still black water below.
+**Detail:** A poorly-bandaged arm wound is visible — the kind that should have slowed him down, and hasn't. Moss and algae cling to him not as filth but as camouflage, deliberately applied. His eyes are the only light in the painting — a faint bioluminescent yellow-green, reflected in the still black water below.
 
 **Technique:** Near-monochrome with a single glowing accent. The water surface painted with horizontal strokes; the reflection of his eyes perfectly still — suggesting he hasn't moved in a very long time.
 
@@ -153,3 +153,177 @@ Concept portraits written as oil painting descriptions. Intended as reference fo
 **Technique:** This is the most technically ambitious of the series. The forest requires layered glazes to achieve depth — cool shadows, warm light shafts, the complex green of filtered sunlight. She is painted in the same earthy tones as the environment; finding her in the composition is part of the experience.
 
 **Palette:** Sap green, viridian, yellow ochre for the light shafts. The forest floor: burnt umber, raw sienna, moss green. Her skin: warm olive. Her hair: cadmium orange deepened with burnt sienna. The arrow tip: one cold glint of silver-white, the sharpest edge in the painting.
+
+---
+
+## Iksar Necromancer — "The Bone Cartographer"
+
+**Composition:** Overhead angle, just slightly — the viewer looks down at a long worktable covered in bones arranged with obsessive precision. The Iksar stands at the far end, half-turned, head tilted in assessment. The angle flattens him slightly, makes him feel like part of the arrangement.
+
+**Detail:** The bones aren't random — they form a map. The skeleton of something large spans the length of the table, but individual bones have been replaced, labeled, rearranged to mark terrain. His scales catch the lamplight in segments, green-black, matte except at the jaw and brow ridge where they catch the light. A quill in one claw, a femur used as a straightedge in the other. The walls are shelved floor-to-ceiling with labeled skulls — not trophies, indexes.
+
+**The stillness:** He has been standing in this exact pose for hours. His expression is not cruel, not dark — it is concentrated. This is scholarship. The dead are his primary sources.
+
+**Background:** A low-lit study carved from stone — the architecture distinctly not human. Arches that come to a point, walls covered in text in a dead script. The lamp is the only warm light; the rest is cold stone and shadow.
+
+**Technique:** The table dominates — it required the most care, each bone rendered with anthropological precision. His figure is loose by comparison, integrated into the composition rather than dominating it. Shadow work is heavy and layered, the lamp creating a single hard source.
+
+**Palette:** Warm lamplight in yellow ochre and amber fighting against cold stone in Payne's grey and raw umber. His scales: deep sap green and ivory black. The bones: titanium white, yellow ochre, a hint of burnt sienna where they've aged.
+
+---
+
+## Minotaur Shaman — "The Ancestor's Weight"
+
+**Composition:** Low-angle, full figure, standing at the threshold of a ruin, back to the viewer — facing out. We see him from behind. The landscape beyond is vast. He takes up most of the vertical frame despite being in the middle ground.
+
+**Detail:** The fetishes and spirit-talismans he carries are shattered things repaired — links of chain woven into his braids beside bone beads and feathers. A drum on his back, hide stretched over a frame of salvaged iron. His silhouette is massive against the sky. We cannot see his face. The viewer inherits his perspective: whatever he's looking out at, we look at it with him.
+
+**The weight:** His horns bear carved names, dozens of them, spiraling from base to tip — ancestors lost to bondage. The names are too small to read. The weight must be real.
+
+**Background:** Vast broken plain under a twilight sky — the specific gold-grey of an ending day. Ruined structures at the horizon, small enough that they might be natural formations. Everything is space and distance.
+
+**Technique:** The figure is painted with careful texture — the roughness of his hide, worn leather and chain. The landscape is thin, almost watercolor in its looseness. The sky does the most emotional work: built in layers, the specific grief-color of fading light.
+
+**Palette:** Raw sienna and yellow ochre in the sky. His silhouette: almost black, but a deep warm umber. The chain: a single note of muted steel-grey. The carved names catch the last light, too small to see.
+
+---
+
+## Revenant Blood Mage — "The Scar That Remembers"
+
+**Composition:** Portrait, close — the painter got too close, or the subject came too close, and neither retreated. Three-quarter view, exactly eye level. The viewer cannot look away. Neither can he.
+
+**Detail:** The wounds are not healing — but they're not killing him either. Where living skin would show bruising, his shows a faint darkening, a memory of injury. He doesn't feel them. A blood mage uses pain as fuel; a revenant blood mage has had to find something else to burn. His hands are extended slightly toward the viewer — one holds a slow red mote of gathered blood-light, hovering, patient. His expression: curious, not threatening. He is observing what he can do now that pain is gone.
+
+**The eyes:** Not dead. Not alive. Something in between that the painter has not tried to categorize.
+
+**Background:** An ordinary room — table, chair, a window with rain on it. No mysticism in the setting. The ordinary world does not know what he is.
+
+**Technique:** Very tight, very controlled. The paint handling is almost photographic at the center — his face, his hands — then loosens rapidly outward. The blood-light is painted wet-on-wet, let to bloom. Everything else: restrained.
+
+**Palette:** Muted and cool — Payne's grey, blue-grey, the specific grey-blue of old skin. The blood-light: alizarin crimson, the only saturated color. The rain on the window: cool viridian. Everything desaturated except the thing he holds.
+
+---
+
+## Fae Enchanter — "The Glass Court"
+
+**Composition:** The fae is small — a deliberate choice. She occupies the lower left quarter of the frame, seated on a throne made from a walnut shell. The rest of the canvas is the illusion she's maintaining: a grand baroque court in miniature, extending impossibly beyond the frame's edges, populated with figures who are not quite there. The eye spends a long time in the illusion before finding her.
+
+**Detail:** She is ancient in the way that pre-dates old — a small face that could pass for a child's if the eyes weren't what they are. The eyes: the specific deep patience of something that has outlived civilizations. She wears a court gown that is also armor — every ornament a ward, every thread a binding. The illusion she maintains without apparent effort: a palace of impossible architecture, lit by sourceless light, inhabited by people who have been charmed so long they've forgotten there's a difference.
+
+**What is real:** The walnut-shell throne. Her hands on the armrests. Everything else is probably not.
+
+**Background:** The illusory palace recedes into soft focus. The painter hasn't committed to it — the edges are unresolved, deliberately so. It might go on forever. It might end an inch beyond the frame.
+
+**Technique:** The court is painted with the same brushwork as the subject, but without the underlayers. It has surface but no depth. The distinction is subtle. The unsettled feeling is the point.
+
+**Palette:** Iridescent — violet, aquamarine, gold leaf implied by yellow ochre. Her figure: cool silver-white, lavender grey. The illusion: warm, sumptuous, slightly too vivid to be trusted.
+
+---
+
+## Vah Shir Monk — "The Still Claw"
+
+**Composition:** Seated, cross-legged. Not in meditation — in readiness that looks identical to meditation. The distinction is in the hands: one rests open on a knee, the other is slightly cupped, slightly forward, weight distributed. A practitioner would recognize the posture. Most viewers would not.
+
+**Detail:** She is simply dressed — wrapped cloth, nothing else. No ornament, no weapon. This is the point. Her ears are forward — not alert, forward. Present. She hears everything in this room and has sorted it into threat and not-threat and is not interested in the not-threat. Her claws are half-extended, barely visible at the fingertips. She has not decided anything yet.
+
+**The focus:** She is looking at something slightly to the left of the viewer. Not at you. At the thing you walked in with.
+
+**Background:** Light. Not a scene — just the warm, directionless light of a practice space. Everything stripped away.
+
+**Technique:** The handling is controlled and careful at the face — every whisker, the texture of short fur. The draped cloth is painted loosely, almost sketchily, by comparison. Her face is what matters; everything else is set-dressing.
+
+**Palette:** Warm gold and amber for the fur — cadmium yellow, raw sienna, yellow ochre. Her wrappings: pale cream, slightly warm. The background: the softest warm grey, almost not there.
+
+---
+
+## Kobold Bard — "The Unexpected Note"
+
+**Composition:** He's performing on a stage that is clearly a crate in a back alley, elevated about eighteen inches off the cobblestones. The audience: three other kobolds, two rats, and one very confused-looking dwarf in the background who stopped walking and hasn't yet decided whether to leave. He doesn't care about any of them. He is playing for himself.
+
+**Detail:** The lute is too big for him — bought, stolen, or traded for something he regrets slightly less. He has adapted his grip. The music he's making is genuinely good; the painting captures this in the posture — the easy looseness of a musician who has stopped thinking about the instrument, who has gotten past technique to the thing underneath. His hat has a hole in it. There is a single coin in his collection hat at the base of the crate. He put it there himself to start the pile. It's still the only one.
+
+**His expression:** He does not need your coin. He needs you to hear the song.
+
+**Background:** Alley at dusk — brick, rain-wet cobblestones reflecting the orange of a lamp somewhere above frame. The confused dwarf in the background: loose and half-suggested. The rats: painted with disproportionate care.
+
+**Technique:** The painting is warmer than it has any right to be given the setting. The lamplight is directed at him, not the alley. The choice is intentional — wherever he is, the light finds him.
+
+**Palette:** Warm amber on his fur — burnt sienna, yellow ochre. The lute: deep walnut-brown, wood grain rendered carefully. The cobblestones: wet grey-blue. His hat: a faded red, almost brown. The single coin: a point of gold. That's it.
+
+---
+
+## Half-Ogre Paladin — "The Door Between"
+
+**Composition:** Full figure, standing in a doorway — a doorway he fills completely, both sides touching. Neither in nor out. The chapel behind him: small, human-scaled, the pews empty. The world ahead: a muddy road, people crossing in the distance who do not look up. He is looking at the people.
+
+**Detail:** The armor was custom-made; the joints have extra links, the breastplate shows where it was expanded twice. The holy symbol at his chest is the size a human would use — tiny against him, worn to brightness at the edges. He holds a weapon in one hand and, in the other, a child's toy left at the chapel door, which he's picked up without knowing what to do with it. His face: heavy-boned, soft-eyed. He has a gentleness that required work to keep.
+
+**The threshold:** He cannot go fully inside; the architecture was not built for him. He cannot fully leave; the faith does not come off.
+
+**Background:** The chapel interior is cool and blue behind him — painted with the reverence you'd give a sacred space. The road ahead is warm, golden-hour, ordinary. He is the point where both exist at once.
+
+**Technique:** No drama in the brushwork, no heroic light. The armor is painted carefully, faithfully. His hands — one on the weapon hilt, one cradling the toy — rendered with the most care of anything in the painting.
+
+**Palette:** Warm gold of the road. Cool blue of the chapel. His armor: Payne's grey and titanium white, muted. The holy symbol: a burst of warm ochre, the only truly bright thing. His eyes: deep, dark brown.
+
+---
+
+## Human Cleric — "The Ordinary Mercy"
+
+**Composition:** Interior — the back room of a temple pressed into service as a field hospital. Close shot, three-quarter, slightly above eye level. She is looking down at her hands, not at us. She is between patients. Just for a moment.
+
+**Detail:** She is tired in the specific way that is not about sleep — it is about what the hands have held and cannot un-hold. Her robes have been washed so many times the dye has gone uneven at the hem. The holy symbol at her wrist is simple and small — not decorative, functional. A ring of keys at her belt: the temple's stores, the medicine cabinet, the room where the difficult cases go. Her face: middle-aged, unremarkable, eyes that have stopped being surprised by anything.
+
+**The hands:** The focal point. They rest in her lap, open, slightly cupped — the posture of someone who has been holding things all day and just set them down. The painter has given them the attention that says: these are what matters.
+
+**Background:** The hospital recedes behind her — shapes of pallets, a curtain, the suggestion of other figures at the edges of lamplight. All loose, secondary. She is the still point.
+
+**Technique:** Warm, direct light — the same quiet approach as the Human Warrior portrait. No drama. The emotion is in the accumulated small details: the worn robe hem, the work-roughened hands, the keys. The face is the last thing the viewer finds, and when they do, it is enough.
+
+**Palette:** Warm cream and tan from the linens. Her robes: a faded blue that was once brighter. Skin tones: yellow ochre, rose madder, thin. The holy symbol: a dim silver. Her hands: the warmest thing in the painting.
+
+---
+
+## Dwarf Druid — "The Understory Mind"
+
+**Composition:** She is underground — but not in a mine. She sits at the base of a massive root system that has broken through the rock ceiling, filling the cavern with living growth. The roots frame her the way columns might in a temple. She chose this.
+
+**Detail:** Her tools are for coaxing and tending, not cutting. Her braids have things growing in them: small pale fungi, strands of cave moss, deliberately maintained. Her expression carries the same deep patience the Dwarf Warrior had in her grief, but pointed outward — the patience of a gardener, not a mourner. The dwarves know rock; she followed it down and found that rock is alive with things that grow in darkness, and those things are listening.
+
+**Background:** The cavern root system fills most of the canvas — massive, gnarled, lit from below by bioluminescent fungi. The rock walls are painted with geological care: strata visible, fault lines traced, the slow record of water through limestone over centuries.
+
+**Technique:** The contrast between the sharp precision of the rock and the organic looseness of the roots is the painting's engine. She sits at their intersection, rendered with the middle precision of someone who has found a middle place.
+
+**Palette:** Deep earth — raw umber, Payne's grey, sap green for the bioluminescence. Mushroom caps: titanium white and pale viridian. Her skin: the same warm tones as any dwarf — incongruous and right in the underground.
+
+---
+
+## Half-Elf Witch Hunter — "The Scent of Wrong"
+
+**Composition:** She is walking. Not posed, not still — caught mid-stride in a busy market, but the people around her are blurred and indistinct, the way peripheral vision works. She is the only sharp thing. Her head is turned slightly — not at us, at something in the crowd she has detected. The viewer is trying to see what she sees. They can't quite find it.
+
+**Detail:** The silver compass from the earlier Half-Elf portrait is here — she uses it. Not to find north. To find wrong. Those mismatched eyes — warm amber and pale jade — serve a purpose here: she perceives things that don't add up. One figure at the frame's edge is not quite right. The posture, the hands, the angle of their attention. She noticed. The viewer is only now noticing.
+
+**The walk:** Not hurrying. The compass is open. She knows what's at the end of this.
+
+**Background:** The market street is rendered loosely but with full warmth — stalls, movement, ordinary color. The off-figure at the edge is painted with the same looseness. Same brushwork. Same warmth. That's what makes them hard to find. She found them anyway.
+
+**Technique:** The illusion of crowd and movement is managed through decreasing paint resolution outward from her. Everything at her center is sharp; the world blurs at the edges. The single wrong figure is placed exactly at the threshold of that blur.
+
+**Palette:** The market: amber, brick red, warm browns. Her coat: the same warm brown as her earlier portrait. The compass: silver-white, open. Her eyes — amber and jade, the only things in perfect focus.
+
+---
+
+## Dark Elf Shadow Knight — "The Titled Shadow"
+
+**Composition:** He is seated — a carved chair, something with authority in its form. But he's seated sideways, one leg draped over the armrest, posture studied in its casualness. It's performative. He knows it's performative. The viewer knowing it's performative is part of the performance.
+
+**Detail:** The armor is excellent — not ornate, not decorated, excellent. Black-lacquered, fitted with the specificity that money and patience can buy. A single pale rune at the throat catches the only light in the composition. His face: the features the Dark Elf race gifts their favored children, and in them a very quiet, very certain cruelty — not rage, not passion, just a settled awareness that most things will bend eventually. He holds a wine glass. It might actually be wine.
+
+**The patience:** He has been waiting for something for a long time. The casual pose is maintained because he has held it before, for other things, and they bent.
+
+**Background:** Stone walls, close, compressed. A single window — darkness beyond it, the particular darkness of a place designed to see little sun. A candle, nearly spent.
+
+**Technique:** The lacquered armor required the painter's best technical work: the black that reflects without gleaming, the rune that catches light when nothing else does. The face is as smooth and controlled as the lacquer. The wine glass is the free brushwork — the one place he has allowed himself looseness.
+
+**Palette:** Black, Payne's grey, ivory. The rune: cold cerulean white. The wine glass: deep alizarin, a single warm note against the studied dark.

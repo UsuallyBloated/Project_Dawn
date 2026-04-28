@@ -1,0 +1,8 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Worn Coin Purse"
+description = "An empty coin purse. Worth a few copper to the right vendor."
+type = 10
+rarity = 0
+stack_size = 1

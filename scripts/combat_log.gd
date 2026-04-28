@@ -11,12 +11,14 @@ const C_DMG_IN   := Color(0.90, 0.30, 0.25)  # player takes damage
 const C_HEAL     := Color(0.35, 0.90, 0.45)
 const C_INFO     := Color(0.70, 0.65, 0.55)
 const C_LEVEL    := Color(0.60, 0.85, 1.00)
+const C_LOOT     := Color(0.55, 0.90, 0.55)
+const C_EVADE    := Color(0.55, 0.75, 0.95)
 
-enum MsgType { DAMAGE_OUT, DAMAGE_IN, HEAL, INFO, LEVEL_UP }
+enum MsgType { DAMAGE_OUT, DAMAGE_IN, HEAL, INFO, LEVEL_UP, LOOT, EVADE }
 
 var _lines: Array = []
 var _labels: Array = []
-var _panel: Panel = null
+var _panel: DraggablePanel = null
 var _last_hp: float = 0.0
 
 func _ready() -> void:
@@ -25,7 +27,7 @@ func _ready() -> void:
 	_last_hp = PlayerStats.hp
 
 func _build_ui() -> void:
-	_panel = Panel.new()
+	_panel = DraggablePanel.new()
 	_panel.anchor_left   = 0.0
 	_panel.anchor_right  = 0.0
 	_panel.anchor_top    = 1.0
@@ -72,16 +74,9 @@ func _connect_signals() -> void:
 
 func _on_player_hp_changed(current: float, _max: float) -> void:
 	var diff := current - _last_hp
-	if diff < 0.0:
-		add_line("%s hits you for %d damage." % [_get_target_name(), int(-diff)], MsgType.DAMAGE_IN)
-	elif diff > 0.0:
+	if diff > 0.0:
 		add_line("You recover %d health." % int(diff), MsgType.HEAL)
 	_last_hp = current
-
-func _get_target_name() -> String:
-	if Combat.current_target != null and is_instance_valid(Combat.current_target):
-		return Combat.current_target.mob_name
-	return "Something"
 
 func add_line(text: String, type: MsgType = MsgType.INFO) -> void:
 	_lines.append({"text": text, "type": type})
@@ -92,8 +87,11 @@ func add_line(text: String, type: MsgType = MsgType.INFO) -> void:
 func add_damage_out(target_name: String, amount: int) -> void:
 	add_line("You hit %s for %d damage." % [target_name, amount], MsgType.DAMAGE_OUT)
 
+func add_evade(attacker_name: String) -> void:
+	add_line("You evade %s's attack!" % attacker_name, MsgType.EVADE)
+
 func _refresh() -> void:
-	var start := max(0, _lines.size() - VISIBLE_ROWS)
+	var start := maxi(0, _lines.size() - VISIBLE_ROWS)
 	for i in VISIBLE_ROWS:
 		var lbl: Label = _labels[i]
 		var idx := start + i
@@ -107,4 +105,6 @@ func _refresh() -> void:
 			MsgType.DAMAGE_IN:  lbl.add_theme_color_override("font_color", C_DMG_IN)
 			MsgType.HEAL:       lbl.add_theme_color_override("font_color", C_HEAL)
 			MsgType.LEVEL_UP:   lbl.add_theme_color_override("font_color", C_LEVEL)
+			MsgType.LOOT:       lbl.add_theme_color_override("font_color", C_LOOT)
+			MsgType.EVADE:      lbl.add_theme_color_override("font_color", C_EVADE)
 			_:                  lbl.add_theme_color_override("font_color", C_INFO)

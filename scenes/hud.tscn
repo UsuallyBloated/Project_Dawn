@@ -1,7 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://bm4x7kpqr2n5"]
+[gd_scene load_steps=6 format=3 uid="uid://bm4x7kpqr2n5"]
 
 [ext_resource type="Script" uid="uid://c8nt3vhqw6y1" path="res://scripts/hud.gd" id="1_hudgd"]
 [ext_resource type="PackedScene" path="res://scenes/character_window.tscn" id="2_charwin"]
+[ext_resource type="Script" path="res://scripts/inventory_window.gd" id="3_invwin"]
+[ext_resource type="Script" path="res://scripts/paperdoll_window.gd" id="4_paperdoll"]
+[ext_resource type="Script" path="res://scripts/draggable_panel.gd" id="5_drag"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hudgd")
@@ -14,6 +17,7 @@ offset_left = 10.0
 offset_top = -150.0
 offset_right = 320.0
 offset_bottom = -10.0
+script = ExtResource("5_drag")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
 anchors_preset = 15
@@ -87,6 +91,7 @@ offset_left = -120.0
 offset_top = 10.0
 offset_right = 120.0
 offset_bottom = 100.0
+script = ExtResource("5_drag")
 
 [node name="VBox" type="VBoxContainer" parent="TargetFrame"]
 anchors_preset = 15
@@ -116,3 +121,11 @@ value = 100.0
 show_percentage = false
 
 [node name="CharacterWindow" parent="." instance=ExtResource("2_charwin")]
+
+[node name="InventoryWindow" type="Panel" parent="."]
+visible = false
+script = ExtResource("3_invwin")
+
+[node name="PaperdollWindow" type="Panel" parent="."]
+visible = false
+script = ExtResource("4_paperdoll")

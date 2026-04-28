@@ -1,0 +1,10 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Cracked Leather Vest"
+description = "Stiff leather armor dried out and splitting at the seams."
+type = 3
+rarity = 0
+stack_size = 1
+bonus_constitution = 1
+bonus_max_hp = 8.0

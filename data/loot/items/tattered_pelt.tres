@@ -1,0 +1,8 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Tattered Pelt"
+description = "A damaged animal hide. Tradeskill material."
+type = 10
+rarity = 0
+stack_size = 20

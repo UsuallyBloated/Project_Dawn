@@ -2,7 +2,7 @@ class_name SpellData
 extends Resource
 
 enum TargetType { ENEMY, SELF, NONE }
-enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, NONE }
+enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, SHADOW, NONE }
 
 @export var spell_name: String = ""
 @export var description: String = ""
@@ -14,4 +14,5 @@ enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, NONE }
 @export var damage_type: DamageType = DamageType.ARCANE
 @export var target_type: TargetType = TargetType.ENEMY
 @export var heal_amount: float = 0.0
+@export var hp_cost: float = 0.0
 @export var allowed_classes: Array[String] = []

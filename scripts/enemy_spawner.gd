@@ -10,7 +10,7 @@ var _respawn_timer: float = 0.0
 var _waiting: bool = false
 
 func _ready() -> void:
-	_spawn()
+	call_deferred("_spawn")
 
 func _process(delta: float) -> void:
 	if not _waiting:
@@ -29,8 +29,8 @@ func _spawn() -> void:
 		0.0,
 		randf_range(-spawn_radius, spawn_radius)
 	)
-	enemy.global_position = global_position + offset
 	get_tree().current_scene.add_child(enemy)
+	enemy.global_position = global_position + offset
 	_current_enemy = enemy
 	enemy.died.connect(_on_enemy_died)
 

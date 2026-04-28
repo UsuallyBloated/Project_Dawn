@@ -1,0 +1,8 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Torn Cloth Gloves"
+description = "Gloves with the fingertips worn through."
+type = 6
+rarity = 0
+stack_size = 1

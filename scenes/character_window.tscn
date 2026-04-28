@@ -10,9 +10,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -155.0
-offset_top = -330.0
+offset_top = -345.0
 offset_right = 155.0
-offset_bottom = 330.0
+offset_bottom = 345.0
 script = ExtResource("1")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
@@ -62,6 +62,11 @@ text = "XP"
 
 [node name="V_XP" type="Label" parent="MarginContainer/VBox/IdentityGrid"]
 size_flags_horizontal = 3
+
+[node name="XPBar" type="ProgressBar" parent="MarginContainer/VBox"]
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 14)
+show_percentage = false
 
 [node name="Sep2" type="HSeparator" parent="MarginContainer/VBox"]
 

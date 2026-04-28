@@ -1,0 +1,10 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Bent Dagger"
+description = "A small blade, slightly warped but still sharp enough."
+type = 0
+rarity = 0
+stack_size = 1
+bonus_dexterity = 1
+bonus_agility = 1
