@@ -1,9 +1,46 @@
-[gd_scene load_steps=6 format=3 uid="uid://h1lkpabnydg3"]
+[gd_scene load_steps=12 format=3 uid="uid://h1lkpabnydg3"]
 
 [ext_resource type="Script" uid="uid://td3xlala4836" path="res://character_body_3d.gd" id="1_a202f"]
 [ext_resource type="PackedScene" uid="uid://bm4x7kpqr2n5" path="res://scenes/hud.tscn" id="2_hudsc"]
+[ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="3_enemy"]
+[ext_resource type="Script" uid="uid://1fpkrvkbgkd3" path="res://scripts/dunes.gd" id="4_dunes"]
+
+[sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_1"]
+rayleigh_color = Color(0.35, 0.48, 0.62, 1)
+mie_eccentricity = 0.9
+mie_color = Color(0.98, 0.82, 0.52, 1)
+turbidity = 3.5
+ground_color = Color(0.72, 0.58, 0.32, 1)
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("PhysicalSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+sky = SubResource("Sky_1")
+ambient_light_source = 3
+ambient_light_sky_contribution = 0.5
+tonemap_mode = 2
+glow_enabled = true
+glow_levels/4 = 1.0
+glow_intensity = 0.6
+glow_bloom = 0.12
+fog_enabled = true
+fog_light_color = Color(0.88, 0.76, 0.52, 1)
+fog_sun_scatter = 0.5
+fog_density = 0.003
+fog_height = -10.0
+fog_height_density = 0.05
+adjustment_enabled = true
+adjustment_contrast = 1.08
+adjustment_saturation = 0.95
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_desert"]
+albedo_color = Color(0.96, 0.88, 0.62, 1)
+roughness = 0.9
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_noarx"]
+material = SubResource("StandardMaterial3D_desert")
 
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_1"]
 
@@ -11,10 +48,21 @@
 
 [node name="Node3D" type="Node3D"]
 
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.174, -0.985, 0, 0.985, 0.174, 0, 0, 0)
+light_color = Color(1, 0.99, 0.96, 1)
+light_energy = 3.0
+light_angular_distance = 0.5
+shadow_enabled = true
+
 [node name="StaticBody3D" type="StaticBody3D" parent="."]
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D"]
-transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, -0.549918, 0)
+transform = Transform3D(1000, 0, 0, 0, 1000, 0, 0, 0, 1000, 0, -0.549918, 0)
+cast_shadow = 0
 mesh = SubResource("PlaneMesh_noarx")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
@@ -34,4 +82,16 @@ spring_length = 3.0
 
 [node name="Camera3D" type="Camera3D" parent="CharacterBody3D/CameraPivot/SpringArm3D"]
 
+[node name="Dunes" type="Node3D" parent="."]
+script = ExtResource("4_dunes")
+
 [node name="HUD" parent="." instance=ExtResource("2_hudsc")]
+
+[node name="Enemy1" parent="." instance=ExtResource("3_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -5)
+
+[node name="Enemy2" parent="." instance=ExtResource("3_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 3)
+
+[node name="Enemy3" parent="." instance=ExtResource("3_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 2)

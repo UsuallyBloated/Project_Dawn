@@ -18,6 +18,18 @@
 
 ## What I'm building
 - The game is similar to EverQuest.
+- Includes three base classes Warrior, Mage, Rogue
+- Includes 8 playable races Ogre, Troll, Gnome, Halfling, Human, Dwarf, Elf, Half-Elf, Dark-Elf, Wood-Elf.  (more to be added)
+# UI
+- Free mouse to click on UI, i.e. skill buttons or spell buttons
+- While player holds right click engage camera control.
 - Tab targeting.
 - User interface overlay during game play.
+- Inventory system, including 'paperdoll'
+- Equipment system
+# Mechanics
+- Combat system featuring auto attack, skills, and spells
+- Player leveling system; as character level increases, character becomes stronger.
+- Equipment system
+
 - Please don't change anything above this PROJECTS folder.

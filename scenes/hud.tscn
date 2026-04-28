@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://bm4x7kpqr2n5"]
+[gd_scene load_steps=3 format=3 uid="uid://bm4x7kpqr2n5"]
 
 [ext_resource type="Script" uid="uid://c8nt3vhqw6y1" path="res://scripts/hud.gd" id="1_hudgd"]
+[ext_resource type="PackedScene" path="res://scenes/character_window.tscn" id="2_charwin"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hudgd")
@@ -24,23 +25,94 @@ offset_right = -8.0
 offset_bottom = -8.0
 theme_override_constants/separation = 6
 
-[node name="HealthBar" type="ProgressBar" parent="Panel/VBoxContainer"]
+[node name="HPRow" type="HBoxContainer" parent="Panel/VBoxContainer"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="HPLabel" type="Label" parent="Panel/VBoxContainer/HPRow"]
+custom_minimum_size = Vector2(32, 0)
+text = "HP"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 12
+
+[node name="HealthBar" type="ProgressBar" parent="Panel/VBoxContainer/HPRow"]
 custom_minimum_size = Vector2(0, 28)
 size_flags_horizontal = 3
 max_value = 100.0
 value = 100.0
 show_percentage = false
 
-[node name="StaminaBar" type="ProgressBar" parent="Panel/VBoxContainer"]
+[node name="MPRow" type="HBoxContainer" parent="Panel/VBoxContainer"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="MPLabel" type="Label" parent="Panel/VBoxContainer/MPRow"]
+custom_minimum_size = Vector2(32, 0)
+text = "MP"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 12
+
+[node name="ManaBar" type="ProgressBar" parent="Panel/VBoxContainer/MPRow"]
 custom_minimum_size = Vector2(0, 28)
 size_flags_horizontal = 3
 max_value = 100.0
 value = 100.0
 show_percentage = false
 
-[node name="ManaBar" type="ProgressBar" parent="Panel/VBoxContainer"]
+[node name="STARow" type="HBoxContainer" parent="Panel/VBoxContainer"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="STALabel" type="Label" parent="Panel/VBoxContainer/STARow"]
+custom_minimum_size = Vector2(32, 0)
+text = "STA"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 12
+
+[node name="StaminaBar" type="ProgressBar" parent="Panel/VBoxContainer/STARow"]
 custom_minimum_size = Vector2(0, 28)
 size_flags_horizontal = 3
 max_value = 100.0
 value = 100.0
 show_percentage = false
+
+[node name="TargetFrame" type="Panel" parent="."]
+visible = false
+anchors_preset = -1
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = -120.0
+offset_top = 10.0
+offset_right = 120.0
+offset_bottom = 100.0
+
+[node name="VBox" type="VBoxContainer" parent="TargetFrame"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 6.0
+offset_right = -8.0
+offset_bottom = -6.0
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="TargetFrame/VBox"]
+text = ""
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 14
+
+[node name="LevelLabel" type="Label" parent="TargetFrame/VBox"]
+text = ""
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 11
+
+[node name="HPBar" type="ProgressBar" parent="TargetFrame/VBox"]
+custom_minimum_size = Vector2(0, 20)
+size_flags_horizontal = 3
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="CharacterWindow" parent="." instance=ExtResource("2_charwin")]

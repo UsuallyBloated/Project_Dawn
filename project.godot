@@ -11,6 +11,11 @@ config_version=5
 [application]
 
 config/name="Project_Dawn"
-run/main_scene="uid://h1lkpabnydg3"
+run/main_scene="res://scenes/character_creation.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+PlayerStats="*res://autoloads/player_stats.gd"
+Combat="*res://autoloads/combat.gd"
