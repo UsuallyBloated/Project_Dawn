@@ -323,7 +323,7 @@ func _refresh_stats() -> void:
 
 	if selected_class != "":
 		var cd: Dictionary = CharacterData.CLASS_DATA[selected_class]
-		var con_total: int = totals.get("constitution", CharacterData.BASE)
+		var con_total: int = totals["constitution"]
 		var con_hp_bonus: float = (con_total - 10) * 5.0
 		_res_labels["hp"].text = str(int(max(50.0, CharacterData.BASE_HP + cd["hp_bonus"] + con_hp_bonus)))
 		_res_labels["mp"].text = str(int(max(20.0, CharacterData.BASE_MP + cd["mp_bonus"])))
@@ -364,7 +364,8 @@ func _on_confirm() -> void:
 	PlayerStats.set_alignment(CharacterData.CLASS_STARTING_ALIGNMENT.get(selected_class, 0))
 	Skills.setup_for_class(selected_class)
 	Spells.setup_for_class(selected_class)
-	get_tree().change_scene_to_file("res://node_3d.tscn")
+	WeaponSkills.initialize(selected_class, PlayerStats.level)
+	get_tree().change_scene_to_file("res://scenes/world.tscn")
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,7 @@
 extends Node
 
 signal zone_changed(zone_name: String)
+signal zone_ready
 
 const FADE_DURATION := 0.5
 
@@ -40,6 +41,7 @@ func travel_to(zone_path: String, entry_id: String, zone_name: String = "") -> v
 # Called by each zone's world script once the scene is ready and the player is
 # spawned. Fades the black overlay back out.
 func on_zone_ready() -> void:
+	zone_ready.emit()
 	_fade_to(0.0, func(): _transitioning = false)
 
 # Returns the position of the matching ZoneEntry in the current scene, falling

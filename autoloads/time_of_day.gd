@@ -16,8 +16,13 @@ var _last_hour: int = -1
 
 func _ready() -> void:
 	call_deferred("_find_world_nodes")
+	ZoneLoader.zone_ready.connect(_find_world_nodes)
 
 func _find_world_nodes() -> void:
+	_sun = null
+	_moon = null
+	_sky_material = null
+	_environment = null
 	_sun = get_tree().get_first_node_in_group("sun")
 	var env_node: WorldEnvironment = get_tree().get_first_node_in_group("world_environment")
 	if env_node:
@@ -77,9 +82,10 @@ func _apply() -> void:
 	if _sky_material == null:
 		return
 
-	_sky_material.sky_top_color      = _lerp_dn(Color(0.10, 0.20, 0.60), Color(0.01, 0.01, 0.05), night_t)
-	_sky_material.sky_horizon_color   = _lerp_dn(Color(0.60, 0.70, 0.90), Color(0.04, 0.03, 0.07), night_t)
-	_sky_material.ground_horizon_color = _lerp_dn(Color(0.50, 0.45, 0.35), Color(0.02, 0.02, 0.04), night_t)
+	_sky_material.rayleigh_color = _lerp_dn(Color(0.26, 0.41, 0.80), Color(0.02, 0.02, 0.10), night_t)
+	_sky_material.mie_color      = _lerp_dn(Color(0.90, 0.80, 0.65), Color(0.05, 0.05, 0.15), night_t)
+	_sky_material.ground_color   = _lerp_dn(Color(0.50, 0.45, 0.35), Color(0.04, 0.04, 0.06), night_t)
+	_sky_material.energy_multiplier = lerpf(1.0, 0.04, night_t)
 
 	if _environment != null:
 		var day_fog   := Color(0.88, 0.76, 0.52)

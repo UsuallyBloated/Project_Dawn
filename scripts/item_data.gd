@@ -26,6 +26,8 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 # Weapon stats (weapons only)
 @export var weapon_damage_min: int = 0
 @export var weapon_damage_max: int = 0
+# Weapon skill trained by this weapon (e.g. "1h_slashing", "piercing"). See WeaponSkillDefinitions.ALL.
+@export var weapon_skill: String = ""
 
 # Physical damage reduction when equipped (armor pieces)
 @export var bonus_armor: int = 0

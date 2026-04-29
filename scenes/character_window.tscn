@@ -93,6 +93,12 @@ text = "Stamina"
 [node name="V_ST" type="Label" parent="MarginContainer/VBox/VitalsGrid"]
 size_flags_horizontal = 3
 
+[node name="L_AC" type="Label" parent="MarginContainer/VBox/VitalsGrid"]
+text = "Armor Class"
+
+[node name="V_AC" type="Label" parent="MarginContainer/VBox/VitalsGrid"]
+size_flags_horizontal = 3
+
 [node name="Sep3" type="HSeparator" parent="MarginContainer/VBox"]
 
 [node name="AttribGrid" type="GridContainer" parent="MarginContainer/VBox"]
@@ -140,10 +146,4 @@ size_flags_horizontal = 3
 text = "Constitution"
 
 [node name="V_CON" type="Label" parent="MarginContainer/VBox/AttribGrid"]
-size_flags_horizontal = 3
-
-[node name="L_AC" type="Label" parent="MarginContainer/VBox/AttribGrid"]
-text = "Armor Class"
-
-[node name="V_AC" type="Label" parent="MarginContainer/VBox/AttribGrid"]
 size_flags_horizontal = 3

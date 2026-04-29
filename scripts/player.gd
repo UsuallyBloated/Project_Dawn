@@ -109,12 +109,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		camera_pivot.rotation.x = clamp(camera_pivot.rotation.x, -PI / 2.0, PI / 2.0)
 
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_X:
+		if event.is_action("toggle_crouch"):
 			if state == PlayerState.STANDING:
 				_enter_state(PlayerState.CROUCHING)
 			elif state == PlayerState.CROUCHING:
 				_enter_state(PlayerState.STANDING)
-		elif event.keycode == KEY_Z:
+		elif event.is_action("toggle_sit"):
 			if state == PlayerState.STANDING:
 				_enter_state(PlayerState.SITTING)
 			elif state == PlayerState.SITTING:
@@ -123,11 +123,11 @@ func _unhandled_input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
 	if state == PlayerState.SITTING:
 		var moving := (
-			Input.is_key_pressed(KEY_W) or
-			Input.is_key_pressed(KEY_A) or
-			Input.is_key_pressed(KEY_S) or
-			Input.is_key_pressed(KEY_D) or
-			Input.is_key_pressed(KEY_SPACE)
+			Input.is_action_pressed("move_forward") or
+			Input.is_action_pressed("move_left") or
+			Input.is_action_pressed("move_backward") or
+			Input.is_action_pressed("move_right") or
+			Input.is_action_pressed("jump")
 		)
 		if moving:
 			_enter_state(PlayerState.STANDING)
@@ -137,7 +137,7 @@ func _physics_process(delta: float) -> void:
 			return
 
 	if is_on_floor():
-		if Input.is_key_pressed(KEY_SPACE) and state != PlayerState.SITTING:
+		if Input.is_action_pressed("jump") and state != PlayerState.SITTING:
 			velocity.y = JUMP_VELOCITY
 		else:
 			velocity.y = maxf(velocity.y, 0.0)
@@ -145,13 +145,13 @@ func _physics_process(delta: float) -> void:
 		velocity.y += GRAVITY * delta
 
 	var direction := Vector3.ZERO
-	if Input.is_key_pressed(KEY_W):
+	if Input.is_action_pressed("move_forward"):
 		direction -= transform.basis.z
-	if Input.is_key_pressed(KEY_S):
+	if Input.is_action_pressed("move_backward"):
 		direction += transform.basis.z
-	if Input.is_key_pressed(KEY_A):
+	if Input.is_action_pressed("move_left"):
 		direction -= transform.basis.x
-	if Input.is_key_pressed(KEY_D):
+	if Input.is_action_pressed("move_right"):
 		direction += transform.basis.x
 
 	var current_speed := CROUCH_SPEED if state == PlayerState.CROUCHING else SPEED

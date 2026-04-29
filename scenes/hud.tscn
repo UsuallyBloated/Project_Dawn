@@ -14,7 +14,7 @@ anchors_preset = -1
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 10.0
-offset_top = -150.0
+offset_top = -100.0
 offset_right = 320.0
 offset_bottom = -10.0
 script = ExtResource("5_drag")
@@ -27,7 +27,7 @@ offset_left = 8.0
 offset_top = 8.0
 offset_right = -8.0
 offset_bottom = -8.0
-theme_override_constants/separation = 6
+theme_override_constants/separation = 4
 
 [node name="HPRow" type="HBoxContainer" parent="Panel/VBoxContainer"]
 size_flags_horizontal = 3
@@ -40,7 +40,7 @@ vertical_alignment = 1
 theme_override_font_sizes/font_size = 12
 
 [node name="HealthBar" type="ProgressBar" parent="Panel/VBoxContainer/HPRow"]
-custom_minimum_size = Vector2(0, 28)
+custom_minimum_size = Vector2(0, 18)
 size_flags_horizontal = 3
 max_value = 100.0
 value = 100.0
@@ -57,7 +57,7 @@ vertical_alignment = 1
 theme_override_font_sizes/font_size = 12
 
 [node name="ManaBar" type="ProgressBar" parent="Panel/VBoxContainer/MPRow"]
-custom_minimum_size = Vector2(0, 28)
+custom_minimum_size = Vector2(0, 18)
 size_flags_horizontal = 3
 max_value = 100.0
 value = 100.0
@@ -74,7 +74,7 @@ vertical_alignment = 1
 theme_override_font_sizes/font_size = 12
 
 [node name="StaminaBar" type="ProgressBar" parent="Panel/VBoxContainer/STARow"]
-custom_minimum_size = Vector2(0, 28)
+custom_minimum_size = Vector2(0, 18)
 size_flags_horizontal = 3
 max_value = 100.0
 value = 100.0

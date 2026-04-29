@@ -47,3 +47,27 @@ const C_BAR_STAMINA := Color(0.85, 0.75, 0.00)
 const C_BAR_MANA    := Color(0.10, 0.30, 0.90)
 const C_BAR_XP      := Color(0.65, 0.50, 0.10)
 const C_BAR_BG      := Color(0.08, 0.08, 0.08, 0.90)
+
+static func make_button(label_text: String) -> Button:
+	var btn := Button.new()
+	btn.text = label_text
+	btn.custom_minimum_size = Vector2(96.0, 34.0)
+	btn.add_theme_stylebox_override("normal",  make_stylebox(C_BTN_NORM))
+	btn.add_theme_stylebox_override("hover",   make_stylebox(C_BTN_HOVER))
+	btn.add_theme_stylebox_override("pressed", make_stylebox(C_BTN_HOVER))
+	btn.add_theme_color_override("font_color", C_TITLE)
+	return btn
+
+static func make_stylebox(bg: Color) -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = bg
+	s.border_color = C_GOLDEN_BORDER
+	s.set_border_width_all(1)
+	s.set_corner_radius_all(3)
+	return s
+
+static func set_all_margins(node: MarginContainer, px: int) -> void:
+	node.add_theme_constant_override("margin_top",    px)
+	node.add_theme_constant_override("margin_left",   px)
+	node.add_theme_constant_override("margin_right",  px)
+	node.add_theme_constant_override("margin_bottom", px)

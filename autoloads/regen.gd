@@ -33,7 +33,7 @@ func _do_regen() -> void:
 	if _in_combat:
 		return
 
-	var is_sitting: bool = is_instance_valid(_player) and _player.state == 2  # PlayerState.SITTING
+	var is_sitting: bool = is_instance_valid(_player) and _player.state == PlayerCharacter.PlayerState.SITTING
 	var hp_mult := 5.0 if is_sitting else 1.0
 	var mp_mult := 5.0 if is_sitting else 1.0
 	var st_mult := 3.0 if is_sitting else 1.0
@@ -61,5 +61,5 @@ func _on_target_changed(enemy) -> void:
 	_in_combat = enemy != null and is_instance_valid(enemy)
 	if not _in_combat:
 		_tick_timer = TICK_INTERVAL * 0.5
-	elif is_instance_valid(_player) and _player.state == 2:
+	elif is_instance_valid(_player) and _player.state == PlayerCharacter.PlayerState.SITTING:
 		_player.stand()

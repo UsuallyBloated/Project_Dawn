@@ -7,6 +7,7 @@ extends DraggablePanel
 @onready var hp_value: Label = $MarginContainer/VBox/VitalsGrid/V_HP
 @onready var mp_value: Label = $MarginContainer/VBox/VitalsGrid/V_MP
 @onready var stamina_value: Label = $MarginContainer/VBox/VitalsGrid/V_ST
+@onready var ac_value: Label = $MarginContainer/VBox/VitalsGrid/V_AC
 @onready var str_value: Label = $MarginContainer/VBox/AttribGrid/V_STR
 @onready var dex_value: Label = $MarginContainer/VBox/AttribGrid/V_DEX
 @onready var agi_value: Label = $MarginContainer/VBox/AttribGrid/V_AGI
@@ -14,8 +15,19 @@ extends DraggablePanel
 @onready var wis_value: Label = $MarginContainer/VBox/AttribGrid/V_WIS
 @onready var cha_value: Label = $MarginContainer/VBox/AttribGrid/V_CHA
 @onready var con_value: Label = $MarginContainer/VBox/AttribGrid/V_CON
-@onready var ac_value: Label = $MarginContainer/VBox/AttribGrid/V_AC
 @onready var xp_bar: ProgressBar = $MarginContainer/VBox/XPBar
+
+@onready var _l_hp: Label = $MarginContainer/VBox/VitalsGrid/L_HP
+@onready var _l_mp: Label = $MarginContainer/VBox/VitalsGrid/L_MP
+@onready var _l_st: Label = $MarginContainer/VBox/VitalsGrid/L_ST
+@onready var _l_ac: Label = $MarginContainer/VBox/VitalsGrid/L_AC
+@onready var _l_str: Label = $MarginContainer/VBox/AttribGrid/L_STR
+@onready var _l_dex: Label = $MarginContainer/VBox/AttribGrid/L_DEX
+@onready var _l_agi: Label = $MarginContainer/VBox/AttribGrid/L_AGI
+@onready var _l_int: Label = $MarginContainer/VBox/AttribGrid/L_INT
+@onready var _l_wis: Label = $MarginContainer/VBox/AttribGrid/L_WIS
+@onready var _l_cha: Label = $MarginContainer/VBox/AttribGrid/L_CHA
+@onready var _l_con: Label = $MarginContainer/VBox/AttribGrid/L_CON
 
 func _ready() -> void:
 	PlayerStats.hp_changed.connect(_on_hp_changed)
@@ -25,7 +37,21 @@ func _ready() -> void:
 	PlayerStats.xp_changed.connect(_on_xp_changed)
 	PlayerStats.stats_changed.connect(_refresh)
 	_style_xp_bar()
+	_setup_tooltips()
 	_refresh()
+
+func _setup_tooltips() -> void:
+	_l_hp.tooltip_text = "Hit Points — your life force. Reaching 0 HP means death."
+	_l_mp.tooltip_text = "Mana Points — fuel for spells. Spells consume MP; it regenerates while resting or meditating."
+	_l_st.tooltip_text = "Stamina — physical endurance. Used by combat abilities and sprinting; recovers while resting."
+	_l_ac.tooltip_text = "Armor Class — your physical defense rating. Higher AC reduces incoming melee and ranged damage."
+	_l_str.tooltip_text = "Strength — raw physical power. Increases melee damage dealt and your carry weight capacity."
+	_l_dex.tooltip_text = "Dexterity — hand-eye coordination. Improves ranged attack accuracy and reduces your chance to miss."
+	_l_agi.tooltip_text = "Agility — speed and reflexes. Increases your dodge chance and movement speed."
+	_l_int.tooltip_text = "Intelligence — arcane knowledge. Boosts spell damage and effectiveness; raises maximum MP for Magicians."
+	_l_wis.tooltip_text = "Wisdom — insight and attunement. Improves MP regeneration rate and the potency of healing spells."
+	_l_cha.tooltip_text = "Charisma — force of personality. Improves NPC reactions, merchant prices, and group leadership bonuses."
+	_l_con.tooltip_text = "Constitution — physical toughness. Increases maximum HP and your health regeneration rate."
 
 func _style_xp_bar() -> void:
 	var fill := StyleBoxFlat.new()

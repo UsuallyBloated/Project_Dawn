@@ -14,7 +14,7 @@ func unregister_player() -> void:
 	_player = null
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.keycode == KEY_TAB and event.pressed and not event.echo:
+	if event is InputEventKey and event.is_action("target_cycle") and event.pressed and not event.echo:
 		_cycle_target()
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:

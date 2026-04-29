@@ -1,6 +1,8 @@
-# Character Concepts — Oil Painting Aesthetic
+---
 
-Concept portraits written as oil painting descriptions. Intended as reference for character select art, loading screens, or in-game portrait frames.
+## Race Portraits — Oil Painting Aesthetic
+
+Concept portraits written as oil painting descriptions. Intended as reference for character select art, loading screens, or in-game portrait frames. Each portrait captures one race/class combination — a specific individual, not a generic type.
 
 ---
 
@@ -18,7 +20,7 @@ Concept portraits written as oil painting descriptions. Intended as reference fo
 
 ---
 
-## Dark Elf Mage — "The Obsidian Scholar"
+## Dark Elf Magician — "The Obsidian Scholar"
 
 **Composition:** Medium shot, slightly above eye level — she's seated but the angle makes her feel elevated anyway. The viewer is a student, not a peer. Books frame the edges of the canvas like a border, some falling off the desk into darkness.
 
@@ -94,7 +96,7 @@ Concept portraits written as oil painting descriptions. Intended as reference fo
 
 ---
 
-## Elf Mage — "The Last Archivist"
+## Elf Magician — "The Last Archivist"
 
 **Composition:** Full figure, standing in a burning library. He is centered and calm. The fire is not. The architecture curves toward him, directing the eye; he is the still point the painting orbits.
 
@@ -268,6 +270,22 @@ Concept portraits written as oil painting descriptions. Intended as reference fo
 
 ---
 
+## Vah Shir Beast Master — "The Second Claw"
+
+**Composition:** Two figures occupy the frame equally — the Vah Shir and the great cat spirit-warder beside her, their forms sharing the same mid-ground, neither elevated above the other. Side by side, not handler and beast. You have to look twice to determine which one is the subject.
+
+**Detail:** She is mid-hunt — crouched low, one hand in the soil, reading something invisible. The warder is standing while she crouches; together they see the scene from different angles and between them have the whole picture. Her armor is minimal for a melee fighter: hardened leather, nothing that would slow her or mask her scent. The warder's fur carries the same coloring as hers — not identical, but resonant, as if the bond has drawn them toward each other's palette over years.
+
+**The bond:** They are not looking at each other. They don't need to. The tilt of her ear and the angle of the warder's head show they are tracking the same thing. They have been hunting together long enough that the communication is below language.
+
+**Background:** Open savannah, late afternoon — tall grass gold in the horizontal light. A treeline in the far distance. The sky is vast and warm. The grass around them is perfectly still; the wind has paused.
+
+**Technique:** Both figures are painted with equal care and attention — a deliberate departure from the convention of centering the humanoid subject. The warder's eyes carry the same painted depth as hers. The grass is loose and gestural, the two figures the only resolved things in it.
+
+**Palette:** Cadmium yellow deepened with raw sienna for the savannah. Her fur: warm amber and burnt sienna. The warder: slightly cooler — a burnished umber-orange. The late sky: yellow ochre bleeding into a thin strip of pale cerulean at the horizon. No dark colors. This is a painting about warmth and partnership.
+
+---
+
 ## Human Cleric — "The Ordinary Mercy"
 
 **Composition:** Interior — the back room of a temple pressed into service as a field hospital. Close shot, three-quarter, slightly above eye level. She is looking down at her hands, not at us. She is between patients. Just for a moment.
@@ -327,3 +345,35 @@ Concept portraits written as oil painting descriptions. Intended as reference fo
 **Technique:** The lacquered armor required the painter's best technical work: the black that reflects without gleaming, the rune that catches light when nothing else does. The face is as smooth and controlled as the lacquer. The wine glass is the free brushwork — the one place he has allowed himself looseness.
 
 **Palette:** Black, Payne's grey, ivory. The rune: cold cerulean white. The wine glass: deep alizarin, a single warm note against the studied dark.
+
+---
+
+## Human Wizard — "The Annotated Life"
+
+**Composition:** He is seated at a lectern in a small cluttered office, turned away from it, facing the viewer as though interrupted mid-sentence. The books behind him are not arranged — they are *catalogued.* Every spine has a label in the same handwriting. The room has the quality of a mind made physical.
+
+**Detail:** He is old for a Human wizard — meaning he made it to sixty, which most don't. His face has the particular lines of someone who spent decades arguing with texts by lamplight. The robe is ink-stained and worn at the elbows. His spectacles are on his forehead, not his face — he removed them just before looking up and will put them back within the minute. An open book on the lectern has two ribbons marking different pages simultaneously. He has already identified the third page in his head.
+
+**The hands:** One holds a quill, tip down, mid-annotation. He stopped writing but did not put the quill down. The annotation matters more than this conversation.
+
+**Background:** Books, notes, scrolls, star charts, and mechanical instruments the viewer cannot name. Not cluttered as chaos — cluttered as *density.* A working mind at full occupation, made visible.
+
+**Technique:** The office is painted quickly, almost frantically — the chaotic detail is the point. He is painted carefully, each line of his face earned. The contrast suggests the room is secondary to the man in it.
+
+**Palette:** Warm amber and yellowed cream of old paper fills the background. His robe: deep worn blue, faded to grey at the seams. Lamplight in yellow ochre, catching the quill tip, the spectacle frames, and the gold lettering on one particular spine that faces the viewer and cannot quite be read.
+
+---
+
+## Troll Sorcerer — "The Burning Ground"
+
+**Composition:** She is standing in a field that was a field until a few seconds ago. The grass in a ten-foot radius is flattened, scorched, or floating. She is not. She stands at the center of it, arms slightly raised — not a fighting posture, a *landing* posture. She just came down. Whatever she did, she did it going.
+
+**Detail:** The sorcery is not elegant. The lightning that came through her left scorch marks on her forearms that are already fading — Troll regeneration working against the residue of power a body was never designed to hold. Her eyes are lit from inside in the way all Troll eyes are, but now something else lives in it — the specific clarity of a mind that has just spent everything and found there is still more. She did not know that until now. This was an accident.
+
+**The expression:** Not triumphant. Not frightened. Working out what just happened and what it means — the specific look of someone who was told their whole life they could not do a thing and just did it accidentally in a field.
+
+**Background:** An ordinary landscape — hills, a distant tree line, late afternoon light. Normal. Indifferent. The contrast with the scorched radius is matter-of-fact. The world does not care that something changed here.
+
+**Technique:** The floating grass and scorched earth are painted with the same looseness as the background — not special, not dramatic in handling. The drama is compositional: she is the only sharp thing in a loosening world. The scorch marks on her forearms are the most carefully rendered detail in the painting, for the same reason a surgeon would render them carefully.
+
+**Palette:** The landscape: blue-grey, sage green, muted gold. The scorched earth: char-brown and black, still warm. Her skin: the grey-green of Troll hide, with fading scorch lines in brief warm orange. Her eyes: the yellow-green bioluminescence of Troll eyes, brighter than usual, not quite settled back.

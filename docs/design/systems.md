@@ -29,7 +29,7 @@
 
 ### Base Classes
 - **Warrior** — Melee DPS/tank. STR/CON growth.
-- **Mage** — Pure arcane caster. INT/WIS growth.
+- **Magician** — Pure arcane caster. INT/WIS growth.
 - **Rogue** — Melee DPS. DEX/AGI growth.
 
 ### Healer / Hybrid Casters

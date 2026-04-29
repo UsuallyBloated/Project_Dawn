@@ -3,11 +3,11 @@ class_name CharacterData
 const RACES: Array[String] = [
 	"Human", "Elf", "Dark Elf", "Wood Elf", "Gnome",
 	"Halfling", "Dwarf", "Half-Elf", "Ogre", "Troll",
-	"Iksar", "Minotaur", "Revenant", "Fae", "Vah Shir", "Kobold", "Half-Ogre"
+	"Iksar", "Minotaur", "Fae", "Vah Shir", "Kobold", "Half-Ogre"
 ]
 
 const CLASSES: Array[String] = [
-	"Warrior", "Mage", "Rogue", "Cleric", "Druid", "Shaman", "Blood Mage",
+	"Warrior", "Magician", "Wizard", "Sorcerer", "Rogue", "Cleric", "Druid", "Shaman", "Beast Master", "Blood Mage",
 	"Paladin", "Shadow Knight", "Necromancer", "Enchanter", "Bard", "Ranger", "Monk", "Witch Hunter"
 ]
 
@@ -88,10 +88,20 @@ const CLASS_DATA: Dictionary = {
 		"bonuses": {"strength": 10, "constitution": 8},
 		"hp_bonus": 50.0, "mp_bonus": 0.0, "stamina_bonus": 20.0
 	},
-	"Mage": {
+	"Magician": {
 		"desc": "Wielders of arcane power. Devastating spells and vast mana, at the cost of physical frailty.",
 		"bonuses": {"intelligence": 15, "wisdom": 10},
 		"hp_bonus": -10.0, "mp_bonus": 100.0, "stamina_bonus": 0.0
+	},
+	"Wizard": {
+		"desc": "Scholars of the arcane. The broadest spell knowledge of any class, but their spell book is finite — a Wizard who runs dry is a liability.",
+		"bonuses": {"intelligence": 18, "wisdom": 5},
+		"hp_bonus": -15.0, "mp_bonus": 110.0, "stamina_bonus": 0.0
+	},
+	"Sorcerer": {
+		"desc": "Born to power, not trained to it. Innate magic flows without the limits of preparation — fewer spells known, but always available.",
+		"bonuses": {"intelligence": 10, "charisma": 15, "wisdom": 5},
+		"hp_bonus": -5.0, "mp_bonus": 90.0, "stamina_bonus": 0.0
 	},
 	"Rogue": {
 		"desc": "Cunning infiltrators. Precision strikes, poisons, and unmatched agility define their craft.",
@@ -112,6 +122,11 @@ const CLASS_DATA: Dictionary = {
 		"desc": "Spiritual warriors who commune with ancestors. Blend melee combat with healing and spirit magic.",
 		"bonuses": {"wisdom": 10, "constitution": 8, "strength": 5},
 		"hp_bonus": 30.0, "mp_bonus": 40.0, "stamina_bonus": 15.0
+	},
+	"Beast Master": {
+		"desc": "Spirit-bonded hunters who fight alongside a permanent animal warder. They blend melee discipline with primal spirit magic.",
+		"bonuses": {"strength": 8, "constitution": 8, "agility": 5, "wisdom": 5},
+		"hp_bonus": 30.0, "mp_bonus": 30.0, "stamina_bonus": 20.0
 	},
 	"Blood Mage": {
 		"desc": "Masters of dark vitomancy. They drain life from enemies and bend mortal flesh to their will.",
@@ -161,13 +176,14 @@ const CLASS_DATA: Dictionary = {
 }
 
 const LOCKED_COMBOS: Dictionary = {
-	"Dark Elf":  ["Paladin"],
+	"Dark Elf":  ["Paladin", "Beast Master"],
 	"Wood Elf":  ["Necromancer"],
-	"Halfling":  ["Shadow Knight"],
-	"Dwarf":     ["Necromancer"],
+	"Gnome":     ["Beast Master"],
+	"Halfling":  ["Shadow Knight", "Beast Master"],
+	"Dwarf":     ["Necromancer", "Beast Master"],
 	"Troll":     ["Paladin", "Monk"],
 	"Iksar":     ["Paladin"],
-	"Fae":       ["Shadow Knight", "Monk"],
+	"Fae":       ["Shadow Knight", "Monk", "Beast Master"],
 	"Kobold":    ["Paladin"],
 }
 
@@ -177,10 +193,13 @@ const CLASS_STARTING_ALIGNMENT: Dictionary = {
 	"Monk":          100,
 	"Witch Hunter":  100,
 	"Warrior":       0,
-	"Mage":          0,
+	"Magician":          0,
+	"Wizard":        0,
+	"Sorcerer":      0,
 	"Rogue":         0,
 	"Druid":         0,
 	"Shaman":        0,
+	"Beast Master":  0,
 	"Ranger":        0,
 	"Bard":          0,
 	"Enchanter":     0,
@@ -205,11 +224,14 @@ const BASE_ST: float   = 100.0
 # player_stats.gd reads this in _level_up() — add new classes here, not there.
 const CLASS_LEVEL_GAINS: Dictionary = {
 	"Warrior":       {"stats": {"strength": 2, "constitution": 2},                    "max_hp": 20.0, "max_mp":  2.0, "max_stamina":  8.0},
-	"Mage":          {"stats": {"intelligence": 3, "wisdom": 2},                       "max_hp":  5.0, "max_mp": 25.0, "max_stamina":  2.0},
+	"Magician":          {"stats": {"intelligence": 3, "wisdom": 2},                       "max_hp":  5.0, "max_mp": 25.0, "max_stamina":  2.0},
+	"Wizard":        {"stats": {"intelligence": 4, "wisdom": 1},                       "max_hp":  3.0, "max_mp": 28.0, "max_stamina":  1.0},
+	"Sorcerer":      {"stats": {"charisma": 2, "intelligence": 2},                     "max_hp":  5.0, "max_mp": 22.0, "max_stamina":  2.0},
 	"Rogue":         {"stats": {"dexterity": 2, "agility": 2},                         "max_hp": 12.0, "max_mp":  3.0, "max_stamina": 10.0},
 	"Cleric":        {"stats": {"wisdom": 3, "constitution": 1},                       "max_hp": 12.0, "max_mp": 20.0, "max_stamina":  2.0},
 	"Druid":         {"stats": {"wisdom": 2, "intelligence": 2},                       "max_hp":  8.0, "max_mp": 22.0, "max_stamina":  2.0},
 	"Shaman":        {"stats": {"wisdom": 2, "constitution": 1, "strength": 1},        "max_hp": 12.0, "max_mp": 15.0, "max_stamina":  5.0},
+	"Beast Master":  {"stats": {"strength": 2, "constitution": 1, "agility": 1, "wisdom": 1}, "max_hp": 14.0, "max_mp": 10.0, "max_stamina":  6.0},
 	"Blood Mage":    {"stats": {"intelligence": 3, "constitution": 1},                 "max_hp":  7.0, "max_mp": 22.0, "max_stamina":  2.0},
 	"Paladin":       {"stats": {"strength": 2, "wisdom": 2, "constitution": 1},        "max_hp": 15.0, "max_mp": 12.0, "max_stamina":  5.0},
 	"Shadow Knight": {"stats": {"strength": 2, "intelligence": 2, "constitution": 1}, "max_hp": 14.0, "max_mp": 12.0, "max_stamina":  4.0},

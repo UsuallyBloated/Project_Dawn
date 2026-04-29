@@ -63,6 +63,10 @@ func cast_spell(spell: SpellData) -> bool:
 		if not Combat.has_valid_target():
 			spell_failed.emit("No valid target.")
 			return false
+	if spell.target_type == SpellData.TargetType.PET_CHARM:
+		if not Combat.has_valid_target():
+			spell_failed.emit("No valid target to charm.")
+			return false
 
 	PlayerStats.set_mp(PlayerStats.mp - spell.mana_cost)
 
@@ -105,12 +109,36 @@ func _apply_spell(spell: SpellData) -> void:
 	if spell.target_type == SpellData.TargetType.ENEMY:
 		Combat.deal_damage_to_target(int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness))
 
-	if spell.heal_amount > 0.0:
+	if spell.target_type == SpellData.TargetType.PET_SUMMON:
+		PetManager.summon(spell.pet_type)
+
+	if spell.target_type == SpellData.TargetType.PET_CHARM:
+		PetManager.charm_current_target(spell.duration)
+
+	if spell.target_type == SpellData.TargetType.PET_HEAL:
+		PetManager.heal_warder(spell.heal_amount + PlayerStats.wisdom * 0.3)
+
+	if spell.heal_amount > 0.0 and spell.target_type != SpellData.TargetType.PET_HEAL:
 		var heal := (spell.heal_amount + PlayerStats.wisdom * 0.3) * effectiveness
 		PlayerStats.set_hp(PlayerStats.hp + heal)
 
 	if spell.hp_cost > 0.0:
 		PlayerStats.set_hp(PlayerStats.hp - spell.hp_cost)
+
+	if spell.dot_dps > 0.0 and spell.dot_duration > 0.0:
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target():
+			BuffManager.add_dot(Combat.current_target, spell.dot_dps * effectiveness,
+				spell.dot_duration, spell.spell_name)
+
+	if spell.hot_hps > 0.0 and spell.hot_duration > 0.0:
+		BuffManager.add_hot(spell.hot_hps * effectiveness, spell.hot_duration, spell.spell_name)
+
+	if spell.absorb_amount > 0.0:
+		BuffManager.add_absorb(spell.absorb_amount * effectiveness, spell.spell_name)
+
+	if spell.cc_duration > 0.0:
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target():
+			Combat.current_target.mesmerize(spell.cc_duration)
 
 	spell_cast.emit(spell)
 
@@ -133,6 +161,14 @@ func _load_spells() -> void:
 		s.target_type = _parse_target_type(d["target_type"])
 		s.heal_amount = d["heal_amount"]
 		s.hp_cost = d.get("hp_cost", 0.0)
+		s.duration = d.get("duration", 0.0)
+		s.pet_type = d.get("pet_type", "")
+		s.dot_dps = d.get("dot_dps", 0.0)
+		s.dot_duration = d.get("dot_duration", 0.0)
+		s.hot_hps = d.get("hot_hps", 0.0)
+		s.hot_duration = d.get("hot_duration", 0.0)
+		s.absorb_amount = d.get("absorb_amount", 0.0)
+		s.cc_duration = d.get("cc_duration", 0.0)
 		for c in d["classes"]:
 			s.allowed_classes.append(c)
 		_all_spells[s.spell_name] = s
@@ -151,6 +187,9 @@ func _parse_damage_type(s: String) -> SpellData.DamageType:
 
 func _parse_target_type(s: String) -> SpellData.TargetType:
 	match s:
-		"ENEMY": return SpellData.TargetType.ENEMY
-		"SELF":  return SpellData.TargetType.SELF
+		"ENEMY":      return SpellData.TargetType.ENEMY
+		"SELF":       return SpellData.TargetType.SELF
+		"PET_SUMMON": return SpellData.TargetType.PET_SUMMON
+		"PET_CHARM":  return SpellData.TargetType.PET_CHARM
+		"PET_HEAL":   return SpellData.TargetType.PET_HEAL
 	return SpellData.TargetType.NONE

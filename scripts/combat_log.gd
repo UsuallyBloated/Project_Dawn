@@ -13,8 +13,15 @@ const C_INFO     := Color(0.70, 0.65, 0.55)
 const C_LEVEL    := Color(0.60, 0.85, 1.00)
 const C_LOOT     := Color(0.55, 0.90, 0.55)
 const C_EVADE    := Color(0.55, 0.75, 0.95)
+const C_SAY      := Color(1.00, 1.00, 1.00)
+const C_SHOUT    := Color(1.00, 0.75, 0.20)
+const C_OOC      := Color(0.30, 0.85, 0.70)
+const C_TELL_OUT := Color(0.90, 0.55, 1.00)
+const C_TELL_IN  := Color(1.00, 0.70, 1.00)
+const C_GROUP    := Color(0.45, 0.80, 1.00)
 
-enum MsgType { DAMAGE_OUT, DAMAGE_IN, HEAL, INFO, LEVEL_UP, LOOT, EVADE }
+enum MsgType { DAMAGE_OUT, DAMAGE_IN, HEAL, INFO, LEVEL_UP, LOOT, EVADE,
+			   SAY, SHOUT, OOC, TELL_OUT, TELL_IN, GROUP_CHAT }
 
 var _lines: Array = []
 var _labels: Array = []
@@ -34,8 +41,8 @@ func _build_ui() -> void:
 	_panel.anchor_bottom = 1.0
 	_panel.offset_left   = 10
 	_panel.offset_right  = 310
-	_panel.offset_top    = -(VISIBLE_ROWS * LINE_HEIGHT + 20)
 	_panel.offset_bottom = -80
+	_panel.offset_top    = -(VISIBLE_ROWS * LINE_HEIGHT + 20 + 80)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color     = C_BG
@@ -71,6 +78,9 @@ func _connect_signals() -> void:
 	Combat.target_changed.connect(func(enemy):
 		if enemy != null and is_instance_valid(enemy):
 			add_line("You target %s." % enemy.mob_name, MsgType.INFO))
+	WeaponSkills.skill_advanced.connect(func(skill_name: String, new_value: int, cap: int):
+		var display := WeaponSkillDefinitions.DISPLAY.get(skill_name, skill_name)
+		add_line("Your %s skill has increased to %d (cap: %d)." % [display, new_value, cap], MsgType.LEVEL_UP))
 
 func _on_player_hp_changed(current: float, _max: float) -> void:
 	var diff := current - _last_hp
@@ -101,10 +111,16 @@ func _refresh() -> void:
 		var entry: Dictionary = _lines[idx]
 		lbl.text = entry["text"]
 		match entry["type"]:
-			MsgType.DAMAGE_OUT: lbl.add_theme_color_override("font_color", C_DMG_OUT)
-			MsgType.DAMAGE_IN:  lbl.add_theme_color_override("font_color", C_DMG_IN)
-			MsgType.HEAL:       lbl.add_theme_color_override("font_color", C_HEAL)
-			MsgType.LEVEL_UP:   lbl.add_theme_color_override("font_color", C_LEVEL)
-			MsgType.LOOT:       lbl.add_theme_color_override("font_color", C_LOOT)
-			MsgType.EVADE:      lbl.add_theme_color_override("font_color", C_EVADE)
-			_:                  lbl.add_theme_color_override("font_color", C_INFO)
+			MsgType.DAMAGE_OUT:  lbl.add_theme_color_override("font_color", C_DMG_OUT)
+			MsgType.DAMAGE_IN:   lbl.add_theme_color_override("font_color", C_DMG_IN)
+			MsgType.HEAL:        lbl.add_theme_color_override("font_color", C_HEAL)
+			MsgType.LEVEL_UP:    lbl.add_theme_color_override("font_color", C_LEVEL)
+			MsgType.LOOT:        lbl.add_theme_color_override("font_color", C_LOOT)
+			MsgType.EVADE:       lbl.add_theme_color_override("font_color", C_EVADE)
+			MsgType.SAY:         lbl.add_theme_color_override("font_color", C_SAY)
+			MsgType.SHOUT:       lbl.add_theme_color_override("font_color", C_SHOUT)
+			MsgType.OOC:         lbl.add_theme_color_override("font_color", C_OOC)
+			MsgType.TELL_OUT:    lbl.add_theme_color_override("font_color", C_TELL_OUT)
+			MsgType.TELL_IN:     lbl.add_theme_color_override("font_color", C_TELL_IN)
+			MsgType.GROUP_CHAT:  lbl.add_theme_color_override("font_color", C_GROUP)
+			_:                   lbl.add_theme_color_override("font_color", C_INFO)

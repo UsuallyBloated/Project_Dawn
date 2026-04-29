@@ -1,6 +1,6 @@
 [gd_scene load_steps=14 format=4 uid="uid://h1lkpabnydg3"]
 
-[ext_resource type="Script" uid="uid://td3xlala4836" path="res://character_body_3d.gd" id="1_a202f"]
+[ext_resource type="Script" uid="uid://td3xlala4836" path="res://scripts/player.gd" id="1_a202f"]
 [ext_resource type="PackedScene" uid="uid://bm4x7kpqr2n5" path="res://scenes/hud.tscn" id="2_hudsc"]
 [ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="3_enemy"]
 [ext_resource type="Script" path="res://scripts/zone_manager.gd" id="9_zone"]

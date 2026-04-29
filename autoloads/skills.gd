@@ -42,6 +42,14 @@ func use_skill(skill: SkillData) -> bool:
 	if skill.target_type == SkillData.TargetType.ENEMY:
 		Combat.deal_damage_to_target(int(Combat.calc_damage() * skill.damage_multiplier))
 
+	match skill.effect_type:
+		SkillData.EffectType.EVADE_BOOST:
+			BuffManager.add_evade_boost(skill.effect_duration)
+		SkillData.EffectType.ABSORB_SHIELD:
+			BuffManager.add_absorb(skill.absorb_amount, skill.skill_name)
+		SkillData.EffectType.WARDER_FURY:
+			PetManager.command_fury()
+
 	skill_used.emit(skill)
 	return true
 
@@ -71,6 +79,12 @@ func _load_skills() -> void:
 		s.stamina_cost = d["stamina_cost"]
 		s.damage_multiplier = d["damage_multiplier"]
 		s.target_type = SkillData.TargetType.ENEMY if d["damage_multiplier"] > 0.0 else SkillData.TargetType.SELF
+		s.effect_duration = d.get("effect_duration", 0.0)
+		s.absorb_amount = d.get("absorb_amount", 0.0)
+		match d.get("effect_type", ""):
+			"EVADE_BOOST":    s.effect_type = SkillData.EffectType.EVADE_BOOST
+			"ABSORB_SHIELD":  s.effect_type = SkillData.EffectType.ABSORB_SHIELD
+			_:                s.effect_type = SkillData.EffectType.NONE
 		for c in d["classes"]:
 			s.allowed_classes.append(c)
 		_all_skills[s.skill_name] = s

@@ -1,6 +1,6 @@
 extends Control
 
-const GAME_SCENE := "res://node_3d.tscn"
+const GAME_SCENE := "res://scenes/world.tscn"
 const CHAR_CREATION_SCENE := "res://scenes/character_creation.tscn"
 
 @onready var address_field: LineEdit = %AddressField
