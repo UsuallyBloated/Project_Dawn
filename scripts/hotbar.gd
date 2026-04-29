@@ -27,7 +27,7 @@ func _ready() -> void:
 	_skill_panel = _build_bar(_skill_slots, KEY_LABELS, -bar_h / 2.0 - BAR_GAP / 2.0)
 	_spell_panel = _build_bar(_spell_slots, KEY_LABELS_SPELL, 0.0, true)
 
-	var tip := _skill_panel._make_tooltip()
+	var tip := _skill_panel.make_tooltip()
 	_tooltip_panel = tip[0]
 	_tooltip_label = tip[1]
 

@@ -20,7 +20,14 @@ var _cast_time_total: float = 0.0
 var _cast_time_elapsed: float = 0.0
 var _is_casting: bool = false
 
+var _clock_label: Label = null
+
+var _state_label: Label = null
+var _command_input: LineEdit = null
+
 var _window_stack: Array = []
+var _tracked_target = null
+var _player: Node3D = null
 
 func _ready() -> void:
 	_style_bar(health_bar, UITheme.C_BAR_HP)
@@ -51,8 +58,31 @@ func _ready() -> void:
 	mana_bar.max_value = PlayerStats.max_mp
 	mana_bar.value = PlayerStats.mp
 
+	_build_clock()
+	_build_state_label()
+	_build_command_input()
+	_connect_player_state()
+
+func _connect_player_state() -> void:
+	await get_tree().process_frame
+	var players := get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		_player = players[0]
+		if _player.has_signal("state_changed"):
+			_player.state_changed.connect(_on_player_state_changed)
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+			if _command_input != null and not _command_input.visible:
+				_command_input.visible = true
+				_command_input.text = ""
+				_command_input.grab_focus()
+				get_viewport().set_input_as_handled()
+				return
+		if _command_input != null and _command_input.visible:
+			get_viewport().set_input_as_handled()
+			return
 		if event.keycode == KEY_ESCAPE:
 			if _window_stack.size() > 0:
 				_window_stack.back().visible = false
@@ -93,6 +123,12 @@ func _on_stamina_changed(current: float, maximum: float) -> void:
 	stamina_bar.value = current
 
 func _on_target_changed(enemy) -> void:
+	if is_instance_valid(_tracked_target):
+		if _tracked_target.is_connected("hp_changed", _on_target_hp_changed):
+			_tracked_target.hp_changed.disconnect(_on_target_hp_changed)
+		if _tracked_target.is_connected("died", _on_target_enemy_died):
+			_tracked_target.died.disconnect(_on_target_enemy_died)
+	_tracked_target = enemy
 	if enemy == null or not is_instance_valid(enemy):
 		target_frame.visible = false
 		return
@@ -101,16 +137,15 @@ func _on_target_changed(enemy) -> void:
 	target_level_label.text = "Level %d" % enemy.level
 	target_hp_bar.max_value = enemy.max_hp
 	target_hp_bar.value = enemy.hp
-	if not enemy.is_connected("hp_changed", _on_target_hp_changed):
-		enemy.hp_changed.connect(_on_target_hp_changed)
-	if not enemy.is_connected("died", _on_target_enemy_died):
-		enemy.died.connect(_on_target_enemy_died)
+	enemy.hp_changed.connect(_on_target_hp_changed)
+	enemy.died.connect(_on_target_enemy_died)
 
 func _on_target_hp_changed(current: float, maximum: float) -> void:
 	target_hp_bar.max_value = maximum
 	target_hp_bar.value = current
 
 func _on_target_enemy_died(_enemy) -> void:
+	_tracked_target = null
 	target_frame.visible = false
 
 func _build_death_overlay() -> void:
@@ -157,6 +192,61 @@ func _build_cast_bar() -> void:
 	_cast_progress.show_percentage = false
 	_cast_bar_panel.add_child(_cast_progress)
 
+func _build_state_label() -> void:
+	_state_label = Label.new()
+	_state_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_state_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_state_label.position = Vector2(-100.0, -160.0)
+	_state_label.size = Vector2(200.0, 24.0)
+	_state_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_state_label.add_theme_color_override("font_color", Color(0.75, 0.90, 1.0))
+	_state_label.add_theme_font_size_override("font_size", 13)
+	_state_label.visible = false
+	add_child(_state_label)
+
+func _build_command_input() -> void:
+	_command_input = LineEdit.new()
+	_command_input.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_command_input.position = Vector2(-150.0, -60.0)
+	_command_input.size = Vector2(300.0, 28.0)
+	_command_input.placeholder_text = "Type a command..."
+	_command_input.visible = false
+	_command_input.text_submitted.connect(_on_command_submitted)
+	_command_input.focus_exited.connect(func(): _command_input.visible = false)
+	add_child(_command_input)
+
+func _on_command_submitted(text: String) -> void:
+	_command_input.visible = false
+	_command_input.text = ""
+	if not is_instance_valid(_player):
+		return
+	match text.strip_edges().to_lower():
+		"/sit":
+			_player.sit()
+		"/stand":
+			_player.stand()
+
+func _on_player_state_changed(new_state: int) -> void:
+	if _state_label == null:
+		return
+	if new_state == PlayerCharacter.PlayerState.SITTING:
+		_state_label.text = "Resting / Meditating"
+		_state_label.visible = true
+	else:
+		_state_label.visible = false
+
+func _build_clock() -> void:
+	_clock_label = Label.new()
+	_clock_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_clock_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_clock_label.position = Vector2(-108.0, 8.0)
+	_clock_label.size = Vector2(100.0, 24.0)
+	_clock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_clock_label.add_theme_color_override("font_color", Color(0.90, 0.84, 0.58))
+	_clock_label.add_theme_font_size_override("font_size", 14)
+	_clock_label.text = TimeOfDay.get_time_string()
+	add_child(_clock_label)
+
 func _on_casting_started(spell: SpellData) -> void:
 	_cast_time_total = spell.cast_time
 	_cast_time_elapsed = 0.0
@@ -173,3 +263,7 @@ func _process(delta: float) -> void:
 	if _is_casting and _cast_time_total > 0.0:
 		_cast_time_elapsed = minf(_cast_time_elapsed + delta, _cast_time_total)
 		_cast_progress.value = _cast_time_elapsed / _cast_time_total
+	if _clock_label != null:
+		var t := TimeOfDay.get_time_string()
+		if t != _clock_label.text:
+			_clock_label.text = t

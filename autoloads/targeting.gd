@@ -35,6 +35,8 @@ func _click_target(mouse_pos: Vector2) -> void:
 	var body = result["collider"]
 	if body.is_in_group("enemies") and not body.is_dead:
 		Combat.set_target(body)
+	elif body is Area3D:
+		pass  # interactable (e.g. loot bag) — let its own input_event handle it
 	else:
 		Combat.set_target(null)
 

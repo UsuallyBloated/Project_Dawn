@@ -92,7 +92,7 @@ func _build_ui() -> void:
 		cells[cell_idx] = frame
 		_slot_frames[slot_name] = frame
 
-	var tip := _make_tooltip()
+	var tip := make_tooltip()
 	_tooltip_panel = tip[0]
 	_tooltip_label = tip[1]
 

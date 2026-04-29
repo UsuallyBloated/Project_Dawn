@@ -8,6 +8,7 @@ var _cooldowns: CooldownTracker
 var available: Array[SkillData] = []
 
 func _ready() -> void:
+	SkillDefinitions.validate()
 	_cooldowns = CooldownTracker.new()
 	_cooldowns.cooldown_updated.connect(func(n, r, t): skill_cooldown_updated.emit(n, r, t))
 	_load_skills()
@@ -17,25 +18,14 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_cooldowns.tick(delta)
 
-func setup_for_class(player_class: String) -> void:
-	var effective := _get_effective_class(player_class)
+func setup_for_class(_player_class: String) -> void:
+	var effective := PlayerStats.get_effective_class()
 	available.clear()
 	for sname in _all_skills:
 		var skill: SkillData = _all_skills[sname]
 		if skill.allowed_classes.is_empty() or effective in skill.allowed_classes:
 			available.append(skill)
 	available.sort_custom(func(a, b): return a.skill_name < b.skill_name)
-
-func _get_effective_class(player_class: String) -> String:
-	var tier := PlayerStats.alignment_tier
-	match player_class:
-		"Paladin":
-			if tier == "Evil":
-				return "Paladin_Fallen"
-		"Shadow Knight":
-			if tier == "Exalted":
-				return "Shadow Knight_Redeemed"
-	return player_class
 
 func use_skill(skill: SkillData) -> bool:
 	if _cooldowns.is_active(skill.skill_name):

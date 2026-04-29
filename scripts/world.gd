@@ -1,20 +1,28 @@
 extends Node3D
 
+# Set this in the Inspector for each zone scene.
+@export var zone_name: String = "Ashfield Ruins"
+
 const PLAYER_SCENE := preload("res://scenes/player.tscn")
 
 @onready var players_container: Node3D = $Players
 
 func _ready() -> void:
+	ZoneLoader.current_zone_name = zone_name
+
 	if not Network.is_online:
-		_spawn_player(1, Vector3.ZERO)
+		_spawn_player(1, ZoneLoader.get_spawn_position())
+		ZoneLoader.on_zone_ready()
 		return
 
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 
 	if multiplayer.is_server():
-		_spawn_player(multiplayer.get_unique_id(), Vector3.ZERO)
+		_spawn_player(multiplayer.get_unique_id(), ZoneLoader.get_spawn_position())
 	else:
 		_request_spawn.rpc_id(1)
+
+	ZoneLoader.on_zone_ready()
 
 # Client calls this on the server to request initial spawn data.
 @rpc("any_peer", "reliable")
@@ -26,7 +34,7 @@ func _request_spawn() -> void:
 	for child in players_container.get_children():
 		var existing_id := str(child.name).to_int()
 		_spawn_player.rpc_id(new_id, existing_id, child.global_position)
-	# Spawn the new player on all peers.
+	# Spawn the new player on all peers at origin (zone entry for remote clients).
 	_spawn_player.rpc(new_id, Vector3.ZERO)
 
 @rpc("authority", "call_local", "reliable")

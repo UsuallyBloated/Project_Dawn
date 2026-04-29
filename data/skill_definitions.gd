@@ -2,6 +2,14 @@ class_name SkillDefinitions
 
 # All skill data in one place. Add new skills here; no logic code needs to change.
 # damage_multiplier == 0 means the skill targets SELF (no damage).
+
+const REQUIRED_KEYS: Array[String] = ["name", "desc", "cooldown", "stamina_cost", "damage_multiplier", "classes"]
+
+static func validate() -> void:
+	for entry in ALL:
+		for key in REQUIRED_KEYS:
+			if not entry.has(key):
+				push_error("SkillDefinitions: entry '%s' is missing required key '%s'" % [entry.get("name", "?"), key])
 const ALL: Array = [
 	{"name": "Slash",            "desc": "A quick slashing strike.",                              "cooldown": 3.0,  "stamina_cost": 8.0,  "damage_multiplier": 1.5, "classes": ["Warrior", "Rogue"]},
 	{"name": "Shield Bash",      "desc": "Stuns and damages with your shield.",                   "cooldown": 8.0,  "stamina_cost": 15.0, "damage_multiplier": 1.2, "classes": ["Warrior"]},

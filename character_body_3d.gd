@@ -1,4 +1,5 @@
 extends CharacterBody3D
+class_name PlayerCharacter
 
 const SPEED = 5.0
 const CROUCH_SPEED = 2.5
@@ -14,9 +15,16 @@ const CROUCH_HEIGHT = 1.0
 const STAND_CAMERA_Y = 1.6
 const CROUCH_CAMERA_Y = 0.7
 
-var is_crouching := false
+enum PlayerState { STANDING, CROUCHING, SITTING }
+
+var state := PlayerState.STANDING
+var is_crouching: bool:
+	get: return state == PlayerState.CROUCHING
+
 var is_camera_active := false
 var _is_local := false
+
+signal state_changed(new_state: int)
 
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
@@ -63,6 +71,28 @@ func _exit_tree() -> void:
 	PlayerDeath.unregister_player()
 	Targeting.unregister_player()
 
+func _enter_state(new_state: PlayerState) -> void:
+	state = new_state
+	var shape := collision_shape.shape as CapsuleShape3D
+	match state:
+		PlayerState.CROUCHING:
+			shape.height = CROUCH_HEIGHT
+			collision_shape.position.y = CROUCH_HEIGHT / 2.0
+			camera_pivot.position.y = CROUCH_CAMERA_Y
+		_:
+			shape.height = STAND_HEIGHT
+			collision_shape.position.y = STAND_HEIGHT / 2.0
+			camera_pivot.position.y = STAND_CAMERA_Y
+	state_changed.emit(state)
+
+func sit() -> void:
+	if state != PlayerState.SITTING:
+		_enter_state(PlayerState.SITTING)
+
+func stand() -> void:
+	if state != PlayerState.STANDING:
+		_enter_state(PlayerState.STANDING)
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_RIGHT:
@@ -78,24 +108,36 @@ func _unhandled_input(event: InputEvent) -> void:
 		camera_pivot.rotate_x(-event.relative.y * MOUSE_SENSITIVITY)
 		camera_pivot.rotation.x = clamp(camera_pivot.rotation.x, -PI / 2.0, PI / 2.0)
 
-	if event is InputEventKey and event.keycode == KEY_X and event.pressed and not event.echo:
-		_toggle_crouch()
-
-func _toggle_crouch() -> void:
-	is_crouching = !is_crouching
-	var shape := collision_shape.shape as CapsuleShape3D
-	if is_crouching:
-		shape.height = CROUCH_HEIGHT
-		collision_shape.position.y = CROUCH_HEIGHT / 2.0
-		camera_pivot.position.y = CROUCH_CAMERA_Y
-	else:
-		shape.height = STAND_HEIGHT
-		collision_shape.position.y = STAND_HEIGHT / 2.0
-		camera_pivot.position.y = STAND_CAMERA_Y
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_X:
+			if state == PlayerState.STANDING:
+				_enter_state(PlayerState.CROUCHING)
+			elif state == PlayerState.CROUCHING:
+				_enter_state(PlayerState.STANDING)
+		elif event.keycode == KEY_Z:
+			if state == PlayerState.STANDING:
+				_enter_state(PlayerState.SITTING)
+			elif state == PlayerState.SITTING:
+				_enter_state(PlayerState.STANDING)
 
 func _physics_process(delta: float) -> void:
+	if state == PlayerState.SITTING:
+		var moving := (
+			Input.is_key_pressed(KEY_W) or
+			Input.is_key_pressed(KEY_A) or
+			Input.is_key_pressed(KEY_S) or
+			Input.is_key_pressed(KEY_D) or
+			Input.is_key_pressed(KEY_SPACE)
+		)
+		if moving:
+			_enter_state(PlayerState.STANDING)
+		else:
+			velocity = Vector3.ZERO
+			move_and_slide()
+			return
+
 	if is_on_floor():
-		if Input.is_key_pressed(KEY_SPACE):
+		if Input.is_key_pressed(KEY_SPACE) and state != PlayerState.SITTING:
 			velocity.y = JUMP_VELOCITY
 		else:
 			velocity.y = maxf(velocity.y, 0.0)
@@ -112,7 +154,7 @@ func _physics_process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_D):
 		direction += transform.basis.x
 
-	var current_speed := CROUCH_SPEED if is_crouching else SPEED
+	var current_speed := CROUCH_SPEED if state == PlayerState.CROUCHING else SPEED
 	if direction != Vector3.ZERO:
 		direction = direction.normalized()
 		velocity.x = direction.x * current_speed

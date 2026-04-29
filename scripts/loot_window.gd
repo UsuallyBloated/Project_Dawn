@@ -13,6 +13,7 @@ func _ready() -> void:
 	bag.tree_exiting.connect(queue_free)
 	_build_ui()
 	await get_tree().process_frame
+	size = Vector2(360.0, 220.0)
 	position = (get_viewport_rect().size * 0.5) - (size * 0.5) + Vector2(-80.0, -60.0)
 
 func _build_ui() -> void:
@@ -22,7 +23,7 @@ func _build_ui() -> void:
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(4)
 	add_theme_stylebox_override("panel", style)
-	custom_minimum_size = Vector2(260.0, 60.0)
+	custom_minimum_size = Vector2(320.0, 80.0)
 
 	var vbox := VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)

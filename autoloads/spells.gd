@@ -14,6 +14,7 @@ var _casting: SpellData = null
 var _cast_timer: float = 0.0
 
 func _ready() -> void:
+	SpellDefinitions.validate()
 	_cooldowns = CooldownTracker.new()
 	_cooldowns.cooldown_updated.connect(func(n, r, t): spell_cooldown_updated.emit(n, r, t))
 	_load_spells()
@@ -27,25 +28,14 @@ func _process(delta: float) -> void:
 			_finish_cast()
 	_cooldowns.tick(delta)
 
-func setup_for_class(player_class: String) -> void:
-	var effective := _get_effective_class(player_class)
+func setup_for_class(_player_class: String) -> void:
+	var effective := PlayerStats.get_effective_class()
 	available.clear()
 	for sname in _all_spells:
 		var spell: SpellData = _all_spells[sname]
 		if spell.allowed_classes.is_empty() or effective in spell.allowed_classes:
 			available.append(spell)
 	available.sort_custom(func(a, b): return a.spell_name < b.spell_name)
-
-func _get_effective_class(player_class: String) -> String:
-	var tier := PlayerStats.alignment_tier
-	match player_class:
-		"Paladin":
-			if tier == "Evil":
-				return "Paladin_Fallen"
-		"Shadow Knight":
-			if tier == "Exalted":
-				return "Shadow Knight_Redeemed"
-	return player_class
 
 func _get_alignment_effectiveness(player_class: String) -> float:
 	var tier := PlayerStats.alignment_tier

@@ -56,6 +56,14 @@ func remove_item(item: ItemData, count: int = 1) -> bool:
 		return true
 	return false
 
+# Silently nulls a slot without emitting item_removed — use this when moving
+# items around (drag/drop). Use remove_at() when an item truly leaves the inventory.
+func clear_slot(slot_index: int) -> void:
+	if slot_index < 0 or slot_index >= MAX_SLOTS:
+		return
+	slots[slot_index] = null
+	inventory_changed.emit()
+
 func remove_at(slot_index: int) -> void:
 	if slot_index < 0 or slot_index >= MAX_SLOTS:
 		return

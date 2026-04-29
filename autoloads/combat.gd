@@ -35,8 +35,9 @@ func set_target(enemy) -> void:
 		_auto_attack_timer.stop()
 	target_changed.emit(current_target)
 
-func _on_target_died(_enemy) -> void:
-	set_target(null)
+func _on_target_died(enemy) -> void:
+	if enemy == current_target:
+		set_target(null)
 
 func _on_auto_attack() -> void:
 	if current_target == null or not is_instance_valid(current_target):
@@ -65,13 +66,18 @@ func has_valid_target() -> bool:
 func receive_player_damage(amount: int, attacker_name: String = "") -> void:
 	if PlayerDeath.is_dead:
 		return
+	Spells.cancel_cast()
 	var evasion_chance := clampf((PlayerStats.agility - 10) * 0.005, 0.0, 0.50)
 	if randf() < evasion_chance:
 		CombatLog.add_evade(attacker_name if attacker_name != "" else "the attack")
 		return
-	var armor := Equipment.get_total_armor()
+	var armor := Equipment.get_armor_class()
 	var reduction := armor / float(armor + 100)
-	var effective: int = max(1, int(amount * (1.0 - reduction)))
+	var was_sitting: bool = is_instance_valid(_player) and _player.state == 2  # PlayerState.SITTING
+	var sit_mult := 2.0 if was_sitting else 1.0
+	var effective: int = max(1, int(amount * (1.0 - reduction) * sit_mult))
+	if was_sitting:
+		_player.stand()
 	PlayerStats.set_hp(PlayerStats.hp - effective)
 	CombatLog.add_line(
 		"%s hits you for %d damage." % [attacker_name if attacker_name != "" else "Something", effective],

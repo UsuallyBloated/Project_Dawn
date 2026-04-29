@@ -3,6 +3,14 @@ class_name SpellDefinitions
 # All spell data in one place. Add new spells here; no logic code needs to change.
 # Fields: name, desc, mana_cost, cast_time, cooldown, base_damage,
 #         damage_type, target_type, heal_amount, hp_cost, classes
+
+const REQUIRED_KEYS: Array[String] = ["name", "desc", "mana_cost", "cast_time", "cooldown", "base_damage", "damage_type", "target_type", "heal_amount", "classes"]
+
+static func validate() -> void:
+	for entry in ALL:
+		for key in REQUIRED_KEYS:
+			if not entry.has(key):
+				push_error("SpellDefinitions: entry '%s' is missing required key '%s'" % [entry.get("name", "?"), key])
 const ALL: Array = [
 	# ── Mage ──────────────────────────────────────────────────────────────────
 	{"name": "Fireball",        "desc": "Hurls a ball of flame at the target.",              "mana_cost": 30.0, "cast_time": 1.5, "cooldown": 8.0,  "base_damage": 50.0, "damage_type": "FIRE",      "target_type": "ENEMY", "heal_amount": 0.0,  "classes": ["Mage"]},

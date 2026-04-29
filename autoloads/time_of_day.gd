@@ -9,6 +9,7 @@ const START_HOUR   := 8.0    # start at 8 AM
 var time_of_day: float = START_HOUR / 24.0  # normalized 0..1
 
 var _sun: DirectionalLight3D = null
+var _moon: DirectionalLight3D = null
 var _sky_material: PhysicalSkyMaterial = null
 var _environment: Environment = null
 var _last_hour: int = -1
@@ -23,6 +24,18 @@ func _find_world_nodes() -> void:
 		_environment = env_node.environment
 		if _environment and _environment.sky:
 			_sky_material = _environment.sky.sky_material as PhysicalSkyMaterial
+	_setup_moon()
+
+func _setup_moon() -> void:
+	_moon = get_tree().get_first_node_in_group("moon")
+	if _moon != null:
+		return
+	_moon = DirectionalLight3D.new()
+	_moon.name = "Moon"
+	_moon.light_color = Color(0.65, 0.72, 1.0)
+	_moon.light_energy = 0.0
+	_moon.shadow_enabled = false
+	get_tree().current_scene.add_child(_moon)
 
 func _process(delta: float) -> void:
 	time_of_day = fmod(time_of_day + delta / DAY_DURATION, 1.0)
@@ -42,31 +55,38 @@ func get_time_string() -> String:
 	return "%02d:%02d" % [h, m]
 
 func _apply() -> void:
-	# Sun angle: rises at ~6 (90°), peaks at noon (0°), sets at ~18 (-90°)
-	var sun_angle := (time_of_day * 360.0) - 90.0
+	var night_t   := _night_factor()
+	var dawn_dusk := _dawn_dusk_factor()
+
+	# Sun arc: rises at ~6 AM (x=0), peaks at noon (x=-90), sets at ~6 PM
+	var sun_angle := 90.0 - time_of_day * 360.0
 	if _sun != null:
 		_sun.rotation_degrees.x = sun_angle
+		_sun.light_energy = lerpf(1.2, 0.0, night_t)
+		_sun.light_color = Color(
+			1.0,
+			lerpf(0.85, 0.55, dawn_dusk),
+			lerpf(0.75, 0.30, dawn_dusk)
+		).lerp(Color(0.1, 0.08, 0.15), night_t)
 
-	# Sky colour shifts: dawn/dusk orange, noon blue, night dark
+	# Moon: opposite the sun, fades in at night
+	if _moon != null:
+		_moon.rotation_degrees.x = sun_angle + 180.0
+		_moon.light_energy = lerpf(0.0, 0.18, night_t)
+
 	if _sky_material == null:
 		return
 
-	var night_t := _night_factor()
-	_sky_material.sky_top_color    = _lerp_day_night(Color(0.1, 0.2, 0.6), Color(0.01, 0.01, 0.05), night_t)
-	_sky_material.sky_horizon_color = _lerp_day_night(Color(0.6, 0.7, 0.9), Color(0.05, 0.03, 0.08), night_t)
-	_sky_material.ground_horizon_color = _lerp_day_night(Color(0.5, 0.45, 0.35), Color(0.02, 0.02, 0.04), night_t)
+	_sky_material.sky_top_color      = _lerp_dn(Color(0.10, 0.20, 0.60), Color(0.01, 0.01, 0.05), night_t)
+	_sky_material.sky_horizon_color   = _lerp_dn(Color(0.60, 0.70, 0.90), Color(0.04, 0.03, 0.07), night_t)
+	_sky_material.ground_horizon_color = _lerp_dn(Color(0.50, 0.45, 0.35), Color(0.02, 0.02, 0.04), night_t)
 
-	if _sun != null:
-		_sun.light_energy = lerpf(1.0, 0.02, night_t)
-		var dawn_dusk := _dawn_dusk_factor()
-		_sun.light_color = _lerp_day_night(
-			Color(1.0, 0.85 - dawn_dusk * 0.3, 0.7 - dawn_dusk * 0.4),
-			Color(0.1, 0.08, 0.15),
-			night_t
-		)
+	if _environment != null:
+		var day_fog   := Color(0.88, 0.76, 0.52)
+		var night_fog := Color(0.06, 0.06, 0.12)
+		_environment.fog_light_color = _lerp_dn(day_fog, night_fog, night_t)
 
 func _night_factor() -> float:
-	# 0 = full day, 1 = full night
 	var hour := time_of_day * 24.0
 	if hour < 5.0 or hour > 21.0:
 		return 1.0
@@ -82,5 +102,5 @@ func _dawn_dusk_factor() -> float:
 	var dusk  := 1.0 - clampf(abs(hour - 19.5) / 1.5, 0.0, 1.0)
 	return maxf(dawn, dusk)
 
-func _lerp_day_night(day_color: Color, night_color: Color, t: float) -> Color:
+func _lerp_dn(day_color: Color, night_color: Color, t: float) -> Color:
 	return day_color.lerp(night_color, t)

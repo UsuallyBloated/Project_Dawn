@@ -31,10 +31,10 @@ func gain_skill_xp(skill_name: String, amount: int) -> void:
 	if PlayerStats.race in skill.racial_bonus_races:
 		effective = int(amount * RACIAL_XP_MULTIPLIER)
 	var cap := get_skill_cap(skill_name)
-	var level := _skill_levels.get(skill_name, 0)
+	var level: int = _skill_levels.get(skill_name, 0)
 	if level >= cap:
 		return
-	var xp := _skill_xp.get(skill_name, 0) + effective
+	var xp: int = _skill_xp.get(skill_name, 0) + effective
 	while xp >= XP_PER_LEVEL and level < cap:
 		xp -= XP_PER_LEVEL
 		level += 1

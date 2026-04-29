@@ -14,6 +14,7 @@ extends DraggablePanel
 @onready var wis_value: Label = $MarginContainer/VBox/AttribGrid/V_WIS
 @onready var cha_value: Label = $MarginContainer/VBox/AttribGrid/V_CHA
 @onready var con_value: Label = $MarginContainer/VBox/AttribGrid/V_CON
+@onready var ac_value: Label = $MarginContainer/VBox/AttribGrid/V_AC
 @onready var xp_bar: ProgressBar = $MarginContainer/VBox/XPBar
 
 func _ready() -> void:
@@ -22,6 +23,7 @@ func _ready() -> void:
 	PlayerStats.stamina_changed.connect(_on_stamina_changed)
 	PlayerStats.level_changed.connect(_on_level_changed)
 	PlayerStats.xp_changed.connect(_on_xp_changed)
+	PlayerStats.stats_changed.connect(_refresh)
 	_style_xp_bar()
 	_refresh()
 
@@ -50,6 +52,7 @@ func _refresh() -> void:
 	wis_value.text = str(PlayerStats.wisdom)
 	cha_value.text = str(PlayerStats.charisma)
 	con_value.text = str(PlayerStats.constitution)
+	ac_value.text = str(Equipment.get_armor_class())
 
 func _on_hp_changed(current: float, maximum: float) -> void:
 	hp_value.text = "%d / %d" % [int(current), int(maximum)]

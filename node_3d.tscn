@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://td3xlala4836" path="res://character_body_3d.gd" id="1_a202f"]
 [ext_resource type="PackedScene" uid="uid://bm4x7kpqr2n5" path="res://scenes/hud.tscn" id="2_hudsc"]
 [ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="3_enemy"]
-[ext_resource type="Script" path="res://scripts/enemy_spawner.gd" id="8_spawner"]
+[ext_resource type="Script" path="res://scripts/zone_manager.gd" id="9_zone"]
 [ext_resource type="Script" path="res://scripts/terrain_mesh.gd" id="4_terrain"]
 [ext_resource type="Script" path="res://scripts/hotbar.gd" id="5_hotbar"]
 [ext_resource type="Script" path="res://scripts/levelup_popup.gd" id="6_levelup"]
@@ -97,26 +97,8 @@ shape = SubResource("WorldBoundaryShape3D_floor")
 
 [node name="HUD" parent="." instance=ExtResource("2_hudsc")]
 
-[node name="Spawner1" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -5)
-script = ExtResource("8_spawner")
-enemy_scene = ExtResource("3_enemy")
-respawn_time = 30.0
-spawn_radius = 2.0
-
-[node name="Spawner2" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 3)
-script = ExtResource("8_spawner")
-enemy_scene = ExtResource("3_enemy")
-respawn_time = 30.0
-spawn_radius = 2.0
-
-[node name="Spawner3" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 2)
-script = ExtResource("8_spawner")
-enemy_scene = ExtResource("3_enemy")
-respawn_time = 30.0
-spawn_radius = 2.0
+[node name="ZoneManager" type="Node3D" parent="."]
+script = ExtResource("9_zone")
 
 [node name="Hotbar" type="CanvasLayer" parent="."]
 script = ExtResource("5_hotbar")

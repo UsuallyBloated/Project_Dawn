@@ -19,6 +19,7 @@ var level: int = 1
 var xp: int = 0
 var xp_to_next: int = 100
 
+var player_name: String = ""
 var player_class: String = ""
 var race: String = ""
 
@@ -69,6 +70,18 @@ func _calc_alignment_tier() -> String:
 	else:
 		return "Evil"
 
+# Returns the alignment-modified class key used to look up skills and spells.
+# Add new alignment variants here when a class gains a fallen/redeemed path.
+func get_effective_class() -> String:
+	match player_class:
+		"Paladin":
+			if alignment_tier == "Evil":
+				return "Paladin_Fallen"
+		"Shadow Knight":
+			if alignment_tier == "Exalted":
+				return "Shadow Knight_Redeemed"
+	return player_class
+
 func gain_xp(amount: int) -> void:
 	xp += amount
 	while xp >= xp_to_next:
@@ -79,112 +92,15 @@ func gain_xp(amount: int) -> void:
 func _level_up() -> void:
 	level += 1
 	xp_to_next = int(xp_to_next * 1.5)
-	var _con_before := constitution
+	var con_before := constitution
 
-	match player_class:
-		"Warrior":
-			strength += 2
-			constitution += 2
-			max_hp += 20.0
-			max_stamina += 8.0
-			max_mp += 2.0
-		"Mage":
-			intelligence += 3
-			wisdom += 2
-			max_mp += 25.0
-			max_hp += 5.0
-			max_stamina += 2.0
-		"Rogue":
-			dexterity += 2
-			agility += 2
-			max_hp += 12.0
-			max_stamina += 10.0
-			max_mp += 3.0
-		"Cleric":
-			wisdom += 3
-			constitution += 1
-			max_hp += 12.0
-			max_mp += 20.0
-			max_stamina += 2.0
-		"Druid":
-			wisdom += 2
-			intelligence += 2
-			max_hp += 8.0
-			max_mp += 22.0
-			max_stamina += 2.0
-		"Shaman":
-			wisdom += 2
-			constitution += 1
-			strength += 1
-			max_hp += 12.0
-			max_mp += 15.0
-			max_stamina += 5.0
-		"Blood Mage":
-			intelligence += 3
-			constitution += 1
-			max_hp += 7.0
-			max_mp += 22.0
-			max_stamina += 2.0
-		"Paladin":
-			strength += 2
-			wisdom += 2
-			constitution += 1
-			max_hp += 15.0
-			max_mp += 12.0
-			max_stamina += 5.0
-		"Shadow Knight":
-			strength += 2
-			intelligence += 2
-			constitution += 1
-			max_hp += 14.0
-			max_mp += 12.0
-			max_stamina += 4.0
-		"Necromancer":
-			intelligence += 3
-			wisdom += 2
-			max_hp += 3.0
-			max_mp += 25.0
-			max_stamina += 1.0
-		"Enchanter":
-			intelligence += 3
-			charisma += 2
-			max_hp += 3.0
-			max_mp += 23.0
-			max_stamina += 1.0
-		"Bard":
-			dexterity += 2
-			charisma += 2
-			agility += 1
-			max_hp += 10.0
-			max_mp += 8.0
-			max_stamina += 8.0
-		"Ranger":
-			dexterity += 2
-			agility += 2
-			wisdom += 1
-			max_hp += 10.0
-			max_mp += 8.0
-			max_stamina += 8.0
-		"Monk":
-			strength += 2
-			dexterity += 2
-			agility += 1
-			max_hp += 12.0
-			max_mp += 4.0
-			max_stamina += 10.0
-		"Witch Hunter":
-			intelligence += 2
-			wisdom += 2
-			constitution += 1
-			max_hp += 10.0
-			max_mp += 15.0
-			max_stamina += 4.0
-		_:
-			max_hp += 10.0
-			max_mp += 10.0
-			max_stamina += 5.0
-
-	max_hp += (constitution - _con_before) * 5.0
+	var g: Dictionary = CharacterData.CLASS_LEVEL_GAINS.get(player_class, CharacterData.CLASS_LEVEL_GAINS["_default"])
+	for stat in g["stats"]:
+		self[stat] += g["stats"][stat]
+	max_hp      += g["max_hp"]
+	max_mp      += g["max_mp"]
+	max_stamina += g["max_stamina"]
+	max_hp += (constitution - con_before) * 5.0
 
 	set_hp(max_hp)
 	set_mp(max_mp)
@@ -199,9 +115,12 @@ func apply_item_bonuses(item: ItemData) -> void:
 	wisdom       += item.bonus_wisdom
 	charisma     += item.bonus_charisma
 	constitution += item.bonus_constitution
-	max_hp       += item.bonus_max_hp
-	max_mp       += item.bonus_max_mp
-	max_stamina  += item.bonus_max_stamina
+	max_hp      += item.bonus_max_hp
+	max_mp      += item.bonus_max_mp
+	max_stamina += item.bonus_max_stamina
+	hp_changed.emit(hp, max_hp)
+	mp_changed.emit(mp, max_mp)
+	stamina_changed.emit(stamina, max_stamina)
 	stats_changed.emit()
 
 func remove_item_bonuses(item: ItemData) -> void:
@@ -212,7 +131,10 @@ func remove_item_bonuses(item: ItemData) -> void:
 	wisdom       -= item.bonus_wisdom
 	charisma     -= item.bonus_charisma
 	constitution -= item.bonus_constitution
-	max_hp       = maxf(max_hp - item.bonus_max_hp, 1.0)
-	max_mp       = maxf(max_mp - item.bonus_max_mp, 0.0)
-	max_stamina  = maxf(max_stamina - item.bonus_max_stamina, 1.0)
+	max_hp      = maxf(max_hp - item.bonus_max_hp, 1.0)
+	max_mp      = maxf(max_mp - item.bonus_max_mp, 0.0)
+	max_stamina = maxf(max_stamina - item.bonus_max_stamina, 1.0)
+	set_hp(hp)
+	set_mp(mp)
+	set_stamina(stamina)
 	stats_changed.emit()

@@ -1,221 +1,26 @@
 extends Control
 
-# ── Data ──────────────────────────────────────────────────────────────────────
-
-const RACES: Array[String] = [
-	"Human", "Elf", "Dark Elf", "Wood Elf", "Gnome",
-	"Halfling", "Dwarf", "Half-Elf", "Ogre", "Troll",
-	"Iksar", "Minotaur", "Revenant", "Fae", "Vah Shir", "Kobold", "Half-Ogre"
-]
-
-const CLASSES: Array[String] = [
-	"Warrior", "Mage", "Rogue", "Cleric", "Druid", "Shaman", "Blood Mage",
-	"Paladin", "Shadow Knight", "Necromancer", "Enchanter", "Bard", "Ranger", "Monk", "Witch Hunter"
-]
-
-const RACE_DATA: Dictionary = {
-	"Human": {
-		"desc": "Versatile and adaptable. Balanced bonuses across all attributes suit any profession.",
-		"bonuses": {"strength": 2, "dexterity": 2, "agility": 2, "intelligence": 2, "wisdom": 2, "charisma": 2, "constitution": 2}
-	},
-	"Elf": {
-		"desc": "Graceful and keen. High dexterity and intellect, but physically fragile.",
-		"bonuses": {"dexterity": 10, "agility": 10, "intelligence": 10, "wisdom": 5, "strength": -5, "constitution": -5}
-	},
-	"Dark Elf": {
-		"desc": "Cunning masters of dark magic with exceptional reflexes. Few trust them.",
-		"bonuses": {"intelligence": 15, "dexterity": 10, "agility": 5, "wisdom": -5, "charisma": -10}
-	},
-	"Gnome": {
-		"desc": "Brilliant tinkerers with extraordinary intellect and wisdom, but weak in body.",
-		"bonuses": {"intelligence": 15, "wisdom": 5, "strength": -5, "constitution": -5}
-	},
-	"Halfling": {
-		"desc": "Quick and nimble folk. Masters of stealth and sleight of hand.",
-		"bonuses": {"dexterity": 10, "agility": 10, "charisma": 5, "strength": -5, "constitution": -5}
-	},
-	"Dwarf": {
-		"desc": "Hardy mountainfolk, nearly unbreakable. Exceptional constitution and wisdom.",
-		"bonuses": {"constitution": 15, "strength": 5, "wisdom": 5, "charisma": -5, "agility": -5}
-	},
-	"Wood Elf": {
-		"desc": "Children of the forest, swift and sure-eyed. Exceptional hunters and rangers.",
-		"bonuses": {"dexterity": 10, "agility": 10, "wisdom": 5, "intelligence": -5, "charisma": -5}
-	},
-	"Half-Elf": {
-		"desc": "Blending elven grace with human resilience. Well-rounded and adaptable.",
-		"bonuses": {"dexterity": 5, "agility": 5, "intelligence": 5, "wisdom": 5}
-	},
-	"Ogre": {
-		"desc": "Massive and brutish. Unmatched raw power at the cost of wit and charm.",
-		"bonuses": {"strength": 20, "constitution": 10, "charisma": -15, "intelligence": -5, "wisdom": -5}
-	},
-	"Troll": {
-		"desc": "Savage regenerators with extraordinary endurance. Fearsome but repugnant.",
-		"bonuses": {"constitution": 20, "strength": 10, "charisma": -15, "wisdom": -10, "intelligence": -5}
-	},
-	"Iksar": {
-		"desc": "Ancient lizardfolk from a fallen empire. Cold-blooded and calculating, their natural scales make them fearsome survivors.",
-		"bonuses": {"constitution": 15, "strength": 8, "charisma": -15, "wisdom": -5}
-	},
-	"Minotaur": {
-		"desc": "Bull-headed titans who carry the weight of generations in bondage. Their rage is matched only by their grief.",
-		"bonuses": {"strength": 20, "constitution": 10, "charisma": -10, "intelligence": -8, "agility": -5}
-	},
-	"Revenant": {
-		"desc": "The returned dead. Neither fully alive nor fully gone, immune to fear and numb to pain.",
-		"bonuses": {"intelligence": 10, "constitution": 10, "strength": 5, "charisma": -15, "wisdom": -5}
-	},
-	"Fae": {
-		"desc": "Ageless creatures of pure magic from the hidden world. Impossibly small, impossibly old, impossibly powerful.",
-		"bonuses": {"intelligence": 20, "wisdom": 10, "agility": 15, "charisma": 5, "strength": -15, "constitution": -10}
-	},
-	"Vah Shir": {
-		"desc": "Proud feline warriors from a distant land. Graceful, deadly, and deeply tribal. They treat combat as an art form.",
-		"bonuses": {"dexterity": 12, "agility": 12, "constitution": 5, "wisdom": -5, "intelligence": -5, "charisma": -5}
-	},
-	"Kobold": {
-		"desc": "Dog-faced scavengers with bat ears and wiry fur, scrappy and relentlessly underestimated. Kobolds survive through cunning, traps, and sheer stubborn spite.",
-		"bonuses": {"dexterity": 10, "intelligence": 8, "agility": 5, "strength": -8, "constitution": -5, "charisma": -10}
-	},
-	"Half-Ogre": {
-		"desc": "Born between brutality and humanity. Too large for one world, too feeling for the other.",
-		"bonuses": {"strength": 15, "constitution": 8, "charisma": -8, "intelligence": -3, "wisdom": -3}
-	},
-}
-
-const CLASS_DATA: Dictionary = {
-	"Warrior": {
-		"desc": "Masters of melee combat. Heavy armor, high HP, and physical dominance define their path.",
-		"bonuses": {"strength": 10, "constitution": 8},
-		"hp_bonus": 50.0, "mp_bonus": 0.0, "stamina_bonus": 20.0
-	},
-	"Mage": {
-		"desc": "Wielders of arcane power. Devastating spells and vast mana, at the cost of physical frailty.",
-		"bonuses": {"intelligence": 15, "wisdom": 10},
-		"hp_bonus": -10.0, "mp_bonus": 100.0, "stamina_bonus": 0.0
-	},
-	"Rogue": {
-		"desc": "Cunning infiltrators. Precision strikes, poisons, and unmatched agility define their craft.",
-		"bonuses": {"dexterity": 15, "agility": 10},
-		"hp_bonus": 20.0, "mp_bonus": 0.0, "stamina_bonus": 20.0
-	},
-	"Cleric": {
-		"desc": "Devoted healers armored in faith. Divine magic mends wounds and smites the wicked.",
-		"bonuses": {"wisdom": 12, "constitution": 8},
-		"hp_bonus": 30.0, "mp_bonus": 60.0, "stamina_bonus": 0.0
-	},
-	"Druid": {
-		"desc": "Guardians of the natural world. They balance potent nature spells with restorative magic.",
-		"bonuses": {"wisdom": 10, "intelligence": 8},
-		"hp_bonus": 10.0, "mp_bonus": 70.0, "stamina_bonus": 0.0
-	},
-	"Shaman": {
-		"desc": "Spiritual warriors who commune with ancestors. Blend melee combat with healing and spirit magic.",
-		"bonuses": {"wisdom": 10, "constitution": 8, "strength": 5},
-		"hp_bonus": 30.0, "mp_bonus": 40.0, "stamina_bonus": 15.0
-	},
-	"Blood Mage": {
-		"desc": "Masters of dark vitomancy. They drain life from enemies and bend mortal flesh to their will.",
-		"bonuses": {"intelligence": 15, "constitution": 5},
-		"hp_bonus": 0.0, "mp_bonus": 80.0, "stamina_bonus": 0.0
-	},
-	"Paladin": {
-		"desc": "A holy warrior armored in faith. Divine strikes, protective auras, and battlefield healing define their calling.",
-		"bonuses": {"strength": 10, "wisdom": 8, "constitution": 5},
-		"hp_bonus": 40.0, "mp_bonus": 30.0, "stamina_bonus": 15.0
-	},
-	"Shadow Knight": {
-		"desc": "A dark champion fueled by death and suffering. Lifetap strikes and shadow magic sustain them in battle.",
-		"bonuses": {"strength": 10, "intelligence": 8, "constitution": 5},
-		"hp_bonus": 35.0, "mp_bonus": 30.0, "stamina_bonus": 10.0
-	},
-	"Necromancer": {
-		"desc": "Masters of death magic. They raise the fallen as servants and drain life with corrupting curses.",
-		"bonuses": {"intelligence": 15, "wisdom": 5},
-		"hp_bonus": -10.0, "mp_bonus": 100.0, "stamina_bonus": 0.0
-	},
-	"Enchanter": {
-		"desc": "Wielders of illusion and mental magic. Unmatched crowd control and mana restoration, but they never throw the first punch.",
-		"bonuses": {"intelligence": 12, "charisma": 12, "wisdom": 5},
-		"hp_bonus": -10.0, "mp_bonus": 90.0, "stamina_bonus": 0.0
-	},
-	"Bard": {
-		"desc": "Wandering storytellers who weave magic through music. Their songs reshape the battlefield while their blades keep them in it.",
-		"bonuses": {"dexterity": 8, "charisma": 12, "agility": 5},
-		"hp_bonus": 20.0, "mp_bonus": 30.0, "stamina_bonus": 20.0
-	},
-	"Ranger": {
-		"desc": "Hunters and trackers of the wild. Swift with both blade and bow, they read the land like a second language.",
-		"bonuses": {"dexterity": 12, "agility": 8, "wisdom": 5},
-		"hp_bonus": 20.0, "mp_bonus": 20.0, "stamina_bonus": 20.0
-	},
-	"Monk": {
-		"desc": "Unarmed masters of discipline. No armor, no weapons — only speed, technique, and unbreakable focus.",
-		"bonuses": {"strength": 8, "dexterity": 8, "agility": 8},
-		"hp_bonus": 25.0, "mp_bonus": 10.0, "stamina_bonus": 30.0
-	},
-	"Witch Hunter": {
-		"desc": "Relentless pursuers of the arcane and the corrupted. Expert at unraveling dark magic and those who wield it.",
-		"bonuses": {"intelligence": 8, "constitution": 8, "wisdom": 8},
-		"hp_bonus": 20.0, "mp_bonus": 40.0, "stamina_bonus": 10.0
-	},
-}
-
-const LOCKED_COMBOS: Dictionary = {
-	"Dark Elf":  ["Paladin"],
-	"Wood Elf":  ["Necromancer"],
-	"Halfling":  ["Shadow Knight"],
-	"Dwarf":     ["Necromancer"],
-	"Troll":     ["Paladin", "Monk"],
-	"Iksar":     ["Paladin"],
-	"Fae":       ["Shadow Knight", "Monk"],
-	"Kobold":    ["Paladin"],
-}
-
-const CLASS_STARTING_ALIGNMENT: Dictionary = {
-	"Paladin":       500,
-	"Cleric":        400,
-	"Monk":          100,
-	"Witch Hunter":  100,
-	"Warrior":       0,
-	"Mage":          0,
-	"Rogue":         0,
-	"Druid":         0,
-	"Shaman":        0,
-	"Ranger":        0,
-	"Bard":          0,
-	"Enchanter":     0,
-	"Blood Mage":   -500,
-	"Shadow Knight": -1600,
-	"Necromancer":   -1600,
-}
-
-const STAT_KEYS: Array[String] = [
-	"strength", "dexterity", "agility",
-	"intelligence", "wisdom", "charisma", "constitution"
-]
-
-const STAT_SHORT: Array[String] = ["STR", "DEX", "AGI", "INT", "WIS", "CHA", "CON"]
-
-const BASE: int = 10
-const BASE_HP: float = 100.0
-const BASE_MP: float = 100.0
-const BASE_ST: float = 100.0
-
 # ── Colors ─────────────────────────────────────────────────────────────────────
 
-const C_BG        := UITheme.C_SCREEN_BG
-const C_PANEL     := UITheme.C_PANEL_BG
-const C_BORDER    := UITheme.C_BORDER
-const C_TEXT      := UITheme.C_TEXT
-const C_TITLE     := UITheme.C_TITLE
-const C_SELECTED  := UITheme.C_SELECTED
-const C_BTN_NORM  := UITheme.C_BTN_NORM
-const C_BTN_HOVER := UITheme.C_BTN_HOVER
-const C_POS       := UITheme.C_POSITIVE
-const C_NEG       := UITheme.C_NEGATIVE
-const C_NEUTRAL   := UITheme.C_NEUTRAL
+const C_BG                      := UITheme.C_SCREEN_BG
+const C_PANEL                   := UITheme.C_PANEL_BG
+const C_BORDER                  := UITheme.C_BORDER
+const C_TEXT                    := UITheme.C_TEXT
+const C_TITLE                   := UITheme.C_TITLE
+const C_SELECTED                := UITheme.C_SELECTED
+const C_BTN_NORM                := UITheme.C_BTN_NORM
+const C_BTN_HOVER               := UITheme.C_BTN_HOVER
+const C_POS                     := UITheme.C_POSITIVE
+const C_NEG                     := UITheme.C_NEGATIVE
+const C_NEUTRAL                 := UITheme.C_NEUTRAL
+const C_GOLDEN_BORDER           := UITheme.C_GOLDEN_BORDER
+const C_BTN_LOCKED_BG           := UITheme.C_BTN_LOCKED_BG
+const C_BTN_LOCKED_BORDER       := UITheme.C_BTN_LOCKED_BORDER
+const C_BTN_LOCKED_TEXT         := UITheme.C_BTN_LOCKED_TEXT
+const C_CONFIRM_BG              := UITheme.C_CONFIRM_BG
+const C_CONFIRM_BG_HOVER        := UITheme.C_CONFIRM_BG_HOVER
+const C_CONFIRM_BG_DISABLED     := UITheme.C_CONFIRM_BG_DISABLED
+const C_CONFIRM_BORDER_DISABLED := UITheme.C_CONFIRM_BORDER_DISABLED
 
 # ── State ──────────────────────────────────────────────────────────────────────
 
@@ -225,9 +30,11 @@ var _race_btns: Dictionary = {}
 var _class_btns: Dictionary = {}
 var _stat_labels: Dictionary = {}
 var _res_labels: Dictionary = {}
+var _identity_lbl: Label
 var _race_desc_lbl: Label
 var _class_desc_lbl: Label
 var _confirm_btn: Button
+var _name_input: LineEdit
 
 # ── Build ──────────────────────────────────────────────────────────────────────
 
@@ -242,46 +49,41 @@ func _ready() -> void:
 
 	var root := VBoxContainer.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.add_theme_constant_override("separation", 10)
-	root.offset_left = 50
-	root.offset_top = 24
-	root.offset_right = -50
-	root.offset_bottom = -24
+	root.add_theme_constant_override("separation", 8)
+	root.offset_left = 40
+	root.offset_top = 16
+	root.offset_right = -40
+	root.offset_bottom = -16
 	add_child(root)
 
-	var title := _make_label("PROJECT DAWN", 32, C_TITLE, HORIZONTAL_ALIGNMENT_CENTER)
-	root.add_child(title)
-
-	var subtitle := _make_label("Create Your Character", 15, C_TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-	root.add_child(subtitle)
-
+	root.add_child(_make_label("PROJECT DAWN", 36, C_TITLE, HORIZONTAL_ALIGNMENT_CENTER))
+	root.add_child(_make_label("Choose Your Path", 13, C_TEXT, HORIZONTAL_ALIGNMENT_CENTER))
 	root.add_child(HSeparator.new())
 
 	var cols := HBoxContainer.new()
 	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	cols.add_theme_constant_override("separation", 14)
+	cols.add_theme_constant_override("separation", 10)
 	root.add_child(cols)
 
-	_build_race_panel(cols)
-	_build_stats_panel(cols)
-	_build_class_panel(cols)
+	_build_selection_panel(cols, "— RACE —", CharacterData.RACES, _race_btns, _on_race_selected)
+	_build_center_panel(cols)
+	_build_selection_panel(cols, "— CLASS —", CharacterData.CLASSES, _class_btns, _on_class_selected)
 
 	root.add_child(HSeparator.new())
-
-	_confirm_btn = _make_confirm_btn()
-	root.add_child(_confirm_btn)
+	_build_bottom_bar(root)
 
 
-func _build_race_panel(parent: Control) -> void:
+func _build_selection_panel(parent: Control, header: String, items: Array, btns: Dictionary, callback: Callable) -> void:
 	var pc := _make_panel_container(true)
 	parent.add_child(pc)
 
 	var margin := _make_margin(pc, 10)
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 5)
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 6)
 	margin.add_child(vbox)
 
-	vbox.add_child(_make_label("— RACE —", 14, C_TITLE, HORIZONTAL_ALIGNMENT_CENTER))
+	vbox.add_child(_make_label(header, 14, C_TITLE, HORIZONTAL_ALIGNMENT_CENTER))
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -293,103 +95,141 @@ func _build_race_panel(parent: Control) -> void:
 	btn_box.add_theme_constant_override("separation", 4)
 	scroll.add_child(btn_box)
 
-	for race in RACES:
-		var btn := _make_select_btn(race)
-		btn.pressed.connect(_on_race_selected.bind(race))
+	for item in items:
+		var btn := _make_select_btn(item)
+		btn.pressed.connect(callback.bind(item))
 		btn_box.add_child(btn)
-		_race_btns[race] = btn
-
-	vbox.add_child(HSeparator.new())
-
-	_race_desc_lbl = _make_label("", 12, C_TEXT, HORIZONTAL_ALIGNMENT_LEFT)
-	_race_desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_race_desc_lbl.custom_minimum_size.y = 50
-	vbox.add_child(_race_desc_lbl)
+		btns[item] = btn
 
 
-func _build_class_panel(parent: Control) -> void:
-	var pc := _make_panel_container(true)
-	parent.add_child(pc)
-
-	var margin := _make_margin(pc, 10)
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 5)
-	margin.add_child(vbox)
-
-	vbox.add_child(_make_label("— CLASS —", 14, C_TITLE, HORIZONTAL_ALIGNMENT_CENTER))
-
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	vbox.add_child(scroll)
-
-	var btn_box := VBoxContainer.new()
-	btn_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn_box.add_theme_constant_override("separation", 4)
-	scroll.add_child(btn_box)
-
-	for cls in CLASSES:
-		var btn := _make_select_btn(cls)
-		btn.pressed.connect(_on_class_selected.bind(cls))
-		btn_box.add_child(btn)
-		_class_btns[cls] = btn
-
-	vbox.add_child(HSeparator.new())
-
-	_class_desc_lbl = _make_label("", 12, C_TEXT, HORIZONTAL_ALIGNMENT_LEFT)
-	_class_desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_class_desc_lbl.custom_minimum_size.y = 50
-	vbox.add_child(_class_desc_lbl)
-
-
-func _build_stats_panel(parent: Control) -> void:
+func _build_center_panel(parent: Control) -> void:
 	var pc := _make_panel_container(false)
-	pc.custom_minimum_size.x = 180
+	pc.custom_minimum_size.x = 260
 	parent.add_child(pc)
 
 	var margin := _make_margin(pc, 10)
 	var vbox := VBoxContainer.new()
+	vbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 8)
 	margin.add_child(vbox)
 
-	vbox.add_child(_make_label("— ATTRIBUTES —", 14, C_TITLE, HORIZONTAL_ALIGNMENT_CENTER))
+	# Portrait frame — art drops in here later
+	var portrait := PanelContainer.new()
+	portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	portrait.custom_minimum_size = Vector2(0, 180)
+	var ps := StyleBoxFlat.new()
+	ps.bg_color        = Color(0.04, 0.03, 0.02, 1.0)
+	ps.border_color    = C_GOLDEN_BORDER
+	ps.set_border_width_all(2)
+	ps.set_corner_radius_all(2)
+	portrait.add_theme_stylebox_override("panel", ps)
+	var cc := CenterContainer.new()
+	portrait.add_child(cc)
+	cc.add_child(_make_label("[ Portrait ]", 13, C_BORDER, HORIZONTAL_ALIGNMENT_CENTER))
+	vbox.add_child(portrait)
 
-	var attr_grid := GridContainer.new()
-	attr_grid.columns = 2
-	attr_grid.add_theme_constant_override("h_separation", 8)
-	attr_grid.add_theme_constant_override("v_separation", 4)
-	vbox.add_child(attr_grid)
+	# Race · Class identity line
+	_identity_lbl = _make_label("Select Race & Class", 15, C_TITLE, HORIZONTAL_ALIGNMENT_CENTER)
+	vbox.add_child(_identity_lbl)
 
-	for i in STAT_KEYS.size():
-		attr_grid.add_child(_make_label(STAT_SHORT[i], 13, C_TEXT, HORIZONTAL_ALIGNMENT_LEFT))
-		var val_lbl := _make_label(str(BASE), 13, C_NEUTRAL, HORIZONTAL_ALIGNMENT_RIGHT)
-		val_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		attr_grid.add_child(val_lbl)
-		_stat_labels[STAT_KEYS[i]] = val_lbl
+	# Character name input
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 6)
+	name_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_child(name_row)
+	name_row.add_child(_make_label("Name:", 12, C_TEXT, HORIZONTAL_ALIGNMENT_LEFT))
+
+	_name_input = LineEdit.new()
+	_name_input.placeholder_text = "Enter name..."
+	_name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_name_input.add_theme_font_size_override("font_size", 13)
+	_name_input.add_theme_color_override("font_color", C_TEXT)
+	_name_input.add_theme_color_override("font_placeholder_color", C_BORDER)
+	var le_norm := StyleBoxFlat.new()
+	le_norm.bg_color = C_PANEL
+	le_norm.border_color = C_BORDER
+	le_norm.set_border_width_all(1)
+	le_norm.set_corner_radius_all(3)
+	le_norm.content_margin_left = 6
+	le_norm.content_margin_top = 4
+	le_norm.content_margin_right = 6
+	le_norm.content_margin_bottom = 4
+	_name_input.add_theme_stylebox_override("normal", le_norm)
+	var le_focus := le_norm.duplicate() as StyleBoxFlat
+	le_focus.border_color = C_TITLE
+	_name_input.add_theme_stylebox_override("focus", le_focus)
+	_name_input.text_changed.connect(func(_t: String): _update_confirm())
+	name_row.add_child(_name_input)
 
 	vbox.add_child(HSeparator.new())
-	vbox.add_child(_make_label("— RESOURCES —", 13, C_TITLE, HORIZONTAL_ALIGNMENT_CENTER))
 
-	var res_grid := GridContainer.new()
-	res_grid.columns = 2
-	res_grid.add_theme_constant_override("h_separation", 8)
-	res_grid.add_theme_constant_override("v_separation", 4)
-	vbox.add_child(res_grid)
+	# Race description
+	_race_desc_lbl = _make_label("", 11, C_TEXT, HORIZONTAL_ALIGNMENT_LEFT)
+	_race_desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_race_desc_lbl.custom_minimum_size.y = 34
+	vbox.add_child(_race_desc_lbl)
 
+	# Class description
+	_class_desc_lbl = _make_label("", 11, C_TEXT, HORIZONTAL_ALIGNMENT_LEFT)
+	_class_desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_class_desc_lbl.custom_minimum_size.y = 34
+	vbox.add_child(_class_desc_lbl)
+
+
+func _build_bottom_bar(parent: Control) -> void:
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 14)
+	parent.add_child(hbox)
+
+	# Stats block
+	var stats_pc := _make_panel_container(false)
+	stats_pc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(stats_pc)
+	var sm := _make_margin(stats_pc, 8)
+	var sv := VBoxContainer.new()
+	sv.add_theme_constant_override("separation", 6)
+	sm.add_child(sv)
+
+	var attr_row := HBoxContainer.new()
+	attr_row.add_theme_constant_override("separation", 0)
+	sv.add_child(attr_row)
+	for i in CharacterData.STAT_KEYS.size():
+		var col := VBoxContainer.new()
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		col.add_theme_constant_override("separation", 2)
+		attr_row.add_child(col)
+		col.add_child(_make_label(CharacterData.STAT_SHORT[i], 10, C_TEXT, HORIZONTAL_ALIGNMENT_CENTER))
+		var val_lbl := _make_label(str(CharacterData.BASE), 13, C_NEUTRAL, HORIZONTAL_ALIGNMENT_CENTER)
+		col.add_child(val_lbl)
+		_stat_labels[CharacterData.STAT_KEYS[i]] = val_lbl
+
+	var res_row := HBoxContainer.new()
+	res_row.add_theme_constant_override("separation", 20)
+	sv.add_child(res_row)
 	for pair: Array in [["HP", "hp"], ["MP", "mp"], ["ST", "st"]]:
-		res_grid.add_child(_make_label(pair[0], 13, C_TEXT, HORIZONTAL_ALIGNMENT_LEFT))
-		var val := _make_label("—", 13, C_NEUTRAL, HORIZONTAL_ALIGNMENT_RIGHT)
-		val.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		res_grid.add_child(val)
+		var r := HBoxContainer.new()
+		r.add_theme_constant_override("separation", 4)
+		res_row.add_child(r)
+		r.add_child(_make_label(pair[0] + ":", 11, C_TEXT, HORIZONTAL_ALIGNMENT_LEFT))
+		var val := _make_label("—", 11, C_NEUTRAL, HORIZONTAL_ALIGNMENT_LEFT)
+		r.add_child(val)
 		_res_labels[pair[1]] = val
+
+	# Confirm button
+	var confirm_wrap := CenterContainer.new()
+	confirm_wrap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	hbox.add_child(confirm_wrap)
+	_confirm_btn = _make_confirm_btn()
+	confirm_wrap.add_child(_confirm_btn)
 
 # ── Selection ──────────────────────────────────────────────────────────────────
 
 func _on_race_selected(race: String) -> void:
 	selected_race = race
-	for r in RACES:
-		_set_btn_selected(_race_btns[r], r == race)
-	_race_desc_lbl.text = RACE_DATA[race]["desc"]
+	for r in CharacterData.RACES:
+		_style_btn(_race_btns[r], r == race)
+	_race_desc_lbl.text = CharacterData.RACE_DATA[race]["desc"]
+	_update_identity()
 	_update_class_locks(race)
 	_refresh_stats()
 	_update_confirm()
@@ -397,112 +237,131 @@ func _on_race_selected(race: String) -> void:
 
 func _on_class_selected(cls: String) -> void:
 	selected_class = cls
-	var locked_for_race := LOCKED_COMBOS.get(selected_race, []) as Array
-	for c in CLASSES:
+	var locked_for_race := CharacterData.LOCKED_COMBOS.get(selected_race, []) as Array
+	for c in CharacterData.CLASSES:
 		if not locked_for_race.has(c):
-			_set_btn_selected(_class_btns[c], c == cls)
-	_class_desc_lbl.text = CLASS_DATA[cls]["desc"]
+			_style_btn(_class_btns[c], c == cls)
+	_class_desc_lbl.text = CharacterData.CLASS_DATA[cls]["desc"]
+	_update_identity()
 	_update_race_locks(cls)
 	_refresh_stats()
 	_update_confirm()
 
 
+func _update_identity() -> void:
+	if selected_race == "" and selected_class == "":
+		_identity_lbl.text = "Select Race & Class"
+	elif selected_class == "":
+		_identity_lbl.text = selected_race
+	elif selected_race == "":
+		_identity_lbl.text = selected_class
+	else:
+		_identity_lbl.text = selected_race + "  ·  " + selected_class
+
+
 func _update_class_locks(race: String) -> void:
-	var locked := LOCKED_COMBOS.get(race, []) as Array
+	var locked := CharacterData.LOCKED_COMBOS.get(race, []) as Array
 	if selected_class in locked:
 		selected_class = ""
 		_class_desc_lbl.text = ""
-	for cls in CLASSES:
+		_update_identity()
+	for cls in CharacterData.CLASSES:
 		var btn: Button = _class_btns[cls]
 		var is_locked: bool = cls in locked
 		btn.disabled = is_locked
 		if is_locked:
 			_style_btn_locked(btn)
 		else:
-			_set_btn_selected(btn, cls == selected_class)
+			_style_btn(btn, cls == selected_class)
 
 
 func _update_race_locks(cls: String) -> void:
 	var locked_races: Array = []
-	for race in LOCKED_COMBOS:
-		if cls in LOCKED_COMBOS[race]:
+	for race in CharacterData.LOCKED_COMBOS:
+		if cls in CharacterData.LOCKED_COMBOS[race]:
 			locked_races.append(race)
 	if selected_race in locked_races:
 		selected_race = ""
 		_race_desc_lbl.text = ""
-	for race in RACES:
+		_update_identity()
+	for race in CharacterData.RACES:
 		var btn: Button = _race_btns[race]
 		var is_locked: bool = race in locked_races
 		btn.disabled = is_locked
 		if is_locked:
 			_style_btn_locked(btn)
 		else:
-			_set_btn_selected(btn, race == selected_race)
+			_style_btn(btn, race == selected_race)
+
+
+func _compute_stat_totals() -> Dictionary:
+	var totals: Dictionary = {}
+	for k in CharacterData.STAT_KEYS:
+		totals[k] = CharacterData.BASE
+	if selected_race != "":
+		for k: String in CharacterData.RACE_DATA[selected_race]["bonuses"]:
+			totals[k] += CharacterData.RACE_DATA[selected_race]["bonuses"][k]
+	if selected_class != "":
+		for k: String in CharacterData.CLASS_DATA[selected_class]["bonuses"]:
+			totals[k] += CharacterData.CLASS_DATA[selected_class]["bonuses"][k]
+	return totals
 
 
 func _refresh_stats() -> void:
-	var totals: Dictionary = {}
-	for k in STAT_KEYS:
-		totals[k] = BASE
+	var totals := _compute_stat_totals()
 
-	if selected_race != "":
-		for k: String in RACE_DATA[selected_race]["bonuses"]:
-			totals[k] += RACE_DATA[selected_race]["bonuses"][k]
-
-	if selected_class != "":
-		for k: String in CLASS_DATA[selected_class]["bonuses"]:
-			totals[k] += CLASS_DATA[selected_class]["bonuses"][k]
-
-	for k in STAT_KEYS:
+	for k in CharacterData.STAT_KEYS:
 		var lbl: Label = _stat_labels[k]
 		var val: int = totals[k]
 		lbl.text = str(val)
-		if val > BASE:
+		if val > CharacterData.BASE:
 			lbl.add_theme_color_override("font_color", C_POS)
-		elif val < BASE:
+		elif val < CharacterData.BASE:
 			lbl.add_theme_color_override("font_color", C_NEG)
 		else:
 			lbl.add_theme_color_override("font_color", C_NEUTRAL)
 
 	if selected_class != "":
-		var cd: Dictionary = CLASS_DATA[selected_class]
-		_res_labels["hp"].text = str(int(max(50.0, BASE_HP + cd["hp_bonus"])))
-		_res_labels["mp"].text = str(int(max(20.0, BASE_MP + cd["mp_bonus"])))
-		_res_labels["st"].text = str(int(max(20.0, BASE_ST + cd["stamina_bonus"])))
+		var cd: Dictionary = CharacterData.CLASS_DATA[selected_class]
+		var con_total: int = totals.get("constitution", CharacterData.BASE)
+		var con_hp_bonus: float = (con_total - 10) * 5.0
+		_res_labels["hp"].text = str(int(max(50.0, CharacterData.BASE_HP + cd["hp_bonus"] + con_hp_bonus)))
+		_res_labels["mp"].text = str(int(max(20.0, CharacterData.BASE_MP + cd["mp_bonus"])))
+		_res_labels["st"].text = str(int(max(20.0, CharacterData.BASE_ST + cd["stamina_bonus"])))
 	else:
 		for k in _res_labels:
 			(_res_labels[k] as Label).text = "—"
 
 
 func _update_confirm() -> void:
-	_confirm_btn.disabled = selected_race == "" or selected_class == ""
+	_confirm_btn.disabled = selected_race == "" or selected_class == "" or _name_input.text.strip_edges().is_empty()
 
 # ── Confirm ────────────────────────────────────────────────────────────────────
 
 func _on_confirm() -> void:
-	var rb: Dictionary = RACE_DATA[selected_race]["bonuses"]
-	var cb: Dictionary = CLASS_DATA[selected_class]["bonuses"]
+	var totals := _compute_stat_totals()
 
+	PlayerStats.player_name  = _name_input.text.strip_edges()
 	PlayerStats.race         = selected_race
 	PlayerStats.player_class = selected_class
-	PlayerStats.strength     = BASE + rb.get("strength", 0)     + cb.get("strength", 0)
-	PlayerStats.dexterity    = BASE + rb.get("dexterity", 0)    + cb.get("dexterity", 0)
-	PlayerStats.agility      = BASE + rb.get("agility", 0)      + cb.get("agility", 0)
-	PlayerStats.intelligence = BASE + rb.get("intelligence", 0) + cb.get("intelligence", 0)
-	PlayerStats.wisdom       = BASE + rb.get("wisdom", 0)       + cb.get("wisdom", 0)
-	PlayerStats.charisma     = BASE + rb.get("charisma", 0)     + cb.get("charisma", 0)
-	PlayerStats.constitution = BASE + rb.get("constitution", 0) + cb.get("constitution", 0)
+	PlayerStats.strength     = totals["strength"]
+	PlayerStats.dexterity    = totals["dexterity"]
+	PlayerStats.agility      = totals["agility"]
+	PlayerStats.intelligence = totals["intelligence"]
+	PlayerStats.wisdom       = totals["wisdom"]
+	PlayerStats.charisma     = totals["charisma"]
+	PlayerStats.constitution = totals["constitution"]
 
-	var cd: Dictionary = CLASS_DATA[selected_class]
-	var con_hp_bonus := (PlayerStats.constitution - 10) * 5.0
-	PlayerStats.max_hp      = max(50.0,  BASE_HP + cd["hp_bonus"] + con_hp_bonus)
-	PlayerStats.max_mp      = max(20.0,  BASE_MP + cd["mp_bonus"])
-	PlayerStats.max_stamina = max(20.0,  BASE_ST + cd["stamina_bonus"])
+	var cd: Dictionary = CharacterData.CLASS_DATA[selected_class]
+	var con_hp_bonus: float = (totals["constitution"] - 10) * 5.0
+	PlayerStats.max_hp      = max(50.0,  CharacterData.BASE_HP + cd["hp_bonus"] + con_hp_bonus)
+	PlayerStats.max_mp      = max(20.0,  CharacterData.BASE_MP + cd["mp_bonus"])
+	PlayerStats.max_stamina = max(20.0,  CharacterData.BASE_ST + cd["stamina_bonus"])
 	PlayerStats.set_hp(PlayerStats.max_hp)
 	PlayerStats.set_mp(PlayerStats.max_mp)
 	PlayerStats.set_stamina(PlayerStats.max_stamina)
 
-	PlayerStats.set_alignment(CLASS_STARTING_ALIGNMENT.get(selected_class, 0))
+	PlayerStats.set_alignment(CharacterData.CLASS_STARTING_ALIGNMENT.get(selected_class, 0))
 	Skills.setup_for_class(selected_class)
 	Spells.setup_for_class(selected_class)
 	get_tree().change_scene_to_file("res://node_3d.tscn")
@@ -551,10 +410,6 @@ func _make_select_btn(label_text: String) -> Button:
 	return btn
 
 
-func _set_btn_selected(btn: Button, is_selected: bool) -> void:
-	_style_btn(btn, is_selected)
-
-
 func _style_btn(btn: Button, is_selected: bool) -> void:
 	var s := StyleBoxFlat.new()
 	s.bg_color     = C_SELECTED if is_selected else C_BTN_NORM
@@ -578,8 +433,8 @@ func _style_btn(btn: Button, is_selected: bool) -> void:
 
 func _style_btn_locked(btn: Button) -> void:
 	var s := StyleBoxFlat.new()
-	s.bg_color     = UITheme.C_BTN_LOCKED_BG
-	s.border_color = UITheme.C_BTN_LOCKED_BORDER
+	s.bg_color     = C_BTN_LOCKED_BG
+	s.border_color = C_BTN_LOCKED_BORDER
 	s.set_border_width_all(1)
 	s.set_corner_radius_all(3)
 	s.content_margin_left   = 10
@@ -588,24 +443,24 @@ func _style_btn_locked(btn: Button) -> void:
 	s.content_margin_bottom = 5
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		btn.add_theme_stylebox_override(state, s)
-	btn.add_theme_color_override("font_color", UITheme.C_BTN_LOCKED_TEXT)
-	btn.add_theme_color_override("font_disabled_color", UITheme.C_BTN_LOCKED_TEXT)
+	btn.add_theme_color_override("font_color", C_BTN_LOCKED_TEXT)
+	btn.add_theme_color_override("font_disabled_color", C_BTN_LOCKED_TEXT)
 
 
 func _make_confirm_btn() -> Button:
 	var btn := Button.new()
 	btn.text = "Begin Adventure"
-	btn.custom_minimum_size = Vector2(280, 46)
+	btn.custom_minimum_size = Vector2(220, 42)
 	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	btn.add_theme_font_size_override("font_size", 18)
+	btn.add_theme_font_size_override("font_size", 17)
 	btn.add_theme_color_override("font_color", C_TITLE)
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.disabled = true
 	btn.pressed.connect(_on_confirm)
 
 	var norm := StyleBoxFlat.new()
-	norm.bg_color     = UITheme.C_CONFIRM_BG
-	norm.border_color = UITheme.C_GOLDEN_BORDER
+	norm.bg_color     = C_CONFIRM_BG
+	norm.border_color = C_GOLDEN_BORDER
 	norm.set_border_width_all(2)
 	norm.set_corner_radius_all(6)
 	norm.content_margin_left   = 24
@@ -615,13 +470,13 @@ func _make_confirm_btn() -> Button:
 	btn.add_theme_stylebox_override("normal", norm)
 
 	var hover := norm.duplicate() as StyleBoxFlat
-	hover.bg_color     = UITheme.C_CONFIRM_BG_HOVER
+	hover.bg_color     = C_CONFIRM_BG_HOVER
 	hover.border_color = C_TITLE
 	btn.add_theme_stylebox_override("hover", hover)
 
 	var dis := norm.duplicate() as StyleBoxFlat
-	dis.bg_color     = UITheme.C_CONFIRM_BG_DISABLED
-	dis.border_color = UITheme.C_CONFIRM_BORDER_DISABLED
+	dis.bg_color     = C_CONFIRM_BG_DISABLED
+	dis.border_color = C_CONFIRM_BORDER_DISABLED
 	dis.set_border_width_all(1)
 	btn.add_theme_stylebox_override("disabled", dis)
 

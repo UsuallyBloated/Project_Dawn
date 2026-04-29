@@ -1,6 +1,7 @@
 extends Node
 
 signal transformation_applied(name: String)
+signal transformation_reverted(name: String)
 
 const TRANSFORMATIONS: Dictionary = {
 	"Revenant": {
@@ -53,6 +54,9 @@ const TRANSFORMATIONS: Dictionary = {
 	},
 }
 
+# Snapshot of what was applied so the transformation can be cleanly reversed.
+var _snapshot: Dictionary = {}
+
 func can_transform(name: String) -> bool:
 	if not TRANSFORMATIONS.has(name):
 		return false
@@ -71,6 +75,7 @@ func apply_transformation(name: String) -> bool:
 	if not can_transform(name):
 		return false
 	var t: Dictionary = TRANSFORMATIONS[name]
+	_snapshot = {"stat_changes": t["stat_changes"].duplicate(), "hp_bonus": t["hp_bonus"], "mp_bonus": t["mp_bonus"]}
 	for stat in t["stat_changes"]:
 		PlayerStats[stat] += t["stat_changes"][stat]
 	PlayerStats.max_hp = maxf(50.0, PlayerStats.max_hp + t["hp_bonus"])
@@ -80,6 +85,20 @@ func apply_transformation(name: String) -> bool:
 	PlayerStats.transformation = name
 	transformation_applied.emit(name)
 	return true
+
+func revert_transformation() -> void:
+	if PlayerStats.transformation == "" or _snapshot.is_empty():
+		return
+	var reverted_name: String = PlayerStats.transformation
+	for stat in _snapshot["stat_changes"]:
+		PlayerStats[stat] -= _snapshot["stat_changes"][stat]
+	PlayerStats.max_hp = maxf(50.0, PlayerStats.max_hp - _snapshot["hp_bonus"])
+	PlayerStats.max_mp = maxf(20.0, PlayerStats.max_mp - _snapshot["mp_bonus"])
+	PlayerStats.set_hp(minf(PlayerStats.hp, PlayerStats.max_hp))
+	PlayerStats.set_mp(minf(PlayerStats.mp, PlayerStats.max_mp))
+	PlayerStats.transformation = ""
+	_snapshot = {}
+	transformation_reverted.emit(reverted_name)
 
 func get_available_transformations() -> Array[String]:
 	var result: Array[String] = []

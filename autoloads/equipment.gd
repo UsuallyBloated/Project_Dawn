@@ -47,6 +47,9 @@ func get_total_armor() -> int:
 			total += item.bonus_armor
 	return total
 
+func get_armor_class() -> int:
+	return (PlayerStats.agility / 4) + get_total_armor()
+
 func _slot_for_type(type: ItemData.Type) -> String:
 	match type:
 		ItemData.Type.WEAPON:   return "weapon"
