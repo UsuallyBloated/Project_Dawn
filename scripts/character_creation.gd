@@ -339,32 +339,8 @@ func _update_confirm() -> void:
 # ── Confirm ────────────────────────────────────────────────────────────────────
 
 func _on_confirm() -> void:
-	var totals := _compute_stat_totals()
-
-	PlayerStats.player_name  = _name_input.text.strip_edges()
-	PlayerStats.race         = selected_race
-	PlayerStats.player_class = selected_class
-	PlayerStats.strength     = totals["strength"]
-	PlayerStats.dexterity    = totals["dexterity"]
-	PlayerStats.agility      = totals["agility"]
-	PlayerStats.intelligence = totals["intelligence"]
-	PlayerStats.wisdom       = totals["wisdom"]
-	PlayerStats.charisma     = totals["charisma"]
-	PlayerStats.constitution = totals["constitution"]
-
-	var cd: Dictionary = CharacterData.CLASS_DATA[selected_class]
-	var con_hp_bonus: float = (totals["constitution"] - 10) * 5.0
-	PlayerStats.max_hp      = max(50.0,  CharacterData.BASE_HP + cd["hp_bonus"] + con_hp_bonus)
-	PlayerStats.max_mp      = max(20.0,  CharacterData.BASE_MP + cd["mp_bonus"])
-	PlayerStats.max_stamina = max(20.0,  CharacterData.BASE_ST + cd["stamina_bonus"])
-	PlayerStats.set_hp(PlayerStats.max_hp)
-	PlayerStats.set_mp(PlayerStats.max_mp)
-	PlayerStats.set_stamina(PlayerStats.max_stamina)
-
-	PlayerStats.set_alignment(CharacterData.CLASS_STARTING_ALIGNMENT.get(selected_class, 0))
-	Skills.setup_for_class(selected_class)
-	Spells.setup_for_class(selected_class)
-	WeaponSkills.initialize(selected_class, PlayerStats.level)
+	PlayerStats.player_name = _name_input.text.strip_edges()
+	PlayerStats.apply_character(selected_race, selected_class, 1)
 	get_tree().change_scene_to_file("res://scenes/world.tscn")
 
 # ── Helpers ────────────────────────────────────────────────────────────────────

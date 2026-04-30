@@ -37,6 +37,7 @@ const CLASS_CAPS: Dictionary = {
 	"Ranger":        {"1h_slashing": 225, "2h_slashing": 225, "1h_blunt": 175, "2h_blunt": 175, "piercing": 225, "hand_to_hand": 100, "defense": 200, "dodge": 225},
 	"Monk":          {"1h_slashing":  50, "2h_slashing":   0, "1h_blunt": 200, "2h_blunt": 100, "piercing":   0, "hand_to_hand": 250, "defense": 250, "dodge": 250},
 	"Witch Hunter":  {"1h_slashing": 200, "2h_slashing": 150, "1h_blunt": 100, "2h_blunt":   0, "piercing": 225, "hand_to_hand": 125, "defense": 200, "dodge": 200},
+	"Beast Master":  {"1h_slashing": 150, "2h_slashing": 100, "1h_blunt": 150, "2h_blunt": 100, "piercing": 125, "hand_to_hand": 200, "defense": 200, "dodge": 175},
 }
 
 static func get_cap(player_class: String, skill: String, level: int) -> int:

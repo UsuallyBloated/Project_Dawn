@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Flint Arrowhead"
+description = "A chipped flint point. Knapped to a sharp edge and fitted to an arrow shaft."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 4

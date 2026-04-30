@@ -7,6 +7,10 @@ signal level_changed(new_level: int)
 signal xp_changed(current_xp: int, xp_to_next: int)
 signal alignment_changed(tier: String, score: int)
 signal stats_changed
+signal character_applied
+signal coins_changed(new_amount: int)
+
+var coins: int = 100
 
 var hp: float = 100.0
 var max_hp: float = 100.0
@@ -22,6 +26,10 @@ var xp_to_next: int = 100
 var player_name: String = ""
 var player_class: String = ""
 var race: String = ""
+
+var bind_zone_path: String = ""
+var bind_entry_id: String = "default"
+var bind_zone_name: String = ""
 
 var alignment_score: int = 0
 var alignment_tier: String = "Neutral"
@@ -46,6 +54,11 @@ func set_mp(value: float) -> void:
 func set_stamina(value: float) -> void:
 	stamina = clamp(value, 0.0, max_stamina)
 	stamina_changed.emit(stamina, max_stamina)
+
+func set_bind_point(zone_path: String, entry_id: String, zone_name: String) -> void:
+	bind_zone_path = zone_path
+	bind_entry_id  = entry_id
+	bind_zone_name = zone_name
 
 func set_alignment(score: int) -> void:
 	alignment_score = clamp(score, -2000, 2000)
@@ -81,6 +94,62 @@ func get_effective_class() -> String:
 			if alignment_tier == "Exalted":
 				return "Shadow Knight_Redeemed"
 	return player_class
+
+func apply_character(race: String, cls: String, lvl: int) -> void:
+	lvl = clampi(lvl, 1, 99)
+
+	var stats: Dictionary = {}
+	for k in CharacterData.STAT_KEYS:
+		stats[k] = CharacterData.BASE
+	for k: String in CharacterData.RACE_DATA[race]["bonuses"]:
+		stats[k] += CharacterData.RACE_DATA[race]["bonuses"][k]
+	for k: String in CharacterData.CLASS_DATA[cls]["bonuses"]:
+		stats[k] += CharacterData.CLASS_DATA[cls]["bonuses"][k]
+
+	var cd: Dictionary = CharacterData.CLASS_DATA[cls]
+	var con_hp_bonus: float = (stats["constitution"] - 10) * 5.0
+	var new_max_hp  := maxf(50.0, CharacterData.BASE_HP + cd["hp_bonus"] + con_hp_bonus)
+	var new_max_mp  := maxf(20.0, CharacterData.BASE_MP + cd["mp_bonus"])
+	var new_max_st  := maxf(20.0, CharacterData.BASE_ST + cd["stamina_bonus"])
+
+	var gains: Dictionary = CharacterData.CLASS_LEVEL_GAINS.get(cls, CharacterData.CLASS_LEVEL_GAINS["_default"])
+	for _i in lvl - 1:
+		var con_before: int = stats["constitution"]
+		for stat in gains["stats"]:
+			stats[stat] += gains["stats"][stat]
+		new_max_hp += gains["max_hp"]
+		new_max_mp += gains["max_mp"]
+		new_max_st += gains["max_stamina"]
+		new_max_hp += (stats["constitution"] - con_before) * 5.0
+
+	var new_xp_to_next := 100
+	for _i in lvl - 1:
+		new_xp_to_next = int(new_xp_to_next * 1.5)
+
+	self.race            = race
+	self.player_class    = cls
+	self.strength        = stats["strength"]
+	self.dexterity       = stats["dexterity"]
+	self.agility         = stats["agility"]
+	self.intelligence    = stats["intelligence"]
+	self.wisdom          = stats["wisdom"]
+	self.charisma        = stats["charisma"]
+	self.constitution    = stats["constitution"]
+	self.level           = lvl
+	self.xp              = 0
+	self.xp_to_next      = new_xp_to_next
+	self.max_hp          = new_max_hp
+	self.max_mp          = new_max_mp
+	self.max_stamina     = new_max_st
+	self.alignment_score = CharacterData.CLASS_STARTING_ALIGNMENT.get(cls, 0)
+	self.alignment_tier  = _calc_alignment_tier()
+	set_hp(new_max_hp)
+	set_mp(new_max_mp)
+	set_stamina(new_max_st)
+	level_changed.emit(lvl)
+	xp_changed.emit(0, new_xp_to_next)
+	stats_changed.emit()
+	character_applied.emit()
 
 func gain_xp(amount: int) -> void:
 	xp += amount
@@ -138,3 +207,14 @@ func remove_item_bonuses(item: ItemData) -> void:
 	set_mp(mp)
 	set_stamina(stamina)
 	stats_changed.emit()
+
+func add_coins(amount: int) -> void:
+	coins = max(0, coins + amount)
+	coins_changed.emit(coins)
+
+func spend_coins(amount: int) -> bool:
+	if coins < amount:
+		return false
+	coins -= amount
+	coins_changed.emit(coins)
+	return true

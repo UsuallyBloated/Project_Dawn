@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Bat Blood"
+description = "Dark blood collected from a cave bat. Used alongside bat wings in shadow alchemy."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 5

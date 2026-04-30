@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Wormwood"
+description = "A bitter herb used in alchemy. Common ingredient for resistance potions."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 7

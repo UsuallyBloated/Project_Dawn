@@ -107,14 +107,30 @@ func _execute_social(sd: Dictionary) -> void:
 		_execute_command(cmd)
 
 func _execute_command(cmd: String) -> void:
-	if cmd.begins_with("/say "):
-		CombatLog.add_line("[Say] " + cmd.substr(5), CombatLog.MsgType.INFO)
+	if cmd.begins_with("/lang "):
+		var lang := cmd.substr(6).strip_edges()
+		if lang not in LanguageDefinitions.LANGUAGES:
+			CombatLog.add_line("Unknown language: %s" % lang, CombatLog.MsgType.INFO)
+		elif Languages.get_skill(lang) == 0:
+			CombatLog.add_line("You do not know that language.", CombatLog.MsgType.INFO)
+		else:
+			Languages.set_active_language(lang)
+			CombatLog.add_line("You will now speak in %s." % lang, CombatLog.MsgType.INFO)
+	elif cmd == "/languages":
+		CombatLog.add_line("Your languages:", CombatLog.MsgType.INFO)
+		for lang in LanguageDefinitions.LANGUAGES:
+			var skill := Languages.get_skill(lang)
+			if skill > 0:
+				var marker := " *" if lang == Languages.active_language else ""
+				CombatLog.add_line("  %s: %d/100%s" % [lang, skill, marker], CombatLog.MsgType.INFO)
+	elif cmd.begins_with("/say "):
+		CombatLog.add_line("[Say%s] %s" % [_lang_tag(), cmd.substr(5)], CombatLog.MsgType.INFO)
 	elif cmd.begins_with("/yell "):
-		CombatLog.add_line("[Yell] " + cmd.substr(6), CombatLog.MsgType.INFO)
+		CombatLog.add_line("[Yell%s] %s" % [_lang_tag(), cmd.substr(6)], CombatLog.MsgType.INFO)
 	elif cmd.begins_with("/shout "):
-		CombatLog.add_line("[Shout] " + cmd.substr(7), CombatLog.MsgType.INFO)
+		CombatLog.add_line("[Shout%s] %s" % [_lang_tag(), cmd.substr(7)], CombatLog.MsgType.INFO)
 	elif cmd.begins_with("/group "):
-		CombatLog.add_line("[Group] " + cmd.substr(7), CombatLog.MsgType.INFO)
+		CombatLog.add_line("[Group%s] %s" % [_lang_tag(), cmd.substr(7)], CombatLog.MsgType.INFO)
 	elif cmd.begins_with("/tell "):
 		var rest := cmd.substr(6)
 		var sep := rest.find(" ")
@@ -132,7 +148,11 @@ func _execute_command(cmd: String) -> void:
 	elif cmd.begins_with("/"):
 		CombatLog.add_line(cmd, CombatLog.MsgType.INFO)
 	else:
-		CombatLog.add_line("[Say] " + cmd, CombatLog.MsgType.INFO)
+		CombatLog.add_line("[Say%s] %s" % [_lang_tag(), cmd], CombatLog.MsgType.INFO)
+
+func _lang_tag() -> String:
+	var lang := Languages.active_language
+	return "" if lang == "Common" else " (%s)" % lang
 
 func _save() -> void:
 	var data: Array = []

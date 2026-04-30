@@ -6,3 +6,6 @@ description = "Shoes mended so many times the original material is hard to find.
 type = 5
 rarity = 0
 stack_size = 1
+bonus_armor = 1
+armor_type = "cloth"
+vendor_price = 2

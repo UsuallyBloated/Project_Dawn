@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Bear Hide"
+description = "Dense fur-covered hide from a bear. Makes excellent heavy leather armor."
+type = 10
+rarity = 0
+stack_size = 5
+vendor_price = 14

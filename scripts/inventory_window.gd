@@ -176,6 +176,8 @@ func _make_slot_cell(index: int) -> Panel:
 	count_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	count_label.add_theme_font_size_override("font_size", 10)
 	count_label.add_theme_color_override("font_color", Color.WHITE)
+	count_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	count_label.add_theme_constant_override("outline_size", 3)
 	count_label.set_meta("is_count", true)
 	cell.add_child(count_label)
 
@@ -232,7 +234,10 @@ func _on_slot_input(event: InputEvent, index: int) -> void:
 		if slot == null:
 			return
 		var item: ItemData = slot["item"]
-		if item.type != ItemData.Type.CONSUMABLE and item.type != ItemData.Type.MISC:
+		if item.type == ItemData.Type.CONSUMABLE:
+			_use_consumable(item)
+			get_viewport().set_input_as_handled()
+		elif item.type != ItemData.Type.MISC:
 			Inventory.remove_at(index)
 			Equipment.equip(item)
 			get_viewport().set_input_as_handled()
@@ -321,6 +326,29 @@ func _confirm_destroy() -> void:
 
 func _cancel_destroy() -> void:
 	_confirm_panel.visible = false
+
+func _use_consumable(item: ItemData) -> void:
+	if item.heal_on_use == 0.0 and item.mp_on_use == 0.0:
+		CombatLog.add_line("You can't use %s that way." % item.item_name, CombatLog.MsgType.INFO)
+		return
+	Inventory.remove_item(item, 1)
+	var parts: Array[String] = []
+	if item.heal_on_use > 0.0:
+		var before := PlayerStats.hp
+		PlayerStats.set_hp(PlayerStats.hp + item.heal_on_use)
+		var gained := PlayerStats.hp - before
+		if gained > 0.0:
+			parts.append("%d HP" % int(gained))
+	if item.mp_on_use > 0.0:
+		var before := PlayerStats.mp
+		PlayerStats.set_mp(PlayerStats.mp + item.mp_on_use)
+		var gained := PlayerStats.mp - before
+		if gained > 0.0:
+			parts.append("%d MP" % int(gained))
+	var msg := "You use %s." % item.item_name
+	if not parts.is_empty():
+		msg += " You recover %s." % " and ".join(parts)
+	CombatLog.add_line(msg, CombatLog.MsgType.INFO)
 
 func _return_item_to_slot() -> void:
 	if _drag_item == null:

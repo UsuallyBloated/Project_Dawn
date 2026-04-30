@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Spider Venom Sac"
+description = "Venom harvested from a spider's abdomen. Used in paralysis and poison potions."
+type = 10
+rarity = 0
+stack_size = 10
+vendor_price = 10

@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Mechanical Trap"
+description = "A spring-loaded device that snaps shut when triggered. Place it in a dungeon corridor."
+type = 10
+rarity = 1
+stack_size = 5
+vendor_price = 90

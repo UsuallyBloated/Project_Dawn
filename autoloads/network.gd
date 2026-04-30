@@ -9,6 +9,7 @@ signal connection_failed
 signal server_disconnected
 
 var is_online := false
+var is_test_room := false
 
 func _ready() -> void:
 	multiplayer.peer_connected.connect(_on_peer_connected)

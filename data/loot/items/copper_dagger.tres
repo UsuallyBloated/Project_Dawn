@@ -1,0 +1,13 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Copper Dagger"
+description = "A short copper blade. Not the sturdiest metal but holds a workable edge."
+type = 0
+rarity = 0
+stack_size = 1
+bonus_dexterity = 1
+weapon_damage_min = 3
+weapon_damage_max = 7
+weapon_skill = "piercing"
+vendor_price = 22

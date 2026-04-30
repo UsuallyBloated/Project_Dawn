@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Poison Vial"
+description = "A vial of distilled nightshade and serpent venom. Applied to a weapon before combat."
+type = 9
+rarity = 1
+stack_size = 10
+vendor_price = 32

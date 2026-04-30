@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Pliable Wood"
+description = "A flexible length of wood. Bent into bow limbs by a skilled fletcher."
+type = 10
+rarity = 0
+stack_size = 10
+vendor_price = 6

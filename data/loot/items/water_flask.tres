@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Water Flask"
+description = "A flask filled with fresh water. Used in cooking, brewing, and alchemy combines."
+type = 9
+rarity = 0
+stack_size = 10
+vendor_price = 3

@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Bread Loaf"
+description = "A freshly baked loaf of bread. Restores health slowly out of combat."
+type = 9
+rarity = 0
+stack_size = 10
+vendor_price = 4

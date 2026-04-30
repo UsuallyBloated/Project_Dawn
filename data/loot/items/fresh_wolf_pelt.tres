@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Fresh Wolf Pelt"
+description = "A recently skinned wolf pelt. Better quality than a damaged pelt. Used in tailoring."
+type = 10
+rarity = 0
+stack_size = 5
+vendor_price = 10

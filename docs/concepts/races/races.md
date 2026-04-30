@@ -1,4 +1,30 @@
 
+# Races Index
+
+Individual race lore files:
+
+| Race | Alignment | File |
+|---|---|---|
+| [Human](human.md) | Neutral | [human.md](human.md) |
+| [Elf](elf.md) | Good | [elf.md](elf.md) |
+| [Dark Elf](dark_elf.md) | Evil | [dark_elf.md](dark_elf.md) |
+| [Wood Elf](wood_elf.md) | Neutral | [wood_elf.md](wood_elf.md) |
+| [Gnome](gnome.md) | Neutral | [gnome.md](gnome.md) |
+| [Halfling](halfling.md) | Good | [halfling.md](halfling.md) |
+| [Dwarf](dwarf.md) | Good | [dwarf.md](dwarf.md) |
+| [Half-Elf](half_elf.md) | Neutral | [half_elf.md](half_elf.md) |
+| [Ogre](ogre.md) | Evil | [ogre.md](ogre.md) |
+| [Troll](troll.md) | Evil | [troll.md](troll.md) |
+| [Kel`varath](kel_varath.md) | Evil | [kel_varath.md](kel_varath.md) |
+| [Minotaur](minotaur.md) | Neutral | [minotaur.md](minotaur.md) |
+| [Fae](fae.md) | Neutral | [fae.md](fae.md) |
+| [Felhari](felhari.md) | Neutral | [felhari.md](felhari.md) |
+| [Kobold](kobold.md) | Evil | [kobold.md](kobold.md) |
+| [Revenant](revenant.md) | Evil | [revenant.md](revenant.md) |
+| [Half-Ogre](half_ogre.md) | Neutral | [half_ogre.md](half_ogre.md) |
+
+---
+
 ## Male & Female Physical Descriptions
 
 *Sexual dimorphism varies widely by race. Notes below cover body type, face, and any features that differ meaningfully between sexes. Where dimorphism is low, both are described together. Special notes follow the table for races with unusual biology.*
@@ -25,15 +51,15 @@
 | | Female | 7'0"–8'0" | 420–600 lbs | Slightly narrower skull, same brutal mass | Tusks shorter but broader; often faster than males despite the size |
 | **Troll** | Male | 7'0"–8'0" | 300–500 lbs | Long-limbed, hunched, hollow cheeks | Warts larger and more clustered; visibly damaged and not slowed by it |
 | | Female | 6'6"–7'6" | 260–430 lbs | Slightly shorter, same warty texture | More moss-clung on average; bioluminescent eye-glow fractionally brighter |
-| **Iksar** | Male | 5'10"–6'6" | 180–270 lbs | Leaner, brighter scale coloration | Display frill at neck flares during aggression or intimidation |
+| **Kel`varath** | Male | 5'10"–6'6" | 180–270 lbs | Leaner, brighter scale coloration | Display frill at neck flares during aggression or intimidation |
 | | Female | 6'2"–7'0" | 220–320 lbs | Larger, heavier scale plating | Subtler coloration (better camouflage); slightly broader skull; carry the eggs |
 | **Minotaur** | Male | 7'4"–8'0" | 520–700 lbs | Massive neck and shoulders, wide horns | Horns curve outward and up; dewlap visible beneath the jaw |
 | | Female | 7'0"–7'8" | 430–580 lbs | Marginally narrower, still enormous | Horns curve more forward; face slightly less heavy-muzzled |
-###| **Revenant** | Male | As in life | Lighter than in life | Preserved at moment of ###death | The grey-blue pallor and still eyes are consistent; everything else is whoever ###they were |
-###| | Female | As in life | Lighter than in life | Preserved at moment of death | Same — ###a Revenant's appearance is their last living moment, held indefinitely |
+| **Revenant** | Male | As in life | Lighter than in life | Preserved at moment of death | Grey-blue pallor; still eyes — present, aware, not moving naturally |
+| | Female | As in life | Lighter than in life | Preserved at moment of death | Same — a Revenant's appearance is their last living moment, held indefinitely |
 | **Fae** | Male | 1'2"–1'6" | 5–8 lbs | Slightly more angular features, sharper chin | Wings more often patterned than iridescent; skin-glow cooler-toned |
 | | Female | 1'0"–1'4" | 4–6 lbs | Marginally softer features | Skin-glow warmer; wings broader relative to body |
-| **Vah Shir** | Male | 6'0"–6'8" | 200–280 lbs | Heavier build, prominent collar mane | Mane color often darker than body fur; marks social standing in some clans |
+| **Felhari** | Male | 6'0"–6'8" | 200–280 lbs | Heavier build, prominent collar mane | Mane color often darker than body fur; marks social standing in some clans |
 | | Female | 5'8"–6'3" | 160–225 lbs | No mane, slightly more lithe | Marginally faster; hearing fractionally sharper — both sexes fight equally |
 | **Kobold** | Male | 3'6"–4'2" | 55–90 lbs | Wiry hair, sharp dog muzzle, larger pointed ears | Ears often scarred from tunnel scrapes |
 | | Female | 3'4"–4'0" | 48–76 lbs | Slightly rounder muzzle, ears only marginally smaller | Fur tends to be slightly thicker|
@@ -42,8 +68,8 @@
 
 ### Special Notes
 
-**Iksar — Reversed Dimorphism**
-Unlike most races, Iksar females are larger and more heavily armored than males. Males evolved brighter coloration and display frills for mate signaling; females evolved mass and scale density as nest defenders. In Iksar culture this is unremarkable — size is simply a female trait, the way tusks are an Ogre male trait.
+**Kel`varath — Reversed Dimorphism**
+Unlike most races, Kel`varath females are larger and more heavily armored than males. Males evolved brighter coloration and display frills for mate signaling; females evolved mass and scale density as nest defenders. In Kel`varath culture this is unremarkable — size is simply a female trait, the way tusks are an Ogre male trait.
 
 **Dwarf — Beard Tradition**
 Dwarven females are physiologically capable of growing beards. Whether they do is entirely a matter of clan tradition and personal preference, with enormous variation across mountain holds. In some clans a bearded woman signals warrior caste; in others it's purely aesthetic. Neither choice carries stigma — outsiders who find it remarkable are the ones who get laughed at.
@@ -62,35 +88,35 @@ Revenants are frozen at their moment of death. They retain whatever gender prese
 
 **Warrior** — Available to all races.
 
-**Paladin** — Human, Elf, Halfling, Dwarf, Half-Elf, Vah Shir, Half-Ogre. Blocked: all Evil-aligned races. Fae follow no mortal religious hierarchies.
+**Paladin** — Human, Elf, Halfling, Dwarf, Half-Elf, Felhari, Half-Ogre. Blocked: all Evil-aligned races, Revenant (dead faith — divine structures do not extend to the undead). Fae follow no mortal religious hierarchies.
 
-**Shadow Knight** — Human, Dark Elf, Half-Elf, Ogre, Troll, Iksar, Minotaur, Kobold, Half-Ogre. Blocked: all Good-aligned races. Requires a genuine darkness that cannot be performed.
+**Shadow Knight** — Human, Dark Elf, Half-Elf, Ogre, Troll, Kel`varath, Minotaur, Revenant, Kobold, Half-Ogre. Blocked: all Good-aligned races. Requires a genuine darkness that cannot be performed.
 
-**Cleric** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Ogre, Troll, Minotaur, Vah Shir, Kobold, Half-Ogre. Blocked: Fae (no mortal gods). Iksar follow necromantic tradition rather than clerical orders.
+**Cleric** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Ogre, Troll, Minotaur, Felhari, Kobold, Half-Ogre. Blocked: Fae (no mortal gods), Revenant (dead faith — divine structures do not extend to the undead). Kel`varath follow necromantic tradition rather than clerical orders.
 
-**Druid** — Human, Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Minotaur, Fae, Vah Shir. Blocked: Dark Elf (severed from living nature by generations underground), Ogre, Troll, Iksar, Kobold, Half-Ogre.
+**Druid** — Human, Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Minotaur, Fae, Felhari. Blocked: Dark Elf (severed from living nature by generations underground), Revenant (no living-nature connection remains), Ogre, Troll, Kel`varath, Kobold, Half-Ogre.
 
-**Shaman** — Human, Ogre, Troll, Iksar, Minotaur, Vah Shir, Kobold, Half-Ogre. Blocked: races without active ancestor-spirit traditions. Gnome ancestor spirits actively resist the summons.
+**Shaman** — Human, Ogre, Troll, Kel`varath, Minotaur, Felhari, Kobold, Half-Ogre. Blocked: races without active ancestor-spirit traditions, Revenant (the tradition requires a living conduit; Revenants blur the line in ways the spirits find uncomfortable). Gnome ancestor spirits actively resist the summons.
 
-**Rogue** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Iksar, Fae, Vah Shir, Kobold. Blocked: Ogre, Troll, Minotaur, Half-Ogre — size and gait incompatible with the craft.
+**Rogue** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Kel`varath, Revenant, Fae, Felhari, Kobold. Blocked: Ogre, Troll, Minotaur, Half-Ogre — size and gait incompatible with the craft.
 
-**Monk** — Human, Elf, Halfling, Dwarf, Half-Elf, Iksar, Vah Shir. Blocked: Ogre, Troll, Minotaur, Half-Ogre (mass and temperament); Fae (size); Dark Elf (the arrogance the training cannot overcome); Gnome (the body will not cooperate with what the mind attempts).
+**Monk** — Human, Elf, Halfling, Dwarf, Half-Elf, Kel`varath, Felhari. Blocked: Ogre, Troll, Minotaur, Half-Ogre (mass and temperament); Fae (size); Dark Elf (the arrogance the training cannot overcome); Gnome (the body will not cooperate with what the mind attempts); Revenant (a living-body discipline — the undead body does not respond to the training).
 
-**Ranger** — Human, Elf, Wood Elf, Halfling, Dwarf, Half-Elf, Minotaur, Fae, Vah Shir. Blocked: Dark Elf, Ogre, Troll, Iksar, Gnome, Kobold, Half-Ogre.
+**Ranger** — Human, Elf, Wood Elf, Halfling, Dwarf, Half-Elf, Minotaur, Fae, Felhari. Blocked: Dark Elf, Revenant, Ogre, Troll, Kel`varath, Gnome, Kobold, Half-Ogre.
 
-**Witch Hunter** — Human, Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Vah Shir, Half-Ogre. Blocked: Evil-aligned races (they are the hunted), Minotaur, Fae, Ogre, Troll, Kobold.
+**Witch Hunter** — Human, Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Felhari, Half-Ogre. Blocked: Evil-aligned races (they are the hunted), Revenant (they are the subject of the hunt, not the hunter), Minotaur, Fae, Ogre, Troll, Kobold.
 
-**Bard** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Minotaur, Fae, Vah Shir, Kobold. Blocked: Ogre, Troll, Iksar, Half-Ogre.
+**Bard** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Minotaur, Fae, Felhari, Kobold. Blocked: Revenant (the art requires resonance with living audiences in ways their presence disrupts), Ogre, Troll, Kel`varath, Half-Ogre.
 
-**Magician** — Available to all races except Ogre (INT floor too low for arcane study).
+**Magician** — Available to all races except Ogre (INT floor too low for arcane study). Revenant is included — elemental summoning has no living-body requirement.
 
-**Wizard** — Human, Elf, Dark Elf, Gnome, Dwarf, Half-Elf, Iksar, Fae. Requires sustained scholarly study over years or decades. Blocked: Ogre, Troll (cannot hold the concepts), Wood Elf (oral tradition only), Halfling (no institutional arcane tradition), Minotaur (displaced people, no fixed schools), Vah Shir (no tradition), Kobold (lifespan too short for meaningful academic completion), Half-Ogre.
+**Wizard** — Human, Elf, Dark Elf, Gnome, Dwarf, Half-Elf, Kel`varath, Fae. Requires sustained scholarly study over years or decades. Blocked: Ogre, Troll (cannot hold the concepts), Wood Elf (oral tradition only), Halfling (no institutional arcane tradition), Minotaur (displaced people, no fixed schools), Felhari (no tradition), Kobold (lifespan too short for meaningful academic completion), Revenant (not blocked on principle — the spells work — but the mana mathematics assume a living caster and the correction is not resolved), Half-Ogre.
 
-**Sorcerer** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Troll, Iksar, Fae, Vah Shir, Kobold, Half-Ogre. Innate power — no training required. Blocked: Ogre and Minotaur, where the bloodline power exists but manifests as uncontrolled destructive episodes rather than usable magic.
+**Sorcerer** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Troll, Kel`varath, Revenant, Fae, Felhari, Kobold, Half-Ogre. Innate power — no training required; the death did not touch this. Blocked: Ogre and Minotaur, where the bloodline power exists but manifests as uncontrolled destructive episodes rather than usable magic.
 
-**Enchanter** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Half-Elf, Fae. Requires sustained concentration and social intelligence. Blocked: Dwarf, Ogre, Troll, Iksar, Minotaur, Vah Shir, Kobold, Half-Ogre.
+**Enchanter** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Half-Elf, Fae. Requires sustained concentration and social intelligence. Blocked: Revenant (mind magic requires projecting life energy — Revenants project something else), Dwarf, Ogre, Troll, Kel`varath, Minotaur, Felhari, Kobold, Half-Ogre.
 
-**Necromancer** — Human, Dark Elf, Gnome, Ogre, Troll, Iksar, Kobold. Taboo is absolute among Good-aligned races. Blocked: Elf, Halfling, Dwarf (the prohibition is cultural bedrock, not law), Wood Elf, Half-Elf, Minotaur, Fae, Vah Shir, Half-Ogre.
+**Necromancer** — Human, Dark Elf, Gnome, Ogre, Troll, Kel`varath, Revenant, Kobold. Taboo is absolute among Good-aligned races. Blocked: Elf, Halfling, Dwarf (the prohibition is cultural bedrock, not law), Wood Elf, Half-Elf, Minotaur, Fae, Felhari, Half-Ogre.
 
-**Blood Mage** — Human, Dark Elf, Half-Elf, Ogre, Troll, Iksar, Kobold, Half-Ogre. Blocked: all Good-aligned races, Gnome, Fae (biology incompatible), Minotaur, Vah Shir, Wood Elf.
+**Blood Mage** — Human, Dark Elf, Half-Elf, Ogre, Troll, Kel`varath, Revenant, Kobold, Half-Ogre. Blocked: all Good-aligned races, Gnome, Fae (biology incompatible), Minotaur, Felhari, Wood Elf. Revenant lifetap works at full rate regardless of their undead status — a known anomaly that Blood Mage guilds find professionally interesting.
 

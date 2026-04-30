@@ -1,0 +1,13 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Copper Short Sword"
+description = "A short sword forged from copper. A step up from salvaged weapons."
+type = 0
+rarity = 0
+stack_size = 1
+bonus_strength = 1
+weapon_damage_min = 4
+weapon_damage_max = 9
+weapon_skill = "1h_slashing"
+vendor_price = 40

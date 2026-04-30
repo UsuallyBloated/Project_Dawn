@@ -1,0 +1,10 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Shadow Draught"
+description = "A viscous black liquid distilled from shadow essence and bat blood. Enhances shadow magic."
+type = 9
+rarity = 1
+stack_size = 10
+mp_on_use = 60.0
+vendor_price = 38

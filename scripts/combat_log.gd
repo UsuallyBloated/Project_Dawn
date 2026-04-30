@@ -1,13 +1,12 @@
 extends CanvasLayer
 
-const MAX_LINES   := 30
-const VISIBLE_ROWS := 6
-const LINE_HEIGHT  := 18
+const MAX_LINES    := 200
+const PANEL_HEIGHT := 148
 
 const C_BG       := Color(0.04, 0.03, 0.02, 0.80)
 const C_BORDER   := Color(0.20, 0.15, 0.05)
-const C_DMG_OUT  := Color(0.95, 0.78, 0.25)  # player deals damage
-const C_DMG_IN   := Color(0.90, 0.30, 0.25)  # player takes damage
+const C_DMG_OUT  := Color(0.95, 0.78, 0.25)
+const C_DMG_IN   := Color(0.90, 0.30, 0.25)
 const C_HEAL     := Color(0.35, 0.90, 0.45)
 const C_INFO     := Color(0.70, 0.65, 0.55)
 const C_LEVEL    := Color(0.60, 0.85, 1.00)
@@ -23,10 +22,11 @@ const C_GROUP    := Color(0.45, 0.80, 1.00)
 enum MsgType { DAMAGE_OUT, DAMAGE_IN, HEAL, INFO, LEVEL_UP, LOOT, EVADE,
 			   SAY, SHOUT, OOC, TELL_OUT, TELL_IN, GROUP_CHAT }
 
-var _lines: Array = []
-var _labels: Array = []
+var _scroll: ScrollContainer = null
+var _msg_vbox: VBoxContainer = null
 var _panel: DraggablePanel = null
 var _last_hp: float = 0.0
+var _auto_scroll := true
 
 func _ready() -> void:
 	_build_ui()
@@ -42,7 +42,7 @@ func _build_ui() -> void:
 	_panel.offset_left   = 10
 	_panel.offset_right  = 310
 	_panel.offset_bottom = -80
-	_panel.offset_top    = -(VISIBLE_ROWS * LINE_HEIGHT + 20 + 80)
+	_panel.offset_top    = -(PANEL_HEIGHT + 80)
 
 	var style := StyleBoxFlat.new()
 	style.bg_color     = C_BG
@@ -52,18 +52,24 @@ func _build_ui() -> void:
 	_panel.add_theme_stylebox_override("panel", style)
 	add_child(_panel)
 
-	for i in VISIBLE_ROWS:
-		var lbl := Label.new()
-		lbl.add_theme_font_size_override("font_size", 12)
-		lbl.anchor_left  = 0.0
-		lbl.anchor_right = 1.0
-		lbl.offset_left  = 6
-		lbl.offset_right = -6
-		lbl.offset_top   = 6 + i * LINE_HEIGHT
-		lbl.offset_bottom = 6 + (i + 1) * LINE_HEIGHT
-		lbl.clip_text    = true
-		_panel.add_child(lbl)
-		_labels.append(lbl)
+	_scroll = ScrollContainer.new()
+	_scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_scroll.offset_left = 6; _scroll.offset_top = 6
+	_scroll.offset_right = -6; _scroll.offset_bottom = -6
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_panel.add_child(_scroll)
+
+	_msg_vbox = VBoxContainer.new()
+	_msg_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_msg_vbox.add_theme_constant_override("separation", 1)
+	_scroll.add_child(_msg_vbox)
+
+	_scroll.get_v_scroll_bar().value_changed.connect(_on_scroll_value_changed)
+
+func _on_scroll_value_changed(value: float) -> void:
+	var bar := _scroll.get_v_scroll_bar()
+	_auto_scroll = value >= bar.max_value - bar.page
 
 func _connect_signals() -> void:
 	Skills.skill_used.connect(func(sk):
@@ -78,49 +84,75 @@ func _connect_signals() -> void:
 	Combat.target_changed.connect(func(enemy):
 		if enemy != null and is_instance_valid(enemy):
 			add_line("You target %s." % enemy.mob_name, MsgType.INFO))
+	Combat.player_hit_enemy.connect(func(t, a): add_damage_out(t, a))
+	Combat.player_missed_enemy.connect(func(t): add_line("You miss %s." % t, MsgType.DAMAGE_OUT))
+	Combat.player_evaded_attack.connect(func(n): add_evade(n))
+	Combat.player_took_damage.connect(func(n, a):
+		add_line("%s hits you for %d damage." % [n, a], MsgType.DAMAGE_IN))
 	WeaponSkills.skill_advanced.connect(func(skill_name: String, new_value: int, cap: int):
-		var display := WeaponSkillDefinitions.DISPLAY.get(skill_name, skill_name)
+		var display: String = WeaponSkillDefinitions.DISPLAY.get(skill_name, skill_name)
 		add_line("Your %s skill has increased to %d (cap: %d)." % [display, new_value, cap], MsgType.LEVEL_UP))
+	BuffManager.dot_applied.connect(func(tname, sname):
+		add_line("%s is afflicted by %s." % [tname, sname], MsgType.DAMAGE_OUT))
+	BuffManager.hot_applied.connect(func(sname):
+		add_line("You feel the effects of %s." % sname, MsgType.HEAL))
+	BuffManager.absorb_applied.connect(func(amount, sname):
+		add_line("A %s shield forms around you. (%d HP)" % [sname, amount], MsgType.HEAL))
+	BuffManager.absorb_damaged.connect(func(absorbed, remaining):
+		add_line("Your shield absorbs %d damage. (%d remaining)" % [absorbed, remaining], MsgType.HEAL))
+	BuffManager.absorb_broken.connect(func():
+		add_line("Your shield has been destroyed!", MsgType.DAMAGE_IN))
+	BuffManager.evade_boost_applied.connect(func():
+		add_line("You slip into a defensive stance.", MsgType.INFO))
+	BuffManager.dot_ticked.connect(func(tname, amount, sname):
+		add_line("%s takes %d from %s." % [tname, amount, sname], MsgType.DAMAGE_OUT))
+	BuffManager.hot_ticked.connect(func(amount, sname):
+		add_line("You recover %d health from %s." % [amount, sname], MsgType.HEAL))
+	PetManager.pet_info.connect(func(text): add_line(text, MsgType.INFO))
 
 func _on_player_hp_changed(current: float, _max: float) -> void:
 	var diff := current - _last_hp
-	if diff > 0.0:
+	if diff > 0.0 and not BuffManager.is_hot_healing():
 		add_line("You recover %d health." % int(diff), MsgType.HEAL)
 	_last_hp = current
 
 func add_line(text: String, type: MsgType = MsgType.INFO) -> void:
-	_lines.append({"text": text, "type": type})
-	if _lines.size() > MAX_LINES:
-		_lines.pop_front()
-	_refresh()
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.clip_text = true
+	lbl.add_theme_color_override("font_color", _color_for(type))
+	_msg_vbox.add_child(lbl)
+
+	if _msg_vbox.get_child_count() > MAX_LINES:
+		_msg_vbox.get_child(0).queue_free()
+
+	if _auto_scroll:
+		call_deferred("_scroll_to_bottom")
+
+func _scroll_to_bottom() -> void:
+	if _scroll != null:
+		_scroll.scroll_vertical = _scroll.get_v_scroll_bar().max_value
+
+func _color_for(type: MsgType) -> Color:
+	match type:
+		MsgType.DAMAGE_OUT: return C_DMG_OUT
+		MsgType.DAMAGE_IN:  return C_DMG_IN
+		MsgType.HEAL:       return C_HEAL
+		MsgType.LEVEL_UP:   return C_LEVEL
+		MsgType.LOOT:       return C_LOOT
+		MsgType.EVADE:      return C_EVADE
+		MsgType.SAY:        return C_SAY
+		MsgType.SHOUT:      return C_SHOUT
+		MsgType.OOC:        return C_OOC
+		MsgType.TELL_OUT:   return C_TELL_OUT
+		MsgType.TELL_IN:    return C_TELL_IN
+		MsgType.GROUP_CHAT: return C_GROUP
+		_:                  return C_INFO
 
 func add_damage_out(target_name: String, amount: int) -> void:
 	add_line("You hit %s for %d damage." % [target_name, amount], MsgType.DAMAGE_OUT)
 
 func add_evade(attacker_name: String) -> void:
 	add_line("You evade %s's attack!" % attacker_name, MsgType.EVADE)
-
-func _refresh() -> void:
-	var start := maxi(0, _lines.size() - VISIBLE_ROWS)
-	for i in VISIBLE_ROWS:
-		var lbl: Label = _labels[i]
-		var idx := start + i
-		if idx >= _lines.size():
-			lbl.text = ""
-			continue
-		var entry: Dictionary = _lines[idx]
-		lbl.text = entry["text"]
-		match entry["type"]:
-			MsgType.DAMAGE_OUT:  lbl.add_theme_color_override("font_color", C_DMG_OUT)
-			MsgType.DAMAGE_IN:   lbl.add_theme_color_override("font_color", C_DMG_IN)
-			MsgType.HEAL:        lbl.add_theme_color_override("font_color", C_HEAL)
-			MsgType.LEVEL_UP:    lbl.add_theme_color_override("font_color", C_LEVEL)
-			MsgType.LOOT:        lbl.add_theme_color_override("font_color", C_LOOT)
-			MsgType.EVADE:       lbl.add_theme_color_override("font_color", C_EVADE)
-			MsgType.SAY:         lbl.add_theme_color_override("font_color", C_SAY)
-			MsgType.SHOUT:       lbl.add_theme_color_override("font_color", C_SHOUT)
-			MsgType.OOC:         lbl.add_theme_color_override("font_color", C_OOC)
-			MsgType.TELL_OUT:    lbl.add_theme_color_override("font_color", C_TELL_OUT)
-			MsgType.TELL_IN:     lbl.add_theme_color_override("font_color", C_TELL_IN)
-			MsgType.GROUP_CHAT:  lbl.add_theme_color_override("font_color", C_GROUP)
-			_:                   lbl.add_theme_color_override("font_color", C_INFO)

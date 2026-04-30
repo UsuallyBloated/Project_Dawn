@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Pristine Wolf Pelt"
+description = "A flawless wolf pelt with no tears. Highly sought after by tailors."
+type = 10
+rarity = 1
+stack_size = 5
+vendor_price = 20

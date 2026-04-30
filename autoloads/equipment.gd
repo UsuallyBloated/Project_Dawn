@@ -39,16 +39,8 @@ func _apply_stat_bonuses(item: ItemData) -> void:
 func _remove_stat_bonuses(item: ItemData) -> void:
 	PlayerStats.remove_item_bonuses(item)
 
-func get_total_armor() -> int:
-	var total := 0
-	for slot in equipped:
-		var item = equipped[slot]
-		if item != null:
-			total += item.bonus_armor
-	return total
-
 func get_armor_class() -> int:
-	return (PlayerStats.agility / 4) + get_total_armor()
+	return (PlayerStats.agility / 4) + ArmorSkills.get_effective_armor(equipped)
 
 func _slot_for_type(type: ItemData.Type) -> String:
 	match type:

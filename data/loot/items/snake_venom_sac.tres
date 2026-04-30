@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Snake Venom Sac"
+description = "A venom gland carefully extracted from a snake. Potent alchemy ingredient."
+type = 10
+rarity = 0
+stack_size = 10
+vendor_price = 8

@@ -6,3 +6,4 @@ description = "Hard and unpleasant, but it will keep you going."
 type = 9
 rarity = 0
 stack_size = 20
+vendor_price = 1

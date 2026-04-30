@@ -4,6 +4,111 @@ class_name SpellDefinitions
 # Fields: name, desc, mana_cost, cast_time, cooldown, base_damage,
 #         damage_type, target_type, heal_amount, hp_cost, classes
 
+# Discipline each spell trains. Looked up by spell name in spells.gd at load time.
+# evocation = direct damage | alteration = buff/debuff/heal/HoT/DoT/CC
+# abjuration = absorb/ward  | conjuration = summon/charm | divination = detect/identify
+const DISCIPLINE: Dictionary = {
+	# Magician
+	"Fireball":          "evocation",
+	"Frost Bolt":        "evocation",
+	"Lightning Strike":  "evocation",
+	"Heal":              "alteration",
+	"Arcane Missile":    "evocation",
+	# Cleric
+	"Healing Light":     "alteration",
+	"Greater Heal":      "alteration",
+	"Smite":             "evocation",
+	"Divine Wrath":      "evocation",
+	# Druid
+	"Regrowth":          "alteration",
+	"Wrath":             "evocation",
+	"Call Lightning":    "evocation",
+	"Entangle":          "alteration",
+	# Shaman
+	"Healing Wave":      "alteration",
+	"Mending":           "alteration",
+	"Spirit Bolt":       "evocation",
+	"Ancestral Strike":  "evocation",
+	# Blood Mage
+	"Blood Bolt":        "evocation",
+	"Crimson Bolt":      "evocation",
+	"Life Drain":        "alteration",
+	"Hemorrhage":        "evocation",
+	# Paladin
+	"Lay on Hands":      "alteration",
+	"Crusader's Mend":   "alteration",
+	"Righteous Fire":    "evocation",
+	"Judgment":          "evocation",
+	# Shadow Knight
+	"Lifetap":           "alteration",
+	"Siphon":            "evocation",
+	"Dark Shroud":       "evocation",
+	# Necromancer
+	"Summon Skeleton":   "conjuration",
+	"Bone Shards":       "evocation",
+	"Soul Drain":        "alteration",
+	"Dark Decay":        "alteration",
+	"Enervation":        "evocation",
+	# Enchanter
+	"Charm":             "conjuration",
+	"Color Spray":       "evocation",
+	"Mesmerize":         "alteration",
+	"Rune":              "abjuration",
+	"Cascade of Stars":  "evocation",
+	# Bard
+	"Siren's Song":      "conjuration",
+	"Dissonance":        "evocation",
+	"Battle Hymn":       "alteration",
+	"Chorus of Misery":  "evocation",
+	# Ranger
+	"Hunter's Mark":     "evocation",
+	"Nature's Cure":     "alteration",
+	# Witch Hunter
+	"Witchfire":         "evocation",
+	"Expose":            "evocation",
+	"Rite of Warding":   "alteration",
+	"Banishment":        "evocation",
+	# Fallen Paladin
+	"Death's Embrace":   "evocation",
+	"Blood Price":       "alteration",
+	"Shadow Flame":      "evocation",
+	"Condemnation":      "evocation",
+	# Redeemed Shadow Knight
+	"Sacrificial Mend":  "alteration",
+	"Radiant Bolt":      "evocation",
+	"Holy Mantle":       "evocation",
+	# Wizard
+	"Ice Spear":         "evocation",
+	"Flame Wave":        "evocation",
+	"Thunder Clap":      "evocation",
+	"Blizzard":          "evocation",
+	"Meteor":            "evocation",
+	# Sorcerer
+	"Arcane Burst":      "evocation",
+	"Void Lance":        "evocation",
+	"Bloodfire":         "evocation",
+	"Tempest Bolt":      "evocation",
+	"Soul Surge":        "evocation",
+	"Bind Affinity":           "alteration",
+	# Druid / Wizard — ports
+	"Gate":                    "alteration",
+	"Succor":                  "alteration",
+	"Evacuate":                "alteration",
+	"Circle of Ardenmoor":     "alteration",
+	"Circle of the Savannahs": "alteration",
+	"Circle of Fae Mere":      "alteration",
+	"Teleport: Aelindra":      "alteration",
+	"Teleport: Greyveil":      "alteration",
+	"Teleport: Harrowmere":    "alteration",
+	"Teleport: Varek's Spire": "alteration",
+	# Beast Master
+	"Spirit Mend":       "alteration",
+	"Feral Shriek":      "evocation",
+	"Warder's Mend":     "alteration",
+	"Primal Bond":       "abjuration",
+	"Spirit Strike":     "evocation",
+}
+
 const REQUIRED_KEYS: Array[String] = ["name", "desc", "mana_cost", "cast_time", "cooldown", "base_damage", "damage_type", "target_type", "heal_amount", "classes"]
 
 static func validate() -> void:
@@ -12,6 +117,9 @@ static func validate() -> void:
 			if not entry.has(key):
 				push_error("SpellDefinitions: entry '%s' is missing required key '%s'" % [entry.get("name", "?"), key])
 const ALL: Array = [
+	# ── Bind Affinity (all caster classes) ────────────────────────────────────
+	{"name": "Bind Affinity", "desc": "Binds your target (or yourself if untargeted) to this location. They will return here on Gate. Cannot be cast in dungeons.", "mana_cost": 30.0, "cast_time": 3.0, "cooldown": 0.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "BIND", "heal_amount": 0.0, "classes": ["Wizard", "Druid", "Cleric", "Shaman", "Necromancer", "Magician", "Sorcerer", "Enchanter", "Blood Mage", "Bard"]},
+
 	# ── Magician ──────────────────────────────────────────────────────────────
 	{"name": "Fireball",        "desc": "Hurls a ball of flame at the target.",              "mana_cost": 30.0, "cast_time": 1.5, "cooldown": 8.0,  "base_damage": 50.0, "damage_type": "FIRE",      "target_type": "ENEMY", "heal_amount": 0.0,  "classes": ["Magician"]},
 	{"name": "Frost Bolt",      "desc": "A bolt of freezing ice.",                           "mana_cost": 20.0, "cast_time": 0.0, "cooldown": 4.0,  "base_damage": 30.0, "damage_type": "ICE",       "target_type": "ENEMY", "heal_amount": 0.0,  "classes": ["Magician"]},
@@ -108,6 +216,30 @@ const ALL: Array = [
 	{"name": "Bloodfire",    "desc": "Ignites the target with sorcerous flame drawn from the blood.", "mana_cost": 22.0, "cast_time": 0.0, "cooldown":  4.0, "base_damage":  40.0, "damage_type": "FIRE",      "target_type": "ENEMY", "heal_amount": 0.0, "classes": ["Sorcerer"]},
 	{"name": "Tempest Bolt", "desc": "A bolt of crackling sorcerous lightning.",                      "mana_cost": 35.0, "cast_time": 1.5, "cooldown": 10.0, "base_damage":  65.0, "damage_type": "LIGHTNING", "target_type": "ENEMY", "heal_amount": 0.0, "classes": ["Sorcerer"]},
 	{"name": "Soul Surge",   "desc": "Channels raw sorcerous will into a devastating burst.",         "mana_cost": 45.0, "cast_time": 2.0, "cooldown": 14.0, "base_damage":  80.0, "damage_type": "ARCANE",    "target_type": "ENEMY", "heal_amount": 0.0, "classes": ["Sorcerer"]},
+
+	# ── Ports ─────────────────────────────────────────────────────────────────
+	# To add a new class to an existing port spell: append the class name to "classes".
+	# To add a new port spell: pick a pattern, then add the spell name to DISCIPLINE with "alteration".
+	#
+	# Pattern A — Gate (self → bind point):
+	#   port_zone_path="", port_entry_id="", port_is_group=false
+	# Pattern B — Succor (self → safe spot in current zone):
+	#   port_zone_path="", port_entry_id="safe", port_is_group=false
+	# Pattern C — Evacuate (group → safe spot in current zone):
+	#   port_zone_path="", port_entry_id="safe", port_is_group=true
+	# Pattern D — Ring/Spire (group → fixed zone destination):
+	#   port_zone_path="res://scenes/zones/<zone>.tscn", port_entry_id="<marker>",
+	#   port_zone_name="<Display Name>", port_is_group=true
+	{"name": "Gate",                    "desc": "Returns you instantly to your bind point.",                                  "mana_cost":  50.0, "cast_time": 5.0, "cooldown": 300.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "PORT", "heal_amount": 0.0, "port_zone_path": "",                                      "port_entry_id": "",          "port_zone_name": "",                "port_is_group": false, "classes": ["Druid", "Wizard"]},
+	{"name": "Succor",                  "desc": "Ports you to a safe spot in the current zone.",                             "mana_cost":  80.0, "cast_time": 3.0, "cooldown":  60.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "PORT", "heal_amount": 0.0, "port_zone_path": "",                                      "port_entry_id": "safe",      "port_zone_name": "",                "port_is_group": false, "classes": ["Druid", "Wizard"]},
+	{"name": "Evacuate",                "desc": "Ports your entire group to a safe spot in the current zone.",               "mana_cost": 120.0, "cast_time": 5.0, "cooldown":  60.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "PORT", "heal_amount": 0.0, "port_zone_path": "",                                      "port_entry_id": "safe",      "port_zone_name": "",                "port_is_group": true,  "classes": ["Druid"]},
+	{"name": "Circle of Ardenmoor",     "desc": "Opens a druid ring in the heart of Ardenmoor Forest. Carries the group.",        "mana_cost": 150.0, "cast_time": 8.0, "cooldown":  12.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "PORT", "heal_amount": 0.0, "port_zone_path": "res://scenes/zones/ardenmoor.tscn",       "port_entry_id": "druid_ring", "port_zone_name": "Ardenmoor",       "port_is_group": true, "classes": ["Druid"]},
+	{"name": "Circle of the Savannahs", "desc": "Opens a druid ring on the open Khala Savannahs. Carries the group.",              "mana_cost": 150.0, "cast_time": 8.0, "cooldown":  12.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "PORT", "heal_amount": 0.0, "port_zone_path": "res://scenes/zones/khala_savannahs.tscn", "port_entry_id": "druid_ring", "port_zone_name": "Khala Savannahs", "port_is_group": true, "classes": ["Druid"]},
+	{"name": "Circle of Fae Mere",      "desc": "Opens a druid ring within the ancient trees of Fae Mere. Carries the group.",     "mana_cost": 150.0, "cast_time": 8.0, "cooldown":  12.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "PORT", "heal_amount": 0.0, "port_zone_path": "res://scenes/zones/fae_mere.tscn",        "port_entry_id": "druid_ring", "port_zone_name": "Fae Mere",        "port_is_group": true, "classes": ["Druid"]},
+	{"name": "Teleport: Aelindra",      "desc": "Teleports the group to the ley anchor outside Aelindra.",                         "mana_cost": 150.0, "cast_time": 8.0, "cooldown":  12.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "PORT", "heal_amount": 0.0, "port_zone_path": "res://scenes/zones/aelindra.tscn",        "port_entry_id": "ley_anchor", "port_zone_name": "Aelindra",        "port_is_group": true, "classes": ["Wizard"]},
+	{"name": "Teleport: Greyveil",      "desc": "Teleports the group to the ley anchor above Greyveil.",                           "mana_cost": 150.0, "cast_time": 8.0, "cooldown":  12.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "PORT", "heal_amount": 0.0, "port_zone_path": "res://scenes/zones/greyveil.tscn",        "port_entry_id": "ley_anchor", "port_zone_name": "Greyveil",        "port_is_group": true, "classes": ["Wizard"]},
+	{"name": "Teleport: Harrowmere",    "desc": "Teleports the group to the ley anchor above Harrowmere harbor.",                  "mana_cost": 150.0, "cast_time": 8.0, "cooldown":  12.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "PORT", "heal_amount": 0.0, "port_zone_path": "res://scenes/zones/harrowmere.tscn",      "port_entry_id": "ley_anchor", "port_zone_name": "Harrowmere",      "port_is_group": true, "classes": ["Wizard"]},
+	{"name": "Teleport: Varek's Spire", "desc": "Teleports the group to the base of Varek's Spire.",                               "mana_cost": 150.0, "cast_time": 8.0, "cooldown":  12.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "PORT", "heal_amount": 0.0, "port_zone_path": "res://scenes/zones/vareks_spire.tscn",    "port_entry_id": "ley_anchor", "port_zone_name": "Varek's Spire",   "port_is_group": true, "classes": ["Wizard"]},
 
 	# ── Beast Master ──────────────────────────────────────────────────────────
 	{"name": "Spirit Mend",   "desc": "Calls on a thread of spirit energy to quickly close wounds.",                                        "mana_cost": 15.0, "cast_time": 0.5, "cooldown":  4.0, "base_damage":  0.0, "damage_type": "SPIRIT", "target_type": "SELF",     "heal_amount": 25.0, "classes": ["Beast Master"]},

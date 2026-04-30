@@ -1,0 +1,11 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Rough Topaz Ring"
+description = "A gold band set with an uncut topaz. Resonates with divine wisdom."
+type = 7
+rarity = 1
+stack_size = 1
+bonus_wisdom = 2
+bonus_max_mp = 8.0
+vendor_price = 100

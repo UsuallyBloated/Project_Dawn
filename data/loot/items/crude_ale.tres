@@ -1,0 +1,10 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Crude Ale"
+description = "A murky barley ale. Rough on the throat but fills the belly and steadies the nerves."
+type = 9
+rarity = 0
+stack_size = 20
+heal_on_use = 15.0
+vendor_price = 4

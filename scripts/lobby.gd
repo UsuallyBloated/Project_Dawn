@@ -10,6 +10,7 @@ const CHAR_CREATION_SCENE := "res://scenes/character_creation.tscn"
 @onready var join_btn: Button = %JoinButton
 
 func _ready() -> void:
+	Network.is_test_room = false
 	multiplayer.connected_to_server.connect(_on_connected)
 	Network.connection_failed.connect(_on_connection_failed)
 	Network.server_disconnected.connect(_on_server_disconnected)
@@ -52,3 +53,13 @@ func _on_server_disconnected() -> void:
 	status_label.text = "Server disconnected."
 	host_btn.disabled = false
 	join_btn.disabled = false
+
+func _on_test_room_pressed() -> void:
+	Network.is_online = false
+	Network.is_test_room = true
+	_setup_default_character("Human", "Warrior")
+	get_tree().change_scene_to_file(GAME_SCENE)
+
+func _setup_default_character(race: String, cls: String) -> void:
+	PlayerStats.player_name = "TestChar"
+	PlayerStats.apply_character(race, cls, 1)

@@ -1,0 +1,13 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Iron Short Sword"
+description = "A solid iron short sword. The workhorse blade of soldiers across the realm."
+type = 0
+rarity = 0
+stack_size = 1
+bonus_strength = 2
+weapon_damage_min = 7
+weapon_damage_max = 15
+weapon_skill = "1h_slashing"
+vendor_price = 90

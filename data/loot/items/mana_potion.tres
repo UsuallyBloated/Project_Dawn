@@ -1,0 +1,10 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Mana Potion"
+description = "A cobalt blue vial that shimmers faintly. Restores a significant amount of mana."
+type = 9
+rarity = 0
+stack_size = 10
+mp_on_use = 80.0
+vendor_price = 22

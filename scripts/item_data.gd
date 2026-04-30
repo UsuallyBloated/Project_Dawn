@@ -31,3 +31,13 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 
 # Physical damage reduction when equipped (armor pieces)
 @export var bonus_armor: int = 0
+# Armor skill trained by this item. See ArmorSkillDefinitions.ALL.
+# "cloth", "leather", "chain", "plate", "shield" — or "" for non-armor items.
+@export var armor_type: String = ""
+
+# Consumable use effects (CONSUMABLE type only)
+@export var heal_on_use: float = 0.0
+@export var mp_on_use: float = 0.0
+
+# Economy
+@export var vendor_price: int = 0  # buy price; sell = vendor_price / 2

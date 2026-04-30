@@ -11,6 +11,7 @@ const TRANSFORMATIONS: Dictionary = {
 		"required_level": 20,
 		"stat_changes": {"constitution": 15, "intelligence": 10, "strength": 5, "charisma": -15, "wisdom": -5},
 		"hp_bonus": 0.0, "mp_bonus": 0.0,
+		"languages": {"Ghost Tongue": 100},
 	},
 	"Vampire Lord": {
 		"desc": "You bind yourself to an ancient vampiric lineage. All attacks now leech vitality.",
@@ -82,6 +83,8 @@ func apply_transformation(name: String) -> bool:
 	PlayerStats.max_mp = maxf(20.0, PlayerStats.max_mp + t["mp_bonus"])
 	PlayerStats.set_hp(PlayerStats.max_hp)
 	PlayerStats.set_mp(PlayerStats.max_mp)
+	for lang in t.get("languages", {}):
+		Languages.grant_language(lang, t["languages"][lang])
 	PlayerStats.transformation = name
 	transformation_applied.emit(name)
 	return true

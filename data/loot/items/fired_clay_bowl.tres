@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Fired Clay Bowl"
+description = "A kiln-hardened clay bowl. Useful as a container or vendor item."
+type = 10
+rarity = 0
+stack_size = 10
+vendor_price = 8

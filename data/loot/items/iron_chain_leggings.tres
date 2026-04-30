@@ -1,0 +1,13 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Iron Chain Leggings"
+description = "Iron ring chausses covering the legs from hip to boot."
+type = 4
+rarity = 0
+stack_size = 1
+bonus_constitution = 1
+bonus_max_hp = 18.0
+bonus_armor = 13
+armor_type = "chain"
+vendor_price = 110

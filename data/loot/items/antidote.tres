@@ -1,0 +1,10 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Antidote"
+description = "A bitter green liquid. Purges poison and disease effects when consumed."
+type = 9
+rarity = 0
+stack_size = 10
+heal_on_use = 20.0
+vendor_price = 16

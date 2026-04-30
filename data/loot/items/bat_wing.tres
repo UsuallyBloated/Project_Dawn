@@ -6,3 +6,4 @@ description = "A leathery wing from a cave bat. Used in alchemy."
 type = 10
 rarity = 0
 stack_size = 20
+vendor_price = 5

@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Arrow Bundle"
+description = "A bundle of twenty fletched arrows. Used with bows in ranged combat."
+type = 10
+rarity = 0
+stack_size = 200
+vendor_price = 10

@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Wild Mushroom"
+description = "A foraged mushroom from the forest floor. Edible and useful in stews."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 4

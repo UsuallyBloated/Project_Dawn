@@ -3,11 +3,21 @@ extends Node
 # Ticks every TICK_INTERVAL seconds.
 # Sitting grants large regen bonuses for all three stats.
 
-const TICK_INTERVAL := 3.0
+const TICK_INTERVAL    := 3.0
+const SITTING_HP_MULT  := 5.0
+const SITTING_MP_MULT  := 5.0
+const SITTING_ST_MULT  := 3.0
+const HP_BASE_REGEN    := 2.0
+const HP_CON_SCALE     := 0.15
+const MP_BASE_REGEN    := 2.0
+const MP_WIS_SCALE     := 0.20
+const ST_BASE_REGEN    := 3.0
+const ST_AGI_SCALE     := 0.10
 
 var _tick_timer: float = 0.0
 var _in_combat: bool = false
 var _player: Node3D = null
+var _is_sitting: bool = false
 
 func register_player(node: Node3D) -> void:
 	_player = node
@@ -19,6 +29,7 @@ func unregister_player() -> void:
 		if _player.state_changed.is_connected(_on_player_state_changed):
 			_player.state_changed.disconnect(_on_player_state_changed)
 	_player = null
+	_is_sitting = false
 
 func _ready() -> void:
 	Combat.target_changed.connect(_on_target_changed)
@@ -33,33 +44,36 @@ func _do_regen() -> void:
 	if _in_combat:
 		return
 
-	var is_sitting: bool = is_instance_valid(_player) and _player.state == PlayerCharacter.PlayerState.SITTING
-	var hp_mult := 5.0 if is_sitting else 1.0
-	var mp_mult := 5.0 if is_sitting else 1.0
-	var st_mult := 3.0 if is_sitting else 1.0
+	var hp_mult := SITTING_HP_MULT if _is_sitting else 1.0
+	var mp_mult := SITTING_MP_MULT if _is_sitting else 1.0
+	var st_mult := SITTING_ST_MULT if _is_sitting else 1.0
+
+	var food_hp := BuffManager.get_food_hp_regen() + BuffManager.get_drink_hp_regen()
+	var food_mp := BuffManager.get_food_mp_regen() + BuffManager.get_drink_mp_regen()
 
 	if PlayerStats.hp < PlayerStats.max_hp:
-		PlayerStats.set_hp(minf(PlayerStats.hp + _hp_regen_per_tick() * hp_mult, PlayerStats.max_hp))
+		PlayerStats.set_hp(minf(PlayerStats.hp + _hp_regen_per_tick() * hp_mult + food_hp, PlayerStats.max_hp))
 	if PlayerStats.mp < PlayerStats.max_mp:
-		PlayerStats.set_mp(minf(PlayerStats.mp + _mp_regen_per_tick() * mp_mult, PlayerStats.max_mp))
+		PlayerStats.set_mp(minf(PlayerStats.mp + _mp_regen_per_tick() * mp_mult + food_mp, PlayerStats.max_mp))
 	if PlayerStats.stamina < PlayerStats.max_stamina:
 		PlayerStats.set_stamina(minf(PlayerStats.stamina + _st_regen_per_tick() * st_mult, PlayerStats.max_stamina))
 
 func _hp_regen_per_tick() -> float:
-	return 2.0 + PlayerStats.constitution * 0.15
+	return HP_BASE_REGEN + PlayerStats.constitution * HP_CON_SCALE
 
 func _mp_regen_per_tick() -> float:
-	return 2.0 + PlayerStats.wisdom * 0.20
+	return MP_BASE_REGEN + PlayerStats.wisdom * MP_WIS_SCALE
 
 func _st_regen_per_tick() -> float:
-	return 3.0 + PlayerStats.agility * 0.10
+	return ST_BASE_REGEN + PlayerStats.agility * ST_AGI_SCALE
 
-func _on_player_state_changed(_new_state: int) -> void:
+func _on_player_state_changed(new_state: int) -> void:
+	_is_sitting = new_state == PlayerCharacter.PlayerState.SITTING
 	_tick_timer = TICK_INTERVAL * 0.5
 
 func _on_target_changed(enemy) -> void:
 	_in_combat = enemy != null and is_instance_valid(enemy)
 	if not _in_combat:
 		_tick_timer = TICK_INTERVAL * 0.5
-	elif is_instance_valid(_player) and _player.state == PlayerCharacter.PlayerState.SITTING:
+	elif _is_sitting and is_instance_valid(_player):
 		_player.stand()

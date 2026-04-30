@@ -1,0 +1,10 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Fire Elixir"
+description = "A vial of liquid flame essence. Briefly enhances fire-aspected spells when consumed."
+type = 9
+rarity = 1
+stack_size = 10
+mp_on_use = 50.0
+vendor_price = 38

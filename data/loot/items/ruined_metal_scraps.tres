@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Ruined Metal Scraps"
+description = "Corroded metal shards. Barely worth salvaging, but a blacksmith might find use."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 1

@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Rough Topaz"
+description = "An uncut topaz with a warm golden tone. Used in lightning-aspected jewelry."
+type = 10
+rarity = 1
+stack_size = 10
+vendor_price = 30

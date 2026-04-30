@@ -69,3 +69,8 @@ const STARTER_ZONE_CAMPS: Array = [
 		"radius": 5.0, "respawn": 90.0,
 	},
 ]
+
+# Zone paths where Bind Affinity cannot be cast (dungeons, instanced content).
+# Add a zone's res:// path here when it is built as a dungeon/instance.
+const NON_BINDABLE_ZONES: Array[String] = [
+]

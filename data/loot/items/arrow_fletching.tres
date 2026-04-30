@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Arrow Fletching"
+description = "Trimmed feathers bound to an arrow shaft. A crafted component for arrows."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 5

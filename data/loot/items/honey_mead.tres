@@ -1,0 +1,11 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Honey Mead"
+description = "A golden fermented honey drink. Sweet and potent. Restores stamina."
+type = 9
+rarity = 0
+stack_size = 20
+heal_on_use = 20.0
+mp_on_use = 20.0
+vendor_price = 6

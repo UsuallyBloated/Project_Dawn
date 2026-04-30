@@ -8,3 +8,4 @@ rarity = 0
 stack_size = 1
 bonus_dexterity = 1
 bonus_agility = 1
+vendor_price = 2

@@ -2,6 +2,7 @@ extends Node
 
 signal skill_used(skill: SkillData)
 signal skill_cooldown_updated(skill_name: String, remaining: float, total: float)
+signal skills_changed
 
 var _all_skills: Dictionary = {}
 var _cooldowns: CooldownTracker
@@ -26,6 +27,7 @@ func setup_for_class(_player_class: String) -> void:
 		if skill.allowed_classes.is_empty() or effective in skill.allowed_classes:
 			available.append(skill)
 	available.sort_custom(func(a, b): return a.skill_name < b.skill_name)
+	skills_changed.emit()
 
 func use_skill(skill: SkillData) -> bool:
 	if _cooldowns.is_active(skill.skill_name):

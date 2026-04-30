@@ -2,6 +2,10 @@ extends Node
 
 signal target_changed(enemy)
 signal player_attacked(attacker)
+signal player_hit_enemy(target_name: String, amount: int)
+signal player_missed_enemy(target_name: String)
+signal player_evaded_attack(attacker_name: String)
+signal player_took_damage(attacker_name: String, amount: int)
 
 var current_target = null
 
@@ -55,7 +59,7 @@ func _on_auto_attack() -> void:
 	var skill_name := _get_weapon_skill_name()
 	WeaponSkills.try_advance(skill_name)
 	if randf() < WeaponSkills.get_miss_chance(skill_name):
-		CombatLog.add_line("You miss %s." % current_target.mob_name, CombatLog.MsgType.DAMAGE_OUT)
+		player_missed_enemy.emit(current_target.mob_name)
 		return
 	deal_damage_to_target(calc_damage())
 
@@ -64,7 +68,7 @@ func deal_damage_to_target(amount: int) -> void:
 		return
 	var target_name: String = current_target.mob_name
 	current_target.take_damage(amount)
-	CombatLog.add_damage_out(target_name, amount)
+	player_hit_enemy.emit(target_name, amount)
 
 func has_valid_target() -> bool:
 	return current_target != null and is_instance_valid(current_target) and not current_target.is_dead
@@ -74,17 +78,18 @@ func receive_player_damage(amount: int, attacker: Node = null, attacker_name: St
 		return
 	if attacker != null and is_instance_valid(attacker):
 		player_attacked.emit(attacker)
-	Spells.cancel_cast()
+	Spells.try_interrupt_cast()
 	if BuffManager.is_evade_boosted():
-		CombatLog.add_evade(attacker_name if attacker_name != "" else "the attack")
+		player_evaded_attack.emit(attacker_name if attacker_name != "" else "the attack")
 		WeaponSkills.try_advance("dodge")
 		return
 	var evasion_chance := clampf((PlayerStats.agility - 10) * 0.005, 0.0, 0.50)
 	if randf() < evasion_chance:
-		CombatLog.add_evade(attacker_name if attacker_name != "" else "the attack")
+		player_evaded_attack.emit(attacker_name if attacker_name != "" else "the attack")
 		WeaponSkills.try_advance("dodge")
 		return
 	WeaponSkills.try_advance("defense")
+	ArmorSkills.try_advance_worn(Equipment.equipped)
 	var armor := Equipment.get_armor_class()
 	var reduction := armor / float(armor + 100)
 	var was_sitting: bool = is_instance_valid(_player) and _player.state == PlayerCharacter.PlayerState.SITTING
@@ -96,10 +101,7 @@ func receive_player_damage(amount: int, attacker: Node = null, attacker_name: St
 	if effective <= 0:
 		return
 	PlayerStats.set_hp(PlayerStats.hp - effective)
-	CombatLog.add_line(
-		"%s hits you for %d damage." % [attacker_name if attacker_name != "" else "Something", effective],
-		CombatLog.MsgType.DAMAGE_IN
-	)
+	player_took_damage.emit(attacker_name if attacker_name != "" else "Something", effective)
 
 func calc_damage() -> int:
 	var str_bonus: int = PlayerStats.strength / 5
@@ -114,6 +116,8 @@ func calc_damage() -> int:
 
 func _get_weapon_skill_name() -> String:
 	var weapon: ItemData = Equipment.equipped.get("weapon")
-	if weapon != null and weapon.weapon_skill != "":
+	if weapon == null:
+		return "hand_to_hand"
+	if weapon.weapon_skill != "":
 		return weapon.weapon_skill
-	return "hand_to_hand"
+	return WeaponItemTable.get_skill(weapon.item_name)

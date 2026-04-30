@@ -158,9 +158,9 @@ Concept portraits written as oil painting descriptions. Intended as reference fo
 
 ---
 
-## Iksar Necromancer — "The Bone Cartographer"
+## Kel`varath Necromancer — "The Bone Cartographer"
 
-**Composition:** Overhead angle, just slightly — the viewer looks down at a long worktable covered in bones arranged with obsessive precision. The Iksar stands at the far end, half-turned, head tilted in assessment. The angle flattens him slightly, makes him feel like part of the arrangement.
+**Composition:** Overhead angle, just slightly — the viewer looks down at a long worktable covered in bones arranged with obsessive precision. The Kel`varath stands at the far end, half-turned, head tilted in assessment. The angle flattens him slightly, makes him feel like part of the arrangement.
 
 **Detail:** The bones aren't random — they form a map. The skeleton of something large spans the length of the table, but individual bones have been replaced, labeled, rearranged to mark terrain. His scales catch the lamplight in segments, green-black, matte except at the jaw and brow ridge where they catch the light. A quill in one claw, a femur used as a straightedge in the other. The walls are shelved floor-to-ceiling with labeled skulls — not trophies, indexes.
 
@@ -222,7 +222,7 @@ Concept portraits written as oil painting descriptions. Intended as reference fo
 
 ---
 
-## Vah Shir Monk — "The Still Claw"
+## Felhari Monk — "The Still Claw"
 
 **Composition:** Seated, cross-legged. Not in meditation — in readiness that looks identical to meditation. The distinction is in the hands: one rests open on a knee, the other is slightly cupped, slightly forward, weight distributed. A practitioner would recognize the posture. Most viewers would not.
 
@@ -270,9 +270,9 @@ Concept portraits written as oil painting descriptions. Intended as reference fo
 
 ---
 
-## Vah Shir Beast Master — "The Second Claw"
+## Felhari Beast Master — "The Second Claw"
 
-**Composition:** Two figures occupy the frame equally — the Vah Shir and the great cat spirit-warder beside her, their forms sharing the same mid-ground, neither elevated above the other. Side by side, not handler and beast. You have to look twice to determine which one is the subject.
+**Composition:** Two figures occupy the frame equally — the Felhari and the great cat spirit-warder beside her, their forms sharing the same mid-ground, neither elevated above the other. Side by side, not handler and beast. You have to look twice to determine which one is the subject.
 
 **Detail:** She is mid-hunt — crouched low, one hand in the soil, reading something invisible. The warder is standing while she crouches; together they see the scene from different angles and between them have the whole picture. Her armor is minimal for a melee fighter: hardened leather, nothing that would slow her or mask her scent. The warder's fur carries the same coloring as hers — not identical, but resonant, as if the bond has drawn them toward each other's palette over years.
 

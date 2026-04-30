@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Hops"
+description = "Dried hop flowers. The bitterest ingredient in ale brewing."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 3

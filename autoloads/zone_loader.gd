@@ -6,6 +6,7 @@ signal zone_ready
 const FADE_DURATION := 0.5
 
 var current_zone_name: String = ""
+var current_zone_path: String = ""
 var _pending_entry_id: String = "default"
 var _transitioning: bool = false
 
@@ -34,6 +35,7 @@ func travel_to(zone_path: String, entry_id: String, zone_name: String = "") -> v
 	_pending_entry_id = entry_id
 	_fade_to(1.0, func():
 		current_zone_name = zone_name
+		current_zone_path = zone_path
 		zone_changed.emit(zone_name)
 		get_tree().change_scene_to_file(zone_path)
 	)

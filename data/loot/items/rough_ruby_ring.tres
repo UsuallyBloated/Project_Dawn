@@ -1,0 +1,11 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Rough Ruby Ring"
+description = "A silver band set with an uncut ruby. Resonates with fire and strength."
+type = 7
+rarity = 1
+stack_size = 1
+bonus_strength = 2
+bonus_max_hp = 10.0
+vendor_price = 130

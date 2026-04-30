@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Lump of Clay"
+description = "Wet clay gathered near a riverbank. Shaped and fired into pottery items."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 3

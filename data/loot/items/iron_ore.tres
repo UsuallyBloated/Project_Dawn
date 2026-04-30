@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Iron Ore"
+description = "Raw iron ore. Smelt it at a forge to produce iron ingots."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 10

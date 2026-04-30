@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Tinkering Kit"
+description = "A set of fine tools for assembling mechanical devices. Required for tinkering combines."
+type = 10
+rarity = 0
+stack_size = 1
+vendor_price = 25

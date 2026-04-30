@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Rough Opal"
+description = "An uncut opal with a swirling iridescence. Used in spirit-aspected jewelry."
+type = 10
+rarity = 1
+stack_size = 10
+vendor_price = 30

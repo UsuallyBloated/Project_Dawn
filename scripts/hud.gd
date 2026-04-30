@@ -1,6 +1,8 @@
 extends CanvasLayer
 
-const _OptionsScreenScript := preload("res://scripts/options_screen.gd")
+const _OptionsScreenScript   := preload("res://scripts/options_screen.gd")
+const _CraftingWindowScript  := preload("res://scripts/crafting_window.gd")
+const _VendorWindowScript    := preload("res://scripts/vendor_window.gd")
 
 @onready var health_bar: ProgressBar = $Panel/VBoxContainer/HPRow/HealthBar
 @onready var stamina_bar: ProgressBar = $Panel/VBoxContainer/STARow/StaminaBar
@@ -31,15 +33,23 @@ var _window_stack: Array = []
 var _tracked_target = null
 var _player: Node3D = null
 var _options_screen: Panel = null
+var _crafting_window: Panel = null
+var _vendor_window: Panel = null
 
 var _hp_label: Label = null
 var _mp_label: Label = null
 var _sta_label: Label = null
+var _xp_bar: ProgressBar = null
+var _xp_label: Label = null
+var _alignment_label: Label = null
 
 var _pet_frame: Panel = null
 var _pet_name_label: Label = null
 var _pet_level_label: Label = null
 var _pet_hp_bar: ProgressBar = null
+
+var _buff_bar: HBoxContainer = null
+var _buff_timer_labels: Dictionary = {}
 
 var _group_window: Panel = null
 var _group_header_lbl: Label = null
@@ -98,8 +108,73 @@ func _ready() -> void:
 	_build_group_window()
 	_build_pet_frame()
 	_reposition_pet_frame()
+	_build_buff_bar()
+	_build_xp_bar()
+	_build_alignment_label()
 	_build_options_screen()
+	_build_crafting_window()
+	_build_vendor_window()
 	_connect_player_state()
+	PlayerStats.alignment_changed.connect(_on_alignment_changed)
+
+func _build_xp_bar() -> void:
+	$Panel.offset_top -= 22.0
+	var vbox: VBoxContainer = $Panel/VBoxContainer
+
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 6)
+	vbox.add_child(row)
+
+	var lbl := Label.new()
+	lbl.text = "XP"
+	lbl.custom_minimum_size = Vector2(32, 0)
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.add_theme_color_override("font_color", Color(0.45, 0.75, 1.00))
+	row.add_child(lbl)
+
+	_xp_bar = ProgressBar.new()
+	_xp_bar.custom_minimum_size = Vector2(0, 18)
+	_xp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_xp_bar.min_value = 0
+	_xp_bar.max_value = PlayerStats.xp_to_next
+	_xp_bar.value = PlayerStats.xp
+	_xp_bar.show_percentage = false
+	_xp_label = _style_bar(_xp_bar, Color(0.20, 0.55, 1.00))
+	row.add_child(_xp_bar)
+
+	_xp_label.text = "%d / %d" % [PlayerStats.xp, PlayerStats.xp_to_next]
+	PlayerStats.xp_changed.connect(_on_xp_changed)
+
+func _on_xp_changed(current_xp: int, xp_to_next: int) -> void:
+	_xp_bar.max_value = xp_to_next
+	_xp_bar.value = current_xp
+	_xp_label.text = "%d / %d" % [current_xp, xp_to_next]
+
+func _build_alignment_label() -> void:
+	_alignment_label = Label.new()
+	_alignment_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_alignment_label.add_theme_font_size_override("font_size", 11)
+	_alignment_label.add_theme_color_override("font_color", _alignment_color(PlayerStats.alignment_tier))
+	_alignment_label.text = PlayerStats.alignment_tier
+	_alignment_label.custom_minimum_size = Vector2(0, 16)
+	$Panel/VBoxContainer.add_child(_alignment_label)
+
+func _on_alignment_changed(tier: String, _score: int) -> void:
+	if _alignment_label == null:
+		return
+	_alignment_label.text = tier
+	_alignment_label.add_theme_color_override("font_color", _alignment_color(tier))
+
+func _alignment_color(tier: String) -> Color:
+	match tier:
+		"Exalted": return Color(1.00, 0.88, 0.20)
+		"Good":    return Color(0.40, 0.85, 1.00)
+		"Neutral": return Color(0.65, 0.65, 0.65)
+		"Bad":     return Color(1.00, 0.55, 0.15)
+		"Evil":    return Color(0.85, 0.15, 0.15)
+	return Color(0.65, 0.65, 0.65)
 
 func _build_options_screen() -> void:
 	_options_screen = _OptionsScreenScript.new()
@@ -108,6 +183,28 @@ func _build_options_screen() -> void:
 	add_child(_options_screen)
 	_options_screen.visibility_changed.connect(
 		_on_window_visibility_changed.bind(_options_screen))
+
+func _build_crafting_window() -> void:
+	_crafting_window = _CraftingWindowScript.new()
+	_crafting_window.visible = false
+	_crafting_window.z_index = 20
+	add_child(_crafting_window)
+	_crafting_window.visibility_changed.connect(
+		_on_window_visibility_changed.bind(_crafting_window))
+	Crafting.skill_level_changed.connect(func(skill: String, lvl: int) -> void:
+		CombatLog.add_line(
+			"Your %s skill has increased to %d!" % [skill, lvl],
+			CombatLog.MsgType.INFO))
+
+func _build_vendor_window() -> void:
+	_vendor_window = _VendorWindowScript.new()
+	_vendor_window.visible = false
+	_vendor_window.z_index = 20
+	add_child(_vendor_window)
+	_vendor_window.visibility_changed.connect(
+		_on_window_visibility_changed.bind(_vendor_window))
+	VendorManager.vendor_opened.connect(func(vname: String, vtype: String) -> void:
+		(_vendor_window as Node).call("open_for", vname, vtype))
 
 func _connect_player_state() -> void:
 	var players := get_tree().get_nodes_in_group("player")
@@ -145,6 +242,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			inventory_window.visible = !inventory_window.visible
 		elif event.is_action("toggle_paperdoll"):
 			paperdoll_window.visible = !paperdoll_window.visible
+		elif event.is_action("toggle_crafting"):
+			_crafting_window.visible = !_crafting_window.visible
+		elif event.is_action("interact"):
+			if VendorManager.nearby_vendor != null:
+				VendorManager.open_nearby()
 
 func _on_window_visibility_changed(window: Panel) -> void:
 	if window.visible:
@@ -315,6 +417,7 @@ func _handle_chat_input(text: String) -> void:
 
 	var lower := text.to_lower()
 
+
 	if lower == "/sit":
 		if is_instance_valid(_player):
 			_player.sit()
@@ -371,6 +474,11 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line("[Group] %s: %s" % [my_name, msg], CombatLog.MsgType.GROUP_CHAT)
 			GroupManager.broadcast_group_chat(my_name, msg)
 			return
+
+	if lower == "/sense" or lower == "/sense heading":
+		if is_instance_valid(_player):
+			CombatLog.add_line(SenseHeading.query(_player.rotation.y), CombatLog.MsgType.INFO)
+		return
 
 	CombatLog.add_line("Unknown command: %s" % text, CombatLog.MsgType.INFO)
 
@@ -479,6 +587,103 @@ func _process(delta: float) -> void:
 		var t := TimeOfDay.get_time_string()
 		if t != _clock_label.text:
 			_clock_label.text = t
+	_update_buff_timers()
+
+# ── Buff bar ──────────────────────────────────────────────────────────────────
+
+func _build_buff_bar() -> void:
+	_buff_bar = HBoxContainer.new()
+	_buff_bar.anchor_left   = 0.0
+	_buff_bar.anchor_top    = 1.0
+	_buff_bar.anchor_right  = 0.0
+	_buff_bar.anchor_bottom = 1.0
+	_buff_bar.position = Vector2(10.0, -152.0)
+	_buff_bar.add_theme_constant_override("separation", 4)
+	add_child(_buff_bar)
+	BuffManager.buffs_changed.connect(_on_buffs_changed)
+	_on_buffs_changed()
+
+func _on_buffs_changed() -> void:
+	_buff_timer_labels.clear()
+	for child in _buff_bar.get_children():
+		child.queue_free()
+	for h in BuffManager.get_hots():
+		_buff_timer_labels["hot:%s" % h.spell_name] = _add_buff_icon("hot", h.spell_name)
+	if BuffManager.get_absorb_hp() > 0.0:
+		_buff_timer_labels["absorb"] = _add_buff_icon("absorb", "Shield")
+	if BuffManager.get_evade_remaining() > 0.0:
+		_buff_timer_labels["evade"] = _add_buff_icon("evade", "Evade")
+	var food := BuffManager.get_food_buff()
+	if not food.is_empty():
+		_buff_timer_labels["food"] = _add_buff_icon("food", food.get("buff_name", "Food"))
+	var drink := BuffManager.get_drink_buff()
+	if not drink.is_empty():
+		_buff_timer_labels["drink"] = _add_buff_icon("drink", drink.get("buff_name", "Drink"))
+
+func _add_buff_icon(type: String, spell_name: String) -> Label:
+	var icon := Panel.new()
+	icon.custom_minimum_size = Vector2(44.0, 44.0)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.05, 0.05, 0.85)
+	match type:
+		"hot":    style.border_color = Color(0.25, 0.65, 0.25)
+		"absorb": style.border_color = Color(0.30, 0.50, 0.90)
+		"evade":  style.border_color = Color(0.80, 0.70, 0.20)
+		"food":   style.border_color = Color(0.75, 0.45, 0.15)
+		"drink":  style.border_color = Color(0.20, 0.55, 0.80)
+		_:        style.border_color = UITheme.C_BORDER
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(3)
+	icon.add_theme_stylebox_override("panel", style)
+	_buff_bar.add_child(icon)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.offset_left = 2; vbox.offset_top = 2
+	vbox.offset_right = -2; vbox.offset_bottom = -2
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 1)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.add_child(vbox)
+
+	var name_lbl := Label.new()
+	name_lbl.text = spell_name.left(7)
+	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_lbl.add_theme_font_size_override("font_size", 8)
+	name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
+	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	name_lbl.clip_text = true
+	vbox.add_child(name_lbl)
+
+	var timer_lbl := Label.new()
+	timer_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	timer_lbl.add_theme_font_size_override("font_size", 10)
+	timer_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 0.7))
+	timer_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(timer_lbl)
+	return timer_lbl
+
+func _update_buff_timers() -> void:
+	for key in _buff_timer_labels:
+		var lbl: Label = _buff_timer_labels[key]
+		if key == "absorb":
+			lbl.text = "%dhp" % int(BuffManager.get_absorb_hp())
+		elif key == "evade":
+			lbl.text = "%ds" % ceili(BuffManager.get_evade_remaining())
+		elif key == "food":
+			var f := BuffManager.get_food_buff()
+			if not f.is_empty():
+				lbl.text = "%ds" % ceili(f.remaining)
+		elif key == "drink":
+			var d := BuffManager.get_drink_buff()
+			if not d.is_empty():
+				lbl.text = "%ds" % ceili(d.remaining)
+		elif key.begins_with("hot:"):
+			var sname := key.substr(4)
+			for h in BuffManager.get_hots():
+				if h.spell_name == sname:
+					lbl.text = "%ds" % ceili(h.remaining)
+					break
 
 # ── Group window ──────────────────────────────────────────────────────────────
 

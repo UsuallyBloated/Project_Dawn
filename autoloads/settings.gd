@@ -14,6 +14,8 @@ const REBINDABLE_ACTIONS: Array[Dictionary] = [
 	{id = "toggle_character", label = "Character Window", category = "Windows",  default_key = KEY_C},
 	{id = "toggle_inventory", label = "Inventory Window", category = "Windows",  default_key = KEY_I},
 	{id = "toggle_paperdoll", label = "Paperdoll Window", category = "Windows",  default_key = KEY_P},
+	{id = "toggle_crafting",  label = "Combine Window",   category = "Windows",  default_key = KEY_K},
+	{id = "interact",         label = "Interact / Talk",  category = "World",    default_key = KEY_F},
 	{id = "target_cycle",     label = "Cycle Target",     category = "Combat",   default_key = KEY_TAB},
 	{id = "move_forward",     label = "Move Forward",     category = "Movement", default_key = KEY_W},
 	{id = "move_backward",    label = "Move Back",        category = "Movement", default_key = KEY_S},

@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Crude Clockwork"
+description = "A small ticking assemblage of gears and springs. Component for advanced tinkering projects."
+type = 10
+rarity = 1
+stack_size = 10
+vendor_price = 160

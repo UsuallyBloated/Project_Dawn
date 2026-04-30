@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Rough Emerald"
+description = "An uncut emerald with a vivid green color. Prized for nature-aspected pieces."
+type = 10
+rarity = 1
+stack_size = 10
+vendor_price = 35

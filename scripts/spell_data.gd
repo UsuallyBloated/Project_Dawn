@@ -1,7 +1,7 @@
 class_name SpellData
 extends Resource
 
-enum TargetType { ENEMY, SELF, NONE, PET_SUMMON, PET_CHARM, PET_HEAL }
+enum TargetType { ENEMY, SELF, NONE, PET_SUMMON, PET_CHARM, PET_HEAL, PORT, BIND }
 enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, SHADOW, NONE }
 
 @export var spell_name: String = ""
@@ -23,4 +23,11 @@ enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, S
 @export var hot_duration: float = 0.0
 @export var absorb_amount: float = 0.0
 @export var cc_duration: float = 0.0
+@export var port_zone_path: String = ""
+@export var port_entry_id: String = ""
+@export var port_zone_name: String = ""
+@export var port_is_group: bool = false
 @export var allowed_classes: Array[String] = []
+# Casting discipline that trains when this spell is cast. See CastingSkillDefinitions.ALL.
+# "evocation", "alteration", "abjuration", "conjuration", "divination" — or "" if unassigned.
+@export var discipline: String = ""

@@ -1,0 +1,10 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Minor Healing Potion"
+description = "A pale red tincture. Restores a modest amount of health when consumed."
+type = 9
+rarity = 0
+stack_size = 10
+heal_on_use = 50.0
+vendor_price = 12

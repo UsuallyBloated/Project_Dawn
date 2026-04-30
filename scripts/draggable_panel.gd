@@ -163,6 +163,10 @@ func _append_stat_lines(item: ItemData, lines: Array) -> void:
 		var val = item.get(pair[0])
 		if val != 0:
 			lines.append(("%s +%s" if val > 0 else "%s %s") % [pair[1], val])
+	if item.heal_on_use > 0.0:
+		lines.append("Use: Restores %d HP" % int(item.heal_on_use))
+	if item.mp_on_use > 0.0:
+		lines.append("Use: Restores %d MP" % int(item.mp_on_use))
 
 func _find_meta_child(parent: Node, meta_key: String) -> Node:
 	for child in parent.get_children():

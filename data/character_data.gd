@@ -3,7 +3,7 @@ class_name CharacterData
 const RACES: Array[String] = [
 	"Human", "Elf", "Dark Elf", "Wood Elf", "Gnome",
 	"Halfling", "Dwarf", "Half-Elf", "Ogre", "Troll",
-	"Iksar", "Minotaur", "Fae", "Vah Shir", "Kobold", "Half-Ogre"
+	"Kel`varath", "Minotaur", "Fae", "Felhari", "Kobold", "Half-Ogre"
 ]
 
 const CLASSES: Array[String] = [
@@ -52,7 +52,7 @@ const RACE_DATA: Dictionary = {
 		"desc": "Savage regenerators with extraordinary endurance. Fearsome but repugnant.",
 		"bonuses": {"constitution": 20, "strength": 10, "charisma": -15, "wisdom": -10, "intelligence": -5}
 	},
-	"Iksar": {
+	"Kel`varath": {
 		"desc": "Ancient lizardfolk from a fallen empire. Cold-blooded and calculating, their natural scales make them fearsome survivors.",
 		"bonuses": {"constitution": 15, "strength": 8, "charisma": -15, "wisdom": -5}
 	},
@@ -68,7 +68,7 @@ const RACE_DATA: Dictionary = {
 		"desc": "Ageless creatures of pure magic from the hidden world. Impossibly small, impossibly old, impossibly powerful.",
 		"bonuses": {"intelligence": 20, "wisdom": 10, "agility": 15, "charisma": 5, "strength": -15, "constitution": -10}
 	},
-	"Vah Shir": {
+	"Felhari": {
 		"desc": "Proud feline warriors from a distant land. Graceful, deadly, and deeply tribal. They treat combat as an art form.",
 		"bonuses": {"dexterity": 12, "agility": 12, "constitution": 5, "wisdom": -5, "intelligence": -5, "charisma": -5}
 	},
@@ -182,7 +182,7 @@ const LOCKED_COMBOS: Dictionary = {
 	"Halfling":  ["Shadow Knight", "Beast Master"],
 	"Dwarf":     ["Necromancer", "Beast Master"],
 	"Troll":     ["Paladin", "Monk"],
-	"Iksar":     ["Paladin"],
+	"Kel`varath": ["Paladin"],
 	"Fae":       ["Shadow Knight", "Monk", "Beast Master"],
 	"Kobold":    ["Paladin"],
 }

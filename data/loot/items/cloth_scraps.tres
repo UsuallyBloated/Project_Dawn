@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Cloth Scraps"
+description = "Rough cloth torn from humanoid enemies. Low-quality tailoring material."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 5

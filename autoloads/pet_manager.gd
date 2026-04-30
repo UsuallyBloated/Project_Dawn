@@ -6,6 +6,7 @@ signal pet_died(pet)
 signal pet_hp_changed(current: float, maximum: float)
 signal warder_retreating(retreat_duration: float)
 signal warder_returned
+signal pet_info(text: String)
 
 var active_pet = null
 var warder_type: String = "Wolf"
@@ -68,7 +69,7 @@ func charm_current_target(duration: float) -> void:
 	enemy.charm(duration)
 	_register_pet(enemy, true)
 	Combat.set_target(null)
-	CombatLog.add_line("You charm %s!" % enemy.mob_name, CombatLog.MsgType.INFO)
+	pet_info.emit("You charm %s!" % enemy.mob_name)
 
 func dismiss_pet() -> void:
 	if not has_pet():
@@ -100,20 +101,20 @@ func command_fury() -> void:
 	if target == null or not is_instance_valid(target):
 		return
 	active_pet.set_attack_target(target)
-	CombatLog.add_line("Your warder lunges at the target!", CombatLog.MsgType.INFO)
+	pet_info.emit("Your warder lunges at the target!")
 
 func command_follow() -> void:
 	if not has_pet() or _pet_is_charmed:
 		return
 	active_pet.set_mode(Pet.Mode.FOLLOW)
-	CombatLog.add_line("Your pet follows you.", CombatLog.MsgType.INFO)
+	pet_info.emit("Your pet follows you.")
 
 func command_guard() -> void:
 	if not has_pet() or _pet_is_charmed:
 		return
 	var guard_target = Combat.current_target
 	if guard_target == null or not is_instance_valid(guard_target):
-		CombatLog.add_line("No target selected to guard.", CombatLog.MsgType.INFO)
+		pet_info.emit("No target selected to guard.")
 		return
 	active_pet.set_guard_target(guard_target)
 	var target_name: String = guard_target.get("mob_name")
@@ -121,13 +122,13 @@ func command_guard() -> void:
 		target_name = guard_target.get("player_name")
 	if target_name == null or target_name == "":
 		target_name = "target"
-	CombatLog.add_line("Your pet guards %s." % target_name, CombatLog.MsgType.INFO)
+	pet_info.emit("Your pet guards %s." % target_name)
 
 func command_passive() -> void:
 	if not has_pet() or _pet_is_charmed:
 		return
 	active_pet.set_mode(Pet.Mode.PASSIVE)
-	CombatLog.add_line("Your pet holds its position.", CombatLog.MsgType.INFO)
+	pet_info.emit("Your pet holds its position.")
 
 # ── private ───────────────────────────────────────────────────────────────────
 
@@ -155,9 +156,9 @@ func _spawn_warder_pet(hp_fraction: float) -> void:
 	_is_warder = true
 	_register_pet(pet, false)
 	if hp_fraction >= 1.0:
-		CombatLog.add_line("Your warder %s is by your side." % warder_type, CombatLog.MsgType.INFO)
+		pet_info.emit("Your warder %s is by your side." % warder_type)
 	else:
-		CombatLog.add_line("Your warder %s returns, wounded." % warder_type, CombatLog.MsgType.INFO)
+		pet_info.emit("Your warder %s returns, wounded." % warder_type)
 		warder_returned.emit()
 
 func _summon_skeleton() -> void:
@@ -179,7 +180,7 @@ func _summon_skeleton() -> void:
 	get_tree().current_scene.add_child(pet)
 	pet.global_position = player.global_position + player.global_transform.basis.x * 2.0
 	_register_pet(pet, false)
-	CombatLog.add_line("A skeleton rises to serve you.", CombatLog.MsgType.INFO)
+	pet_info.emit("A skeleton rises to serve you.")
 
 func _register_pet(pet, is_charmed: bool) -> void:
 	active_pet = pet
@@ -223,10 +224,7 @@ func _on_pet_died(pet) -> void:
 		_warder_retreating = true
 		_warder_retreat_timer = WARDER_RETREAT_DURATION
 		warder_retreating.emit(WARDER_RETREAT_DURATION)
-		CombatLog.add_line(
-			"Your warder retreats! It will return in %d seconds." % int(WARDER_RETREAT_DURATION),
-			CombatLog.MsgType.INFO
-		)
+		pet_info.emit("Your warder retreats! It will return in %d seconds." % int(WARDER_RETREAT_DURATION))
 	else:
 		_deactivate_pet()
 		pet_died.emit(pet)
@@ -234,5 +232,5 @@ func _on_pet_died(pet) -> void:
 func _on_charm_broke() -> void:
 	var pet = active_pet
 	_deactivate_pet()
-	CombatLog.add_line("The charm has broken!", CombatLog.MsgType.INFO)
+	pet_info.emit("The charm has broken!")
 	pet_died.emit(pet)

@@ -1,0 +1,13 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Copper Chain Vest"
+description = "Interlocking rings of copper formed into a flexible haubergeon. Light chain armor."
+type = 3
+rarity = 0
+stack_size = 1
+bonus_constitution = 1
+bonus_max_hp = 20.0
+bonus_armor = 14
+armor_type = "chain"
+vendor_price = 90

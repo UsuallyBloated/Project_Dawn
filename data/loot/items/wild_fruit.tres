@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Wild Fruit"
+description = "Foraged fruit from the woods. Can be fermented into wine or used in cooking."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 4

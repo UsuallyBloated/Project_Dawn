@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Thick Silk Thread"
+description = "Spun silk thread. A crafted material used in high-quality cloth tailoring."
+type = 10
+rarity = 0
+stack_size = 10
+vendor_price = 12

@@ -23,6 +23,7 @@ var is_crouching: bool:
 
 var is_camera_active := false
 var _is_local := false
+var _heading_train_accum: float = 0.0
 
 signal state_changed(new_state: int)
 
@@ -159,8 +160,13 @@ func _physics_process(delta: float) -> void:
 		direction = direction.normalized()
 		velocity.x = direction.x * current_speed
 		velocity.z = direction.z * current_speed
+		_heading_train_accum += delta
+		if _heading_train_accum >= 2.0:
+			_heading_train_accum = 0.0
+			SenseHeading.try_advance()
 	else:
 		velocity.x = move_toward(velocity.x, 0.0, current_speed)
 		velocity.z = move_toward(velocity.z, 0.0, current_speed)
+		_heading_train_accum = 0.0
 
 	move_and_slide()

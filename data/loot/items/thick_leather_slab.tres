@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Thick Leather Slab"
+description = "A wide slab of tanned hide from a large animal. Used in heavier leather armor."
+type = 10
+rarity = 0
+stack_size = 10
+vendor_price = 18

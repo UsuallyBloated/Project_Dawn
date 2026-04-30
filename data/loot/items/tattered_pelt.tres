@@ -6,3 +6,4 @@ description = "A damaged animal hide. Tradeskill material."
 type = 10
 rarity = 0
 stack_size = 20
+vendor_price = 1

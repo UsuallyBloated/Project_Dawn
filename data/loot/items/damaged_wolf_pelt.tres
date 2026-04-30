@@ -6,3 +6,4 @@ description = "A wolf pelt marred by wounds. Still valuable to a tanner."
 type = 10
 rarity = 0
 stack_size = 20
+vendor_price = 4

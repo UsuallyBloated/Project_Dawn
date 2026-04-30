@@ -1,0 +1,13 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Carved Staff"
+description = "A smooth hardwood staff carved to a balanced length. Favored by casters and monks alike."
+type = 0
+rarity = 0
+stack_size = 1
+bonus_intelligence = 1
+weapon_damage_min = 4
+weapon_damage_max = 11
+weapon_skill = "2h_blunt"
+vendor_price = 50

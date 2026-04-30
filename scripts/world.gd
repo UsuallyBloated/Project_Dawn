@@ -3,12 +3,17 @@ extends Node3D
 # Set this in the Inspector for each zone scene.
 @export var zone_name: String = "Ashfield Ruins"
 
-const PLAYER_SCENE := preload("res://scenes/player.tscn")
+const PLAYER_SCENE  := preload("res://scenes/player.tscn")
+const TEST_PANEL_GD := preload("res://scripts/test_panel.gd")
 
 @onready var players_container: Node3D = $Players
 
 func _ready() -> void:
 	ZoneLoader.current_zone_name = zone_name
+	ZoneLoader.current_zone_path = scene_file_path
+
+	if Network.is_test_room:
+		add_child(TEST_PANEL_GD.new())
 
 	if not Network.is_online:
 		_spawn_player(1, ZoneLoader.get_spawn_position())

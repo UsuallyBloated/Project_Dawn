@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Ruined Silk"
+description = "Torn and frayed silk strands. Nearly useless, but a skilled tailor might salvage it."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 1

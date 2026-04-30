@@ -1,0 +1,10 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Meat Pie"
+description = "A hearty baked pie filled with seasoned meat. Restores health and stamina."
+type = 9
+rarity = 0
+stack_size = 20
+heal_on_use = 40.0
+vendor_price = 6

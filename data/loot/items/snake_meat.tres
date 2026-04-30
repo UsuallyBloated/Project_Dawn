@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Snake Meat"
+description = "Lean meat from a large snake. Surprisingly tender when properly prepared."
+type = 10
+rarity = 0
+stack_size = 10
+vendor_price = 3

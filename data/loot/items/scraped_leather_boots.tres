@@ -6,3 +6,6 @@ description = "Boots with deep gouges across the surface."
 type = 5
 rarity = 0
 stack_size = 1
+bonus_armor = 2
+armor_type = "leather"
+vendor_price = 2

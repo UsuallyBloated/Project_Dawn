@@ -50,7 +50,9 @@ func _ready() -> void:
 	_build_social_editor()
 
 	Skills.skill_cooldown_updated.connect(_on_skill_cooldown)
+	Skills.skills_changed.connect(_refresh_hotkey_slots)
 	Spells.spell_cooldown_updated.connect(_on_spell_cooldown)
+	Spells.spells_changed.connect(_refresh_spell_slots)
 	SocialHotkeys.bank_changed.connect(_on_bank_changed)
 	SocialHotkeys.slot_changed.connect(_on_slot_changed)
 	PlayerStats.level_changed.connect(func(_l): _refresh_spell_slots())

@@ -8,3 +8,6 @@ rarity = 0
 stack_size = 1
 bonus_constitution = 1
 bonus_max_hp = 8.0
+bonus_armor = 4
+armor_type = "leather"
+vendor_price = 3

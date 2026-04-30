@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Boar Hide"
+description = "Thick hide stripped from a boar. Durable material for leather armor crafting."
+type = 10
+rarity = 0
+stack_size = 5
+vendor_price = 10

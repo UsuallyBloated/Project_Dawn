@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Sewing Needle"
+description = "A fine metal needle. Required tool for all tailoring combines."
+type = 10
+rarity = 0
+stack_size = 5
+vendor_price = 5

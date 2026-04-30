@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Tarnished Silver Setting"
+description = "A crude silver ring or pendant base. Salvaged from humanoid enemies. Polishable."
+type = 10
+rarity = 0
+stack_size = 10
+vendor_price = 12

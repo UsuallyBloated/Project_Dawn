@@ -6,3 +6,4 @@ description = "A murky red liquid. Restores a small amount of health."
 type = 9
 rarity = 0
 stack_size = 10
+vendor_price = 8

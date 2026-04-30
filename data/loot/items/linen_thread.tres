@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Linen Thread"
+description = "Basic thread used in tailoring. Purchased from vendors or spun from plant fiber."
+type = 10
+rarity = 0
+stack_size = 20
+vendor_price = 6

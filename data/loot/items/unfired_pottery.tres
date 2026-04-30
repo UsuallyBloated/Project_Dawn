@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Unfired Pottery"
+description = "A clay vessel that has been shaped but not yet fired. Needs a kiln to finish."
+type = 10
+rarity = 0
+stack_size = 5
+vendor_price = 5
