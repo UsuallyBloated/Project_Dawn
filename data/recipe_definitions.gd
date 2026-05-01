@@ -40,6 +40,62 @@ const ALL: Dictionary = {
 			"output": "Small Metal Sheet", "output_qty": 1,
 			"tool": "Smithing Hammer", "station": "forge"
 		},
+		{
+			"name": "Tin Ingot",
+			"required_skill": 15, "trivial_at": 55,
+			"ingredients": [{"item": "Tin Ore", "qty": 2}, {"item": "Coal", "qty": 1}],
+			"output": "Tin Ingot", "output_qty": 1,
+			"tool": "", "station": "forge"
+		},
+		{
+			"name": "Bronze Ingot",
+			"required_skill": 30, "trivial_at": 70,
+			"ingredients": [{"item": "Copper Ingot", "qty": 1}, {"item": "Tin Ingot", "qty": 1}],
+			"output": "Bronze Ingot", "output_qty": 2,
+			"tool": "", "station": "forge"
+		},
+		{
+			"name": "Silver Ingot",
+			"required_skill": 70, "trivial_at": 110,
+			"ingredients": [{"item": "Silver Ore", "qty": 2}, {"item": "Coal", "qty": 2}],
+			"output": "Silver Ingot", "output_qty": 1,
+			"tool": "", "station": "forge"
+		},
+		{
+			"name": "Gold Ingot",
+			"required_skill": 95, "trivial_at": 135,
+			"ingredients": [{"item": "Gold Ore", "qty": 2}, {"item": "Coal", "qty": 2}],
+			"output": "Gold Ingot", "output_qty": 1,
+			"tool": "", "station": "forge"
+		},
+		{
+			"name": "Mithril Ingot",
+			"required_skill": 140, "trivial_at": 180,
+			"ingredients": [{"item": "Mithril Ore", "qty": 2}, {"item": "Coal", "qty": 3}],
+			"output": "Mithril Ingot", "output_qty": 1,
+			"tool": "", "station": "forge"
+		},
+		{
+			"name": "Adamantite Ingot",
+			"required_skill": 180, "trivial_at": 200,
+			"ingredients": [{"item": "Adamantite Ore", "qty": 2}, {"item": "Coal", "qty": 3}],
+			"output": "Adamantite Ingot", "output_qty": 1,
+			"tool": "", "station": "forge"
+		},
+		{
+			"name": "Silver Wire",
+			"required_skill": 40, "trivial_at": 75,
+			"ingredients": [{"item": "Silver Ingot", "qty": 1}],
+			"output": "Silver Wire", "output_qty": 2,
+			"tool": "Smithing Hammer", "station": "forge"
+		},
+		{
+			"name": "Gold Wire",
+			"required_skill": 80, "trivial_at": 115,
+			"ingredients": [{"item": "Gold Ingot", "qty": 1}],
+			"output": "Gold Wire", "output_qty": 2,
+			"tool": "Smithing Hammer", "station": "forge"
+		},
 	],
 
 	# -----------------------------------------------------------------------
@@ -195,6 +251,20 @@ const ALL: Dictionary = {
 			"output": "Cloth Robe", "output_qty": 1,
 			"tool": "Sewing Needle", "station": ""
 		},
+		{
+			"name": "Linen Thread",
+			"required_skill": 0, "trivial_at": 20,
+			"ingredients": [{"item": "Flax", "qty": 3}],
+			"output": "Linen Thread", "output_qty": 2,
+			"tool": "Sewing Needle", "station": ""
+		},
+		{
+			"name": "Thick Silk Thread",
+			"required_skill": 45, "trivial_at": 80,
+			"ingredients": [{"item": "Spiderling Silk", "qty": 2}],
+			"output": "Thick Silk Thread", "output_qty": 1,
+			"tool": "Sewing Needle", "station": ""
+		},
 	],
 
 	# -----------------------------------------------------------------------
@@ -241,6 +311,48 @@ const ALL: Dictionary = {
 			"required_skill": 75, "trivial_at": 115,
 			"ingredients": [{"item": "Iron Ingot", "qty": 5}],
 			"output": "Iron Chain Vest", "output_qty": 1,
+			"tool": "Smithing Hammer", "station": "forge"
+		},
+		{
+			"name": "Copper Chain Coif",
+			"required_skill": 20, "trivial_at": 60,
+			"ingredients": [{"item": "Copper Ingot", "qty": 2}],
+			"output": "Copper Chain Coif", "output_qty": 1,
+			"tool": "Smithing Hammer", "station": "forge"
+		},
+		{
+			"name": "Copper Chain Gloves",
+			"required_skill": 15, "trivial_at": 55,
+			"ingredients": [{"item": "Copper Ingot", "qty": 2}],
+			"output": "Copper Chain Gloves", "output_qty": 1,
+			"tool": "Smithing Hammer", "station": "forge"
+		},
+		{
+			"name": "Copper Chain Boots",
+			"required_skill": 15, "trivial_at": 55,
+			"ingredients": [{"item": "Copper Ingot", "qty": 2}],
+			"output": "Copper Chain Boots", "output_qty": 1,
+			"tool": "Smithing Hammer", "station": "forge"
+		},
+		{
+			"name": "Copper Chain Leggings",
+			"required_skill": 25, "trivial_at": 65,
+			"ingredients": [{"item": "Copper Ingot", "qty": 3}],
+			"output": "Copper Chain Leggings", "output_qty": 1,
+			"tool": "Smithing Hammer", "station": "forge"
+		},
+		{
+			"name": "Small Gear",
+			"required_skill": 20, "trivial_at": 55,
+			"ingredients": [{"item": "Small Metal Sheet", "qty": 1}],
+			"output": "Small Gear", "output_qty": 2,
+			"tool": "Smithing Hammer", "station": "forge"
+		},
+		{
+			"name": "Coiled Spring",
+			"required_skill": 25, "trivial_at": 60,
+			"ingredients": [{"item": "Small Metal Sheet", "qty": 1}],
+			"output": "Coiled Spring", "output_qty": 1,
 			"tool": "Smithing Hammer", "station": "forge"
 		},
 	],
@@ -316,6 +428,20 @@ const ALL: Dictionary = {
 				{"item": "Feather", "qty": 5}
 			],
 			"output": "Arrow Bundle", "output_qty": 1,
+			"tool": "", "station": ""
+		},
+		{
+			"name": "Arrow Fletching",
+			"required_skill": 0, "trivial_at": 20,
+			"ingredients": [{"item": "Feather", "qty": 3}],
+			"output": "Arrow Fletching", "output_qty": 5,
+			"tool": "", "station": ""
+		},
+		{
+			"name": "Flint Arrowhead",
+			"required_skill": 0, "trivial_at": 25,
+			"ingredients": [{"item": "Flint", "qty": 1}],
+			"output": "Flint Arrowhead", "output_qty": 5,
 			"tool": "", "station": ""
 		},
 	],

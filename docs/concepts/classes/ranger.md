@@ -198,4 +198,4 @@ Spells are learned from wilderness scouts, Ranger guilds, or nature-aligned trai
 | Nature's Bond | 30s: immune to nature damage; +100% movement; +50% crit chance | Nature | 180 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Wood Elf Ranger: "The Patient Distance"*
+*See [characters.md](../lore/characters.md) — Wood Elf Ranger: "The Patient Distance"*

@@ -10,140 +10,191 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -155.0
-offset_top = -360.0
+offset_top = -140.0
 offset_right = 155.0
-offset_bottom = 360.0
+offset_bottom = 140.0
 script = ExtResource("1")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 12
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
 
 [node name="VBox" type="VBoxContainer" parent="MarginContainer"]
-theme_override_constants/separation = 8
+theme_override_constants/separation = 5
 
-[node name="Title" type="Label" parent="MarginContainer/VBox"]
-text = "Character"
+[node name="TitleRow" type="HBoxContainer" parent="MarginContainer/VBox"]
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="MarginContainer/VBox/TitleRow"]
+text = "CHARACTER"
+size_flags_horizontal = 3
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 13
 
-[node name="Sep1" type="HSeparator" parent="MarginContainer/VBox"]
+[node name="CloseBtn" type="Button" parent="MarginContainer/VBox/TitleRow"]
+text = "✕"
+flat = true
+custom_minimum_size = Vector2(20, 20)
+theme_override_font_sizes/font_size = 12
+
+[node name="Sep0" type="HSeparator" parent="MarginContainer/VBox"]
 
 [node name="IdentityGrid" type="GridContainer" parent="MarginContainer/VBox"]
-columns = 2
+columns = 4
 size_flags_horizontal = 3
-theme_override_constants/h_separation = 16
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 3
 
 [node name="L_Class" type="Label" parent="MarginContainer/VBox/IdentityGrid"]
 text = "Class"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_Class" type="Label" parent="MarginContainer/VBox/IdentityGrid"]
 size_flags_horizontal = 3
-
-[node name="L_Race" type="Label" parent="MarginContainer/VBox/IdentityGrid"]
-text = "Race"
-
-[node name="V_Race" type="Label" parent="MarginContainer/VBox/IdentityGrid"]
-size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="L_Level" type="Label" parent="MarginContainer/VBox/IdentityGrid"]
 text = "Level"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_Level" type="Label" parent="MarginContainer/VBox/IdentityGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+
+[node name="L_Race" type="Label" parent="MarginContainer/VBox/IdentityGrid"]
+text = "Race"
+theme_override_font_sizes/font_size = 11
+
+[node name="V_Race" type="Label" parent="MarginContainer/VBox/IdentityGrid"]
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="L_XP" type="Label" parent="MarginContainer/VBox/IdentityGrid"]
 text = "XP"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_XP" type="Label" parent="MarginContainer/VBox/IdentityGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="XPBar" type="ProgressBar" parent="MarginContainer/VBox"]
 size_flags_horizontal = 3
-custom_minimum_size = Vector2(0, 14)
+custom_minimum_size = Vector2(0, 10)
 show_percentage = false
 
-[node name="Sep2" type="HSeparator" parent="MarginContainer/VBox"]
+[node name="Sep1" type="HSeparator" parent="MarginContainer/VBox"]
 
 [node name="VitalsGrid" type="GridContainer" parent="MarginContainer/VBox"]
-columns = 2
+columns = 4
 size_flags_horizontal = 3
-theme_override_constants/h_separation = 16
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 3
 
 [node name="L_HP" type="Label" parent="MarginContainer/VBox/VitalsGrid"]
 text = "HP"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_HP" type="Label" parent="MarginContainer/VBox/VitalsGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="L_MP" type="Label" parent="MarginContainer/VBox/VitalsGrid"]
 text = "MP"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_MP" type="Label" parent="MarginContainer/VBox/VitalsGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="L_ST" type="Label" parent="MarginContainer/VBox/VitalsGrid"]
-text = "Stamina"
+text = "ST"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_ST" type="Label" parent="MarginContainer/VBox/VitalsGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="L_AC" type="Label" parent="MarginContainer/VBox/VitalsGrid"]
-text = "Armor Class"
+text = "AC"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_AC" type="Label" parent="MarginContainer/VBox/VitalsGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
-[node name="Sep3" type="HSeparator" parent="MarginContainer/VBox"]
+[node name="Sep2" type="HSeparator" parent="MarginContainer/VBox"]
 
 [node name="AttribGrid" type="GridContainer" parent="MarginContainer/VBox"]
-columns = 2
+columns = 4
 size_flags_horizontal = 3
-theme_override_constants/h_separation = 16
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 3
 
 [node name="L_STR" type="Label" parent="MarginContainer/VBox/AttribGrid"]
-text = "Strength"
+text = "STR"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_STR" type="Label" parent="MarginContainer/VBox/AttribGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="L_DEX" type="Label" parent="MarginContainer/VBox/AttribGrid"]
-text = "Dexterity"
+text = "DEX"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_DEX" type="Label" parent="MarginContainer/VBox/AttribGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="L_AGI" type="Label" parent="MarginContainer/VBox/AttribGrid"]
-text = "Agility"
+text = "AGI"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_AGI" type="Label" parent="MarginContainer/VBox/AttribGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="L_INT" type="Label" parent="MarginContainer/VBox/AttribGrid"]
-text = "Intelligence"
+text = "INT"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_INT" type="Label" parent="MarginContainer/VBox/AttribGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="L_WIS" type="Label" parent="MarginContainer/VBox/AttribGrid"]
-text = "Wisdom"
+text = "WIS"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_WIS" type="Label" parent="MarginContainer/VBox/AttribGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="L_CHA" type="Label" parent="MarginContainer/VBox/AttribGrid"]
-text = "Charisma"
+text = "CHA"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_CHA" type="Label" parent="MarginContainer/VBox/AttribGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 
 [node name="L_CON" type="Label" parent="MarginContainer/VBox/AttribGrid"]
-text = "Constitution"
+text = "CON"
+theme_override_font_sizes/font_size = 11
 
 [node name="V_CON" type="Label" parent="MarginContainer/VBox/AttribGrid"]
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+
+[node name="L_ATK" type="Label" parent="MarginContainer/VBox/AttribGrid"]
+text = "ATK"
+theme_override_font_sizes/font_size = 11
+
+[node name="V_ATK" type="Label" parent="MarginContainer/VBox/AttribGrid"]
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11

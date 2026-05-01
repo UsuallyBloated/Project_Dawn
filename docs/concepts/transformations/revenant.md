@@ -32,7 +32,7 @@ This is the most significant physical transformation in the game — it changes 
 
 **Visual:**
 - Skin shifts to grey-blue; exact shade depends on race
-- Eyes become still — present, aware, but without the constant micro-movement of living eyes
+- Eyes become still — present, aware, but without the constant micro-movement of living eyes; gain full ultravision regardless of original race
 - Body temperature is ambient
 - The wound that triggered the death remains as a permanent visible scar
 - All original race features persist — an Ogre Revenant is still an Ogre
@@ -61,5 +61,5 @@ This is the most significant physical transformation in the game — it changes 
 - The transformation is a death event — the character's death animation plays, then they stand up wrong.
 
 ## Portrait Reference
-*See [characters.md](../characters.md):*
+*See [characters.md](../lore/characters.md):*
 - *Revenant Blood Mage — "The Scar That Remembers"*

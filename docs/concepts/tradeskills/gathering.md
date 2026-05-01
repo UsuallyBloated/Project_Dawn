@@ -24,6 +24,14 @@ The primary metal and gem source. Ore veins appear in cave systems, mountain zon
 | Mithril Ore | 160 | High mountain, dungeon upper floors | Mithril Ingot | Highest standard armor tier |
 | Adamantite Ore | 185 | End-game zones only | Adamantite Ingot | Legendary tier; rare spawn |
 
+### Coal
+
+| Item | Min Skill | Node Location | Used In |
+|---|---|---|---|
+| Coal | 0 | Coal seam nodes — shallow caves, mine tunnels | Smelting (fuel for all ingot recipes) |
+
+Coal seams appear in the same cave systems as ore veins but are their own distinct node type. A skill-0 miner can harvest them. Higher Mining skill does not improve coal yield — it is purely a fuel resource.
+
 **Bronze:** Smelting copper + tin at skill 30 produces Bronze Ingots — stronger than copper alone. First alloy in the game; guards and town militia gear is often bronze.
 
 **Gem nodes:** Rare spawn within ore veins at Mining skill 50+. Yield directly to Jewel Crafting. Types by rarity: Jasper → Bloodstone → Sapphire → Emerald → Diamond. Higher skill increases both gem find chance and gem tier.
@@ -68,6 +76,10 @@ The most class-diverse gathering skill in the game. Herb nodes appear as ground-
 |---|---|---|---|
 | Bloodmoss | 0 | Common fields, forest edges | White Alchemy (healing base) |
 | Bitterroot | 0 | Marshes, riverbanks | White Alchemy (antidotes) |
+| Feverfew | 0 | Meadows, road-side verges | White Alchemy (healing, used alongside Bloodmoss) |
+| Wild Mushroom | 0 | Shaded forest floors, damp hollows | Cooking (Mushroom Bread) |
+| Wild Berries | 0 | Forest edges, hedgerows | Cooking (Berry Tart) |
+| Wormwood | 10 | Marshes, disturbed soil near settlements | White Alchemy (antidotes, Mana Potion base) |
 | Nightshade | 25 | Forests, night-only spawn | Black Alchemy (poison base) |
 | Silverleaf | 40 | Temperate fields, hillsides | White Alchemy (mana restoration) |
 | Shimmerbloom | 60 | High elevation, mountain meadows | White Alchemy (stat elixirs) |
@@ -169,6 +181,7 @@ Extract large stone blocks from quarry nodes in mountain and cliff zones. Quarry
 
 | Stone | Min Skill | Primary Use |
 |---|---|---|
+| Flint | 0 | Knapped into Flint Arrowheads (Fletching) |
 | Limestone | 0 | Masonry basics; Pottery substitute |
 | Granite | 40 | Heavy masonry, dungeon construction |
 | Marble | 80 | Premium housing; high vendor value |

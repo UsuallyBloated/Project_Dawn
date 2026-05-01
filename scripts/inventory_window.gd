@@ -7,7 +7,7 @@ const ROWS := 5
 const C_BG := Color(0.07, 0.06, 0.04, 0.95)
 
 var _slot_cells: Array = []
-var _tooltip: Panel = null
+var _tooltip: PanelContainer = null
 var _tooltip_label: Label = null
 
 var _drag_item: ItemData = null
@@ -328,6 +328,22 @@ func _cancel_destroy() -> void:
 	_confirm_panel.visible = false
 
 func _use_consumable(item: ItemData) -> void:
+	if item.is_food:
+		if BuffManager.has_food_buff():
+			CombatLog.add_line("You are already eating something.", CombatLog.MsgType.INFO)
+			return
+		Inventory.remove_item(item, 1)
+		BuffManager.add_food_buff(item.food_hp_regen, item.food_mp_regen, item.food_duration, item.item_name)
+		CombatLog.add_line("You eat %s." % item.item_name, CombatLog.MsgType.INFO)
+		return
+	if item.is_drink:
+		if BuffManager.has_drink_buff():
+			CombatLog.add_line("You are already drinking something.", CombatLog.MsgType.INFO)
+			return
+		Inventory.remove_item(item, 1)
+		BuffManager.add_drink_buff(item.food_hp_regen, item.food_mp_regen, item.food_duration, item.item_name)
+		CombatLog.add_line("You drink %s." % item.item_name, CombatLog.MsgType.INFO)
+		return
 	if item.heal_on_use == 0.0 and item.mp_on_use == 0.0:
 		CombatLog.add_line("You can't use %s that way." % item.item_name, CombatLog.MsgType.INFO)
 		return

@@ -51,4 +51,4 @@ The most interesting case is the Fallen Paladin who knows what happened and is t
 | Dark Ward | Self-buff | Reduce all incoming damage by 20% for 12s | 22 | Instant |
 
 ## Portrait Reference
-*No portrait currently. A Fallen Paladin portrait would be a strong addition to characters.md — suggest same armor, different light.*
+*No portrait currently. A Fallen Paladin portrait would be a strong addition to [lore/characters.md](../lore/characters.md) — suggest same armor, different light.*

@@ -139,7 +139,7 @@ Combat arts are trained at Thieves' Guild halls or independent specialists. Rear
 | Shadow's Embrace | 60s: remain semi-stealthed in combat; +50% flanking damage | Offensive | 60 |
 
 ## Portrait References
-*See [characters.md](../characters.md):*
+*See [characters.md](../lore/characters.md):*
 - *Gnome Rogue — "The Clockwork Cutpurse"*
 - *Troll Rogue — "The Marsh Phantom"*
 - *Halfling Rogue — "The Hearthside Knife"*

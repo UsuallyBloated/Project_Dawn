@@ -24,7 +24,7 @@ const SLOT_LABELS: Dictionary = {
 }
 
 var _slot_frames: Dictionary = {}
-var _tooltip_panel: Panel = null
+var _tooltip_panel: PanelContainer = null
 var _tooltip_label: Label = null
 
 func _ready() -> void:
@@ -163,4 +163,3 @@ func _on_slot_input(event: InputEvent, slot_name: String) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		Equipment.unequip(slot_name)
 		_tooltip_panel.visible = false
-

@@ -25,6 +25,13 @@ var _keybind_btns: Dictionary = {}   # action_id -> Button
 var _listening_action: String = ""
 var _listening_btn: Button = null
 
+# Interface controls
+var _ft_master_cb: CheckBox = null
+var _ft_damage_cb: CheckBox = null
+var _ft_heals_cb:  CheckBox = null
+var _ft_misses_cb: CheckBox = null
+var _ft_xp_cb:     CheckBox = null
+
 func _ready() -> void:
 	_build()
 	_load_from_settings()
@@ -63,6 +70,7 @@ func _build() -> void:
 
 	_build_graphics_tab()
 	_build_audio_tab()
+	_build_interface_tab()
 	_build_keybinds_tab()
 
 	var btn_row := HBoxContainer.new()
@@ -164,6 +172,43 @@ func _build_audio_tab() -> void:
 	for ch: Dictionary in _AUDIO_CHANNELS:
 		var row_data := _make_slider_row(vbox, ch.label)
 		_audio_rows[ch.id] = {slider = row_data[0], pct = row_data[1]}
+
+# ── Interface tab ─────────────────────────────────────────────────────────────
+
+func _build_interface_tab() -> void:
+	var vbox := _make_tab("Interface")
+
+	var master_row := HBoxContainer.new()
+	_ft_master_cb = CheckBox.new()
+	_ft_master_cb.text = "Floating Combat Text"
+	_ft_master_cb.add_theme_color_override("font_color", UITheme.C_TEXT)
+	master_row.add_child(_ft_master_cb)
+	vbox.add_child(master_row)
+
+	var sub_margin := MarginContainer.new()
+	sub_margin.add_theme_constant_override("margin_left", 28)
+	vbox.add_child(sub_margin)
+
+	var sub_vbox := VBoxContainer.new()
+	sub_vbox.add_theme_constant_override("separation", 8)
+	sub_margin.add_child(sub_vbox)
+
+	_ft_damage_cb = _make_sub_checkbox("Damage Numbers", sub_vbox)
+	_ft_heals_cb  = _make_sub_checkbox("Heals",          sub_vbox)
+	_ft_misses_cb = _make_sub_checkbox("Misses",         sub_vbox)
+	_ft_xp_cb     = _make_sub_checkbox("XP Gains",       sub_vbox)
+
+	var sub_cbs := [_ft_damage_cb, _ft_heals_cb, _ft_misses_cb, _ft_xp_cb]
+	_ft_master_cb.toggled.connect(func(on: bool) -> void:
+		for cb: CheckBox in sub_cbs:
+			cb.disabled = not on)
+
+func _make_sub_checkbox(label: String, parent: VBoxContainer) -> CheckBox:
+	var cb := CheckBox.new()
+	cb.text = label
+	cb.add_theme_color_override("font_color", UITheme.C_TEXT)
+	parent.add_child(cb)
+	return cb
 
 # ── Keybinds tab ──────────────────────────────────────────────────────────────
 
@@ -323,6 +368,13 @@ func _load_from_settings() -> void:
 	_vsync_btn.selected = GameSettings.vsync_mode
 	for ch: Dictionary in _AUDIO_CHANNELS:
 		_audio_rows[ch.id].slider.value = GameSettings.get(ch.id + "_volume")
+	_ft_master_cb.button_pressed = GameSettings.floating_text_enabled
+	_ft_damage_cb.button_pressed = GameSettings.floating_text_damage
+	_ft_heals_cb.button_pressed  = GameSettings.floating_text_heals
+	_ft_misses_cb.button_pressed = GameSettings.floating_text_misses
+	_ft_xp_cb.button_pressed     = GameSettings.floating_text_xp
+	for cb: CheckBox in [_ft_damage_cb, _ft_heals_cb, _ft_misses_cb, _ft_xp_cb]:
+		cb.disabled = not GameSettings.floating_text_enabled
 	for id: String in _keybind_btns:
 		_keybind_btns[id].text = _key_label(id)
 
@@ -333,5 +385,10 @@ func _on_apply() -> void:
 	GameSettings.vsync_mode       = _vsync_btn.selected
 	for ch: Dictionary in _AUDIO_CHANNELS:
 		GameSettings.set(ch.id + "_volume", _audio_rows[ch.id].slider.value)
+	GameSettings.floating_text_enabled = _ft_master_cb.button_pressed
+	GameSettings.floating_text_damage  = _ft_damage_cb.button_pressed
+	GameSettings.floating_text_heals   = _ft_heals_cb.button_pressed
+	GameSettings.floating_text_misses  = _ft_misses_cb.button_pressed
+	GameSettings.floating_text_xp      = _ft_xp_cb.button_pressed
 	GameSettings.apply_all()
 	GameSettings.save_settings()

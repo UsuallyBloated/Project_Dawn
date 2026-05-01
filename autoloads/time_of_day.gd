@@ -60,7 +60,7 @@ func get_time_string() -> String:
 	return "%02d:%02d" % [h, m]
 
 func _apply() -> void:
-	var night_t   := _night_factor()
+	var night_t   := night_factor()
 	var dawn_dusk := _dawn_dusk_factor()
 
 	# Sun arc: rises at ~6 AM (x=0), peaks at noon (x=-90), sets at ~6 PM
@@ -92,7 +92,7 @@ func _apply() -> void:
 		var night_fog := Color(0.06, 0.06, 0.12)
 		_environment.fog_light_color = _lerp_dn(day_fog, night_fog, night_t)
 
-func _night_factor() -> float:
+func night_factor() -> float:
 	var hour := time_of_day * 24.0
 	if hour < 5.0 or hour > 21.0:
 		return 1.0

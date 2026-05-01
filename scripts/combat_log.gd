@@ -6,6 +6,7 @@ const PANEL_HEIGHT := 148
 const C_BG       := Color(0.04, 0.03, 0.02, 0.80)
 const C_BORDER   := Color(0.20, 0.15, 0.05)
 const C_DMG_OUT  := Color(0.95, 0.78, 0.25)
+const C_CRIT     := Color(1.00, 0.92, 0.30)
 const C_DMG_IN   := Color(0.90, 0.30, 0.25)
 const C_HEAL     := Color(0.35, 0.90, 0.45)
 const C_INFO     := Color(0.70, 0.65, 0.55)
@@ -20,11 +21,12 @@ const C_TELL_IN  := Color(1.00, 0.70, 1.00)
 const C_GROUP    := Color(0.45, 0.80, 1.00)
 
 enum MsgType { DAMAGE_OUT, DAMAGE_IN, HEAL, INFO, LEVEL_UP, LOOT, EVADE,
-			   SAY, SHOUT, OOC, TELL_OUT, TELL_IN, GROUP_CHAT }
+			   SAY, SHOUT, OOC, TELL_OUT, TELL_IN, GROUP_CHAT, CRIT }
 
 var _scroll: ScrollContainer = null
 var _msg_vbox: VBoxContainer = null
 var _panel: DraggablePanel = null
+var _back_btn: Button = null
 var _last_hp: float = 0.0
 var _auto_scroll := true
 
@@ -67,9 +69,32 @@ func _build_ui() -> void:
 
 	_scroll.get_v_scroll_bar().value_changed.connect(_on_scroll_value_changed)
 
+	_back_btn = Button.new()
+	_back_btn.text = "▼  latest"
+	_back_btn.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	_back_btn.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_back_btn.offset_left   =  6.0
+	_back_btn.offset_right  = -6.0
+	_back_btn.offset_top    = -26.0
+	_back_btn.offset_bottom = -6.0
+	_back_btn.add_theme_font_size_override("font_size", 10)
+	var btn_style := StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.10, 0.08, 0.05, 0.90)
+	btn_style.border_color = UITheme.C_GOLDEN_BORDER
+	btn_style.set_border_width_all(1)
+	btn_style.set_corner_radius_all(2)
+	_back_btn.add_theme_stylebox_override("normal",  btn_style)
+	_back_btn.add_theme_stylebox_override("hover",   btn_style)
+	_back_btn.add_theme_stylebox_override("pressed", btn_style)
+	_back_btn.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_back_btn.visible = false
+	_back_btn.pressed.connect(_on_back_to_bottom_pressed)
+	_panel.add_child(_back_btn)
+
 func _on_scroll_value_changed(value: float) -> void:
 	var bar := _scroll.get_v_scroll_bar()
 	_auto_scroll = value >= bar.max_value - bar.page
+	_back_btn.visible = not _auto_scroll
 
 func _connect_signals() -> void:
 	Skills.skill_used.connect(func(sk):
@@ -84,7 +109,7 @@ func _connect_signals() -> void:
 	Combat.target_changed.connect(func(enemy):
 		if enemy != null and is_instance_valid(enemy):
 			add_line("You target %s." % enemy.mob_name, MsgType.INFO))
-	Combat.player_hit_enemy.connect(func(t, a): add_damage_out(t, a))
+	Combat.player_hit_enemy.connect(func(t, a, c): add_damage_out(t, a, c))
 	Combat.player_missed_enemy.connect(func(t): add_line("You miss %s." % t, MsgType.DAMAGE_OUT))
 	Combat.player_evaded_attack.connect(func(n): add_evade(n))
 	Combat.player_took_damage.connect(func(n, a):
@@ -109,6 +134,15 @@ func _connect_signals() -> void:
 	BuffManager.hot_ticked.connect(func(amount, sname):
 		add_line("You recover %d health from %s." % [amount, sname], MsgType.HEAL))
 	PetManager.pet_info.connect(func(text): add_line(text, MsgType.INFO))
+	Combat.enemy_stunned.connect(func(n): add_line("%s is stunned!" % n, MsgType.INFO))
+	Combat.enemy_stun_wore_off.connect(func(n): add_line("The stun on %s wears off." % n, MsgType.INFO))
+	Combat.enemy_rooted.connect(func(n): add_line("%s is rooted!" % n, MsgType.INFO))
+	Combat.enemy_snared.connect(func(n): add_line("%s is snared!" % n, MsgType.INFO))
+	Combat.enemy_slowed.connect(func(n): add_line("%s is slowed!" % n, MsgType.INFO))
+	Combat.enemy_mez_applied.connect(func(n): add_line("%s is mesmerized!" % n, MsgType.INFO))
+	Combat.enemy_mez_broke.connect(func(n): add_line("The mesmerize on %s breaks!" % n, MsgType.INFO))
+	Combat.enemy_charmed_attacked.connect(func(atk, tgt, amt): add_line("%s hits %s for %d." % [atk, tgt, amt], MsgType.DAMAGE_OUT))
+	Combat.enemy_silenced.connect(func(n): add_line("%s is silenced!" % n, MsgType.INFO))
 
 func _on_player_hp_changed(current: float, _max: float) -> void:
 	var diff := current - _last_hp
@@ -135,6 +169,11 @@ func _scroll_to_bottom() -> void:
 	if _scroll != null:
 		_scroll.scroll_vertical = _scroll.get_v_scroll_bar().max_value
 
+func _on_back_to_bottom_pressed() -> void:
+	_auto_scroll = true
+	_back_btn.visible = false
+	_scroll_to_bottom()
+
 func _color_for(type: MsgType) -> Color:
 	match type:
 		MsgType.DAMAGE_OUT: return C_DMG_OUT
@@ -149,10 +188,14 @@ func _color_for(type: MsgType) -> Color:
 		MsgType.TELL_OUT:   return C_TELL_OUT
 		MsgType.TELL_IN:    return C_TELL_IN
 		MsgType.GROUP_CHAT: return C_GROUP
+		MsgType.CRIT:       return C_CRIT
 		_:                  return C_INFO
 
-func add_damage_out(target_name: String, amount: int) -> void:
-	add_line("You hit %s for %d damage." % [target_name, amount], MsgType.DAMAGE_OUT)
+func add_damage_out(target_name: String, amount: int, is_crit: bool = false) -> void:
+	if is_crit:
+		add_line("** You critically hit %s for %d damage! **" % [target_name, amount], MsgType.CRIT)
+	else:
+		add_line("You hit %s for %d damage." % [target_name, amount], MsgType.DAMAGE_OUT)
 
 func add_evade(attacker_name: String) -> void:
 	add_line("You evade %s's attack!" % attacker_name, MsgType.EVADE)

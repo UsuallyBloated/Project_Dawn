@@ -132,7 +132,7 @@ func _do_resize() -> void:
 
 # Public API: build a standard tooltip panel attached as a child. Returns [Panel, Label].
 func make_tooltip() -> Array:
-	var panel := Panel.new()
+	var panel := PanelContainer.new()
 	panel.visible = false
 	panel.z_index = 20
 	var style := StyleBoxFlat.new()
@@ -167,6 +167,16 @@ func _append_stat_lines(item: ItemData, lines: Array) -> void:
 		lines.append("Use: Restores %d HP" % int(item.heal_on_use))
 	if item.mp_on_use > 0.0:
 		lines.append("Use: Restores %d MP" % int(item.mp_on_use))
+	if item.is_food and item.food_duration > 0.0:
+		var parts: Array[String] = []
+		if item.food_hp_regen > 0.0: parts.append("%d HP" % int(item.food_hp_regen))
+		if item.food_mp_regen > 0.0: parts.append("%d MP" % int(item.food_mp_regen))
+		lines.append("Eat: +%s/tick for %ds" % ["/".join(parts), int(item.food_duration)])
+	if item.is_drink and item.food_duration > 0.0:
+		var parts: Array[String] = []
+		if item.food_hp_regen > 0.0: parts.append("%d HP" % int(item.food_hp_regen))
+		if item.food_mp_regen > 0.0: parts.append("%d MP" % int(item.food_mp_regen))
+		lines.append("Drink: +%s/tick for %ds" % ["/".join(parts), int(item.food_duration)])
 
 func _find_meta_child(parent: Node, meta_key: String) -> Node:
 	for child in parent.get_children():

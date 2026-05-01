@@ -2,7 +2,7 @@ class_name SkillData
 extends Resource
 
 enum TargetType { ENEMY, SELF, NONE }
-enum EffectType { NONE, EVADE_BOOST, ABSORB_SHIELD, WARDER_FURY }
+enum EffectType { NONE, EVADE_BOOST, ABSORB_SHIELD, WARDER_FURY, STUN, FEIGN_DEATH, STEALTH, TRUESIGHT }
 
 @export var skill_name: String = ""
 @export var description: String = ""
@@ -14,4 +14,6 @@ enum EffectType { NONE, EVADE_BOOST, ABSORB_SHIELD, WARDER_FURY }
 @export var effect_type: EffectType = EffectType.NONE
 @export var effect_duration: float = 0.0
 @export var absorb_amount: float = 0.0
+@export var stun_duration: float = 0.0
+@export var stealth_duration: float = 0.0
 @export var allowed_classes: Array[String] = []

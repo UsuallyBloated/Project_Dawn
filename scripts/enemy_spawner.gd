@@ -14,11 +14,29 @@ extends Node3D
 @export var move_speed_override: float = 0.0
 @export var aggro_range_override: float = 0.0
 
+@export_group("Spawn Conditions")
+@export var night_only: bool = false
+
+@export_group("Resist Overrides")
+@export var fire_resist:      float = -1.0
+@export var ice_resist:       float = -1.0
+@export var lightning_resist: float = -1.0
+@export var arcane_resist:    float = -1.0
+@export var holy_resist:      float = -1.0
+@export var nature_resist:    float = -1.0
+@export var spirit_resist:    float = -1.0
+@export var shadow_resist:    float = -1.0
+
 var _current_enemy: Node3D = null
 var _respawn_timer: float = 0.0
 var _waiting: bool = false
 
+func _is_night() -> bool:
+	var h := TimeOfDay.get_hour()
+	return h >= 20 or h < 6
+
 func _ready() -> void:
+	TimeOfDay.hour_changed.connect(_on_hour_changed)
 	call_deferred("_spawn")
 
 func _process(delta: float) -> void:
@@ -29,8 +47,20 @@ func _process(delta: float) -> void:
 		_waiting = false
 		_spawn()
 
+func _on_hour_changed(hour: int) -> void:
+	if not night_only:
+		return
+	if hour == 20 and _current_enemy == null and not _waiting:
+		_spawn()
+	elif hour == 6 and is_instance_valid(_current_enemy):
+		_current_enemy.queue_free()
+		_current_enemy = null
+		_waiting = false
+
 func _spawn() -> void:
 	if enemy_scene == null:
+		return
+	if night_only and not _is_night():
 		return
 	var enemy: Node3D = enemy_scene.instantiate()
 	_apply_overrides(enemy)
@@ -59,6 +89,10 @@ func _apply_overrides(enemy: Node3D) -> void:
 		enemy.move_speed = move_speed_override
 	if aggro_range_override > 0.0:
 		enemy.aggro_range = aggro_range_override
+	for field in ["fire_resist", "ice_resist", "lightning_resist", "arcane_resist",
+			"holy_resist", "nature_resist", "spirit_resist", "shadow_resist"]:
+		if get(field) >= 0.0:
+			enemy.set(field, get(field))
 
 func _on_enemy_died(_enemy) -> void:
 	_current_enemy = null

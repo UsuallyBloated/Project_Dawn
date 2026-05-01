@@ -15,6 +15,7 @@ extends DraggablePanel
 @onready var wis_value: Label = $MarginContainer/VBox/AttribGrid/V_WIS
 @onready var cha_value: Label = $MarginContainer/VBox/AttribGrid/V_CHA
 @onready var con_value: Label = $MarginContainer/VBox/AttribGrid/V_CON
+@onready var atk_value: Label = $MarginContainer/VBox/AttribGrid/V_ATK
 @onready var xp_bar: ProgressBar = $MarginContainer/VBox/XPBar
 
 @onready var _l_hp: Label = $MarginContainer/VBox/VitalsGrid/L_HP
@@ -28,17 +29,35 @@ extends DraggablePanel
 @onready var _l_wis: Label = $MarginContainer/VBox/AttribGrid/L_WIS
 @onready var _l_cha: Label = $MarginContainer/VBox/AttribGrid/L_CHA
 @onready var _l_con: Label = $MarginContainer/VBox/AttribGrid/L_CON
+@onready var _l_atk: Label = $MarginContainer/VBox/AttribGrid/L_ATK
+
+@onready var _close_btn: Button = $MarginContainer/VBox/TitleRow/CloseBtn
+@onready var _title_lbl: Label = $MarginContainer/VBox/TitleRow/Title
 
 func _ready() -> void:
+	_apply_panel_style()
+	_title_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_close_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
+	_close_btn.pressed.connect(func() -> void: visible = false)
+
 	PlayerStats.hp_changed.connect(_on_hp_changed)
 	PlayerStats.mp_changed.connect(_on_mp_changed)
 	PlayerStats.stamina_changed.connect(_on_stamina_changed)
 	PlayerStats.level_changed.connect(_on_level_changed)
 	PlayerStats.xp_changed.connect(_on_xp_changed)
 	PlayerStats.stats_changed.connect(_refresh)
+	Equipment.equipment_changed.connect(func(_slot, _item) -> void: _refresh())
 	_style_xp_bar()
 	_setup_tooltips()
 	_refresh()
+
+func _apply_panel_style() -> void:
+	var style := StyleBoxFlat.new()
+	style.bg_color = UITheme.C_WINDOW_BG
+	style.border_color = UITheme.C_GOLDEN_BORDER
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	add_theme_stylebox_override("panel", style)
 
 func _setup_tooltips() -> void:
 	_l_hp.tooltip_text = "Hit Points — your life force. Reaching 0 HP means death."
@@ -52,6 +71,7 @@ func _setup_tooltips() -> void:
 	_l_wis.tooltip_text = "Wisdom — insight and attunement. Improves MP regeneration rate and the potency of healing spells."
 	_l_cha.tooltip_text = "Charisma — force of personality. Improves NPC reactions, merchant prices, and group leadership bonuses."
 	_l_con.tooltip_text = "Constitution — physical toughness. Increases maximum HP and your health regeneration rate."
+	_l_atk.tooltip_text = "Attack — your melee damage range. Weapon damage is fixed; Strength adds a bonus (STR / 5) on top."
 
 func _style_xp_bar() -> void:
 	var fill := StyleBoxFlat.new()
@@ -78,7 +98,15 @@ func _refresh() -> void:
 	wis_value.text = str(PlayerStats.wisdom)
 	cha_value.text = str(PlayerStats.charisma)
 	con_value.text = str(PlayerStats.constitution)
+	atk_value.text = _get_attack_range()
 	ac_value.text = str(Equipment.get_armor_class())
+
+func _get_attack_range() -> String:
+	var str_bonus: int = PlayerStats.strength / 5
+	var weapon: ItemData = Equipment.equipped.get("weapon")
+	if weapon != null and weapon.weapon_damage_max > 0:
+		return "%d - %d" % [weapon.weapon_damage_min + str_bonus, weapon.weapon_damage_max + str_bonus]
+	return "%d - %d" % [1 + str_bonus, 4 + str_bonus]
 
 func _on_hp_changed(current: float, maximum: float) -> void:
 	hp_value.text = "%d / %d" % [int(current), int(maximum)]

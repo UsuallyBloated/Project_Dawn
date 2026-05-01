@@ -19,7 +19,7 @@ var _bank_label: Label            = null
 var _spell_slots: Array           = []
 var _spell_panel: DraggablePanel  = null
 
-var _tooltip_panel: Panel         = null
+var _tooltip_panel: PanelContainer = null
 var _tooltip_label: Label         = null
 
 var _ctx_menu: PopupMenu          = null
@@ -589,7 +589,6 @@ func _on_hotkey_hover(slot: int) -> void:
 	_tooltip_label.text = text
 	var frame: Panel = _hotkey_slots[slot]["frame"]
 	_tooltip_panel.position = frame.global_position - _hotkey_panel.global_position + Vector2(0, -80)
-	_tooltip_panel.size = Vector2.ZERO
 	_tooltip_panel.visible = true
 
 func _on_spell_hover(index: int) -> void:
@@ -603,7 +602,6 @@ func _on_spell_hover(index: int) -> void:
 	_tooltip_label.text = text
 	var frame: Panel = _spell_slots[index]["frame"]
 	_tooltip_panel.position = frame.global_position - _hotkey_panel.global_position + Vector2(0, -80)
-	_tooltip_panel.size = Vector2.ZERO
 	_tooltip_panel.visible = true
 
 func _style_slot(frame: Panel, active: bool) -> void:

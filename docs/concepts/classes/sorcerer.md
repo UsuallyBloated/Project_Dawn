@@ -192,4 +192,4 @@ Spells are not learned from books — they surface as the bloodline matures. Sor
 | Void Collapse | AoE arcane damage (320) in 20m radius; instant | Arcane | 280 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Troll Sorcerer: "The Burning Ground"*
+*See [characters.md](../lore/characters.md) — Troll Sorcerer: "The Burning Ground"*

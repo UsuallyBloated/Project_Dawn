@@ -11,19 +11,20 @@ const RESOLUTIONS: Array[Vector2i] = [
 ]
 
 const REBINDABLE_ACTIONS: Array[Dictionary] = [
-	{id = "toggle_character", label = "Character Window", category = "Windows",  default_key = KEY_C},
-	{id = "toggle_inventory", label = "Inventory Window", category = "Windows",  default_key = KEY_I},
-	{id = "toggle_paperdoll", label = "Paperdoll Window", category = "Windows",  default_key = KEY_P},
-	{id = "toggle_crafting",  label = "Combine Window",   category = "Windows",  default_key = KEY_K},
-	{id = "interact",         label = "Interact / Talk",  category = "World",    default_key = KEY_F},
-	{id = "target_cycle",     label = "Cycle Target",     category = "Combat",   default_key = KEY_TAB},
-	{id = "move_forward",     label = "Move Forward",     category = "Movement", default_key = KEY_W},
-	{id = "move_backward",    label = "Move Back",        category = "Movement", default_key = KEY_S},
-	{id = "move_left",        label = "Strafe Left",      category = "Movement", default_key = KEY_A},
-	{id = "move_right",       label = "Strafe Right",     category = "Movement", default_key = KEY_D},
-	{id = "jump",             label = "Jump",             category = "Movement", default_key = KEY_SPACE},
-	{id = "toggle_crouch",    label = "Crouch",           category = "Movement", default_key = KEY_X},
-	{id = "toggle_sit",       label = "Sit / Rest",       category = "Movement", default_key = KEY_Z},
+	{id = "toggle_character",  label = "Character Window",  category = "Windows",  default_key = KEY_C},
+	{id = "toggle_inventory",  label = "Inventory Window",  category = "Windows",  default_key = KEY_I},
+	{id = "toggle_paperdoll",  label = "Paperdoll Window",  category = "Windows",  default_key = KEY_P},
+	{id = "toggle_crafting",   label = "Tradeskill Window", category = "Windows",  default_key = KEY_K},
+	{id = "toggle_spell_book", label = "Spellbook",         category = "Windows",  default_key = KEY_B},
+	{id = "interact",          label = "Interact / Talk",   category = "World",    default_key = KEY_F},
+	{id = "target_cycle",      label = "Cycle Target",      category = "Combat",   default_key = KEY_TAB},
+	{id = "move_forward",      label = "Move Forward",      category = "Movement", default_key = KEY_W},
+	{id = "move_backward",     label = "Move Back",         category = "Movement", default_key = KEY_S},
+	{id = "move_left",         label = "Strafe Left",       category = "Movement", default_key = KEY_A},
+	{id = "move_right",        label = "Strafe Right",      category = "Movement", default_key = KEY_D},
+	{id = "jump",              label = "Jump",              category = "Movement", default_key = KEY_SPACE},
+	{id = "toggle_crouch",     label = "Crouch",            category = "Movement", default_key = KEY_X},
+	{id = "toggle_sit",        label = "Sit / Rest",        category = "Movement", default_key = KEY_Z},
 ]
 
 # Audio (0.0 – 1.0 linear)
@@ -36,6 +37,13 @@ var ui_volume: float = 1.0
 var window_mode: int = 0       # 0=windowed, 1=fullscreen, 2=borderless
 var vsync_mode: int = 1        # 0=disabled, 1=enabled, 2=adaptive
 var resolution_index: int = 2  # index into RESOLUTIONS; -1 = don't touch
+
+# Floating combat text
+var floating_text_enabled: bool = true
+var floating_text_damage:  bool = true
+var floating_text_heals:   bool = true
+var floating_text_misses:  bool = true
+var floating_text_xp:      bool = true
 
 # Keybinds: action_id -> Key enum value
 var keybinds: Dictionary = {}
@@ -115,6 +123,11 @@ func save_settings() -> void:
 	cfg.set_value("graphics", "window_mode",      window_mode)
 	cfg.set_value("graphics", "vsync_mode",       vsync_mode)
 	cfg.set_value("graphics", "resolution_index", resolution_index)
+	cfg.set_value("interface", "floating_text_enabled", floating_text_enabled)
+	cfg.set_value("interface", "floating_text_damage",  floating_text_damage)
+	cfg.set_value("interface", "floating_text_heals",   floating_text_heals)
+	cfg.set_value("interface", "floating_text_misses",  floating_text_misses)
+	cfg.set_value("interface", "floating_text_xp",      floating_text_xp)
 	for action: Dictionary in REBINDABLE_ACTIONS:
 		cfg.set_value("keybinds", action.id, keybinds.get(action.id, action.default_key))
 	cfg.save(SAVE_PATH)
@@ -130,5 +143,10 @@ func load_settings() -> void:
 	window_mode      = cfg.get_value("graphics", "window_mode",      0)
 	vsync_mode       = cfg.get_value("graphics", "vsync_mode",       1)
 	resolution_index = cfg.get_value("graphics", "resolution_index", 2)
+	floating_text_enabled = cfg.get_value("interface", "floating_text_enabled", true)
+	floating_text_damage  = cfg.get_value("interface", "floating_text_damage",  true)
+	floating_text_heals   = cfg.get_value("interface", "floating_text_heals",   true)
+	floating_text_misses  = cfg.get_value("interface", "floating_text_misses",  true)
+	floating_text_xp      = cfg.get_value("interface", "floating_text_xp",      true)
 	for action: Dictionary in REBINDABLE_ACTIONS:
 		keybinds[action.id] = cfg.get_value("keybinds", action.id, action.default_key)

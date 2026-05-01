@@ -1,8 +1,8 @@
 # Magician
-*Arcane DPS (Generalist) + Pet — Any Alignment — Studied (Generalist)*
+*Arcane DPS (Generalist) + Pet ”” Any Alignment ”” Studied (Generalist)*
 
 ## Overview
-The Magician went wide where the Wizard went deep. They studied fire and ice and lightning and arcane without specializing in any of them, which means they are never the best tool against any specific enemy type — and never useless against any enemy type either. Where the Wizard commits to memorized spells and the Sorcerer's bloodline limits their variety, the Magician has the widest active spell pool of the three arcane classes.
+The Magician went wide where the Wizard went deep. They studied fire and ice and lightning and arcane without specializing in any of them, which means they are never the best tool against any specific enemy type ”” and never useless against any enemy type either. Where the Wizard commits to memorized spells and the Sorcerer's bloodline limits their variety, the Magician has the widest active spell pool of the three arcane classes.
 
 The distinguishing mechanic is elemental pets. The Magician is the only arcane class with a sustained companion, and each elemental type has a distinct tactical function: the earth elemental holds aggro and absorbs damage, the fire elemental deals the highest damage output of any pet, the water elemental provides healing support, and the air elemental contributes utility and evasion. No other pet class offers this elemental specialization choice on a per-encounter basis.
 
@@ -15,7 +15,7 @@ The Heal spell gives the Magician more self-sufficiency than any other pure arca
 - **Pet:** Elemental (summoned; one active at a time; see Elemental System below)
 
 ## Elemental System
-*Design target — not yet implemented.*
+*Design target ”” not yet implemented.*
 
 The Magician summons one elemental at a time from four types. Summoning requires mana and a short cast. The active elemental persists until dismissed, killed, or replaced. Elemental level scales with the Magician's level.
 
@@ -28,7 +28,7 @@ The Magician summons one elemental at a time from four types. Summoning requires
 
 **Tactical implication:** Before pulling, the Magician chooses a role. Earth for dangerous solo content. Fire to maximize group DPS. Water when playing healer support. Air when the fight requires movement or mobility over sustained pressure.
 
-## Spells — Current Implementation
+## Spells ”” Current Implementation
 | Spell | Type | Damage/Heal | Mana | Cast | Cooldown |
 |---|---|---|---|---|---|
 | Arcane Missile | Arcane dmg | 20 | 15 | Instant | 2s |
@@ -37,7 +37,7 @@ The Magician summons one elemental at a time from four types. Summoning requires
 | Lightning Strike | Lightning dmg | 80 | 40 | 2.0s | 12s |
 | Heal | Self-heal | +40 HP | 25 | 1.0s | 6s |
 
-## Signature Spells — Design Targets
+## Signature Spells ”” Design Targets
 | Spell | Type | Effect | Notes |
 |---|---|---|---|
 | **Conjure Earth / Fire / Water / Air** | Summoning | Summons the selected elemental type | Core class mechanic; fast cast; costs mana |
@@ -47,12 +47,12 @@ The Magician summons one elemental at a time from four types. Summoning requires
 | **Grounding Field** | Utility | Area debuff that reduces enemy movement speed; pairs with earth elemental as tank | Not damage; positional control |
 
 ## Skills
-None — pure spellcaster.
+None ”” pure spellcaster.
 
 ## Race Availability
 **Available:** All races except Ogre.
 
-**Blocked:** Ogre — INT floor too low for arcane study in any school, generalist or not.
+**Blocked:** Ogre ”” INT floor too low for arcane study in any school, generalist or not.
 
 ## Versus Wizard and Sorcerer
 
@@ -61,8 +61,8 @@ None — pure spellcaster.
 | Source of power | Academic (specialist) | Bloodline (innate) | Academic (generalist) |
 | Spell variety | Narrowest active set (memorized) | Moderate | Widest breadth |
 | Damage ceiling | Highest (Meteor 130) | Medium (Soul Surge 80) | Medium (Lightning Strike 80) |
-| Pet | None | None | Yes — elemental; role-selectable |
-| Self-sustain | None | Mana Feed (HP → mana) | Heal spell; earth elemental as sponge |
+| Pet | None | None | Yes ”” elemental; role-selectable |
+| Self-sustain | None | Mana Feed (HP â†’ mana) | Heal spell; earth elemental as sponge |
 | Solo viability | Conditional (preparation-dependent) | Good | Best of the three |
 | Group specialization | Burst DPS | Sustained DPS | Flexible (pet role + damage school) |
 
@@ -71,11 +71,11 @@ Before pulling: choose an elemental. Earth for content where survival is uncerta
 
 In combat: Arcane Missile and Frost Bolt for pressure while long-cooldown spells recharge; Fireball for medium investments; Lightning Strike for the burst moment. Heal keeps the Magician up when the elemental isn't absorbing enough. Elemental Fury spikes the fire elemental's damage for decisive moments.
 
-The Magician's skill expression is in elemental selection and positioning — placing the earth elemental to hold aggro, keeping the fire elemental alive by not pulling it into cleave attacks, using the water elemental's healing where it reaches group members. The spells are the simplest of the three arcane classes. The pet management is the deepest.
+The Magician's skill expression is in elemental selection and positioning ”” placing the earth elemental to hold aggro, keeping the fire elemental alive by not pulling it into cleave attacks, using the water elemental's healing where it reaches group members. The spells are the simplest of the three arcane classes. The pet management is the deepest.
 
 ## Spell Unlock Schedule
 
-Spells are purchased from Magician guild vendors or arcane libraries. Elemental summons are always available from the guild but require the listed minimum level to successfully bind. A summoned elemental that outlasts the Magician's mana reserve will not vanish — it will simply stop obeying.
+Spells are purchased from Magician guild vendors or arcane libraries. Elemental summons are always available from the guild but require the listed minimum level to successfully bind. A summoned elemental that outlasts the Magician's mana reserve will not vanish ”” it will simply stop obeying.
 
 ### Level 1
 
@@ -212,6 +212,6 @@ Spells are purchased from Magician guild vendors or arcane libraries. Elemental 
 | Arcane Mastery | 20s: all spells cost 0 mana and have no cooldown | Arcane | 200 |
 
 ## Portrait References
-*See [characters.md](../characters.md):*
-- *Dark Elf Magician — "The Obsidian Scholar"*
-- *Elf Magician — "The Last Archivist"*
+*See [characters.md](../lore/characters.md):*
+- *Dark Elf Magician ”” "The Obsidian Scholar"*
+- *Elf Magician ”” "The Last Archivist"*

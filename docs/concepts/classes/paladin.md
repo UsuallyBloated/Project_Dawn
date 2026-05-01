@@ -188,4 +188,4 @@ Spells are received through ordination ceremonies at good-aligned temples or pur
 | Word of the Faithful | Group: restore full HP over 10s; remove all debuffs | Restoration | 220 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Half-Ogre Paladin: "The Door Between"*
+*See [characters.md](../lore/characters.md) — Half-Ogre Paladin: "The Door Between"*

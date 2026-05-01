@@ -11,7 +11,7 @@ The world of Project Dawn is divided into named zones. Each zone is a discrete a
 | [The Bonecourt](bonecourt.md) | 1–10 | Evil starting area | Kel`varath | Bonewright necromantic outpost; jungle ruins; Kel`varath start |
 | [The Kobold Deeps](kobold_deeps.md) | 1–10 | Evil starting area | Kobold | Pack tunnel network beneath Cogsworth; Kobold start |
 | [Ardenmoor](ardenmoor.md) | 5–15 | Forest / Wilderness | Ranger guilds, Wood Elf | Dense woodland; nature content; early wilderness experience |
-| [Aelindra](aelindra.md) | 10–20 | Elf city / Forest | High Elf, Arcane schools | Elven city with surrounding enchanted forest; caster training |
+| [Aelindra](aelindra.md) | 10–25 | Elf city / Forest | High Elf, Arcane schools | Elven city with two dungeons; Dreaming Grove at root level; Sealed Archive; caster hub |
 | [Cogsworth](cogsworth.md) | 10–25 | City / Underground | Gnome, Kobold | Mechanical city; Tinkering hub; multi-level industrial zone |
 | [Dwarven Mountain Holds](dwarven_holds.md) | 15–25 | Underground / Dungeon | Dwarf clans | Forge culture; Runeforging center; deep mine dungeons |
 | [Harrowmere](harrowmere.md) | 15–30 | Coastal port city | Dockmasters' Compact | Independent neutral port; maritime content; sea dungeon |

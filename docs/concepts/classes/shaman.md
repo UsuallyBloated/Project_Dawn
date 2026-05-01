@@ -179,4 +179,4 @@ Spells are received through ancestral rites performed at tribal spirit shrines o
 | Ancestral Covenant | Group: +65 all stats, +50% attack speed, +100 HP regen for 180s | Abjuration | 250 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Minotaur Shaman: "The Ancestor's Weight"*
+*See [characters.md](../lore/characters.md) — Minotaur Shaman: "The Ancestor's Weight"*

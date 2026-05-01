@@ -40,3 +40,43 @@ Druids receive a mild passive bonus to faction here — the nature tradition cre
 
 ## Ranger Connection
 Ardenmoor is the zone where the Ranger's tracking ability becomes most useful. The forest limits sight lines to approximately 15 meters; the tracking window compensates by showing what's in range even when it's not visible. A Ranger who ignores tracking in Ardenmoor is fighting with one hand tied back.
+
+---
+
+## The Wood Elf Community
+
+The canopy villages are not a single settlement — they are four separate platforms connected by rope bridges at heights between 40 and 80 feet, spread across a quarter-mile of canopy. The platforms were built incrementally over two centuries and show it: old sections in dark heartwood, newer sections in lighter planking where the heartwood was not available, repairs in whatever was on hand when the repair was needed. The result is structurally sound and visually chaotic, which the Wood Elves find aesthetically correct.
+
+The community here does not have a formal government. Decisions are made by the people most affected by them, in consultation with whoever has been here longest and whoever is most skilled in the relevant area. This produces decisions that are slow by outside standards and surprisingly durable — disagreements that would produce faction splits in other communities tend to produce nuanced compromises here, because everyone knows everyone and will continue to know everyone for a very long time.
+
+**The Canopy Council** is not a governing body; it is a recognition mechanism. Three elders who have been in Ardenmoor for more than a century are considered the Council by default. Currently: Vaen (oldest, 430 years, does not take positions but asks questions that make positions sharper), Sirith (280 years, handles the faction standing decisions — who gets access to the villages), and Kaeven, who is not old enough to be on the Council by standard but has been asked anyway because the standard was not well-suited to the current situation and Kaeven is.
+
+**What the Community Knows:** The Blighted Wood to the east began forty years ago. The Wood Elves marked the hour — the specific night, the specific trees. They have been tracking the spread rate (six inches per month, consistent) and have concluded, without saying so formally, that the cord markers will reach the nearest canopy village in approximately eleven years. They have not changed their response plan. They are still watching and marking. The alternative response plans they have considered have all been judged insufficient, and they are waiting for a sufficient one.
+
+---
+
+## Key NPCs
+
+**Kaevel Undershade** — Wood Elf Ranger, level 22. The effective Ranger Guildmaster at the ground waystation, though he holds the title of "Senior Waykeeper," which is what the Rangers call the person who actually runs the waystation as distinct from the Guildmaster who is administratively responsible from Aelindra. He is thirty-one years old by Elvish standards (young for the responsibility) and was given the role because the previous Waykeeper left to assist with the Blighted Wood monitoring and has not returned. Kaevel has been doing the job seriously for six years and has filed four requests to formally transfer the Guildmaster title to the ground post and been denied four times on procedural grounds he considers inadequate. He is not bitter. He is focused. He is the person players interact with for Ranger guild quests, arrow vendors, and zone orientation. He gives good information and asks for good information in return.
+
+**Vaen** — Wood Elf Druid, level 30, 430 years in the forest. Does not come down to ground level. Will speak to players who have high Wood Elf faction and who reach the canopy villages. Asks questions rather than giving information. The questions are relevant to the questline, but players have to work out how.
+
+---
+
+## The Rotwood Hollow — Expanded
+
+The Hollow is not a dungeon in the traditional sense of something built for use. It is something that happened: a section of the Ardenmoor root system where a specific tree species experienced an accelerated rot, which attracted things that live in accelerated rot, which attracted things that live in the things that live in accelerated rot, and so on until the result is a four-level underground complex that has no maker and no design but has developed something that functions like structure because the things living in it have organized the space around their needs.
+
+The Bark Matron at the bottom is the oldest and most established of these things. It has been in the Hollow for approximately sixty years. The Wood Elves know it is there and have a considered position that it should not be disturbed. This position was reached after the previous two expeditions into the Hollow established that disturbing the Bark Matron produces temporary worsening of the rot in the surrounding forest, and then it returns to its previous rate, which suggests the Matron is managing the rot as much as it is benefiting from it. The Wood Elf position: the Matron keeps the rot contained. Killing it may release what it is containing.
+
+This position is not certain and the Wood Elves will not stop players from testing it. They will watch and take notes.
+
+**Connection to the Blighted Wood:** The Ardenmoor rot, the Rotwood Hollow, and the Blighted Wood forty years later are three things the Wood Elves have not formally connected. Players who investigate all three and present the evidence receive a unique lore item: the Canopy Council's assessment that the three phenomena are connected and that the Blighted Wood's source may predate its visible onset by decades.
+
+---
+
+## Cross-Zone Connections
+
+- **Blighted Wood** — Ardenmoor questlines reference the blight; completing the Rotwood Hollow provides the first clue pointing toward the Blighted Wood as a connected phenomenon
+- **Aelindra** — The Ranger guild has administrative ties to Aelindra; Kaevel's transfer requests go to the Aelindra guild office; the canopy villages are culturally connected to Aelindra's Wood Elf community
+- **Elvish language** — Ardenmoor is one of the zones where hearing Elvish spoken by NPCs provides passive skill gain; the canopy village access quests require minimum Elvish 25

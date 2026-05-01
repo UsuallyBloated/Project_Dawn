@@ -190,4 +190,4 @@ Spells are purchased from Druid circle vendors or nature-aligned merchants. Most
 | World's Wrath | AoE nature damage (350) in 30m radius; 60s cooldown | Nature | 250 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Dwarf Druid: "The Understory Mind"*
+*See [characters.md](../lore/characters.md) — Dwarf Druid: "The Understory Mind"*

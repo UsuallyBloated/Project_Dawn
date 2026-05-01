@@ -34,6 +34,11 @@ func _ready() -> void:
 
 	input_event.connect(_on_input_event)
 
+const LOOT_RANGE := 6.0
+
 func _on_input_event(_camera: Node, event: InputEvent, _pos: Vector3, _normal: Vector3, _idx: int) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var player := get_tree().get_first_node_in_group("player")
+		if player == null or global_position.distance_to(player.global_position) > LOOT_RANGE:
+			return
 		Loot.show_window(self)

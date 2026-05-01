@@ -48,6 +48,32 @@ const C_BAR_MANA    := Color(0.10, 0.30, 0.90)
 const C_BAR_XP      := Color(0.65, 0.50, 0.10)
 const C_BAR_BG      := Color(0.08, 0.08, 0.08, 0.90)
 
+static func style_bar(bar: ProgressBar, color: Color, with_label: bool = true) -> Label:
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = color
+	fill.set_corner_radius_all(4)
+	bar.add_theme_stylebox_override("fill", fill)
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = C_BAR_BG
+	bg.set_corner_radius_all(4)
+	bg.border_color = Color(0.25, 0.18, 0.06, 0.85)
+	bg.set_border_width_all(1)
+	bar.add_theme_stylebox_override("background", bg)
+	if not with_label:
+		return null
+	var lbl := Label.new()
+	lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.90))
+	lbl.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.80))
+	lbl.add_theme_constant_override("shadow_offset_x", 1)
+	lbl.add_theme_constant_override("shadow_offset_y", 1)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bar.add_child(lbl)
+	return lbl
+
 static func make_button(label_text: String) -> Button:
 	var btn := Button.new()
 	btn.text = label_text

@@ -3,6 +3,7 @@ extends CharacterBody3D
 
 signal died(pet)
 signal hp_changed(current: float, maximum: float)
+signal hit_target(attacker_name: String, target_name: String, amount: int)
 
 enum Mode { FOLLOW, ATTACK, GUARD, PASSIVE }
 enum State { FOLLOWING, ATTACKING, GUARDING, DEAD }
@@ -127,11 +128,8 @@ func _do_attack() -> void:
 	var target = _attack_target
 	target.take_damage(base_damage)
 	if is_instance_valid(target):
-		DamageNumbers.spawn(target.global_position, base_damage, false)
-		CombatLog.add_line(
-			"%s hits %s for %d." % [pet_name, target.mob_name, base_damage],
-			CombatLog.MsgType.DAMAGE_OUT
-		)
+		DamageNumbers.spawn_damage(target.global_position, base_damage, false)
+		hit_target.emit(pet_name, target.mob_name, base_damage)
 
 # ── public API ────────────────────────────────────────────────────────────────
 

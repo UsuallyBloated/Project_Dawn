@@ -49,6 +49,7 @@ func _ready() -> void:
 	add_to_group("player")
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(55.0)
+	CombatLog.visible = true
 	PlayerDeath.set_respawn_point(global_position)
 	PlayerDeath.register_player(self)
 	Targeting.register_camera(camera)
@@ -155,7 +156,8 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_pressed("move_right"):
 		direction += transform.basis.x
 
-	var current_speed := CROUCH_SPEED if state == PlayerState.CROUCHING else SPEED
+	var base_speed := CROUCH_SPEED if state == PlayerState.CROUCHING else SPEED
+	var current_speed := base_speed * BuffManager.get_speed_mult()
 	if direction != Vector3.ZERO:
 		direction = direction.normalized()
 		velocity.x = direction.x * current_speed

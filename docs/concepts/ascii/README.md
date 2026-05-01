@@ -22,19 +22,25 @@ All art is schematic — not pixel-perfect — meant to convey layout, feel, and
 | [millhaven_cellars.md](millhaven_cellars.md) | The Millhaven Cellars | Greenshire |
 | [sunken_ziggurat.md](sunken_ziggurat.md) | The Sunken Ziggurat | Southeastern Marshlands |
 | [unlicensed_wing.md](unlicensed_wing.md) | The Unlicensed Wing | Vel'Sharath |
+| [dreaming_grove.md](dreaming_grove.md) | The Dreaming Grove | Aelindra (root level) |
 
 ## New Zones
 
 | File | Zone | Level Range |
 |---|---|---|
+| [ardenmoor.md](ardenmoor.md) | Ardenmoor | 5–15 |
 | [ashen_coast.md](ashen_coast.md) | The Ashen Coast | 20–35 |
 | [dominion_capital_ruins.md](dominion_capital_ruins.md) | The Dominion Capital (Ruined) | 35–50 |
 | [underdark_crossing.md](underdark_crossing.md) | The Underdark Crossing | 25–40 |
 | [coastal_port.md](coastal_port.md) | Harrowmere — Coastal Port | 15–30 |
 | [blighted_wood.md](blighted_wood.md) | The Blighted Wood | 20–30 |
 | [wizard_tower.md](wizard_tower.md) | Varek's Spire | 25–35 |
+| [fae_mere.md](fae_mere.md) | The Fae Mere | 25–35 |
 | [revenant_territory.md](revenant_territory.md) | The Ashen Marches | 30–45 |
 | [siege_location.md](siege_location.md) | The Breach | 25–40 |
+| [khala_savannahs.md](khala_savannahs.md) | The Khala Savannahs | 30–45 |
+| [eastern_badlands.md](eastern_badlands.md) | The Eastern Badlands | 25–40 |
+| [greyfen.md](greyfen.md) | The Greyfen | 10–20 |
 
 ## Evil Race Starting Zones
 

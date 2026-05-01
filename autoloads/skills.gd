@@ -14,13 +14,13 @@ func _ready() -> void:
 	_cooldowns.cooldown_updated.connect(func(n, r, t): skill_cooldown_updated.emit(n, r, t))
 	_load_skills()
 	PlayerStats.level_changed.connect(_on_level_changed)
-	PlayerStats.alignment_changed.connect(_on_alignment_changed)
+	Alignment.alignment_changed.connect(_on_alignment_changed)
 
 func _process(delta: float) -> void:
 	_cooldowns.tick(delta)
 
 func setup_for_class(_player_class: String) -> void:
-	var effective := PlayerStats.get_effective_class()
+	var effective := Alignment.get_effective_class()
 	available.clear()
 	for sname in _all_skills:
 		var skill: SkillData = _all_skills[sname]
@@ -50,10 +50,32 @@ func use_skill(skill: SkillData) -> bool:
 		SkillData.EffectType.ABSORB_SHIELD:
 			BuffManager.add_absorb(skill.absorb_amount, skill.skill_name)
 		SkillData.EffectType.WARDER_FURY:
-			PetManager.command_fury()
+			WarderAI.command_fury()
+		SkillData.EffectType.STUN:
+			if Combat.has_valid_target():
+				Combat.current_target.stun(skill.stun_duration)
+		SkillData.EffectType.FEIGN_DEATH:
+			_do_feign_death()
+		SkillData.EffectType.STEALTH:
+			BuffManager.add_stealth(skill.stealth_duration, skill.skill_name)
+		SkillData.EffectType.TRUESIGHT:
+			pass  # damage already applied by the target_type == ENEMY block above
+
+	if skill.target_type == SkillData.TargetType.ENEMY:
+		BuffManager.break_stealth()
 
 	skill_used.emit(skill)
 	return true
+
+func _do_feign_death() -> void:
+	var success_chance := 0.80
+	if randf() < success_chance:
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if is_instance_valid(enemy) and not enemy.is_dead:
+				enemy.feign_death_deaggro()
+		CombatLog.add_line("You feign death successfully.", CombatLog.MsgType.INFO)
+	else:
+		CombatLog.add_line("Your feign death fails!", CombatLog.MsgType.DAMAGE_IN)
 
 func use_skill_by_index(index: int) -> bool:
 	if index < 0 or index >= available.size():
@@ -83,10 +105,17 @@ func _load_skills() -> void:
 		s.target_type = SkillData.TargetType.ENEMY if d["damage_multiplier"] > 0.0 else SkillData.TargetType.SELF
 		s.effect_duration = d.get("effect_duration", 0.0)
 		s.absorb_amount = d.get("absorb_amount", 0.0)
+		s.stun_duration = d.get("stun_duration", 0.0)
+		s.stealth_duration = d.get("stealth_duration", 0.0)
 		match d.get("effect_type", ""):
-			"EVADE_BOOST":    s.effect_type = SkillData.EffectType.EVADE_BOOST
-			"ABSORB_SHIELD":  s.effect_type = SkillData.EffectType.ABSORB_SHIELD
-			_:                s.effect_type = SkillData.EffectType.NONE
+			"EVADE_BOOST":   s.effect_type = SkillData.EffectType.EVADE_BOOST
+			"ABSORB_SHIELD": s.effect_type = SkillData.EffectType.ABSORB_SHIELD
+			"WARDER_FURY":   s.effect_type = SkillData.EffectType.WARDER_FURY
+			"STUN":          s.effect_type = SkillData.EffectType.STUN
+			"FEIGN_DEATH":   s.effect_type = SkillData.EffectType.FEIGN_DEATH
+			"STEALTH":       s.effect_type = SkillData.EffectType.STEALTH
+			"TRUESIGHT":     s.effect_type = SkillData.EffectType.TRUESIGHT
+			_:               s.effect_type = SkillData.EffectType.NONE
 		for c in d["classes"]:
 			s.allowed_classes.append(c)
 		_all_skills[s.skill_name] = s

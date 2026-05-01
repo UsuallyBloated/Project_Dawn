@@ -187,4 +187,4 @@ Spells are received through dark patron rituals or purchased from Shadow Knight 
 | Wail of the Grave | AoE shadow damage (350); fear all in 30m for 20s | Shadow | 280 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Dark Elf Shadow Knight: "The Titled Shadow"*
+*See [characters.md](../lore/characters.md) — Dark Elf Shadow Knight: "The Titled Shadow"*

@@ -139,7 +139,7 @@ Combat arts are trained at fighter guilds in major cities. Active arts must be p
 | Eternal Warrior | Passive: revive once at 50% HP per zone entry | Passive | — |
 
 ## Portrait References
-*See [characters.md](../characters.md):*
+*See [characters.md](../lore/characters.md):*
 - *Ogre Warrior — "The Penitent Brute"*
 - *Dwarf Warrior — "The Mountain's Grief"*
 - *Human Warrior — "The Ordinary Weight"*

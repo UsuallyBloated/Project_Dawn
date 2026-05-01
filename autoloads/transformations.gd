@@ -66,7 +66,7 @@ func can_transform(name: String) -> bool:
 	var t: Dictionary = TRANSFORMATIONS[name]
 	if PlayerStats.level < t["required_level"]:
 		return false
-	if PlayerStats.alignment_tier != t["required_alignment"]:
+	if Alignment.alignment_tier != t["required_alignment"]:
 		return false
 	if PlayerStats.player_class not in t["required_classes"]:
 		return false
@@ -86,6 +86,9 @@ func apply_transformation(name: String) -> bool:
 	for lang in t.get("languages", {}):
 		Languages.grant_language(lang, t["languages"][lang])
 	PlayerStats.transformation = name
+	# Revenant: tradeskill scores are retained unchanged (no reset needed because
+	# tradeskill scores live outside PlayerStats; this is a no-op placeholder until
+	# the tradeskill system is implemented).
 	transformation_applied.emit(name)
 	return true
 

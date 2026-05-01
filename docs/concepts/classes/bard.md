@@ -192,4 +192,4 @@ Songs are learned from Bard guilds, traveling performers, and instrument vendors
 | Ancient Anthem of the Hunt | Group: +85% attack speed, +100 melee damage; double pulse rate | Alteration | 35 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Kobold Bard: "The Unexpected Note"*
+*See [characters.md](../lore/characters.md) — Kobold Bard: "The Unexpected Note"*

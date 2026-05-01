@@ -206,4 +206,4 @@ Spells are purchased from Wizard guild libraries or copied from recovered arcane
 | Arcane Transcendence | 20s: all spells deal triple damage and have no cast time | Arcane | 250 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Human Wizard: "The Annotated Life"*
+*See [characters.md](../lore/characters.md) — Human Wizard: "The Annotated Life"*

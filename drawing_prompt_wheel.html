@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dawn · Drawing Prompt Wheel</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0d0a14;
+      background-image: radial-gradient(ellipse 80% 60% at 50% 0%, #1a1028 0%, #0d0a14 65%);
+      color: #e8d5a3;
+      font-family: Georgia, 'Times New Roman', serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 32px 20px 56px;
+    }
+
+    header { text-align: center; margin-bottom: 24px; }
+
+    h1 {
+      font-size: 2rem;
+      color: #c9a227;
+      text-shadow: 0 0 28px rgba(201,162,39,.5), 0 0 60px rgba(201,162,39,.18);
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: #5a4a2a;
+      font-style: italic;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+    }
+
+    .wheel-wrap {
+      position: relative;
+      width: 520px;
+      height: 520px;
+    }
+
+    .pointer {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-top: 34px solid #c9a227;
+      filter: drop-shadow(0 3px 10px rgba(201,162,39,.85));
+      z-index: 10;
+    }
+
+    canvas { display: block; }
+
+    #spin-btn {
+      margin-top: 22px;
+      padding: 12px 50px;
+      background: linear-gradient(180deg, #4a1e1e, #1e0a0a);
+      color: #c9a227;
+      font-family: Georgia, serif;
+      font-size: 1.2rem;
+      font-weight: bold;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      border: 2px solid #7a5814;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background .2s, border-color .2s, box-shadow .2s;
+      box-shadow: 0 0 18px rgba(201,162,39,.12), inset 0 1px 0 rgba(201,162,39,.08);
+      outline: none;
+    }
+    #spin-btn:hover:not(:disabled) {
+      background: linear-gradient(180deg, #5c2828, #2a1010);
+      border-color: #c9a227;
+      box-shadow: 0 0 30px rgba(201,162,39,.3);
+    }
+    #spin-btn:active:not(:disabled) { transform: translateY(1px); }
+    #spin-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    #result {
+      margin-top: 26px;
+      width: 100%;
+      max-width: 520px;
+      min-height: 120px;
+    }
+
+    .card {
+      background: linear-gradient(150deg, #160f26, #0d0a14);
+      border: 1px solid #6a5014;
+      border-radius: 6px;
+      padding: 24px 32px;
+      text-align: center;
+      box-shadow: 0 0 36px rgba(201,162,39,.1);
+      animation: cardIn .4s ease forwards;
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(12px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0)   scale(1); }
+    }
+
+    .card-label {
+      font-size: .7rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #4a3a1e;
+      margin-bottom: 10px;
+    }
+
+    .card-name {
+      font-size: 2rem;
+      color: #c9a227;
+      text-shadow: 0 0 18px rgba(201,162,39,.4);
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .card-desc {
+      font-size: .9rem;
+      color: #9a7850;
+      font-style: italic;
+      line-height: 1.65;
+    }
+
+    .card-foot {
+      margin-top: 12px;
+      font-size: .68rem;
+      color: #342616;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Drawing Prompt Wheel</h1>
+  <p class="subtitle">Project Dawn &mdash; Item Compendium</p>
+</header>
+
+<div class="wheel-wrap">
+  <div class="pointer"></div>
+  <canvas id="wheel" width="520" height="520"></canvas>
+</div>
+
+<button id="spin-btn">Spin</button>
+<div id="result"></div>
+
+<script>
+const ITEMS = [
+  ["Antidote","A bitter green liquid. Purges poison and disease effects when consumed."],
+  ["Arrow Bundle","A bundle of twenty fletched arrows. Used with bows in ranged combat."],
+  ["Arrow Fletching","Trimmed feathers bound to an arrow shaft. A crafted component for arrows."],
+  ["Barley","Malted barley grain. The fermentable base for most ales and beers."],
+  ["Bat Blood","Dark blood collected from a cave bat. Used alongside bat wings in shadow alchemy."],
+  ["Bat Wing","A leathery wing from a cave bat. Used in alchemy."],
+  ["Bear Hide","Dense fur-covered hide from a bear. Makes excellent heavy leather armor."],
+  ["Bent Dagger","A small blade, slightly warped but still sharp enough."],
+  ["Berry Tart","A small sweet tart made from wild berries and honey. Restores health; beloved by halflings."],
+  ["Bloodmoss","A red-tinged moss that grows near wounds. Vital in healing potion recipes."],
+  ["Boar Hide","Thick hide stripped from a boar. Durable material for leather armor crafting."],
+  ["Bone Fragment","A shard of bone. Useful for crafting or grinding into powder."],
+  ["Bread Loaf","A freshly baked loaf of bread. Restores health slowly out of combat."],
+  ["Carved Staff","A smooth hardwood staff carved to a balanced length. Favored by casters and monks alike."],
+  ["Cloth Cap","A simple woven cap offering minimal protection."],
+  ["Cloth Gloves","Thin woven gloves. Poor protection but better than bare hands."],
+  ["Cloth Pants","Basic woven trousers. Comfortable but offer little defense."],
+  ["Cloth Robe","A long woven robe favored by apprentice spellcasters."],
+  ["Cloth Scraps","Rough cloth torn from humanoid enemies. Low-quality tailoring material."],
+  ["Cloth Slippers","Soft woven footwear. Quiet and light but offer no real protection."],
+  ["Coal","Fuel used to heat a forge. Required for most blacksmithing combines."],
+  ["Coiled Spring","A tightly wound metal spring. Used in mechanical gadgets and traps."],
+  ["Copper Chain Vest","Interlocking rings of copper formed into a flexible haubergeon. Light chain armor."],
+  ["Copper Dagger","A short copper blade. Not the sturdiest metal but holds a workable edge."],
+  ["Copper Ingot","A bar of smelted copper. Used in blacksmithing and jewelcrafting."],
+  ["Copper Ore","Raw copper ore. Smelt at a forge to produce copper ingots."],
+  ["Copper Short Sword","A short sword forged from copper. A step up from salvaged weapons."],
+  ["Cracked Leather Vest","Stiff leather armor dried out and splitting at the seams."],
+  ["Cracked Wooden Club","A heavy stick with a split running down its length."],
+  ["Crude Ale","A murky barley ale. Rough on the throat but fills the belly and steadies the nerves."],
+  ["Crude Clockwork","A small ticking assemblage of gears and springs. Component for advanced tinkering projects."],
+  ["Crude Health Potion","A murky red liquid. Restores a small amount of health."],
+  ["Cured Leather Strip","A processed strip of animal hide. Softened and ready for leatherworking."],
+  ["Damaged Wolf Pelt","A wolf pelt marred by wounds. Still valuable to a tanner."],
+  ["Empty Bottle","A glass bottle with a stopper. Used as a container for brewed beverages."],
+  ["Empty Vial","A small glass vial. Used as a container when brewing potions."],
+  ["Feather","A large flight feather from a bird. Used to fletch arrows."],
+  ["Feverfew","A small white flower with medicinal properties. Used in fever and disease cures."],
+  ["Fire Elixir","A vial of liquid flame essence. Briefly enhances fire-aspected spells when consumed."],
+  ["Fire Essence","A crystallized fragment of elemental fire. Drops from fire elementals."],
+  ["Fired Clay Bowl","A kiln-hardened clay bowl. Useful as a container or vendor item."],
+  ["Flint Arrowhead","A chipped flint point. Knapped to a sharp edge and fitted to an arrow shaft."],
+  ["Flour","Finely ground grain. The base ingredient for breads and baked goods."],
+  ["Frayed Cloth Pants","Worn trousers held together by a few remaining threads."],
+  ["Fresh Wolf Pelt","A recently skinned wolf pelt. Better quality than a damaged pelt. Used in tailoring."],
+  ["Gnoll Meat","Questionable meat from a gnoll. Desperate adventurers have eaten worse."],
+  ["Gnoll Tooth","A sharp fang from a gnoll. Some merchants pay for these."],
+  ["Gold Wire","Fine gold wire drawn from a gold ingot. Used in delicate jewelry settings."],
+  ["Ground Bone","Bone fragments ground into fine powder. An intermediate alchemy material."],
+  ["Hardwood Shaft","A straight length of hardwood. Used as arrow shafts or bow limb material."],
+  ["Healing Potion","A rich crimson draught. Restores a significant amount of health."],
+  ["Honey","Thick golden honey from a hive. Sweetens baked goods and brewed drinks."],
+  ["Honey Mead","A golden fermented honey drink. Sweet and potent. Restores stamina."],
+  ["Hops","Dried hop flowers. The bitterest ingredient in ale brewing."],
+  ["Ice Essence","A shard of pure elemental cold. Drops from ice elementals."],
+  ["Iron Chain Boots","Sabatons of iron rings over a leather sole. Heavy but protective."],
+  ["Iron Chain Coif","A hood of iron rings protecting the head and neck."],
+  ["Iron Chain Gloves","Iron ring gauntlets with a flexible knuckle weave."],
+  ["Iron Chain Leggings","Iron ring chausses covering the legs from hip to boot."],
+  ["Iron Chain Vest","Tightly woven iron rings forming a sturdy hauberk. Reliable mid-tier armor."],
+  ["Iron Dagger","A well-balanced iron dagger. Preferred by rogues for its speed and punch."],
+  ["Iron Ingot","A bar of smelted iron. The foundation of most blacksmithed equipment."],
+  ["Iron Ore","Raw iron ore. Smelt it at a forge to produce iron ingots."],
+  ["Iron Short Sword","A solid iron short sword. The workhorse blade of soldiers across the realm."],
+  ["Leather Boots","Sturdy leather boots with a reinforced sole. Good for long travels."],
+  ["Leather Cap","A fitted cap of cured leather. Standard headgear for scouts and hunters."],
+  ["Leather Gloves","Fitted leather gloves. Offer good grip and adequate protection."],
+  ["Leather Leggings","Supple leather leggings stitched with sinew for durability."],
+  ["Leather Vest","A well-made vest of layered leather. Solid protection without restricting movement."],
+  ["Linen Thread","Basic thread used in tailoring. Purchased from vendors or spun from plant fiber."],
+  ["Lump of Clay","Wet clay gathered near a riverbank. Shaped and fired into pottery items."],
+  ["Mana Potion","A cobalt blue vial that shimmers faintly. Restores a significant amount of mana."],
+  ["Meat Pie","A hearty baked pie filled with seasoned meat. Restores health and stamina."],
+  ["Mechanical Trap","A spring-loaded device that snaps shut when triggered. Place it in a dungeon corridor."],
+  ["Metal Bits","Scrap metal salvaged from humanoid enemies. Used in blacksmithing."],
+  ["Minor Healing Potion","A pale red tincture. Restores a modest amount of health when consumed."],
+  ["Mushroom Bread","Dense bread baked with wild mushrooms. Earthy and filling; good trail food."],
+  ["Nightshade","A dark herb with toxic properties. Key ingredient in shadow and poison potions."],
+  ["Patched Cloth Boots","Shoes mended so many times the original material is hard to find."],
+  ["Pliable Wood","A flexible length of wood. Bent into bow limbs by a skilled fletcher."],
+  ["Poison Vial","A vial of distilled nightshade and serpent venom. Applied to a weapon before combat."],
+  ["Pottery Sketch","A diagram showing how to shape and fire a particular clay vessel. Recipe item."],
+  ["Pristine Wolf Pelt","A flawless wolf pelt with no tears. Highly sought after by tailors."],
+  ["Rat Meat","Raw meat from a large rat. Not appetizing, but edible once cooked."],
+  ["Raw Egg","A large egg from a nest. Used in baking and cooking recipes."],
+  ["Rough Emerald","An uncut emerald with a vivid green color. Prized for nature-aspected pieces."],
+  ["Rough Emerald Ring","A gold band set with an uncut emerald. Resonates with agility and nature."],
+  ["Rough Leather Bracers","Crude bracers cut from untreated hide."],
+  ["Rough Opal","An uncut opal with a swirling iridescence. Used in spirit-aspected jewelry."],
+  ["Rough Opal Ring","A silver band set with an uncut opal. Resonates with charm and charisma."],
+  ["Rough Ruby","An uncut ruby with a deep red hue. Cut and set to make fire-aspected jewelry."],
+  ["Rough Ruby Ring","A silver band set with an uncut ruby. Resonates with fire and strength."],
+  ["Rough Sapphire","An uncut sapphire with a cool blue shimmer. Used in cold-aspected jewelry."],
+  ["Rough Sapphire Ring","A silver band set with an uncut sapphire. Resonates with the arcane."],
+  ["Rough Topaz","An uncut topaz with a warm golden tone. Used in lightning-aspected jewelry."],
+  ["Rough Topaz Ring","A gold band set with an uncut topaz. Resonates with divine wisdom."],
+  ["Ruined Metal Scraps","Corroded metal shards. Barely worth salvaging, but a blacksmith might find use."],
+  ["Ruined Silk","Torn and frayed silk strands. Nearly useless, but a skilled tailor might salvage it."],
+  ["Rusted Buckle","A corroded metal buckle. Vendor trash."],
+  ["Rusty Short Sword","A battered blade barely fit for combat."],
+  ["Salt","Coarse salt used to season and preserve food. A staple cooking ingredient."],
+  ["Scraped Leather Boots","Boots with deep gouges across the surface."],
+  ["Sewing Needle","A fine metal needle. Required tool for all tailoring combines."],
+  ["Shadow Draught","A viscous black liquid distilled from shadow essence and bat blood. Enhances shadow magic."],
+  ["Shadow Essence","A fragment of solidified shadow energy. Drops from shadow creatures and undead."],
+  ["Silver Ring","A simple polished silver band. Mild enchantment-friendly material."],
+  ["Silver Wire","Thin silver wire drawn from a silver ingot. Used in most jewelry combines."],
+  ["Sinew","Dried animal sinew. Twisted into a strong cord for bowstrings."],
+  ["Small Gear","A tiny toothed gear. A fundamental component in Gnomish tinkering."],
+  ["Small Metal Plate","A stamped metal plate used as a housing in tinkered devices."],
+  ["Small Metal Sheet","A thin flattened sheet of metal. Used in jewelry settings and tinkering."],
+  ["Smithing Hammer","A heavy hammer used at the forge. Required tool for blacksmithing combines."],
+  ["Snake Meat","Lean meat from a large snake. Surprisingly tender when properly prepared."],
+  ["Snake Skin","Shed skin from a large snake. Supple and light — good for fine leather work."],
+  ["Snake Venom Sac","A venom gland carefully extracted from a snake. Potent alchemy ingredient."],
+  ["Spider Venom Sac","Venom harvested from a spider's abdomen. Used in paralysis and poison potions."],
+  ["Spiderling Silk","Delicate silk harvested from spiderlings. Spun into thread for cloth armor."],
+  ["Splintered Staff","A wooden staff cracked near the base, still usable."],
+  ["Stale Bread","Hard and unpleasant, but it will keep you going."],
+  ["Tarnished Silver Setting","A crude silver ring or pendant base. Salvaged from humanoid enemies. Polishable."],
+  ["Tattered Cloth Tunic","A threadbare shirt full of holes. Better than nothing."],
+  ["Tattered Pelt","A damaged animal hide. Tradeskill material."],
+  ["Thick Leather Slab","A wide slab of tanned hide from a large animal. Used in heavier leather armor."],
+  ["Thick Silk Thread","Spun silk thread. A crafted material used in high-quality cloth tailoring."],
+  ["Tinkering Kit","A set of fine tools for assembling mechanical devices. Required for tinkering combines."],
+  ["Torn Cloth Gloves","Gloves with the fingertips worn through."],
+  ["Unfired Pottery","A clay vessel that has been shaped but not yet fired. Needs a kiln to finish."],
+  ["Water Flask","A flask filled with fresh water. Used in cooking, brewing, and alchemy combines."],
+  ["Wild Berries","A handful of foraged berries. Sweet and tart — used in baking and brewing."],
+  ["Wild Fruit","Foraged fruit from the woods. Can be fermented into wine or used in cooking."],
+  ["Wild Mushroom","A foraged mushroom from the forest floor. Edible and useful in stews."],
+  ["Wolf Meat","Raw meat from a wolf. Gamey but substantial — cooks into a filling meal."],
+  ["Worn Cloth Cap","A faded cap that has seen many seasons of wear."],
+  ["Worn Coin Purse","An empty coin purse. Worth a few copper to the right vendor."],
+  ["Wormwood","A bitter herb used in alchemy. Common ingredient for resistance potions."],
+  ["Yeast","A small cake of active yeast. Required for fermentation in brewing."],
+];
+
+const SEGS    = 12;
+const CX = 260, CY = 260, R = 232, HUB = 42;
+
+const PALETTE = [
+  '#5C1010','#0E2A0E','#10104A','#2A0A4A',
+  '#0A3530','#3A2808','#1C1C2E','#1A0C28',
+  '#182A08','#3A0A1C','#0A1A2C','#2E1808'
+];
+
+const canvas = document.getElementById('wheel');
+const ctx    = canvas.getContext('2d');
+const btn    = document.getElementById('spin-btn');
+const result = document.getElementById('result');
+
+let currentAngle = 0;
+let segments     = [];
+let spinning     = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function drawWheel(angle) {
+  ctx.clearRect(0, 0, 520, 520);
+  const seg = (2 * Math.PI) / SEGS;
+
+  // outer ambient glow
+  const glow = ctx.createRadialGradient(CX, CY, R - 8, CX, CY, R + 14);
+  glow.addColorStop(0, 'rgba(201,162,39,0.2)');
+  glow.addColorStop(1, 'rgba(201,162,39,0)');
+  ctx.beginPath();
+  ctx.arc(CX, CY, R + 14, 0, 2 * Math.PI);
+  ctx.fillStyle = glow;
+  ctx.fill();
+
+  for (let i = 0; i < SEGS; i++) {
+    const a0  = angle + i * seg;
+    const a1  = a0 + seg;
+    const mid = a0 + seg / 2;
+
+    // fill
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.arc(CX, CY, R, a0, a1);
+    ctx.closePath();
+    ctx.fillStyle = PALETTE[i % PALETTE.length];
+    ctx.fill();
+
+    // radial depth gradient overlay
+    const depth = ctx.createRadialGradient(CX, CY, HUB, CX, CY, R);
+    depth.addColorStop(0, 'rgba(255,255,255,0.05)');
+    depth.addColorStop(1, 'rgba(0,0,0,0.20)');
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.arc(CX, CY, R, a0, a1);
+    ctx.closePath();
+    ctx.fillStyle = depth;
+    ctx.fill();
+
+    // divider lines
+    ctx.beginPath();
+    ctx.moveTo(CX, CY);
+    ctx.arc(CX, CY, R, a0, a1);
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(201,162,39,0.32)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // segment text
+    if (segments[i]) {
+      const tx  = CX + Math.cos(mid) * R * 0.62;
+      const ty  = CY + Math.sin(mid) * R * 0.62;
+      const rot = Math.sin(mid) > 0 ? mid - Math.PI / 2 : mid + Math.PI / 2;
+
+      ctx.save();
+      ctx.translate(tx, ty);
+      ctx.rotate(rot);
+      ctx.fillStyle  = 'rgba(232,213,163,0.85)';
+      ctx.font       = 'bold 10px Georgia';
+      ctx.textAlign  = 'center';
+      ctx.textBaseline = 'middle';
+
+      const words = segments[i][0].split(' ');
+      if (words.length === 1) {
+        ctx.fillText(words[0], 0, 0);
+      } else if (words.length === 2) {
+        ctx.fillText(words[0], 0, -6);
+        ctx.fillText(words[1], 0,  6);
+      } else {
+        const h = Math.ceil(words.length / 2);
+        ctx.fillText(words.slice(0, h).join(' '), 0, -6);
+        ctx.fillText(words.slice(h).join(' '),    0,  6);
+      }
+      ctx.restore();
+    }
+  }
+
+  // outer border ring
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#8b6914';
+  ctx.lineWidth   = 3;
+  ctx.stroke();
+
+  // hub background
+  const hubG = ctx.createRadialGradient(CX, CY, 0, CX, CY, HUB);
+  hubG.addColorStop(0, '#2a1a08');
+  hubG.addColorStop(1, '#0d0a14');
+  ctx.beginPath();
+  ctx.arc(CX, CY, HUB, 0, 2 * Math.PI);
+  ctx.fillStyle   = hubG;
+  ctx.fill();
+  ctx.strokeStyle = '#c9a227';
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+
+  // hub ornament
+  ctx.fillStyle    = '#c9a227';
+  ctx.font         = '22px Georgia';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('✦', CX, CY);
+}
+
+function easeOut(t) {
+  return 1 - Math.pow(1 - t, 4);
+}
+
+function spin() {
+  if (spinning) return;
+  spinning = true;
+  btn.disabled = true;
+  result.innerHTML = '';
+
+  // pick winner from full pool
+  const wi     = Math.floor(Math.random() * ITEMS.length);
+  const winner = ITEMS[wi];
+
+  // build 12 visible segments, winner at a random slot
+  const pool = shuffle(ITEMS.filter((_, i) => i !== wi));
+  const slot = Math.floor(Math.random() * SEGS);
+  segments = [
+    ...pool.slice(0, slot),
+    winner,
+    ...pool.slice(slot, SEGS - 1)
+  ];
+
+  // target: winner slot midpoint lands at pointer (top = -PI/2)
+  const segAngle  = (2 * Math.PI) / SEGS;
+  const targetBase = -Math.PI / 2 - (slot + 0.5) * segAngle;
+  let delta = ((targetBase - currentAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+  if (delta < 0.1) delta += 2 * Math.PI;
+
+  const extraSpins = 5 + Math.floor(Math.random() * 4);
+  const endAngle   = currentAngle + delta + extraSpins * 2 * Math.PI;
+  const duration   = 4200 + Math.random() * 1600;
+  const startAngle = currentAngle;
+  let   startTime  = null;
+
+  function frame(ts) {
+    if (!startTime) startTime = ts;
+    const t = Math.min((ts - startTime) / duration, 1);
+    currentAngle = startAngle + (endAngle - startAngle) * easeOut(t);
+    drawWheel(currentAngle);
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      currentAngle = endAngle;
+      spinning     = false;
+      btn.disabled = false;
+      showResult(winner);
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
+function showResult([name, desc]) {
+  result.innerHTML = `
+    <div class="card">
+      <div class="card-label">Your Drawing Prompt</div>
+      <div class="card-name">${name}</div>
+      <div class="card-desc">${desc}</div>
+      <div class="card-foot">${ITEMS.length} items &mdash; Project Dawn</div>
+    </div>`;
+}
+
+btn.addEventListener('click', spin);
+
+// initial render
+segments = shuffle(ITEMS).slice(0, SEGS);
+drawWheel(currentAngle);
+</script>
+</body>
+</html>

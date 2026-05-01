@@ -14,71 +14,88 @@ const CLASSES: Array[String] = [
 const RACE_DATA: Dictionary = {
 	"Human": {
 		"desc": "Versatile and adaptable. Balanced bonuses across all attributes suit any profession.",
-		"bonuses": {"strength": 2, "dexterity": 2, "agility": 2, "intelligence": 2, "wisdom": 2, "charisma": 2, "constitution": 2}
+		"bonuses": {"strength": 2, "dexterity": 2, "agility": 2, "intelligence": 2, "wisdom": 2, "charisma": 2, "constitution": 2},
+		"vision": "normal"
 	},
 	"Elf": {
 		"desc": "Graceful and keen. High dexterity and intellect, but physically fragile.",
-		"bonuses": {"dexterity": 10, "agility": 10, "intelligence": 10, "wisdom": 5, "strength": -5, "constitution": -5}
+		"bonuses": {"dexterity": 10, "agility": 10, "intelligence": 10, "wisdom": 5, "strength": -5, "constitution": -5},
+		"vision": "infravision"
 	},
 	"Dark Elf": {
 		"desc": "Cunning masters of dark magic with exceptional reflexes. Few trust them.",
-		"bonuses": {"intelligence": 15, "dexterity": 10, "agility": 5, "wisdom": -5, "charisma": -10}
+		"bonuses": {"intelligence": 15, "dexterity": 10, "agility": 5, "wisdom": -5, "charisma": -10},
+		"vision": "ultravision"
 	},
 	"Gnome": {
 		"desc": "Brilliant tinkerers with extraordinary intellect and wisdom, but weak in body.",
-		"bonuses": {"intelligence": 15, "wisdom": 5, "strength": -5, "constitution": -5}
+		"bonuses": {"intelligence": 15, "wisdom": 5, "strength": -5, "constitution": -5},
+		"vision": "infravision"
 	},
 	"Halfling": {
 		"desc": "Quick and nimble folk. Masters of stealth and sleight of hand.",
-		"bonuses": {"dexterity": 10, "agility": 10, "charisma": 5, "strength": -5, "constitution": -5}
+		"bonuses": {"dexterity": 10, "agility": 10, "charisma": 5, "strength": -5, "constitution": -5},
+		"vision": "infravision"
 	},
 	"Dwarf": {
 		"desc": "Hardy mountainfolk, nearly unbreakable. Exceptional constitution and wisdom.",
-		"bonuses": {"constitution": 15, "strength": 5, "wisdom": 5, "charisma": -5, "agility": -5}
+		"bonuses": {"constitution": 15, "strength": 5, "wisdom": 5, "charisma": -5, "agility": -5},
+		"vision": "infravision"
 	},
 	"Wood Elf": {
 		"desc": "Children of the forest, swift and sure-eyed. Exceptional hunters and rangers.",
-		"bonuses": {"dexterity": 10, "agility": 10, "wisdom": 5, "intelligence": -5, "charisma": -5}
+		"bonuses": {"dexterity": 10, "agility": 10, "wisdom": 5, "intelligence": -5, "charisma": -5},
+		"vision": "infravision"
 	},
 	"Half-Elf": {
 		"desc": "Blending elven grace with human resilience. Well-rounded and adaptable.",
-		"bonuses": {"dexterity": 5, "agility": 5, "intelligence": 5, "wisdom": 5}
+		"bonuses": {"dexterity": 5, "agility": 5, "intelligence": 5, "wisdom": 5},
+		"vision": "infravision"
 	},
 	"Ogre": {
 		"desc": "Massive and brutish. Unmatched raw power at the cost of wit and charm.",
-		"bonuses": {"strength": 20, "constitution": 10, "charisma": -15, "intelligence": -5, "wisdom": -5}
+		"bonuses": {"strength": 20, "constitution": 10, "charisma": -15, "intelligence": -5, "wisdom": -5},
+		"vision": "ultravision"
 	},
 	"Troll": {
 		"desc": "Savage regenerators with extraordinary endurance. Fearsome but repugnant.",
-		"bonuses": {"constitution": 20, "strength": 10, "charisma": -15, "wisdom": -10, "intelligence": -5}
+		"bonuses": {"constitution": 20, "strength": 10, "charisma": -15, "wisdom": -10, "intelligence": -5},
+		"vision": "ultravision"
 	},
 	"Kel`varath": {
 		"desc": "Ancient lizardfolk from a fallen empire. Cold-blooded and calculating, their natural scales make them fearsome survivors.",
-		"bonuses": {"constitution": 15, "strength": 8, "charisma": -15, "wisdom": -5}
+		"bonuses": {"constitution": 15, "strength": 8, "charisma": -15, "wisdom": -5},
+		"vision": "ultravision"
 	},
 	"Minotaur": {
 		"desc": "Bull-headed titans who carry the weight of generations in bondage. Their rage is matched only by their grief.",
-		"bonuses": {"strength": 20, "constitution": 10, "charisma": -10, "intelligence": -8, "agility": -5}
+		"bonuses": {"strength": 20, "constitution": 10, "charisma": -10, "intelligence": -8, "agility": -5},
+		"vision": "normal"
 	},
 	"Revenant": {
 		"desc": "The returned dead. Neither fully alive nor fully gone, immune to fear and numb to pain.",
-		"bonuses": {"intelligence": 10, "constitution": 10, "strength": 5, "charisma": -15, "wisdom": -5}
+		"bonuses": {"intelligence": 10, "constitution": 10, "strength": 5, "charisma": -15, "wisdom": -5},
+		"vision": "ultravision"
 	},
 	"Fae": {
 		"desc": "Ageless creatures of pure magic from the hidden world. Impossibly small, impossibly old, impossibly powerful.",
-		"bonuses": {"intelligence": 20, "wisdom": 10, "agility": 15, "charisma": 5, "strength": -15, "constitution": -10}
+		"bonuses": {"intelligence": 20, "wisdom": 10, "agility": 15, "charisma": 5, "strength": -15, "constitution": -10},
+		"vision": "infravision"
 	},
 	"Felhari": {
 		"desc": "Proud feline warriors from a distant land. Graceful, deadly, and deeply tribal. They treat combat as an art form.",
-		"bonuses": {"dexterity": 12, "agility": 12, "constitution": 5, "wisdom": -5, "intelligence": -5, "charisma": -5}
+		"bonuses": {"dexterity": 12, "agility": 12, "constitution": 5, "wisdom": -5, "intelligence": -5, "charisma": -5},
+		"vision": "infravision"
 	},
 	"Kobold": {
 		"desc": "Dog-faced scavengers with bat ears and wiry fur, scrappy and relentlessly underestimated. Kobolds survive through cunning, traps, and sheer stubborn spite.",
-		"bonuses": {"dexterity": 10, "intelligence": 8, "agility": 5, "strength": -8, "constitution": -5, "charisma": -10}
+		"bonuses": {"dexterity": 10, "intelligence": 8, "agility": 5, "strength": -8, "constitution": -5, "charisma": -10},
+		"vision": "infravision"
 	},
 	"Half-Ogre": {
 		"desc": "Born between brutality and humanity. Too large for one world, too feeling for the other.",
-		"bonuses": {"strength": 15, "constitution": 8, "charisma": -8, "intelligence": -3, "wisdom": -3}
+		"bonuses": {"strength": 15, "constitution": 8, "charisma": -8, "intelligence": -3, "wisdom": -3},
+		"vision": "normal"
 	},
 }
 

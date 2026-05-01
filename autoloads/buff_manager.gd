@@ -11,6 +11,11 @@ signal dot_ticked(target_name: String, amount: int, spell_name: String)
 signal hot_ticked(amount: int, spell_name: String)
 signal food_buff_changed
 signal drink_buff_changed
+signal stealth_changed(active: bool)
+signal lich_form_changed(active: bool)
+signal haste_changed
+signal primary_stat_buff_changed
+signal damage_shield_applied(amount: int, buff_name: String)
 
 const TICK_INTERVAL := 3.0
 
@@ -26,6 +31,25 @@ var _hots: Array = []
 # {hp_regen, mp_regen, remaining, buff_name}
 var _food_buff: Dictionary = {}
 var _drink_buff: Dictionary = {}
+
+# {speed_mult, remaining, buff_name}
+var _speed_buff: Dictionary = {}
+# {hps, remaining, buff_name}
+var _mp_regen_buff: Dictionary = {}
+# {amount, remaining, buff_name}
+var _haste_buff: Dictionary = {}
+# {accuracy, crit, remaining, buff_name}
+var _stat_buff: Dictionary = {}
+# {str, agi, int, wis, con, max_hp, max_mp, remaining, buff_name}
+# Values are already applied to PlayerStats; undone on expire or clear_all.
+var _primary_stat_buff: Dictionary = {}
+# {amount, remaining, buff_name}
+var _damage_shield: Dictionary = {}
+# stealth state
+var _stealth_remaining: float = 0.0
+# Lich Form
+var _lich_form_active: bool = false
+var _lich_mp_regen: float = 0.0
 
 func _ready() -> void:
 	PlayerDeath.player_died.connect(clear_all)
@@ -129,6 +153,127 @@ func get_drink_hp_regen() -> float:
 func get_drink_mp_regen() -> float:
 	return _drink_buff.get("mp_regen", 0.0)
 
+func add_speed_buff(speed_mult: float, duration: float, buff_name: String) -> void:
+	_speed_buff = {speed_mult = speed_mult, remaining = duration, buff_name = buff_name}
+	buffs_changed.emit()
+
+func get_speed_mult() -> float:
+	return _speed_buff.get("speed_mult", 1.0)
+
+func get_speed_buff() -> Dictionary:
+	return _speed_buff
+
+func add_mp_regen_buff(hps: float, duration: float, buff_name: String) -> void:
+	_mp_regen_buff = {hps = hps, remaining = duration, buff_name = buff_name}
+	buffs_changed.emit()
+
+func get_mp_regen_buff() -> Dictionary:
+	return _mp_regen_buff
+
+func add_haste_buff(amount: float, duration: float, buff_name: String) -> void:
+	_haste_buff = {amount = amount, remaining = duration, buff_name = buff_name}
+	haste_changed.emit()
+	buffs_changed.emit()
+
+func get_haste_amount() -> float:
+	return _haste_buff.get("amount", 0.0)
+
+func get_haste_buff() -> Dictionary:
+	return _haste_buff
+
+func add_stat_buff(accuracy: float, crit: float, duration: float, buff_name: String) -> void:
+	_stat_buff = {accuracy = accuracy, crit = crit, remaining = duration, buff_name = buff_name}
+	buffs_changed.emit()
+
+func get_accuracy_bonus() -> float:
+	return _stat_buff.get("accuracy", 0.0)
+
+func get_crit_bonus() -> float:
+	return _stat_buff.get("crit", 0.0)
+
+func get_stat_buff() -> Dictionary:
+	return _stat_buff
+
+func add_damage_shield(amount: float, duration: float, buff_name: String) -> void:
+	# Overwrites any existing shield; only one active at a time (matches haste/speed pattern).
+	_damage_shield = {amount = amount, remaining = duration, buff_name = buff_name}
+	damage_shield_applied.emit(int(amount), buff_name)
+	buffs_changed.emit()
+
+func get_damage_shield_amount() -> float:
+	return _damage_shield.get("amount", 0.0)
+
+func get_damage_shield() -> Dictionary:
+	return _damage_shield
+
+func add_primary_stat_buff(str_b: int, agi_b: int, int_b: int, wis_b: int, con_b: int,
+		max_hp_b: float, max_mp_b: float, duration: float, buff_name: String) -> void:
+	if not _primary_stat_buff.is_empty():
+		_undo_primary_stat_buff()
+	_primary_stat_buff = {strength = str_b, agility = agi_b, intelligence = int_b,
+		wisdom = wis_b, constitution = con_b, max_hp = max_hp_b, max_mp = max_mp_b,
+		remaining = duration, buff_name = buff_name}
+	PlayerStats.strength     += str_b
+	PlayerStats.agility      += agi_b
+	PlayerStats.intelligence += int_b
+	PlayerStats.wisdom       += wis_b
+	PlayerStats.constitution += con_b
+	PlayerStats.max_hp       += max_hp_b
+	PlayerStats.max_mp       += max_mp_b
+	PlayerStats.stats_changed.emit()
+	primary_stat_buff_changed.emit()
+	buffs_changed.emit()
+
+func get_primary_stat_buff() -> Dictionary:
+	return _primary_stat_buff
+
+func _undo_primary_stat_buff() -> void:
+	if _primary_stat_buff.is_empty():
+		return
+	PlayerStats.strength     -= _primary_stat_buff.strength
+	PlayerStats.agility      -= _primary_stat_buff.agility
+	PlayerStats.intelligence -= _primary_stat_buff.intelligence
+	PlayerStats.wisdom       -= _primary_stat_buff.wisdom
+	PlayerStats.constitution -= _primary_stat_buff.constitution
+	PlayerStats.max_hp        = maxf(PlayerStats.max_hp - _primary_stat_buff.max_hp, 1.0)
+	PlayerStats.max_mp        = maxf(PlayerStats.max_mp - _primary_stat_buff.max_mp, 0.0)
+	PlayerStats.set_hp(PlayerStats.hp)
+	PlayerStats.set_mp(PlayerStats.mp)
+	PlayerStats.stats_changed.emit()
+	_primary_stat_buff.clear()
+
+func add_stealth(duration: float, _buff_name: String) -> void:
+	var was_stealthed := _stealth_remaining > 0.0
+	_stealth_remaining = duration
+	if not was_stealthed:
+		stealth_changed.emit(true)
+		buffs_changed.emit()
+
+func is_stealthed() -> bool:
+	return _stealth_remaining > 0.0
+
+func get_stealth_remaining() -> float:
+	return _stealth_remaining
+
+func break_stealth() -> void:
+	if _stealth_remaining <= 0.0:
+		return
+	_stealth_remaining = 0.0
+	stealth_changed.emit(false)
+	buffs_changed.emit()
+
+func toggle_lich_form(mp_regen_hps: float) -> void:
+	_lich_form_active = not _lich_form_active
+	_lich_mp_regen = mp_regen_hps if _lich_form_active else 0.0
+	lich_form_changed.emit(_lich_form_active)
+	buffs_changed.emit()
+
+func is_lich_form() -> bool:
+	return _lich_form_active
+
+func get_lich_mp_regen() -> float:
+	return _lich_mp_regen
+
 func clear_all() -> void:
 	_dots.clear()
 	_hots.clear()
@@ -136,6 +281,21 @@ func clear_all() -> void:
 	_evade_boost_remaining = 0.0
 	_food_buff.clear()
 	_drink_buff.clear()
+	_speed_buff.clear()
+	_mp_regen_buff.clear()
+	_haste_buff.clear()
+	_stat_buff.clear()
+	_damage_shield.clear()
+	if not _primary_stat_buff.is_empty():
+		_undo_primary_stat_buff()
+		primary_stat_buff_changed.emit()
+	if _stealth_remaining > 0.0:
+		stealth_changed.emit(false)
+	_stealth_remaining = 0.0
+	if _lich_form_active:
+		lich_form_changed.emit(false)
+	_lich_form_active = false
+	_lich_mp_regen = 0.0
 	buffs_changed.emit()
 
 func _process(delta: float) -> void:
@@ -143,9 +303,38 @@ func _process(delta: float) -> void:
 		_evade_boost_remaining -= delta
 		if _evade_boost_remaining <= 0.0:
 			buffs_changed.emit()
+	if _stealth_remaining > 0.0:
+		_stealth_remaining -= delta
+		if _stealth_remaining <= 0.0:
+			stealth_changed.emit(false)
+			buffs_changed.emit()
+	_tick_timed_buff(_speed_buff, delta)
+	_tick_timed_buff(_mp_regen_buff, delta)
+	_tick_timed_buff(_damage_shield, delta)
+	if not _haste_buff.is_empty():
+		_haste_buff.remaining -= delta
+		if _haste_buff.remaining <= 0.0:
+			_haste_buff.clear()
+			haste_changed.emit()
+			buffs_changed.emit()
+	_tick_timed_buff(_stat_buff, delta)
+	if not _primary_stat_buff.is_empty():
+		_primary_stat_buff.remaining -= delta
+		if _primary_stat_buff.remaining <= 0.0:
+			_undo_primary_stat_buff()
+			primary_stat_buff_changed.emit()
+			buffs_changed.emit()
 	_tick_dots(delta)
 	_tick_hots(delta)
 	_tick_consumable_buffs(delta)
+
+func _tick_timed_buff(buff: Dictionary, delta: float) -> void:
+	if buff.is_empty():
+		return
+	buff.remaining -= delta
+	if buff.remaining <= 0.0:
+		buff.clear()
+		buffs_changed.emit()
 
 func _tick_dots(delta: float) -> void:
 	var i := _dots.size() - 1

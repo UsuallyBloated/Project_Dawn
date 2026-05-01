@@ -5,7 +5,8 @@ signal mp_changed(current: float, maximum: float)
 signal stamina_changed(current: float, maximum: float)
 signal level_changed(new_level: int)
 signal xp_changed(current_xp: int, xp_to_next: int)
-signal alignment_changed(tier: String, score: int)
+signal xp_gained(amount: int)
+signal healed(amount: int)
 signal stats_changed
 signal character_applied
 signal coins_changed(new_amount: int)
@@ -31,8 +32,6 @@ var bind_zone_path: String = ""
 var bind_entry_id: String = "default"
 var bind_zone_name: String = ""
 
-var alignment_score: int = 0
-var alignment_tier: String = "Neutral"
 var transformation: String = ""
 
 var strength: int = 10
@@ -44,7 +43,10 @@ var charisma: int = 10
 var constitution: int = 10
 
 func set_hp(value: float) -> void:
+	var old := hp
 	hp = clamp(value, 0.0, max_hp)
+	if hp > old:
+		healed.emit(int(hp - old))
 	hp_changed.emit(hp, max_hp)
 
 func set_mp(value: float) -> void:
@@ -59,41 +61,6 @@ func set_bind_point(zone_path: String, entry_id: String, zone_name: String) -> v
 	bind_zone_path = zone_path
 	bind_entry_id  = entry_id
 	bind_zone_name = zone_name
-
-func set_alignment(score: int) -> void:
-	alignment_score = clamp(score, -2000, 2000)
-	alignment_tier = _calc_alignment_tier()
-
-func modify_alignment(delta: int) -> void:
-	alignment_score = clamp(alignment_score + delta, -2000, 2000)
-	var new_tier := _calc_alignment_tier()
-	if new_tier != alignment_tier:
-		alignment_tier = new_tier
-		alignment_changed.emit(alignment_tier, alignment_score)
-
-func _calc_alignment_tier() -> String:
-	if alignment_score >= 1500:
-		return "Exalted"
-	elif alignment_score >= 300:
-		return "Good"
-	elif alignment_score >= -300:
-		return "Neutral"
-	elif alignment_score >= -1500:
-		return "Bad"
-	else:
-		return "Evil"
-
-# Returns the alignment-modified class key used to look up skills and spells.
-# Add new alignment variants here when a class gains a fallen/redeemed path.
-func get_effective_class() -> String:
-	match player_class:
-		"Paladin":
-			if alignment_tier == "Evil":
-				return "Paladin_Fallen"
-		"Shadow Knight":
-			if alignment_tier == "Exalted":
-				return "Shadow Knight_Redeemed"
-	return player_class
 
 func apply_character(race: String, cls: String, lvl: int) -> void:
 	lvl = clampi(lvl, 1, 99)
@@ -141,8 +108,7 @@ func apply_character(race: String, cls: String, lvl: int) -> void:
 	self.max_hp          = new_max_hp
 	self.max_mp          = new_max_mp
 	self.max_stamina     = new_max_st
-	self.alignment_score = CharacterData.CLASS_STARTING_ALIGNMENT.get(cls, 0)
-	self.alignment_tier  = _calc_alignment_tier()
+	Alignment.set_alignment(CharacterData.CLASS_STARTING_ALIGNMENT.get(cls, 0))
 	set_hp(new_max_hp)
 	set_mp(new_max_mp)
 	set_stamina(new_max_st)
@@ -153,6 +119,7 @@ func apply_character(race: String, cls: String, lvl: int) -> void:
 
 func gain_xp(amount: int) -> void:
 	xp += amount
+	xp_gained.emit(amount)
 	while xp >= xp_to_next:
 		xp -= xp_to_next
 		_level_up()

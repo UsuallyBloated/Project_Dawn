@@ -111,6 +111,10 @@ func _build_ui() -> void:
 	die_btn.pressed.connect(_trigger_death)
 	_body.add_child(die_btn)
 
+	var food_btn := _make_btn("Give Food & Drink", Color(0.35, 0.60, 0.20, 1.0))
+	food_btn.pressed.connect(_give_consumables)
+	_body.add_child(food_btn)
+
 func _make_label(t: String) -> Label:
 	var lbl := Label.new()
 	lbl.text = t
@@ -201,3 +205,24 @@ func _full_heal() -> void:
 
 func _trigger_death() -> void:
 	PlayerStats.set_hp(0.0)
+
+func _give_consumables() -> void:
+	var bread := ItemData.new()
+	bread.item_name = "Journeybread"
+	bread.description = "Dense traveler's bread. Restores HP while resting."
+	bread.type = ItemData.Type.CONSUMABLE
+	bread.is_food = true
+	bread.food_hp_regen = 4.0
+	bread.food_duration = 180.0
+	Inventory.add_item(bread, 5)
+
+	var water := ItemData.new()
+	water.item_name = "Waterskin"
+	water.description = "Fresh water in a skin pouch. Restores MP while resting."
+	water.type = ItemData.Type.CONSUMABLE
+	water.is_drink = true
+	water.food_mp_regen = 5.0
+	water.food_duration = 180.0
+	Inventory.add_item(water, 5)
+
+	CombatLog.add_line("Received 5x Journeybread and 5x Waterskin.", CombatLog.MsgType.INFO)

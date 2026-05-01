@@ -1,5 +1,7 @@
 # Project notes
 
+note for claude:  I will add play testing notes to the docs\playtest_notes\  Please have a look.  if this can be organized better, you're welcome to move it after i make additions.
+
 ## Engine
 - Godot 4.3 (or whatever version you're on)
 - GDScript only, no C#
@@ -19,7 +21,7 @@
 ## What I'm building
 - The game is similar to classic MMORPGs.
 - Includes 18 classes: Warrior, Paladin, Shadow Knight, Cleric, Druid, Shaman, Beast Master, Rogue, Monk, Ranger, Witch Hunter, Bard, Magician, Wizard, Sorcerer, Enchanter, Necromancer, Blood Mage. Planned: Assassin, Warlock.
-- Includes 17 playable races: Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Ogre, Troll, Kel`varath, Minotaur, Revenant, Fae, Felhari, Kobold, Half-Ogre.
+- Includes 16 playable races: Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Ogre, Troll, Kel`varath, Minotaur, Fae, Felhari, Kobold, Half-Ogre.
 # UI
 - Free mouse to click on UI, i.e. skill buttons or spell buttons
 - While player holds right click engage camera control.
@@ -39,29 +41,29 @@
 # To-Do List
 
 ## High Priority (core feel)
-- [ ] **XP bar on HUD** — Progress bar toward next level, always visible
+- [x] **XP bar on HUD** — Progress bar toward next level, always visible
 - [x] **Buff/debuff bar UI** — Icons with countdown timers for active buffs (absorb, HoT, evade boost, etc.)
-- [ ] **Scrollback on chat log** — Scroll up to read older messages; currently only 6 lines visible
-- [ ] **Player stat buffs** — Spells that temporarily raise STR/AGI/INT/WIS/max HP/MP (Cleric, Shaman, Enchanter)
-- [ ] **Stun** — Shield Bash and similar skills should briefly stun enemies (can't attack or move)
-- [ ] **Slow** — Reduce enemy attack speed by a percentage; Shaman/Enchanter staple
-- [ ] **Root** — Enemy can't move but can still attack/cast; distinct from mez
-- [ ] **Critical hits** — Chance to deal 150–200% damage on melee/spells, scaling with stats
+- [x] **Scrollback on chat log** — Mouse wheel scrolls up; auto-scroll resumes when at bottom; "▼ latest" button appears when scrolled up and new messages arrive
+- [x] **Player stat buffs** — SpellData has str/agi/int/wis/con/max_hp/max_mp buff fields; BuffManager.add_primary_stat_buff() applies directly to PlayerStats and undoes on expire/death/zone; Bless+Valor (Cleric/Paladin), Spirit of the Bear+Gift of Insight (Shaman), Strength+Brilliance (Enchanter) added to spell_definitions.gd
+- [x] **Stun** — Shield Bash (Warrior/Paladin/Shadow Knight skill) stuns via SkillData.EffectType.STUN → enemy.stun(); stunned enemies skip entire physics state machine (no movement OR attacking)
+- [x] **Slow** — "Slow" spell (Shaman/Enchanter) applies attack_slow_amount:0.7 via enemy.apply_attack_slow(); attack cooldown scaled by (1.0 + slow_amount)
+- [x] **Root** — enemy.root() wired in spells.gd; roots block movement in _tick_chase() while allowing attack; Ensnare (Druid, 20s) and Immobilize (Enchanter, 15s) added to spell_definitions.gd
+- [x] **Critical hits** — Auto-attack/skill crits scale with DEX (0–30%); spell crits scale with INT (0–20%); both roll 1.5–2.0× multiplier; crit log lines use distinct bright-gold `MsgType.CRIT` color
 - [x] **Wire `alignment_changed` signal** — skills.gd, spells.gd, and hud.gd all connected; HUD shows alignment tier with color coding (Exalted/Good/Neutral/Bad/Evil)
 
 ## Medium Priority (gameplay depth)
 - [ ] **Passive weapon skills** — Skills like 1H Slashing, Piercing, 2H Blunt, Defense, Dodge that train up through use; each has a level-based cap; higher skill = better hit/damage chance
-- [ ] **Damage shield** — Thorns effect: attacker takes X damage when hitting you (Druid/Enchanter)
+- [x] **Damage shield** — Thorns effect: attacker takes X damage when hitting you (Druid/Enchanter)
 - [ ] **AOE spells** — Hit all enemies within a radius; needed for Magician/Druid at higher levels
-- [ ] **Elemental resistances** — Enemies have resist values (fire, ice, shadow, etc.) that reduce spell damage
+- [x] **Elemental resistances** — Enemies have resist values (fire, ice, shadow, etc.) that reduce spell damage
 - [ ] **Spell ranks** — Spells gain power at certain levels (Rank I → II → III)
 - [ ] **Ranged combat** — Bow attacks for Ranger; range-check before auto-attack
 - [ ] **Proc weapons** — Equipment with on-hit spell effects
-- [ ] **Meditation (sit-to-med)** — Sitting triggers meditate state; mana regenerates 3× faster; movement or damage cancels it; pairs with food & drink for the full EQ regen loop
-- [ ] **Food & drink items** — BuffManager slots and regen.gd wiring are done; still need actual food/drink ItemData resources and a consume action that calls `add_food_buff` / `add_drink_buff`
-- [ ] **Bindpoint system** — `/bind` at camps/inns; respawn at bind instead of a fixed point on death
+- [x] **Meditation (sit-to-med)** — Sitting applies 5× HP/MP and 3× ST multiplier in regen.gd; movement auto-stands (player.gd); targeting while seated auto-stands via Regen._on_target_changed; food/drink regen stacks additively on top
+- [x] **Food & drink items** — ItemData has `is_food`/`is_drink`/`food_hp_regen`/`food_mp_regen`/`food_duration`; right-click in inventory calls `add_food_buff`/`add_drink_buff`; Test Panel "Give Food & Drink" seeds Journeybread (+4 HP/tick) and Waterskin (+5 MP/tick) for 180s
+- [ ] **Bindpoint system** — Bind is a spell cast by eligible casters (not a chat command); casters can bind themselves or others; warriors/melee without the spell must find a caster or use a bind stone (world object); respawn at bind location instead of a fixed point on death
 - [ ] **Corpse run** — Gear stays on corpse on death; respawn naked and retrieve it (optional hardcore mode)
-- [ ] **Enemy spawn system** — Spawn points with respawn timers; world feels alive
+- [x] **Enemy spawn system** — Spawn points with respawn timers; world feels alive
 - [ ] **Named/boss mobs** — Rare spawns with special loot tables and behaviors
 - [ ] **Incoming /tell RPC** — Receiving tells from other players over the network (outbound is done)
 - [ ] **Mount system** — Design and implement mount summoning, speed modifier, and dismount-on-damage; required context before Animal Husbandry, Spirit of Wolf stacking, and Selos' Melody interactions can be fully designed
@@ -73,50 +75,51 @@
 - [ ] **Quest system** — Kill X, collect Y, deliver Z; quest log window; XP/item rewards
 - [ ] **Faction system** — Race/class affects NPC standing; guards may attack on sight
 - [ ] **Multiple enemy types** — Casters that kite, healers that flee, undead with shadow resist
+- [x] **Race vision types** — ultravision (Dark Elf, Ogre, Troll, Kel`varath), infravision (Elf, Wood Elf, Half-Elf, Dwarf, Gnome, Halfling, Fae, Felhari, Kobold), normal (Human, Minotaur, Half-Ogre); VisionSystem autoload adjusts `adjustment_brightness` + infravision green tint at night; Revenant transformation grants ultravision separately
 - [ ] **Weather system** — Rain, fog, storms; some mobs stronger/weaker in certain weather
-- [ ] **Day/night mob behavior** — Undead only spawn at night, etc.; requires wiring TimeOfDay's `hour_changed` signal to mob spawners and NPC schedulers (signal is emitted every in-game hour but currently has 0 listeners)
+- [x] **Day/night mob behavior** — EnemySpawner has `night_only: bool` export; TimeOfDay.hour_changed wired: spawns at hour 20, despawns at hour 6; normal `_spawn()` skips if night_only and it's daytime
 - [ ] **Fall damage** — Damage from long drops; Levitate/Feather Fall spell counters it
 - [ ] **Water & swimming** — Breath meter, drowning, Enduring Breath spell
 - [ ] **Doors & locks** — Rogues pick locks; keys drop from mobs
 
 ## UI Polish
-- [ ] **Spell book window** — View all known spells, drag to hotbar slots
+- [x] **Spell book window** — View all known spells, drag to hotbar slots
 - [ ] **Target-of-target frame** — Show what your target is targeting (essential for group play)
-- [ ] **HP numbers on target frame** — Show actual HP values, not just a bar
+- [x] **HP numbers on target frame** — Show actual HP values, not just a bar
 - [ ] **Player portrait** — Race/class portrait in the HUD panel
 - [ ] **Chat channel tabs** — Separate tabs for Say, OOC, Group, Tells
 - [ ] **Map / minimap** — Simple zone map showing player position
-- [ ] **Floating heal numbers** — Extend damage numbers to show heals and misses
+- [x] **Floating heal numbers** — Damage (with crit), incoming damage, heals, misses, XP gains; billboard Label3D always faces camera; per-category toggles in Options → Interface tab
 
 ## Class Abilities
-- [ ] **Feign Death** (Monk) — Drop to ground, enemies de-aggro; chance to fail
-- [ ] **Sneak & Hide** (Rogue) — Stealth system; no aggro if approaching from behind
-- [ ] **Track** (Ranger) — Window listing nearby mob names and distances
-- [ ] **Ranger spells in spell_definitions.gd** — Ensnaring Roots, Snare, Camouflage, and Hunter's Eye are designed in docs/concepts/classes/ranger.md but have no entries in data/spell_definitions.gd yet
-- [ ] **Witch Hunter spells in spell_definitions.gd** — Spellbreak, Antimagic Ward, and reworked Expose (buff-strip) are designed in docs/concepts/classes/witch_hunter.md but not in data/spell_definitions.gd yet
+- [x] **Feign Death** (Monk) — SkillData.FEIGN_DEATH; 80% success; all enemies in group de-aggro via `feign_death_deaggro()`; skill_definitions.gd + skills.gd
+- [x] **Sneak & Hide** (Rogue) — SkillData.STEALTH; BuffManager.add_stealth(); aggro range vs stealthed players reduced in enemy.gd; breaks on attacking
+- [x] **Track** (Ranger) — `scripts/track_window.gd`; lists all enemies within 60m with name/level/distance; refreshes every 2s; toggle via `TrackWindow.toggle()`
+- [x] **Ranger spells in spell_definitions.gd** — Ensnaring Roots (root_duration:15), Camouflage (is_stealth), Hunter's Eye (accuracy_buff:0.15, crit_buff:0.10) added
+- [x] **Witch Hunter spells in spell_definitions.gd** — Spellbreak (silence_duration:4), Antimagic Ward (is_dispel), Expose fixed to dispel (is_dispel) instead of damage
 - [ ] **Tradeskill implementation** — Recipes, combine window, skill XP (full design in docs/concepts/tradeskills/)
 - [ ] **Consumables system** — Food/drink buff slots in BuffManager; meditation regen loop (sit + food + drink = 3× MP regen + HP bonus); fermentation timer for Brewing; ritual consumable components for Cleric/Shaman/Necromancer abilities (design in docs/concepts/tradeskills/consumables.md and alchemy.md)
 - [ ] **Bookbinding / player-authored lore** — Text input window when crafting Journal tier+; readable books findable in the world; Skill Manual passive XP bonus (+5-10% for 24h) on read; Bard Song Scroll (single-use song any class can play); Grand Grimoire housing item (design in docs/concepts/tradeskills/service.md)
 - [ ] **Clockwork Engineering prestige path** — Tinkering 150+ for Gnomes/Kobolds unlocks Clockwork Engineering tier: Scout/Guardian Automatons, Clockwork Carrier, Clockwork Golem (Grandmaster end-goal); shares skill score with Tinkering (design in docs/concepts/tradeskills/tinkering.md)
-- [ ] **Revenant tradeskill retention** — On earned Revenant transformation, all tradeskill scores carry over unchanged; if Revenant is ever offered as a starting race, start at 0 with no past-life retention
-- [ ] **Augmentation/socketing** — Gem slots in gear for bonus stats
-- [ ] **Bard song twist mechanic** — Songs pulse effects every ~3s while active; only one song plays at a time; skilled players manually cycle 3–4 songs fast enough to keep all timers active simultaneously (the EQ "twist")
-- [ ] **Complete Heal** (Cleric) — 8s cast, heals target to full HP; the cornerstone spell of serious group play
-- [ ] **Resurrection** (Cleric) — Restore a dead player at their corpse with partial XP return; only class with this
-- [ ] **Torpor** (Shaman) — Massive slow + powerful HoT combined in one spell; makes Shaman irreplaceable in groups
-- [ ] **Clarity / Breeze** (Enchanter) — Regenerates target's mana rapidly; Clarity is the high-level version; Breeze is lesser; makes long sessions possible for casters
-- [ ] **Haste** (Enchanter) — Reduces target's melee auto-attack delay; effectively doubles warrior DPS; defines group synergy
-- [ ] **Spirit of Wolf** (Druid / Shaman) — Movement speed buff; everyone wants this for zone traversal; AoE version for groups
-- [ ] **Selos' Melody** (Bard) — Bard's movement speed song; affects whole group; stacks with SoW
-- [ ] **Lich Form** (Necromancer) — Toggle: disables HP regen, grants extreme mana regen instead; changes how you play entirely
-- [ ] **Gate** (Wizard) — Instant teleport to bind point; emergency escape; Wizard utility pillar
-- [ ] **Exsanguinate** (Blood Mage) — Drains enemy HP directly into caster's mana pool; the defining Blood Mage fantasy spell
+- [x] **Revenant tradeskill retention** — Placeholder comment in transformations.gd; scores carry over automatically once tradeskill system is implemented (scores live outside PlayerStats)
+- [x] **Augmentation/socketing** — ItemData: `gem_slots: int`, `socketed_augments: Array[String]`, `Type.AUGMENT`; UI/combine logic deferred until paperdoll update
+- [x] **Bard song twist mechanic** — `autoloads/bard_songs.gd`; single active song, pulses every 3s via `BardSongs.activate_song()`; buff lingers 3.5s so twist cycling keeps effects active; Selos' Melody added as first twist song
+- [x] **Complete Heal** (Cleric) — Spell data added (heal_amount:9999, cast_time:8s); resolves as self-heal for now; needs ALLY target type for multiplayer
+- [ ] **Resurrection** (Cleric) — Spell data scaffolded (target_type:NONE); needs corpse system before functional implementation
+- [x] **Torpor** (Shaman) — Spell data added (attack_slow:70%, hot_hps:12, duration:24s)
+- [x] **Clarity / Breeze** (Enchanter) — Spell data added; BuffManager.add_mp_regen_buff(); regen.gd ticks clarity_mp per tick
+- [x] **Haste** (Enchanter) — Spell data added; BuffManager.add_haste_buff(); combat.gd updates auto-attack interval via `_update_attack_interval()`
+- [x] **Spirit of Wolf** (Druid / Shaman) — Spell data added; BuffManager.add_speed_buff(); player.gd multiplies move speed by `BuffManager.get_speed_mult()`
+- [x] **Selos' Melody** (Bard) — Spell data added (is_song:true); routes through BardSongs twist system; pulses speed buff every 3s
+- [x] **Lich Form** (Necromancer) — Spell data added (is_lich_form:true, lich_mp_regen:15); BuffManager.toggle_lich_form(); regen.gd skips HP regen + adds extreme MP regen while active
+- [x] **Gate** (Wizard) — Already implemented (PORT target type, port_zone_path:"", port_entry_id:""); returns to bind point
+- [x] **Exsanguinate** (Blood Mage) — Spell data added (mana_drain:60); spells.gd deals damage = min(drain, target.hp) and converts to caster MP
 
 ## Polish & Feel
-- [ ] **Spell visual effects** — Particles for fire, ice, lightning, holy, shadow; spells are currently invisible
+- [x] **Spell visual effects** — Elemental color flash on enemy mesh + OmniLight3D burst per damage type (fire=orange, ice=blue, lightning=yellow, arcane=purple, holy=gold, nature=green, spirit=lavender, shadow=dark purple); physical hits flash white
 - [ ] **Sound system** — Combat hit sounds, spell audio, ambient zone sounds, music
-- [ ] **Enemy hit reactions** — Color flash or brief knockback when damaged
-- [ ] **Death animations** — Enemies and player fall over instead of vanishing
+- [x] **Enemy hit reactions** — White mesh flash on physical hit; elemental-colored flash on spell hit; OmniLight3D burst at impact point for spell hits; all via `enemy.flash_spell_hit(color)` called from `combat.deal_spell_damage()`
+- [x] **Death animations** — Enemies and player fall over instead of vanishing
 - [ ] **Zone transition effects** — Fade to black / loading screen between zones
 - [x] **Settings persistence** — Save keybinds, UI panel positions, chat prefs to disk
 
@@ -130,8 +133,8 @@
 - [ ] **Auction / bazaar** — List items for sale; other players browse and buy
 
 ## Technical Debt
-- [ ] **`player_stats.gd` refactor** — 20+ responsibilities in one autoload; extract Alignment into its own autoload before buff stacking and faction systems are added or this becomes unmaintainable
-- [ ] **`PetManager` split** — 238 lines mixing pet state, Warder AI, and Beast Master-specific logic; split into PetManager (lifecycle) + WarderAI (behavior) before Magician elemental pets can be added cleanly
-- [ ] **`hud.gd` split** — 786 lines managing 10+ unrelated concerns; split into focused panels (CoreHUD, BuffBar, GroupPanel, PetPanel, CastBar, DeathScreen) before more UI items from this list land
-- [ ] **Wire cooldown signals to Hotbar** — `spell_cooldown_updated` and `skill_cooldown_updated` are emitted by spells.gd/skills.gd but Hotbar currently polls; switching to signal-driven removes the polling loop
-- [ ] **`enemy.gd` / `pet.gd` CombatLog coupling** — both scripts call `CombatLog.add_line()` directly for mesmerize feedback and pet hit events; should emit signals (e.g. `mez_applied`, `hit_target`) that `combat_log.gd` subscribes to, same pattern used for `combat.gd`
+- [x] **`player_stats.gd` refactor** — Alignment extracted to `autoloads/alignment.gd`; PlayerStats no longer owns alignment_score/tier/signal/get_effective_class
+- [x] **`PetManager` split** — WarderAI extracted to `autoloads/warder_ai.gd`; PetManager is now generic pet lifecycle; warder retreat/fury/setup_for_class lives in WarderAI
+- [x] **`hud.gd` split** — 907→478 lines; DeathScreen/CastBar/BuffBar/PetPanel/GroupPanel each in their own `scripts/hud_*.gd` file
+- [x] **Wire cooldown signals to Hotbar** — `spell_cooldown_updated` and `skill_cooldown_updated` are emitted by spells.gd/skills.gd; Hotbar is fully signal-driven (hotbar.gd lines 52–54)
+- [x] **`enemy.gd` / `pet.gd` CombatLog coupling** — enemy status effects emit via `Combat` signals; pet hits relay through `PetManager.pet_info`; `combat_log.gd` subscribes to both

@@ -41,6 +41,7 @@ var _name_input: LineEdit
 func _ready() -> void:
 	anchor_right = 1.0
 	anchor_bottom = 1.0
+	CombatLog.visible = false
 
 	var bg := ColorRect.new()
 	bg.color = C_BG

@@ -199,4 +199,4 @@ Spells are learned from Witch Hunter order trainers in sanctioned chapterhouses.
 | Ancient Spellbreaker | Silence all enemies in 20m for 12s; interrupt all active casts | Abjuration | 220 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Half-Elf Witch Hunter: "The Scent of Wrong"*
+*See [characters.md](../lore/characters.md) — Half-Elf Witch Hunter: "The Scent of Wrong"*

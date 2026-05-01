@@ -186,4 +186,4 @@ Spells are purchased from Cleric guild vendors or city spell merchants. You must
 | Word of the Faithful | Group: restore to 75% HP; remove all debuffs | Restoration | 200 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Human Cleric: "The Ordinary Mercy"*
+*See [characters.md](../lore/characters.md) — Human Cleric: "The Ordinary Mercy"*

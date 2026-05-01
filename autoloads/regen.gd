@@ -51,10 +51,17 @@ func _do_regen() -> void:
 	var food_hp := BuffManager.get_food_hp_regen() + BuffManager.get_drink_hp_regen()
 	var food_mp := BuffManager.get_food_mp_regen() + BuffManager.get_drink_mp_regen()
 
-	if PlayerStats.hp < PlayerStats.max_hp:
+	# Lich Form: disable HP regen, grant extreme MP regen instead
+	var lich_mp := BuffManager.get_lich_mp_regen() * TICK_INTERVAL if BuffManager.is_lich_form() else 0.0
+
+	# Clarity/Breeze mana regen buff
+	var mp_regen_buff := BuffManager.get_mp_regen_buff()
+	var clarity_mp: float = mp_regen_buff.get("hps", 0.0) * TICK_INTERVAL if not mp_regen_buff.is_empty() else 0.0
+
+	if PlayerStats.hp < PlayerStats.max_hp and not BuffManager.is_lich_form():
 		PlayerStats.set_hp(minf(PlayerStats.hp + _hp_regen_per_tick() * hp_mult + food_hp, PlayerStats.max_hp))
 	if PlayerStats.mp < PlayerStats.max_mp:
-		PlayerStats.set_mp(minf(PlayerStats.mp + _mp_regen_per_tick() * mp_mult + food_mp, PlayerStats.max_mp))
+		PlayerStats.set_mp(minf(PlayerStats.mp + _mp_regen_per_tick() * mp_mult + food_mp + clarity_mp + lich_mp, PlayerStats.max_mp))
 	if PlayerStats.stamina < PlayerStats.max_stamina:
 		PlayerStats.set_stamina(minf(PlayerStats.stamina + _st_regen_per_tick() * st_mult, PlayerStats.max_stamina))
 

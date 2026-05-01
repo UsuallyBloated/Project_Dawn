@@ -11,7 +11,10 @@
       "PowerShell(cd \"f:\\\\Projects\\\\Project_Dawn\\\\HTML_LOW_POLY_TOOL\"; $env:ANTHROPIC_API_KEY=\"test-key-smoke\"; python -c \"import flask, anthropic; print\\('imports OK'\\)\")",
       "PowerShell(python -m pip install python-dotenv 2>&1)",
       "Bash(git -C \"f:/Projects/Project_Dawn\" status --short)",
-      "Bash(git -C \"f:/Projects/Project_Dawn\" log --oneline -5)"
+      "Bash(git -C \"f:/Projects/Project_Dawn\" log --oneline -5)",
+      "Read(//f/Projects/ProceduralDungeon/**)",
+      "Read(//f/Projects/ProceduralDungeon/scripts/**)",
+      "Bash(git -C \"f:/Projects/Project_Dawn\" show --stat --format=\"\" 72401a1384ba65d47460a5ff8bcc5a70cd846982)"
     ],
     "additionalDirectories": [
       "f:\\Projects\\Project_Dawn",

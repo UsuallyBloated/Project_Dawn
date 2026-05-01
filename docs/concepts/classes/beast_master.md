@@ -180,4 +180,4 @@ Spells are learned through spirit-bond communion rather than formal instruction.
 | Spirit Unity | 60s: self and warder share HP pools; damage to either is split equally | Spirit | 240 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Felhari Beast Master: "The Second Claw"*
+*See [characters.md](../lore/characters.md) — Felhari Beast Master: "The Second Claw"*

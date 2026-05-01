@@ -173,4 +173,4 @@ Spells are purchased from Blood Mage guild vendors in neutral or evil-aligned ci
 | Wail of the Vitae | AoE: drain 100 HP from all enemies in 20m; fully restore own HP | Shadow | 280 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Revenant Blood Mage: "The Scar That Remembers"*
+*See [characters.md](../lore/characters.md) — Human Revenant Blood Mage: "The Scar That Remembers"*

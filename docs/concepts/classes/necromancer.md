@@ -175,4 +175,4 @@ Spells are purchased from Necromancer guild vendors in cities that tolerate the 
 | Lich's Ascension | Permanent toggle: no HP regen; unlimited mana regen; near-immortal while active | Shadow | 300 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Kel`varath Necromancer: "The Bone Cartographer"*
+*See [characters.md](../lore/characters.md) — Kel`varath Necromancer: "The Bone Cartographer"*

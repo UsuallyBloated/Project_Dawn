@@ -40,7 +40,7 @@ func can_access_skill(skill_name: String) -> bool:
 	if not skill.allowed_classes.is_empty() and PlayerStats.player_class not in skill.allowed_classes:
 		return false
 	if skill.required_alignment != "":
-		var tier := PlayerStats.alignment_tier
+		var tier := Alignment.alignment_tier
 		match skill.required_alignment:
 			"Good":    if tier not in ["Exalted", "Good"]:  return false
 			"NotGood": if tier in ["Exalted", "Good"]:      return false

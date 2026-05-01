@@ -5,7 +5,7 @@
 
 Groups in Project Dawn are the game's central social structure. Most high-value content — named enemies, dungeon clears, high-tier loot — is designed around a full group of six players. Solo play is viable for the right classes, but group play is where the game's depth lives. The class design specifically rewards players who understand what their role asks of the group, and punishes those who don't.
 
-The EQ DNA is deliberate here: a group is not five players who happen to be together. It is a formation. Everyone has a function. Failing your function costs the group.
+The EQ DNA is deliberate here: a group is not six players who happen to be together. It is a formation. Everyone has a function. Failing your function costs the group.
 
 ---
 

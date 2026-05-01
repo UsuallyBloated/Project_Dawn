@@ -139,4 +139,4 @@ Combat arts are trained at monastery guilds. All monk arts require cloth or wrap
 | Ancient Flying Kick | Leaping kick (6.0×); knock back 15m | Offensive | 50 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Felhari Monk: "The Still Claw"*
+*See [characters.md](../lore/characters.md) — Felhari Monk: "The Still Claw"*

@@ -21,7 +21,7 @@ func _ready() -> void:
 	_cooldowns.cooldown_updated.connect(func(n, r, t): spell_cooldown_updated.emit(n, r, t))
 	_load_spells()
 	PlayerStats.level_changed.connect(_on_level_changed)
-	PlayerStats.alignment_changed.connect(_on_alignment_changed)
+	Alignment.alignment_changed.connect(_on_alignment_changed)
 
 func _process(delta: float) -> void:
 	if _casting != null:
@@ -31,7 +31,7 @@ func _process(delta: float) -> void:
 	_cooldowns.tick(delta)
 
 func setup_for_class(_player_class: String) -> void:
-	var effective := PlayerStats.get_effective_class()
+	var effective := Alignment.get_effective_class()
 	available.clear()
 	for sname in _all_spells:
 		var spell: SpellData = _all_spells[sname]
@@ -41,7 +41,7 @@ func setup_for_class(_player_class: String) -> void:
 	spells_changed.emit()
 
 func _get_alignment_effectiveness(player_class: String) -> float:
-	var tier := PlayerStats.alignment_tier
+	var tier := Alignment.alignment_tier
 	match player_class:
 		"Paladin":
 			match tier:
@@ -150,7 +150,7 @@ func _apply_spell(spell: SpellData) -> void:
 	var absorb_mult := CastingSkills.get_absorb_mult(spell.discipline)
 
 	if spell.target_type == SpellData.TargetType.ENEMY:
-		Combat.deal_damage_to_target(int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness * dmg_mult))
+		Combat.deal_spell_damage(int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness * dmg_mult), spell.damage_type)
 
 	if spell.target_type == SpellData.TargetType.PET_SUMMON:
 		PetManager.summon(spell.pet_type)
@@ -159,7 +159,7 @@ func _apply_spell(spell: SpellData) -> void:
 		PetManager.charm_current_target(spell.duration)
 
 	if spell.target_type == SpellData.TargetType.PET_HEAL:
-		PetManager.heal_warder(spell.heal_amount + PlayerStats.wisdom * 0.3)
+		WarderAI.heal_warder(spell.heal_amount + PlayerStats.wisdom * 0.3)
 
 	if spell.heal_amount > 0.0 and spell.target_type != SpellData.TargetType.PET_HEAL:
 		var heal := (spell.heal_amount + PlayerStats.wisdom * 0.3) * effectiveness
@@ -179,15 +179,81 @@ func _apply_spell(spell: SpellData) -> void:
 	if spell.absorb_amount > 0.0:
 		BuffManager.add_absorb(spell.absorb_amount * effectiveness * absorb_mult, spell.spell_name)
 
+	if spell.damage_shield_amount > 0.0 and spell.damage_shield_duration > 0.0:
+		BuffManager.add_damage_shield(spell.damage_shield_amount * effectiveness, spell.damage_shield_duration * dur_mult, spell.spell_name)
+
 	if spell.cc_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target():
 			Combat.current_target.mesmerize(spell.cc_duration * dur_mult)
+
+	if spell.root_duration > 0.0:
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target():
+			Combat.current_target.root(spell.root_duration * dur_mult)
+
+	if spell.slow_amount > 0.0 and spell.slow_duration > 0.0:
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target():
+			Combat.current_target.snare(spell.slow_amount, spell.slow_duration * dur_mult)
+
+	if spell.attack_slow_amount > 0.0 and spell.attack_slow_duration > 0.0:
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target():
+			Combat.current_target.apply_attack_slow(spell.attack_slow_amount, spell.attack_slow_duration * dur_mult)
+
+	if spell.primary_stat_buff_duration > 0.0:
+		BuffManager.add_primary_stat_buff(
+			spell.str_buff, spell.agi_buff, spell.int_buff,
+			spell.wis_buff, spell.con_buff,
+			spell.max_hp_buff, spell.max_mp_buff,
+			spell.primary_stat_buff_duration * dur_mult, spell.spell_name)
 
 	if spell.target_type == SpellData.TargetType.PORT:
 		_execute_port(spell)
 
 	if spell.target_type == SpellData.TargetType.BIND:
 		_execute_bind()
+
+	if not spell.is_song:
+		if spell.move_speed_mult > 0.0 and spell.move_speed_duration > 0.0:
+			BuffManager.add_speed_buff(spell.move_speed_mult, spell.move_speed_duration * dur_mult, spell.spell_name)
+
+		if spell.mp_regen_hps > 0.0 and spell.mp_regen_duration > 0.0:
+			BuffManager.add_mp_regen_buff(spell.mp_regen_hps * effectiveness, spell.mp_regen_duration * dur_mult, spell.spell_name)
+
+		if spell.haste_amount > 0.0 and spell.haste_duration > 0.0:
+			BuffManager.add_haste_buff(spell.haste_amount, spell.haste_duration * dur_mult, spell.spell_name)
+
+		if spell.accuracy_buff > 0.0 or spell.crit_buff > 0.0:
+			BuffManager.add_stat_buff(spell.accuracy_buff, spell.crit_buff, spell.stat_buff_duration * dur_mult, spell.spell_name)
+
+	if spell.is_stealth:
+		BuffManager.add_stealth(spell.stealth_duration * dur_mult, spell.spell_name)
+
+	if spell.is_dispel:
+		if Combat.has_valid_target():
+			var stripped: bool = Combat.current_target.strip_one_buff()
+			if stripped:
+				CombatLog.add_line("You strip a buff from %s." % Combat.current_target.mob_name, CombatLog.MsgType.INFO)
+			else:
+				CombatLog.add_line("%s has no buffs to strip." % Combat.current_target.mob_name, CombatLog.MsgType.INFO)
+
+	if spell.silence_duration > 0.0:
+		if Combat.has_valid_target():
+			Combat.current_target.silence(spell.silence_duration * dur_mult)
+
+	if spell.is_lich_form:
+		BuffManager.toggle_lich_form(spell.lich_mp_regen)
+
+	if spell.mana_drain > 0.0:
+		if Combat.has_valid_target():
+			var drained := minf(spell.mana_drain * effectiveness * dmg_mult, Combat.current_target.hp)
+			Combat.current_target.take_damage(int(drained))
+			PlayerStats.set_mp(PlayerStats.mp + drained)
+			CombatLog.add_line("You drain %d life from %s into mana." % [int(drained), Combat.current_target.mob_name], CombatLog.MsgType.INFO)
+
+	if spell.is_song:
+		BardSongs.activate_song(spell)
+
+	if spell.target_type == SpellData.TargetType.ENEMY:
+		BuffManager.break_stealth()
 
 	if spell.discipline != "":
 		CastingSkills.try_advance(spell.discipline)
@@ -255,11 +321,43 @@ func _load_spells() -> void:
 		s.hot_hps = d.get("hot_hps", 0.0)
 		s.hot_duration = d.get("hot_duration", 0.0)
 		s.absorb_amount = d.get("absorb_amount", 0.0)
-		s.cc_duration    = d.get("cc_duration", 0.0)
+		s.cc_duration         = d.get("cc_duration", 0.0)
+		s.root_duration       = d.get("root_duration", 0.0)
+		s.slow_amount         = d.get("slow_amount", 0.0)
+		s.slow_duration       = d.get("slow_duration", 0.0)
+		s.attack_slow_amount  = d.get("attack_slow_amount", 0.0)
+		s.attack_slow_duration = d.get("attack_slow_duration", 0.0)
 		s.port_zone_path = d.get("port_zone_path", "")
 		s.port_entry_id  = d.get("port_entry_id", "")
 		s.port_zone_name = d.get("port_zone_name", "")
 		s.port_is_group  = d.get("port_is_group", false)
+		s.move_speed_mult     = d.get("move_speed_mult", 0.0)
+		s.move_speed_duration = d.get("move_speed_duration", 0.0)
+		s.mp_regen_hps        = d.get("mp_regen_hps", 0.0)
+		s.mp_regen_duration   = d.get("mp_regen_duration", 0.0)
+		s.haste_amount        = d.get("haste_amount", 0.0)
+		s.haste_duration      = d.get("haste_duration", 0.0)
+		s.accuracy_buff       = d.get("accuracy_buff", 0.0)
+		s.crit_buff           = d.get("crit_buff", 0.0)
+		s.stat_buff_duration  = d.get("stat_buff_duration", 0.0)
+		s.is_stealth          = d.get("is_stealth", false)
+		s.stealth_duration    = d.get("stealth_duration", 0.0)
+		s.is_dispel           = d.get("is_dispel", false)
+		s.silence_duration    = d.get("silence_duration", 0.0)
+		s.is_lich_form        = d.get("is_lich_form", false)
+		s.lich_mp_regen       = d.get("lich_mp_regen", 0.0)
+		s.mana_drain          = d.get("mana_drain", 0.0)
+		s.damage_shield_amount   = d.get("damage_shield_amount", 0.0)
+		s.damage_shield_duration = d.get("damage_shield_duration", 0.0)
+		s.is_song             = d.get("is_song", false)
+		s.str_buff                  = d.get("str_buff", 0)
+		s.agi_buff                  = d.get("agi_buff", 0)
+		s.int_buff                  = d.get("int_buff", 0)
+		s.wis_buff                  = d.get("wis_buff", 0)
+		s.con_buff                  = d.get("con_buff", 0)
+		s.max_hp_buff               = d.get("max_hp_buff", 0.0)
+		s.max_mp_buff               = d.get("max_mp_buff", 0.0)
+		s.primary_stat_buff_duration = d.get("primary_stat_buff_duration", 0.0)
 		s.discipline = SpellDefinitions.DISCIPLINE.get(d["name"], "")
 		for c in d["classes"]:
 			s.allowed_classes.append(c)

@@ -185,4 +185,4 @@ Spells are purchased from Enchanter guild vendors in cities with sufficient arca
 | Ancient Cascade of Eternity | Arcane damage (430); 1.5s cast | Arcane | 280 |
 
 ## Portrait Reference
-*See [characters.md](../characters.md) — Fae Enchanter: "The Glass Court"*
+*See [characters.md](../lore/characters.md) — Fae Enchanter: "The Glass Court"*

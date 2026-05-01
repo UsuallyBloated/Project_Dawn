@@ -47,5 +47,5 @@ The Grief Rage is not optional and is not glamorous. Losing the warder temporari
 | Enhanced Warder | Passive | Warder stats exceed normal scaling ceiling by 25%; warder returns from death at 50% HP instead of 30% | — | — |
 
 ## Portrait Reference
-*See [characters.md](../characters.md):*
+*See [characters.md](../lore/characters.md):*
 - *Felhari Beast Master — "The Second Claw" — captures the pre-transformation state of the bond*

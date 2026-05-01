@@ -37,7 +37,7 @@ Eighteen classes are playable. See `data/character_data.gd` for all stats, bonus
 - **Monk** — Unarmed martial arts. No armor, no weapons — speed, technique, and inner discipline. STR/DEX/AGI growth.
 - **Rogue** — Precision strikes, poisons, ambush. Backstab from stealth for massive burst. DEX/AGI growth.
 
-### Holy Warriors
+### Zealot(evil & good)
 - **Paladin** — Divine faith translated into steel. Heals, protects, and destroys undead. STR/WIS/CON growth. *Starts Good.*
 - **Shadow Knight** — Dark faith and death magic sustaining a warrior. Lifetap, fear, and undead summons. STR/INT/CON growth. *Starts Evil.*
 
@@ -115,7 +115,7 @@ Locked combinations are enforced at character creation (`LOCKED_COMBOS` in `data
 
 **NPC recognition:** NPCs observe and react to alignment tier. Players cannot directly see another player's alignment score — only NPCs acknowledge it.
 
-**Drift:** `PlayerStats.modify_alignment(delta)`. When a tier threshold is crossed, `alignment_changed` fires; `Skills` and `Spells` autoloads rebuild available lists via `setup_for_class()`. **Status:** `alignment_changed` currently has 0 listeners — tier-crossing rebuilds do not fire. Signal must be wired to `Transformations` autoload and HUD.
+**Drift:** `PlayerStats.modify_alignment(delta)`. When a tier threshold is crossed, `alignment_changed` fires; `Skills` and `Spells` autoloads rebuild available lists via `setup_for_class()`. Signal is fully wired — `Skills`, `Spells`, and HUD all subscribe; alignment tier and color display on the HUD.
 
 **Spell effectiveness:** Paladin spells are penalized at Neutral (0.7×) and Bad (0.4×) alignment. Shadow Knight spells are penalized at Neutral (0.7×) and Good (0.4×). Full effectiveness only at the intended extreme. Implemented in `Spells._get_alignment_effectiveness()`.
 
@@ -146,7 +146,7 @@ Auto-attack fires on a timer (`combat.gd`). Skills and spells layer on top.
 - **Auto-attack damage:** `(STR / 5.0) + randf_range(1, 6)` — scales with strength.
 - **Haste dependency:** Enchanter Haste requires the auto-attack interval to be a data-driven per-weapon stat, not the current hardcoded 2.0s literal in combat.gd. Implement the interval as a modifiable stat before Haste is built.
 - **Damage reduction (armor):** `received_damage * (1.0 - armor_reduction)`.
-- **Critical hits:** *Design target — not yet implemented.* Chance based on DEX; 150–200% damage.
+- **Critical hits:** **Implemented.** Auto-attack and skill crits roll against DEX (0–30% chance). Spell crits roll against INT (0–20% chance). All crits deal 1.5–2.0× damage. Logged in bright gold `MsgType.CRIT` color.
 - **Evasion (AGI):** `clamp((agility - 10) * 0.005, 0.0, 0.50)`. Checked before armor. Max 50% at AGI 110. Logged as EVADE in CombatLog.
 - **Tab targeting:** Cycle through nearby enemies. Combat.set_target() updates the target frame.
 - **Player attacked signal:** `Combat.player_attacked` fires when the player takes damage; used by PetManager to direct the warder to counter-attack.
@@ -208,7 +208,7 @@ Managed by `BuffManager` autoload. All effects tick in `_process`.
 | **Absorb Shield** | `BuffManager.add_absorb(amount, name)` | Intercepts incoming damage before HP; multiple shields stack |
 | **Evade Boost** | `BuffManager.add_evade_boost(duration)` | Evasion = 1.0 for the duration (guaranteed dodge) |
 
-**Design target — Buff bar UI:** Icons with countdown timers for all active effects. Priority: see CLAUDE.md To-Do.
+**Buff bar UI:** Implemented. `scripts/hud_buff_bar.gd` — icon strip with countdown timers for HoT, absorb shield, evade boost, food, and drink buffs. Subscribes to `BuffManager.buffs_changed`.
 
 ---
 
@@ -229,7 +229,7 @@ Managed by `PetManager` autoload.
 - Stats: `max_hp = 50 + level * 10`, `damage = 5 + level * 3`.
 
 ### Magician Elemental (Design Target)
-Magician summons one of four elemental types — Earth (tank), Fire (DPS), Water (support/heal), Air (utility/speed). Unlike Warder and Skeleton, elemental stats must be defined per type rather than a single formula. Full design in `docs/concepts/classes/magician.md`. Requires `PetManager` to be split into state/behavior components before implementation.
+Magician summons one of four elemental types — Earth (tank), Fire (DPS), Water (support/heal), Air (utility/speed). Unlike Warder and Skeleton, elemental stats must be defined per type rather than a single formula. Full design in `docs/concepts/classes/magician.md`. The PetManager/WarderAI split is complete — implementation can proceed when elemental definitions are ready.
 
 ### Enchanter / Bard Charm
 - `PetManager.charm_current_target(duration)` converts the current combat target into a temporary ally.
@@ -447,25 +447,35 @@ Checked in `Combat.receive_player_damage()` before armor reduction. Max evasion:
 |---|---|---|
 | Network | autoloads/network.gd | Live |
 | PlayerStats | autoloads/player_stats.gd | Live |
+| Alignment | autoloads/alignment.gd | Live — extracted from PlayerStats |
 | Combat | autoloads/combat.gd | Live |
 | Inventory | autoloads/inventory.gd | Live |
 | Equipment | autoloads/equipment.gd | Live |
 | Skills | autoloads/skills.gd | Live |
 | Spells | autoloads/spells.gd | Live |
+| WeaponSkills | autoloads/weapon_skills.gd | Live — passive skill gains on use |
+| ArmorSkills | autoloads/armor_skills.gd | Live — passive armor skill gains |
+| CastingSkills | autoloads/casting_skills.gd | Live — channeling/discipline mastery |
 | BuffManager | autoloads/buff_manager.gd | Live |
-| PetManager | autoloads/pet_manager.gd | Live |
+| PetManager | autoloads/pet_manager.gd | Live — generic pet lifecycle only |
+| WarderAI | autoloads/warder_ai.gd | Live — extracted from PetManager; owns warder retreat/fury/summon |
 | DamageNumbers | autoloads/damage_numbers.gd | Live |
 | PlayerDeath | autoloads/player_death.gd | Live |
 | Regen | autoloads/regen.gd | Live |
 | TimeOfDay | autoloads/time_of_day.gd | Live |
+| VisionSystem | autoloads/vision_system.gd | Live — race vision types; night brightness/tint |
+| SenseHeading | autoloads/sense_heading.gd | Live — /sense command, compass direction |
 | CombatLog | scripts/combat_log.gd | Live |
 | Targeting | autoloads/targeting.gd | Live |
 | Loot | autoloads/loot.gd | Live |
+| ZoneLoader | autoloads/zone_loader.gd | Live — scene switching with transitions |
 | Crafting | autoloads/crafting.gd | Stub |
-| Transformations | autoloads/transformations.gd | Written — not wired (0 connections) |
+| Transformations | autoloads/transformations.gd | Written — not wired (0 callers trigger it) |
 | GroupManager | autoloads/group_manager.gd | Live |
+| VendorManager | autoloads/vendor_manager.gd | Stub |
 | SocialHotkeys | autoloads/social_hotkeys.gd | Live |
 | Settings | autoloads/settings.gd | Live |
+| CharacterSetup | autoloads/character_setup.gd | Live — race/class application at game start |
 
 ---
 
