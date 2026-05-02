@@ -7,6 +7,7 @@ func _ready() -> void:
 	input_ray_pickable = true
 	collision_layer = 4
 	collision_mask = 0
+	add_to_group("loot_bags")
 
 	var mesh_inst := MeshInstance3D.new()
 	var sphere := SphereMesh.new()

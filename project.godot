@@ -50,3 +50,11 @@ SenseHeading="*res://autoloads/sense_heading.gd"
 CharacterSetup="*res://autoloads/character_setup.gd"
 VendorManager="*res://autoloads/vendor_manager.gd"
 BardSongs="*res://autoloads/bard_songs.gd"
+DebugLog="*res://autoloads/debug_log.gd"
+QuestManager="*res://autoloads/quest_manager.gd"
+StationManager="*res://autoloads/station_manager.gd"
+DialogueManager="*res://autoloads/dialogue_manager.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/procedural_dungeon/plugin.cfg")

@@ -14,6 +14,21 @@ extends Node3D
 @export var move_speed_override: float = 0.0
 @export var aggro_range_override: float = 0.0
 
+@export_group("Caster Overrides")
+@export var spell_damage_override:    int   = 0
+@export var spell_interval_override:  float = 0.0
+@export var caster_range_override:    float = 0.0
+@export var spell_damage_type_override: SpellData.DamageType = SpellData.DamageType.NONE
+
+@export_group("Healer Overrides")
+@export var healer_flee_hp_override: float = 0.0
+@export var heal_amount_override:    float = 0.0
+@export var heal_interval_override:  float = 0.0
+
+@export_group("Named Mob")
+@export var named_mob_id: String = ""
+@export var named_respawn_time: float = 300.0   # seconds; replaces respawn_time for named spawns
+
 @export_group("Spawn Conditions")
 @export var night_only: bool = false
 
@@ -71,6 +86,8 @@ func _spawn() -> void:
 	)
 	get_tree().current_scene.add_child(enemy)
 	enemy.global_position = global_position + offset
+	if named_mob_id != "":
+		enemy.apply_named(named_mob_id)
 	_current_enemy = enemy
 	enemy.died.connect(_on_enemy_died)
 
@@ -89,6 +106,20 @@ func _apply_overrides(enemy: Node3D) -> void:
 		enemy.move_speed = move_speed_override
 	if aggro_range_override > 0.0:
 		enemy.aggro_range = aggro_range_override
+	if spell_damage_override > 0:
+		enemy.spell_damage = spell_damage_override
+	if spell_interval_override > 0.0:
+		enemy.spell_interval = spell_interval_override
+	if caster_range_override > 0.0:
+		enemy.caster_range = caster_range_override
+	if spell_damage_type_override != SpellData.DamageType.NONE:
+		enemy.spell_damage_type = spell_damage_type_override
+	if healer_flee_hp_override > 0.0:
+		enemy.healer_flee_hp = healer_flee_hp_override
+	if heal_amount_override > 0.0:
+		enemy.heal_amount = heal_amount_override
+	if heal_interval_override > 0.0:
+		enemy.heal_interval = heal_interval_override
 	for field in ["fire_resist", "ice_resist", "lightning_resist", "arcane_resist",
 			"holy_resist", "nature_resist", "spirit_resist", "shadow_resist"]:
 		if get(field) >= 0.0:
@@ -97,4 +128,4 @@ func _apply_overrides(enemy: Node3D) -> void:
 func _on_enemy_died(_enemy) -> void:
 	_current_enemy = null
 	_waiting = true
-	_respawn_timer = respawn_time
+	_respawn_timer = named_respawn_time if named_mob_id != "" else respawn_time

@@ -19,9 +19,10 @@ func _ready() -> void:
 	_populate_options()
 
 func _build_ui() -> void:
-	var panel := PanelContainer.new()
+	var panel := DraggablePanel.new()
 	panel.position = Vector2(10, 10)
-	panel.custom_minimum_size.x = 230
+	panel.custom_minimum_size = Vector2(230, 60)
+	panel.size = Vector2(230, 500)
 	add_child(panel)
 
 	var style := StyleBoxFlat.new()
@@ -29,15 +30,19 @@ func _build_ui() -> void:
 	style.border_color = C_BORDER
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(4)
-	style.content_margin_left   = 8
-	style.content_margin_top    = 6
-	style.content_margin_right  = 8
-	style.content_margin_bottom = 8
 	panel.add_theme_stylebox_override("panel", style)
+
+	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_top", 6)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_bottom", 8)
+	panel.add_child(margin)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
-	panel.add_child(vbox)
+	margin.add_child(vbox)
 
 	# Header row
 	var header := HBoxContainer.new()
@@ -111,9 +116,29 @@ func _build_ui() -> void:
 	die_btn.pressed.connect(_trigger_death)
 	_body.add_child(die_btn)
 
+	var bags_btn := _make_btn("Give Bags", Color(0.45, 0.35, 0.15, 1.0))
+	bags_btn.pressed.connect(_give_bags)
+	_body.add_child(bags_btn)
+
 	var food_btn := _make_btn("Give Food & Drink", Color(0.35, 0.60, 0.20, 1.0))
 	food_btn.pressed.connect(_give_consumables)
 	_body.add_child(food_btn)
+
+	var bow_btn := _make_btn("Give Bow", Color(0.55, 0.35, 0.10, 1.0))
+	bow_btn.pressed.connect(_give_bow)
+	_body.add_child(bow_btn)
+
+	var proc_btn := _make_btn("Give Proc Weapon", Color(0.65, 0.25, 0.05, 1.0))
+	proc_btn.pressed.connect(_give_proc_weapon)
+	_body.add_child(proc_btn)
+
+	var quest_btn := _make_btn("Add Test Quest", Color(0.60, 0.45, 0.10, 1.0))
+	quest_btn.pressed.connect(_add_test_quest)
+	_body.add_child(quest_btn)
+
+	var craft_btn := _make_btn("Give Crafting Materials", Color(0.20, 0.50, 0.65, 1.0))
+	craft_btn.pressed.connect(_give_crafting_materials)
+	_body.add_child(craft_btn)
 
 func _make_label(t: String) -> Label:
 	var lbl := Label.new()
@@ -226,3 +251,127 @@ func _give_consumables() -> void:
 	Inventory.add_item(water, 5)
 
 	CombatLog.add_line("Received 5x Journeybread and 5x Waterskin.", CombatLog.MsgType.INFO)
+
+func _add_test_quest() -> void:
+	var ok := QuestManager.add_quest({
+		"id": "test_q1",
+		"name": "Slay the Infected Wolves",
+		"description": "The wolves near the eastern road have grown diseased and aggressive. Thin their numbers before travelers are harmed.",
+		"zone": "Eastern Road",
+		"level_req": 1,
+		"xp_reward": 250,
+		"objectives": [
+			{"text": "Slay Infected Wolves", "type": "kill", "target": "Wolf", "count_needed": 5},
+			{"text": "Report back to Captain Aldren"},
+		],
+	})
+	if ok:
+		CombatLog.add_line("Quest added: Slay the Infected Wolves.", CombatLog.MsgType.INFO)
+	else:
+		CombatLog.add_line("Quest already in journal.", CombatLog.MsgType.INFO)
+
+func _give_crafting_materials() -> void:
+	var mats: Array[Dictionary] = [
+		# Smelting / Blacksmithing / Weaponsmithing
+		{p = "res://data/loot/items/copper_ore.tres",    qty = 10},
+		{p = "res://data/loot/items/tin_ore.tres",       qty = 10},
+		{p = "res://data/loot/items/iron_ore.tres",      qty = 10},
+		{p = "res://data/loot/items/coal.tres",          qty = 20},
+		{p = "res://data/loot/items/metal_bits.tres",    qty = 10},
+		{p = "res://data/loot/items/smithing_hammer.tres", qty = 1},
+		{p = "res://data/loot/items/pickaxe.tres",        qty = 1},
+		# Tanning / Leatherworking
+		{p = "res://data/loot/items/tattered_pelt.tres",       qty = 4},
+		{p = "res://data/loot/items/damaged_wolf_pelt.tres",   qty = 4},
+		{p = "res://data/loot/items/fresh_wolf_pelt.tres",     qty = 4},
+		{p = "res://data/loot/items/sinew.tres",               qty = 8},
+		{p = "res://data/loot/items/sewing_needle.tres",       qty = 1},
+		# Tailoring
+		{p = "res://data/loot/items/cloth_scraps.tres",  qty = 10},
+		{p = "res://data/loot/items/flax.tres",          qty = 10},
+		{p = "res://data/loot/items/linen_thread.tres",  qty = 6},
+		# Alchemy
+		{p = "res://data/loot/items/feverfew.tres",      qty = 6},
+		{p = "res://data/loot/items/bloodmoss.tres",     qty = 6},
+		{p = "res://data/loot/items/wormwood.tres",      qty = 6},
+		{p = "res://data/loot/items/empty_vial.tres",    qty = 10},
+		# Baking
+		{p = "res://data/loot/items/flour.tres",         qty = 6},
+		{p = "res://data/loot/items/water_flask.tres",   qty = 6},
+		{p = "res://data/loot/items/wolf_meat.tres",     qty = 4},
+		{p = "res://data/loot/items/raw_egg.tres",       qty = 4},
+		# Brewing
+		{p = "res://data/loot/items/barley.tres",        qty = 4},
+		{p = "res://data/loot/items/hops.tres",          qty = 4},
+		{p = "res://data/loot/items/yeast.tres",         qty = 4},
+		{p = "res://data/loot/items/empty_bottle.tres",  qty = 4},
+		# Fletching
+		{p = "res://data/loot/items/hardwood_shaft.tres",  qty = 10},
+		{p = "res://data/loot/items/flint.tres",           qty = 10},
+		{p = "res://data/loot/items/feather.tres",         qty = 10},
+		# Jewelry Crafting
+		{p = "res://data/loot/items/silver_ore.tres",      qty = 6},
+		{p = "res://data/loot/items/tarnished_silver_setting.tres", qty = 3},
+		{p = "res://data/loot/items/rough_ruby.tres",      qty = 2},
+		# Pottery
+		{p = "res://data/loot/items/lump_of_clay.tres",    qty = 6},
+	]
+	var given := 0
+	for entry in mats:
+		var item := load(entry.p) as ItemData
+		if item and Inventory.add_item(item, entry.qty):
+			given += 1
+	CombatLog.add_line("Crafting materials seeded (%d stacks)." % given, CombatLog.MsgType.INFO)
+
+func _give_bow() -> void:
+	var bow := ItemData.new()
+	bow.item_name       = "Hunter's Shortbow"
+	bow.description     = "A compact recurve bow, well-worn but reliable."
+	bow.type            = ItemData.Type.WEAPON
+	bow.rarity          = ItemData.Rarity.COMMON
+	bow.is_ranged       = true
+	bow.is_two_handed   = true
+	bow.weapon_skill    = "archery"
+	bow.weapon_damage_min = 6
+	bow.weapon_damage_max = 14
+	bow.weapon_delay    = 3.0
+	if not Inventory.add_item(bow):
+		CombatLog.add_line("No bag space for the bow.", CombatLog.MsgType.INFO)
+		return
+	CombatLog.add_line("Hunter's Shortbow added to inventory. Right-click to equip.", CombatLog.MsgType.INFO)
+
+func _give_proc_weapon() -> void:
+	var sword := ItemData.new()
+	sword.item_name        = "Flamebrand"
+	sword.description      = "A blade that occasionally erupts in searing flame on a successful strike."
+	sword.type             = ItemData.Type.WEAPON
+	sword.rarity           = ItemData.Rarity.UNCOMMON
+	sword.weapon_skill     = "1h_slashing"
+	sword.weapon_damage_min = 8
+	sword.weapon_damage_max = 18
+	sword.weapon_delay     = 2.5
+	sword.proc_chance      = 0.15
+	sword.proc_damage      = 25
+	sword.proc_damage_type = SpellData.DamageType.FIRE
+	sword.proc_name        = "Flaming Strike"
+	if not Inventory.add_item(sword):
+		CombatLog.add_line("No bag space for Flamebrand.", CombatLog.MsgType.INFO)
+		return
+	CombatLog.add_line("Flamebrand added to inventory. Right-click to equip.", CombatLog.MsgType.INFO)
+
+func _give_bags() -> void:
+	var names := ["Small Pouch", "Worn Satchel"]
+	var sizes := [6, 10]
+	var given := 0
+	for i in names.size():
+		var bag := ItemData.new()
+		bag.item_name = names[i]
+		bag.description = "A %s-slot bag." % sizes[i]
+		bag.type = ItemData.Type.BAG
+		bag.bag_num_slots = sizes[i]
+		if Inventory.add_item(bag):
+			given += 1
+	if given > 0:
+		CombatLog.add_line("Added %d bag(s) to inventory." % given, CombatLog.MsgType.INFO)
+	else:
+		CombatLog.add_line("No inventory space for bags.", CombatLog.MsgType.INFO)

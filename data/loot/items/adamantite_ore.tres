@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Adamantite Ore"
+description = "An extraordinarily dense ore found only in the deepest mines. Almost impossible to work."
+type = 10
+rarity = 2
+stack_size = 20
+vendor_price = 150

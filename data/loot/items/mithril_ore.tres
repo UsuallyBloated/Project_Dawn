@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Mithril Ore"
+description = "A rare, lightweight ore found deep underground. Exceptionally difficult to smelt."
+type = 10
+rarity = 1
+stack_size = 20
+vendor_price = 75

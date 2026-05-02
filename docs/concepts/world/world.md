@@ -11,10 +11,12 @@ The world of Project Dawn is divided into named zones. Each zone is a discrete a
 | [The Bonecourt](bonecourt.md) | 1–10 | Evil starting area | Kel`varath | Bonewright necromantic outpost; jungle ruins; Kel`varath start |
 | [The Kobold Deeps](kobold_deeps.md) | 1–10 | Evil starting area | Kobold | Pack tunnel network beneath Cogsworth; Kobold start |
 | [Ardenmoor](ardenmoor.md) | 5–15 | Forest / Wilderness | Ranger guilds, Wood Elf | Dense woodland; nature content; early wilderness experience |
-| [Aelindra](aelindra.md) | 10–25 | Elf city / Forest | High Elf, Arcane schools | Elven city with two dungeons; Dreaming Grove at root level; Sealed Archive; caster hub |
+| [The Greyfen](greyfen.md) | 10–20 | Fen / Predecessor site | Cartography Hall, Walking Name Order | Fen corridor between Ardenmoor and Greyveil; Foundation Ring edges surface here; Peat Hall dungeon |
+| [Aelindra](aelindra.md) | 10–20 | Elf city / Forest | High Elf, Arcane schools | Elven city with two dungeons; Dreaming Grove at root level; Sealed Archive; caster hub |
 | [Cogsworth](cogsworth.md) | 10–25 | City / Underground | Gnome, Kobold | Mechanical city; Tinkering hub; multi-level industrial zone |
 | [Dwarven Mountain Holds](dwarven_holds.md) | 15–25 | Underground / Dungeon | Dwarf clans | Forge culture; Runeforging center; deep mine dungeons |
 | [Harrowmere](harrowmere.md) | 15–30 | Coastal port city | Dockmasters' Compact | Independent neutral port; maritime content; sea dungeon |
+| [The Drowned Hold](drowned_hold.md) | 20–30 | Maritime dungeon / Architect node | Dominion garrison (undead), Dockmasters' Compact | Dominion naval installation on Architect seamount in Harrow Bay; six levels; 300-year-old garrison; confirmed network node |
 | [Greyveil](greyveil.md) | 20–30 | Human city | Merchants, Rogues, Bards | Urban intrigue zone; large neutral city; Bard colleges |
 | [Auroch's Rest](aurochs_rest.md) | 20–30 | Plains / Minotaur lands | Minotaur clans | Open plains; Minotaur cultural center; Shaman tradition |
 | [The Blighted Wood](blighted_wood.md) | 20–30 | Corrupted forest | Corrupted Grove, Wood Elf rangers | Dying eastern Ardenmoor; horror content; vertical tree dungeon |
@@ -29,6 +31,8 @@ The world of Project Dawn is divided into named zones. Each zone is a discrete a
 | [Khala Savannahs](khala_savannahs.md) | 30–45 | Savannah / Grassland | Felhari clans | Felhari homeland; Spirit-Walker tradition; wide open terrain |
 | [Ixareth-Kul — Ruined Dominion](ruined_dominion.md) | 35–50 | Open world dungeon | Bonewrights, Soulcarvers, Ash Scribes | Fallen Kel`varath capital; three-faction conflict; Dominion Vault endgame |
 | [Vel'Sharath](vel_sharath.md) | 35–50 | Dark Elf city / Underground | Dark Elf, Necromancer guilds | Evil-aligned city; dangerous for Good characters; deepest Evil content |
+| [The Dominion Vault](dominion_vault.md) | 50+ | Endgame dungeon / Architect terminus | Three Dominion Orders | Sealed archive beneath Ixareth-Kul; Architect survey terminus; Gate-Key required; server-scale event |
+| [The Rising Shell](rising_shell.md) | 50+ | Endgame dungeon / Architect anchor node | Walking Name Order | Architect terminal node rising from Cinder Deep; post-Calibration State access; consequence of the server-scale event manifests here |
 
 ## Zone Design Principles
 

@@ -5,6 +5,7 @@ signal group_updated(membership_changed: bool)
 signal invite_received(from_peer_id: int, from_name: String)
 
 const MAX_SIZE := 6
+const GROUP_XP_BONUS := 1.20
 
 var in_group := false
 var is_leader := false
@@ -89,6 +90,17 @@ func pass_leadership(new_leader_peer_id: int) -> void:
 	leader_peer_id = new_leader_peer_id
 	_broadcast_state()
 
+func distribute_kill_xp(base_xp: int) -> void:
+	if not in_group or members.size() <= 1:
+		PlayerStats.gain_xp(base_xp)
+		return
+	var share: int = maxi(1, int(base_xp * GROUP_XP_BONUS / members.size()))
+	PlayerStats.gain_xp(share)
+	for m in members:
+		var pid: int = m.get("peer_id", 0)
+		if pid != 0 and pid != _my_peer_id:
+			_rpc_receive_xp.rpc_id(pid, share)
+
 func broadcast_group_chat(sender_name: String, msg: String) -> void:
 	if not in_group:
 		return
@@ -160,6 +172,14 @@ func _rpc_member_stat_delta(peer_id: int, hp: float, max_hp: float, mp: float, m
 	_update_member_entry({"peer_id": peer_id, "hp": hp, "max_hp": max_hp,
 		"mp": mp, "max_mp": max_mp, "sta": sta, "max_sta": max_sta})
 	group_updated.emit(false)
+
+@rpc("any_peer", "reliable")
+func _rpc_receive_xp(amount: int) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	for m in members:
+		if m.get("peer_id", 0) == sender:
+			PlayerStats.gain_xp(amount)
+			return
 
 @rpc("any_peer", "reliable")
 func _rpc_receive_disband() -> void:

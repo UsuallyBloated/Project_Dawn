@@ -28,6 +28,8 @@ Harrow Island, a half-mile offshore, was used as a pirate anchorage for decades 
 
 **Named:** Captain Morreth the Returned (level 28) — the captain knows she's dead. She's not angry about it. She's angry about something else, and completing the dungeon involves finding out what. Resolution options: destroy her (standard loot), fulfill the unfinished business she's waiting for (rare outcome, significant reward, unlocks a follow-up questline in Greyveil).
 
+The above describes the upper structure only. The Dominion installation continues below Morreth's level; the full six-level zone — including the 300-year-old Dominion garrison and the confirmed Architect node at the lowest level — is documented in [drowned_hold.md](drowned_hold.md).
+
 ## Services
 - Harrowmere harbormaster (maritime travel: Ashen Coast route, open sea exploration)
 - The Ember Hearth (inn; regen; no questions)

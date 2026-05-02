@@ -38,7 +38,9 @@ No burial sites have been located. Either the Architects did not bury their dead
 | The Calibration Tower | Eastern Badlands, ruined | Surface explored | Interior collapsed; original purpose unclear |
 | The Quiet Dig | Underdark Crossing, off main tunnels | Sealed | Third Digger found it; its survey orders point here |
 | The Roofless Hall | Ixareth-Kul ruins, inner ring | Claimed by Dominion Orders | Something sits the throne; three orders dispute access |
-| The Tide Marks | Ashen Coast, sea cliffs | Partially accessible | Carved into cliff face; calibrated for tidal timing |
+| The Tide Marks | Ashen Coast, sea cliffs | Partially accessible | Carved into cliff face; calibrated for this structure's tidal position |
+| The Drowned Hold | Harrow Bay, on Architect seamount | Confirmed ✦; lowest level not yet reached | Dominion naval installation built over the node; garrison on 300-year-old orders; monitoring station transmits continuously |
+| The Rising Shell | Cinder Deep, offshore Ashen Coast | Confirmed ✦✦✦; post-Calibration State access | Terminal node; partially surfaced; Tide Marks calibrated to its depth; rising approximately forty feet over sixty years |
 | The Deep Rooms | Blighted Wood, beneath Heartwood | Speculative | Referenced in Architect notations found at Sunken Ziggurat |
 
 ---

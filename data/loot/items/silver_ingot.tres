@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Silver Ingot"
+description = "A bar of refined silver. Prized by jewelers and enchanters."
+type = 10
+rarity = 0
+stack_size = 10
+vendor_price = 42

@@ -32,11 +32,22 @@ func _process(delta: float) -> void:
 
 func setup_for_class(_player_class: String) -> void:
 	var effective := Alignment.get_effective_class()
-	available.clear()
+	var current_level := PlayerStats.level
+	var candidates: Array[SpellData] = []
 	for sname in _all_spells:
 		var spell: SpellData = _all_spells[sname]
 		if spell.allowed_classes.is_empty() or effective in spell.allowed_classes:
-			available.append(spell)
+			if current_level >= spell.min_level:
+				candidates.append(spell)
+	# For ranked spells, keep only the highest accessible rank per base spell.
+	var by_base: Dictionary = {}
+	for spell in candidates:
+		var base := spell.base_name if spell.base_name != "" else spell.spell_name
+		if not by_base.has(base) or spell.rank > (by_base[base] as SpellData).rank:
+			by_base[base] = spell
+	available.clear()
+	for spell in by_base.values():
+		available.append(spell as SpellData)
 	available.sort_custom(func(a, b): return a.spell_name < b.spell_name)
 	spells_changed.emit()
 
@@ -152,6 +163,12 @@ func _apply_spell(spell: SpellData) -> void:
 	if spell.target_type == SpellData.TargetType.ENEMY:
 		Combat.deal_spell_damage(int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness * dmg_mult), spell.damage_type)
 
+	if spell.target_type == SpellData.TargetType.AOE:
+		Combat.deal_aoe_spell_damage(
+			spell.aoe_radius,
+			int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness * dmg_mult),
+			spell.damage_type)
+
 	if spell.target_type == SpellData.TargetType.PET_SUMMON:
 		PetManager.summon(spell.pet_type)
 
@@ -252,7 +269,7 @@ func _apply_spell(spell: SpellData) -> void:
 	if spell.is_song:
 		BardSongs.activate_song(spell)
 
-	if spell.target_type == SpellData.TargetType.ENEMY:
+	if spell.target_type in [SpellData.TargetType.ENEMY, SpellData.TargetType.AOE]:
 		BuffManager.break_stealth()
 
 	if spell.discipline != "":
@@ -350,6 +367,7 @@ func _load_spells() -> void:
 		s.damage_shield_amount   = d.get("damage_shield_amount", 0.0)
 		s.damage_shield_duration = d.get("damage_shield_duration", 0.0)
 		s.is_song             = d.get("is_song", false)
+		s.min_level           = d.get("min_level", 1)
 		s.str_buff                  = d.get("str_buff", 0)
 		s.agi_buff                  = d.get("agi_buff", 0)
 		s.int_buff                  = d.get("int_buff", 0)
@@ -358,7 +376,15 @@ func _load_spells() -> void:
 		s.max_hp_buff               = d.get("max_hp_buff", 0.0)
 		s.max_mp_buff               = d.get("max_mp_buff", 0.0)
 		s.primary_stat_buff_duration = d.get("primary_stat_buff_duration", 0.0)
-		s.discipline = SpellDefinitions.DISCIPLINE.get(d["name"], "")
+		s.aoe_radius = d.get("aoe_radius", 0.0)
+		s.rank      = d.get("rank", 1)
+		s.base_name = d.get("base_name", "")
+		# Discipline: exact name first, then fall back to base_name so rank II/III
+		# spells don't need a separate DISCIPLINE entry.
+		var disc: String = SpellDefinitions.DISCIPLINE.get(d["name"], "")
+		if disc == "" and s.base_name != "":
+			disc = SpellDefinitions.DISCIPLINE.get(s.base_name, "")
+		s.discipline = disc
 		for c in d["classes"]:
 			s.allowed_classes.append(c)
 		_all_spells[s.spell_name] = s
@@ -384,4 +410,5 @@ func _parse_target_type(s: String) -> SpellData.TargetType:
 		"PET_HEAL":   return SpellData.TargetType.PET_HEAL
 		"PORT":       return SpellData.TargetType.PORT
 		"BIND":       return SpellData.TargetType.BIND
+		"AOE":        return SpellData.TargetType.AOE
 	return SpellData.TargetType.NONE

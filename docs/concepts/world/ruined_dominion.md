@@ -24,9 +24,9 @@ The grand avenue through the outer ring is still walkable — the stone was laid
 ## Dungeon — The Dominion Vault
 *Levels 44–50.*
 
-Beneath the palace, sealed by the last High Commander three hours before she died. The three orders know it exists. None have cracked the seal. The dungeon is the Vault itself: four levels of Dominion-era security, each designed by a different High Commander over the Dominion's history. The bottom level holds what was sealed.
+Beneath the palace, sealed by the last High Commander three hours before she died. The three orders know it exists. None have cracked the seal. The dungeon is documented fully in [dominion_vault.md](dominion_vault.md), which supersedes the summary below.
 
-What was sealed is not established here — it is a GM-defined or late-game revelation. The Vault Guardian at the bottom is whatever was put there to protect it. The three orders are each running their own parallel attempt to get inside; player faction choice determines which order they're helping and what they find out.
+In brief: the Vault descends through Dominion-era archive levels before reaching an Architect foundation below the Dominion's own construction. Access requires the Gate-Key (from the Gate-Warden at the Breach) and completion of the Architect network survey chain. The three Dominion Orders each maintain a presence and are in active conflict over access and what the Vault's contents mean. The last High Commander personally sealed Level 3's sanctum. The survey terminus — the Architect network's destination — is at the lowest level.
 
 **Named:** The Last Seal (level 50 encounter, not a single mob) — a layered puzzle-combat encounter involving the Vault's final security system, designed to be fought as a full group with players from each role.
 

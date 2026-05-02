@@ -22,6 +22,10 @@ Tracks implementation status of the tradeskill system. Design docs live alongsid
 | ✅ | Tinkering inputs — Small Gear, Coiled Spring added to Blacksmithing |
 | ✅ | Thread recipes — Linen Thread (from Flax), Thick Silk Thread (from Spiderling Silk) |
 | ✅ | Arrow components — Arrow Fletching (from Feather), Flint Arrowhead (from Flint) |
+| ✅ | All 150+ item `.tres` files — ores, ingots, hides, herbs, armor, weapons, tools, consumables |
+| ✅ | `data/loot_tables.gd` — MobLootTables: 12 mob archetypes (Wolf, Gnoll, Skeleton, Rat, Boar, Snake, Bear, Spider, Bat, Zombie, Bandit) + generic fallback; partial mob-name matching; SKINNING dict with pelt-quality progression |
+| ✅ | Vendor NPCs — `scenes/vendor_npc.tscn`; Elara (General Merchant) + Brom (Provisioner) in world.tscn; F key opens shop; 10 vendor types in `data/vendor_definitions.gd` |
+| ✅ | Test Panel "Give Crafting Materials" — seeds 35 stacks covering all 8 Phase 2 loops |
 
 ---
 
@@ -29,85 +33,81 @@ Tracks implementation status of the tradeskill system. Design docs live alongsid
 
 *Everything else depends on this. No other systems required.*
 
-### Item Definitions (GDScript)
+### Item Definitions
 
-The recipe file references item names as strings. These need matching `ItemData` resources or a central `item_definitions.gd` lookup so the combine window and loot system can find them.
+All items implemented as `.tres` files in `data/loot/items/` — no separate `item_definitions.gd` needed; `crafting.gd` and `vendor_window.gd` both load by path.
 
 | Status | Item |
 |---|---|
-| ⬜ | Create `data/item_definitions.gd` — static dictionary of all items keyed by name |
-| ⬜ | Raw materials (ores, herbs, hides, wood, stone, grave yields) |
-| ⬜ | Processed materials (ingots, leather strips, thread, rope, vials) |
-| ⬜ | Crafted equipment (cloth/leather/chain armor, weapons, jewelry) |
-| ⬜ | Consumables (potions, food, drink, poisons) |
-| ⬜ | Tools and components (pickaxe, sewing needle, smithing hammer, tinkering kit, etc.) |
-| ⬜ | Vendor-only items — Flour, Water Flask, Empty Bottle, Tarnished Silver Setting, Yeast |
+| ✅ | Raw materials — copper/tin/iron/silver/gold/mithril/adamantite ores, herbs, hides, wood, flax, flint, coal |
+| ✅ | Processed materials — all ingots, leather strips/slabs, thread, vials, wires |
+| ✅ | Crafted equipment — cloth/leather/chain/copper armor sets, weapons, jewelry |
+| ✅ | Consumables — potions, food, drink, poisons |
+| ✅ | Tools and components — Smithing Hammer, Sewing Needle, Skinning Knife, Tinkering Kit, pickaxe (not yet used) |
+| ✅ | Vendor-only items — Flour, Water Flask, Empty Bottle, Tarnished Silver Setting, Yeast all have `.tres` files and appear in vendor stock |
 
 ### Combine Window (UI)
 
 | Status | Item |
 |---|---|
-| ⬜ | Combine window scene — lists recipes for selected tradeskill |
-| ⬜ | Ingredient slot UI — drag items from inventory into combine slots |
-| ⬜ | Attempt combine button — calls `Crafting.try_combine()` |
-| ⬜ | Success/failure feedback in chat log |
-| ⬜ | Skill XP display on success |
-| ⬜ | Trivial recipe indicator (grey out when no XP awarded) |
-| ⬜ | Station gate — recipe greyed out if required station not nearby |
+| ✅ | Combine window — `scripts/crafting_window.gd`; K to open; skill dropdown, recipe list, ingredient have/need display, combine button, result feedback |
+| ✅ | Success/failure feedback in chat log |
+| ✅ | Skill XP display on success |
+| ✅ | Trivial recipe indicator — skill level vs. trivial_at shown on recipe detail |
+| ⬜ | Drag-drop ingredient slots — currently shows have/need counts; no drag-drop |
+| ✅ | Station gate enforcement — `StationManager.nearby_station` checked in `Crafting.try_combine()`; combine button disabled when not at station; F key near station opens crafting window |
 
 ### Crafting Stations (World Objects)
 
 | Status | Item |
 |---|---|
-| ⬜ | Forge scene — opens Blacksmithing/Weaponsmithing/Smelting combine window on interact |
-| ⬜ | Alchemy Table — opens Alchemy/Poison Making combine window |
-| ⬜ | Kiln — opens Pottery combine window |
-| ⬜ | Oven — opens Baking combine window |
-| ⬜ | Brewing Barrel — opens Brewing combine window |
+| ✅ | Forge — placed in world.tscn at (-4,0,5); colored orange-red; proximity registers in StationManager |
+| ✅ | Alchemy Table — placed at (-4,0,11); purple |
+| ✅ | Kiln — placed at (-4,0,14); brown |
+| ✅ | Oven — placed at (-4,0,8); brown |
+| ✅ | Brewing Barrel — placed at (-4,0,17); dark brown |
 
 ### Loot Table System
 
-Required for Cloth Scraps, Metal Bits, Feathers, mob venoms, and all mob-drop raw materials.
-
 | Status | Item |
 |---|---|
-| ⬜ | `data/loot_tables.gd` — per-enemy loot tables with drop chance and qty range |
-| ⬜ | Wire loot roll into enemy death in `enemy.gd` |
-| ⬜ | Humanoid mobs (bandits, cultists, zombies) — drop Cloth Scraps |
-| ⬜ | Bird mobs — drop Feather, Raw Egg |
-| ⬜ | Construct/golem mobs — drop Metal Bits |
-| ⬜ | Wolf mobs — drop Wolf Meat (already have Wolf Pelts from skinning) |
+| ✅ | `data/loot_tables.gd` — per-enemy loot tables with drop chance and qty range |
+| ✅ | Loot roll wired to enemy death — `autoloads/loot.gd` connects `enemy.died`; `MobLootTables.build()` called from `enemy._build_default_loot_table()` |
+| ✅ | Humanoid mobs (Gnoll, Zombie, Bandit) — drop Cloth Scraps |
+| ✅ | Wolf mobs — drop Wolf Meat, pelts, Sinew |
+| ⬜ | Bird mobs — drop Feather, Raw Egg (no bird mob type yet) |
+| ⬜ | Construct/golem mobs — dedicated table (Bandit table has Metal Bits as approximation) |
 
 ---
 
 ## Phase 2 — First Tradeskills Playable
 
-*Requires Phase 1. Targets the shortest path to a working crafting loop.*
+*All loops now testable via Test Panel + Vendor NPCs. Station enforcement still needed for oven/forge/alchemy table recipes.*
 
 | Status | Tradeskill | Loop |
 |---|---|---|
-| ⬜ | Smelting → Blacksmithing | Mine Copper Ore → smelt Copper Ingot → smith Copper Chain Vest → equip |
-| ⬜ | Tanning → Leatherworking | Skin wolf → tan Cured Leather Strip → craft Leather Vest → equip |
-| ⬜ | Tailoring | Loot Cloth Scraps from humanoid → spin Linen Thread from Flax → craft Cloth Robe |
-| ⬜ | Alchemy (White) | Pick Feverfew + Bloodmoss → combine at alchemy table → Minor Healing Potion |
-| ⬜ | Baking | Buy Flour + Water Flask from vendor → bake Bread Loaf → eat for HP regen buff |
-| ⬜ | Brewing | Buy Barley + Hops + Yeast → brew Crude Ale → drink for MP regen buff |
-| ⬜ | Fletching | Quarry Flint → knap Flint Arrowheads → combine with Hardwood Shafts + Feathers → Arrow Bundle |
-| ⬜ | Jewelry Crafting | Mine Silver Ore → smelt Silver Ingot → draw Silver Wire → craft Silver Ring → equip |
+| ✅ | Smelting → Blacksmithing | Copper Ore + Coal → smelt Copper Ingot → smith Copper Chain Vest; all items exist; works via test panel |
+| ✅ | Tanning → Leatherworking | Skin wolf (F key + Skinning Knife) → tan Cured Leather Strip → craft Leather Vest; full live loop |
+| ✅ | Fletching | Buy Hardwood Shaft + Flint from vendor → Flint Arrowhead → Arrow Bundle; no station needed |
+| ✅ | Jewelry Crafting | Buy Silver Ore from Blacksmith → smelt Silver Ingot → draw Silver Wire → craft Silver Ring; no station needed |
+| 🔨 | Tailoring | Cloth Scraps from General Merchant or humanoid drops; Flax from vendor; works via test panel; no dedicated cloth-mob drops yet |
+| 🔨 | Alchemy (White) | Herbs buyable from Alchemist vendor; station gate not enforced, so combines succeed anywhere |
+| 🔨 | Baking | Flour + Water Flask buyable from Provisioner; station gate not enforced |
+| 🔨 | Brewing | All ingredients buyable from Provisioner; station gate not enforced |
 
 ---
 
 ## Phase 3 — Gathering Nodes
 
-*Requires the loot table and world object systems. Makes gathering skills functional.*
+*Loot table system is done. World object infrastructure still needed for nodes.*
 
 | Status | Skill | Notes |
 |---|---|---|
-| ⬜ | Mining nodes | Ore vein scene; depletes on harvest; respawn timer; requires Pickaxe in inventory |
+| ✅ | Skinning | `is_skinnable` export auto-detected from mob name; `try_skin()` on enemy corpse (F key within 3m); requires Skinning Knife; pelt quality scales with Skinning skill; XP granted; skinnable corpses linger 30s |
+| ✅ | Mining nodes | `scenes/mining_node.tscn` + `scripts/mining_node.gd`; depletes on harvest; respawn timer (60–90s); requires Pickaxe; XP to Mining skill; TinVein1/2 and SilverVein1 placed in world.tscn |
 | ⬜ | Coal seam nodes | Separate node type from ore; skill 0; no tool required beyond pickaxe |
 | ⬜ | Herbalism nodes | Ground-level spawns; biome-specific; some night-only |
 | ⬜ | Logging nodes | Tree objects; requires Axe; yields timber type based on zone |
-| ⬜ | Skinning | Add `is_skinnable` flag to enemy; require Skinning Knife in inventory; yield based on Skinning skill vs. creature tier |
 | ⬜ | Quarrying nodes | Stone outcroppings; requires Maul and Chisel; yields Flint, Limestone, etc. |
 | ⬜ | Fishing | Rod equips to weapon slot; cast at water node; wait for catch event |
 | ⬜ | Trapping | Place Trap Kit in world; return to collect; skill affects what tier spawns |
@@ -126,7 +126,7 @@ Required for Cloth Scraps, Metal Bits, Feathers, mob venoms, and all mob-drop ra
 | ⬜ | Grave Robbing | Alignment ≤ Neutral; requires Shovel; world burial nodes | Burial site world objects |
 | ⬜ | Necromantic Scribing | Evil alignment + Necromancer/SK class; requires Grave Robbing output | Grave Robbing nodes |
 | ⬜ | Shadow Weaving | Dark Elf exclusive; requires Shadow Fiber (shadow biome Herbalism) | Shadow biome zone |
-| ⬜ | Tinkering | Gnome/Kobold exclusive; requires Tinkering Kit | Phase 2 combine window |
+| ⬜ | Tinkering | Gnome/Kobold exclusive; requires Tinkering Kit | Phase 2 combine window ✅ |
 | ⬜ | Black Alchemy | Alignment ≤ Neutral; same skill as White | Phase 2 alchemy; alignment gate check in combine window |
 | ⬜ | Bone Carving | Ogre/Troll exclusive (Minotaur via Ancestor Vessel transformation) | Phase 3 mob loot for bones |
 

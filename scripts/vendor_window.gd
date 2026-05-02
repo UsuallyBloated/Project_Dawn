@@ -181,11 +181,10 @@ func _populate_list() -> void:
 			_list_btns.append(btn)
 	else:
 		_sell_items.clear()
-		for slot in Inventory.slots:
-			if slot != null:
-				var item: ItemData = slot["item"]
-				if item.vendor_price > 0:
-					_sell_items.append(slot)
+		for slot in Inventory.all_slots():
+			var item: ItemData = slot["item"]
+			if item.vendor_price > 0:
+				_sell_items.append(slot)
 		for i in _sell_items.size():
 			var slot = _sell_items[i]
 			var item: ItemData = slot["item"]
@@ -373,9 +372,7 @@ func _set_result(msg: String, ok: bool) -> void:
 
 func _load_item(item_name: String) -> ItemData:
 	var path := "res://data/loot/items/%s.tres" % item_name.to_lower().replace(" ", "_")
-	if ResourceLoader.exists(path):
-		return load(path) as ItemData
-	return null
+	return load(path) as ItemData
 
 func _add_detail_label(text: String, color: Color, font_size: int) -> void:
 	var lbl := Label.new()

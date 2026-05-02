@@ -1,8 +1,11 @@
-[gd_scene load_steps=14 format=4 uid="uid://h1lkpabnydg3"]
+[gd_scene load_steps=17 format=4 uid="uid://h1lkpabnydg3"]
 
 [ext_resource type="Script" uid="uid://td3xlala4836" path="res://scripts/player.gd" id="1_a202f"]
 [ext_resource type="PackedScene" uid="uid://bm4x7kpqr2n5" path="res://scenes/hud.tscn" id="2_hudsc"]
 [ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="3_enemy"]
+[ext_resource type="PackedScene" path="res://scenes/vendor_npc.tscn" id="10_vendor"]
+[ext_resource type="PackedScene" path="res://scenes/crafting_station.tscn" id="11_craft"]
+[ext_resource type="PackedScene" path="res://scenes/mining_node.tscn" id="12_mine"]
 [ext_resource type="Script" path="res://scripts/zone_manager.gd" id="9_zone"]
 [ext_resource type="Script" path="res://scripts/terrain_mesh.gd" id="4_terrain"]
 [ext_resource type="Script" path="res://scripts/hotbar.gd" id="5_hotbar"]
@@ -105,3 +108,51 @@ script = ExtResource("5_hotbar")
 
 [node name="LevelUpPopup" type="CanvasLayer" parent="."]
 script = ExtResource("6_levelup")
+
+[node name="GeneralMerchant" parent="." instance=ExtResource("10_vendor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 5)
+vendor_name = "Elara — General Merchant"
+vendor_type = "General Merchant"
+
+[node name="Provisioner" parent="." instance=ExtResource("10_vendor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 5)
+vendor_name = "Brom — Provisioner"
+vendor_type = "Provisioner"
+
+[node name="Forge" parent="." instance=ExtResource("11_craft")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 5)
+station_type = "forge"
+
+[node name="Oven" parent="." instance=ExtResource("11_craft")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 8)
+station_type = "oven"
+
+[node name="AlchemyTable" parent="." instance=ExtResource("11_craft")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 11)
+station_type = "alchemy_table"
+
+[node name="Kiln" parent="." instance=ExtResource("11_craft")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 14)
+station_type = "kiln"
+
+[node name="BrewingBarrel" parent="." instance=ExtResource("11_craft")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 17)
+station_type = "brewing_barrel"
+
+[node name="TinVein1" parent="." instance=ExtResource("12_mine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, -5)
+ore_type = "Tin Ore"
+required_skill = 0
+respawn_time = 60.0
+
+[node name="TinVein2" parent="." instance=ExtResource("12_mine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -8)
+ore_type = "Tin Ore"
+required_skill = 0
+respawn_time = 60.0
+
+[node name="SilverVein1" parent="." instance=ExtResource("12_mine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, -5)
+ore_type = "Silver Ore"
+required_skill = 50
+respawn_time = 90.0

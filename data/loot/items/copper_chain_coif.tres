@@ -1,0 +1,13 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Copper Chain Coif"
+description = "A hood of interlocked copper rings. Offers modest protection to the head."
+type = 2
+rarity = 0
+stack_size = 1
+bonus_constitution = 1
+bonus_max_hp = 8.0
+bonus_armor = 5
+armor_type = "chain"
+vendor_price = 40

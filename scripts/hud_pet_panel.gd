@@ -1,4 +1,4 @@
-extends Panel
+extends DraggablePanel
 
 var _name_label: Label = null
 var _level_label: Label = null

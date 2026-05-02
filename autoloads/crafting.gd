@@ -102,6 +102,10 @@ func try_combine(recipe: Dictionary, tradeskill: String) -> String:
 	if level < required:
 		return "You need %s skill %d to attempt this (you have %d)." % [tradeskill, required, level]
 
+	var station: String = recipe.get("station", "")
+	if station != "" and StationManager.nearby_station != station:
+		return "You must be at a %s to craft this." % station.replace("_", " ").capitalize()
+
 	var tool: String = recipe.get("tool", "")
 	if tool != "" and count_item(tool) == 0:
 		return "You need a %s to craft this." % tool
@@ -137,15 +141,15 @@ func try_combine(recipe: Dictionary, tradeskill: String) -> String:
 
 func count_item(item_name: String) -> int:
 	var total := 0
-	for slot in Inventory.slots:
-		if slot != null and (slot["item"] as ItemData).item_name == item_name:
+	for slot in Inventory.all_slots():
+		if (slot["item"] as ItemData).item_name == item_name:
 			total += int(slot["count"])
 	return total
 
 func _remove_item_by_name(item_name: String, qty: int) -> void:
 	var item_ref: ItemData = null
-	for slot in Inventory.slots:
-		if slot != null and (slot["item"] as ItemData).item_name == item_name:
+	for slot in Inventory.all_slots():
+		if (slot["item"] as ItemData).item_name == item_name:
 			item_ref = slot["item"]
 			break
 	if item_ref != null:
@@ -153,9 +157,7 @@ func _remove_item_by_name(item_name: String, qty: int) -> void:
 
 func _load_item_by_name(item_name: String) -> ItemData:
 	var path := "res://data/loot/items/%s.tres" % item_name.to_lower().replace(" ", "_")
-	if ResourceLoader.exists(path):
-		return load(path) as ItemData
-	return null
+	return load(path) as ItemData
 
 # --- Registration ------------------------------------------------------------
 

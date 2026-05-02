@@ -14,27 +14,27 @@
          |                           |
          | [WEST PATH]    [EAST PATH]|
          | from Ardenmoor  to higher |
-         |                  elevels  |
+         |                  levels   |
          ↓                           ↓
     ┌────────────────────────────────────────────┐
     │              AELINDRA                      │
     │                                            │
-    │  ↑↑↑↑↑  CANOPY LEVEL  ↑↑↑↑↑↑↑           │
+    │  ↑↑↑↑↑  CANOPY LEVEL  ↑↑↑↑↑↑↑              │
     │  [high branches]  [sky bridges]            │
     │  [Wizard platforms]  [starwatch]           │
-    │  ─────────────────────────────────────    │
-    │  ↑↑↑↑↑  UPPER LEVEL   ↑↑↑↑↑↑↑           │
+    │  ─────────────────────────────────────     │
+    │  ↑↑↑↑↑  UPPER LEVEL   ↑↑↑↑↑↑↑              │
     │  [living quarters — in the trees]          │
     │  [guild houses] [Bard stages]              │
-    │  ─────────────────────────────────────    │
+    │  ─────────────────────────────────────     │
     │        GROUND LEVEL (the trunks)           │
     │  [market]  [temple district] [gates]       │
-    │  ─────────────────────────────────────    │
-    │  ↓↓↓↓↓  ROOT LEVEL    ↓↓↓↓↓↓↓           │
+    │  ─────────────────────────────────────     │
+    │  ↓↓↓↓↓  ROOT LEVEL    ↓↓↓↓↓↓↓              │
     │  [archives]  [root-halls]  [old city]      │
-    │  ─────────────────────────────────────    │
-    │  ↓↓↓↓↓  DEEP ROOTS    ↓↓↓↓↓↓↓           │
-    │  ░░░ THE DREAMING GROVE (dungeon) ░░░     │
+    │  ─────────────────────────────────────     │
+    │  ↓↓↓↓↓  DEEP ROOTS    ↓↓↓↓↓↓↓              │
+    │  ░░░ THE DREAMING GROVE (dungeon) ░░░      │
     └────────────────────────────────────────────┘
 ```
 
@@ -58,18 +58,18 @@
     │                    [third one in the region] │
     │                    [this one is the biggest] │
     │                                              │
-    │  ┌────────────────────────────────────────┐ │
-    │  │         TEMPLE DISTRICT                │ │
-    │  │                                        │ │
-    │  │  ┌──────────────┐  ┌────────────────┐ │ │
-    │  │  │ SOLRATH      │  │  ERINDRA GROVE │ │ │
-    │  │  │ (small here; │  │  [primary]     │ │ │
-    │  │  │  the Elves   │  │  [Grove-Keeper │ │ │
-    │  │  │  tolerate it)│  │   Silindra]    │ │ │
-    │  │  └──────────────┘  │  [root-door    │ │ │
-    │  │                    │   to archive]  │ │ │
-    │  │                    └────────────────┘ │ │
-    │  └────────────────────────────────────────┘ │
+    │  ┌────────────────────────────────────────┐  │
+    │  │         TEMPLE DISTRICT                │  │
+    │  │                                        │  │
+    │  │  ┌──────────────┐  ┌────────────────┐ │   │
+    │  │  │ SOLRATH      │  │  ERINDRA GROVE │ │   │
+    │  │  │ (small here; │  │  [primary]     │ │   │
+    │  │  │  the Elves   │  │  [Grove-Keeper │ │   │
+    │  │  │  tolerate it)│  │   Silindra]    │ │   │
+    │  │  └──────────────┘  │  [root-door    │ │   │
+    │  │                    │   to archive]  │ │   │
+    │  │                    └────────────────┘ │   │
+    │  └────────────────────────────────────────┘  │
     │                                              │
     │  [EAST GATE]  → higher-level zones           │
     └──────────────────────────────────────────────┘
@@ -128,7 +128,7 @@
     ░  │  [halls built 3000 years ago     │   ░
     ░  │   are now fully enclosed]        │   ░
     ░  └──────────────────┬───────────────┘   ░
-    ░                     │                    ░
+    ░                     │                   ░
     ░  ┌──────────────────┴───────────────┐   ░
     ░  │       ARCHIVES                   │   ░
     ░  │  three thousand years of records │   ░
@@ -140,9 +140,9 @@
     ░  │   current state]                 │   ░
     ░  │  [nobody asks what that means]   │   ░
     ░  └──────────────────────────────────┘   ░
-    ░                     ↓ deeper             ░
-    ░                                          ░
-    ░  THE DREAMING GROVE (dungeon — below)    ░
+    ░                     ↓ deeper            ░
+    ░                                         ░
+    ░  THE DREAMING GROVE (dungeon — below)   ░
     ░  ┌──────────────────────────────────┐   ░
     ░  │  levels 18-25                    │   ░
     ░  │  [dream-logic dungeon]           │   ░

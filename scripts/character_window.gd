@@ -18,6 +18,9 @@ extends DraggablePanel
 @onready var atk_value: Label = $MarginContainer/VBox/AttribGrid/V_ATK
 @onready var xp_bar: ProgressBar = $MarginContainer/VBox/XPBar
 
+var _skills_rows: Dictionary = {}       # weapon skill_key -> {name: Label, val: Label}
+var _armor_skill_rows: Dictionary = {}  # armor skill_key -> {name: Label, val: Label}
+
 @onready var _l_hp: Label = $MarginContainer/VBox/VitalsGrid/L_HP
 @onready var _l_mp: Label = $MarginContainer/VBox/VitalsGrid/L_MP
 @onready var _l_st: Label = $MarginContainer/VBox/VitalsGrid/L_ST
@@ -50,6 +53,9 @@ func _ready() -> void:
 	_style_xp_bar()
 	_setup_tooltips()
 	_refresh()
+	_build_skills_section()
+	WeaponSkills.skill_advanced.connect(_on_skill_advanced)
+	ArmorSkills.skill_advanced.connect(_on_armor_skill_advanced)
 
 func _apply_panel_style() -> void:
 	var style := StyleBoxFlat.new()
@@ -127,3 +133,119 @@ func _on_level_changed(new_level: int) -> void:
 	xp_value.text = "%d / %d" % [PlayerStats.xp, PlayerStats.xp_to_next]
 	xp_bar.max_value = PlayerStats.xp_to_next
 	xp_bar.value = PlayerStats.xp
+	_refresh_skills()
+	_refresh_armor_skills()
+
+func _build_skills_section() -> void:
+	var vbox: VBoxContainer = $MarginContainer/VBox
+
+	vbox.add_child(HSeparator.new())
+
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.custom_minimum_size = Vector2(0, 180)
+	vbox.add_child(scroll)
+
+	var inner := VBoxContainer.new()
+	inner.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	inner.add_theme_constant_override("separation", 4)
+	scroll.add_child(inner)
+
+	var header := Label.new()
+	header.text = "Combat Skills"
+	header.add_theme_color_override("font_color", UITheme.C_TITLE)
+	header.add_theme_font_size_override("font_size", 12)
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	inner.add_child(header)
+
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 8)
+	grid.add_theme_constant_override("v_separation", 3)
+	inner.add_child(grid)
+
+	for skill in WeaponSkillDefinitions.ALL:
+		var name_lbl := Label.new()
+		name_lbl.text = WeaponSkillDefinitions.DISPLAY.get(skill, skill)
+		name_lbl.add_theme_font_size_override("font_size", 11)
+		name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(name_lbl)
+
+		var val_lbl := Label.new()
+		val_lbl.add_theme_font_size_override("font_size", 11)
+		val_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
+		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		grid.add_child(val_lbl)
+		_skills_rows[skill] = {"name": name_lbl, "val": val_lbl}
+
+	_refresh_skills()
+
+	inner.add_child(HSeparator.new())
+
+	var armor_header := Label.new()
+	armor_header.text = "Armor Skills"
+	armor_header.add_theme_color_override("font_color", UITheme.C_TITLE)
+	armor_header.add_theme_font_size_override("font_size", 12)
+	armor_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	inner.add_child(armor_header)
+
+	var armor_grid := GridContainer.new()
+	armor_grid.columns = 2
+	armor_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	armor_grid.add_theme_constant_override("h_separation", 8)
+	armor_grid.add_theme_constant_override("v_separation", 3)
+	inner.add_child(armor_grid)
+
+	for skill in ArmorSkillDefinitions.ALL:
+		var name_lbl := Label.new()
+		name_lbl.text = ArmorSkillDefinitions.DISPLAY.get(skill, skill)
+		name_lbl.add_theme_font_size_override("font_size", 11)
+		name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		armor_grid.add_child(name_lbl)
+
+		var val_lbl := Label.new()
+		val_lbl.add_theme_font_size_override("font_size", 11)
+		val_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
+		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		armor_grid.add_child(val_lbl)
+		_armor_skill_rows[skill] = {"name": name_lbl, "val": val_lbl}
+
+	_refresh_armor_skills()
+
+func _refresh_skills() -> void:
+	for skill in _skills_rows:
+		var cap := WeaponSkills.get_cap(skill)
+		var row: Dictionary = _skills_rows[skill]
+		var name_lbl: Label = row["name"]
+		var val_lbl: Label = row["val"]
+		if cap == 0:
+			name_lbl.visible = false
+			val_lbl.visible = false
+		else:
+			name_lbl.visible = true
+			val_lbl.visible = true
+			val_lbl.text = "%d / %d" % [WeaponSkills.get_current(skill), cap]
+
+func _on_skill_advanced(_skill_name: String, _new_value: int, _cap: int) -> void:
+	_refresh_skills()
+
+func _refresh_armor_skills() -> void:
+	for skill in _armor_skill_rows:
+		var cap := ArmorSkills.get_cap(skill)
+		var row: Dictionary = _armor_skill_rows[skill]
+		var name_lbl: Label = row["name"]
+		var val_lbl: Label = row["val"]
+		if cap == 0:
+			name_lbl.visible = false
+			val_lbl.visible = false
+		else:
+			name_lbl.visible = true
+			val_lbl.visible = true
+			val_lbl.text = "%d / %d" % [ArmorSkills.get_current(skill), cap]
+
+func _on_armor_skill_advanced(_skill_name: String, _new_value: int, _cap: int) -> void:
+	_refresh_armor_skills()

@@ -1,5 +1,5 @@
 class_name Pet
-extends CharacterBody3D
+extends MobileCharacter
 
 signal died(pet)
 signal hp_changed(current: float, maximum: float)
@@ -80,6 +80,9 @@ func _tick_follow() -> void:
 	else:
 		velocity.x = 0.0
 		velocity.z = 0.0
+		# Face the same direction the player faces so the pet presents its front to the camera
+		var player_forward := -_player.global_transform.basis.z
+		_face_toward(global_position + player_forward)
 
 func _tick_attack(delta: float) -> void:
 	if not _target_valid():
@@ -225,14 +228,4 @@ func _target_valid() -> bool:
 	return _attack_target != null and is_instance_valid(_attack_target) and not _attack_target.is_dead
 
 func _move_toward(target_pos: Vector3) -> void:
-	var dir := (target_pos - global_position)
-	dir.y = 0.0
-	dir = dir.normalized()
-	velocity.x = dir.x * move_speed
-	velocity.z = dir.z * move_speed
-	_face_toward(target_pos)
-
-func _face_toward(target_pos: Vector3) -> void:
-	var look_pos := Vector3(target_pos.x, global_position.y, target_pos.z)
-	if look_pos.distance_to(global_position) > 0.01:
-		look_at(look_pos, Vector3.UP)
+	_move_at_speed(target_pos, move_speed)

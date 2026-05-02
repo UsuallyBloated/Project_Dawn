@@ -14,6 +14,8 @@ const STAND_HEIGHT = 2.0
 const CROUCH_HEIGHT = 1.0
 const STAND_CAMERA_Y = 1.6
 const CROUCH_CAMERA_Y = 0.7
+const FALL_DAMAGE_THRESHOLD := 9.0  # m/s downward; below this landing is safe
+const FALL_DAMAGE_MULT := 5         # HP lost per m/s above threshold
 
 enum PlayerState { STANDING, CROUCHING, SITTING }
 
@@ -24,6 +26,8 @@ var is_crouching: bool:
 var is_camera_active := false
 var _is_local := false
 var _heading_train_accum: float = 0.0
+var _was_on_floor: bool = true
+var _peak_fall_speed: float = 0.0
 
 signal state_changed(new_state: int)
 
@@ -95,21 +99,23 @@ func stand() -> void:
 	if state != PlayerState.STANDING:
 		_enter_state(PlayerState.STANDING)
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
+	if not _is_local:
+		return
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			is_camera_active = event.pressed
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if event.pressed else Input.MOUSE_MODE_VISIBLE
-		elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			spring_arm.spring_length = maxf(spring_arm.spring_length - ZOOM_STEP, ZOOM_MIN)
+			get_viewport().set_input_as_handled()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			spring_arm.spring_length = minf(spring_arm.spring_length + ZOOM_STEP, ZOOM_MAX)
-
+			get_viewport().set_input_as_handled()
 	if event is InputEventMouseMotion and is_camera_active:
 		rotate_y(-event.relative.x * MOUSE_SENSITIVITY)
 		camera_pivot.rotate_x(-event.relative.y * MOUSE_SENSITIVITY)
 		camera_pivot.rotation.x = clamp(camera_pivot.rotation.x, -PI / 2.0, PI / 2.0)
+		get_viewport().set_input_as_handled()
 
+func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.is_action("toggle_crouch"):
 			if state == PlayerState.STANDING:
@@ -123,6 +129,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				_enter_state(PlayerState.STANDING)
 
 func _physics_process(delta: float) -> void:
+	# Poll hardware state so camera works even when UI panels consume the event.
+	var want_cam := Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
+	if want_cam != is_camera_active:
+		is_camera_active = want_cam
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if want_cam else Input.MOUSE_MODE_VISIBLE
+
 	if state == PlayerState.SITTING:
 		var moving := (
 			Input.is_action_pressed("move_forward") or
@@ -138,13 +150,20 @@ func _physics_process(delta: float) -> void:
 			move_and_slide()
 			return
 
-	if is_on_floor():
+	var now_on_floor := is_on_floor()
+	if now_on_floor and not _was_on_floor:
+		_on_land()
+	_was_on_floor = now_on_floor
+
+	if now_on_floor:
+		_peak_fall_speed = 0.0
 		if Input.is_action_pressed("jump") and state != PlayerState.SITTING:
 			velocity.y = JUMP_VELOCITY
 		else:
 			velocity.y = maxf(velocity.y, 0.0)
 	else:
 		velocity.y += GRAVITY * delta
+		_peak_fall_speed = maxf(_peak_fall_speed, -velocity.y)
 
 	var direction := Vector3.ZERO
 	if Input.is_action_pressed("move_forward"):
@@ -172,3 +191,14 @@ func _physics_process(delta: float) -> void:
 		_heading_train_accum = 0.0
 
 	move_and_slide()
+
+func _on_land() -> void:
+	if _peak_fall_speed <= FALL_DAMAGE_THRESHOLD:
+		return
+	# TODO: skip if BuffManager has levitate/feather fall active
+	var dmg := maxi(1, int((_peak_fall_speed - FALL_DAMAGE_THRESHOLD) * FALL_DAMAGE_MULT))
+	Combat.receive_player_damage(dmg, null, "Fall")
+	CombatLog.add_line(
+		"You hit the ground hard for %d damage." % dmg,
+		CombatLog.MsgType.DAMAGE_IN)
+	DamageNumbers.spawn_incoming(global_position, dmg)

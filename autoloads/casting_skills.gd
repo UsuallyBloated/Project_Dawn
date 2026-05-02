@@ -1,13 +1,4 @@
-extends Node
-
-signal skill_advanced(skill_name: String, new_value: int, cap: int)
-
-var _skills: Dictionary = {}
-var _player_class: String = ""
-var _level: int = 1
-
-func _ready() -> void:
-	PlayerStats.level_changed.connect(_on_level_changed)
+extends PassiveSkillTracker
 
 func initialize(player_class: String, level: int) -> void:
 	_player_class = player_class
@@ -15,21 +6,6 @@ func initialize(player_class: String, level: int) -> void:
 	_skills.clear()
 	for skill in CastingSkillDefinitions.ALL:
 		_skills[skill] = CastingSkillDefinitions.get_starting_value(player_class, skill)
-
-func try_advance(skill_name: String) -> void:
-	if _player_class == "" or not _skills.has(skill_name):
-		return
-	var current: int = _skills[skill_name]
-	var cap: int = CastingSkillDefinitions.get_cap(_player_class, skill_name, _level)
-	if cap == 0 or current >= cap:
-		return
-	var advance_chance := 0.2 * (1.0 - float(current) / float(cap))
-	if randf() < advance_chance:
-		_skills[skill_name] = current + 1
-		skill_advanced.emit(skill_name, _skills[skill_name], cap)
-
-func get_current(skill_name: String) -> int:
-	return _skills.get(skill_name, 0)
 
 func get_cap(skill_name: String) -> int:
 	return CastingSkillDefinitions.get_cap(_player_class, skill_name, _level)
@@ -67,6 +43,3 @@ func get_interrupt_chance() -> float:
 		return 1.0
 	var ratio := float(get_current("channeling")) / float(cap)
 	return maxf(0.10, 0.70 - ratio * 0.60)
-
-func _on_level_changed(new_level: int) -> void:
-	_level = new_level

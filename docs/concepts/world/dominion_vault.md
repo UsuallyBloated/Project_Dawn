@@ -1,0 +1,110 @@
+# The Dominion Vault
+*Endgame Dungeon — Level 50+ — Ixareth-Kul Interior*
+
+## Overview
+
+Beneath Ixareth-Kul's inner ring, the Kel`varath Dominion's last High Commander sealed an archive three hours before she died. She sealed it knowing the coalition forces were inside the palace. She sealed it anyway. Whatever she considered worth protecting, she considered it worth dying to protect.
+
+Three hundred years later, the three Dominion Orders agree on one thing: it is still sealed. They do not agree on what it contains, what it means, or who has the right to open it. They have been arguing these questions in the ruins for three hundred years without resolution. The arguments have been conducted in armed standoff, in careful diplomacy, and in the occasional exchange of casualties on particularly contested days. The structure of the disagreement has not changed.
+
+The Vault opens when two conditions are met simultaneously: the Gate-Key, obtained from the Gate-Warden at the Breach, and the assembled survey data from the Architect node network. The Gate-Key is an Architect access key for the survey terminus level — it is not an authorization token. The Order of the Final Survey believes it is an authorization token. They are wrong in a specific and load-bearing way, and the mechanism at Level 3 will make this clear at the point of use. The survey data is not incidental to the terminus — the terminus requires it to function. An empty terminus is still a terminus, but it cannot produce the conclusion the Architects designed it to produce.
+
+No one has opened the Vault in Year 847 CR. The three Orders are as close as they have ever been.
+
+## Setting
+
+The Vault is not a room. It is a structure beneath a structure — four interior levels of Dominion archive and security built on top of an Architect foundation chamber that predates the Dominion by at minimum three thousand years. The Dominion did not build down to the foundation and then build around it. They built their vault to protect the foundation they found, and every High Commander after the first added to that protection. Three hundred years of Dominion investment in a site none of the High Commanders could enter freely, because the foundation inside requires access conditions none of the Dominion's best scholars ever fully decoded.
+
+The inner ring approach is the most actively contested open terrain in Ixareth-Kul. The three Orders have operated here for decades in a standoff maintained by mutual self-interest: all three know that opening the Vault ends the standoff, and all three know that if they commit their forces to fighting each other instead of watching the Vault, someone else will walk through the middle while they are occupied. The Vault's eventual opening will be the end of the standoff and the beginning of something none of the Orders have been able to model in advance, because modeling it requires knowing what is inside.
+
+Below the surface, the Vault is organized. The Dominion was systematic, and their archive is systematic even in three-hundred-year abandonment. The stonework is intact, the seals are intact, the construction that was built to last has lasted. What has changed is the three Orders' presence: incursions over decades have left layered evidence in the outer levels — marks on the stonework, abandoned camp equipment, in some cases bodies in varying stages of preservation. The outer levels are a palimpsest of Dominion original, Orders intrusion, and archive guardian response to that intrusion.
+
+## Enemies
+
+| Enemy | Level Range | Notes |
+|---|---|---|
+| Sealed Record Archivist | 50 | Defends Sealed Record sectors; hostile to non-Order personnel in their areas; the most systematic faction presence in the outer archive |
+| Walking Name Seeker | 50 | Defends Walking Name sectors; more likely to offer conditional passage than engage immediately; has been deeper than the other Orders and knows what the others don't |
+| Final Survey Agent | 50 | The most aggressive faction presence; hostile by default beyond their perimeter; they have been trying to get through the Level 3 sanctum door for nine years and patience is no longer their primary resource |
+| Vault Warden | 50 | Dominion-era construct; neutral to entry; hostile to removal of archive material without survey completion; all three Orders have lost personnel to this distinction |
+| Archive Sentinel | 50 | Pre-Dominion construct; older than the Vault; distinguishable from Vault Wardens by construction material and stillness — Wardens patrol, Sentinels stand; responds to Architect authorization only; not hostile unless the survey terminus threshold is approached without the Gate-Key |
+| The Classification Chamber's Third Occupant | 50 | The Sealed Record will not discuss it. The Walking Name will say, if pressed, that they have not been close enough to characterize it. It is in the Level 2 Deep Archive's most intact section. The Dominion scholars' operational logs reference it in three entries that stop mid-sentence. |
+
+## Dungeon — The Dominion Vault
+
+*Level 50+. Access requirements: Gate-Key (obtained from the Gate-Warden at the Breach) AND Architect node survey reports assembled across the network. Both conditions must be present simultaneously. The Gate-Key opens the Level 3 terminal threshold. The survey reports determine whether the Level 4 terminus activates and at what completeness.*
+
+**Pre-Vault — The Inner Ring Approach:**
+
+The surface approach to the Vault entrance through Ixareth-Kul's inner ring. All three Orders hold positions; transit depends on faction standing. Players with high standing in one Order can move through that Order's sector without challenge. Players without established standing navigate terrain that all three Orders treat as a perimeter.
+
+Director Sathren's position, if players accepted the joint approach: she is here with a small Final Survey unit, prepared and waiting. Her route relies on players' faction access, which she does not have and does not pretend to have. She is not anxious. She has been planning this for nine years and has planned for most contingencies. She has not planned for the possibility that her Gate-Key theory is wrong — she does not believe it is wrong. She will find out at Level 3.
+
+Players who declined Sathren's joint approach: she is not here. She has a separate angle. She will be available for a specific conversation after the Vault's terminus is reached, regardless of whether she was present.
+
+**Level 1 — The Outer Archive** (50):
+
+The Vault's first interior level. Centuries of attempted incursion have left layered evidence: scratches, abandoned equipment, and in some sections bodies in the mid-stages of the preservation process unique to this archive's environmental conditions. Each Order has established a base camp in their controlled sector. The three-way standoff here has been running for decades. It is tense in the specific way that long-standing standoffs are tense — not acute, but structural, the kind of tension that all parties have adapted to and that makes any change to the structure feel dangerous.
+
+The archive material on this level reflects the last decades of the Dominion: end-of-empire scholarship, increasingly urgent theories about the Architect sites, records that read like people trying to understand something quickly before they ran out of time. Players with Kel`varath reading skill can access this material; higher skill unlocks more of it. The Orders' agents are using this level's archive as a staging area for their attempt to go deeper. They are not cooperating. They are each waiting for the others to run out of resources first.
+
+Vault Wardens patrol the uncontested sections of the archive, maintaining Dominion security protocols three hundred years past the last Dominion instruction. They are neutral to entry. They are not neutral to archive material leaving the vault without survey completion. Each Order has learned this the hard way.
+
+**Level 2 — The Deep Archive** (50):
+
+The Dominion at organizational height. The archive here is deliberate and systematic — not the desperate scholarship of Level 1, but three hundred years of careful, funded, institutional study. The Dominion knew about the Architect sites for the full duration of their empire, documented them methodically, and sealed this documentation in the Vault so the knowledge would survive the Dominion's end.
+
+It survived.
+
+Players with Kel`varath reading skill (100+) have access to the archive's main sequence: detailed surveys of every known Architect site — including several the current world has entirely lost — Dominion theories about the network's function (some partially correct, most wrong in ways that illuminate what the Dominion misunderstood and why), and the operational logs of the Dominion Survey Corps describing their contractor work in the bureaucratic language that makes very strange commissions sound routine.
+
+**The Missing Volume:** A physically distinctive document — bound in the material the Dominion Survey Corps used for its highest-authority classified contracts, partially damaged but readable in the relevant sections. Archivist Valex has been seeking this volume for thirty-one years. Players who locate it and read its content find: the commissioning authority for the Survey Corps' largest Architect contract — the organization whose designator appears in the Nameless Commander's standing orders without a name attached — referred to itself in this document using an Architect-derived designation that translates approximately as *"the prior index"* or *"the standing record."* The document describes this organization as having maintained continuous observation of Architect sites since before the Dominion's founding, and possibly since the network's initial construction. Who the prior index is now, whether it continues to operate, whether players have already encountered any of its work without recognizing it as such: the document raises these questions and does not answer them. The document should be brought to Valex. She will need time before she can respond to what it contains.
+
+**Level 3 — The Sealed Sanctum** (50):
+
+What the last High Commander personally sealed. The Dominion's highest-classification Architect project records — the Survey Corps' classified contracts, the Convergence Point documentation, the Roofless Hall's operational history as the Dominion understood it. And, at the sanctum's far end, the terminal mechanism the Dominion built their entire sanctum around.
+
+The mechanism is an Architect artifact. The Dominion identified it as a door-control and they were approximately correct. Presenting the Gate-Key to the reader causes the sanctum door to open. The Final Survey Order has been right about this much for nine years.
+
+What the Final Survey has wrong: they believe the Key says *I am authorized.* The reader's notation response, visible before the door opens, says something different. Players who examine it find: a destination marker. The reader is not asking who the bearer is. It is noting where the bearer is going — specifically, the survey terminus on Level 4 — and facilitating the passage. The Architects built an access system that anyone holding the destination credential can use. The authorization theory is wrong. The Key does not say *I am permitted.* It says *I am going here.* The distinction matters because it changes what the Key *is*, who can use it, and what the Final Survey's entire theory of exclusive authorized access has been built on.
+
+Director Sathren, if present, examines the reader's notation response and is quiet for an interval that players who know her will recognize as significant. *"I had this wrong. We have had this wrong for nine years. The question was never who is authorized. The question is what happens when you arrive."* She closes her notes. Opens them. Writes something down. She is not available for conversation for approximately thirty seconds. When she is available again, she is focused forward in a way that suggests she has updated and is moving.
+
+**Level 4 — The Survey Terminus** (50):
+
+Below the Dominion construction, the Architect foundation begins. There is no gradual transition — the Dominion stonework stops at a precise line, and Architect stonework begins. The Dominion built their sanctum down to this boundary and stopped. The foundation was here before the Vault was built; the Vault was built to protect it.
+
+The chamber below the Level 3 threshold is larger than the structure above it permits. The Dominion architects documented this inconsistency in the operational logs accessible on Level 2; their records note the measured dimensions of the chamber and do not attempt to explain them. Players who read those logs before reaching this level arrive already knowing the room should not be this size.
+
+The remainder here is different from every other remainder in the network. Previous sites — the Drowned Hold's monitoring station, Varek's B3, the Dreaming Grove's Warden chamber — have the quality of waiting or transmitting: presence reduced to its essential function, persisting. This remainder is not transmitting toward anything. It is receiving. It has been accumulating the surveys transmitted by every other network node for the full period since the last Calibration State. The combined survey data from every node players have visited arrives here. Players who have completed the Drowned Hold's monitoring station, the Dreaming Grove's Warden interaction, the Peat Hall's Level 3 notation, and the other network survey points find the terminus in a state that corresponds to what they sent — and find the terminus's response to that data is what the Architects designed this to do.
+
+The physical space of the Level 4 chamber is the most intact Architect construction ever reached. No wear, no age, no evidence of the three thousand years since the network's construction. The notation on the walls is the most complete Architect text assembled at any single location — more than the Peat Hall's Level 2, more than Varek's ninety years of notes combined. Players with Architect notation skill (150+) can read extended passages describing the network's purpose, the Remainder Protocol's design, and what the Architects built this system for.
+
+The conclusion of that reading is not documented here. It is designed to be discovered in-game. The zone file describes the terminus as it is encountered; what the terminus renders from the combined surveys is the server-scale event.
+
+## Faction Notes
+
+**Order of the Sealed Record (Valex's Order):** Their priority is the archive, particularly Level 2. They are the most useful faction for players attempting the archive levels and the least useful for reaching the terminus. Players aligned with the Sealed Record receive significant assistance navigating the Level 2 archive and hostile resistance from the other Orders' agents in contested sections. Valex, if players deliver the missing volume to her, processes what it contains carefully before advising. She will not recommend rushing the terminus activation until she has worked through the volume's implications for what "the prior index" means. She is aware this takes time she may not have. She is doing it anyway.
+
+**Order of the Walking Name:** They want to receive whatever communication the Vault contains. They are the most cooperative faction for players attempting the lower levels, having been deeper than they usually acknowledge and having documented the Level 3 mechanism more thoroughly than anyone else. Their agents at Level 3 have three years of observations on the reader mechanism — observations that become fully interpretable when players present the Gate-Key and see the destination notation response. Sharing this response with the Walking Name before acting on it is significant standing advancement and produces a specific dialogue from their senior representative that is not available otherwise.
+
+**Order of the Final Survey (Sathren's Order):** They want the terminus activated. They are the least cooperative with the other Orders and the most cooperative with players who are demonstrably going to the terminus. Their nine years of failed attempts to reach Level 3 end when players use the Gate-Key; their reaction to the destination notation — that the Key is not an authorization token — reorganizes nine years of theoretical work on the spot. Their agents follow the faction standing structure described in the faction document; inside the Vault, their operational posture shifts from aggressive to facilitative as players descend, because they want someone to get to the terminus more than they want to control who does.
+
+**The Three-Way Conflict:** The inner ring and Level 1 are active conflict zones. Below Level 1, all three Orders have agents but not massed forces — each has been trying to go deeper without provoking a fight that destroys the archive they all want. The deeper players go, the more the Orders need them to proceed rather than wanting to stop them. By Level 3, all three factions will offer facilitation over obstruction, because they need someone to reach the terminus. By Level 4, the faction conflict has resolved into three different parties all wanting to know what the terminus renders, for three different reasons.
+
+## Key NPCs
+
+**Archivist Valex** — Sealed Record. She is in the Level 1 outer archive, which she has occupied as a base camp for three years — documenting what the other Orders are documenting, building the most complete external record of the Vault's outer levels that exists, and steadily working toward the goal she will not name in any official context but which she has been working toward for thirty-one years: finding the missing volume. She will tell players approximately where it is in the Level 2 archive sequence. She has never been to Level 2. She is sixty years old. She has been in the ruins for thirty-one years. If someone else finds the volume before she does and brings it to her, she will read it in their presence and say nothing for a time, and then: *"This changes the scope of the question. I thought I knew what we would find in the terminus. I still think I know. But the scope is different."* She will want a complete account of what the terminus renders. She will sit with it for however long she needs and then she will have something to say. It is worth hearing.
+
+**Director Sathren** — Final Survey. Either in the inner ring approach (joint approach) or outside Ixareth-Kul's inner ring (declined). If outside: she is not waiting. She has an agent inside the Vault who is reporting to her. She knows what players find within approximately a day. She is available for a specific conversation after players have reached the terminus, regardless of whether she was present. If the terminus rendered what she predicted: *"I wish I had been there."* Not regret — something more complicated. If the terminus rendered something she did not predict: *"What was it, then?"* She means the question. She will update. That is who she is.
+
+**Seeker Drathis Vehn** — Walking Name. He is on the Level 3 sanctum approach, applying his Maren field observations to the reader mechanism that has occupied his Order for years. He came back from Maren with documentation that he immediately recognized as relevant to the Level 3 mechanism and has been trying to get the Orders to agree on access for three years since. He is tired of the standoff in the specific way that very patient people are tired of things that have lasted longer than patience is designed to last. He will cooperate with players who are clearly going to the terminus. He will insist on witnessing what happens at the terminus if the joint approach includes him. What he saw in Maren has made him reasonably sure he knows what the terminus will render. He is the Walking Name's best-prepared scholar for this moment, and also the one who has the most personally invested in being right about what "receiving a communication" from the Architects actually means.
+
+## Cross-Zone Connections
+
+- **Ixareth-Kul — Ruined Dominion** — The surface zone. Faction standing with the three Orders is built here before the Vault opens. The inner ring approach connects directly to Ixareth-Kul's contested inner sectors.
+- **The Breach** — The Gate-Key from the Gate-Warden is one of the two access requirements. Players who have completed the Breach's Warden-Captain questline arrive with an understanding of the Gate-Key's actual nature — as an Architect destination credential rather than a faction authorization — that the Final Survey does not have and that the Level 3 reader confirms.
+- **Architect network** — Every node survey assembled across the network contributes to the terminus's activation. The completeness of the survey determines the completeness of what the terminus renders. Partial surveys produce partial conclusions. The Architects designed the system to reward complete work.
+- **Third Digger chain** — Players who delivered the cessation notice and completed the Third Digger's transit route have an alternate entrance to Level 4 that bypasses the three Orders' contested upper levels entirely. The transit route opens a chamber adjacent to the terminus and arrives with the full context of the Third Army's parallel mission followed from the other direction.
+- **The Drowned Hold** — The monitoring station's continuous transmission is part of the survey data the terminus processes. Players who have completed the Drowned Hold's Level 6 arrive at the terminus with the additional context of having been inside the node that was watching the anchor site.
+- **The Rising Shell** — Sequential with the terminus event, not simultaneous. The Vault delivers the Calibration State's conclusion. The Rising Shell is where the conclusion's consequence manifests. These are separate events. Players who access the Rising Shell before the terminus event have not completed the necessary condition for access and cannot enter.

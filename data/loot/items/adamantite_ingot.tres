@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Adamantite Ingot"
+description = "A bar of smelted adamantite. The hardest metal known, prized by master smiths."
+type = 10
+rarity = 2
+stack_size = 10
+vendor_price = 360

@@ -61,7 +61,9 @@ The world is roughly divided into four geographic regions connected by a central
 | Dwarven Holds | Cogsworth, Underdark Crossing | Tunnels |
 | Kobold Deeps | Cogsworth lower levels, Underdark Crossing | Tunnels |
 | Greyveil | Greenshire, Ardenmoor, Harrowmere, Auroch's Rest | Roads / river |
-| Harrowmere | Greyveil, Southeastern Marshlands, Ashen Coast | Road / maritime |
+| Harrowmere | Greyveil, Southeastern Marshlands, Ashen Coast, Drowned Hold | Road / maritime |
+| The Greyfen | Ardenmoor, Greyveil, Fae Mere | Fen paths |
+| The Drowned Hold | Harrowmere (maritime) | Maritime; Compact license required |
 | Auroch's Rest | Greyveil, Eastern Badlands | Road / plains |
 | Ashfang Hold | Eastern Badlands | Interior road |
 | Eastern Badlands | Auroch's Rest, Ashfang Hold, Khala Savannahs | Plains / scrubland |
@@ -71,7 +73,9 @@ The world is roughly divided into four geographic regions connected by a central
 | Southeastern Marshlands | Harrowmere, Ashen Coast, Ixareth-Kul, Bonecourt, Khala Savannahs | River / coast |
 | Khala Savannahs | Eastern Badlands, Southeastern Marshlands | Plains / southern pass |
 | Bonecourt | Southeastern Marshlands, Ixareth-Kul | Ancient road |
-| Ixareth-Kul | Southeastern Marshlands, Bonecourt | Jungle road |
+| Ixareth-Kul | Southeastern Marshlands, Bonecourt, Dominion Vault | Jungle road / sub-surface |
+| The Dominion Vault | Ixareth-Kul (sub-surface access) | Dungeon descent; Gate-Key required |
+| The Rising Shell | Ashen Coast (maritime; post-Calibration State) | Maritime; post-event access |
 | Underdark Crossing | Kobold Deeps, Dwarven Holds, Vel'Sharath | Tunnel network |
 | Vel'Sharath | Underdark Crossing | Tunnel |
 
@@ -81,9 +85,10 @@ The world is roughly divided into four geographic regions connected by a central
 
 Harrowmere is the primary maritime hub. The Harrowmere harbormaster offers routes to:
 - **Ashen Coast** — standard route; available once Harrowmere Compact faction Tier 1+
-- **Open sea exploration** — unlocks after Drowned Hold questline; leads to unnamed island content (future zone stub)
+- **The Drowned Hold** — Harrow Bay, half-mile offshore; available with Compact standing; full zone documented in [drowned_hold.md](drowned_hold.md)
+- **Maren (Varethian Shore)** — trans-Bone-Reach crossing; unlocks after Drowned Hold questline completion and Compact license; the harbormaster does not explain the connection between these requirements
 
-The Ashen Coast's Cinder Docks offer a secondary maritime connection back to Harrowmere.
+The Ashen Coast's Cinder Docks offer a secondary maritime connection back to Harrowmere, and — post-Calibration State — to The Rising Shell offshore in the Cinder Deep.
 
 ---
 

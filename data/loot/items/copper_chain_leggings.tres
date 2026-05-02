@@ -1,0 +1,13 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Copper Chain Leggings"
+description = "Copper ring leggings offering solid leg protection. A common choice for new warriors."
+type = 4
+rarity = 0
+stack_size = 1
+bonus_constitution = 1
+bonus_max_hp = 12.0
+bonus_armor = 9
+armor_type = "chain"
+vendor_price = 55

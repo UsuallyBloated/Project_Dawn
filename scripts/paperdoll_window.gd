@@ -30,6 +30,8 @@ var _tooltip_label: Label = null
 func _ready() -> void:
 	_build_ui()
 	Equipment.equipment_changed.connect(_on_equipment_changed)
+	for slot_name in SLOT_LAYOUT:
+		_refresh_slot(slot_name)
 
 func _build_ui() -> void:
 	custom_minimum_size = Vector2(220, 280)
@@ -115,6 +117,7 @@ func _make_slot_frame(slot_name: String) -> Panel:
 	icon.set_meta("is_icon", true)
 	frame.add_child(icon)
 
+	# Slot-type label — visible when slot is empty.
 	var lbl := Label.new()
 	lbl.text = SLOT_LABELS.get(slot_name, slot_name)
 	lbl.anchor_top = 0.65
@@ -125,6 +128,19 @@ func _make_slot_frame(slot_name: String) -> Panel:
 	lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	lbl.set_meta("is_label", true)
 	frame.add_child(lbl)
+
+	# Item name label — visible when something is equipped.
+	var item_lbl := Label.new()
+	item_lbl.anchor_right = 1.0
+	item_lbl.anchor_bottom = 1.0
+	item_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	item_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	item_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	item_lbl.add_theme_font_size_override("font_size", 7)
+	item_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+	item_lbl.set_meta("is_item_label", true)
+	item_lbl.visible = false
+	frame.add_child(item_lbl)
 
 	frame.mouse_entered.connect(_on_slot_hover.bind(slot_name))
 	frame.mouse_exited.connect(func(): _tooltip_panel.visible = false)
@@ -143,6 +159,18 @@ func _refresh_slot(slot_name: String) -> void:
 	var icon := _find_meta_child(frame, "is_icon") as TextureRect
 	if icon:
 		icon.texture = item.icon if item != null else null
+	var slot_lbl  := _find_meta_child(frame, "is_label")      as Label
+	var item_lbl  := _find_meta_child(frame, "is_item_label") as Label
+	if item != null:
+		if slot_lbl: slot_lbl.visible = false
+		if item_lbl:
+			item_lbl.text    = item.item_name
+			item_lbl.visible = true
+	else:
+		if slot_lbl: slot_lbl.visible = true
+		if item_lbl:
+			item_lbl.text    = ""
+			item_lbl.visible = false
 
 func _on_slot_hover(slot_name: String) -> void:
 	var item = Equipment.equipped.get(slot_name)

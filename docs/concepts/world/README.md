@@ -45,6 +45,7 @@ One entry per file. For the canonical zone map and level ranges, start with `wor
 | File | Zone | Level |
 |---|---|---|
 | [harrowmere.md](harrowmere.md) | Harrowmere (neutral coastal port) | 15–30 |
+| [drowned_hold.md](drowned_hold.md) | The Drowned Hold (Dominion installation / Architect node; maritime) | 20–30 |
 | [aurochs_rest.md](aurochs_rest.md) | Auroch's Rest (Minotaur plains) | 20–30 |
 | [eastern_badlands.md](eastern_badlands.md) | Eastern Badlands (Ogre / Troll / Half-Ogre) | 25–40 |
 | [ashfang_hold.md](ashfang_hold.md) | Ashfang Hold (Evil starting area) | 1–10 |
@@ -62,6 +63,7 @@ One entry per file. For the canonical zone map and level ranges, start with `wor
 | [khala_savannahs.md](khala_savannahs.md) | Khala Savannahs (Felhari homeland) | 30–45 |
 | [bonecourt.md](bonecourt.md) | The Bonecourt (Kel'varath starting area) | 1–10 |
 | [ruined_dominion.md](ruined_dominion.md) | Ixareth-Kul — Ruined Dominion | 35–50 |
+| [dominion_vault.md](dominion_vault.md) | The Dominion Vault (endgame; Architect survey terminus; three Orders) | 50+ |
 
 ---
 
@@ -80,6 +82,7 @@ One entry per file. For the canonical zone map and level ranges, start with `wor
 | File | Zone | Level |
 |---|---|---|
 | [wizard_tower.md](wizard_tower.md) | Varek's Spire (wizard tower; Residual) | 25–35 |
+| [rising_shell.md](rising_shell.md) | The Rising Shell (Architect anchor node; offshore Cinder Deep; post-Calibration State) | 50+ |
 
 ---
 
@@ -90,11 +93,12 @@ One entry per file. For the canonical zone map and level ranges, start with `wor
 | [npc_varek.md](npc_varek.md) | Varek Lenn — Wizard, 133 years; Residual researcher | Varek's Spire, B3 |
 | [npc_archivist_valex.md](npc_archivist_valex.md) | Archivist Valex — Cartography Hall | Aelindra |
 | [npc_bess_holloway.md](npc_bess_holloway.md) | Bess Holloway | Greenshire |
-| [npc_sereth_dolan.md](npc_sereth_dolan.md) | Sereth Dolan | — |
-| [npc_silindra.md](npc_silindra.md) | Silindra | — |
-| [npc_seeker_drathis.md](npc_seeker_drathis.md) | Seeker Drathis Vehn — Walking Name Order | Ixareth-Kul / Maren |
+| [npc_sereth_dolan.md](npc_sereth_dolan.md) | Sereth Dolan — Warden-Captain, Breach Wardens | The Breach |
+| [npc_silindra.md](npc_silindra.md) | Silindra Vaethas — Grove-Keeper | Aelindra, Root Quarter |
+| [npc_seeker_drathis.md](npc_seeker_drathis.md) | Seeker Drathis Vehn — Walking Name Order | Dominion Vault (returned from Maren) |
+| [npc_aldren_coss.md](npc_aldren_coss.md) | Aldren Coss (alias Kellen Post) — former Wizard, former Millhaven innkeeper | Harrowmere, Maritime Quarter |
 | [npc_nameless_commander.md](npc_nameless_commander.md) | The Nameless Commander — Third Army | Ashen Marches, Final Encampment |
-| [npc_director_sathren.md](npc_director_sathren.md) | Director Sathren | — |
+| [npc_director_sathren.md](npc_director_sathren.md) | Director Sathren — Order of the Final Survey | Ixareth-Kul |
 
 ---
 
@@ -117,7 +121,10 @@ One entry per file. For the canonical zone map and level ranges, start with `wor
 |---|---|---|---|
 | [faction_dockmasters_compact.md](faction_dockmasters_compact.md) | Dockmasters' Compact | Neutral (commercial) | Harrowmere |
 | [faction_breach_wardens.md](faction_breach_wardens.md) | Breach Wardens | Neutral (institutional) | The Breach; cross-zone |
+| [faction_breach_factions.md](faction_breach_factions.md) | Vanguard / Iron Camp | Good vs Evil (military) | The Breach |
 | [faction_dominion_orders.md](faction_dominion_orders.md) | The Three Dominion Orders | Evil-adjacent (scholarly) | Ixareth-Kul |
+| [faction_walking_name_order.md](faction_walking_name_order.md) | Walking Name Order | Neutral (scholarly) | Ixareth-Kul · Aelindra · The Greyfen · cross-zone |
+| [faction_grey_market.md](faction_grey_market.md) | The Grey Market | Neutral (commerce) | Underdark Crossing |
 
 ---
 
@@ -129,7 +136,6 @@ One entry per file. For the canonical zone map and level ranges, start with `wor
 | [six_fingered_builders.md](six_fingered_builders.md) | The Architects / Predecessors — confirmed sites, physical evidence, the network, the "remainder protocol" |
 | [varek_and_the_residual.md](varek_and_the_residual.md) | The Residual — what it is, Varek's ninety years, Floor 4, resolution paths, cross-zone connections |
 | [languages.md](languages.md) | Language system — racial starting languages, garble cipher, passive skill gain |
-| [dominion_war.md](dominion_war.md) | See above |
 
 ---
 
@@ -143,6 +149,7 @@ One entry per file. For the canonical zone map and level ranges, start with `wor
 | [creature_battle_remembering.md](creature_battle_remembering.md) | The Battle-Remembering — creature type / mystery |
 | [bess_quest_hook.md](bess_quest_hook.md) | Bess Holloway questline hook |
 | [aelindra_sealed_archive.md](aelindra_sealed_archive.md) | The Sealed Archive — Aelindra's locked section |
+| [felhari_far_runner.md](felhari_far_runner.md) | **The Far-Runner question** — Khala/Maren cross-continental ceremony; Encroaching Silence causation; six-hundred-year-old crossing; Shore clan descendants |
 
 ---
 

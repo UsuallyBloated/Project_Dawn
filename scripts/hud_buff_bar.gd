@@ -1,5 +1,6 @@
-extends HBoxContainer
+extends DraggablePanel
 
+var _hbox: HBoxContainer = null
 var _timer_labels: Dictionary = {}
 
 func _ready() -> void:
@@ -7,8 +8,21 @@ func _ready() -> void:
 	anchor_top    = 1.0
 	anchor_right  = 0.0
 	anchor_bottom = 1.0
-	position = Vector2(10.0, -152.0)
-	add_theme_constant_override("separation", 4)
+	offset_left   = 10.0
+	offset_right  = 310.0
+	offset_bottom = -152.0
+	offset_top    = -200.0
+	clip_contents = true
+
+	apply_style(Color(0.04, 0.03, 0.02, 0.70), UITheme.C_BORDER)
+
+	_hbox = HBoxContainer.new()
+	_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_hbox.offset_left = 3; _hbox.offset_top = 3
+	_hbox.offset_right = -3; _hbox.offset_bottom = -3
+	_hbox.add_theme_constant_override("separation", 4)
+	add_child(_hbox)
+
 	BuffManager.buffs_changed.connect(_on_buffs_changed)
 	_on_buffs_changed()
 
@@ -17,7 +31,7 @@ func _process(_delta: float) -> void:
 
 func _on_buffs_changed() -> void:
 	_timer_labels.clear()
-	for child in get_children():
+	for child in _hbox.get_children():
 		child.queue_free()
 	for h in BuffManager.get_hots():
 		_timer_labels["hot:%s" % h.spell_name] = _add_icon("hot", h.spell_name)
@@ -69,7 +83,7 @@ func _add_icon(type: String, spell_name: String) -> Label:
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(3)
 	icon.add_theme_stylebox_override("panel", style)
-	add_child(icon)
+	_hbox.add_child(icon)
 
 	var vbox := VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)

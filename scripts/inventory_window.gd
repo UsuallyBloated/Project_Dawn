@@ -1,31 +1,31 @@
 extends DraggablePanel
 
 const SLOT_SIZE := 48
-const COLS := 8
-const ROWS := 5
-
+const COLS := 2
 const C_BG := Color(0.07, 0.06, 0.04, 0.95)
 
-var _slot_cells: Array = []
+# Shared drag state — owned here, read by BagWindows.
+# drag_source_bi == -1  →  dragged from a base slot (drag_source_si = base index)
+# drag_source_bi >= 0   →  dragged from a bag slot  (bi = bag's base index, si = slot within bag)
+var drag_item: ItemData = null
+var drag_count: int = 0
+var drag_source_bi: int = -1
+var drag_source_si: int = -1
+var _drag_icon: TextureRect = null
+
+var _base_cells: Array = []   # BASE_SLOT_COUNT Panel nodes
+var _bag_windows: Array = []  # BASE_SLOT_COUNT BagWindow or null
 var _tooltip: PanelContainer = null
 var _tooltip_label: Label = null
 
-var _drag_item: ItemData = null
-var _drag_count: int = 0
-var _drag_source_slot: int = -1
-var _drag_icon: TextureRect = null
-
-var _destroy_btn: Button = null
-var _confirm_panel: Panel = null
-var _confirm_label: Label = null
-
 func _ready() -> void:
+	_bag_windows.resize(Inventory.BASE_SLOT_COUNT)
+	_bag_windows.fill(null)
 	_build_ui()
 	_build_drag_icon()
-	_build_confirm_dialog()
-	Inventory.inventory_changed.connect(_refresh)
+	Inventory.inventory_changed.connect(_refresh_all)
 	visibility_changed.connect(_on_visibility_changed)
-	_refresh()
+	_refresh_all()
 
 func _build_ui() -> void:
 	var style := StyleBoxFlat.new()
@@ -35,7 +35,8 @@ func _build_ui() -> void:
 	style.set_corner_radius_all(4)
 	add_theme_stylebox_override("panel", style)
 
-	custom_minimum_size = Vector2(COLS * SLOT_SIZE + 24, ROWS * SLOT_SIZE + 74)
+	var rows := ceili(float(Inventory.BASE_SLOT_COUNT) / float(COLS))
+	custom_minimum_size = Vector2(COLS * SLOT_SIZE + 24, rows * SLOT_SIZE + 54)
 
 	var vbox := VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -54,14 +55,20 @@ func _build_ui() -> void:
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
 
+	var stack_btn := Button.new()
+	stack_btn.text = "Stack All"
+	stack_btn.flat = true
+	stack_btn.add_theme_font_size_override("font_size", 10)
+	stack_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
+	stack_btn.tooltip_text = "Consolidate stackable items into fewest stacks"
+	stack_btn.pressed.connect(Inventory.stack_all)
+	header.add_child(stack_btn)
+
 	var close_btn := Button.new()
 	close_btn.text = "✕"
 	close_btn.flat = true
 	close_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
-	close_btn.pressed.connect(func():
-		if _drag_item != null:
-			_return_item_to_slot()
-		visible = false)
+	close_btn.pressed.connect(func(): visible = false)
 	header.add_child(close_btn)
 
 	var grid := GridContainer.new()
@@ -70,96 +77,19 @@ func _build_ui() -> void:
 	grid.add_theme_constant_override("v_separation", 4)
 	vbox.add_child(grid)
 
-	for i in Inventory.MAX_SLOTS:
+	for i in Inventory.BASE_SLOT_COUNT:
 		var cell := _make_slot_cell(i)
 		grid.add_child(cell)
-		_slot_cells.append(cell)
-
-	var bottom_row := HBoxContainer.new()
-	bottom_row.alignment = BoxContainer.ALIGNMENT_END
-	vbox.add_child(bottom_row)
-
-	_destroy_btn = Button.new()
-	_destroy_btn.text = "Destroy"
-	_destroy_btn.add_theme_font_size_override("font_size", 11)
-	_destroy_btn.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
-	_destroy_btn.pressed.connect(_on_destroy_pressed)
-	bottom_row.add_child(_destroy_btn)
+		_base_cells.append(cell)
 
 	var tip := make_tooltip()
 	_tooltip = tip[0]
 	_tooltip_label = tip[1]
 
-func _build_drag_icon() -> void:
-	_drag_icon = TextureRect.new()
-	_drag_icon.top_level = true
-	_drag_icon.z_index = 100
-	_drag_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_drag_icon.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
-	_drag_icon.size = Vector2(SLOT_SIZE, SLOT_SIZE)
-	_drag_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	_drag_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_drag_icon.modulate = Color(1.0, 1.0, 1.0, 0.85)
-	_drag_icon.visible = false
-	add_child(_drag_icon)
-
-func _build_confirm_dialog() -> void:
-	_confirm_panel = Panel.new()
-	_confirm_panel.top_level = true
-	_confirm_panel.z_index = 200
-	_confirm_panel.visible = false
-	_confirm_panel.custom_minimum_size = Vector2(300, 110)
-
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.10, 0.08, 0.06, 0.98)
-	style.border_color = Color(0.75, 0.25, 0.25)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	_confirm_panel.add_theme_stylebox_override("panel", style)
-
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 10)
-	vbox.offset_left = 14; vbox.offset_top = 14
-	vbox.offset_right = -14; vbox.offset_bottom = -14
-	_confirm_panel.add_child(vbox)
-
-	_confirm_label = Label.new()
-	_confirm_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_confirm_label.add_theme_color_override("font_color", UITheme.C_TEXT)
-	_confirm_label.add_theme_font_size_override("font_size", 12)
-	_confirm_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	vbox.add_child(_confirm_label)
-
-	var btn_row := HBoxContainer.new()
-	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	btn_row.add_theme_constant_override("separation", 16)
-	vbox.add_child(btn_row)
-
-	var yes_btn := Button.new()
-	yes_btn.text = "Yes"
-	yes_btn.custom_minimum_size = Vector2(64, 0)
-	yes_btn.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
-	yes_btn.pressed.connect(_confirm_destroy)
-	btn_row.add_child(yes_btn)
-
-	var no_btn := Button.new()
-	no_btn.text = "No"
-	no_btn.custom_minimum_size = Vector2(64, 0)
-	no_btn.pressed.connect(_cancel_destroy)
-	btn_row.add_child(no_btn)
-
-	add_child(_confirm_panel)
-
 func _make_slot_cell(index: int) -> Panel:
 	var cell := Panel.new()
 	cell.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
-	var s := StyleBoxFlat.new()
-	s.bg_color = UITheme.C_SLOT_BG
-	s.border_color = UITheme.C_BORDER
-	s.set_border_width_all(1)
-	s.set_corner_radius_all(2)
-	cell.add_theme_stylebox_override("panel", s)
+	_apply_slot_style(cell, UITheme.C_SLOT_BG, UITheme.C_BORDER, 1)
 	cell.set_meta("slot_index", index)
 
 	var icon_rect := TextureRect.new()
@@ -181,158 +111,270 @@ func _make_slot_cell(index: int) -> Panel:
 	count_label.set_meta("is_count", true)
 	cell.add_child(count_label)
 
-	cell.mouse_entered.connect(_on_slot_hover.bind(index))
+	var name_label := Label.new()
+	name_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.add_theme_font_size_override("font_size", 9)
+	name_label.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7))
+	name_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	name_label.add_theme_constant_override("outline_size", 2)
+	name_label.visible = false
+	name_label.set_meta("is_name", true)
+	cell.add_child(name_label)
+
+	# Badge on bag items showing slot count
+	var badge := Label.new()
+	badge.anchor_right = 1.0
+	badge.anchor_bottom = 1.0
+	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	badge.add_theme_font_size_override("font_size", 9)
+	badge.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	badge.add_theme_color_override("font_outline_color", Color.BLACK)
+	badge.add_theme_constant_override("outline_size", 2)
+	badge.set_meta("is_badge", true)
+	cell.add_child(badge)
+
+	cell.mouse_entered.connect(_on_cell_hover.bind(index))
 	cell.mouse_exited.connect(func(): _tooltip.visible = false)
-	cell.gui_input.connect(_on_slot_input.bind(index))
+	cell.gui_input.connect(_on_cell_input.bind(index))
 
 	return cell
 
+func _build_drag_icon() -> void:
+	_drag_icon = TextureRect.new()
+	_drag_icon.top_level = true
+	_drag_icon.z_index = 100
+	_drag_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_drag_icon.custom_minimum_size = Vector2(48, 48)
+	_drag_icon.size = Vector2(48, 48)
+	_drag_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	_drag_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_drag_icon.modulate = Color(1.0, 1.0, 1.0, 0.85)
+	_drag_icon.visible = false
+	add_child(_drag_icon)
+
 func _process(_delta: float) -> void:
-	if _drag_item != null and _drag_icon != null:
-		var mp := get_viewport().get_mouse_position()
-		_drag_icon.position = mp - Vector2(SLOT_SIZE * 0.5, SLOT_SIZE * 0.5)
+	if drag_item != null and _drag_icon != null:
+		_drag_icon.position = get_viewport().get_mouse_position() - Vector2(24.0, 24.0)
 
-func _refresh() -> void:
-	for i in _slot_cells.size():
-		var cell: Panel = _slot_cells[i]
-		var slot = Inventory.slots[i]
-		var icon_rect: TextureRect = _find_meta_child(cell, "is_icon")
-		var count_label: Label = _find_meta_child(cell, "is_count")
-		if slot == null:
-			icon_rect.texture = null
-			count_label.text = ""
-		else:
-			icon_rect.texture = slot["item"].icon
-			count_label.text = str(slot["count"]) if slot["count"] > 1 else ""
+# ── Refresh ───────────────────────────────────────────────────────────────────
 
-func _on_slot_hover(index: int) -> void:
-	if _drag_item != null:
+func _refresh_all() -> void:
+	for i in Inventory.BASE_SLOT_COUNT:
+		_refresh_cell(i)
+
+func _refresh_cell(index: int) -> void:
+	var cell: Panel = _base_cells[index]
+	var icon_rect: TextureRect = _find_meta_child(cell, "is_icon")
+	var count_label: Label = _find_meta_child(cell, "is_count")
+	var name_label: Label = _find_meta_child(cell, "is_name")
+	var badge: Label = _find_meta_child(cell, "is_badge")
+
+	var slot = Inventory.base_slots[index]
+	if slot == null:
+		icon_rect.texture = null
+		count_label.text = ""
+		if name_label: name_label.visible = false
+		if badge: badge.text = ""
+		_apply_slot_style(cell, UITheme.C_SLOT_BG, UITheme.C_BORDER, 1)
+		return
+
+	var item: ItemData = slot["item"]
+	icon_rect.texture = item.icon
+	if name_label:
+		name_label.visible = item.icon == null
+		name_label.text = item.item_name
+
+	if item.type == ItemData.Type.BAG:
+		count_label.text = ""
+		if badge:
+			var contents = Inventory.bag_contents[index]
+			badge.text = "%d" % (contents.size() if contents != null else 0)
+		var is_open: bool = _bag_windows[index] != null and _bag_windows[index].visible
+		_apply_slot_style(cell, _rarity_color(item.rarity),
+			Color(0.8, 0.7, 0.3) if is_open else UITheme.C_BORDER,
+			2 if is_open else 1)
+	else:
+		count_label.text = str(slot["count"]) if slot["count"] > 1 else ""
+		if badge: badge.text = ""
+		_apply_slot_style(cell, _rarity_color(item.rarity), UITheme.C_BORDER, 1)
+
+# ── Input ─────────────────────────────────────────────────────────────────────
+
+func _on_cell_hover(index: int) -> void:
+	if drag_item != null:
 		_tooltip.visible = false
 		return
-	var slot = Inventory.slots[index]
+	var slot = Inventory.base_slots[index]
 	if slot == null:
 		_tooltip.visible = false
 		return
 	var item: ItemData = slot["item"]
-	var lines := [item.item_name, item.description]
+	var lines: Array[String] = [item.item_name]
+	if item.type == ItemData.Type.BAG:
+		lines.append("%d slot bag" % item.bag_num_slots)
+	if item.description != "":
+		lines.append(item.description)
 	_append_stat_lines(item, lines)
 	_tooltip_label.text = "\n".join(lines)
-	_tooltip.position = _slot_cells[index].position + Vector2(SLOT_SIZE + 4, 0)
+	_tooltip.position = Vector2(SLOT_SIZE * COLS + 12, _base_cells[index].position.y)
 	_tooltip.size = Vector2.ZERO
 	_tooltip.visible = true
 
-func _on_slot_input(event: InputEvent, index: int) -> void:
+func _on_cell_input(event: InputEvent, index: int) -> void:
 	if not (event is InputEventMouseButton and event.pressed):
-		return
-	if _confirm_panel != null and _confirm_panel.visible:
 		return
 
 	if event.button_index == MOUSE_BUTTON_RIGHT:
-		if _drag_item != null:
+		if drag_item != null:
 			return
-		var slot = Inventory.slots[index]
+		var slot = Inventory.base_slots[index]
 		if slot == null:
 			return
 		var item: ItemData = slot["item"]
-		if item.type == ItemData.Type.CONSUMABLE:
-			_use_consumable(item)
-			get_viewport().set_input_as_handled()
+		if item.type == ItemData.Type.BAG:
+			_toggle_bag(index)
+		elif item.type == ItemData.Type.CONSUMABLE:
+			_use_consumable(item, index)
 		elif item.type != ItemData.Type.MISC:
-			Inventory.remove_at(index)
+			Inventory.remove_base_at(index)
 			Equipment.equip(item)
-			get_viewport().set_input_as_handled()
+		get_viewport().set_input_as_handled()
 		return
 
 	if event.button_index != MOUSE_BUTTON_LEFT:
 		return
 
-	if _drag_item == null:
-		var slot = Inventory.slots[index]
+	if drag_item == null:
+		var slot = Inventory.base_slots[index]
 		if slot == null:
 			return
-		_drag_item = slot["item"]
-		_drag_count = slot["count"]
-		_drag_source_slot = index
-		Inventory.clear_slot(index)
-		_drag_icon.texture = _drag_item.icon
-		_drag_icon.visible = true
+		if slot["item"].type == ItemData.Type.BAG:
+			_toggle_bag(index)
+			get_viewport().set_input_as_handled()
+			return
+		begin_drag(slot["item"], slot["count"], -1, index)
+		Inventory.clear_base_slot(index)
 		_tooltip.visible = false
 		get_viewport().set_input_as_handled()
 	else:
-		var existing = Inventory.slots[index]
+		# Can't drop a bag on an occupied slot
+		var existing = Inventory.base_slots[index]
+		if drag_item.type == ItemData.Type.BAG and existing != null:
+			get_viewport().set_input_as_handled()
+			return
 		if existing == null:
-			Inventory.slots[index] = {"item": _drag_item, "count": _drag_count}
-			_end_drag()
+			Inventory.set_base_slot(index, {"item": drag_item, "count": drag_count})
+			end_drag()
 		else:
-			# Swap: place dragged item here, pick up the existing item
+			# Swap
 			var swap_item: ItemData = existing["item"]
 			var swap_count: int = existing["count"]
-			Inventory.slots[index] = {"item": _drag_item, "count": _drag_count}
-			_drag_item = swap_item
-			_drag_count = swap_count
-			_drag_source_slot = index
-			_drag_icon.texture = _drag_item.icon
-			Inventory.inventory_changed.emit()
+			Inventory.set_base_slot(index, {"item": drag_item, "count": drag_count})
+			begin_drag(swap_item, swap_count, -1, index)
 		get_viewport().set_input_as_handled()
 
-# Prevent window-dragging while an item is being dragged.
+# ── Bag open/close ────────────────────────────────────────────────────────────
+
+func _toggle_bag(base_index: int) -> void:
+	if _bag_windows[base_index] == null:
+		_open_bag(base_index)
+	else:
+		_bag_windows[base_index].visible = not _bag_windows[base_index].visible
+		_refresh_cell(base_index)
+
+func _open_bag(base_index: int) -> void:
+	var win := BagWindow.new()
+	win.top_level = true
+	add_child(win)
+	win.init_bag(base_index, self)
+	win.position = global_position + Vector2(size.x + 8, base_index * 12)
+	win.visibility_changed.connect(func(): _refresh_cell(base_index))
+	_bag_windows[base_index] = win
+	_refresh_cell(base_index)
+
+func _on_visibility_changed() -> void:
+	if not visible:
+		if drag_item != null:
+			_return_drag_to_source()
+		for win in _bag_windows:
+			if win != null:
+				win.visible = false
+
+# ── Drag API (called by BagWindow) ───────────────────────────────────────────
+
+func begin_drag(item: ItemData, count: int, bi: int, si: int) -> void:
+	drag_item = item
+	drag_count = count
+	drag_source_bi = bi
+	drag_source_si = si
+	_drag_icon.texture = item.icon
+	_drag_icon.visible = true
+
+func end_drag() -> void:
+	Inventory.inventory_changed.emit()
+	_clear_drag()
+
+func cancel_drag() -> void:
+	_clear_drag()
+
+func _return_drag_to_source() -> void:
+	if drag_item == null:
+		return
+	if drag_source_bi == -1:
+		if Inventory.get_base_slot(drag_source_si) == null:
+			Inventory.set_base_slot(drag_source_si, {"item": drag_item, "count": drag_count})
+		else:
+			Inventory.add_item(drag_item, drag_count)
+	elif Inventory.get_slot(drag_source_bi, drag_source_si) == null:
+		Inventory.set_slot(drag_source_bi, drag_source_si, {"item": drag_item, "count": drag_count})
+	else:
+		Inventory.add_item(drag_item, drag_count)
+	_clear_drag()
+
+func _clear_drag() -> void:
+	drag_item = null
+	drag_count = 0
+	drag_source_bi = -1
+	drag_source_si = -1
+	if _drag_icon != null:
+		_drag_icon.visible = false
+		_drag_icon.texture = null
+
 func _gui_input(event: InputEvent) -> void:
-	if _drag_item != null and event is InputEventMouseButton \
+	if drag_item != null and event is InputEventMouseButton \
 			and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		accept_event()
 		return
 	super._gui_input(event)
 
-# Catch left-clicks that land outside all slots while dragging an item.
 func _input(event: InputEvent) -> void:
 	super._input(event)
-	if not visible or _drag_item == null:
+	if not visible or drag_item == null:
 		return
 	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		return
-	if _confirm_panel != null and _confirm_panel.visible:
-		return
 	var mp := get_viewport().get_mouse_position()
-	for cell in _slot_cells:
+	for win in _bag_windows:
+		if win != null and win.visible and win.get_global_rect().has_point(mp):
+			return
+	for cell in _base_cells:
 		if cell.get_global_rect().has_point(mp):
 			return
-	if _destroy_btn != null and _destroy_btn.get_global_rect().has_point(mp):
-		return
-	_show_destroy_confirm()
+	_return_drag_to_source()
 	get_viewport().set_input_as_handled()
 
-func _on_visibility_changed() -> void:
-	if not visible and _drag_item != null:
-		_return_item_to_slot()
+# ── Consumable use (base slot items) ─────────────────────────────────────────
 
-func _on_destroy_pressed() -> void:
-	if _drag_item == null:
-		return
-	_show_destroy_confirm()
-
-func _show_destroy_confirm() -> void:
-	if _drag_item == null:
-		return
-	_confirm_label.text = 'Are you sure you want to destroy\n"%s"?' % _drag_item.item_name
-	var vp := get_viewport_rect().size
-	_confirm_panel.position = (vp * 0.5) - (_confirm_panel.custom_minimum_size * 0.5)
-	_confirm_panel.visible = true
-
-func _confirm_destroy() -> void:
-	_confirm_panel.visible = false
-	var destroyed := _drag_item
-	_clear_drag()
-	Inventory.item_removed.emit(destroyed)
-
-func _cancel_destroy() -> void:
-	_confirm_panel.visible = false
-
-func _use_consumable(item: ItemData) -> void:
+func _use_consumable(item: ItemData, index: int) -> void:
 	if item.is_food:
 		if BuffManager.has_food_buff():
 			CombatLog.add_line("You are already eating something.", CombatLog.MsgType.INFO)
 			return
-		Inventory.remove_item(item, 1)
+		Inventory.remove_base_at(index)
 		BuffManager.add_food_buff(item.food_hp_regen, item.food_mp_regen, item.food_duration, item.item_name)
 		CombatLog.add_line("You eat %s." % item.item_name, CombatLog.MsgType.INFO)
 		return
@@ -340,14 +382,14 @@ func _use_consumable(item: ItemData) -> void:
 		if BuffManager.has_drink_buff():
 			CombatLog.add_line("You are already drinking something.", CombatLog.MsgType.INFO)
 			return
-		Inventory.remove_item(item, 1)
+		Inventory.remove_base_at(index)
 		BuffManager.add_drink_buff(item.food_hp_regen, item.food_mp_regen, item.food_duration, item.item_name)
 		CombatLog.add_line("You drink %s." % item.item_name, CombatLog.MsgType.INFO)
 		return
 	if item.heal_on_use == 0.0 and item.mp_on_use == 0.0:
 		CombatLog.add_line("You can't use %s that way." % item.item_name, CombatLog.MsgType.INFO)
 		return
-	Inventory.remove_item(item, 1)
+	Inventory.remove_base_at(index)
 	var parts: Array[String] = []
 	if item.heal_on_use > 0.0:
 		var before := PlayerStats.hp
@@ -366,26 +408,19 @@ func _use_consumable(item: ItemData) -> void:
 		msg += " You recover %s." % " and ".join(parts)
 	CombatLog.add_line(msg, CombatLog.MsgType.INFO)
 
-func _return_item_to_slot() -> void:
-	if _drag_item == null:
-		return
-	if _drag_source_slot >= 0 and Inventory.slots[_drag_source_slot] == null:
-		Inventory.slots[_drag_source_slot] = {"item": _drag_item, "count": _drag_count}
-		Inventory.inventory_changed.emit()
-	else:
-		Inventory.add_item(_drag_item, _drag_count)
-	_clear_drag()
+# ── Style helpers ─────────────────────────────────────────────────────────────
 
-func _end_drag() -> void:
-	Inventory.inventory_changed.emit()
-	_clear_drag()
+func _apply_slot_style(cell: Panel, bg: Color, border: Color, border_width: int) -> void:
+	var s := StyleBoxFlat.new()
+	s.bg_color = bg
+	s.border_color = border
+	s.set_border_width_all(border_width)
+	s.set_corner_radius_all(2)
+	cell.add_theme_stylebox_override("panel", s)
 
-func _clear_drag() -> void:
-	_drag_item = null
-	_drag_count = 0
-	_drag_source_slot = -1
-	if _drag_icon != null:
-		_drag_icon.visible = false
-		_drag_icon.texture = null
-	if _confirm_panel != null:
-		_confirm_panel.visible = false
+func _rarity_color(rarity: ItemData.Rarity) -> Color:
+	match rarity:
+		ItemData.Rarity.UNCOMMON: return Color(0.06, 0.14, 0.06, 0.95)
+		ItemData.Rarity.RARE:     return Color(0.04, 0.08, 0.18, 0.95)
+		ItemData.Rarity.EPIC:     return Color(0.12, 0.04, 0.18, 0.95)
+		_:                        return Color(UITheme.C_SLOT_BG)

@@ -11,16 +11,28 @@ func register_enemy(enemy: Enemy) -> void:
 	enemy.died.connect(_on_enemy_died)
 
 func _on_enemy_died(enemy: Enemy) -> void:
+	var items: Array = []
+
 	var table: LootTable = enemy.loot_table
-	if table == null or table.entries.is_empty():
-		return
-	var items := _roll(table)
+	if table == null:
+		DebugLog.warn("Loot: %s has no loot table" % enemy.mob_name)
+	elif table.entries.is_empty():
+		DebugLog.warn("Loot: %s loot table has 0 entries" % enemy.mob_name)
+	else:
+		items.append_array(_roll(table))
+
+	for item: ItemData in enemy._named_drops:
+		items.append({"item": item, "count": 1})
+
+	DebugLog.info("Loot: %s died — %d item(s) rolled" % [enemy.mob_name, items.size()])
+
 	if items.is_empty():
 		return
 	var bag := LootBag.new()
 	bag.items = items
 	get_tree().current_scene.add_child(bag)
 	bag.global_position = enemy.global_position + Vector3(0.0, 0.3, 0.0)
+	DebugLog.info("Loot: bag spawned at %s" % bag.global_position)
 
 func _roll(table: LootTable) -> Array:
 	var result: Array = []

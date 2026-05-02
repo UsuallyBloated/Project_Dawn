@@ -1,7 +1,7 @@
 class_name SpellData
 extends Resource
 
-enum TargetType { ENEMY, SELF, NONE, PET_SUMMON, PET_CHARM, PET_HEAL, PORT, BIND }
+enum TargetType { ENEMY, SELF, NONE, PET_SUMMON, PET_CHARM, PET_HEAL, PORT, BIND, AOE }
 enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, SHADOW, NONE }
 
 @export var spell_name: String = ""
@@ -70,9 +70,18 @@ enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, S
 # Damage shield: attacker takes this much damage on each hit.
 @export var damage_shield_amount: float = 0.0
 @export var damage_shield_duration: float = 0.0
+# AOE radius in meters (AOE target_type only). 0 = not an AOE spell.
+@export var aoe_radius: float = 0.0
 # Song: route through BardSongs twist system instead of standard effect handling.
 @export var is_song: bool = false
 @export var allowed_classes: Array[String] = []
+# Minimum character level required to have this spell available.
+@export var min_level: int = 1
 # Casting discipline that trains when this spell is cast. See CastingSkillDefinitions.ALL.
 # "evocation", "alteration", "abjuration", "conjuration", "divination" — or "" if unassigned.
 @export var discipline: String = ""
+# Rank system: rank 1 is the base spell, 2 and 3 are upgrades.
+# base_name links all ranks of the same spell (e.g. "Fireball").
+# setup_for_class() keeps only the highest accessible rank per base_name.
+@export var rank: int = 1
+@export var base_name: String = ""

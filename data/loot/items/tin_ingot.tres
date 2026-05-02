@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Tin Ingot"
+description = "A bar of smelted tin. Combined with copper to produce bronze."
+type = 10
+rarity = 0
+stack_size = 10
+vendor_price = 12

@@ -92,6 +92,9 @@ func _add_row(entry: Dictionary) -> void:
 	btn.pressed.connect(func(): _take_entry(captured))
 	row.add_child(btn)
 
+func _inv_error_msg() -> String:
+	return "Your inventory is full."
+
 func _take_entry(entry: Dictionary) -> void:
 	if not is_instance_valid(bag):
 		queue_free()
@@ -103,6 +106,8 @@ func _take_entry(entry: Dictionary) -> void:
 			bag.queue_free()
 		else:
 			refresh()
+	else:
+		CombatLog.add_line(_inv_error_msg(), CombatLog.MsgType.INFO)
 
 func _take_all() -> void:
 	if not is_instance_valid(bag):
@@ -118,6 +123,7 @@ func _take_all() -> void:
 	if bag.items.is_empty():
 		bag.queue_free()
 	else:
+		CombatLog.add_line(_inv_error_msg(), CombatLog.MsgType.INFO)
 		refresh()
 
 func _rarity_color(rarity: ItemData.Rarity) -> Color:

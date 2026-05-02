@@ -14,7 +14,8 @@
       "Bash(git -C \"f:/Projects/Project_Dawn\" log --oneline -5)",
       "Read(//f/Projects/ProceduralDungeon/**)",
       "Read(//f/Projects/ProceduralDungeon/scripts/**)",
-      "Bash(git -C \"f:/Projects/Project_Dawn\" show --stat --format=\"\" 72401a1384ba65d47460a5ff8bcc5a70cd846982)"
+      "Bash(git -C \"f:/Projects/Project_Dawn\" show --stat --format=\"\" 72401a1384ba65d47460a5ff8bcc5a70cd846982)",
+      "Bash(bash /tmp/final_verdict.sh)"
     ],
     "additionalDirectories": [
       "f:\\Projects\\Project_Dawn",

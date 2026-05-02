@@ -10,6 +10,8 @@ const _HudPetPanel          := preload("res://scripts/hud_pet_panel.gd")
 const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
 const _TrackWindowScript    := preload("res://scripts/track_window.gd")
 const _SpellBookScript      := preload("res://scripts/spell_book.gd")
+const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
+const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
 
 @onready var health_bar: ProgressBar = $Panel/VBoxContainer/HPRow/HealthBar
 @onready var stamina_bar: ProgressBar = $Panel/VBoxContainer/STARow/StaminaBar
@@ -43,7 +45,16 @@ var _group_panel = null
 var _pet_panel = null
 var _track_window: TrackWindow = null
 var _spell_book: Panel = null
+var _quest_journal: Panel = null
+var _dialogue_window: Panel = null
 var _target_hp_label: Label = null
+
+var _tot_frame: DraggablePanel = null
+var _tot_name_label: Label = null
+var _tot_hp_bar: ProgressBar = null
+var _tot_hp_label: Label = null
+
+var _self_targeted: bool = false
 
 func _ready() -> void:
 	_style_panel()
@@ -61,6 +72,7 @@ func _ready() -> void:
 	PlayerStats.stamina_changed.connect(_on_stamina_changed)
 	Combat.target_changed.connect(_on_target_changed)
 	target_frame.visible = false
+	$Panel.gui_input.connect(_on_stat_panel_input)
 
 	health_bar.max_value = PlayerStats.max_hp
 	health_bar.value = PlayerStats.hp
@@ -111,6 +123,17 @@ func _build_components() -> void:
 	add_child(_spell_book)
 	_spell_book.visibility_changed.connect(_on_window_visibility_changed.bind(_spell_book))
 
+	_quest_journal = _QuestJournalScript.new()
+	_quest_journal.visible = false
+	add_child(_quest_journal)
+	_quest_journal.visibility_changed.connect(_on_window_visibility_changed.bind(_quest_journal))
+
+	_dialogue_window = _DialogueWindowScript.new()
+	_dialogue_window.visible = false
+	add_child(_dialogue_window)
+
+	_build_tot_frame()
+
 	_group_panel.layout_changed.connect(_reposition_pet_panel)
 	_reposition_pet_panel()
 
@@ -118,6 +141,48 @@ func _reposition_pet_panel() -> void:
 	if _pet_panel == null or _group_panel == null:
 		return
 	_pet_panel.position.y = _group_panel.position.y + _group_panel.size.y + 8.0
+
+func _build_tot_frame() -> void:
+	var tot := DraggablePanel.new()
+	_tot_frame = tot
+	_tot_frame.visible = false
+
+	add_child(_tot_frame)
+	var vp := get_viewport().get_visible_rect().size
+	_tot_frame.setup(Vector2(vp.x - 154.0, 4.0), Vector2(150.0, 34.0), Vector2(100.0, 28.0))
+	tot.apply_style(Color(0.06, 0.05, 0.04, 0.88))
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.add_theme_constant_override("separation", 1)
+	vbox.offset_left = 4; vbox.offset_top = 2
+	vbox.offset_right = -4; vbox.offset_bottom = -2
+	_tot_frame.add_child(vbox)
+
+	var name_row := HBoxContainer.new()
+	name_row.add_theme_constant_override("separation", 2)
+	vbox.add_child(name_row)
+
+	var arrow := Label.new()
+	arrow.text = "▶"
+	arrow.add_theme_font_size_override("font_size", 8)
+	arrow.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name_row.add_child(arrow)
+
+	_tot_name_label = Label.new()
+	_tot_name_label.add_theme_font_size_override("font_size", 10)
+	_tot_name_label.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_tot_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tot_name_label.clip_text = true
+	name_row.add_child(_tot_name_label)
+
+	_tot_hp_bar = ProgressBar.new()
+	_tot_hp_bar.custom_minimum_size = Vector2(0, 6)
+	_tot_hp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_tot_hp_bar.show_percentage = false
+	_tot_hp_label = UITheme.style_bar(_tot_hp_bar, UITheme.C_BAR_HP)
+	vbox.add_child(_tot_hp_bar)
 
 # ── XP bar ────────────────────────────────────────────────────────────────────
 
@@ -293,6 +358,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif _options_screen != null:
 				_options_screen.visible = !_options_screen.visible
 				get_viewport().set_input_as_handled()
+		elif event.is_action("target_self"):
+			if _self_targeted:
+				_clear_self_target()
+			else:
+				Combat.set_target(null)
+				_show_self_target()
 		elif event.is_action("toggle_character"):
 			character_window.visible = !character_window.visible
 		elif event.is_action("toggle_inventory"):
@@ -304,9 +375,65 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action("toggle_spell_book"):
 			if _spell_book != null:
 				_spell_book.visible = !_spell_book.visible
+		elif event.is_action("toggle_quest_journal"):
+			if _quest_journal != null:
+				_quest_journal.visible = !_quest_journal.visible
 		elif event.is_action("interact"):
-			if VendorManager.nearby_vendor != null:
+			if DialogueManager.nearby_npc != null:
+				DialogueManager.open_nearby()
+			elif VendorManager.nearby_vendor != null:
 				VendorManager.open_nearby()
+			elif StationManager.nearby_station != "":
+				_crafting_window.visible = true
+			elif _try_loot_nearby():
+				pass
+			elif not _try_mine_nearby():
+				_try_skin_nearby()
+
+func _try_loot_nearby() -> bool:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return false
+	const LOOT_RANGE := 6.0
+	for node in get_tree().get_nodes_in_group("loot_bags"):
+		var bag := node as LootBag
+		if bag == null or not is_instance_valid(bag):
+			continue
+		if bag.global_position.distance_to(player.global_position) <= LOOT_RANGE:
+			Loot.show_window(bag)
+			return true
+	return false
+
+func _try_mine_nearby() -> bool:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return false
+	const MINE_RANGE := 3.0
+	for node in get_tree().get_nodes_in_group("mining_nodes"):
+		var mn := node as MiningNode
+		if mn == null:
+			continue
+		if mn.global_position.distance_to(player.global_position) > MINE_RANGE:
+			continue
+		var msg := mn.try_mine()
+		CombatLog.add_line(msg, CombatLog.MsgType.INFO)
+		return true
+	return false
+
+func _try_skin_nearby() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return
+	const SKIN_RANGE := 3.0
+	for node in get_tree().get_nodes_in_group("enemies"):
+		var enemy := node as Enemy
+		if enemy == null or not enemy.is_skinnable:
+			continue
+		if enemy.global_position.distance_to(player.global_position) > SKIN_RANGE:
+			continue
+		var msg := enemy.try_skin()
+		CombatLog.add_line(msg, CombatLog.MsgType.INFO)
+		return
 
 func _on_window_visibility_changed(window: Panel) -> void:
 	if window.visible:
@@ -332,6 +459,11 @@ func _on_hp_changed(current: float, maximum: float) -> void:
 	health_bar.value = current
 	if _hp_label:
 		_hp_label.text = "%d / %d" % [int(current), int(maximum)]
+	if _tot_frame != null and _tot_frame.visible:
+		_tot_hp_bar.max_value = maximum
+		_tot_hp_bar.value = current
+		if _tot_hp_label:
+			_tot_hp_label.text = "%d / %d" % [int(current), int(maximum)]
 
 func _on_mp_changed(current: float, maximum: float) -> void:
 	mana_bar.max_value = maximum
@@ -347,7 +479,53 @@ func _on_stamina_changed(current: float, maximum: float) -> void:
 
 # ── Target frame ──────────────────────────────────────────────────────────────
 
+func _on_stat_panel_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if _self_targeted:
+			_clear_self_target()
+		else:
+			Combat.set_target(null)
+			_show_self_target()
+
+func _show_self_target() -> void:
+	_self_targeted = true
+	if is_instance_valid(_tracked_target):
+		if _tracked_target.is_connected("hp_changed", _on_target_hp_changed):
+			_tracked_target.hp_changed.disconnect(_on_target_hp_changed)
+		if _tracked_target.is_connected("died", _on_target_enemy_died):
+			_tracked_target.died.disconnect(_on_target_enemy_died)
+	_tracked_target = null
+	var pname := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
+	target_name_label.text = pname
+	target_level_label.text = "Level %d" % PlayerStats.level
+	target_hp_bar.max_value = PlayerStats.max_hp
+	target_hp_bar.value = PlayerStats.hp
+	if _target_hp_label:
+		_target_hp_label.text = "%d / %d" % [int(PlayerStats.hp), int(PlayerStats.max_hp)]
+		_target_hp_label.visible = true
+	target_frame.visible = true
+	if not PlayerStats.is_connected("hp_changed", _on_self_target_hp_changed):
+		PlayerStats.hp_changed.connect(_on_self_target_hp_changed)
+	if _tot_frame != null:
+		_tot_frame.visible = false
+
+func _clear_self_target() -> void:
+	_self_targeted = false
+	if PlayerStats.is_connected("hp_changed", _on_self_target_hp_changed):
+		PlayerStats.hp_changed.disconnect(_on_self_target_hp_changed)
+	target_frame.visible = false
+	if _target_hp_label:
+		_target_hp_label.visible = false
+
+func _on_self_target_hp_changed(current: float, maximum: float) -> void:
+	target_hp_bar.max_value = maximum
+	target_hp_bar.value = current
+	if _target_hp_label:
+		_target_hp_label.text = "%d / %d" % [int(current), int(maximum)]
+
 func _on_target_changed(enemy) -> void:
+	if _self_targeted:
+		_clear_self_target()
 	if is_instance_valid(_tracked_target):
 		if _tracked_target.is_connected("hp_changed", _on_target_hp_changed):
 			_tracked_target.hp_changed.disconnect(_on_target_hp_changed)
@@ -358,6 +536,8 @@ func _on_target_changed(enemy) -> void:
 		target_frame.visible = false
 		if _target_hp_label:
 			_target_hp_label.visible = false
+		if _tot_frame != null:
+			_tot_frame.visible = false
 		return
 	target_frame.visible = true
 	target_name_label.text = enemy.mob_name
@@ -369,6 +549,7 @@ func _on_target_changed(enemy) -> void:
 		_target_hp_label.visible = true
 	enemy.hp_changed.connect(_on_target_hp_changed)
 	enemy.died.connect(_on_target_enemy_died)
+	_refresh_tot()
 
 func _on_target_hp_changed(current: float, maximum: float) -> void:
 	target_hp_bar.max_value = maximum
@@ -379,6 +560,19 @@ func _on_target_hp_changed(current: float, maximum: float) -> void:
 func _on_target_enemy_died(_enemy) -> void:
 	_tracked_target = null
 	target_frame.visible = false
+	if _tot_frame != null:
+		_tot_frame.visible = false
+
+func _refresh_tot() -> void:
+	if _tot_frame == null or _tracked_target == null:
+		return
+	var pname := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
+	_tot_name_label.text = pname
+	_tot_hp_bar.max_value = PlayerStats.max_hp
+	_tot_hp_bar.value = PlayerStats.hp
+	if _tot_hp_label:
+		_tot_hp_label.text = "%d / %d" % [int(PlayerStats.hp), int(PlayerStats.max_hp)]
+	_tot_frame.visible = true
 
 # ── Player state ──────────────────────────────────────────────────────────────
 
@@ -475,6 +669,31 @@ func _handle_chat_input(text: String) -> void:
 	if lower == "/track":
 		if _track_window != null:
 			_track_window.toggle()
+		return
+
+	if lower == "/languages":
+		var known: Array = []
+		for lang in Languages.skills:
+			if Languages.skills[lang] > 0:
+				known.append(lang)
+		if known.is_empty():
+			CombatLog.add_line("You know no languages.", CombatLog.MsgType.INFO)
+		else:
+			CombatLog.add_line("Known languages:", CombatLog.MsgType.INFO)
+			for lang in known:
+				var active_marker := " (active)" if lang == Languages.active_language else ""
+				CombatLog.add_line("  %s — %d%s" % [lang, Languages.skills[lang], active_marker], CombatLog.MsgType.INFO)
+		return
+
+	if lower.begins_with("/lang "):
+		var lang_name := text.substr(6).strip_edges()
+		if lang_name == "":
+			CombatLog.add_line("Usage: /lang [language name]", CombatLog.MsgType.INFO)
+		elif Languages.get_skill(lang_name) > 0:
+			Languages.set_active_language(lang_name)
+			CombatLog.add_line("You are now speaking %s." % lang_name, CombatLog.MsgType.INFO)
+		else:
+			CombatLog.add_line("You do not know the language '%s'." % lang_name, CombatLog.MsgType.INFO)
 		return
 
 	CombatLog.add_line("Unknown command: %s" % text, CombatLog.MsgType.INFO)

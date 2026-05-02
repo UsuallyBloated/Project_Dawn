@@ -1,7 +1,7 @@
 class_name ItemData
 extends Resource
 
-enum Type { WEAPON, OFFHAND, HEAD, CHEST, LEGS, FEET, HANDS, RING, NECK, CONSUMABLE, MISC, AUGMENT }
+enum Type { WEAPON, OFFHAND, HEAD, CHEST, LEGS, FEET, HANDS, RING, NECK, CONSUMABLE, MISC, AUGMENT, BAG }
 enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 
 @export var item_name: String = ""
@@ -27,7 +27,9 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 @export var weapon_damage_min: int = 0
 @export var weapon_damage_max: int = 0
 @export var weapon_delay: float = 2.0  # base attack interval in seconds; unaffected by stats
-# Weapon skill trained by this weapon (e.g. "1h_slashing", "piercing"). See WeaponSkillDefinitions.ALL.
+@export var is_two_handed: bool = false
+@export var is_ranged: bool = false    # bow/crossbow: uses ranged range, DEX damage bonus, archery skill
+# Weapon skill trained by this weapon (e.g. "1h_slashing", "piercing", "archery"). See WeaponSkillDefinitions.ALL.
 @export var weapon_skill: String = ""
 
 # Physical damage reduction when equipped (armor pieces)
@@ -51,6 +53,15 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 # names of inserted augment items (max gem_slots entries).
 @export var gem_slots: int = 0
 @export var socketed_augments: Array[String] = []
+
+# Bag (BAG type only)
+@export var bag_num_slots: int = 0
+
+# On-hit proc effect (WEAPON type only). proc_chance 0 = disabled.
+@export var proc_chance: float = 0.0         # 0.0–1.0; probability per hit
+@export var proc_damage: int = 0             # flat damage on proc fire
+@export var proc_damage_type: SpellData.DamageType = SpellData.DamageType.NONE
+@export var proc_name: String = ""           # combat log label, e.g. "Flaming Strike"
 
 # Economy
 @export var vendor_price: int = 0  # buy price; sell = vendor_price / 2

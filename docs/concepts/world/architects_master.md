@@ -13,7 +13,7 @@ The civilization left no name, no unambiguous history, and no living successors 
 
 ## The Network — Known Sites
 
-Seven confirmed sites. Three suspected. Each site is a node in the network — a physical location with Architect construction, a "remainder" (a persistent warm terminus point), and Architect notation describing the site's role in the larger system.
+Eleven confirmed sites. One speculative. Each site is a node in the network — a physical location with Architect construction, a "remainder" (a persistent warm terminus point), and Architect notation describing the site's role in the larger system.
 
 | Site | Location | Role in Network | Remainder Status |
 |---|---|---|---|
@@ -26,6 +26,8 @@ Seven confirmed sites. Three suspected. Each site is a node in the network — a
 | The Foundation Ring | Beneath Greyveil | City-level anchoring node; structurally inaccessible | Status unknown — city built on top of it |
 | The Tide Marks | Ashen Coast cliffs | Calibration reference; tidal timing alignment | Partially accessible; status uncertain |
 | The Calibration Tower | Eastern Badlands | Signal relay; partially collapsed | Interior unknown |
+| The Drowned Hold | Harrow Bay (maritime; Harrowmere) | Harbor node; monitoring station transmitting continuously since construction; PENDING: FINAL CALIBRATION entry confirmed | Active — transmitting; lowest level reached by [drowned_hold.md](drowned_hold.md) questline |
+| The Rising Shell | Cinder Deep (offshore; Ashen Coast) | Anchor node; partially surfaced; terminal manifestation point for Calibration State consequence | Active — intensifying; forty feet of uplift over sixty years; full zone at [rising_shell.md](rising_shell.md) |
 | **The Deep Rooms** | Blighted Wood, beneath Heartwood | Referenced in notation only; unlocated | Unknown |
 
 ---
@@ -137,6 +139,7 @@ NODE SURVEY REPORTS (one per site)
   └─ Dreaming Grove completion → Warden's fragment
   └─ Varek's B3 notes → Residual observations
   └─ Convergence Point assessment → Third Army's objective
+  └─ Drowned Hold lowest level → monitoring station data; PENDING: FINAL CALIBRATION entry
   └─ [Additional sites not yet surveyed]
 
 SURVEY TERMINUS (Dominion Vault, lowest level)

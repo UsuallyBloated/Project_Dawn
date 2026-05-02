@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Pickaxe"
+description = "A sturdy iron pickaxe. Required to mine ore and stone from veins."
+type = 10
+rarity = 0
+stack_size = 1
+vendor_price = 10

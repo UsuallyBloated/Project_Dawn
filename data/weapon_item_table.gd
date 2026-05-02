@@ -1,12 +1,14 @@
 class_name WeaponItemTable
 
-# Central lookup: item_name -> weapon skill key.
-# Add every weapon here when you add it to the game.
+# Fallback lookup: item_name -> weapon skill key.
+# Only needed for dynamically-created weapon items that have no .tres file
+# (e.g. random enemy drops generated at runtime with an empty weapon_skill field).
+# Weapons backed by .tres files should set weapon_skill directly on the resource.
 # Skill keys must match WeaponSkillDefinitions.ALL.
 #
 # Priority order in combat.gd:
-#   1. ItemData.weapon_skill (per-item override on the .tres/.gd)
-#   2. This table (looked up by item_name)
+#   1. ItemData.weapon_skill (per-item field on the .tres resource)
+#   2. This table (looked up by item_name string)
 #   3. "hand_to_hand" (fallback for anything not listed)
 
 const SKILLS: Dictionary = {
@@ -26,6 +28,13 @@ const SKILLS: Dictionary = {
 
 	# ── Piercing ──────────────────────────────────────────────────────────────
 	"Bent Dagger":               "piercing",
+
+	# ── Archery ───────────────────────────────────────────────────────────────
+	"Worn Short Bow":            "archery",
+	"Hunter's Shortbow":         "archery",
+	"Ranger's Longbow":          "archery",
+	"Compound Bow":              "archery",
+	"Hunting Crossbow":          "archery",
 
 	# ── Hand to Hand ──────────────────────────────────────────────────────────
 	# (unarmed — combat.gd falls back to this automatically; no entry needed)

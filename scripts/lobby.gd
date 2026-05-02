@@ -1,6 +1,7 @@
 extends Control
 
-const GAME_SCENE := "res://scenes/world.tscn"
+const GAME_SCENE   := "res://scenes/world.tscn"
+const DUNGEON_SCENE := "res://scenes/dungeon_world.tscn"
 const CHAR_CREATION_SCENE := "res://scenes/character_creation.tscn"
 
 @onready var address_field: LineEdit = %AddressField
@@ -59,6 +60,12 @@ func _on_test_room_pressed() -> void:
 	Network.is_test_room = true
 	_setup_default_character("Human", "Warrior")
 	get_tree().change_scene_to_file(GAME_SCENE)
+
+func _on_test_dungeon_pressed() -> void:
+	Network.is_online = false
+	Network.is_test_room = true
+	_setup_default_character("Human", "Warrior")
+	get_tree().change_scene_to_file(DUNGEON_SCENE)
 
 func _setup_default_character(race: String, cls: String) -> void:
 	PlayerStats.player_name = "TestChar"

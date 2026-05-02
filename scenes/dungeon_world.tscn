@@ -1,0 +1,30 @@
+[gd_scene load_steps=5 format=3 uid="uid://dngwrld00001"]
+
+[ext_resource type="Script" uid="uid://ch0768uo88850" path="res://scripts/dungeon_world.gd" id="1_dworld"]
+[ext_resource type="PackedScene" uid="uid://bm4x7kpqr2n5" path="res://scenes/hud.tscn" id="2_hudinst"]
+[ext_resource type="Script" uid="uid://d4dgrhxpeyuk7" path="res://addons/procedural_dungeon/dungeon_spawner.gd" id="3_dspawn"]
+
+[sub_resource type="Environment" id="Environment_cave"]
+background_mode = 1
+ambient_light_source = 2
+ambient_light_color = Color(0.15, 0.1, 0.05, 1)
+ambient_light_energy = 0.06
+tonemap_mode = 2
+adjustment_enabled = true
+adjustment_contrast = 1.1
+adjustment_saturation = 0.9
+
+[node name="DungeonWorld" type="Node3D"]
+script = ExtResource("1_dworld")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_cave")
+
+[node name="DungeonSpawner" type="Node3D" parent="."]
+script = ExtResource("3_dspawn")
+dungeon_seed = 1
+auto_generate = false
+
+[node name="Players" type="Node3D" parent="."]
+
+[node name="HUD" parent="." instance=ExtResource("2_hudinst")]

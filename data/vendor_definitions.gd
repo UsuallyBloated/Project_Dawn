@@ -5,10 +5,11 @@ const ALL: Dictionary = {
 	"General Merchant": {
 		"desc": "Basic goods, food, and everyday supplies.",
 		"stock": [
-			"Cloth Scraps", "Coal", "Salt", "Flour", "Raw Egg", "Honey",
+			"Cloth Scraps", "Flax", "Coal", "Salt", "Flour", "Raw Egg", "Honey",
 			"Bread Loaf", "Stale Bread", "Crude Ale", "Water Flask",
 			"Empty Bottle", "Empty Vial", "Minor Healing Potion",
 			"Wild Berries", "Wild Fruit", "Wild Mushroom",
+			"Skinning Knife", "Sewing Needle", "Pickaxe",
 		],
 	},
 	"Alchemist": {
@@ -43,7 +44,7 @@ const ALL: Dictionary = {
 	"Tailor": {
 		"desc": "Cloth, thread, and fabric armor.",
 		"stock": [
-			"Cloth Scraps", "Linen Thread", "Thick Silk Thread",
+			"Cloth Scraps", "Flax", "Linen Thread", "Thick Silk Thread",
 			"Sewing Needle", "Spiderling Silk", "Ruined Silk", "Feather",
 			"Cloth Cap", "Cloth Robe", "Cloth Pants",
 			"Cloth Gloves", "Cloth Slippers",

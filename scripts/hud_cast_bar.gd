@@ -1,4 +1,4 @@
-extends Panel
+extends DraggablePanel
 
 var _label: Label = null
 var _progress: ProgressBar = null

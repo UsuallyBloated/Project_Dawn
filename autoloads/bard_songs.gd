@@ -69,3 +69,9 @@ func _pulse(spell: SpellData) -> void:
 
 	if spell.absorb_amount > 0.0:
 		BuffManager.add_absorb(spell.absorb_amount, spell.spell_name)
+
+	if spell.accuracy_buff > 0.0 or spell.crit_buff > 0.0:
+		BuffManager.add_stat_buff(spell.accuracy_buff, spell.crit_buff, linger, spell.spell_name)
+
+	if spell.attack_slow_amount > 0.0 and Combat.has_valid_target():
+		Combat.current_target.apply_attack_slow(spell.attack_slow_amount, linger)

@@ -1,4 +1,4 @@
-extends Panel
+extends DraggablePanel
 
 const W := 640.0
 const H := 500.0

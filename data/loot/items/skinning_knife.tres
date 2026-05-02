@@ -1,0 +1,9 @@
+[gd_resource type="ItemData" load_steps=1 format=3]
+
+[resource]
+item_name = "Skinning Knife"
+description = "A short, curved blade designed for field dressing animals. Required to skin creatures."
+type = 10
+rarity = 0
+stack_size = 1
+vendor_price = 8

@@ -130,6 +130,23 @@ func _do_resize() -> void:
 	position = new_pos
 	size = new_size
 
+# ── Unified window helpers ────────────────────────────────────────────────────
+
+func setup(pos: Vector2, sz: Vector2, min_sz: Vector2 = MIN_SIZE) -> void:
+	anchor_left = 0.0; anchor_top = 0.0; anchor_right = 0.0; anchor_bottom = 0.0
+	position = pos
+	size = sz
+	custom_minimum_size = min_sz
+
+func apply_style(bg: Color = Color(0.07, 0.05, 0.03, 0.92),
+				 border: Color = UITheme.C_BORDER) -> void:
+	var s := StyleBoxFlat.new()
+	s.bg_color = bg
+	s.border_color = border
+	s.set_border_width_all(1)
+	s.set_corner_radius_all(4)
+	add_theme_stylebox_override("panel", s)
+
 # Public API: build a standard tooltip panel attached as a child. Returns [Panel, Label].
 func make_tooltip() -> Array:
 	var panel := PanelContainer.new()
@@ -153,6 +170,17 @@ func make_tooltip() -> Array:
 	return [panel, label]
 
 func _append_stat_lines(item: ItemData, lines: Array) -> void:
+	if item.type == ItemData.Type.WEAPON:
+		lines.append("Damage: %d–%d   Delay: %.1fs" % [
+			item.weapon_damage_min, item.weapon_damage_max, item.weapon_delay])
+		if item.weapon_skill != "":
+			lines.append("Skill: %s" % item.weapon_skill.capitalize().replace("_", " "))
+		if item.proc_chance > 0.0 and item.proc_damage > 0:
+			lines.append("%s: %d%% chance / %d dmg" % [
+				item.proc_name if item.proc_name != "" else "Proc",
+				int(item.proc_chance * 100), item.proc_damage])
+	if item.bonus_armor > 0:
+		lines.append("Armor: +%d" % item.bonus_armor)
 	var checks := [
 		["bonus_strength", "STR"], ["bonus_dexterity", "DEX"], ["bonus_agility", "AGI"],
 		["bonus_intelligence", "INT"], ["bonus_wisdom", "WIS"], ["bonus_charisma", "CHA"],

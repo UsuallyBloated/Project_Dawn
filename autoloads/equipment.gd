@@ -12,16 +12,56 @@ func _ready() -> void:
 	for s in SLOTS:
 		equipped[s] = null
 
+func can_dual_wield() -> bool:
+	return WeaponSkills.get_current("dual_wield") > 0
+
 func equip(item: ItemData) -> void:
-	var slot := _slot_for_type(item.type)
+	var slot := _resolve_slot(item)
 	if slot == "":
 		return
+	# Equipping a 2H weapon clears any offhand weapon (shields/weapons)
+	if item.type == ItemData.Type.WEAPON and item.is_two_handed:
+		var oh = equipped.get("offhand")
+		if oh != null:
+			_remove_stat_bonuses(oh)
+			equipped["offhand"] = null
+			equipment_changed.emit("offhand", null)
+			Inventory.add_item(oh)
 	var old = equipped[slot]
 	if old != null:
 		_remove_stat_bonuses(old)
+		# When replacing main hand while offhand holds a weapon, push offhand back too
+		if slot == "weapon" and item.is_two_handed:
+			pass  # already cleared above
 	equipped[slot] = item
 	_apply_stat_bonuses(item)
 	equipment_changed.emit(slot, item)
+
+func _resolve_slot(item: ItemData) -> String:
+	if item.type == ItemData.Type.WEAPON:
+		var main_wpn: ItemData = equipped.get("weapon")
+		# Main hand is empty → go there
+		if main_wpn == null:
+			return "weapon"
+		# This is a 2H weapon → always replace main hand
+		if item.is_two_handed:
+			return "weapon"
+		# Main hand holds a 2H weapon → replace it
+		if main_wpn.is_two_handed:
+			return "weapon"
+		# Main hand is a 1H weapon; try offhand if dual wield is trained
+		if can_dual_wield() and equipped.get("offhand") == null:
+			return "offhand"
+		# Replace main hand
+		return "weapon"
+	# OFFHAND (shield, focus, etc.) — block if main is 2H
+	if item.type == ItemData.Type.OFFHAND:
+		var main_wpn: ItemData = equipped.get("weapon")
+		if main_wpn != null and main_wpn.is_two_handed:
+			Inventory.add_item(item)
+			return ""
+		return "offhand"
+	return _slot_for_type(item.type)
 
 func unequip(slot: String) -> ItemData:
 	var item = equipped.get(slot)

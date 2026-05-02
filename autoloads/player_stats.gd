@@ -185,3 +185,7 @@ func spend_coins(amount: int) -> bool:
 	coins -= amount
 	coins_changed.emit(coins)
 	return true
+
+func lose_xp(amount: int) -> void:
+	xp = max(0, xp - amount)
+	xp_changed.emit(xp, xp_to_next)

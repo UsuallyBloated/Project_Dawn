@@ -20,6 +20,7 @@ func _ready() -> void:
 	_build_ui()
 	Inventory.inventory_changed.connect(_refresh_detail)
 	Crafting.skill_level_changed.connect(_on_skill_changed)
+	Alignment.alignment_changed.connect(func(_tier, _score): _populate_tradeskills())
 	visibility_changed.connect(_on_visibility_changed)
 
 func _build_ui() -> void:
@@ -143,9 +144,11 @@ func _build_footer(parent: VBoxContainer) -> void:
 func _populate_tradeskills() -> void:
 	_tradeskill_names.clear()
 	_tradeskill_opt.clear()
-	for ts: String in RecipeDefinitions.ALL.keys():
-		_tradeskill_names.append(ts)
-		_tradeskill_opt.add_item(ts)
+	for skill in Crafting.get_accessible_skills():
+		var ts_name: String = skill.skill_name
+		if RecipeDefinitions.ALL.has(ts_name):
+			_tradeskill_names.append(ts_name)
+			_tradeskill_opt.add_item(ts_name)
 	if not _tradeskill_names.is_empty():
 		_on_tradeskill_selected(0)
 
@@ -175,6 +178,8 @@ func _populate_recipes() -> void:
 
 	for i in _filtered_recipes.size():
 		var recipe: Dictionary = _filtered_recipes[i]
+		var station: String = recipe.get("station", "")
+		var station_blocked := station != "" and StationManager.nearby_station != station
 		var btn := Button.new()
 		btn.text = recipe.get("name", "")
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -182,6 +187,8 @@ func _populate_recipes() -> void:
 		btn.add_theme_font_size_override("font_size", 12)
 		btn.add_theme_stylebox_override("normal", UITheme.make_stylebox(UITheme.C_BTN_NORM))
 		btn.add_theme_stylebox_override("hover",  UITheme.make_stylebox(UITheme.C_BTN_HOVER))
+		if station_blocked:
+			btn.add_theme_color_override("font_color", UITheme.C_NEUTRAL)
 		btn.pressed.connect(_on_recipe_btn_pressed.bind(i))
 		_recipe_vbox.add_child(btn)
 		_recipe_btns.append(btn)
@@ -191,7 +198,8 @@ func _populate_recipes() -> void:
 func _on_recipe_btn_pressed(idx: int) -> void:
 	_selected_recipe = _filtered_recipes[idx]
 	_result_label.text = ""
-	_combine_btn.disabled = false
+	var station: String = _selected_recipe.get("station", "")
+	_combine_btn.disabled = station != "" and StationManager.nearby_station != station
 	for i in _recipe_btns.size():
 		_recipe_btns[i].add_theme_stylebox_override("normal",
 			UITheme.make_stylebox(UITheme.C_SELECTED if i == idx else UITheme.C_BTN_NORM))

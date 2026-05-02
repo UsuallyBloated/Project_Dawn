@@ -31,7 +31,9 @@ func _die() -> void:
 	is_dead = true
 	Combat.set_target(null)
 	var xp_loss := int(PlayerStats.xp * XP_LOSS_PERCENT)
-	PlayerStats.xp = max(0, PlayerStats.xp - xp_loss)
+	if xp_loss > 0:
+		PlayerStats.lose_xp(xp_loss)
+		CombatLog.add_line("You lost %d experience points." % xp_loss, CombatLog.MsgType.DAMAGE_IN)
 	player_died.emit()
 	get_tree().create_timer(RESPAWN_DELAY).timeout.connect(_respawn)
 
@@ -41,8 +43,12 @@ func _respawn() -> void:
 	PlayerStats.set_mp(PlayerStats.max_mp * 0.25)
 	PlayerStats.set_stamina(PlayerStats.max_stamina * 0.50)
 
-	if is_instance_valid(_player):
-		_player.global_position = _respawn_position
-		_player.velocity = Vector3.ZERO
-
-	player_respawned.emit()
+	var bind := PlayerStats.bind_zone_path
+	if bind != "" and FileAccess.file_exists(bind):
+		player_respawned.emit()
+		ZoneLoader.travel_to(bind, PlayerStats.bind_entry_id, PlayerStats.bind_zone_name)
+	else:
+		if is_instance_valid(_player):
+			_player.global_position = _respawn_position
+			_player.velocity = Vector3.ZERO
+		player_respawned.emit()

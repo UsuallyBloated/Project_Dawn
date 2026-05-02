@@ -1,5 +1,5 @@
 class_name Enemy
-extends CharacterBody3D
+extends MobileCharacter
 
 signal died(enemy)
 signal hp_changed(current: float, maximum: float)
@@ -34,6 +34,33 @@ const GRAVITY := -20.0
 @export var move_speed:      float = 2.5
 @export var attack_interval: float = 2.5
 
+@export_group("Caster")
+@export var spell_damage:    int   = 0    # 0 = melee-only; >0 = caster, uses spells
+@export var spell_interval:  float = 3.0
+@export var caster_range:    float = 8.0  # preferred engagement distance
+@export var flee_range:      float = 3.0  # backs away if player closer than this
+@export var spell_damage_type: SpellData.DamageType = SpellData.DamageType.NONE
+
+@export_group("Healer")
+@export var healer_flee_hp:  float = 0.0  # fraction 0.0–1.0; flee + self-heal when below
+@export var heal_amount:     float = 0.0
+@export var heal_interval:   float = 5.0
+
+@export_group("Skinning")
+@export var is_skinnable: bool = false
+@export var skinning_tier: int = 0  # 0=tattered 1=damaged 2=fresh 3=pristine quality cap
+
+var _has_been_skinned: bool = false
+
+# Named / boss mob runtime state
+var _named_drops: Array[ItemData] = []
+var _damage_mult: float = 1.0
+var _speed_mult:  float = 1.0
+var _enraged:             bool  = false
+var _enrage_threshold:    float = 0.0
+var _enrage_damage_mult:  float = 1.5
+var _enrage_speed_mult:   float = 1.3
+
 var hp: float
 var is_charmed: bool = false
 var _charm_timer: float = 0.0
@@ -50,7 +77,7 @@ var _attack_slow_timer: float = 0.0
 var is_silenced: bool = false
 var _silence_timer: float = 0.0
 
-enum State { IDLE, CHASE, ATTACK, LEASH, DEAD }
+enum State { IDLE, CHASE, ATTACK, LEASH, FLEE, DEAD }
 var state := State.IDLE
 var is_dead: bool:
 	get:
@@ -58,6 +85,8 @@ var is_dead: bool:
 
 var _player:             Node3D = null
 var _attack_cooldown:    float  = 0.0
+var _spell_cooldown:     float  = 0.0
+var _heal_cooldown:      float  = 0.0
 var _spawn_position:     Vector3
 var _force_chase_timer:  float  = 0.0
 
@@ -76,6 +105,9 @@ func _ready() -> void:
 	_name_label.text = mob_name
 	if loot_table == null:
 		loot_table = _build_default_loot_table()
+	if not is_skinnable and MobLootTables.is_skinnable_type(mob_name):
+		is_skinnable = true
+		skinning_tier = MobLootTables.skinning_tier_for(mob_name)
 	Loot.register_enemy(self)
 	var mat := _mesh.get_surface_override_material(0) as StandardMaterial3D
 	if mat:
@@ -96,10 +128,14 @@ func get_spell_resist(damage_type: SpellData.DamageType) -> float:
 	return 0.0
 
 func _build_default_loot_table() -> LootTable:
+	var named := MobLootTables.build(mob_name)
+	if named != null and not named.entries.is_empty():
+		return named
+	# Generic fallback for unknown mob types
 	var table := LootTable.new()
 	table.rolls = 1
 	table.empty_weight = 1.5
-	table.entries.append(_make_loot_entry("Tattered Cloth",  "A scrap of worn cloth.",       ItemData.Type.MISC,    ItemData.Rarity.COMMON,   2.0))
+	table.entries.append(_make_loot_entry("Cloth Scraps",    "Scraps of woven cloth.",       ItemData.Type.MISC,    ItemData.Rarity.COMMON,   2.0))
 	table.entries.append(_make_loot_entry("Bone Fragment",   "A brittle piece of bone.",     ItemData.Type.MISC,    ItemData.Rarity.COMMON,   1.5))
 	if level >= 1:
 		var sword := _make_loot_entry("Rusty Shortsword", "A worn, pitted blade.", ItemData.Type.WEAPON, ItemData.Rarity.COMMON, 0.8)
@@ -119,12 +155,34 @@ func _build_default_loot_table() -> LootTable:
 		table.entries.append(ring)
 	return table
 
+func try_skin() -> String:
+	if state != State.DEAD:
+		return "That isn't dead yet."
+	if _has_been_skinned:
+		return "You've already harvested this creature."
+	if Crafting.count_item("Skinning Knife") == 0:
+		return "You need a Skinning Knife to skin this."
+	_has_been_skinned = true
+	var skill := Crafting.get_skill_level("Skinning")
+	var pelt  := MobLootTables.roll_skin(mob_name, skill)
+	if pelt == null:
+		Crafting.gain_skill_xp("Skinning", 5)
+		return "You attempted to skin the %s but ruined the hide." % mob_name
+	if not Inventory.add_item(pelt, 1):
+		_has_been_skinned = false
+		return "Your inventory is full."
+	Crafting.gain_skill_xp("Skinning", 10)
+	get_tree().create_timer(5.0).timeout.connect(func():
+		if is_instance_valid(self): queue_free())
+	return "You skinned the %s and received %s." % [mob_name, pelt.item_name]
+
 func _make_loot_entry(iname: String, idesc: String, itype: ItemData.Type, irarity: ItemData.Rarity, iweight: float) -> LootEntry:
 	var item := ItemData.new()
 	item.item_name   = iname
 	item.description = idesc
 	item.type        = itype
 	item.rarity      = irarity
+	item.stack_size  = 20 if itype == ItemData.Type.MISC else 1
 	var entry := LootEntry.new()
 	entry.item      = item
 	entry.weight    = iweight
@@ -189,6 +247,7 @@ func _physics_process(delta: float) -> void:
 		State.CHASE:  _tick_chase()
 		State.ATTACK: _tick_attack(delta)
 		State.LEASH:  _tick_leash()
+		State.FLEE:   _tick_flee(delta)
 		State.DEAD:   pass
 	move_and_slide()
 
@@ -231,11 +290,15 @@ func _tick_chase() -> void:
 	if not _player_valid():
 		_transition(State.LEASH)
 		return
+	if _should_flee():
+		_transition(State.FLEE)
+		return
 	var dist := global_position.distance_to(_player.global_position)
 	var effective_leash := leash_range * 3.0 if _force_chase_timer > 0.0 else leash_range
+	var engage_range := caster_range if spell_damage > 0 else melee_range
 	if dist > effective_leash:
 		_transition(State.LEASH)
-	elif dist <= melee_range:
+	elif dist <= engage_range:
 		_transition(State.ATTACK)
 	elif not is_rooted:
 		_move_toward(_player.global_position)
@@ -265,17 +328,42 @@ func _tick_attack(delta: float) -> void:
 	if not _player_valid():
 		_transition(State.LEASH)
 		return
+	if _should_flee():
+		_transition(State.FLEE)
+		return
 	var dist := global_position.distance_to(_player.global_position)
-	if dist > melee_range * 1.2:  # small buffer to prevent CHASE/ATTACK ping-pong
+	if spell_damage > 0:
+		_tick_attack_caster(delta, dist)
+	else:
+		if dist > melee_range * 1.2:
+			_transition(State.CHASE)
+			return
+		velocity.x = 0.0
+		velocity.z = 0.0
+		_face_toward(_player.global_position)
+		_attack_cooldown -= delta
+		if _attack_cooldown <= 0.0:
+			_attack_cooldown = attack_interval * (1.0 + _attack_slow_amount)
+			_do_attack()
+
+func _tick_attack_caster(delta: float, dist: float) -> void:
+	_face_toward(_player.global_position)
+	if dist < flee_range and not is_rooted:
+		var away := (global_position - _player.global_position).normalized()
+		velocity.x = away.x * move_speed
+		velocity.z = away.z * move_speed
+	elif dist > caster_range * 1.3:
 		_transition(State.CHASE)
 		return
-	velocity.x = 0.0
-	velocity.z = 0.0
-	_face_toward(_player.global_position)
-	_attack_cooldown -= delta
-	if _attack_cooldown <= 0.0:
-		_attack_cooldown = attack_interval * (1.0 + _attack_slow_amount)
-		_do_attack()
+	else:
+		velocity.x = 0.0
+		velocity.z = 0.0
+	if is_silenced:
+		return
+	_spell_cooldown -= delta
+	if _spell_cooldown <= 0.0:
+		_spell_cooldown = spell_interval
+		_do_cast_spell()
 
 func _tick_leash() -> void:
 	if is_charmed:
@@ -288,29 +376,46 @@ func _tick_leash() -> void:
 	else:
 		_move_toward(_spawn_position)
 
+func _tick_flee(delta: float) -> void:
+	if not _should_flee():
+		_transition(State.CHASE)
+		return
+	_move_toward(_spawn_position)
+	_heal_cooldown -= delta
+	if _heal_cooldown <= 0.0 and heal_amount > 0.0:
+		_heal_cooldown = heal_interval
+		hp = minf(hp + heal_amount, max_hp)
+		hp_changed.emit(hp, max_hp)
+		flash_spell_hit(Color(0.2, 1.0, 0.2))
+		CombatLog.add_line("%s heals itself for %d." % [mob_name, int(heal_amount)], CombatLog.MsgType.INFO)
+
+func _should_flee() -> bool:
+	return healer_flee_hp > 0.0 and hp / max_hp < healer_flee_hp
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 func _player_valid() -> bool:
 	return _player != null and is_instance_valid(_player) and not PlayerDeath.is_dead
 
 func _move_toward(target_pos: Vector3) -> void:
-	var dir := (target_pos - global_position)
-	dir.y = 0.0
-	dir = dir.normalized()
-	var eff_speed := move_speed * (1.0 - _snare_amount)
-	velocity.x = dir.x * eff_speed
-	velocity.z = dir.z * eff_speed
-	_face_toward(target_pos)
-
-func _face_toward(target_pos: Vector3) -> void:
-	var look_pos := Vector3(target_pos.x, global_position.y, target_pos.z)
-	if look_pos.distance_to(global_position) > 0.01:
-		look_at(look_pos, Vector3.UP)
+	_move_at_speed(target_pos, move_speed * _speed_mult * (1.0 - _snare_amount))
 
 func _do_attack() -> void:
-	Combat.receive_player_damage(base_damage, self, mob_name)
+	var dmg := int(base_damage * _damage_mult)
+	Combat.receive_player_damage(dmg, self, mob_name)
 	if _player_valid():
-		DamageNumbers.spawn_incoming(_player.global_position, base_damage)
+		DamageNumbers.spawn_incoming(_player.global_position, dmg)
+
+func _do_cast_spell() -> void:
+	if not _player_valid():
+		return
+	var crit_roll := randf() < 0.05
+	var amount: int = int(spell_damage * _damage_mult) * 2 if crit_roll else int(spell_damage * _damage_mult)
+	Combat.receive_player_damage(amount, self, mob_name)
+	if _player_valid():
+		var color := Combat.spell_color(spell_damage_type)
+		DamageNumbers.spawn_incoming(_player.global_position, amount)
+		Combat.spawn_impact_light(_player.global_position, color)
 
 # ── public API ────────────────────────────────────────────────────────────────
 
@@ -394,16 +499,28 @@ func take_damage(amount: int) -> void:
 	hp = maxf(hp - amount, 0.0)
 	hp_changed.emit(hp, max_hp)
 	_flash_hit(Color.WHITE)
+	_check_enrage()
 	if state == State.IDLE:
 		_transition(State.CHASE)
 	_force_chase_timer = 10.0
 	if hp <= 0.0:
 		_die()
 
+func _check_enrage() -> void:
+	if _enraged or _enrage_threshold <= 0.0 or hp <= 0.0:
+		return
+	if hp / max_hp <= _enrage_threshold:
+		_enraged = true
+		_damage_mult *= _enrage_damage_mult
+		_speed_mult  *= _enrage_speed_mult
+		_name_label.add_theme_color_override("font_color", Color(1.0, 0.20, 0.10))
+		CombatLog.add_line("%s becomes ENRAGED!" % mob_name, CombatLog.MsgType.DAMAGE_IN)
+
 func _die() -> void:
 	_transition(State.DEAD)
 	if not is_charmed:
-		PlayerStats.gain_xp(xp_reward)
+		GroupManager.distribute_kill_xp(xp_reward)
+		QuestManager.notify_kill(mob_name)
 	died.emit(self)
 	_name_label.visible = false
 	_target_indicator.visible = false
@@ -415,8 +532,41 @@ func _die() -> void:
 	if mat:
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		tw.tween_property(mat, "albedo_color:a", 0.0, 1.0).set_delay(0.5)
-	await get_tree().create_timer(2.0).timeout
-	queue_free()
+	var despawn_delay := 30.0 if is_skinnable else 3.0
+	await get_tree().create_timer(despawn_delay).timeout
+	if is_instance_valid(self):
+		queue_free()
+
+func apply_named(named_id: String) -> void:
+	var data: Dictionary = NamedMobDefinitions.ALL.get(named_id, {})
+	if data.is_empty():
+		return
+
+	var display: String  = data.get("display_name", mob_name)
+	var subtitle: String = data.get("subtitle", "")
+	mob_name = display
+	_name_label.text = ("%s %s" % [display, subtitle]).strip_edges()
+	_name_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0))
+
+	level      = data.get("level", level)
+	max_hp     = max_hp * data.get("hp_mult", 1.0)
+	hp         = max_hp
+	xp_reward  = int(xp_reward * data.get("xp_mult", 1.0))
+	_damage_mult       = data.get("damage_mult", 1.0)
+	_enrage_threshold  = data.get("enrage_threshold", 0.0)
+	_enrage_damage_mult = data.get("enrage_damage_mult", 1.5)
+	_enrage_speed_mult  = data.get("enrage_speed_mult", 1.3)
+	hp_changed.emit(hp, max_hp)
+
+	if loot_table == null:
+		loot_table = _build_default_loot_table()
+
+	for d: Dictionary in data.get("guaranteed_loot", []):
+		_named_drops.append(NamedMobDefinitions.make_item(d))
+
+	for d: Dictionary in data.get("rare_loot", []):
+		if randf() < d.get("drop_chance", 0.2):
+			_named_drops.append(NamedMobDefinitions.make_item(d))
 
 func flash_spell_hit(color: Color) -> void:
 	if state != State.DEAD:
