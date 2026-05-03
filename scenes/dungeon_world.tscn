@@ -23,6 +23,7 @@ environment = SubResource("Environment_cave")
 [node name="DungeonSpawner" type="Node3D" parent="."]
 script = ExtResource("3_dspawn")
 dungeon_seed = 1
+floor_count = 2
 auto_generate = false
 
 [node name="Players" type="Node3D" parent="."]
