@@ -128,6 +128,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif state == PlayerState.SITTING:
 				_enter_state(PlayerState.STANDING)
 
+func _is_text_input_focused() -> bool:
+	var f := get_viewport().gui_get_focus_owner()
+	return f != null and (f is LineEdit or f is TextEdit)
+
 func _physics_process(delta: float) -> void:
 	# Poll hardware state so camera works even when UI panels consume the event.
 	var want_cam := Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
@@ -135,8 +139,10 @@ func _physics_process(delta: float) -> void:
 		is_camera_active = want_cam
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if want_cam else Input.MOUSE_MODE_VISIBLE
 
+	var chat_focused := _is_text_input_focused()
+
 	if state == PlayerState.SITTING:
-		var moving := (
+		var moving := not chat_focused and (
 			Input.is_action_pressed("move_forward") or
 			Input.is_action_pressed("move_left") or
 			Input.is_action_pressed("move_backward") or
@@ -157,7 +163,7 @@ func _physics_process(delta: float) -> void:
 
 	if now_on_floor:
 		_peak_fall_speed = 0.0
-		if Input.is_action_pressed("jump") and state != PlayerState.SITTING:
+		if not chat_focused and Input.is_action_pressed("jump") and state != PlayerState.SITTING:
 			velocity.y = JUMP_VELOCITY
 		else:
 			velocity.y = maxf(velocity.y, 0.0)
@@ -166,14 +172,15 @@ func _physics_process(delta: float) -> void:
 		_peak_fall_speed = maxf(_peak_fall_speed, -velocity.y)
 
 	var direction := Vector3.ZERO
-	if Input.is_action_pressed("move_forward"):
-		direction -= transform.basis.z
-	if Input.is_action_pressed("move_backward"):
-		direction += transform.basis.z
-	if Input.is_action_pressed("move_left"):
-		direction -= transform.basis.x
-	if Input.is_action_pressed("move_right"):
-		direction += transform.basis.x
+	if not chat_focused:
+		if Input.is_action_pressed("move_forward"):
+			direction -= transform.basis.z
+		if Input.is_action_pressed("move_backward"):
+			direction += transform.basis.z
+		if Input.is_action_pressed("move_left"):
+			direction -= transform.basis.x
+		if Input.is_action_pressed("move_right"):
+			direction += transform.basis.x
 
 	var base_speed := CROUCH_SPEED if state == PlayerState.CROUCHING else SPEED
 	var current_speed := base_speed * BuffManager.get_speed_mult()

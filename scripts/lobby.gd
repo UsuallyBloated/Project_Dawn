@@ -58,15 +58,29 @@ func _on_server_disconnected() -> void:
 func _on_test_room_pressed() -> void:
 	Network.is_online = false
 	Network.is_test_room = true
-	_setup_default_character("Human", "Warrior")
+	_setup_default_character()
 	get_tree().change_scene_to_file(GAME_SCENE)
 
 func _on_test_dungeon_pressed() -> void:
 	Network.is_online = false
 	Network.is_test_room = true
-	_setup_default_character("Human", "Warrior")
+	_setup_default_character()
 	get_tree().change_scene_to_file(DUNGEON_SCENE)
 
-func _setup_default_character(race: String, cls: String) -> void:
-	PlayerStats.player_name = "TestChar"
-	PlayerStats.apply_character(race, cls, 1)
+const TEST_CHARACTER_NAME  := "Chortle"
+const TEST_CHARACTER_RACE  := "Troll"
+const TEST_CHARACTER_CLASS := "Shadow Knight"
+const TEST_CHARACTER_LEVEL := 50
+
+func _setup_default_character() -> void:
+	if SaveManager.load_save():
+		return
+	PlayerStats.player_name = TEST_CHARACTER_NAME
+	PlayerStats.apply_character(TEST_CHARACTER_RACE, TEST_CHARACTER_CLASS, TEST_CHARACTER_LEVEL)
+
+func _on_delete_save_pressed() -> void:
+	if SaveManager.has_save():
+		SaveManager.delete_save()
+		status_label.text = "Save deleted."
+	else:
+		status_label.text = "No save to delete."

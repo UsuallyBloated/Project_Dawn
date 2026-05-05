@@ -7,6 +7,7 @@ const DAY_DURATION := 1200.0
 const START_HOUR   := 8.0    # start at 8 AM
 
 var time_of_day: float = START_HOUR / 24.0  # normalized 0..1
+var paused: bool = false
 
 var _sun: DirectionalLight3D = null
 var _moon: DirectionalLight3D = null
@@ -43,6 +44,8 @@ func _setup_moon() -> void:
 	get_tree().current_scene.add_child(_moon)
 
 func _process(delta: float) -> void:
+	if paused:
+		return
 	time_of_day = fmod(time_of_day + delta / DAY_DURATION, 1.0)
 	_apply()
 

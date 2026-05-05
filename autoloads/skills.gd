@@ -7,6 +7,7 @@ signal skills_changed
 var _all_skills: Dictionary = {}
 var _cooldowns: CooldownTracker
 var available: Array[SkillData] = []
+var no_cooldowns: bool = false
 
 func _ready() -> void:
 	SkillDefinitions.validate()
@@ -30,7 +31,7 @@ func setup_for_class(_player_class: String) -> void:
 	skills_changed.emit()
 
 func use_skill(skill: SkillData) -> bool:
-	if _cooldowns.is_active(skill.skill_name):
+	if _cooldowns.is_active(skill.skill_name) and not no_cooldowns:
 		return false
 	if PlayerStats.stamina < skill.stamina_cost:
 		return false

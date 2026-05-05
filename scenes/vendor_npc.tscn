@@ -1,8 +1,12 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/vendor_npc.gd" id="1"]
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_1"]
+[sub_resource type="CapsuleShape3D" id="SphereShape3D_1"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="SphereShape3D" id="ProximitySphere"]
 radius = 2.5
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
@@ -30,3 +34,10 @@ outline_size = 6
 outline_modulate = Color(0, 0, 0, 1)
 billboard = 1
 no_depth_test = false
+
+[node name="ProximitySensor" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ProximitySensor"]
+shape = SubResource("ProximitySphere")

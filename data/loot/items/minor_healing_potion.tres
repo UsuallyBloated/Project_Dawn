@@ -1,6 +1,9 @@
-[gd_resource type="ItemData" load_steps=1 format=3]
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/item_data.gd" id="1_item"]
 
 [resource]
+script = ExtResource("1_item")
 item_name = "Minor Healing Potion"
 description = "A pale red tincture. Restores a modest amount of health when consumed."
 type = 9

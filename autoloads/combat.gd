@@ -36,6 +36,7 @@ var _auto_attack_timer: Timer
 var _offhand_timer: Timer
 var _player: Node3D = null
 var _last_crit: bool = false
+var god_mode: bool = false
 
 func register_player(node: Node3D) -> void:
 	_player = node
@@ -56,19 +57,24 @@ func _ready() -> void:
 
 	Equipment.equipment_changed.connect(_on_equipment_changed)
 
-func set_target(enemy) -> void:
-	if current_target == enemy:
+func set_target(node) -> void:
+	if current_target == node:
 		return
 	if is_instance_valid(current_target) and current_target.has_method("set_targeted"):
 		current_target.set_targeted(false)
-	current_target = enemy
-	if enemy != null and is_instance_valid(enemy):
-		enemy.set_targeted(true)
-		if not enemy.is_connected("died", _on_target_died):
-			enemy.died.connect(_on_target_died)
-		_auto_attack_timer.start()
-		if _is_dual_wielding():
-			_offhand_timer.start()
+	current_target = node
+	if node != null and is_instance_valid(node):
+		if node.has_method("set_targeted"):
+			node.set_targeted(true)
+		if node.is_in_group("enemies"):
+			if node.has_signal("died") and not node.is_connected("died", _on_target_died):
+				node.died.connect(_on_target_died)
+			_auto_attack_timer.start()
+			if _is_dual_wielding():
+				_offhand_timer.start()
+		else:
+			_auto_attack_timer.stop()
+			_offhand_timer.stop()
 	else:
 		current_target = null
 		_auto_attack_timer.stop()
@@ -239,10 +245,12 @@ func deal_spell_damage(amount: int, damage_type: SpellData.DamageType = SpellDat
 		spawn_impact_light(fx_target.global_position, sc)
 
 func has_valid_target() -> bool:
-	return current_target != null and is_instance_valid(current_target) and not current_target.is_dead
+	return current_target != null and is_instance_valid(current_target) and current_target.is_in_group("enemies") and not current_target.is_dead
 
 func receive_player_damage(amount: int, attacker: Node = null, attacker_name: String = "") -> void:
 	if PlayerDeath.is_dead:
+		return
+	if god_mode:
 		return
 	if attacker != null and is_instance_valid(attacker):
 		player_attacked.emit(attacker)

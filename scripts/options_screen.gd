@@ -16,6 +16,8 @@ var _tab_container: TabContainer
 var _win_mode_btn: OptionButton
 var _res_btn: OptionButton
 var _vsync_btn: OptionButton
+var _ui_scale_slider: HSlider = null
+var _ui_scale_label: Label = null
 
 # Audio controls
 var _audio_rows: Dictionary = {}  # id -> {slider: HSlider, pct: Label}
@@ -75,13 +77,17 @@ func _build() -> void:
 
 	var btn_row := HBoxContainer.new()
 	btn_row.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	btn_row.offset_left   = -218.0
+	btn_row.offset_left   = -328.0
 	btn_row.offset_top    = -52.0
 	btn_row.offset_right  = -12.0
 	btn_row.offset_bottom = -12.0
 	btn_row.alignment = BoxContainer.ALIGNMENT_END
 	btn_row.add_theme_constant_override("separation", 10)
 	add_child(btn_row)
+
+	var quit_btn := UITheme.make_button("Quit Game")
+	quit_btn.pressed.connect(_on_quit_pressed)
+	btn_row.add_child(quit_btn)
 
 	var apply_btn := UITheme.make_button("Apply")
 	apply_btn.pressed.connect(_on_apply)
@@ -92,6 +98,10 @@ func _build() -> void:
 		_cancel_listening()
 		visible = false)
 	btn_row.add_child(close_btn)
+
+func _on_quit_pressed() -> void:
+	SaveManager.save()
+	get_tree().quit()
 
 func _style_tabs() -> void:
 	var panel_s := StyleBoxFlat.new()
@@ -164,6 +174,22 @@ func _build_graphics_tab() -> void:
 	_vsync_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vsync_row.add_child(_vsync_btn)
 	vbox.add_child(vsync_row)
+
+	var scale_row := _make_row("UI Scale")
+	_ui_scale_slider = HSlider.new()
+	_ui_scale_slider.min_value = 0.75
+	_ui_scale_slider.max_value = 1.50
+	_ui_scale_slider.step = 0.05
+	_ui_scale_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_ui_scale_label = Label.new()
+	_ui_scale_label.custom_minimum_size = Vector2(48.0, 0.0)
+	_ui_scale_label.add_theme_color_override("font_color", UITheme.C_TEXT)
+	_ui_scale_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_ui_scale_slider.value_changed.connect(func(v: float) -> void:
+		_ui_scale_label.text = "%d%%" % int(v * 100.0))
+	scale_row.add_child(_ui_scale_slider)
+	scale_row.add_child(_ui_scale_label)
+	vbox.add_child(scale_row)
 
 # ── Audio tab ─────────────────────────────────────────────────────────────────
 
@@ -304,6 +330,12 @@ func _cancel_listening() -> void:
 	_listening_btn = null
 
 func _commit_listening(keycode: int) -> void:
+	# Reserved keys (Enter/Numpad-Enter/Escape) are wired to chat and menu nav;
+	# rebinding to them would break the game. Cancel the rebind, leaving the
+	# previous binding intact.
+	if GameSettings.is_reserved_key(keycode):
+		_cancel_listening()
+		return
 	GameSettings.keybinds[_listening_action] = keycode
 	GameSettings.apply_keybinds()
 	_listening_btn.text = _key_label(_listening_action)
@@ -366,6 +398,8 @@ func _load_from_settings() -> void:
 	_win_mode_btn.selected = GameSettings.window_mode
 	_res_btn.selected = max(0, GameSettings.resolution_index)
 	_vsync_btn.selected = GameSettings.vsync_mode
+	_ui_scale_slider.value = GameSettings.ui_scale
+	_ui_scale_label.text = "%d%%" % int(GameSettings.ui_scale * 100.0)
 	for ch: Dictionary in _AUDIO_CHANNELS:
 		_audio_rows[ch.id].slider.value = GameSettings.get(ch.id + "_volume")
 	_ft_master_cb.button_pressed = GameSettings.floating_text_enabled
@@ -383,6 +417,7 @@ func _on_apply() -> void:
 	GameSettings.window_mode      = _win_mode_btn.selected
 	GameSettings.resolution_index = _res_btn.selected
 	GameSettings.vsync_mode       = _vsync_btn.selected
+	GameSettings.ui_scale         = _ui_scale_slider.value
 	for ch: Dictionary in _AUDIO_CHANNELS:
 		GameSettings.set(ch.id + "_volume", _audio_rows[ch.id].slider.value)
 	GameSettings.floating_text_enabled = _ft_master_cb.button_pressed

@@ -26,7 +26,6 @@ const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
 
 var _clock_label: Label = null
 var _state_label: Label = null
-var _command_input: LineEdit = null
 var _hp_label: Label = null
 var _mp_label: Label = null
 var _sta_label: Label = null
@@ -308,15 +307,7 @@ func _build_state_label() -> void:
 	add_child(_state_label)
 
 func _build_command_input() -> void:
-	_command_input = LineEdit.new()
-	_command_input.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_command_input.position = Vector2(-150.0, -60.0)
-	_command_input.size = Vector2(300.0, 28.0)
-	_command_input.placeholder_text = "Type a command..."
-	_command_input.visible = false
-	_command_input.text_submitted.connect(_on_command_submitted)
-	_command_input.focus_exited.connect(func(): _command_input.visible = false)
-	add_child(_command_input)
+	CombatLog.chat_submitted.connect(_handle_chat_input)
 
 func _connect_player_state() -> void:
 	var players := get_tree().get_nodes_in_group("player")
@@ -342,13 +333,11 @@ func _process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
-			if _command_input != null and not _command_input.visible:
-				_command_input.visible = true
-				_command_input.text = ""
-				_command_input.grab_focus()
+			if not CombatLog.is_chat_input_focused():
+				CombatLog.show_chat_input()
 				get_viewport().set_input_as_handled()
 				return
-		if _command_input != null and _command_input.visible:
+		if CombatLog.is_chat_input_focused():
 			get_viewport().set_input_as_handled()
 			return
 		if event.keycode == KEY_ESCAPE:
@@ -379,16 +368,34 @@ func _unhandled_input(event: InputEvent) -> void:
 			if _quest_journal != null:
 				_quest_journal.visible = !_quest_journal.visible
 		elif event.is_action("interact"):
-			if DialogueManager.nearby_npc != null:
-				DialogueManager.open_nearby()
-			elif VendorManager.nearby_vendor != null:
-				VendorManager.open_nearby()
+			if _try_open_targeted_npc():
+				pass
 			elif StationManager.nearby_station != "":
 				_crafting_window.visible = true
 			elif _try_loot_nearby():
 				pass
 			elif not _try_mine_nearby():
 				_try_skin_nearby()
+
+func _try_open_targeted_npc() -> bool:
+	var t = Combat.current_target
+	if t == null or not is_instance_valid(t):
+		return false
+	var is_friendly: bool = t.is_in_group("dialogue_npcs") or t.is_in_group("vendor_npcs")
+	if not is_friendly:
+		return false
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return false
+	const NPC_INTERACT_RANGE := 6.0
+	if t.global_position.distance_to(player.global_position) > NPC_INTERACT_RANGE:
+		CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
+		return true
+	if t.is_in_group("dialogue_npcs"):
+		DialogueManager.open_for(t)
+	else:
+		VendorManager.open_for(t)
+	return true
 
 func _try_loot_nearby() -> bool:
 	var player := get_tree().get_first_node_in_group("player")
@@ -504,6 +511,7 @@ func _show_self_target() -> void:
 		_target_hp_label.text = "%d / %d" % [int(PlayerStats.hp), int(PlayerStats.max_hp)]
 		_target_hp_label.visible = true
 	target_frame.visible = true
+	target_hp_bar.visible = true
 	if not PlayerStats.is_connected("hp_changed", _on_self_target_hp_changed):
 		PlayerStats.hp_changed.connect(_on_self_target_hp_changed)
 	if _tot_frame != null:
@@ -534,12 +542,25 @@ func _on_target_changed(enemy) -> void:
 	_tracked_target = enemy
 	if enemy == null or not is_instance_valid(enemy):
 		target_frame.visible = false
+		target_hp_bar.visible = true
 		if _target_hp_label:
 			_target_hp_label.visible = false
 		if _tot_frame != null:
 			_tot_frame.visible = false
 		return
 	target_frame.visible = true
+	if not enemy.is_in_group("enemies"):
+		var nm: String = enemy.vendor_name if enemy.is_in_group("vendor_npcs") else enemy.npc_name
+		var subtitle: String = enemy.vendor_type if enemy.is_in_group("vendor_npcs") else enemy.npc_title
+		target_name_label.text = nm
+		target_level_label.text = subtitle
+		target_hp_bar.visible = false
+		if _target_hp_label:
+			_target_hp_label.visible = false
+		if _tot_frame != null:
+			_tot_frame.visible = false
+		return
+	target_hp_bar.visible = true
 	target_name_label.text = enemy.mob_name
 	target_level_label.text = "Level %d" % enemy.level
 	target_hp_bar.max_value = enemy.max_hp
@@ -586,14 +607,6 @@ func _on_player_state_changed(new_state: int) -> void:
 		_state_label.visible = false
 
 # ── Command input ─────────────────────────────────────────────────────────────
-
-func _on_command_submitted(text: String) -> void:
-	_command_input.visible = false
-	_command_input.text = ""
-	var trimmed := text.strip_edges()
-	if trimmed.is_empty():
-		return
-	_handle_chat_input(trimmed)
 
 func _handle_chat_input(text: String) -> void:
 	var my_name := PlayerStats.player_name if PlayerStats.player_name != "" else "You"

@@ -54,6 +54,16 @@ DebugLog="*res://autoloads/debug_log.gd"
 QuestManager="*res://autoloads/quest_manager.gd"
 StationManager="*res://autoloads/station_manager.gd"
 DialogueManager="*res://autoloads/dialogue_manager.gd"
+SaveManager="*res://autoloads/save_manager.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 
 [editor_plugins]
 

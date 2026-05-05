@@ -14,6 +14,7 @@ var available: Array[SpellData] = []
 var _casting: SpellData = null
 var _cast_timer: float = 0.0
 var _hit_during_cast: bool = false
+var no_cooldowns: bool = false
 
 func _ready() -> void:
 	SpellDefinitions.validate()
@@ -67,7 +68,7 @@ func _get_alignment_effectiveness(player_class: String) -> float:
 func cast_spell(spell: SpellData) -> bool:
 	if _casting != null:
 		return false
-	if _cooldowns.is_active(spell.spell_name):
+	if _cooldowns.is_active(spell.spell_name) and not no_cooldowns:
 		spell_failed.emit("Spell is on cooldown.")
 		return false
 	if PlayerStats.mp < spell.mana_cost:

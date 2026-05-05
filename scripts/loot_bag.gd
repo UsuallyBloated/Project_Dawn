@@ -35,6 +35,13 @@ func _ready() -> void:
 
 	input_event.connect(_on_input_event)
 
+	var despawn_timer := Timer.new()
+	despawn_timer.wait_time = 120.0
+	despawn_timer.one_shot = true
+	despawn_timer.autostart = true
+	despawn_timer.timeout.connect(queue_free)
+	add_child(despawn_timer)
+
 const LOOT_RANGE := 6.0
 
 func _on_input_event(_camera: Node, event: InputEvent, _pos: Vector3, _normal: Vector3, _idx: int) -> void:

@@ -94,3 +94,34 @@ func _slot_for_type(type: ItemData.Type) -> String:
 		ItemData.Type.RING:     return "ring"
 		ItemData.Type.NECK:     return "neck"
 	return ""
+
+# ── Save / load (Tier 2) ──────────────────────────────────────────────────────
+
+func save_state() -> Dictionary:
+	var slots_out: Dictionary = {}
+	for s in SLOTS:
+		var item: ItemData = equipped.get(s)
+		if item != null:
+			slots_out[s] = item.to_save_dict()
+	return {"slots": slots_out}
+
+func load_state(d: Dictionary) -> void:
+	# Clear current equipment + remove any lingering bonuses (defensive — load
+	# normally runs from a clean state, but Equipment may have items from the
+	# default character path).
+	for s in SLOTS:
+		var existing: ItemData = equipped.get(s)
+		if existing != null:
+			_remove_stat_bonuses(existing)
+			equipped[s] = null
+			equipment_changed.emit(s, null)
+	var slots_in: Dictionary = d.get("slots", {})
+	for s in SLOTS:
+		if not slots_in.has(s):
+			continue
+		var item: ItemData = ItemData.from_save_dict(slots_in[s])
+		if item == null:
+			continue
+		equipped[s] = item
+		_apply_stat_bonuses(item)
+		equipment_changed.emit(s, item)

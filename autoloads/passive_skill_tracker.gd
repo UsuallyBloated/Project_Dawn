@@ -32,3 +32,12 @@ func get_cap(_skill_name: String) -> int:
 
 func _on_level_changed(new_level: int) -> void:
 	_level = new_level
+
+func save_state() -> Dictionary:
+	return {"skills": _skills.duplicate()}
+
+func load_state(d: Dictionary) -> void:
+	var saved: Dictionary = d.get("skills", {})
+	for k in saved:
+		if _skills.has(k):
+			_skills[k] = int(saved[k])

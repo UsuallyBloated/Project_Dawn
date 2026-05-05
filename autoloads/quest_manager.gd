@@ -181,3 +181,15 @@ func _all_objectives_done(q: Dictionary) -> bool:
 		if not obj["done"]:
 			return false
 	return true
+
+# ── Save / load (Tier 1 persistence) ──────────────────────────────────────────
+
+func save_state() -> Dictionary:
+	return {"quests": _quests.duplicate(true)}
+
+func load_state(d: Dictionary) -> void:
+	_quests.clear()
+	var saved: Dictionary = d.get("quests", {})
+	for id in saved:
+		_quests[id] = (saved[id] as Dictionary).duplicate(true)
+		quest_added.emit(id)

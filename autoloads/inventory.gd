@@ -248,3 +248,57 @@ func all_slots() -> Array:
 			if s != null:
 				result.append(s)
 	return result
+
+# ── Save / load (Tier 2) ──────────────────────────────────────────────────────
+
+func save_state() -> Dictionary:
+	var base_out: Array = []
+	var bags_out: Array = []
+	for i in BASE_SLOT_COUNT:
+		base_out.append(_slot_to_dict(base_slots[i]))
+		if bag_contents[i] == null:
+			bags_out.append(null)
+		else:
+			var bag_out: Array = []
+			for s in bag_contents[i]:
+				bag_out.append(_slot_to_dict(s))
+			bags_out.append(bag_out)
+	return {"base": base_out, "bags": bags_out}
+
+func load_state(d: Dictionary) -> void:
+	for i in BASE_SLOT_COUNT:
+		base_slots[i] = null
+		bag_contents[i] = null
+	var base_in: Array = d.get("base", [])
+	var bags_in: Array = d.get("bags", [])
+	for i in BASE_SLOT_COUNT:
+		if i < base_in.size():
+			var slot: Variant = _slot_from_dict(base_in[i])
+			if slot != null:
+				base_slots[i] = slot
+				if slot["item"].type == ItemData.Type.BAG and i < bags_in.size():
+					var raw_bag: Variant = bags_in[i]
+					if raw_bag is Array:
+						var size: int = slot["item"].bag_num_slots
+						var bag_arr: Array = []
+						bag_arr.resize(size)
+						bag_arr.fill(null)
+						for j in mini(size, (raw_bag as Array).size()):
+							bag_arr[j] = _slot_from_dict((raw_bag as Array)[j])
+						bag_contents[i] = bag_arr
+	inventory_changed.emit()
+
+func _slot_to_dict(slot: Variant) -> Variant:
+	if slot == null:
+		return null
+	var item: ItemData = slot["item"]
+	return {"item": item.to_save_dict(), "count": int(slot["count"])}
+
+func _slot_from_dict(raw: Variant) -> Variant:
+	if raw == null or not (raw is Dictionary):
+		return null
+	var d: Dictionary = raw
+	var item: ItemData = ItemData.from_save_dict(d.get("item", {}))
+	if item == null:
+		return null
+	return {"item": item, "count": int(d.get("count", 1))}

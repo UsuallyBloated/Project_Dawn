@@ -28,12 +28,15 @@ func _click_target(mouse_pos: Vector2) -> void:
 	var origin := camera.project_ray_origin(mouse_pos)
 	var end := origin + camera.project_ray_normal(mouse_pos) * 100.0
 	var params := PhysicsRayQueryParameters3D.create(origin, end)
+	params.collide_with_areas = true
 	var result := space.intersect_ray(params)
 	if result.is_empty():
 		Combat.set_target(null)
 		return
 	var body = result["collider"]
 	if body.is_in_group("enemies") and not body.is_dead:
+		Combat.set_target(body)
+	elif body.is_in_group("vendor_npcs") or body.is_in_group("dialogue_npcs"):
 		Combat.set_target(body)
 	elif body is Area3D:
 		pass  # interactable (e.g. loot bag) — let its own input_event handle it

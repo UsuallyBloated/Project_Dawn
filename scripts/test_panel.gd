@@ -1,11 +1,21 @@
 extends CanvasLayer
 
-var _race_opt: OptionButton
-var _class_opt: OptionButton
-var _level_lbl: Label
-var _body: VBoxContainer
-var _toggle_btn: Button
-var _collapsed: bool = false
+const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
+
+const NORMAL_MOBS := [
+	{"name":"Bandit",   "level":3, "max_hp":60.0,  "base_damage":8,  "xp_reward":30, "move_speed":3.0, "aggro_range":8.0},
+	{"name":"Wolf",     "level":2, "max_hp":45.0,  "base_damage":6,  "xp_reward":20, "move_speed":4.0, "aggro_range":10.0},
+	{"name":"Skeleton", "level":4, "max_hp":55.0,  "base_damage":9,  "xp_reward":35, "move_speed":2.8, "aggro_range":7.0},
+	{"name":"Gnoll",    "level":5, "max_hp":80.0,  "base_damage":12, "xp_reward":45, "move_speed":3.2, "aggro_range":9.0},
+]
+
+const ZONES := [
+	{"name": "World (Test Room)",  "path": "res://scenes/world.tscn",         "entry": "default"},
+	{"name": "Dungeon World",      "path": "res://scenes/dungeon_world.tscn", "entry": "default"},
+]
+
+const STAT_KEYS := ["strength", "dexterity", "agility", "intelligence", "wisdom", "constitution"]
+const STAT_ABBR := ["STR", "DEX", "AGI", "INT", "WIS", "CON"]
 
 const C_BG     := Color(0.10, 0.08, 0.06, 0.93)
 const C_BORDER := Color(0.80, 0.60, 0.20, 1.00)
@@ -13,16 +23,48 @@ const C_TITLE  := Color(0.90, 0.75, 0.30, 1.00)
 const C_TEXT   := Color(0.75, 0.70, 0.60, 1.00)
 const C_DIE    := Color(0.70, 0.15, 0.15, 1.00)
 
+var _race_opt: OptionButton
+var _class_opt: OptionButton
+var _level_lbl: Label
+var _body: VBoxContainer
+var _toggle_btn: Button
+var _collapsed: bool = false
+
+# Section containers
+var _sec_character: VBoxContainer
+var _sec_resources: VBoxContainer
+var _sec_time: VBoxContainer
+var _sec_zone: VBoxContainer
+var _sec_enemy: VBoxContainer
+var _sec_stats: VBoxContainer
+var _sec_combat: VBoxContainer
+
+# Time section
+var _time_label: Label
+var _time_slider: HSlider
+
+# Enemy section
+var _normal_mob_opt: OptionButton
+var _named_mob_opt: OptionButton
+
+# Stats section
+var _stat_labels: Array[Label] = []
+
 func _ready() -> void:
 	layer = 10
 	_build_ui()
 	_populate_options()
 
+func _process(_delta: float) -> void:
+	if _collapsed or _time_label == null or not _sec_time.visible:
+		return
+	_time_label.text = "Current: " + TimeOfDay.get_time_string()
+
 func _build_ui() -> void:
 	var panel := DraggablePanel.new()
 	panel.position = Vector2(10, 10)
-	panel.custom_minimum_size = Vector2(230, 60)
-	panel.size = Vector2(230, 500)
+	panel.custom_minimum_size = Vector2(240, 60)
+	panel.size = Vector2(240, 480)
 	add_child(panel)
 
 	var style := StyleBoxFlat.new()
@@ -42,6 +84,7 @@ func _build_ui() -> void:
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_child(vbox)
 
 	# Header row
@@ -63,28 +106,84 @@ func _build_ui() -> void:
 	_toggle_btn.pressed.connect(_toggle_collapse)
 	header.add_child(_toggle_btn)
 
-	# Body (collapsible)
+	# Body (collapsible) — wrapped in a ScrollContainer so the panel fits any screen size.
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	vbox.add_child(scroll)
+
 	_body = VBoxContainer.new()
 	_body.add_theme_constant_override("separation", 6)
-	vbox.add_child(_body)
+	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_body)
 
-	_body.add_child(_make_label("Race"))
+	_sec_character = _make_section("CHARACTER", true)
+	_sec_resources = _make_section("RESOURCES", true)
+	_sec_time      = _make_section("TIME & WORLD")
+	_sec_zone      = _make_section("ZONE TRAVEL")
+	_sec_enemy     = _make_section("ENEMY SPAWN")
+	_sec_stats     = _make_section("STATS OVERRIDE")
+	_sec_combat    = _make_section("COMBAT FLAGS")
+	_build_character_section()
+	_build_resources_section()
+	_build_time_section()
+	_build_zone_section()
+	_build_enemy_section()
+	_build_stats_section()
+	_build_combat_section()
+
+func _make_section(title: String, start_open: bool = false) -> VBoxContainer:
+	var header_btn := Button.new()
+	header_btn.text = ("▾ " if start_open else "▸ ") + title
+	header_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_btn.focus_mode = Control.FOCUS_NONE
+	var s := StyleBoxFlat.new()
+	s.bg_color = Color(0.14, 0.11, 0.07, 1.0)
+	s.border_color = C_TITLE
+	s.set_border_width_all(1)
+	s.set_corner_radius_all(3)
+	s.content_margin_left = 6; s.content_margin_top = 4
+	s.content_margin_right = 6; s.content_margin_bottom = 4
+	header_btn.add_theme_stylebox_override("normal", s)
+	header_btn.add_theme_stylebox_override("focus", s)
+	var h := s.duplicate() as StyleBoxFlat
+	h.bg_color = Color(0.22, 0.17, 0.09, 1.0)
+	header_btn.add_theme_stylebox_override("hover", h)
+	header_btn.add_theme_stylebox_override("pressed", h)
+	header_btn.add_theme_color_override("font_color", C_TITLE)
+	header_btn.add_theme_font_size_override("font_size", 11)
+	_body.add_child(header_btn)
+
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 5)
+	content.visible = start_open
+	_body.add_child(content)
+
+	header_btn.pressed.connect(func():
+		content.visible = not content.visible
+		header_btn.text = ("▾ " if content.visible else "▸ ") + title
+	)
+	return content
+
+func _build_character_section() -> void:
+	_sec_character.add_child(_make_label("Race"))
 	_race_opt = OptionButton.new()
 	_race_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_race_opt.focus_mode = Control.FOCUS_NONE
-	_body.add_child(_race_opt)
+	_sec_character.add_child(_race_opt)
 
-	_body.add_child(_make_label("Class"))
+	_sec_character.add_child(_make_label("Class"))
 	_class_opt = OptionButton.new()
 	_class_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_class_opt.focus_mode = Control.FOCUS_NONE
-	_body.add_child(_class_opt)
+	_sec_character.add_child(_class_opt)
 
-	# Level row
-	_body.add_child(_make_label("Level"))
+	_sec_character.add_child(_make_label("Level"))
 	var lvl_row := HBoxContainer.new()
 	lvl_row.add_theme_constant_override("separation", 4)
-	_body.add_child(lvl_row)
+	_sec_character.add_child(lvl_row)
 
 	var btn_minus := _make_step_btn("−")
 	btn_minus.pressed.connect(_change_level.bind(-1))
@@ -104,41 +203,228 @@ func _build_ui() -> void:
 
 	var apply_btn := _make_btn("Apply Race / Class / Level", C_BORDER)
 	apply_btn.pressed.connect(_apply_race_class)
-	_body.add_child(apply_btn)
+	_sec_character.add_child(apply_btn)
 
-	_body.add_child(HSeparator.new())
-
+func _build_resources_section() -> void:
 	var heal_btn := _make_btn("Full Heal", Color(0.20, 0.55, 0.20, 1.0))
 	heal_btn.pressed.connect(_full_heal)
-	_body.add_child(heal_btn)
+	_sec_resources.add_child(heal_btn)
 
 	var die_btn := _make_btn("Trigger Death", C_DIE)
 	die_btn.pressed.connect(_trigger_death)
-	_body.add_child(die_btn)
+	_sec_resources.add_child(die_btn)
 
 	var bags_btn := _make_btn("Give Bags", Color(0.45, 0.35, 0.15, 1.0))
 	bags_btn.pressed.connect(_give_bags)
-	_body.add_child(bags_btn)
+	_sec_resources.add_child(bags_btn)
 
 	var food_btn := _make_btn("Give Food & Drink", Color(0.35, 0.60, 0.20, 1.0))
 	food_btn.pressed.connect(_give_consumables)
-	_body.add_child(food_btn)
+	_sec_resources.add_child(food_btn)
 
 	var bow_btn := _make_btn("Give Bow", Color(0.55, 0.35, 0.10, 1.0))
 	bow_btn.pressed.connect(_give_bow)
-	_body.add_child(bow_btn)
+	_sec_resources.add_child(bow_btn)
 
 	var proc_btn := _make_btn("Give Proc Weapon", Color(0.65, 0.25, 0.05, 1.0))
 	proc_btn.pressed.connect(_give_proc_weapon)
-	_body.add_child(proc_btn)
+	_sec_resources.add_child(proc_btn)
 
 	var quest_btn := _make_btn("Add Test Quest", Color(0.60, 0.45, 0.10, 1.0))
 	quest_btn.pressed.connect(_add_test_quest)
-	_body.add_child(quest_btn)
+	_sec_resources.add_child(quest_btn)
 
 	var craft_btn := _make_btn("Give Crafting Materials", Color(0.20, 0.50, 0.65, 1.0))
 	craft_btn.pressed.connect(_give_crafting_materials)
-	_body.add_child(craft_btn)
+	_sec_resources.add_child(craft_btn)
+
+func _build_time_section() -> void:
+	_time_label = _make_label("Current: " + TimeOfDay.get_time_string())
+	_sec_time.add_child(_time_label)
+
+	_time_slider = HSlider.new()
+	_time_slider.min_value = 0.0
+	_time_slider.max_value = 23.75
+	_time_slider.step = 0.25
+	_time_slider.value = float(TimeOfDay.get_hour())
+	_time_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_time_slider.value_changed.connect(_on_time_slider_changed)
+	_sec_time.add_child(_time_slider)
+
+	var presets := HBoxContainer.new()
+	presets.add_theme_constant_override("separation", 4)
+	_sec_time.add_child(presets)
+	for entry in [["Dawn", 6.0], ["Noon", 12.0], ["Dusk", 18.0], ["Night", 23.0]]:
+		var b := _make_step_btn(entry[0])
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.add_theme_font_size_override("font_size", 11)
+		b.pressed.connect(_set_time.bind(entry[1]))
+		presets.add_child(b)
+
+	var pause_check := CheckButton.new()
+	pause_check.text = "Pause Cycle"
+	pause_check.focus_mode = Control.FOCUS_NONE
+	pause_check.add_theme_color_override("font_color", C_TEXT)
+	pause_check.toggled.connect(func(on: bool): TimeOfDay.paused = on)
+	_sec_time.add_child(pause_check)
+
+func _on_time_slider_changed(value: float) -> void:
+	TimeOfDay.time_of_day = value / 24.0
+	_time_label.text = "Current: " + TimeOfDay.get_time_string()
+
+func _set_time(hour: float) -> void:
+	TimeOfDay.time_of_day = hour / 24.0
+	_time_slider.value = hour
+	_time_label.text = "Current: " + TimeOfDay.get_time_string()
+
+func _build_zone_section() -> void:
+	var zone_opt := OptionButton.new()
+	zone_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	zone_opt.focus_mode = Control.FOCUS_NONE
+	for z in ZONES:
+		zone_opt.add_item(z["name"])
+	_sec_zone.add_child(zone_opt)
+
+	var teleport_btn := _make_btn("Teleport", Color(0.20, 0.45, 0.75, 1.0))
+	teleport_btn.pressed.connect(func():
+		if ZoneLoader._transitioning:
+			return
+		var z: Dictionary = ZONES[zone_opt.selected]
+		ZoneLoader.travel_to(z["path"], z["entry"], z["name"])
+	)
+	_sec_zone.add_child(teleport_btn)
+
+func _build_enemy_section() -> void:
+	_sec_enemy.add_child(_make_label("Normal Mob"))
+	_normal_mob_opt = OptionButton.new()
+	_normal_mob_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_normal_mob_opt.focus_mode = Control.FOCUS_NONE
+	for mob in NORMAL_MOBS:
+		_normal_mob_opt.add_item(mob["name"])
+	_sec_enemy.add_child(_normal_mob_opt)
+
+	var spawn_normal_btn := _make_btn("Spawn Normal", Color(0.35, 0.55, 0.20, 1.0))
+	spawn_normal_btn.pressed.connect(_spawn_normal_enemy)
+	_sec_enemy.add_child(spawn_normal_btn)
+
+	_sec_enemy.add_child(_make_label("Named Mob"))
+	_named_mob_opt = OptionButton.new()
+	_named_mob_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_named_mob_opt.focus_mode = Control.FOCUS_NONE
+	_sec_enemy.add_child(_named_mob_opt)
+
+	var spawn_named_btn := _make_btn("Spawn Named", Color(0.65, 0.45, 0.10, 1.0))
+	spawn_named_btn.pressed.connect(_spawn_named_enemy)
+	_sec_enemy.add_child(spawn_named_btn)
+
+	_sec_enemy.add_child(HSeparator.new())
+
+	var despawn_btn := _make_btn("Despawn All Enemies", C_DIE)
+	despawn_btn.pressed.connect(_despawn_all_enemies)
+	_sec_enemy.add_child(despawn_btn)
+
+func _get_spawn_pos() -> Vector3:
+	var players := get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		CombatLog.add_line("TestPanel: no player found for spawn position", CombatLog.MsgType.INFO)
+		return Vector3.ZERO
+	var p := players[0] as Node3D
+	return p.global_position + (-p.transform.basis.z.normalized() * 3.0)
+
+func _spawn_normal_enemy() -> void:
+	var data: Dictionary = NORMAL_MOBS[_normal_mob_opt.selected]
+	var e = ENEMY_SCENE.instantiate()
+	e.mob_name    = data["name"]
+	e.level       = data["level"]
+	e.max_hp      = data["max_hp"]
+	e.base_damage = data["base_damage"]
+	e.xp_reward   = data["xp_reward"]
+	e.move_speed  = data["move_speed"]
+	e.aggro_range = data["aggro_range"]
+	get_tree().current_scene.add_child(e)
+	e.global_position = _get_spawn_pos()
+
+func _spawn_named_enemy() -> void:
+	var keys: Array = NamedMobDefinitions.ALL.keys()
+	if keys.is_empty():
+		return
+	var e = ENEMY_SCENE.instantiate()
+	get_tree().current_scene.add_child(e)
+	e.global_position = _get_spawn_pos()
+	e.apply_named(keys[_named_mob_opt.selected])
+
+func _despawn_all_enemies() -> void:
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(enemy):
+			enemy.queue_free()
+
+func _build_stats_section() -> void:
+	_stat_labels.clear()
+	for i in STAT_KEYS.size():
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 4)
+		_sec_stats.add_child(row)
+
+		var abbr := Label.new()
+		abbr.text = STAT_ABBR[i]
+		abbr.custom_minimum_size = Vector2(28, 0)
+		abbr.add_theme_font_size_override("font_size", 11)
+		abbr.add_theme_color_override("font_color", C_TEXT)
+		row.add_child(abbr)
+
+		var minus := _make_step_btn("−")
+		minus.pressed.connect(_change_stat.bind(i, -1))
+		row.add_child(minus)
+
+		var val := Label.new()
+		val.text = str(int(PlayerStats.get(STAT_KEYS[i])))
+		val.add_theme_font_size_override("font_size", 13)
+		val.add_theme_color_override("font_color", C_TITLE)
+		val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		val.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(val)
+		_stat_labels.append(val)
+
+		var plus := _make_step_btn("+")
+		plus.pressed.connect(_change_stat.bind(i, 1))
+		row.add_child(plus)
+
+	var reset_btn := _make_btn("Reset Stats", Color(0.50, 0.30, 0.15, 1.0))
+	reset_btn.pressed.connect(_reset_stats)
+	_sec_stats.add_child(reset_btn)
+
+func _change_stat(idx: int, delta: int) -> void:
+	var key: String = STAT_KEYS[idx]
+	PlayerStats.set(key, clampi(int(PlayerStats.get(key)) + delta, 1, 255))
+	_stat_labels[idx].text = str(int(PlayerStats.get(key)))
+	PlayerStats.stats_changed.emit()
+
+func _reset_stats() -> void:
+	PlayerStats.apply_character(PlayerStats.race, PlayerStats.player_class, PlayerStats.level)
+	for i in STAT_KEYS.size():
+		_stat_labels[i].text = str(int(PlayerStats.get(STAT_KEYS[i])))
+
+func _build_combat_section() -> void:
+	var god_check := CheckButton.new()
+	god_check.text = "God Mode"
+	god_check.focus_mode = Control.FOCUS_NONE
+	god_check.add_theme_color_override("font_color", C_TEXT)
+	god_check.toggled.connect(func(on: bool): Combat.god_mode = on)
+	_sec_combat.add_child(god_check)
+
+	var cd_check := CheckButton.new()
+	cd_check.text = "No Cooldowns"
+	cd_check.focus_mode = Control.FOCUS_NONE
+	cd_check.add_theme_color_override("font_color", C_TEXT)
+	cd_check.toggled.connect(func(on: bool):
+		Spells.no_cooldowns = on
+		Skills.no_cooldowns = on
+	)
+	_sec_combat.add_child(cd_check)
+
+	var clear_btn := _make_btn("Clear All Buffs", Color(0.60, 0.20, 0.50, 1.0))
+	clear_btn.pressed.connect(func(): BuffManager.clear_all())
+	_sec_combat.add_child(clear_btn)
 
 func _make_label(t: String) -> Label:
 	var lbl := Label.new()
@@ -205,6 +491,9 @@ func _populate_options() -> void:
 
 	_level_lbl.text = str(PlayerStats.level)
 
+	for key in NamedMobDefinitions.ALL.keys():
+		_named_mob_opt.add_item(key)
+
 func _toggle_collapse() -> void:
 	_collapsed = !_collapsed
 	_body.visible = !_collapsed
@@ -236,6 +525,7 @@ func _give_consumables() -> void:
 	bread.item_name = "Journeybread"
 	bread.description = "Dense traveler's bread. Restores HP while resting."
 	bread.type = ItemData.Type.CONSUMABLE
+	bread.stack_size = 20
 	bread.is_food = true
 	bread.food_hp_regen = 4.0
 	bread.food_duration = 180.0
@@ -245,6 +535,7 @@ func _give_consumables() -> void:
 	water.item_name = "Waterskin"
 	water.description = "Fresh water in a skin pouch. Restores MP while resting."
 	water.type = ItemData.Type.CONSUMABLE
+	water.stack_size = 20
 	water.is_drink = true
 	water.food_mp_regen = 5.0
 	water.food_duration = 180.0
@@ -273,55 +564,68 @@ func _add_test_quest() -> void:
 func _give_crafting_materials() -> void:
 	var mats: Array[Dictionary] = [
 		# Smelting / Blacksmithing / Weaponsmithing
-		{p = "res://data/loot/items/copper_ore.tres",    qty = 10},
-		{p = "res://data/loot/items/tin_ore.tres",       qty = 10},
-		{p = "res://data/loot/items/iron_ore.tres",      qty = 10},
-		{p = "res://data/loot/items/coal.tres",          qty = 20},
-		{p = "res://data/loot/items/metal_bits.tres",    qty = 10},
-		{p = "res://data/loot/items/smithing_hammer.tres", qty = 1},
-		{p = "res://data/loot/items/pickaxe.tres",        qty = 1},
+		{"p": "res://data/loot/items/copper_ore.tres",    "qty": 10},
+		{"p": "res://data/loot/items/tin_ore.tres",       "qty": 10},
+		{"p": "res://data/loot/items/iron_ore.tres",      "qty": 10},
+		{"p": "res://data/loot/items/coal.tres",          "qty": 20},
+		{"p": "res://data/loot/items/metal_bits.tres",    "qty": 10},
+		{"p": "res://data/loot/items/smithing_hammer.tres", "qty": 1},
+		{"p": "res://data/loot/items/pickaxe.tres",        "qty": 1},
 		# Tanning / Leatherworking
-		{p = "res://data/loot/items/tattered_pelt.tres",       qty = 4},
-		{p = "res://data/loot/items/damaged_wolf_pelt.tres",   qty = 4},
-		{p = "res://data/loot/items/fresh_wolf_pelt.tres",     qty = 4},
-		{p = "res://data/loot/items/sinew.tres",               qty = 8},
-		{p = "res://data/loot/items/sewing_needle.tres",       qty = 1},
+		{"p": "res://data/loot/items/tattered_pelt.tres",       "qty": 4},
+		{"p": "res://data/loot/items/damaged_wolf_pelt.tres",   "qty": 4},
+		{"p": "res://data/loot/items/fresh_wolf_pelt.tres",     "qty": 4},
+		{"p": "res://data/loot/items/sinew.tres",               "qty": 8},
+		{"p": "res://data/loot/items/sewing_needle.tres",       "qty": 1},
 		# Tailoring
-		{p = "res://data/loot/items/cloth_scraps.tres",  qty = 10},
-		{p = "res://data/loot/items/flax.tres",          qty = 10},
-		{p = "res://data/loot/items/linen_thread.tres",  qty = 6},
+		{"p": "res://data/loot/items/cloth_scraps.tres",  "qty": 10},
+		{"p": "res://data/loot/items/flax.tres",          "qty": 10},
+		{"p": "res://data/loot/items/linen_thread.tres",  "qty": 6},
 		# Alchemy
-		{p = "res://data/loot/items/feverfew.tres",      qty = 6},
-		{p = "res://data/loot/items/bloodmoss.tres",     qty = 6},
-		{p = "res://data/loot/items/wormwood.tres",      qty = 6},
-		{p = "res://data/loot/items/empty_vial.tres",    qty = 10},
+		{"p": "res://data/loot/items/feverfew.tres",      "qty": 6},
+		{"p": "res://data/loot/items/bloodmoss.tres",     "qty": 6},
+		{"p": "res://data/loot/items/wormwood.tres",      "qty": 6},
+		{"p": "res://data/loot/items/empty_vial.tres",    "qty": 10},
 		# Baking
-		{p = "res://data/loot/items/flour.tres",         qty = 6},
-		{p = "res://data/loot/items/water_flask.tres",   qty = 6},
-		{p = "res://data/loot/items/wolf_meat.tres",     qty = 4},
-		{p = "res://data/loot/items/raw_egg.tres",       qty = 4},
+		{"p": "res://data/loot/items/flour.tres",         "qty": 6},
+		{"p": "res://data/loot/items/water_flask.tres",   "qty": 6},
+		{"p": "res://data/loot/items/wolf_meat.tres",     "qty": 4},
+		{"p": "res://data/loot/items/raw_egg.tres",       "qty": 4},
 		# Brewing
-		{p = "res://data/loot/items/barley.tres",        qty = 4},
-		{p = "res://data/loot/items/hops.tres",          qty = 4},
-		{p = "res://data/loot/items/yeast.tres",         qty = 4},
-		{p = "res://data/loot/items/empty_bottle.tres",  qty = 4},
+		{"p": "res://data/loot/items/barley.tres",        "qty": 4},
+		{"p": "res://data/loot/items/hops.tres",          "qty": 4},
+		{"p": "res://data/loot/items/yeast.tres",         "qty": 4},
+		{"p": "res://data/loot/items/empty_bottle.tres",  "qty": 4},
 		# Fletching
-		{p = "res://data/loot/items/hardwood_shaft.tres",  qty = 10},
-		{p = "res://data/loot/items/flint.tres",           qty = 10},
-		{p = "res://data/loot/items/feather.tres",         qty = 10},
+		{"p": "res://data/loot/items/hardwood_shaft.tres",  "qty": 10},
+		{"p": "res://data/loot/items/flint.tres",           "qty": 10},
+		{"p": "res://data/loot/items/feather.tres",         "qty": 10},
 		# Jewelry Crafting
-		{p = "res://data/loot/items/silver_ore.tres",      qty = 6},
-		{p = "res://data/loot/items/tarnished_silver_setting.tres", qty = 3},
-		{p = "res://data/loot/items/rough_ruby.tres",      qty = 2},
+		{"p": "res://data/loot/items/silver_ore.tres",      "qty": 6},
+		{"p": "res://data/loot/items/tarnished_silver_setting.tres", "qty": 3},
+		{"p": "res://data/loot/items/rough_ruby.tres",      "qty": 2},
 		# Pottery
-		{p = "res://data/loot/items/lump_of_clay.tres",    qty = 6},
+		{"p": "res://data/loot/items/lump_of_clay.tres",    "qty": 6},
 	]
 	var given := 0
-	for entry in mats:
-		var item := load(entry.p) as ItemData
-		if item and Inventory.add_item(item, entry.qty):
+	var load_failed := 0
+	var inv_full := 0
+	for entry: Dictionary in mats:
+		var path: String = entry.get("p", "")
+		var qty: int = int(entry.get("qty", 1))
+		var item: ItemData = load(path) as ItemData
+		if item == null:
+			DebugLog.warn("[TestPanel] Failed to load %s" % path)
+			load_failed += 1
+			continue
+		if Inventory.add_item(item, qty):
 			given += 1
-	CombatLog.add_line("Crafting materials seeded (%d stacks)." % given, CombatLog.MsgType.INFO)
+		else:
+			inv_full += 1
+	var parts: PackedStringArray = ["%d stacks added" % given]
+	if load_failed > 0: parts.append("%d failed to load" % load_failed)
+	if inv_full > 0:    parts.append("%d skipped (no inventory space)" % inv_full)
+	CombatLog.add_line("Crafting materials: " + ", ".join(parts) + ".", CombatLog.MsgType.INFO)
 
 func _give_bow() -> void:
 	var bow := ItemData.new()

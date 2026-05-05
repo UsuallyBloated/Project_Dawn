@@ -17,6 +17,8 @@ var _base_cells: Array = []   # BASE_SLOT_COUNT Panel nodes
 var _bag_windows: Array = []  # BASE_SLOT_COUNT BagWindow or null
 var _tooltip: PanelContainer = null
 var _tooltip_label: Label = null
+var _trash_cell: Panel = null
+var _delete_dialog: ConfirmationDialog = null
 
 func _ready() -> void:
 	_bag_windows.resize(Inventory.BASE_SLOT_COUNT)
@@ -36,7 +38,8 @@ func _build_ui() -> void:
 	add_theme_stylebox_override("panel", style)
 
 	var rows := ceili(float(Inventory.BASE_SLOT_COUNT) / float(COLS))
-	custom_minimum_size = Vector2(COLS * SLOT_SIZE + 24, rows * SLOT_SIZE + 54)
+	# header (24) + grid + separator (8) + trash slot + margins (24)
+	custom_minimum_size = Vector2(COLS * SLOT_SIZE + 24, rows * SLOT_SIZE + 24 + SLOT_SIZE + 32)
 
 	var vbox := VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -82,9 +85,30 @@ func _build_ui() -> void:
 		grid.add_child(cell)
 		_base_cells.append(cell)
 
+	_trash_cell = _make_trash_cell()
+	vbox.add_child(_trash_cell)
+
 	var tip := make_tooltip()
 	_tooltip = tip[0]
 	_tooltip_label = tip[1]
+
+func _make_trash_cell() -> Panel:
+	var cell := Panel.new()
+	cell.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
+	cell.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_apply_slot_style(cell, Color(0.18, 0.06, 0.04, 1.0), Color(0.70, 0.20, 0.18, 1.0), 1)
+	cell.tooltip_text = "Drag an item here to delete it"
+
+	var label := Label.new()
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label.text = "🗑"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_color_override("font_color", Color(0.85, 0.45, 0.40))
+	cell.add_child(label)
+
+	return cell
 
 func _make_slot_cell(index: int) -> Panel:
 	var cell := Panel.new()
@@ -364,8 +388,27 @@ func _input(event: InputEvent) -> void:
 	for cell in _base_cells:
 		if cell.get_global_rect().has_point(mp):
 			return
+	if _trash_cell != null and _trash_cell.get_global_rect().has_point(mp):
+		_show_delete_confirm()
+		get_viewport().set_input_as_handled()
+		return
 	_return_drag_to_source()
 	get_viewport().set_input_as_handled()
+
+func _show_delete_confirm() -> void:
+	if _drag_icon != null:
+		_drag_icon.visible = false
+	if _delete_dialog == null:
+		_delete_dialog = ConfirmationDialog.new()
+		_delete_dialog.title = "Delete Item"
+		_delete_dialog.confirmed.connect(end_drag)
+		_delete_dialog.canceled.connect(_return_drag_to_source)
+		add_child(_delete_dialog)
+	if drag_count > 1:
+		_delete_dialog.dialog_text = "Delete %d × %s?" % [drag_count, drag_item.item_name]
+	else:
+		_delete_dialog.dialog_text = "Delete %s?" % drag_item.item_name
+	_delete_dialog.popup_centered()
 
 # ── Consumable use (base slot items) ─────────────────────────────────────────
 

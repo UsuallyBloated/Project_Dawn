@@ -23,10 +23,13 @@ const C_GROUP    := Color(0.45, 0.80, 1.00)
 enum MsgType { DAMAGE_OUT, DAMAGE_IN, HEAL, INFO, LEVEL_UP, LOOT, EVADE,
 			   SAY, SHOUT, OOC, TELL_OUT, TELL_IN, GROUP_CHAT, CRIT }
 
+signal chat_submitted(text: String)
+
 var _scroll: ScrollContainer = null
 var _msg_vbox: VBoxContainer = null
 var _panel: DraggablePanel = null
 var _back_btn: Button = null
+var _chat_input: LineEdit = null
 var _last_hp: float = 0.0
 var _auto_scroll := true
 
@@ -57,7 +60,7 @@ func _build_ui() -> void:
 	_scroll = ScrollContainer.new()
 	_scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_scroll.offset_left = 6; _scroll.offset_top = 6
-	_scroll.offset_right = -6; _scroll.offset_bottom = -6
+	_scroll.offset_right = -6; _scroll.offset_bottom = -32
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_panel.add_child(_scroll)
@@ -91,6 +94,39 @@ func _build_ui() -> void:
 	_back_btn.pressed.connect(_on_back_to_bottom_pressed)
 	_panel.add_child(_back_btn)
 
+	_chat_input = LineEdit.new()
+	_chat_input.anchor_left = 0.0
+	_chat_input.anchor_top = 1.0
+	_chat_input.anchor_right = 1.0
+	_chat_input.anchor_bottom = 1.0
+	_chat_input.offset_left = 6
+	_chat_input.offset_right = -6
+	_chat_input.offset_top = -28
+	_chat_input.offset_bottom = -2
+	_chat_input.placeholder_text = "Press Enter to type..."
+	_chat_input.visible = false
+	_chat_input.text_submitted.connect(_on_chat_submitted)
+	_chat_input.focus_exited.connect(func(): _chat_input.visible = false)
+	_panel.add_child(_chat_input)
+
+func show_chat_input() -> void:
+	if _chat_input == null:
+		return
+	_chat_input.visible = true
+	_chat_input.text = ""
+	_chat_input.grab_focus()
+
+func is_chat_input_focused() -> bool:
+	return _chat_input != null and _chat_input.has_focus()
+
+func _on_chat_submitted(text: String) -> void:
+	_chat_input.visible = false
+	_chat_input.text = ""
+	var trimmed := text.strip_edges()
+	if trimmed.is_empty():
+		return
+	chat_submitted.emit(trimmed)
+
 func _on_scroll_value_changed(value: float) -> void:
 	var bar := _scroll.get_v_scroll_bar()
 	_auto_scroll = value >= bar.max_value - bar.page
@@ -102,13 +138,14 @@ func _connect_signals() -> void:
 	Spells.spell_cast.connect(func(sp):
 		add_line("You cast %s." % sp.spell_name, MsgType.INFO))
 	Spells.spell_failed.connect(func(reason):
-		add_line(reason, MsgType.INFO))
+		add_line(reason, MsgType.DAMAGE_IN))
 	PlayerStats.level_changed.connect(func(lvl):
 		add_line("You have reached level %d!" % lvl, MsgType.LEVEL_UP))
 	PlayerStats.hp_changed.connect(_on_player_hp_changed)
 	Combat.target_changed.connect(func(enemy):
 		if enemy != null and is_instance_valid(enemy):
-			add_line("You target %s." % enemy.mob_name, MsgType.INFO))
+			var tname: String = enemy.get("mob_name") if "mob_name" in enemy else enemy.name
+			add_line("You target %s." % tname, MsgType.INFO))
 	Combat.player_hit_enemy.connect(func(t, a, c): add_damage_out(t, a, c))
 	Combat.player_missed_enemy.connect(func(t): add_line("You miss %s." % t, MsgType.DAMAGE_OUT))
 	Combat.player_evaded_attack.connect(func(n): add_evade(n))
@@ -116,6 +153,12 @@ func _connect_signals() -> void:
 		add_line("%s hits you for %d damage." % [n, a], MsgType.DAMAGE_IN))
 	WeaponSkills.skill_advanced.connect(func(skill_name: String, new_value: int, cap: int):
 		var display: String = WeaponSkillDefinitions.DISPLAY.get(skill_name, skill_name)
+		add_line("Your %s skill has increased to %d (cap: %d)." % [display, new_value, cap], MsgType.LEVEL_UP))
+	ArmorSkills.skill_advanced.connect(func(skill_name: String, new_value: int, cap: int):
+		var display: String = ArmorSkillDefinitions.DISPLAY.get(skill_name, skill_name)
+		add_line("Your %s skill has increased to %d (cap: %d)." % [display, new_value, cap], MsgType.LEVEL_UP))
+	CastingSkills.skill_advanced.connect(func(skill_name: String, new_value: int, cap: int):
+		var display: String = CastingSkillDefinitions.DISPLAY.get(skill_name, skill_name)
 		add_line("Your %s skill has increased to %d (cap: %d)." % [display, new_value, cap], MsgType.LEVEL_UP))
 	BuffManager.dot_applied.connect(func(tname, sname):
 		add_line("%s is afflicted by %s." % [tname, sname], MsgType.DAMAGE_OUT))
