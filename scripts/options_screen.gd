@@ -3,6 +3,8 @@ extends DraggablePanel
 const W := 640.0
 const H := 500.0
 
+const BUG_REPORT_URL := "https://discord.gg/T77GRKNv"
+
 const _AUDIO_CHANNELS := [
 	{id = "master", label = "Master Volume"},
 	{id = "music",  label = "Music Volume"},
@@ -77,13 +79,18 @@ func _build() -> void:
 
 	var btn_row := HBoxContainer.new()
 	btn_row.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	btn_row.offset_left   = -328.0
+	btn_row.offset_left   = -460.0
 	btn_row.offset_top    = -52.0
 	btn_row.offset_right  = -12.0
 	btn_row.offset_bottom = -12.0
 	btn_row.alignment = BoxContainer.ALIGNMENT_END
 	btn_row.add_theme_constant_override("separation", 10)
 	add_child(btn_row)
+
+	var bug_btn := UITheme.make_button("Report a Bug")
+	bug_btn.tooltip_text = "Opens Discord. Attach debug.log from %APPDATA%\\Godot\\app_userdata\\Project_Dawn\\"
+	bug_btn.pressed.connect(_on_report_bug_pressed)
+	btn_row.add_child(bug_btn)
 
 	var quit_btn := UITheme.make_button("Quit Game")
 	quit_btn.pressed.connect(_on_quit_pressed)
@@ -102,6 +109,9 @@ func _build() -> void:
 func _on_quit_pressed() -> void:
 	SaveManager.save()
 	get_tree().quit()
+
+func _on_report_bug_pressed() -> void:
+	OS.shell_open(BUG_REPORT_URL)
 
 func _style_tabs() -> void:
 	var panel_s := StyleBoxFlat.new()

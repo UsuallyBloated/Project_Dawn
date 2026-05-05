@@ -5,3 +5,10 @@
 # Local secrets — never commit
 HTML_LOW_POLY_TOOL/.env
 HTML_LOW_POLY_TOOL/reference_images/
+
+# Built executables — distributed out-of-band, not via git
+builds/
+
+# Runtime debug log — rotated by autoloads/debug_log.gd
+debug.log
+debug_prev.log
