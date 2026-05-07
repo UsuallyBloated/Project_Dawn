@@ -25,6 +25,14 @@ enum State {
 	CONNECTED_APP,         # ready for gameplay intents
 }
 
+# Server kicks at HEARTBEAT_TIMEOUT (10 s) of app-layer silence. Beat at 4 s
+# so a single dropped packet still leaves headroom — the system channel is
+# reliable so loss is unlikely, but cheap insurance. Any other inbound app
+# message (Move, etc.) also resets the server's idle timer, so once
+# `send_movement` is wired into player.gd this becomes redundant but
+# harmless.
+const HEARTBEAT_INTERVAL_SEC := 4.0
+
 # Coarse, high-level signals — most callers want these, not the raw
 # transport-level ones from the GDExtension.
 signal app_connected(player_id: int)
@@ -37,6 +45,7 @@ var _char_id: int = -1
 var _client_version := ""
 var _player_id: int = -1
 var _move_sequence: int = 0
+var _heartbeat_timer: Timer = null
 
 func _ready() -> void:
 	# Hook GDExtension signals — populated from the renet poll loop.
@@ -45,6 +54,13 @@ func _ready() -> void:
 	connect_ok.connect(_on_connect_ok)
 	kicked.connect(_on_kicked)
 	position.connect(_on_position)
+
+	_heartbeat_timer = Timer.new()
+	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
+	_heartbeat_timer.one_shot = false
+	_heartbeat_timer.autostart = false
+	_heartbeat_timer.timeout.connect(_on_heartbeat_tick)
+	add_child(_heartbeat_timer)
 
 	var args: Variant = CliArgs.parse()
 	if args == null:
@@ -81,6 +97,7 @@ func send_movement(direction: Vector3, jumping: bool = false) -> void:
 func leave_session() -> void:
 	if _state == State.CONNECTED_APP:
 		send_disconnect()
+	_stop_heartbeat()
 	disconnect_now()
 	_state = State.DISCONNECTED
 	_player_id = -1
@@ -161,6 +178,7 @@ func _on_transport_connected() -> void:
 		push_warning("Net: send_app_connect returned false")
 
 func _on_transport_disconnected(reason: String) -> void:
+	_stop_heartbeat()
 	_state = State.DISCONNECTED
 	_player_id = -1
 	app_disconnected.emit(reason)
@@ -168,10 +186,12 @@ func _on_transport_disconnected(reason: String) -> void:
 func _on_connect_ok(player_id: int) -> void:
 	_player_id = player_id
 	_state = State.CONNECTED_APP
+	_heartbeat_timer.start()
 	app_connected.emit(player_id)
 
 func _on_kicked(reason: String, code: String) -> void:
 	push_warning("Net: kicked code=%s reason=%s" % [code, reason])
+	_stop_heartbeat()
 	_state = State.DISCONNECTED
 	_player_id = -1
 	app_disconnected.emit("kicked: %s" % reason)
@@ -179,3 +199,11 @@ func _on_kicked(reason: String, code: String) -> void:
 
 func _on_position(id: int, pos: Vector3, vel: Vector3, yaw: float, sequence: int) -> void:
 	world_position.emit(id, pos, vel, yaw, sequence)
+
+func _on_heartbeat_tick() -> void:
+	if _state == State.CONNECTED_APP:
+		send_heartbeat()
+
+func _stop_heartbeat() -> void:
+	if _heartbeat_timer != null and not _heartbeat_timer.is_stopped():
+		_heartbeat_timer.stop()
