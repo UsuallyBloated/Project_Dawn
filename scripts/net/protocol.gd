@@ -10,19 +10,21 @@ const CLIENT_VERSION := "0.1.0"
 
 # ─── Auth: message type tags ────────────────────────────────────────
 
-const AUTH_REGISTER     := "Register"
-const AUTH_LOGIN        := "Login"
-const AUTH_CHAR_LIST    := "CharList"
-const AUTH_CHAR_CREATE  := "CharCreate"
-const AUTH_CHAR_DELETE  := "CharDelete"
-const AUTH_LOGOUT       := "Logout"
+const AUTH_REGISTER             := "Register"
+const AUTH_LOGIN                := "Login"
+const AUTH_CHAR_LIST            := "CharList"
+const AUTH_CHAR_CREATE          := "CharCreate"
+const AUTH_CHAR_DELETE          := "CharDelete"
+const AUTH_LOGOUT               := "Logout"
+const AUTH_REQUEST_WORLD_TOKEN  := "RequestWorldToken"
 
-const AUTH_REGISTER_OK  := "RegisterOk"
-const AUTH_LOGIN_OK     := "LoginOk"
-const AUTH_CHAR_CREATED := "CharCreated"
-const AUTH_CHAR_DELETED := "CharDeleted"
-const AUTH_LOGOUT_OK    := "LogoutOk"
-const AUTH_ERROR        := "Error"
+const AUTH_REGISTER_OK          := "RegisterOk"
+const AUTH_LOGIN_OK             := "LoginOk"
+const AUTH_CHAR_CREATED         := "CharCreated"
+const AUTH_CHAR_DELETED         := "CharDeleted"
+const AUTH_LOGOUT_OK            := "LogoutOk"
+const AUTH_WORLD_CONNECT_TOKEN  := "WorldConnectToken"
+const AUTH_ERROR                := "Error"
 
 # ─── Auth: ErrorCode (snake_case wire form) ─────────────────────────
 
@@ -68,6 +70,30 @@ static func make_char_delete(session_token: String, char_id: int) -> Dictionary:
 
 static func make_logout(session_token: String) -> Dictionary:
 	return {"type": AUTH_LOGOUT, "session_token": session_token}
+
+# Launcher → auth, after the user picks Play. Server validates the session and
+# char ownership, then mints a renet ConnectToken and replies with
+# WorldConnectToken. The launcher hands `token_bytes` to the game .exe via
+# tempfile (NOT CLI arg — args are visible in `ps`/Task Manager).
+static func make_request_world_token(session_token: String, char_id: int) -> Dictionary:
+	return {
+		"type": AUTH_REQUEST_WORLD_TOKEN,
+		"session_token": session_token,
+		"char_id": char_id,
+	}
+
+# Decode WorldConnectToken.token_bytes from the JSON wire form (Vec<u8> on the
+# Rust side serialises as an Array of integers, not a base64 string) into a
+# PackedByteArray suitable for `NetClient.connect_to_server` or for writing
+# to the launcher → game tempfile.
+static func decode_world_token_bytes(arr: Variant) -> PackedByteArray:
+	var pba := PackedByteArray()
+	if typeof(arr) != TYPE_ARRAY:
+		return pba
+	pba.resize(arr.size())
+	for i in arr.size():
+		pba[i] = int(arr[i]) & 0xFF
+	return pba
 
 # ─── Auth: JSON wire helpers ────────────────────────────────────────
 

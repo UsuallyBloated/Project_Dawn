@@ -55,6 +55,7 @@ QuestManager="*res://autoloads/quest_manager.gd"
 StationManager="*res://autoloads/station_manager.gd"
 DialogueManager="*res://autoloads/dialogue_manager.gd"
 SaveManager="*res://autoloads/save_manager.gd"
+Net="*res://autoloads/net.gd"
 
 [display]
 

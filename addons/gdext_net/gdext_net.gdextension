@@ -1,0 +1,16 @@
+; gdext-net — Rust GDExtension wrapping the renet 2.0 client.
+;
+; The .dll is built from F:/Projects/server/crates/gdext-net/ and copied here
+; via build.ps1. It is NOT committed; on a fresh clone, run build.ps1 once
+; before opening the editor.
+;
+; Compatibility: gdext 0.5.2 with feature `api-4-4` ⇒ Godot 4.4+.
+
+[configuration]
+entry_symbol = "gdext_rust_init"
+compatibility_minimum = 4.4
+reloadable = false
+
+[libraries]
+windows.debug.x86_64 = "res://addons/gdext_net/gdext_net.dll"
+windows.release.x86_64 = "res://addons/gdext_net/gdext_net.dll"

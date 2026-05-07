@@ -12,3 +12,10 @@ builds/
 # Runtime debug log — rotated by autoloads/debug_log.gd
 debug.log
 debug_prev.log
+
+# GDExtension build artifacts — rebuilt from F:/Projects/server/crates/gdext-net/
+# via addons/gdext_net/build.ps1. Never commit binary blobs.
+addons/gdext_net/*.dll
+addons/gdext_net/*.so
+addons/gdext_net/*.dylib
+addons/gdext_net/*.pdb
