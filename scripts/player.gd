@@ -197,6 +197,9 @@ func _physics_process(delta: float) -> void:
 		velocity.z = move_toward(velocity.z, 0.0, current_speed)
 		_heading_train_accum = 0.0
 
+	if Net.is_app_ready():
+		Net.send_movement(direction, false)
+
 	move_and_slide()
 
 func _on_land() -> void:

@@ -108,6 +108,7 @@ func _build() -> void:
 
 func _on_quit_pressed() -> void:
 	SaveManager.save()
+	Net.leave_session()
 	get_tree().quit()
 
 func _on_report_bug_pressed() -> void:

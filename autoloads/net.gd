@@ -48,6 +48,14 @@ var _move_sequence: int = 0
 var _heartbeat_timer: Timer = null
 
 func _ready() -> void:
+	# Take ownership of window-close so we can flush the app-layer Disconnect
+	# packet before the tree tears down. In Godot 4 the close request is
+	# delivered to the root Window's `close_requested` signal — autoloads do
+	# NOT receive NOTIFICATION_WM_CLOSE_REQUEST via _notification (that path
+	# is for Window nodes only and does not propagate to scene-tree children).
+	get_tree().auto_accept_quit = false
+	get_tree().root.close_requested.connect(_on_close_requested)
+
 	# Hook GDExtension signals — populated from the renet poll loop.
 	transport_connected.connect(_on_transport_connected)
 	transport_disconnected.connect(_on_transport_disconnected)
@@ -75,6 +83,14 @@ func _process(delta: float) -> void:
 		return
 	poll(delta)
 
+func _on_close_requested() -> void:
+	# Clean shutdown when the user closes the game window via the OS X button.
+	# In-game Quit buttons must call Net.leave_session() themselves before
+	# get_tree().quit() (see options_screen.gd) — close_requested only fires
+	# for OS-initiated closes.
+	leave_session()
+	get_tree().quit()
+
 # ─── Public API ─────────────────────────────────────────────────────
 
 func is_launcher_mode() -> bool:
@@ -95,10 +111,31 @@ func send_movement(direction: Vector3, jumping: bool = false) -> void:
 	send_move(_move_sequence, direction, jumping)
 
 func leave_session() -> void:
+	# Send the app-layer Disconnect and drive renet a few times so the
+	# message actually reaches the UDP socket. ~200 ms total.
+	#
+	# We deliberately do NOT call disconnect_now() here: it sends a
+	# netcode-level disconnect packet, which races the app message at the
+	# server. When both arrive in the same tick, renet's transport.update()
+	# evicts the connection's channel buffers BEFORE our tick code drains
+	# them, so the app Disconnect is silently lost and the server reports
+	# `reason=Transport` instead of logging `client requested disconnect`.
+	#
+	# Skipping disconnect_now means the OS closes the UDP socket on
+	# process exit; the server processes our message cleanly, calls
+	# Outcome::Disconnect → server.disconnect(), and reports
+	# `reason=DisconnectedByServer`. Both log lines land.
+	#
+	# This is fine for the current callers (window-close + Quit Game),
+	# which both lead to immediate process exit. A future return-to-lobby
+	# flow that needs to keep the process alive would need a different
+	# teardown path (poll long enough for the message to be acked, then
+	# disconnect_now).
 	if _state == State.CONNECTED_APP:
 		send_disconnect()
+		for i in 4:
+			poll(0.05)
 	_stop_heartbeat()
-	disconnect_now()
 	_state = State.DISCONNECTED
 	_player_id = -1
 
