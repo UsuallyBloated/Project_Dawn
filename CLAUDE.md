@@ -34,7 +34,7 @@ note for claude:  I will add play testing notes to the docs\playtest_notes\  Ple
 - Player leveling system; as character level increases, character becomes stronger.
 - Equipment system
 
-- Please don't change anything above this PROJECTS folder.
+- Please don't change anything above the F:\PROJECTS\ directory.
 
 ---
 
@@ -159,7 +159,10 @@ note for claude:  I will add play testing notes to the docs\playtest_notes\  Ple
 - [ ] **Target-of-target frame** — Show what your target is targeting (essential for group play)
 - [x] **HP numbers on target frame** — Show actual HP values, not just a bar
 - [ ] **Player portrait** — Race/class portrait in the HUD panel
-- [ ] **Chat channel tabs** — Separate tabs for Say, OOC, Group, Tells
+- [ ] **EQ-style multi-window chat system** — Three separable chunks:
+  - **Multi-window framework** — Create/rename/delete independent chat windows; dock together as tabs in a parent window or detach to float separately; persist layout to settings
+  - **Per-window message filters** — Right-click menu to choose which `CombatLog.MsgType` categories display in each window (Say, OOC, Group, Tell, Guild, Raid, Auction, damage dealt, damage taken, heals, system, pet actions, etc.); leverages existing `MsgType` enum
+  - **Per-window display settings** — Window alpha (0–100), font alpha (10–100), font size (9–21pt), default channel for input field when window is active
 - [ ] **Map / minimap** — Simple zone map showing player position
 - [x] **Quest journal window** — `scripts/quest_journal.gd`; split panel (list/detail); Active/Completed tabs; objectives with ✓/○; toggle via J (keybind registered in settings.gd); QuestManager signals connected
 - [x] **Inventory "stack all" button** — "Stack All" button in each BagWindow calls `Inventory.stack_all()`

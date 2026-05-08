@@ -546,7 +546,7 @@ func apply_named(named_id: String) -> void:
 	var subtitle: String = data.get("subtitle", "")
 	mob_name = display
 	_name_label.text = ("%s %s" % [display, subtitle]).strip_edges()
-	_name_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.0))
+	_name_label.modulate = Color(1.0, 0.85, 0.0)
 
 	level      = data.get("level", level)
 	max_hp     = max_hp * data.get("hp_mult", 1.0)

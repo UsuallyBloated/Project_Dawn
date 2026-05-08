@@ -52,7 +52,8 @@ func _build_single_floor(used_seed: int) -> void:
 	add_child(mesh)
 	var groups := {}
 	DungeonLightPlacer.place(layout, self, 0.0, 0, groups)
-	DungeonLightPlacer.print_debug_groups(groups)
+	if DungeonLightPlacer.DEBUG_TORCH_LABELS:
+		DungeonLightPlacer.print_debug_groups(groups)
 	print("[DungeonSpawner] seed=%d  rooms=%d" % [used_seed, layout.rooms.size()])
 
 
@@ -70,7 +71,8 @@ func _build_multi_floor(used_seed: int) -> void:
 		mesh.name = "Floor_%d" % i
 		add_child(mesh)
 		torch_idx = DungeonLightPlacer.place(fl, self, y_off, torch_idx, groups)
-	DungeonLightPlacer.print_debug_groups(groups)
+	if DungeonLightPlacer.DEBUG_TORCH_LABELS:
+		DungeonLightPlacer.print_debug_groups(groups)
 
 	for stair in multi_layout.stairs:
 		var lower_y    = multi_layout.floor_y_offset(stair.from_floor)

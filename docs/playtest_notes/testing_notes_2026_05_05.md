@@ -23,6 +23,6 @@ ESC menu needs UI scale slider
 
 beast master needs a skill for summoning their pet.
 
-Vision affects are not visible in Test Dungeon.
+Vision effects are not visible in Test Dungeon.
 
 

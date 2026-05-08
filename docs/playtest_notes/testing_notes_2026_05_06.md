@@ -1,0 +1,1 @@
+How do we clear deleted characters so the character name is no longer taken?

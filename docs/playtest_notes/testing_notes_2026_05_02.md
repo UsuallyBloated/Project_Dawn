@@ -12,7 +12,12 @@ if loot is left for too long, it should be removed after 2 minutes
 
 need a button to delete items in the inventory window
 
-dual wield changed to unlockable passive ability.  unlocked by those who can use it at level 13.
+dual wield changed to unlockable passive ability.  unlocked by those who can use it at somewhere between 13 and 20.
 
-test room needs working option to adjust time of day/night
+
+Test Room needs tighter hud and also include some additional options
+New features for Test Room:
+    • Ability for tester to adjust time of day and day/night.
+    • 
+
 

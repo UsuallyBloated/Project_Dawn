@@ -20,7 +20,12 @@
     "additionalDirectories": [
       "f:\\Projects\\Project_Dawn",
       "F:\\Projects\\ProceduralDungeon\\dungeon_gen",
-      "F:\\Projects\\ProceduralDungeon\\scenes"
+      "F:\\Projects\\ProceduralDungeon\\scenes",
+      "f:\\Projects\\server\\crates\\shared",
+      "f:\\Projects\\server\\crates\\projectdawn-server",
+      "f:\\Projects\\server\\migrations",
+      "f:\\Projects\\server\\scripts",
+      "f:\\Projects\\server\\tests"
     ]
   }
 }

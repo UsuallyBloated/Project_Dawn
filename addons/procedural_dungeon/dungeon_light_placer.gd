@@ -7,7 +7,8 @@ const TORCH_RANGE    = 28.0    # world units — covers ~4.5 cells per side
 const TORCH_ATTEN    = 1.8     # falloff curve
 static var MIN_DIST:    int  = 1     # set via dungeon_test.gd export
 static var MAX_TORCHES: int  = 200   # set via dungeon_test.gd export
-const DEBUG_LABELS          = true   # set false to remove numbered labels before shipping
+const DEBUG_TORCH_LABELS = false  # numbered Label3D on each torch + Output group log
+const DEBUG_COMPASS      = true   # N/S/E/W compass labels in scene
 
 static func place(layout: DungeonLayout, parent: Node3D, y_offset: float = 0.0, start_idx: int = 0, groups: Dictionary = {}) -> int:
 	var cs      = layout.cell_size
@@ -60,7 +61,7 @@ static func place(layout: DungeonLayout, parent: Node3D, y_offset: float = 0.0, 
 		light.name = "Torch_%d" % idx
 		parent.add_child(light)
 
-		if DEBUG_LABELS:
+		if DEBUG_TORCH_LABELS:
 			var label       = Label3D.new()
 			label.text      = str(idx)
 			label.font_size = 96
@@ -83,7 +84,7 @@ static func place(layout: DungeonLayout, parent: Node3D, y_offset: float = 0.0, 
 		if MAX_TORCHES >= 0 and (idx - start_idx) >= MAX_TORCHES:
 			break
 
-	if DEBUG_LABELS:
+	if DEBUG_COMPASS:
 		_place_compass_labels(layout, parent, y_offset)
 
 	return idx
