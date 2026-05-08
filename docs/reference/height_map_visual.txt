@@ -1,0 +1,170 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  PROJECT DAWN - VISUAL HEIGHT COMPARISON MAP                 ║
+║                              (Scale: 1 char = 0.15M)                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+PLAYABLE RACES (Left = Short, Right = Tall)
+
+FAE (0.6–0.85M)                                                    *.
+                                                                  (o_o)
+                                                                   \|/
+                                                                   / \
+
+GNOME (0.90–1.05M)                                                *
+                                                                 (o_o)
+                                                                  |||
+                                                                 /| |\
+                                                                   / \
+
+HALFLING (0.95–1.10M)                                            *
+                                                                (o_o)
+                                                                 |||
+                                                                / | \
+                                                                  / \
+
+KOBOLD (1.00–1.20M)                                             *
+                                                               (o_o) [bat ear]
+                                                                [tail]
+                                                               /|  |\
+                                                                 / \
+
+DWARF (1.20–1.35M)                                            *
+                                                             [H]     [sturdy]
+                                                             /|\
+                                                             / \
+
+DARK ELF (1.65–1.80M)                                   *           .
+                                                       (o_o)       |
+ELF (1.60–1.75M)                                    (o_o)         [long]
+                                                    (o_o)          |
+WOOD ELF (1.55–1.70M)                           /'o_o'\          / \
+                                               /  |   |  \      /   \
+                                              / \/ |_| \/  \  /       \
+                                             '  / \   / \  ' /         \
+
+HALF-ELF (1.65–1.80M)                                 *
+                                                     (o_o)     [balanced]
+                                                      |||
+                                                     /| |\
+                                                       / \
+
+HUMAN (1.70–1.85M)                                   *             ▲
+                                                    (o_o)          |
+FELHARI (1.75–1.95M)                            \`(o_o)´/    [athletic]
+                                                (o_o) <feline>
+                                                  ||| tail
+                                                 /| |\
+                                                   / \
+
+KEL`VARATH (1.85–2.10M)                            ═══
+                                                   (=_=)     [reptilian]
+                                                   ╱│╲       [tail]
+                                                  ╱ │ ╲
+                                                    ╱ ╲
+
+HALF-OGRE (2.00–2.25M)                           ╔═══╗
+                                                 ║(o_o)║    [broad]
+                                                 ║╱│ │╲║    [thick]
+                                                 ║╱ │ ╲║
+                                                   ╱   ╲
+
+MINOTAUR (2.20–2.50M)                          ╔═══════╗
+                                               ║  /\_/ ║  [horns]
+                                               ║ (o_o) ║  [bull]
+                                               ║╱ │ │ ╲║
+                                               ║╱  │  ╲║
+                                                  ╱    ╲
+
+TROLL (2.30–2.60M)                            ╔═════════╗
+                                              ║  (o_o)  ║ [hunched]
+                                              ║ ╱│   │╲ ║ [long arms]
+                                              ║╱ │   │ ╲║
+                                              ║   │   │  ║
+                                                  ╱     ╲
+
+OGRE (2.40–2.70M)                           ╔═══════════╗
+                                            ║   (o_o)   ║ [massive]
+                                            ║  ╱│     │╲ ║ [brutal]
+                                            ║ ╱ │     │ ╲║
+                                            ║╱  │     │  ╲║
+                                                ╱       ╲
+
+═════════════════════════════════════════════════════════════════════════════════
+
+ENEMY CREATURES & BOSSES
+
+RAT (0.25M)     GIANT SPIDER (0.60M)     SABLE BAT (0.70M)     WOLF (0.95M)
+    *                 @                       ~v~                  ◺
+   (*)                (*)                      (*)               ◺◺◺
+    │                /│\                       ║                 ◺◺
+   /|\              / │ \                     /|\                ◺
+                   ╱  │  ╲                   /   \
+
+GNOLL (1.70M)     ROTFANG (1.40M)      GRETH BONECRUSHER (2.00M)
+    *                *  [scarred]          ╔═══╗
+   (o)              (O_O)                  ║(**)║ [chief]
+   /|\              ╱│ │╲                  ║╱│ │╲║
+   / \             ╱ │ │ ╲                 ║╱ │ │ ╲║
+                                             ╱   ╲
+
+ANCIENT CRAWLER (0.80M body, 2.0M leg span)     THE UNDYING (1.85M)
+        @                                             ☠
+       ╱ ╲ [8 legs]                                 ╱│╲
+      ╱   ╲                                         ╱ │ ╲
+     │     │
+    ╱ ╲   ╱ ╲
+
+═════════════════════════════════════════════════════════════════════════════════
+
+SCALE COMPARISON: From Smallest to Largest Playable Race
+
+Fae ├─────┤ 0.60–0.85M     (Smallest — fairy-sized)
+Gnome ├────────┤ 0.90–1.05M
+Halfling ├─────────┤ 0.95–1.10M
+Kobold ├─────────┤ 1.00–1.20M
+Dwarf ├─────────────┤ 1.20–1.35M
+Wood Elf ├──────────┤ 1.55–1.70M
+Elf ├──────────┤ 1.60–1.75M
+Dark Elf ├───────────┤ 1.65–1.80M
+Human ├───────────┤ 1.70–1.85M      (Baseline — human-sized)
+Half-Elf ├───────────┤ 1.65–1.80M
+Felhari ├─────────────┤ 1.75–1.95M
+Kel`varath ├──────────────┤ 1.85–2.10M
+Half-Ogre ├────────────────┤ 2.00–2.25M
+Minotaur ├─────────────────┤ 2.20–2.50M
+Troll ├──────────────────┤ 2.30–2.60M
+Ogre ├───────────────────┤ 2.40–2.70M  (Largest — giant-sized)
+
+═════════════════════════════════════════════════════════════════════════════════
+
+NOTES FOR MODELERS
+
+✓ Tiny Races (Fae, Gnome, Halfling):
+  - Large expressive eyes relative to head size
+  - Childlike proportions with adult mannerisms
+  - Short legs, stockier build
+  - ~60–70% of human model scale
+
+✓ Standard Races (Elf, Human, Dark Elf, Felhari):
+  - Typical 1/7 head-to-body ratio
+  - Proportional limbs
+  - Variation: Elves more graceful, Humans balanced, Felhari athletic
+  - ~85–100% of baseline scale
+
+✓ Humanoid-ish Larger (Dwarf, Kel`varath, Half-Elf, Half-Ogre):
+  - May have unique facial features (reptilian scales, anvil-like face, etc.)
+  - Still roughly proportional, but sturdier
+  - ~100–125% of baseline scale
+
+✓ Monstrous (Minotaur, Ogre, Troll):
+  - Exaggerated features: horns, tusks, distorted face
+  - Proportionally shorter heads (1/9 ratio)
+  - Longer arms, barrel chests
+  - ~130–150% of baseline scale
+
+✓ Creatures (Wolves, Spiders, Bats):
+  - Non-humanoid collision models
+  - Movement systems account for quadruped/multi-legged locomotion
+  - Shoulder height = listed height (for comparison with humanoids)
+
+═════════════════════════════════════════════════════════════════════════════════
