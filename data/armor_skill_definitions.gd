@@ -41,6 +41,7 @@ static func get_cap(player_class: String, skill: String, level: int) -> int:
 	var max_cap: int = class_data.get(skill, 0)
 	if max_cap == 0:
 		return 0
+	@warning_ignore("integer_division")
 	return max(1, int(max_cap * level / MAX_LEVEL))
 
 static func get_starting_value(player_class: String, skill: String) -> int:

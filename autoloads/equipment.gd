@@ -80,7 +80,9 @@ func _remove_stat_bonuses(item: ItemData) -> void:
 	PlayerStats.remove_item_bonuses(item)
 
 func get_armor_class() -> int:
-	return (PlayerStats.agility / 4) + ArmorSkills.get_effective_armor(equipped)
+	@warning_ignore("integer_division")
+	var agi_bonus: int = PlayerStats.agility / 4
+	return agi_bonus + ArmorSkills.get_effective_armor(equipped)
 
 func _slot_for_type(type: ItemData.Type) -> String:
 	match type:

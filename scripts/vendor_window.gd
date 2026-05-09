@@ -351,6 +351,7 @@ func _do_sell() -> void:
 		return
 	var slot = _sell_items[_selected_index]
 	var item: ItemData = slot["item"]
+	@warning_ignore("integer_division")
 	var sell_price := item.vendor_price / 2
 	var actual_qty := mini(_qty, slot["count"])
 	var total := sell_price * actual_qty

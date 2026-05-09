@@ -225,13 +225,13 @@ func _build_bottom_bar(parent: Control) -> void:
 
 # ── Selection ──────────────────────────────────────────────────────────────────
 
-func _on_race_selected(race: String) -> void:
-	selected_race = race
+func _on_race_selected(race_id: String) -> void:
+	selected_race = race_id
 	for r in CharacterData.RACES:
-		_style_btn(_race_btns[r], r == race)
-	_race_desc_lbl.text = CharacterData.RACE_DATA[race]["desc"]
+		_style_btn(_race_btns[r], r == race_id)
+	_race_desc_lbl.text = CharacterData.RACE_DATA[race_id]["desc"]
 	_update_identity()
-	_update_class_locks(race)
+	_update_class_locks(race_id)
 	_refresh_stats()
 	_update_confirm()
 
@@ -260,8 +260,8 @@ func _update_identity() -> void:
 		_identity_lbl.text = selected_race + "  ·  " + selected_class
 
 
-func _update_class_locks(race: String) -> void:
-	var locked := CharacterData.LOCKED_COMBOS.get(race, []) as Array
+func _update_class_locks(race_id: String) -> void:
+	var locked := CharacterData.LOCKED_COMBOS.get(race_id, []) as Array
 	if selected_class in locked:
 		selected_class = ""
 		_class_desc_lbl.text = ""

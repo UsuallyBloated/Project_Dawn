@@ -58,12 +58,12 @@ const TRANSFORMATIONS: Dictionary = {
 # Snapshot of what was applied so the transformation can be cleanly reversed.
 var _snapshot: Dictionary = {}
 
-func can_transform(name: String) -> bool:
-	if not TRANSFORMATIONS.has(name):
+func can_transform(tname: String) -> bool:
+	if not TRANSFORMATIONS.has(tname):
 		return false
 	if PlayerStats.transformation != "":
 		return false
-	var t: Dictionary = TRANSFORMATIONS[name]
+	var t: Dictionary = TRANSFORMATIONS[tname]
 	if PlayerStats.level < t["required_level"]:
 		return false
 	if Alignment.alignment_tier != t["required_alignment"]:
@@ -72,10 +72,10 @@ func can_transform(name: String) -> bool:
 		return false
 	return true
 
-func apply_transformation(name: String) -> bool:
-	if not can_transform(name):
+func apply_transformation(tname: String) -> bool:
+	if not can_transform(tname):
 		return false
-	var t: Dictionary = TRANSFORMATIONS[name]
+	var t: Dictionary = TRANSFORMATIONS[tname]
 	_snapshot = {"stat_changes": t["stat_changes"].duplicate(), "hp_bonus": t["hp_bonus"], "mp_bonus": t["mp_bonus"]}
 	for stat in t["stat_changes"]:
 		PlayerStats[stat] += t["stat_changes"][stat]
@@ -85,11 +85,11 @@ func apply_transformation(name: String) -> bool:
 	PlayerStats.set_mp(PlayerStats.max_mp)
 	for lang in t.get("languages", {}):
 		Languages.grant_language(lang, t["languages"][lang])
-	PlayerStats.transformation = name
+	PlayerStats.transformation = tname
 	# Revenant: tradeskill scores are retained unchanged (no reset needed because
 	# tradeskill scores live outside PlayerStats; this is a no-op placeholder until
 	# the tradeskill system is implemented).
-	transformation_applied.emit(name)
+	transformation_applied.emit(tname)
 	return true
 
 func revert_transformation() -> void:
