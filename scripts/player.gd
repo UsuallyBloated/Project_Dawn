@@ -17,6 +17,39 @@ const CROUCH_CAMERA_Y = 0.7
 const FALL_DAMAGE_THRESHOLD := 9.0  # m/s downward; below this landing is safe
 const FALL_DAMAGE_MULT := 5         # HP lost per m/s above threshold
 
+# Track 2 — server-authoritative movement reconciliation.
+# When a Position broadcast arrives:
+#   - Filter to own player ID; ignore others (Track 3 handles those).
+#   - Drop out-of-order packets (channel 1 is Unreliable).
+#   - First broadcast: snap unconditionally — server's DB-loaded spawn may
+#     differ from world.tscn's local spawn point.
+#   - Else: snap if horizontal divergence > SERVER_SNAP_THRESHOLD, otherwise
+#     update _server_pos_target and lerp toward it each physics tick.
+# Server has no Y-axis physics in slice 2 (no gravity, no jumping). Reconcile
+# X/Z only; Y stays under local control until server-side physics lands.
+const SERVER_SNAP_THRESHOLD := 1.0  # metres
+# Time-based smoothing rate. Per-frame factor is computed as
+# `1.0 - exp(-RATE * delta)` so closure speed is consistent across framerates.
+# 17.3 /sec ≈ 95% convergence in ~167ms (matches the original 0.25-per-frame
+# feel at 60 fps, but stays stable when frame rate dips).
+const SERVER_LERP_RATE := 17.3
+
+# Must match MAX_MOVE_SPEED in server crates/projectdawn-server/src/world/mod.rs.
+# The server reads Move.direction as a unit vector and integrates `direction *
+# MAX_MOVE_SPEED * dt` per tick, so we scale outgoing direction by
+# (current_speed / SERVER_MAX_MOVE_SPEED) to make server-side movement match
+# whatever the client is locally predicting (base 5 m/s, crouch 2.5, with
+# speed-buff multipliers). Server clamps direction length to 1.0, so any
+# buff pushing local speed above the cap gets capped on the wire too.
+const SERVER_MAX_MOVE_SPEED := 7.5
+
+# Throttle Move sends to the server's 20 Hz tick rate. The server applies a
+# fixed TICK_DT (50ms) of integration per accepted Move, so sending faster
+# than server-tick scales effective server speed by (client_send_rate /
+# server_tick_rate). At 60 fps unthrottled that runs the server 3× ahead of
+# the client and looks like rubber-banding. 50ms == one server tick.
+const MOVE_SEND_INTERVAL := 0.05
+
 enum PlayerState { STANDING, CROUCHING, SITTING }
 
 var state := PlayerState.STANDING
@@ -28,6 +61,12 @@ var _is_local := false
 var _heading_train_accum: float = 0.0
 var _was_on_floor: bool = true
 var _peak_fall_speed: float = 0.0
+
+# Track 2 — server-authoritative movement state.
+var _server_pos_target: Vector3 = Vector3.ZERO
+var _last_server_seq: int = -1
+var _received_first_pos: bool = false
+var _move_send_accum: float = 0.0
 
 signal state_changed(new_state: int)
 
@@ -60,6 +99,7 @@ func _ready() -> void:
 	Targeting.register_player(self)
 	Combat.register_player(self)
 	Regen.register_player(self)
+	Net.world_position.connect(_on_world_position)
 
 func _setup_sync() -> void:
 	var sync := MultiplayerSynchronizer.new()
@@ -198,9 +238,57 @@ func _physics_process(delta: float) -> void:
 		_heading_train_accum = 0.0
 
 	if Net.is_app_ready():
-		Net.send_movement(direction, false)
+		# Throttle to server tick rate (20 Hz). Subtract instead of zeroing so
+		# the average rate stays exact across variable frame times.
+		_move_send_accum += delta
+		if _move_send_accum >= MOVE_SEND_INTERVAL:
+			_move_send_accum -= MOVE_SEND_INTERVAL
+			# Scale unit direction to (current_speed / SERVER_MAX_MOVE_SPEED) so
+			# the server's `direction * MAX_MOVE_SPEED` integration produces
+			# current_speed.
+			var server_dir := direction * (current_speed / SERVER_MAX_MOVE_SPEED)
+			Net.send_movement(server_dir, false)
 
 	move_and_slide()
+
+	# Track 2 — blend horizontal position toward server truth. Local prediction
+	# (move_and_slide above) and the lerp below run concurrently every frame; the
+	# two equally-valid futures (predicted and authoritative) blend smoothly.
+	# Skipped in local-save mode (Net stays idle, signal never fires, flag stays
+	# false). Y is left untouched — slice 2 server has no Y physics.
+	if Net.is_app_ready() and _received_first_pos:
+		var blend := 1.0 - exp(-SERVER_LERP_RATE * delta)
+		var blend_x := lerpf(global_position.x, _server_pos_target.x, blend)
+		var blend_z := lerpf(global_position.z, _server_pos_target.z, blend)
+		global_position = Vector3(blend_x, global_position.y, blend_z)
+
+func _on_world_position(id: int, pos: Vector3, _vel: Vector3, _yaw: float, sequence: int) -> void:
+	# Track 2 — own-player reconciliation only. Other-player replication is Track 3.
+	if id != Net.get_player_id():
+		return
+	# Channel 1 is Unreliable; drop reorders and duplicate-sequence broadcasts.
+	# Server uses last_move_seq for the Position broadcast field, so equal
+	# sequences carry no new positional information.
+	if sequence <= _last_server_seq and _received_first_pos:
+		return
+	_last_server_seq = sequence
+
+	if not _received_first_pos:
+		# First broadcast wins: server's DB-loaded spawn may differ from
+		# world.tscn's local spawn. Snap unconditionally so scene-in is clean.
+		_received_first_pos = true
+		global_position = Vector3(pos.x, global_position.y, pos.z)
+		_server_pos_target = global_position
+		return
+
+	var dx := pos.x - global_position.x
+	var dz := pos.z - global_position.z
+	var horiz := sqrt(dx * dx + dz * dz)
+	if horiz > SERVER_SNAP_THRESHOLD:
+		global_position = Vector3(pos.x, global_position.y, pos.z)
+		_server_pos_target = global_position
+	else:
+		_server_pos_target = Vector3(pos.x, global_position.y, pos.z)
 
 func _on_land() -> void:
 	if _peak_fall_speed <= FALL_DAMAGE_THRESHOLD:
