@@ -210,7 +210,7 @@ func add_line(text: String, type: MsgType = MsgType.INFO) -> void:
 
 func _scroll_to_bottom() -> void:
 	if _scroll != null:
-		_scroll.scroll_vertical = _scroll.get_v_scroll_bar().max_value
+		_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
 
 func _on_back_to_bottom_pressed() -> void:
 	_auto_scroll = true

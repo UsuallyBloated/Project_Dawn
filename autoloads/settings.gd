@@ -120,7 +120,7 @@ func apply_keybinds() -> void:
 		var key: int = keybinds[id]
 		if key != KEY_NONE:
 			var ev := InputEventKey.new()
-			ev.keycode = key
+			ev.keycode = key as Key
 			InputMap.action_add_event(id, ev)
 
 # ── Persist ───────────────────────────────────────────────────────────────────
