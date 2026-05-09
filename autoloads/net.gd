@@ -185,6 +185,7 @@ func _hex_to_bytes(hex: String) -> PackedByteArray:
 	var pba := PackedByteArray()
 	if hex.length() % 2 != 0:
 		return pba
+	@warning_ignore("integer_division")
 	pba.resize(hex.length() / 2)
 	for i in pba.size():
 		pba[i] = hex.substr(i * 2, 2).hex_to_int() & 0xFF

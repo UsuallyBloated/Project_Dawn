@@ -108,6 +108,7 @@ func _refresh() -> void:
 	ac_value.text = str(Equipment.get_armor_class())
 
 func _get_attack_range() -> String:
+	@warning_ignore("integer_division")
 	var str_bonus: int = PlayerStats.strength / 5
 	var weapon: ItemData = Equipment.equipped.get("weapon")
 	if weapon != null and weapon.weapon_damage_max > 0:

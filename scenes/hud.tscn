@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://bm4x7kpqr2n5"]
 
-[ext_resource type="Script" uid="uid://c8nt3vhqw6y1" path="res://scripts/hud.gd" id="1_hudgd"]
+[ext_resource type="Script" uid="uid://4xqe6iejlere" path="res://scripts/hud.gd" id="1_hudgd"]
 [ext_resource type="PackedScene" path="res://scenes/character_window.tscn" id="2_charwin"]
 [ext_resource type="Script" path="res://scripts/inventory_window.gd" id="3_invwin"]
 [ext_resource type="Script" path="res://scripts/paperdoll_window.gd" id="4_paperdoll"]

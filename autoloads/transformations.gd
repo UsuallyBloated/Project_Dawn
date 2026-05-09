@@ -108,7 +108,7 @@ func revert_transformation() -> void:
 
 func get_available_transformations() -> Array[String]:
 	var result: Array[String] = []
-	for name in TRANSFORMATIONS:
-		if can_transform(name):
-			result.append(name)
+	for tname in TRANSFORMATIONS:
+		if can_transform(tname):
+			result.append(tname)
 	return result

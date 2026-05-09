@@ -612,14 +612,14 @@ func _style_slot(frame: Panel, active: bool) -> void:
 	s.set_corner_radius_all(3)
 	frame.add_theme_stylebox_override("panel", s)
 
-func _find_spell(name: String) -> SpellData:
+func _find_spell(spell_name: String) -> SpellData:
 	for sp in Spells.available:
-		if sp.spell_name == name:
+		if sp.spell_name == spell_name:
 			return sp
 	return null
 
-func _find_skill(name: String) -> SkillData:
+func _find_skill(skill_name: String) -> SkillData:
 	for sk in Skills.available:
-		if sk.skill_name == name:
+		if sk.skill_name == skill_name:
 			return sk
 	return null

@@ -278,21 +278,21 @@ func _update_class_locks(race: String) -> void:
 
 func _update_race_locks(cls: String) -> void:
 	var locked_races: Array = []
-	for race in CharacterData.LOCKED_COMBOS:
-		if cls in CharacterData.LOCKED_COMBOS[race]:
-			locked_races.append(race)
+	for race_id in CharacterData.LOCKED_COMBOS:
+		if cls in CharacterData.LOCKED_COMBOS[race_id]:
+			locked_races.append(race_id)
 	if selected_race in locked_races:
 		selected_race = ""
 		_race_desc_lbl.text = ""
 		_update_identity()
-	for race in CharacterData.RACES:
-		var btn: Button = _race_btns[race]
-		var is_locked: bool = race in locked_races
+	for race_id in CharacterData.RACES:
+		var btn: Button = _race_btns[race_id]
+		var is_locked: bool = race_id in locked_races
 		btn.disabled = is_locked
 		if is_locked:
 			_style_btn_locked(btn)
 		else:
-			_style_btn(btn, race == selected_race)
+			_style_btn(btn, race_id == selected_race)
 
 
 func _compute_stat_totals() -> Dictionary:

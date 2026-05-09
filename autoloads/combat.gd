@@ -167,6 +167,7 @@ func _on_offhand_attack() -> void:
 	_update_offhand_interval()
 
 func calc_offhand_damage() -> int:
+	@warning_ignore("integer_division")
 	var str_bonus: int = PlayerStats.strength / 5
 	var oh: ItemData = Equipment.equipped.get("offhand")
 	var base: int
@@ -286,8 +287,10 @@ func calc_damage() -> int:
 	var weapon: ItemData = Equipment.equipped.get("weapon")
 	var stat_bonus: int
 	if weapon != null and weapon.is_ranged:
+		@warning_ignore("integer_division")
 		stat_bonus = PlayerStats.dexterity / 5
 	else:
+		@warning_ignore("integer_division")
 		stat_bonus = PlayerStats.strength / 5
 	var base: int
 	if weapon != null and weapon.weapon_damage_max > 0:

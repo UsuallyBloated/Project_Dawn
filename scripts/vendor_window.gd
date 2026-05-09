@@ -253,6 +253,7 @@ func _refresh_detail() -> void:
 			return
 		var slot = _sell_items[_selected_index]
 		item = slot["item"]
+		@warning_ignore("integer_division")
 		price = item.vendor_price / 2
 		max_qty = slot["count"]
 
