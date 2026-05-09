@@ -5,10 +5,10 @@ extends Node
 # Alignment, QuestManager, the three passive skill trackers, Inventory, and
 # Equipment. Buffs / cooldowns / pet state are transient and not persisted.
 #
-# Auto-save fires on level-up and zone change. The window-close handler (see
-# _notification) flushes a final save before quitting; the in-game Quit Game
-# button in the Options screen calls SaveManager.save() directly with the same
-# effect.
+# Auto-save fires on level-up and zone change. SaveManager owns window-close:
+# its handler flushes a final save, calls Net.leave_session() to flush the
+# app-layer Disconnect, then calls get_tree().quit(). The in-game Quit Game
+# button in the Options screen runs the same sequence directly.
 #
 # Atomic writes: data is staged at character.save.tmp, the previous primary is
 # rotated to character.save.bak, then tmp is renamed into place. A crash mid-
@@ -25,21 +25,31 @@ signal loaded
 var _is_loading: bool = false
 
 func _ready() -> void:
-	# Auto-save triggers. Window-close save runs from _notification below.
+	# Auto-save triggers. Window-close save runs from _on_close_requested below.
 	PlayerStats.level_changed.connect(func(_lvl: int) -> void:
 		if not _is_loading:
 			save())
 	ZoneLoader.zone_ready.connect(func() -> void:
 		if not _is_loading:
 			save())
-	# Take over window-close handling so we can autosave before quit.
+	# Take over window-close handling so we can autosave before quit. In Godot
+	# 4 the close request is delivered to the root Window's `close_requested`
+	# signal — autoloads do NOT receive NOTIFICATION_WM_CLOSE_REQUEST via
+	# _notification (that path is for Window nodes only and does not propagate
+	# to scene-tree children). SaveManager is the single owner of this signal;
+	# Net intentionally does not connect to it.
 	get_tree().auto_accept_quit = false
+	get_tree().root.close_requested.connect(_on_close_requested)
 
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_WM_GO_BACK_REQUEST:
-		if not _is_loading:
-			save()
-		get_tree().quit()
+func _on_close_requested() -> void:
+	# Order matches options_screen._on_quit_pressed so all quit paths converge:
+	# save first (local autoloads, untouched by network teardown), then flush
+	# the app-layer Disconnect (~200 ms poll), then quit. Skipping save during
+	# load avoids racing a half-loaded character to disk.
+	if not _is_loading:
+		save()
+	Net.leave_session()
+	get_tree().quit()
 
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
