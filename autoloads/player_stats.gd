@@ -78,14 +78,14 @@ func set_bind_point(zone_path: String, entry_id: String, zone_name: String) -> v
 	bind_entry_id  = entry_id
 	bind_zone_name = zone_name
 
-func apply_character(race: String, cls: String, lvl: int) -> void:
+func apply_character(race_id: String, cls: String, lvl: int) -> void:
 	lvl = clampi(lvl, 1, 99)
 
 	var stats: Dictionary = {}
 	for k in CharacterData.STAT_KEYS:
 		stats[k] = CharacterData.BASE
-	for k: String in CharacterData.RACE_DATA[race]["bonuses"]:
-		stats[k] += CharacterData.RACE_DATA[race]["bonuses"][k]
+	for k: String in CharacterData.RACE_DATA[race_id]["bonuses"]:
+		stats[k] += CharacterData.RACE_DATA[race_id]["bonuses"][k]
 	for k: String in CharacterData.CLASS_DATA[cls]["bonuses"]:
 		stats[k] += CharacterData.CLASS_DATA[cls]["bonuses"][k]
 
@@ -109,7 +109,7 @@ func apply_character(race: String, cls: String, lvl: int) -> void:
 	for _i in lvl - 1:
 		new_xp_to_next = int(new_xp_to_next * 1.5)
 
-	self.race            = race
+	self.race            = race_id
 	self.player_class    = cls
 	self.strength        = stats["strength"]
 	self.dexterity       = stats["dexterity"]
