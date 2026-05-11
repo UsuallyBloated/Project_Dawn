@@ -38,6 +38,17 @@ const HEARTBEAT_INTERVAL_SEC := 4.0
 signal app_connected(player_id: int)
 signal app_disconnected(reason: String)
 signal world_position(id: int, pos: Vector3, vel: Vector3, yaw: float, sequence: int)
+# Track 3 entity replication. `char_class` rather than `class` because the
+# latter is reserved in GDScript.
+signal world_entity_spawn(
+	id: int,
+	player_name: String,
+	race: String,
+	char_class: String,
+	level: int,
+	pos: Vector3,
+	yaw: float)
+signal world_entity_despawn(id: int)
 
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
@@ -54,6 +65,8 @@ func _ready() -> void:
 	connect_ok.connect(_on_connect_ok)
 	kicked.connect(_on_kicked)
 	position.connect(_on_position)
+	entity_spawn.connect(_on_entity_spawn)
+	entity_despawn.connect(_on_entity_despawn)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -221,6 +234,23 @@ func _on_kicked(reason: String, code: String) -> void:
 
 func _on_position(id: int, pos: Vector3, vel: Vector3, yaw: float, sequence: int) -> void:
 	world_position.emit(id, pos, vel, yaw, sequence)
+
+# GDExtension `entity_spawn` signal parameter names mirror the Rust side
+# (id, name, race, class, level, pos, yaw). Receiver parameter names rebind
+# safely: `n` instead of `name` so we don't shadow Node.name; `char_class`
+# instead of `class` (GDScript reserved word).
+func _on_entity_spawn(
+		id: int,
+		n: String,
+		race: String,
+		char_class: String,
+		level: int,
+		pos: Vector3,
+		yaw: float) -> void:
+	world_entity_spawn.emit(id, n, race, char_class, level, pos, yaw)
+
+func _on_entity_despawn(id: int) -> void:
+	world_entity_despawn.emit(id)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:
