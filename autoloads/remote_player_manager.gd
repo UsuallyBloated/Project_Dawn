@@ -37,6 +37,9 @@ func _ready() -> void:
 	Net.world_entity_spawn.connect(_on_entity_spawn)
 	Net.world_entity_despawn.connect(_on_entity_despawn)
 	Net.world_position.connect(_on_position)
+	Net.world_health_update.connect(_on_health_update)
+	Net.world_mana_update.connect(_on_mana_update)
+	Net.world_stamina_update.connect(_on_stamina_update)
 
 func _process(_delta: float) -> void:
 	var scene := get_tree().current_scene
@@ -110,6 +113,46 @@ func _on_position(id: int, pos: Vector3, _vel: Vector3, yaw: float, sequence: in
 		return
 	rp.on_position_update(pos, yaw, sequence)
 
+# Track 4: peer resource fan-out. Owner is filtered out (server already skips
+# self, but defensive). If we have no spawn record for `id`, drop — happens
+# only if EntityDespawn already cleared the record but a late HealthUpdate
+# slipped through the reliable channel.
+func _on_health_update(id: int, hp: float, max_hp: float) -> void:
+	if id == Net.get_player_id():
+		return
+	if not _spawn_data.has(id):
+		return
+	var data: Dictionary = _spawn_data[id]
+	data["hp"] = hp
+	data["max_hp"] = max_hp
+	var rp = _by_id.get(id)
+	if rp != null and is_instance_valid(rp):
+		rp.apply_health_update(hp, max_hp)
+
+func _on_mana_update(id: int, mp: float, max_mp: float) -> void:
+	if id == Net.get_player_id():
+		return
+	if not _spawn_data.has(id):
+		return
+	var data: Dictionary = _spawn_data[id]
+	data["mp"] = mp
+	data["max_mp"] = max_mp
+	var rp = _by_id.get(id)
+	if rp != null and is_instance_valid(rp):
+		rp.apply_mana_update(mp, max_mp)
+
+func _on_stamina_update(id: int, stamina: float, maximum: float) -> void:
+	if id == Net.get_player_id():
+		return
+	if not _spawn_data.has(id):
+		return
+	var data: Dictionary = _spawn_data[id]
+	data["stamina"] = stamina
+	data["max_stamina"] = maximum
+	var rp = _by_id.get(id)
+	if rp != null and is_instance_valid(rp):
+		rp.apply_stamina_update(stamina, maximum)
+
 func _instantiate_into(id: int, scene: Node) -> void:
 	var data: Dictionary = _spawn_data[id]
 	var rp := REMOTE_PLAYER_SCENE.instantiate()
@@ -122,6 +165,15 @@ func _instantiate_into(id: int, scene: Node) -> void:
 	rp.rotation.y = data["yaw"]
 	scene.add_child(rp)
 	_by_id[id] = rp
+	# Apply any cached resource state (from earlier broadcasts that arrived
+	# while we were in the lobby, or the 4a seed at app-connect). add_child
+	# fires _ready first, so the bar nodes are guaranteed live here.
+	if data.has("hp"):
+		rp.apply_health_update(data["hp"], data["max_hp"])
+	if data.has("mp"):
+		rp.apply_mana_update(data["mp"], data["max_mp"])
+	if data.has("stamina"):
+		rp.apply_stamina_update(data["stamina"], data["max_stamina"])
 
 # A scene "hosts the local player" once player.gd._ready has run and
 # added the player to the "player" group. Picks out world.tscn (and any

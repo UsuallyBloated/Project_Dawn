@@ -36,6 +36,8 @@ func _click_target(mouse_pos: Vector2) -> void:
 	var body = result["collider"]
 	if body.is_in_group("enemies") and not body.is_dead:
 		Combat.set_target(body)
+	elif body.is_in_group("remote_players") and not body.is_dead:
+		Combat.set_target(body)
 	elif body.is_in_group("vendor_npcs") or body.is_in_group("dialogue_npcs"):
 		Combat.set_target(body)
 	elif body is Area3D:

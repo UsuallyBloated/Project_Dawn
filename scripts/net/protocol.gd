@@ -194,6 +194,11 @@ const W_GROUP_LEAVE         := "GroupLeave"
 const W_GROUP_KICK          := "GroupKick"
 const W_GM_COMMAND          := "GmCommand"
 
+# Track 4: owning-client → server broadcast of current resources. The server
+# fans out three separate SW_HEALTH_UPDATE / SW_MANA_UPDATE / SW_STAMINA_UPDATE
+# messages to each other ready peer. Throttled client-side; reliable channel.
+const W_RESOURCE_UPDATE     := "ResourceUpdate"
+
 # ─── World: Server → Client message tags ────────────────────────────
 
 const SW_CONNECT_OK        := "ConnectOk"

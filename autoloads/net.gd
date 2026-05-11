@@ -49,6 +49,10 @@ signal world_entity_spawn(
 	pos: Vector3,
 	yaw: float)
 signal world_entity_despawn(id: int)
+# Track 4 resource bars — relayed from each peer's owning-client broadcast.
+signal world_health_update(id: int, hp: float, max_hp: float)
+signal world_mana_update(id: int, mp: float, max_mp: float)
+signal world_stamina_update(id: int, stamina: float, maximum: float)
 
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
@@ -57,6 +61,15 @@ var _client_version := ""
 var _player_id: int = -1
 var _move_sequence: int = 0
 var _heartbeat_timer: Timer = null
+
+# Server-authoritative identity, delivered in ConnectOk. The lobby reads
+# these in _on_app_connected to call PlayerStats.apply_character before
+# entering world.tscn — without it the local character spawns classless
+# with default base stats.
+var _own_name := ""
+var _own_race := ""
+var _own_class := ""
+var _own_level: int = 1
 
 func _ready() -> void:
 	# Hook GDExtension signals — populated from the renet poll loop.
@@ -67,6 +80,9 @@ func _ready() -> void:
 	position.connect(_on_position)
 	entity_spawn.connect(_on_entity_spawn)
 	entity_despawn.connect(_on_entity_despawn)
+	health_update.connect(_on_health_update)
+	mana_update.connect(_on_mana_update)
+	stamina_update.connect(_on_stamina_update)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -99,6 +115,21 @@ func is_app_ready() -> bool:
 func get_player_id() -> int:
 	return _player_id
 
+# Server-authoritative identity from ConnectOk. Empty strings / 0 until the
+# handshake completes; lobby's _on_app_connected uses these to drive
+# PlayerStats.apply_character.
+func get_own_name() -> String:
+	return _own_name
+
+func get_own_race() -> String:
+	return _own_race
+
+func get_own_class() -> String:
+	return _own_class
+
+func get_own_level() -> int:
+	return _own_level
+
 # Send a Move intent. Server clamps the direction to unit length. Sequence
 # is auto-incremented; out-of-order packets are dropped server-side.
 func send_movement(direction: Vector3, jumping: bool = false) -> void:
@@ -106,6 +137,17 @@ func send_movement(direction: Vector3, jumping: bool = false) -> void:
 		return
 	_move_sequence += 1
 	send_move(_move_sequence, direction, jumping)
+
+# Track 4: gated wrapper around the GDExtension `send_resource_update`.
+# Throttling lives in NetCombatBroadcaster; this just rejects pre-app-ready
+# sends so local-save mode and the lobby phase stay quiet on the wire.
+func broadcast_resources(
+		hp: float, max_hp: float,
+		mp: float, max_mp: float,
+		stamina: float, max_stamina: float) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_resource_update(hp, max_hp, mp, max_mp, stamina, max_stamina)
 
 func leave_session() -> void:
 	# Send the app-layer Disconnect and drive renet a few times so the
@@ -218,8 +260,17 @@ func _on_transport_disconnected(reason: String) -> void:
 	_player_id = -1
 	app_disconnected.emit(reason)
 
-func _on_connect_ok(player_id: int) -> void:
+func _on_connect_ok(
+		player_id: int,
+		n: String,
+		race: String,
+		char_class: String,
+		level: int) -> void:
 	_player_id = player_id
+	_own_name = n
+	_own_race = race
+	_own_class = char_class
+	_own_level = level
 	_state = State.CONNECTED_APP
 	_heartbeat_timer.start()
 	app_connected.emit(player_id)
@@ -251,6 +302,17 @@ func _on_entity_spawn(
 
 func _on_entity_despawn(id: int) -> void:
 	world_entity_despawn.emit(id)
+
+# Track 4: GDExtension signal parameter names mirror the Rust side. Receiver
+# uses `maximum` for stamina_update's `max` to avoid shadowing GDScript's @max.
+func _on_health_update(id: int, hp: float, max_hp: float) -> void:
+	world_health_update.emit(id, hp, max_hp)
+
+func _on_mana_update(id: int, mp: float, max_mp: float) -> void:
+	world_mana_update.emit(id, mp, max_mp)
+
+func _on_stamina_update(id: int, stamina: float, maximum: float) -> void:
+	world_stamina_update.emit(id, stamina, maximum)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:

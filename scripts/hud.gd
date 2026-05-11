@@ -23,6 +23,8 @@ const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
 @onready var target_name_label: Label = $TargetFrame/VBox/NameLabel
 @onready var target_level_label: Label = $TargetFrame/VBox/LevelLabel
 @onready var target_hp_bar: ProgressBar = $TargetFrame/VBox/HPBar
+@onready var target_mp_bar: ProgressBar = $TargetFrame/VBox/MPBar
+@onready var target_st_bar: ProgressBar = $TargetFrame/VBox/StaminaBar
 
 var _clock_label: Label = null
 var _state_label: Label = null
@@ -47,6 +49,8 @@ var _spell_book: Panel = null
 var _quest_journal: Panel = null
 var _dialogue_window: Panel = null
 var _target_hp_label: Label = null
+var _target_mp_label: Label = null
+var _target_st_label: Label = null
 
 var _tot_frame: DraggablePanel = null
 var _tot_name_label: Label = null
@@ -65,6 +69,14 @@ func _ready() -> void:
 	$Panel/VBoxContainer/STARow/STALabel.add_theme_color_override("font_color", Color(1.00, 0.92, 0.35))
 
 	_target_hp_label = UITheme.style_bar(target_hp_bar, UITheme.C_BAR_HP)
+	_target_mp_label = UITheme.style_bar(target_mp_bar, UITheme.C_BAR_MANA)
+	_target_st_label = UITheme.style_bar(target_st_bar, UITheme.C_BAR_STAMINA)
+	target_mp_bar.visible = false
+	target_st_bar.visible = false
+	if _target_mp_label:
+		_target_mp_label.visible = false
+	if _target_st_label:
+		_target_st_label.visible = false
 
 	PlayerStats.hp_changed.connect(_on_hp_changed)
 	PlayerStats.mp_changed.connect(_on_mp_changed)
@@ -537,9 +549,21 @@ func _on_target_changed(enemy) -> void:
 	if is_instance_valid(_tracked_target):
 		if _tracked_target.is_connected("hp_changed", _on_target_hp_changed):
 			_tracked_target.hp_changed.disconnect(_on_target_hp_changed)
-		if _tracked_target.is_connected("died", _on_target_enemy_died):
+		if _tracked_target.is_connected("mp_changed", _on_target_mp_changed):
+			_tracked_target.mp_changed.disconnect(_on_target_mp_changed)
+		if _tracked_target.is_connected("stamina_changed", _on_target_stamina_changed):
+			_tracked_target.stamina_changed.disconnect(_on_target_stamina_changed)
+		if _tracked_target.has_signal("died") and _tracked_target.is_connected("died", _on_target_enemy_died):
 			_tracked_target.died.disconnect(_on_target_enemy_died)
 	_tracked_target = enemy
+	# MP/Stamina bars are peer-only; hide on every transition and re-show in
+	# the remote-player branch below if applicable.
+	target_mp_bar.visible = false
+	target_st_bar.visible = false
+	if _target_mp_label:
+		_target_mp_label.visible = false
+	if _target_st_label:
+		_target_st_label.visible = false
 	if enemy == null or not is_instance_valid(enemy):
 		target_frame.visible = false
 		target_hp_bar.visible = true
@@ -549,6 +573,9 @@ func _on_target_changed(enemy) -> void:
 			_tot_frame.visible = false
 		return
 	target_frame.visible = true
+	if enemy.is_in_group("remote_players"):
+		_setup_peer_target(enemy)
+		return
 	if not enemy.is_in_group("enemies"):
 		var nm: String = enemy.vendor_name if enemy.is_in_group("vendor_npcs") else enemy.npc_name
 		var subtitle: String = enemy.vendor_type if enemy.is_in_group("vendor_npcs") else enemy.npc_title
@@ -571,6 +598,51 @@ func _on_target_changed(enemy) -> void:
 	enemy.hp_changed.connect(_on_target_hp_changed)
 	enemy.died.connect(_on_target_enemy_died)
 	_refresh_tot()
+
+# Targeting a remote player. Resources are server-replicated via Track 4
+# ResourceUpdate fan-out and cached on the RemotePlayer node; we read the
+# current values now and subscribe to its hp/mp/stamina signals so the bars
+# tick as fresh broadcasts arrive.
+func _setup_peer_target(peer) -> void:
+	target_name_label.text = peer.mob_name
+	# Per design: peer level isn't surfaced in the target frame. Class /
+	# race subtitle could land here later; left empty for now.
+	target_level_label.text = ""
+	target_hp_bar.visible = true
+	target_hp_bar.max_value = maxf(peer.max_hp, 1.0)
+	target_hp_bar.value = peer.hp
+	if _target_hp_label:
+		_target_hp_label.text = "%d / %d" % [int(peer.hp), int(peer.max_hp)]
+		_target_hp_label.visible = true
+	target_mp_bar.visible = true
+	target_mp_bar.max_value = maxf(peer.max_mp, 1.0)
+	target_mp_bar.value = peer.mp
+	if _target_mp_label:
+		_target_mp_label.text = "%d / %d" % [int(peer.mp), int(peer.max_mp)]
+		_target_mp_label.visible = true
+	target_st_bar.visible = true
+	target_st_bar.max_value = maxf(peer.max_stamina, 1.0)
+	target_st_bar.value = peer.stamina
+	if _target_st_label:
+		_target_st_label.text = "%d / %d" % [int(peer.stamina), int(peer.max_stamina)]
+		_target_st_label.visible = true
+	peer.hp_changed.connect(_on_target_hp_changed)
+	peer.mp_changed.connect(_on_target_mp_changed)
+	peer.stamina_changed.connect(_on_target_stamina_changed)
+	if _tot_frame != null:
+		_tot_frame.visible = false
+
+func _on_target_mp_changed(current: float, maximum: float) -> void:
+	target_mp_bar.max_value = maxf(maximum, 1.0)
+	target_mp_bar.value = current
+	if _target_mp_label:
+		_target_mp_label.text = "%d / %d" % [int(current), int(maximum)]
+
+func _on_target_stamina_changed(current: float, maximum: float) -> void:
+	target_st_bar.max_value = maxf(maximum, 1.0)
+	target_st_bar.value = current
+	if _target_st_label:
+		_target_st_label.text = "%d / %d" % [int(current), int(maximum)]
 
 func _on_target_hp_changed(current: float, maximum: float) -> void:
 	target_hp_bar.max_value = maximum

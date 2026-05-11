@@ -126,6 +126,17 @@ func _setup_launcher_mode() -> void:
 		_on_app_connected(Net.get_player_id())
 
 func _on_app_connected(_player_id: int) -> void:
+	# Initialize PlayerStats from the server-authoritative identity carried
+	# in ConnectOk. Without this the character lands in world.tscn with no
+	# class set — no spells, no skills, default base stats. Race/class/level
+	# come from the DB-loaded CharacterSpawn on the server side.
+	var cls := Net.get_own_class()
+	var race := Net.get_own_race()
+	var lvl := Net.get_own_level()
+	var pname := Net.get_own_name()
+	if cls != "" and race != "":
+		PlayerStats.player_name = pname
+		PlayerStats.apply_character(race, cls, lvl)
 	status_label.text = "Connected. Click Enter World to begin."
 	enter_world_btn.visible = true
 
