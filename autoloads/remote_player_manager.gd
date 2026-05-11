@@ -1,25 +1,61 @@
 extends Node
 
-# RemotePlayerManager — owns the Dictionary[char_id → RemotePlayer node]
-# for every other player visible to the local client. Listens to Net's
-# coarse signals; instantiates / frees `remote_player.tscn` in response.
+# RemotePlayerManager — visual replication of every other player in the
+# current zone. Listens to Net's coarse signals; manages a dict of
+# `remote_player.tscn` instances keyed by char_id.
 #
-# The own player is rendered by world.tscn / player.tscn — this manager
-# explicitly filters out broadcasts where `id == Net.get_player_id()`.
+# Two maps, two lifetimes:
+#   _spawn_data — last known identity + spawn pose per char_id. Survives
+#       scene changes (autoload-scoped). The source of truth for
+#       re-instantiation when the local scene tree shifts under us.
+#   _by_id — live RemotePlayer node per char_id, parented under the
+#       current scene's root so it dies with the scene on transition.
 #
-# Remote-player nodes are scene-scoped (parented under the current scene's
-# root, not this autoload) so they are freed automatically on scene change.
-# `clear_all()` is a defensive belt-and-suspenders for callers that want
-# to force a clean slate (e.g. zone transitions before scene swap).
+# Why two maps: the lobby→world transition for the second-joining client.
+# Server fan-out delivers EntitySpawn(A) to B at app-Connect time, which
+# is BEFORE B clicks Enter World — so B is still on the lobby scene.
+# Parenting RemotePlayer(A) under the lobby means it gets freed on
+# transition, and the server doesn't re-send spawn (it's a one-shot
+# reliable message). With _spawn_data persistent, the `_process` poll
+# below catches the scene swap and re-instantiates into world.tscn.
+#
+# Own player is rendered by world.tscn + handled by player.gd; we filter
+# out broadcasts where id == Net.get_player_id() on every signal.
 
 const REMOTE_PLAYER_SCENE := preload("res://scenes/remote_player.tscn")
 
-var _by_id: Dictionary = {}  # int char_id -> RemotePlayer node
+var _spawn_data: Dictionary = {}   # int char_id -> spawn dict
+var _by_id: Dictionary = {}        # int char_id -> RemotePlayer node
+var _last_scene: Node = null
+# Set when a scene swap drops _by_id; cleared once we've reinstantiated
+# into a scene that actually hosts the local player. Persists across
+# frames so the local player joining its group one tick after the scene
+# becomes current doesn't fall through the cracks.
+var _needs_rehydrate: bool = false
 
 func _ready() -> void:
 	Net.world_entity_spawn.connect(_on_entity_spawn)
 	Net.world_entity_despawn.connect(_on_entity_despawn)
 	Net.world_position.connect(_on_position)
+
+func _process(_delta: float) -> void:
+	var scene := get_tree().current_scene
+	if scene != _last_scene:
+		# Scene swap. The previous scene's children (including any
+		# RemotePlayers we parented there) are freed or queued for free,
+		# so _by_id entries point at dead nodes. Drop the map; rehydration
+		# (below) waits until the new scene hosts the local player.
+		_last_scene = scene
+		_by_id.clear()
+		_needs_rehydrate = true
+	if not _needs_rehydrate or scene == null:
+		return
+	if not _scene_hosts_local_player(scene):
+		return
+	for id in _spawn_data:
+		if not _by_id.has(id):
+			_instantiate_into(id, scene)
+	_needs_rehydrate = false
 
 func _on_entity_spawn(
 		id: int,
@@ -29,34 +65,38 @@ func _on_entity_spawn(
 		level: int,
 		pos: Vector3,
 		yaw: float) -> void:
-	# Own-player spawn is handled by world.tscn instantiating player.tscn.
-	# We get the broadcast too (server fan-out includes self for the
-	# Position channel; spawn fan-out skips subject, so this branch is
-	# defensive insurance against a future protocol change).
 	if id == Net.get_player_id():
+		# Own-player spawn fan-out skips the subject server-side; this
+		# branch is defensive insurance against a future protocol change.
 		return
+	# Cache regardless of scene — drives rehydration on the next world
+	# transition if we're in the lobby right now.
+	_spawn_data[id] = {
+		"name": player_name,
+		"race": race,
+		"class": char_class,
+		"level": level,
+		"pos": pos,
+		"yaw": yaw,
+	}
+	var scene := get_tree().current_scene
+	if scene == null or not _scene_hosts_local_player(scene):
+		return
+	# Duplicate spawn (stale message after a despawn). Replace.
 	if _by_id.has(id):
-		# Duplicate spawn (server-side bug or a stale message arriving
-		# after a despawn). Replace silently.
-		_by_id[id].queue_free()
+		var old = _by_id[id]
+		if is_instance_valid(old):
+			old.queue_free()
 		_by_id.erase(id)
-	var rp := REMOTE_PLAYER_SCENE.instantiate()
-	rp.char_id = id
-	rp.player_name = player_name
-	rp.race = race
-	rp.player_class = char_class
-	rp.level = level
-	rp.global_position = pos
-	rp.rotation.y = yaw
-	_add_to_active_scene(rp)
-	_by_id[id] = rp
+	_instantiate_into(id, scene)
 
 func _on_entity_despawn(id: int) -> void:
+	_spawn_data.erase(id)
 	var rp = _by_id.get(id)
-	if rp == null:
-		return
-	rp.queue_free()
-	_by_id.erase(id)
+	if rp != null:
+		if is_instance_valid(rp):
+			rp.queue_free()
+		_by_id.erase(id)
 
 func _on_position(id: int, pos: Vector3, _vel: Vector3, yaw: float, sequence: int) -> void:
 	# Own-player position is handled by player.gd._on_world_position.
@@ -64,25 +104,38 @@ func _on_position(id: int, pos: Vector3, _vel: Vector3, yaw: float, sequence: in
 		return
 	var rp = _by_id.get(id)
 	if rp == null:
-		# Position arrived before EntitySpawn (race across the reliable
-		# and unreliable channels). Drop; the next Position after the
-		# spawn arrives will land on the freshly-created node.
+		# Position before EntitySpawn (channel race), or while still in
+		# the lobby (spawn cached, node not yet instantiated). Drop —
+		# subsequent Positions after the node exists will land.
 		return
 	rp.on_position_update(pos, yaw, sequence)
 
-func _add_to_active_scene(rp: Node) -> void:
-	# Parent under the current scene's root so remote players are freed
-	# automatically on scene change (lobby ↔ world.tscn ↔ future zones).
-	var scene := get_tree().current_scene
-	if scene == null:
-		push_warning("RemotePlayerManager: no current scene; dropping spawn")
-		rp.queue_free()
-		return
+func _instantiate_into(id: int, scene: Node) -> void:
+	var data: Dictionary = _spawn_data[id]
+	var rp := REMOTE_PLAYER_SCENE.instantiate()
+	rp.char_id = id
+	rp.player_name = data["name"]
+	rp.race = data["race"]
+	rp.player_class = data["class"]
+	rp.level = data["level"]
+	rp.global_position = data["pos"]
+	rp.rotation.y = data["yaw"]
 	scene.add_child(rp)
+	_by_id[id] = rp
 
-# Defensive — call before zone swaps if needed. Scene change already frees
-# the children when the parent scene goes away.
+# A scene "hosts the local player" once player.gd._ready has run and
+# added the player to the "player" group. Picks out world.tscn (and any
+# future 3D zones that follow the same pattern) without hard-coding a
+# scene path.
+func _scene_hosts_local_player(_scene: Node) -> bool:
+	return get_tree().get_first_node_in_group("player") != null
+
+# Defensive — call before zone swaps if needed. Scene change already
+# frees the children when the parent scene goes away.
 func clear_all() -> void:
 	for id in _by_id:
-		_by_id[id].queue_free()
+		var rp = _by_id[id]
+		if is_instance_valid(rp):
+			rp.queue_free()
 	_by_id.clear()
+	_spawn_data.clear()
