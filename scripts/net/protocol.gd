@@ -211,6 +211,11 @@ const W_CAST_START_BROADCAST    := "CastStartBroadcast"
 const W_CAST_COMPLETE_BROADCAST := "CastCompleteBroadcast"
 const W_CAST_FAIL_BROADCAST     := "CastFailBroadcast"
 
+# Track 4 sub-task 3: full buff list broadcast on every BuffManager
+# state change. Server relays as ServerWorldMsg::BuffSnapshot (with the
+# casting peer's char_id as target) to in_world peers.
+const W_BUFF_SNAPSHOT_BROADCAST := "BuffSnapshotBroadcast"
+
 # ─── World: Server → Client message tags ────────────────────────────
 
 const SW_CONNECT_OK        := "ConnectOk"

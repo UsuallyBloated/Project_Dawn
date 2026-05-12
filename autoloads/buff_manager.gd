@@ -274,6 +274,54 @@ func is_lich_form() -> bool:
 func get_lich_mp_regen() -> float:
 	return _lich_mp_regen
 
+# Track 4 sub-task 3 — walk every buff source the local buff bar shows and
+# emit parallel name/duration arrays for over-the-wire snapshot replication.
+# 0.0 duration means "indefinite / toggle" (Lich, raw Absorb) — receiver
+# displays the name without a countdown.
+func get_snapshot_arrays() -> Dictionary:
+	var names := PackedStringArray()
+	var durations := PackedFloat32Array()
+	for h in _hots:
+		names.append(h.spell_name)
+		durations.append(h.remaining)
+	if _absorb_hp > 0.0:
+		names.append("Shield")
+		durations.append(0.0)
+	if _evade_boost_remaining > 0.0:
+		names.append("Evade")
+		durations.append(_evade_boost_remaining)
+	if not _food_buff.is_empty():
+		names.append(_food_buff.get("buff_name", "Food"))
+		durations.append(_food_buff.get("remaining", 0.0))
+	if not _drink_buff.is_empty():
+		names.append(_drink_buff.get("buff_name", "Drink"))
+		durations.append(_drink_buff.get("remaining", 0.0))
+	if not _speed_buff.is_empty():
+		names.append(_speed_buff.get("buff_name", "SoW"))
+		durations.append(_speed_buff.get("remaining", 0.0))
+	if not _haste_buff.is_empty():
+		names.append(_haste_buff.get("buff_name", "Haste"))
+		durations.append(_haste_buff.get("remaining", 0.0))
+	if not _mp_regen_buff.is_empty():
+		names.append(_mp_regen_buff.get("buff_name", "Clarity"))
+		durations.append(_mp_regen_buff.get("remaining", 0.0))
+	if not _stat_buff.is_empty():
+		names.append(_stat_buff.get("buff_name", "Focused"))
+		durations.append(_stat_buff.get("remaining", 0.0))
+	if not _primary_stat_buff.is_empty():
+		names.append(_primary_stat_buff.get("buff_name", "Bless"))
+		durations.append(_primary_stat_buff.get("remaining", 0.0))
+	if not _damage_shield.is_empty():
+		names.append(_damage_shield.get("buff_name", "Thorns"))
+		durations.append(_damage_shield.get("remaining", 0.0))
+	if _stealth_remaining > 0.0:
+		names.append("Hidden")
+		durations.append(_stealth_remaining)
+	if _lich_form_active:
+		names.append("Lich")
+		durations.append(0.0)
+	return {"names": names, "durations": durations}
+
 func clear_all() -> void:
 	_dots.clear()
 	_hots.clear()

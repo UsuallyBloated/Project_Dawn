@@ -43,6 +43,7 @@ func _ready() -> void:
 	Net.world_cast_start.connect(_on_cast_start)
 	Net.world_cast_complete.connect(_on_cast_complete)
 	Net.world_cast_fail.connect(_on_cast_fail)
+	Net.world_buff_snapshot.connect(_on_buff_snapshot)
 
 func _process(_delta: float) -> void:
 	var scene := get_tree().current_scene
@@ -195,6 +196,21 @@ func _on_cast_fail(caster: int, reason: String) -> void:
 	if rp != null and is_instance_valid(rp):
 		rp.apply_cast_fail(reason)
 
+# Track 4 sub-task 3 — full buff snapshot. Cached on _spawn_data so a
+# rehydrate (scene transition with the peer mid-buffs) replays the last
+# known list onto the new RemotePlayer instance.
+func _on_buff_snapshot(target: int, names: PackedStringArray, durations: PackedFloat32Array) -> void:
+	if target == Net.get_player_id():
+		return
+	if not _spawn_data.has(target):
+		return
+	var data: Dictionary = _spawn_data[target]
+	data["buff_names"] = names
+	data["buff_durations"] = durations
+	var rp = _by_id.get(target)
+	if rp != null and is_instance_valid(rp):
+		rp.apply_buff_snapshot(names, durations)
+
 func _instantiate_into(id: int, scene: Node) -> void:
 	var data: Dictionary = _spawn_data[id]
 	var rp := REMOTE_PLAYER_SCENE.instantiate()
@@ -216,6 +232,8 @@ func _instantiate_into(id: int, scene: Node) -> void:
 		rp.apply_mana_update(data["mp"], data["max_mp"])
 	if data.has("stamina"):
 		rp.apply_stamina_update(data["stamina"], data["max_stamina"])
+	if data.has("buff_names"):
+		rp.apply_buff_snapshot(data["buff_names"], data["buff_durations"])
 
 # A scene "hosts the local player" once player.gd._ready has run and
 # added the player to the "player" group. Picks out world.tscn (and any

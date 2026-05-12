@@ -27,6 +27,7 @@ const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
 @onready var target_st_bar: ProgressBar = $TargetFrame/VBox/StaminaBar
 @onready var target_cast_bar: ProgressBar = $TargetFrame/VBox/CastBar
 @onready var target_cast_label: Label = $TargetFrame/VBox/CastLabel
+@onready var target_buffs_label: Label = $TargetFrame/VBox/BuffsLabel
 
 var _clock_label: Label = null
 var _state_label: Label = null
@@ -80,6 +81,7 @@ func _ready() -> void:
 	target_st_bar.visible = false
 	target_cast_bar.visible = false
 	target_cast_label.visible = false
+	target_buffs_label.visible = false
 	if _target_mp_label:
 		_target_mp_label.visible = false
 	if _target_st_label:
@@ -570,15 +572,18 @@ func _on_target_changed(enemy) -> void:
 			_tracked_target.cast_started.disconnect(_on_target_cast_started)
 		if _tracked_target.has_signal("cast_ended") and _tracked_target.is_connected("cast_ended", _on_target_cast_ended):
 			_tracked_target.cast_ended.disconnect(_on_target_cast_ended)
+		if _tracked_target.has_signal("buffs_changed") and _tracked_target.is_connected("buffs_changed", _on_target_buffs_changed):
+			_tracked_target.buffs_changed.disconnect(_on_target_buffs_changed)
 		if _tracked_target.has_signal("died") and _tracked_target.is_connected("died", _on_target_enemy_died):
 			_tracked_target.died.disconnect(_on_target_enemy_died)
 	_tracked_target = enemy
-	# MP/Stamina/Cast bars are peer-only; hide on every transition and
+	# MP/Stamina/Cast/Buffs are peer-only; hide on every transition and
 	# re-show in the remote-player branch below if applicable.
 	target_mp_bar.visible = false
 	target_st_bar.visible = false
 	target_cast_bar.visible = false
 	target_cast_label.visible = false
+	target_buffs_label.visible = false
 	if _target_mp_label:
 		_target_mp_label.visible = false
 	if _target_st_label:
@@ -650,10 +655,12 @@ func _setup_peer_target(peer) -> void:
 	peer.stamina_changed.connect(_on_target_stamina_changed)
 	peer.cast_started.connect(_on_target_cast_started)
 	peer.cast_ended.connect(_on_target_cast_ended)
+	peer.buffs_changed.connect(_on_target_buffs_changed)
 	# Pick up an in-progress cast at target-time (peer may have been
 	# casting before we targeted them; the bar should appear immediately).
 	if peer.is_casting():
 		_show_target_cast_bar(peer.cast_spell_name)
+	_refresh_target_buffs_label()
 	if _tot_frame != null:
 		_tot_frame.visible = false
 
@@ -681,6 +688,35 @@ func _show_target_cast_bar(spell_name: String) -> void:
 	target_cast_bar.value = 0.0
 	target_cast_label.text = spell_name
 	target_cast_label.visible = true
+
+func _on_target_buffs_changed() -> void:
+	_refresh_target_buffs_label()
+
+# Render the peer's buff list as a single multi-line label. Lightweight by
+# design — sub-task 3 is "show the buffs", not "show colored icons" — and
+# trivially extensible to a proper icon row in a future polish pass.
+func _refresh_target_buffs_label() -> void:
+	if not is_instance_valid(_tracked_target):
+		target_buffs_label.visible = false
+		return
+	if not _tracked_target.has_method("apply_buff_snapshot"):
+		target_buffs_label.visible = false
+		return
+	var names: PackedStringArray = _tracked_target.buff_names
+	var durations: PackedFloat32Array = _tracked_target.buff_durations
+	if names.is_empty():
+		target_buffs_label.visible = false
+		target_buffs_label.text = ""
+		return
+	var lines: PackedStringArray = PackedStringArray()
+	for i in names.size():
+		var d: float = durations[i] if i < durations.size() else 0.0
+		if d > 0.0:
+			lines.append("%s  %ds" % [names[i], int(ceil(d))])
+		else:
+			lines.append(names[i])
+	target_buffs_label.text = "\n".join(lines)
+	target_buffs_label.visible = true
 
 func _on_target_hp_changed(current: float, maximum: float) -> void:
 	target_hp_bar.max_value = maximum

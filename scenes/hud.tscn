@@ -150,6 +150,13 @@ text = ""
 horizontal_alignment = 1
 theme_override_font_sizes/font_size = 10
 
+[node name="BuffsLabel" type="Label" parent="TargetFrame/VBox"]
+visible = false
+text = ""
+horizontal_alignment = 1
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 10
+
 [node name="CharacterWindow" parent="." instance=ExtResource("2_charwin")]
 
 [node name="InventoryWindow" type="Panel" parent="."]

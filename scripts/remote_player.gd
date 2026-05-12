@@ -25,6 +25,10 @@ signal stamina_changed(current: float, maximum: float)
 # Fail and on the defensive duration-elapsed timeout in _process.
 signal cast_started(spell_name: String, duration: float)
 signal cast_ended
+# Track 4 sub-task 3 — replicated buff snapshot. Fires whenever the peer's
+# buff list mutates server-side. Subscribers (HUD target frame) re-render
+# from `buff_names` / `buff_durations`.
+signal buffs_changed
 
 # Network identity — set by RemotePlayerManager *before* add_child fires
 # _ready, so _ready can read them.
@@ -59,6 +63,14 @@ var is_dead: bool = false
 var cast_spell_name: String = ""
 var cast_duration: float = 0.0
 var cast_start_time: float = 0.0
+
+# Buff snapshot — parallel arrays from the wire. Durations were the
+# remaining time at the moment of the broadcast; we don't tick them down
+# locally (HUD displays the value as-is). A fresh snapshot on every
+# BuffManager.buffs_changed keeps the display close enough to accurate
+# without per-frame countdown bookkeeping.
+var buff_names: PackedStringArray = PackedStringArray()
+var buff_durations: PackedFloat32Array = PackedFloat32Array()
 
 # Interpolation buffer of { time: float, pos: Vector3, yaw: float } dicts
 # ordered by `time`. Kept short — only the two snapshots straddling
@@ -133,6 +145,11 @@ func cast_progress_ratio() -> float:
 		return 0.0
 	var elapsed := Time.get_unix_time_from_system() - cast_start_time
 	return clampf(float(elapsed) / cast_duration, 0.0, 1.0)
+
+func apply_buff_snapshot(names: PackedStringArray, durations: PackedFloat32Array) -> void:
+	buff_names = names.duplicate()
+	buff_durations = durations.duplicate()
+	buffs_changed.emit()
 
 func on_position_update(pos: Vector3, yaw: float, sequence: int) -> void:
 	# Position channel is Unreliable; drop reorders and dupes. Sequence is

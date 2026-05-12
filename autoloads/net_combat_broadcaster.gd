@@ -41,6 +41,11 @@ func _ready() -> void:
 	Spells.casting_started.connect(_on_casting_started)
 	Spells.spell_cast.connect(_on_spell_cast)
 	Spells.casting_cancelled.connect(_on_casting_cancelled)
+	# Sub-task 3: buff snapshot replication. BuffManager.buffs_changed
+	# fires on every buff add/expire/clear; we send a fresh snapshot each
+	# time. ~10 buffs × ~30 B per entry = ~300 B per change on the
+	# reliable channel — negligible.
+	BuffManager.buffs_changed.connect(_on_buffs_changed)
 	# No explicit hook on Net.app_connected — apply_character runs in lobby's
 	# app-connected handler and its hp/mp/stamina signal cascade naturally
 	# triggers the first broadcast with the server-authoritative values.
@@ -108,6 +113,14 @@ func _on_casting_cancelled() -> void:
 	# it does, plumb the reason through.
 	Net.broadcast_cast_fail("interrupted")
 	_last_cast_spell_name = ""
+
+# ── Buff snapshot ───────────────────────────────────────────────────
+
+func _on_buffs_changed() -> void:
+	if not Net.is_app_ready():
+		return
+	var snap: Dictionary = BuffManager.get_snapshot_arrays()
+	Net.broadcast_buff_snapshot(snap["names"], snap["durations"])
 
 func _send(now_ms: int) -> void:
 	Net.broadcast_resources(

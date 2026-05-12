@@ -58,6 +58,11 @@ signal world_stamina_update(id: int, stamina: float, maximum: float)
 signal world_cast_start(caster: int, spell_name: String, duration: float)
 signal world_cast_complete(caster: int, spell_name: String)
 signal world_cast_fail(caster: int, reason: String)
+# Track 4 sub-task 3 buff snapshot — names/durations are parallel arrays.
+signal world_buff_snapshot(
+	target: int,
+	names: PackedStringArray,
+	durations: PackedFloat32Array)
 
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
@@ -91,6 +96,7 @@ func _ready() -> void:
 	cast_start.connect(_on_cast_start)
 	cast_complete.connect(_on_cast_complete)
 	cast_fail.connect(_on_cast_fail)
+	buff_snapshot.connect(_on_buff_snapshot)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -173,6 +179,11 @@ func broadcast_cast_fail(reason: String) -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_cast_fail_broadcast(reason)
+
+func broadcast_buff_snapshot(names: PackedStringArray, durations: PackedFloat32Array) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_buff_snapshot_broadcast(names, durations)
 
 func leave_session() -> void:
 	# Send the app-layer Disconnect and drive renet a few times so the
@@ -347,6 +358,9 @@ func _on_cast_complete(caster: int, spell_name: String) -> void:
 
 func _on_cast_fail(caster: int, reason: String) -> void:
 	world_cast_fail.emit(caster, reason)
+
+func _on_buff_snapshot(target: int, names: PackedStringArray, durations: PackedFloat32Array) -> void:
+	world_buff_snapshot.emit(target, names, durations)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:
