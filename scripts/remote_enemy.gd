@@ -1,4 +1,4 @@
-extends Node3D
+extends CharacterBody3D
 class_name RemoteEnemy
 
 # Visual stand-in for a server-spawned enemy. Render-only: no AI, no
