@@ -25,6 +25,8 @@ const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
 @onready var target_hp_bar: ProgressBar = $TargetFrame/VBox/HPBar
 @onready var target_mp_bar: ProgressBar = $TargetFrame/VBox/MPBar
 @onready var target_st_bar: ProgressBar = $TargetFrame/VBox/StaminaBar
+@onready var target_cast_bar: ProgressBar = $TargetFrame/VBox/CastBar
+@onready var target_cast_label: Label = $TargetFrame/VBox/CastLabel
 
 var _clock_label: Label = null
 var _state_label: Label = null
@@ -71,8 +73,13 @@ func _ready() -> void:
 	_target_hp_label = UITheme.style_bar(target_hp_bar, UITheme.C_BAR_HP)
 	_target_mp_label = UITheme.style_bar(target_mp_bar, UITheme.C_BAR_MANA)
 	_target_st_label = UITheme.style_bar(target_st_bar, UITheme.C_BAR_STAMINA)
+	# Cast bar uses XP color (warm gold). Distinct enough from the mana
+	# blue and stamina yellow that the player can tell at a glance.
+	UITheme.style_bar(target_cast_bar, UITheme.C_BAR_XP, false)
 	target_mp_bar.visible = false
 	target_st_bar.visible = false
+	target_cast_bar.visible = false
+	target_cast_label.visible = false
 	if _target_mp_label:
 		_target_mp_label.visible = false
 	if _target_st_label:
@@ -339,6 +346,12 @@ func _process(_delta: float) -> void:
 		var t := TimeOfDay.get_time_string()
 		if t != _clock_label.text:
 			_clock_label.text = t
+	# Tick the cast bar for a casting peer target. Reads progress from the
+	# RemotePlayer which tracks elapsed via Time.get_unix_time_from_system
+	# — server messages provide start + duration, not per-frame progress.
+	if target_cast_bar.visible and is_instance_valid(_tracked_target):
+		if _tracked_target.has_method("cast_progress_ratio"):
+			target_cast_bar.value = _tracked_target.cast_progress_ratio()
 
 # ── Input ─────────────────────────────────────────────────────────────────────
 
@@ -553,13 +566,19 @@ func _on_target_changed(enemy) -> void:
 			_tracked_target.mp_changed.disconnect(_on_target_mp_changed)
 		if _tracked_target.is_connected("stamina_changed", _on_target_stamina_changed):
 			_tracked_target.stamina_changed.disconnect(_on_target_stamina_changed)
+		if _tracked_target.has_signal("cast_started") and _tracked_target.is_connected("cast_started", _on_target_cast_started):
+			_tracked_target.cast_started.disconnect(_on_target_cast_started)
+		if _tracked_target.has_signal("cast_ended") and _tracked_target.is_connected("cast_ended", _on_target_cast_ended):
+			_tracked_target.cast_ended.disconnect(_on_target_cast_ended)
 		if _tracked_target.has_signal("died") and _tracked_target.is_connected("died", _on_target_enemy_died):
 			_tracked_target.died.disconnect(_on_target_enemy_died)
 	_tracked_target = enemy
-	# MP/Stamina bars are peer-only; hide on every transition and re-show in
-	# the remote-player branch below if applicable.
+	# MP/Stamina/Cast bars are peer-only; hide on every transition and
+	# re-show in the remote-player branch below if applicable.
 	target_mp_bar.visible = false
 	target_st_bar.visible = false
+	target_cast_bar.visible = false
+	target_cast_label.visible = false
 	if _target_mp_label:
 		_target_mp_label.visible = false
 	if _target_st_label:
@@ -629,6 +648,12 @@ func _setup_peer_target(peer) -> void:
 	peer.hp_changed.connect(_on_target_hp_changed)
 	peer.mp_changed.connect(_on_target_mp_changed)
 	peer.stamina_changed.connect(_on_target_stamina_changed)
+	peer.cast_started.connect(_on_target_cast_started)
+	peer.cast_ended.connect(_on_target_cast_ended)
+	# Pick up an in-progress cast at target-time (peer may have been
+	# casting before we targeted them; the bar should appear immediately).
+	if peer.is_casting():
+		_show_target_cast_bar(peer.cast_spell_name)
 	if _tot_frame != null:
 		_tot_frame.visible = false
 
@@ -643,6 +668,19 @@ func _on_target_stamina_changed(current: float, maximum: float) -> void:
 	target_st_bar.value = current
 	if _target_st_label:
 		_target_st_label.text = "%d / %d" % [int(current), int(maximum)]
+
+func _on_target_cast_started(spell_name: String, _duration: float) -> void:
+	_show_target_cast_bar(spell_name)
+
+func _on_target_cast_ended() -> void:
+	target_cast_bar.visible = false
+	target_cast_label.visible = false
+
+func _show_target_cast_bar(spell_name: String) -> void:
+	target_cast_bar.visible = true
+	target_cast_bar.value = 0.0
+	target_cast_label.text = spell_name
+	target_cast_label.visible = true
 
 func _on_target_hp_changed(current: float, maximum: float) -> void:
 	target_hp_bar.max_value = maximum

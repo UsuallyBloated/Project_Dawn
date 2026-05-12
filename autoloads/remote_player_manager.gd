@@ -40,6 +40,9 @@ func _ready() -> void:
 	Net.world_health_update.connect(_on_health_update)
 	Net.world_mana_update.connect(_on_mana_update)
 	Net.world_stamina_update.connect(_on_stamina_update)
+	Net.world_cast_start.connect(_on_cast_start)
+	Net.world_cast_complete.connect(_on_cast_complete)
+	Net.world_cast_fail.connect(_on_cast_fail)
 
 func _process(_delta: float) -> void:
 	var scene := get_tree().current_scene
@@ -165,6 +168,32 @@ func _on_stamina_update(id: int, stamina: float, maximum: float) -> void:
 	var rp = _by_id.get(id)
 	if rp != null and is_instance_valid(rp):
 		rp.apply_stamina_update(stamina, maximum)
+
+# Track 4 sub-task 2 cast lifecycle. Cast state is transient and not cached
+# in _spawn_data — server's step 4a seed catches mid-cast peers for new
+# joiners, and a peer's cast bar disappearing during a scene transition is
+# acceptable visual loss. RemotePlayer's own state is the source of truth
+# while the node lives.
+func _on_cast_start(caster: int, spell_name: String, duration: float) -> void:
+	if caster == Net.get_player_id():
+		return
+	var rp = _by_id.get(caster)
+	if rp != null and is_instance_valid(rp):
+		rp.apply_cast_start(spell_name, duration)
+
+func _on_cast_complete(caster: int, spell_name: String) -> void:
+	if caster == Net.get_player_id():
+		return
+	var rp = _by_id.get(caster)
+	if rp != null and is_instance_valid(rp):
+		rp.apply_cast_complete(spell_name)
+
+func _on_cast_fail(caster: int, reason: String) -> void:
+	if caster == Net.get_player_id():
+		return
+	var rp = _by_id.get(caster)
+	if rp != null and is_instance_valid(rp):
+		rp.apply_cast_fail(reason)
 
 func _instantiate_into(id: int, scene: Node) -> void:
 	var data: Dictionary = _spawn_data[id]

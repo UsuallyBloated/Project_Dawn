@@ -53,6 +53,11 @@ signal world_entity_despawn(id: int)
 signal world_health_update(id: int, hp: float, max_hp: float)
 signal world_mana_update(id: int, mp: float, max_mp: float)
 signal world_stamina_update(id: int, stamina: float, maximum: float)
+# Track 4 sub-task 2 cast lifecycle — relayed from the casting peer's
+# broadcasts. `duration` is the time the receiver should run the bar for.
+signal world_cast_start(caster: int, spell_name: String, duration: float)
+signal world_cast_complete(caster: int, spell_name: String)
+signal world_cast_fail(caster: int, reason: String)
 
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
@@ -83,6 +88,9 @@ func _ready() -> void:
 	health_update.connect(_on_health_update)
 	mana_update.connect(_on_mana_update)
 	stamina_update.connect(_on_stamina_update)
+	cast_start.connect(_on_cast_start)
+	cast_complete.connect(_on_cast_complete)
+	cast_fail.connect(_on_cast_fail)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -148,6 +156,23 @@ func broadcast_resources(
 	if _state != State.CONNECTED_APP:
 		return
 	send_resource_update(hp, max_hp, mp, max_mp, stamina, max_stamina)
+
+# Track 4 sub-task 2: cast broadcast wrappers. Gated like broadcast_resources
+# so local-save and lobby phases stay quiet on the wire.
+func broadcast_cast_start(spell_name: String, duration: float) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_cast_start_broadcast(spell_name, duration)
+
+func broadcast_cast_complete(spell_name: String) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_cast_complete_broadcast(spell_name)
+
+func broadcast_cast_fail(reason: String) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_cast_fail_broadcast(reason)
 
 func leave_session() -> void:
 	# Send the app-layer Disconnect and drive renet a few times so the
@@ -313,6 +338,15 @@ func _on_mana_update(id: int, mp: float, max_mp: float) -> void:
 
 func _on_stamina_update(id: int, stamina: float, maximum: float) -> void:
 	world_stamina_update.emit(id, stamina, maximum)
+
+func _on_cast_start(caster: int, spell_name: String, duration: float) -> void:
+	world_cast_start.emit(caster, spell_name, duration)
+
+func _on_cast_complete(caster: int, spell_name: String) -> void:
+	world_cast_complete.emit(caster, spell_name)
+
+func _on_cast_fail(caster: int, reason: String) -> void:
+	world_cast_fail.emit(caster, reason)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:

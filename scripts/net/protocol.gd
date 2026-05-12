@@ -204,6 +204,13 @@ const W_RESOURCE_UPDATE     := "ResourceUpdate"
 # don't see ghost bodies while a player is still on the Enter World screen.
 const W_ENTER_WORLD         := "EnterWorld"
 
+# Track 4 sub-task 2: cast lifecycle broadcasts. Server relays as
+# SW_CAST_START / SW_CAST_COMPLETE / SW_CAST_FAIL to in_world peers; the
+# casting peer's target frame renders a cast bar for the duration.
+const W_CAST_START_BROADCAST    := "CastStartBroadcast"
+const W_CAST_COMPLETE_BROADCAST := "CastCompleteBroadcast"
+const W_CAST_FAIL_BROADCAST     := "CastFailBroadcast"
+
 # ─── World: Server → Client message tags ────────────────────────────
 
 const SW_CONNECT_OK        := "ConnectOk"

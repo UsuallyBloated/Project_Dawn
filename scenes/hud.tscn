@@ -136,6 +136,20 @@ max_value = 100.0
 value = 100.0
 show_percentage = false
 
+[node name="CastBar" type="ProgressBar" parent="TargetFrame/VBox"]
+visible = false
+custom_minimum_size = Vector2(0, 14)
+size_flags_horizontal = 3
+max_value = 1.0
+value = 0.0
+show_percentage = false
+
+[node name="CastLabel" type="Label" parent="TargetFrame/VBox"]
+visible = false
+text = ""
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 10
+
 [node name="CharacterWindow" parent="." instance=ExtResource("2_charwin")]
 
 [node name="InventoryWindow" type="Panel" parent="."]

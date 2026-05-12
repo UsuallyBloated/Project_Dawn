@@ -20,6 +20,11 @@ class_name RemotePlayer
 signal hp_changed(current: float, maximum: float)
 signal mp_changed(current: float, maximum: float)
 signal stamina_changed(current: float, maximum: float)
+# Track 4 sub-task 2 cast bar. cast_started fires when a fresh CastStart
+# arrives (or a late-joiner seed mid-cast). cast_ended fires on Complete /
+# Fail and on the defensive duration-elapsed timeout in _process.
+signal cast_started(spell_name: String, duration: float)
+signal cast_ended
 
 # Network identity — set by RemotePlayerManager *before* add_child fires
 # _ready, so _ready can read them.
@@ -46,6 +51,14 @@ var max_stamina: float = 0.0
 # Track 4 leaves PvP off — `is_dead` stays false; sub-task 5 wires death.
 var mob_name: String = ""
 var is_dead: bool = false
+
+# Cast state cache. cast_spell_name is "" when not casting; cast_start_time
+# is in seconds (Time.get_unix_time_from_system clock). HUD reads these
+# directly to render the cast bar and subscribes to cast_started /
+# cast_ended for show/hide.
+var cast_spell_name: String = ""
+var cast_duration: float = 0.0
+var cast_start_time: float = 0.0
 
 # Interpolation buffer of { time: float, pos: Vector3, yaw: float } dicts
 # ordered by `time`. Kept short — only the two snapshots straddling
@@ -90,6 +103,37 @@ func apply_stamina_update(new_stamina: float, new_max_stamina: float) -> void:
 	max_stamina = new_max_stamina
 	stamina_changed.emit(stamina, max_stamina)
 
+func apply_cast_start(spell_name: String, duration: float) -> void:
+	cast_spell_name = spell_name
+	cast_duration = maxf(duration, 0.0)
+	cast_start_time = Time.get_unix_time_from_system()
+	cast_started.emit(spell_name, duration)
+
+func apply_cast_complete(_spell_name: String) -> void:
+	if cast_spell_name == "":
+		return
+	cast_spell_name = ""
+	cast_duration = 0.0
+	cast_ended.emit()
+
+func apply_cast_fail(_reason: String) -> void:
+	if cast_spell_name == "":
+		return
+	cast_spell_name = ""
+	cast_duration = 0.0
+	cast_ended.emit()
+
+func is_casting() -> bool:
+	return cast_spell_name != ""
+
+func cast_progress_ratio() -> float:
+	# 0.0 → just started, 1.0 → full duration elapsed. Used by the HUD to
+	# fill the cast bar between server messages.
+	if cast_duration <= 0.0:
+		return 0.0
+	var elapsed := Time.get_unix_time_from_system() - cast_start_time
+	return clampf(float(elapsed) / cast_duration, 0.0, 1.0)
+
 func on_position_update(pos: Vector3, yaw: float, sequence: int) -> void:
 	# Position channel is Unreliable; drop reorders and dupes. Sequence is
 	# the server's `last_move_seq` per sender — monotone within one
@@ -101,6 +145,19 @@ func on_position_update(pos: Vector3, yaw: float, sequence: int) -> void:
 	_snapshots.append({"time": now, "pos": pos, "yaw": yaw})
 	if _snapshots.size() > BUFFER_CAPACITY:
 		_snapshots.pop_front()
+
+func _process(_delta: float) -> void:
+	# Defensive cast-bar auto-end: if the casting peer crashed before
+	# sending CastComplete / CastFail, the cast bar would linger
+	# indefinitely without this. 0.5 s grace so a slightly-late server
+	# CastComplete doesn't get pre-empted.
+	if cast_spell_name == "" or cast_duration <= 0.0:
+		return
+	var elapsed := Time.get_unix_time_from_system() - cast_start_time
+	if elapsed >= cast_duration + 0.5:
+		cast_spell_name = ""
+		cast_duration = 0.0
+		cast_ended.emit()
 
 func _physics_process(_delta: float) -> void:
 	if _snapshots.size() < 2:
