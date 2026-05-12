@@ -205,11 +205,21 @@ func _on_cast_fail(caster: int, reason: String) -> void:
 # local damage number when sending the broadcast). For the target, we
 # render INCOMING text near the local player; for any other observer, we
 # render OUTGOING text over the targeted RemotePlayer.
-func _on_hit(_attacker: int, target: int, amount: int, crit: bool, _dmg_type: int) -> void:
+func _on_hit(attacker: int, target: int, amount: int, crit: bool, _dmg_type: int) -> void:
 	if target == Net.get_player_id():
 		var players := get_tree().get_nodes_in_group("player")
 		if not players.is_empty():
 			DamageNumbers.spawn_incoming((players[0] as Node3D).global_position, amount)
+		# Track 5 sub-task 2D — server-originated enemy attacks land
+		# authoritative damage on the local player. Player-vs-player
+		# Hits stay visual-only (Track 4 trust model) and route through
+		# the same Hit broadcast; partition by attacker id.
+		if attacker >= RemoteEnemyManager.ENEMY_ID_BASE:
+			var attacker_node: Node = RemoteEnemyManager.get_enemy(attacker)
+			var attacker_name := ""
+			if attacker_node != null and is_instance_valid(attacker_node):
+				attacker_name = attacker_node.mob_name
+			Combat.receive_player_damage(amount, attacker_node, attacker_name)
 		return
 	var rp = _by_id.get(target)
 	if rp != null and is_instance_valid(rp):

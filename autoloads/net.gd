@@ -71,6 +71,20 @@ signal world_evade(attacker: int, target: int)
 # Track 4 sub-task 5 — peer's HP hit zero. Receiver plays death anim;
 # respawn lands silently via the next ResourceUpdate.
 signal world_entity_died(id: int)
+# Track 5 sub-task 2 — server announces a server-spawned enemy. `id` is
+# in the reserved enemy-id partition (>= 1_000_000_000) so the client
+# can distinguish from player EntitySpawns by id alone.
+signal world_enemy_spawn(
+	id: int,
+	mob_name: String,
+	level: int,
+	max_hp: float,
+	hp: float,
+	pos: Vector3,
+	yaw: float)
+# Track 5 sub-task 2 — server-driven aggro replication. `target_id == 0`
+# encodes "no target" (drop / leash); non-zero is the targeted entity's id.
+signal world_entity_target(id: int, target_id: int)
 
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
@@ -109,6 +123,8 @@ func _ready() -> void:
 	miss.connect(_on_miss)
 	evade.connect(_on_evade)
 	entity_died.connect(_on_entity_died)
+	enemy_spawn.connect(_on_enemy_spawn)
+	entity_target.connect(_on_entity_target)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -406,6 +422,19 @@ func _on_evade(attacker: int, target: int) -> void:
 
 func _on_entity_died(id: int) -> void:
 	world_entity_died.emit(id)
+
+func _on_enemy_spawn(
+		id: int,
+		mob_name: String,
+		level: int,
+		max_hp: float,
+		hp: float,
+		pos: Vector3,
+		yaw: float) -> void:
+	world_enemy_spawn.emit(id, mob_name, level, max_hp, hp, pos, yaw)
+
+func _on_entity_target(id: int, target_id: int) -> void:
+	world_entity_target.emit(id, target_id)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:

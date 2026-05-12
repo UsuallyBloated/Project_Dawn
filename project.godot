@@ -57,6 +57,7 @@ DialogueManager="*res://autoloads/dialogue_manager.gd"
 SaveManager="*res://autoloads/save_manager.gd"
 Net="*res://autoloads/net.gd"
 RemotePlayerManager="*res://autoloads/remote_player_manager.gd"
+RemoteEnemyManager="*res://autoloads/remote_enemy_manager.gd"
 NetCombatBroadcaster="*res://autoloads/net_combat_broadcaster.gd"
 
 [display]

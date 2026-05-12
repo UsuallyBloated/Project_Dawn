@@ -3,6 +3,13 @@ extends Node3D
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 
 func _ready() -> void:
+	# Track 5 sub-task 2C: server is authoritative on enemy spawn / state
+	# in launcher mode. Skip the local EnemySpawner instantiation so the
+	# only enemies in the scene are RemoteEnemy instances driven by
+	# server broadcasts. The single-player Test Room flow (no Net session)
+	# falls through to the legacy code path.
+	if Net.is_launcher_mode():
+		return
 	for camp in ZoneData.STARTER_ZONE_CAMPS:
 		var mob: Dictionary    = camp["mob"]
 		var radius: float      = camp.get("radius",  ZoneData.DEFAULT_RADIUS)
