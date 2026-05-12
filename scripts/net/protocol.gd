@@ -259,3 +259,11 @@ const SW_TIME_OF_DAY       := "TimeOfDay"
 const SW_CHAT_MESSAGE      := "ChatMessage"
 const SW_ERROR             := "Error"
 const SW_BROADCAST_MESSAGE := "BroadcastMessage"
+
+# Track 5 sub-task 2: server-authoritative enemies. SW_ENEMY_SPAWN carries
+# the mob identity + initial state when a server-spawned enemy enters the
+# recipient's AOI; ongoing Position / HealthUpdate / EntityDied reuse the
+# generic variants. SW_ENTITY_TARGET fires on enemy aggro switch and lets
+# the client render a "what is the mob targeting" indicator.
+const SW_ENEMY_SPAWN       := "EnemySpawn"
+const SW_ENTITY_TARGET     := "EntityTarget"
