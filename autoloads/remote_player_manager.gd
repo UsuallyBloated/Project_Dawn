@@ -47,6 +47,7 @@ func _ready() -> void:
 	Net.world_hit.connect(_on_hit)
 	Net.world_miss.connect(_on_miss)
 	Net.world_evade.connect(_on_evade)
+	Net.world_entity_died.connect(_on_entity_died)
 
 func _process(_delta: float) -> void:
 	var scene := get_tree().current_scene
@@ -223,6 +224,16 @@ func _on_miss(_attacker: int, target: int) -> void:
 	var rp = _by_id.get(target)
 	if rp != null and is_instance_valid(rp):
 		DamageNumbers.spawn_miss(rp.global_position)
+
+# Track 4 sub-task 5 — peer died. Routes to RemotePlayer.apply_death which
+# plays the fall-over visual. Respawn is implied by the next ResourceUpdate
+# carrying hp > 0 (handled in RemotePlayer.apply_health_update).
+func _on_entity_died(id: int) -> void:
+	if id == Net.get_player_id():
+		return
+	var rp = _by_id.get(id)
+	if rp != null and is_instance_valid(rp):
+		rp.apply_death()
 
 func _on_evade(_attacker: int, target: int) -> void:
 	# DamageNumbers has no spawn_evade; reuse spawn_miss — same visual

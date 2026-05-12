@@ -223,6 +223,11 @@ const W_HIT_BROADCAST   := "HitBroadcast"
 const W_MISS_BROADCAST  := "MissBroadcast"
 const W_EVADE_BROADCAST := "EvadeBroadcast"
 
+# Track 4 sub-task 5: dying client signals HP-zero. Server relays as
+# SW_ENTITY_DIED to in_world peers. Respawn lands silently via the next
+# ResourceUpdate (no Respawn variant by design).
+const W_DEATH_BROADCAST := "DeathBroadcast"
+
 # ─── World: Server → Client message tags ────────────────────────────
 
 const SW_CONNECT_OK        := "ConnectOk"

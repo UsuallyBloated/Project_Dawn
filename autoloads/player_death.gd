@@ -34,6 +34,11 @@ func _die() -> void:
 	if xp_loss > 0:
 		PlayerStats.lose_xp(xp_loss)
 		CombatLog.add_line("You lost %d experience points." % xp_loss, CombatLog.MsgType.DAMAGE_IN)
+	# Track 4 sub-task 5: notify the server so peers can play the
+	# fall-over animation on their RemotePlayer for us. The matching
+	# stand-up happens implicitly on the next ResourceUpdate (when
+	# _respawn() below sets HP back above zero).
+	Net.broadcast_death()
 	player_died.emit()
 	get_tree().create_timer(RESPAWN_DELAY).timeout.connect(_respawn)
 

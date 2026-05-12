@@ -101,8 +101,15 @@ func set_targeted(_active: bool) -> void:
 	pass
 
 func apply_health_update(new_hp: float, new_max_hp: float) -> void:
+	# Track 4 sub-task 5: if we're currently in the death state and HP
+	# just came back above zero, that's the respawn trigger. Stand the
+	# body back up. The dying client's _respawn() sets HP first, then
+	# the position snaps via the next Position broadcast.
+	var was_dead := is_dead
 	hp = new_hp
 	max_hp = new_max_hp
+	if was_dead and new_hp > 0.0:
+		_apply_respawn()
 	hp_changed.emit(hp, max_hp)
 
 func apply_mana_update(new_mp: float, new_max_mp: float) -> void:
@@ -151,6 +158,34 @@ func apply_buff_snapshot(names: PackedStringArray, durations: PackedFloat32Array
 	buff_durations = durations.duplicate()
 	buffs_changed.emit()
 
+# Track 4 sub-task 5: fall-over animation in place. We freeze the snapshot
+# interpolation so the corpse doesn't keep walking, tween the body onto
+# its side, and grey out the nameplate so it reads as dead at a glance.
+# Stand-up is the inverse — kicked off when apply_health_update sees HP
+# return above zero (i.e. the dying client's respawn() landed).
+func apply_death() -> void:
+	if is_dead:
+		return
+	is_dead = true
+	var tw := create_tween()
+	tw.tween_property(self, "rotation:x", PI * 0.5, 0.5)
+	if name_label:
+		var faded := Color(0.6, 0.6, 0.6, 1.0)
+		tw.parallel().tween_property(name_label, "modulate", faded, 0.5)
+
+func _apply_respawn() -> void:
+	is_dead = false
+	# Drop the snapshot buffer — once the dying client teleports to bind
+	# point, the position would lerp from the death spot to the new spot,
+	# which looks like a slide-of-doom. Clearing forces the next Position
+	# to snap (cold-start branch in _physics_process).
+	_snapshots.clear()
+	_last_seq = -1
+	var tw := create_tween()
+	tw.tween_property(self, "rotation:x", 0.0, 0.3)
+	if name_label:
+		tw.parallel().tween_property(name_label, "modulate", Color.WHITE, 0.3)
+
 func on_position_update(pos: Vector3, yaw: float, sequence: int) -> void:
 	# Position channel is Unreliable; drop reorders and dupes. Sequence is
 	# the server's `last_move_seq` per sender — monotone within one
@@ -158,6 +193,12 @@ func on_position_update(pos: Vector3, yaw: float, sequence: int) -> void:
 	if sequence <= _last_seq:
 		return
 	_last_seq = sequence
+	# Track 4 sub-task 5: while dead, freeze the corpse at the death
+	# location. The dying client's respawn fires apply_health_update
+	# (hp > 0) → _apply_respawn() clears the buffer, so the next
+	# Position after that arrives in cold-start mode and snaps.
+	if is_dead:
+		return
 	var now := Time.get_unix_time_from_system()
 	_snapshots.append({"time": now, "pos": pos, "yaw": yaw})
 	if _snapshots.size() > BUFFER_CAPACITY:
@@ -177,6 +218,8 @@ func _process(_delta: float) -> void:
 		cast_ended.emit()
 
 func _physics_process(_delta: float) -> void:
+	if is_dead:
+		return
 	if _snapshots.size() < 2:
 		# Cold start: render at the only known position. Two snapshots
 		# arrive after at most one server tick (50 ms), so this branch

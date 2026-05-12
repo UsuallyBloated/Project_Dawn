@@ -68,6 +68,9 @@ signal world_buff_snapshot(
 signal world_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
 signal world_miss(attacker: int, target: int)
 signal world_evade(attacker: int, target: int)
+# Track 4 sub-task 5 — peer's HP hit zero. Receiver plays death anim;
+# respawn lands silently via the next ResourceUpdate.
+signal world_entity_died(id: int)
 
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
@@ -105,6 +108,7 @@ func _ready() -> void:
 	hit.connect(_on_hit)
 	miss.connect(_on_miss)
 	evade.connect(_on_evade)
+	entity_died.connect(_on_entity_died)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -208,6 +212,11 @@ func broadcast_evade(target: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_evade_broadcast(target)
+
+func broadcast_death() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_death_broadcast()
 
 func leave_session() -> void:
 	# Send the app-layer Disconnect and drive renet a few times so the
@@ -394,6 +403,9 @@ func _on_miss(attacker: int, target: int) -> void:
 
 func _on_evade(attacker: int, target: int) -> void:
 	world_evade.emit(attacker, target)
+
+func _on_entity_died(id: int) -> void:
+	world_entity_died.emit(id)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:
