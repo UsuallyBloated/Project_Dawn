@@ -151,4 +151,11 @@ func _on_enter_world_pressed() -> void:
 	# launcher mode but world.gd / its children still read them.
 	Network.is_online = false
 	Network.is_test_room = false
+	# Track 4 follow-up E: tell the server we've left the lobby. Server
+	# gates EntitySpawn / Position fan-out on this so other players don't
+	# see our static body while we're still on the Enter World screen.
+	# Idempotent server-side; safe even if app_disconnect / reconnect
+	# replays this path.
+	if Net.is_app_ready():
+		Net.send_enter_world()
 	get_tree().change_scene_to_file(GAME_SCENE)

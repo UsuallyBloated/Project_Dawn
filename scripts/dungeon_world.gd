@@ -15,7 +15,9 @@ func _ready() -> void:
 	ZoneLoader.current_zone_name = zone_name
 	ZoneLoader.current_zone_path = scene_file_path
 
-	if Network.is_test_room:
+	# See world.gd for context: same dual-gate so launcher-mode sessions
+	# get the dev panel too.
+	if Network.is_test_room or Net.is_launcher_mode():
 		add_child(preload("res://scripts/test_panel.gd").new())
 
 	dungeon_spawner.dungeon_ready.connect(_on_dungeon_ready)

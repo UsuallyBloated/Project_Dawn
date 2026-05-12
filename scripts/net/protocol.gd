@@ -199,6 +199,11 @@ const W_GM_COMMAND          := "GmCommand"
 # messages to each other ready peer. Throttled client-side; reliable channel.
 const W_RESOURCE_UPDATE     := "ResourceUpdate"
 
+# Track 4 follow-up: client signals it has left the lobby (Enter World button
+# pressed). Server gates EntitySpawn / Position fan-out on this so peers
+# don't see ghost bodies while a player is still on the Enter World screen.
+const W_ENTER_WORLD         := "EnterWorld"
+
 # ─── World: Server → Client message tags ────────────────────────────
 
 const SW_CONNECT_OK        := "ConnectOk"

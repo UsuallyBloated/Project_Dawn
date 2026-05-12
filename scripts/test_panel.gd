@@ -426,6 +426,14 @@ func _build_combat_section() -> void:
 	clear_btn.pressed.connect(func(): BuffManager.clear_all())
 	_sec_combat.add_child(clear_btn)
 
+	# Track 4 verification: take fixed damage on demand. Bypasses needing
+	# a mob in range to validate that resource broadcasts reach peers.
+	# Goes through Combat.receive_player_damage so the full damage path
+	# fires (evasion, absorbs, armor reduction, NetCombatBroadcaster).
+	var dmg_btn := _make_btn("Take 20 dmg", C_DIE)
+	dmg_btn.pressed.connect(func(): Combat.receive_player_damage(20, null, "Test Panel"))
+	_sec_combat.add_child(dmg_btn)
+
 func _make_label(t: String) -> Label:
 	var lbl := Label.new()
 	lbl.text = t

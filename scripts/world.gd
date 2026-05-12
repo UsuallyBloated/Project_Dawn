@@ -12,7 +12,11 @@ func _ready() -> void:
 	ZoneLoader.current_zone_name = zone_name
 	ZoneLoader.current_zone_path = scene_file_path
 
-	if Network.is_test_room:
+	# Test panel mounts in two cases: the legacy local Test Room flow (built
+	# for solo dev iteration) and launcher-mode sessions (Track 4+, where we
+	# still want the dev tools available while bringing multiplayer features
+	# online). Strip the second branch when we ship for real players.
+	if Network.is_test_room or Net.is_launcher_mode():
 		add_child(TEST_PANEL_GD.new())
 
 	if not Network.is_online:

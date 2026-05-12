@@ -44,10 +44,16 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	var scene := get_tree().current_scene
 	if scene != _last_scene:
-		# Scene swap. The previous scene's children (including any
-		# RemotePlayers we parented there) are freed or queued for free,
-		# so _by_id entries point at dead nodes. Drop the map; rehydration
-		# (below) waits until the new scene hosts the local player.
+		# Scene swap (or `current_scene` transitioning through null between
+		# change_scene_to_file and the actual swap — Godot does this briefly).
+		# Free every live node we know about before dropping the map; relying
+		# on "scene change frees its children" misses the case where the
+		# scene didn't actually change but `_last_scene` was invalidated
+		# (e.g. transient null), which would otherwise leave orphaned
+		# RemotePlayer bodies in the live scene tree.
+		for rp in _by_id.values():
+			if is_instance_valid(rp):
+				rp.queue_free()
 		_last_scene = scene
 		_by_id.clear()
 		_needs_rehydrate = true
@@ -91,6 +97,13 @@ func _on_entity_spawn(
 		if is_instance_valid(old):
 			old.queue_free()
 		_by_id.erase(id)
+	# Defensive orphan sweep: free any RemotePlayer in the live scene whose
+	# char_id matches but isn't tracked in _by_id. Catches the case where
+	# a prior _by_id.clear() lost the reference but Godot didn't free the
+	# node (transient scene-null window during change_scene_to_file).
+	for child in scene.get_children():
+		if child is RemotePlayer and child.char_id == id:
+			child.queue_free()
 	_instantiate_into(id, scene)
 
 func _on_entity_despawn(id: int) -> void:
