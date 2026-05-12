@@ -44,6 +44,9 @@ func _ready() -> void:
 	Net.world_cast_complete.connect(_on_cast_complete)
 	Net.world_cast_fail.connect(_on_cast_fail)
 	Net.world_buff_snapshot.connect(_on_buff_snapshot)
+	Net.world_hit.connect(_on_hit)
+	Net.world_miss.connect(_on_miss)
+	Net.world_evade.connect(_on_evade)
 
 func _process(_delta: float) -> void:
 	var scene := get_tree().current_scene
@@ -195,6 +198,44 @@ func _on_cast_fail(caster: int, reason: String) -> void:
 	var rp = _by_id.get(caster)
 	if rp != null and is_instance_valid(rp):
 		rp.apply_cast_fail(reason)
+
+# Track 4 sub-task 4 — combat outcome from the attacker's POV. We don't
+# render anything for the attacker (their own client already spawned a
+# local damage number when sending the broadcast). For the target, we
+# render INCOMING text near the local player; for any other observer, we
+# render OUTGOING text over the targeted RemotePlayer.
+func _on_hit(_attacker: int, target: int, amount: int, crit: bool, _dmg_type: int) -> void:
+	if target == Net.get_player_id():
+		var players := get_tree().get_nodes_in_group("player")
+		if not players.is_empty():
+			DamageNumbers.spawn_incoming((players[0] as Node3D).global_position, amount)
+		return
+	var rp = _by_id.get(target)
+	if rp != null and is_instance_valid(rp):
+		DamageNumbers.spawn_damage(rp.global_position, amount, crit)
+
+func _on_miss(_attacker: int, target: int) -> void:
+	if target == Net.get_player_id():
+		var players := get_tree().get_nodes_in_group("player")
+		if not players.is_empty():
+			DamageNumbers.spawn_miss((players[0] as Node3D).global_position)
+		return
+	var rp = _by_id.get(target)
+	if rp != null and is_instance_valid(rp):
+		DamageNumbers.spawn_miss(rp.global_position)
+
+func _on_evade(_attacker: int, target: int) -> void:
+	# DamageNumbers has no spawn_evade; reuse spawn_miss — same visual
+	# meaning (the attack landed but did nothing). Future polish could
+	# distinguish them.
+	if target == Net.get_player_id():
+		var players := get_tree().get_nodes_in_group("player")
+		if not players.is_empty():
+			DamageNumbers.spawn_miss((players[0] as Node3D).global_position)
+		return
+	var rp = _by_id.get(target)
+	if rp != null and is_instance_valid(rp):
+		DamageNumbers.spawn_miss(rp.global_position)
 
 # Track 4 sub-task 3 — full buff snapshot. Cached on _spawn_data so a
 # rehydrate (scene transition with the peer mid-buffs) replays the last

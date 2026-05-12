@@ -63,6 +63,11 @@ signal world_buff_snapshot(
 	target: int,
 	names: PackedStringArray,
 	durations: PackedFloat32Array)
+# Track 4 sub-task 4 combat events — pure visualization fan-out; the
+# target's HP isn't driven by these (sub-task 6 / Track 6 lifts authority).
+signal world_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
+signal world_miss(attacker: int, target: int)
+signal world_evade(attacker: int, target: int)
 
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
@@ -97,6 +102,9 @@ func _ready() -> void:
 	cast_complete.connect(_on_cast_complete)
 	cast_fail.connect(_on_cast_fail)
 	buff_snapshot.connect(_on_buff_snapshot)
+	hit.connect(_on_hit)
+	miss.connect(_on_miss)
+	evade.connect(_on_evade)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -184,6 +192,22 @@ func broadcast_buff_snapshot(names: PackedStringArray, durations: PackedFloat32A
 	if _state != State.CONNECTED_APP:
 		return
 	send_buff_snapshot_broadcast(names, durations)
+
+# Track 4 sub-task 4 combat broadcasts.
+func broadcast_hit(target: int, amount: int, crit: bool, dmg_type: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_hit_broadcast(target, amount, crit, dmg_type)
+
+func broadcast_miss(target: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_miss_broadcast(target)
+
+func broadcast_evade(target: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_evade_broadcast(target)
 
 func leave_session() -> void:
 	# Send the app-layer Disconnect and drive renet a few times so the
@@ -361,6 +385,15 @@ func _on_cast_fail(caster: int, reason: String) -> void:
 
 func _on_buff_snapshot(target: int, names: PackedStringArray, durations: PackedFloat32Array) -> void:
 	world_buff_snapshot.emit(target, names, durations)
+
+func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int) -> void:
+	world_hit.emit(attacker, target, amount, crit, dmg_type)
+
+func _on_miss(attacker: int, target: int) -> void:
+	world_miss.emit(attacker, target)
+
+func _on_evade(attacker: int, target: int) -> void:
+	world_evade.emit(attacker, target)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:

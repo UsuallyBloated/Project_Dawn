@@ -196,7 +196,14 @@ func deal_damage_to_target(amount: int) -> void:
 	var is_crit := _last_crit
 	_last_crit = false
 	var hit_pos: Vector3 = current_target.global_position
-	current_target.take_damage(amount)
+	if current_target is RemotePlayer:
+		# Track 4 sub-task 4: peer target. Authority over the peer's HP
+		# belongs to that peer's client; we broadcast a visual hit and
+		# render our own floating number, but skip take_damage entirely.
+		# PvP damage application lands in Track 6.
+		Net.broadcast_hit(current_target.char_id, amount, is_crit, NetProtocol.DamageType.PHYSICAL)
+	else:
+		current_target.take_damage(amount)
 	player_hit_enemy.emit(target_name, amount, is_crit)
 	DamageNumbers.spawn_damage(hit_pos, amount, is_crit)
 

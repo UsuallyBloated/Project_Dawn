@@ -216,6 +216,13 @@ const W_CAST_FAIL_BROADCAST     := "CastFailBroadcast"
 # casting peer's char_id as target) to in_world peers.
 const W_BUFF_SNAPSHOT_BROADCAST := "BuffSnapshotBroadcast"
 
+# Track 4 sub-task 4: attacker broadcasts a combat outcome so peers can
+# render floating damage / "MISS" / "EVADE" text over the target. Pure
+# visualization — target HP isn't driven by these in Track 4.
+const W_HIT_BROADCAST   := "HitBroadcast"
+const W_MISS_BROADCAST  := "MissBroadcast"
+const W_EVADE_BROADCAST := "EvadeBroadcast"
+
 # ─── World: Server → Client message tags ────────────────────────────
 
 const SW_CONNECT_OK        := "ConnectOk"

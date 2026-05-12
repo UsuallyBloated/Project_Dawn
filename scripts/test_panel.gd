@@ -434,6 +434,55 @@ func _build_combat_section() -> void:
 	dmg_btn.pressed.connect(func(): Combat.receive_player_damage(20, null, "Test Panel"))
 	_sec_combat.add_child(dmg_btn)
 
+	# Track 4 sub-task 4 verification: simulate combat outcomes on the
+	# current target. Requires a RemotePlayer target — for enemies these
+	# buttons no-op (the standard combat path already fans visuals).
+	var hit_btn := _make_btn("Hit Target (20)", Color(0.65, 0.25, 0.15, 1.0))
+	hit_btn.pressed.connect(_on_test_hit_target)
+	_sec_combat.add_child(hit_btn)
+
+	var miss_btn := _make_btn("Miss Target", Color(0.55, 0.55, 0.20, 1.0))
+	miss_btn.pressed.connect(_on_test_miss_target)
+	_sec_combat.add_child(miss_btn)
+
+	var evade_btn := _make_btn("Evade Target", Color(0.45, 0.45, 0.65, 1.0))
+	evade_btn.pressed.connect(_on_test_evade_target)
+	_sec_combat.add_child(evade_btn)
+
+func _on_test_hit_target() -> void:
+	var t = _resolve_peer_target()
+	if t == null:
+		return
+	Net.broadcast_hit(t.char_id, 20, false, NetProtocol.DamageType.PHYSICAL)
+	DamageNumbers.spawn_damage(t.global_position, 20, false)
+
+func _on_test_miss_target() -> void:
+	var t = _resolve_peer_target()
+	if t == null:
+		return
+	Net.broadcast_miss(t.char_id)
+	DamageNumbers.spawn_miss(t.global_position)
+
+func _on_test_evade_target() -> void:
+	var t = _resolve_peer_target()
+	if t == null:
+		return
+	Net.broadcast_evade(t.char_id)
+	DamageNumbers.spawn_miss(t.global_position)
+
+# Group-check rather than `is RemotePlayer` to avoid any class_name lookup
+# fragility, and tell the user why we no-op'd so a quiet failure doesn't
+# look like a bug in the broadcast path.
+func _resolve_peer_target():
+	var t = Combat.current_target
+	if t == null or not is_instance_valid(t):
+		CombatLog.add_line("Test Panel: no target — left-click a remote player first.", CombatLog.MsgType.INFO)
+		return null
+	if not t.is_in_group("remote_players"):
+		CombatLog.add_line("Test Panel: target is not a remote player.", CombatLog.MsgType.INFO)
+		return null
+	return t
+
 func _make_label(t: String) -> Label:
 	var lbl := Label.new()
 	lbl.text = t
