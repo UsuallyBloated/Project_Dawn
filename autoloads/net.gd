@@ -100,6 +100,12 @@ signal world_loot_bag_spawn(
 # claimed; the GDScript handler loads `item_path` → ItemData and adds
 # to Inventory.
 signal world_loot_granted(item_path: String, count: int)
+# Track 5 sub-task 5 — private kill-credit XP grant. Receive-side
+# handler calls PlayerStats.gain_xp directly (mirror of how
+# RemoteLootBagManager._on_loot_granted invokes Inventory.add_item).
+# `current` / `to_next` are placeholder zeros from the server in
+# Track 5; PlayerStats.gain_xp computes them internally.
+signal world_xp_gained(amount: int, current: int, to_next: int)
 
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
@@ -142,6 +148,7 @@ func _ready() -> void:
 	entity_target.connect(_on_entity_target)
 	loot_bag_spawn.connect(_on_loot_bag_spawn)
 	loot_granted.connect(_on_loot_granted)
+	xp_gained.connect(_on_xp_gained)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -487,6 +494,10 @@ func _on_loot_bag_spawn(
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)
+
+func _on_xp_gained(amount: int, current: int, to_next: int) -> void:
+	world_xp_gained.emit(amount, current, to_next)
+	PlayerStats.gain_xp(amount)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:
