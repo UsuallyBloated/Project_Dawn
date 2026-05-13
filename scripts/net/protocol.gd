@@ -230,6 +230,16 @@ const W_EVADE_BROADCAST := "EvadeBroadcast"
 const W_DEATH_BROADCAST := "DeathBroadcast"
 const W_RESPAWN         := "Respawn"
 
+# Track 6 sub-task 3 tags. EquipUpdate ships the client's total armor
+# class so the server can apply AC/(AC+100) reduction. PvpToggle flips
+# the dev /pvp flag (combat::can_attack chokepoint gate). DamageSelf /
+# HealSelf are dev intents for verifying the server-applied damage and
+# heal paths without the CastSpell port landing first.
+const W_EQUIP_UPDATE  := "EquipUpdate"
+const W_PVP_TOGGLE    := "PvpToggle"
+const W_DAMAGE_SELF   := "DamageSelf"
+const W_HEAL_SELF     := "HealSelf"
+
 # ─── World: Server → Client message tags ────────────────────────────
 
 const SW_CONNECT_OK        := "ConnectOk"

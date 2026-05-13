@@ -293,6 +293,36 @@ func broadcast_respawn() -> void:
 		return
 	send_respawn()
 
+# Track 6 sub-task 3: armor sync. Fires on Equipment.equipment_changed
+# so the server's incoming-damage formula applies the same AC reduction
+# the client uses. Cheaty (client picks the number) but matches Track
+# 6's transitional trust model.
+func broadcast_equip_update(armor: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_equip_update(armor)
+
+# Track 6 sub-task 3: dev /pvp toggle. Server caches the flag on the
+# sender's PerConnection; combat::can_attack requires both attacker and
+# target to have the flag on.
+func broadcast_pvp_toggle(on: bool) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_pvp_toggle(on)
+
+# Track 6 sub-task 3 dev intents. Bypass the CastSpell pipeline so we
+# can verify server-driven HP/heal application before the spell port
+# lands.
+func broadcast_damage_self(amount: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_damage_self(amount)
+
+func broadcast_heal_self(amount: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_heal_self(amount)
+
 func leave_session() -> void:
 	# Send the app-layer Disconnect and drive renet a few times so the
 	# message actually reaches the UDP socket. ~200 ms total.

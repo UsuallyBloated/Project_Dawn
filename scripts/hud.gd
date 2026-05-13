@@ -894,6 +894,41 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line("Couldn't spawn %s (inventory full?)." % item_name, CombatLog.MsgType.INFO)
 		return
 
+	# Track 6 sub-task 3 dev — toggle PvP authorization on this client.
+	# Both attacker and target need /pvp on for combat::can_attack to
+	# allow damage. Used to verify the PvP HP application path before
+	# the duel / PvP-zone / PvP-server design lands.
+	if lower == "/pvp" or lower == "/pvp on" or lower == "/pvp off":
+		var on := lower != "/pvp off"
+		Net.broadcast_pvp_toggle(on)
+		CombatLog.add_line("PvP override: %s" % ("on" if on else "off"), CombatLog.MsgType.INFO)
+		return
+
+	# Track 6 sub-task 3 dev — bypass-the-spell-system self damage.
+	# Routes through the same server damage path PvP and (future) spells
+	# use, exercising regen + death detection end-to-end. Replaced by
+	# proper CastSpell handling once the spell table is server-side.
+	if lower.begins_with("/damage "):
+		var arg := text.substr("/damage ".length()).strip_edges()
+		if not arg.is_valid_int():
+			CombatLog.add_line("Usage: /damage <amount>", CombatLog.MsgType.INFO)
+			return
+		Net.broadcast_damage_self(int(arg))
+		CombatLog.add_line("Dev damage self: %s" % arg, CombatLog.MsgType.INFO)
+		return
+
+	# Track 6 sub-task 3 dev — bypass-the-spell-system self heal.
+	# Verifies that server-applied heals stick (the regression we noted
+	# during sub-task 1 verification) before the CastSpell port lands.
+	if lower.begins_with("/heal "):
+		var arg := text.substr("/heal ".length()).strip_edges()
+		if not arg.is_valid_int():
+			CombatLog.add_line("Usage: /heal <amount>", CombatLog.MsgType.INFO)
+			return
+		Net.broadcast_heal_self(int(arg))
+		CombatLog.add_line("Dev heal self: %s" % arg, CombatLog.MsgType.INFO)
+		return
+
 	# Dev command — list items whose name matches a substring without
 	# spawning. Pairs with /give for discoverability without flooding
 	# the inventory.

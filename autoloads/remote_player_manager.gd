@@ -207,30 +207,56 @@ func _on_cast_fail(caster: int, reason: String) -> void:
 	if rp != null and is_instance_valid(rp):
 		rp.apply_cast_fail(reason)
 
-# Track 4 sub-task 4 — combat outcome from the attacker's POV. We don't
-# render anything for the attacker (their own client already spawned a
-# local damage number when sending the broadcast). For the target, we
-# render INCOMING text near the local player; for any other observer, we
-# render OUTGOING text over the targeted RemotePlayer.
+# Track 6 sub-task 3 — combat outcome from the attacker's POV. For the
+# target's local client we render INCOMING text at the local player; for
+# any other observer (including the attacker) we render the server's
+# authoritative damage number over the targeted RemotePlayer. The PvP
+# path also adds a "You hit X for N" combat-log line here (rather than
+# in Combat.deal_damage_to_target) so the number matches the post-armor
+# applied amount. Track 5+6: server applies HP for both enemy-on-player
+# (target.equipped_armor reduction) and player-on-player (can_attack
+# gated + same armor reduction) cases — the legacy
+# Combat.receive_player_damage call is kept only for enemy attackers
+# to drive client-side combat-log + buff-trigger side effects that
+# haven't migrated server-side yet.
 func _on_hit(attacker: int, target: int, amount: int, crit: bool, _dmg_type: int) -> void:
 	if target == Net.get_player_id():
 		var players := get_tree().get_nodes_in_group("player")
 		if not players.is_empty():
 			DamageNumbers.spawn_incoming((players[0] as Node3D).global_position, amount)
-		# Track 5 sub-task 2D — server-originated enemy attacks land
-		# authoritative damage on the local player. Player-vs-player
-		# Hits stay visual-only (Track 4 trust model) and route through
-		# the same Hit broadcast; partition by attacker id.
 		if attacker >= RemoteEnemyManager.ENEMY_ID_BASE:
 			var attacker_node: Node = RemoteEnemyManager.get_enemy(attacker)
 			var attacker_name := ""
 			if attacker_node != null and is_instance_valid(attacker_node):
 				attacker_name = attacker_node.mob_name
+			# Server already deducted HP server-side (sub-task 1 enemy-
+			# on-player armor reduction). The local call drives the
+			# client-side cast-interrupt + log + buff-trigger paths
+			# without re-applying HP — receive_player_damage's
+			# PlayerStats.set_hp call still runs but with a value the
+			# next HealthUpdate immediately overrides.
 			Combat.receive_player_damage(amount, attacker_node, attacker_name)
+		else:
+			# PvP incoming attack — log the source player so the target
+			# knows who hit them. Server's HealthUpdate is the source
+			# of truth for HP; we don't call receive_player_damage to
+			# avoid double-counting against the local PlayerStats.
+			var src_name := "another player"
+			var src_rp = _by_id.get(attacker)
+			if src_rp != null and is_instance_valid(src_rp):
+				src_name = src_rp.player_name
+			CombatLog.add_line("%s hits you for %d damage." % [src_name, amount], CombatLog.MsgType.DAMAGE_IN)
 		return
 	var rp = _by_id.get(target)
 	if rp != null and is_instance_valid(rp):
 		DamageNumbers.spawn_damage(rp.global_position, amount, crit)
+		# PvP outgoing — if this Hit's attacker is us, log the strike
+		# against the target. Mirrors the "You hit X for N" line that
+		# Combat.deal_damage_to_target emits for enemy targets; for
+		# PvP we wait until here so the number reflects server-side
+		# armor reduction.
+		if attacker == Net.get_player_id():
+			CombatLog.add_line("You hit %s for %d damage%s." % [rp.player_name, amount, (" (Critical!)" if crit else "")], CombatLog.MsgType.DAMAGE_OUT)
 
 func _on_miss(_attacker: int, target: int) -> void:
 	if target == Net.get_player_id():

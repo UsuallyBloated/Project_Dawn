@@ -66,7 +66,13 @@ func set_target(node) -> void:
 	if node != null and is_instance_valid(node):
 		if node.has_method("set_targeted"):
 			node.set_targeted(true)
-		if node.is_in_group("enemies"):
+		# Track 6 sub-task 3: RemotePlayer targets also start the auto-
+		# attack timer so PvP swings actually fire. Server's can_attack
+		# chokepoint gates whether the damage applies; the timer firing
+		# here is just "are we trying to attack." Pure-NPC targets
+		# (vendors / dialogue NPCs) fall through and don't start the
+		# timer.
+		if node.is_in_group("enemies") or node is RemotePlayer:
 			if node.has_signal("died") and not node.is_connected("died", _on_target_died):
 				node.died.connect(_on_target_died)
 			_auto_attack_timer.start()
@@ -196,32 +202,42 @@ func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.P
 	var is_crit := _last_crit
 	_last_crit = false
 	var hit_pos: Vector3 = current_target.global_position
+	var target_is_pvp := current_target is RemotePlayer
 	_apply_damage_to_node(current_target, amount, is_crit, dmg_type, is_offhand)
-	player_hit_enemy.emit(target_name, amount, is_crit)
-	DamageNumbers.spawn_damage(hit_pos, amount, is_crit)
+	# Track 6 sub-task 3: for PvP swings the server applies armor
+	# reduction and fans an authoritative Hit — RemotePlayerManager
+	# ._on_hit then spawns the authoritative damage number. Suppressing
+	# the predictive number here avoids the visual double-spawn where
+	# the higher pre-armor value would mask the lower post-armor one.
+	# The combat log line is also deferred to _on_hit so it matches the
+	# applied amount.
+	if not target_is_pvp:
+		player_hit_enemy.emit(target_name, amount, is_crit)
+		DamageNumbers.spawn_damage(hit_pos, amount, is_crit)
 
 # Routes damage to the right authority for `target`:
-#   • RemotePlayer   → broadcast Hit (visual fan-out; PvP HP is sub-task 3)
-#   • RemoteEnemy    → broadcast Attack (server rolls + applies HP). Track 6
-#                      sub-task 2 — the `amount` arg is now the client's
-#                      predictive damage (for floating-number flash); the
-#                      server ignores it and uses its own roll via
-#                      combat::calc_swing, then fans the authoritative
-#                      Hit with the real number.
+#   • RemotePlayer / RemoteEnemy → broadcast Attack (server rolls +
+#       applies HP). Track 6 sub-task 3 unified the two — peers and
+#       enemies share the same wire path now. The server's step 4h
+#       branches on `target_id < ENEMY_ID_BASE` to apply PvP gating
+#       (combat::can_attack) for player targets vs the existing
+#       enemy-HP path. The `amount` arg is now the client's
+#       predictive damage (for floating-number flash); the server
+#       ignores it and uses its own roll, then fans the authoritative
+#       Hit with the real number.
 #   • local Enemy    → local take_damage (Test Room single-player path)
 # Centralising the branch keeps deal_damage_to_target, deal_aoe_spell_damage,
 # and the proc handler from diverging when the trust model evolves.
 func _apply_damage_to_node(target: Node, amount: int, is_crit: bool, dmg_type: int, is_offhand: bool = false) -> void:
 	if not is_instance_valid(target):
 		return
-	if target is RemotePlayer:
-		Net.broadcast_hit(target.char_id, amount, is_crit, dmg_type)
-	elif target is RemoteEnemy:
+	if target is RemotePlayer or target is RemoteEnemy:
 		var weapon: ItemData = Equipment.equipped.get("offhand" if is_offhand else "weapon")
 		var weapon_path := ""
 		if weapon != null and weapon.resource_path != "":
 			weapon_path = weapon.resource_path
-		Net.broadcast_attack(target.enemy_id, weapon_path, is_offhand, dmg_type)
+		var target_id: int = (target as RemotePlayer).char_id if target is RemotePlayer else (target as RemoteEnemy).enemy_id
+		Net.broadcast_attack(target_id, weapon_path, is_offhand, dmg_type)
 	else:
 		target.take_damage(amount)
 

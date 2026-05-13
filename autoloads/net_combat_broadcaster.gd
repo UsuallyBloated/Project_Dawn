@@ -22,6 +22,13 @@ func _ready() -> void:
 	# time. ~10 buffs × ~30 B per entry = ~300 B per change on the
 	# reliable channel — negligible.
 	BuffManager.buffs_changed.connect(_on_buffs_changed)
+	# Track 6 sub-task 3: armor sync. Server reads conn.equipped_armor in
+	# the damage formula and applies AC/(AC+100) reduction. Send on every
+	# equipment_changed (which covers all equip / unequip / swap paths
+	# in Equipment); BuffManager.buffs_changed also gets fired when AGI
+	# buffs land, but those don't change Equipment's armor sum — server
+	# computes the AGI bonus from PerConnection.agility itself.
+	Equipment.equipment_changed.connect(_on_equipment_changed)
 
 # ── Cast lifecycle ──────────────────────────────────────────────────
 
@@ -60,3 +67,14 @@ func _on_buffs_changed() -> void:
 		return
 	var snap: Dictionary = BuffManager.get_snapshot_arrays()
 	Net.broadcast_buff_snapshot(snap["names"], snap["durations"])
+
+# ── Equipment / armor sync (Track 6 sub-task 3) ────────────────────
+
+func _on_equipment_changed(_slot: String, _item) -> void:
+	if not Net.is_app_ready():
+		return
+	# Send the total armor class (sum across equipped pieces + AGI/4).
+	# Server's damage formula uses AC/(AC+100). Stays in lockstep with
+	# the client's Combat.receive_player_damage so floating numbers
+	# match bar drops within the predictive-vs-authoritative window.
+	Net.broadcast_equip_update(Equipment.get_armor_class())
