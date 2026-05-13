@@ -11,6 +11,10 @@ func _init(b: LootBag) -> void:
 
 func _ready() -> void:
 	bag.tree_exiting.connect(queue_free)
+	# Track 5 sub-task 4: server re-broadcasts a fresh bag snapshot
+	# every time a slot is claimed. Manager updates bag.items, then
+	# emits items_changed; we re-render the row list.
+	bag.items_changed.connect(refresh)
 	_build_ui()
 	await get_tree().process_frame
 	size = Vector2(360.0, 220.0)
@@ -67,10 +71,10 @@ func refresh() -> void:
 		return
 	for child in _rows.get_children():
 		child.queue_free()
-	for entry in bag.items:
-		_add_row(entry)
+	for i in bag.items.size():
+		_add_row(bag.items[i], i)
 
-func _add_row(entry: Dictionary) -> void:
+func _add_row(entry: Dictionary, slot_idx: int) -> void:
 	var item: ItemData = entry["item"]
 	var count: int = entry["count"]
 
@@ -89,29 +93,39 @@ func _add_row(entry: Dictionary) -> void:
 	btn.text = "Take"
 	btn.add_theme_font_size_override("font_size", 11)
 	var captured := entry
-	btn.pressed.connect(func(): _take_entry(captured))
+	var captured_slot := slot_idx
+	btn.pressed.connect(func(): _take_entry(captured, captured_slot))
 	row.add_child(btn)
 
 func _inv_error_msg() -> String:
 	return "Your inventory is full."
 
-func _take_entry(entry: Dictionary) -> void:
+func _take_entry(entry: Dictionary, slot_idx: int) -> void:
 	if not is_instance_valid(bag):
 		queue_free()
 		return
+	# Network-owned bag: send the intent and let the server arbitrate.
+	# The server replies with a private LootGranted (handled by
+	# RemoteLootBagManager → Inventory.add_item) and a fresh
+	# LootBagSpawn snapshot → bag.items_changed → refresh.
+	if bag.bag_id >= 0:
+		Net.broadcast_loot_item(bag.bag_id, slot_idx)
+		return
 	if Inventory.add_item(entry["item"], entry["count"]):
 		bag.items.erase(entry)
+		bag.items_changed.emit()
 		CombatLog.add_line("You loot: %s." % entry["item"].item_name, CombatLog.MsgType.LOOT)
 		if bag.items.is_empty():
 			bag.queue_free()
-		else:
-			refresh()
 	else:
 		CombatLog.add_line(_inv_error_msg(), CombatLog.MsgType.INFO)
 
 func _take_all() -> void:
 	if not is_instance_valid(bag):
 		queue_free()
+		return
+	if bag.bag_id >= 0:
+		Net.broadcast_loot_all(bag.bag_id)
 		return
 	var remaining: Array = []
 	for entry in bag.items:
@@ -120,11 +134,11 @@ func _take_all() -> void:
 		else:
 			remaining.append(entry)
 	bag.items = remaining
+	bag.items_changed.emit()
 	if bag.items.is_empty():
 		bag.queue_free()
 	else:
 		CombatLog.add_line(_inv_error_msg(), CombatLog.MsgType.INFO)
-		refresh()
 
 func _rarity_color(rarity: ItemData.Rarity) -> Color:
 	match rarity:

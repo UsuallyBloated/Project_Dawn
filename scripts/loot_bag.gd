@@ -1,7 +1,26 @@
 class_name LootBag
 extends Area3D
 
+# `items` is the user-facing entry list:
+#   [{item: ItemData, count: int}, ...]
+# Network-driven bags get their entries written by RemoteLootBagManager
+# from a LootBagSpawn broadcast (path → load() → ItemData); local-mode
+# bags get them from autoloads/loot.gd's _roll(). Same shape either way
+# so LootWindow doesn't care.
 var items: Array = []
+
+# Track 5 sub-task 4 — when non-negative, this bag is server-owned and
+# its lifecycle is driven by LootBagSpawn / EntityDespawn broadcasts.
+# Local single-player bags leave this at -1; they keep the legacy
+# 120-second despawn timer in _ready below. Setting before add_child
+# so _ready can branch on it.
+var bag_id: int = -1
+
+# Emitted whenever `items` is reassigned from outside (server re-snap-
+# shot after a LootItem / LootAll). LootWindow subscribes to refresh
+# its row list. Local-mode bags also emit this from the legacy local
+# take path so the same wire keeps both flows in sync.
+signal items_changed
 
 func _ready() -> void:
 	input_ray_pickable = true
@@ -35,12 +54,16 @@ func _ready() -> void:
 
 	input_event.connect(_on_input_event)
 
-	var despawn_timer := Timer.new()
-	despawn_timer.wait_time = 120.0
-	despawn_timer.one_shot = true
-	despawn_timer.autostart = true
-	despawn_timer.timeout.connect(queue_free)
-	add_child(despawn_timer)
+	# Local despawn timer applies only to single-player Test Room bags.
+	# Server-owned bags use EntityDespawn broadcasts after the server-
+	# side LOOT_BAG_LINGER_SECS (matches the local 120s for parity).
+	if bag_id < 0:
+		var despawn_timer := Timer.new()
+		despawn_timer.wait_time = 120.0
+		despawn_timer.one_shot = true
+		despawn_timer.autostart = true
+		despawn_timer.timeout.connect(queue_free)
+		add_child(despawn_timer)
 
 const LOOT_RANGE := 6.0
 

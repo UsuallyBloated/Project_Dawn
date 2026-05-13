@@ -85,6 +85,21 @@ signal world_enemy_spawn(
 # Track 5 sub-task 2 — server-driven aggro replication. `target_id == 0`
 # encodes "no target" (drop / leash); non-zero is the targeted entity's id.
 signal world_entity_target(id: int, target_id: int)
+# Track 5 sub-task 4 — server-spawned loot bag landed in the AOI.
+# `item_paths` and `item_counts` are parallel arrays of the bag's
+# current contents. Re-fires (with shrinking arrays) every time the
+# server processes a successful LootItem / LootAll — clients update
+# the bag's view by reassignment, not diff application.
+signal world_loot_bag_spawn(
+	bag_id: int,
+	pos: Vector3,
+	item_paths: PackedStringArray,
+	item_counts: PackedInt32Array)
+# Track 5 sub-task 4 — private confirmation that the local player's
+# LootItem / LootAll intent landed. Carries one stack the looter just
+# claimed; the GDScript handler loads `item_path` → ItemData and adds
+# to Inventory.
+signal world_loot_granted(item_path: String, count: int)
 
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
@@ -125,6 +140,8 @@ func _ready() -> void:
 	entity_died.connect(_on_entity_died)
 	enemy_spawn.connect(_on_enemy_spawn)
 	entity_target.connect(_on_entity_target)
+	loot_bag_spawn.connect(_on_loot_bag_spawn)
+	loot_granted.connect(_on_loot_granted)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -229,6 +246,20 @@ func broadcast_attack(target_id: int, amount: int, crit: bool, dmg_type: int) ->
 	if _state != State.CONNECTED_APP:
 		return
 	send_attack(target_id, amount, crit, dmg_type)
+
+# Track 5 sub-task 4 — player → server loot pickup intents. Server
+# validates pickup range + slot bounds, transfers the stack with a
+# private LootGranted, and re-broadcasts the bag (or despawns it when
+# empty).
+func broadcast_loot_item(bag_id: int, slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_loot_item(bag_id, slot)
+
+func broadcast_loot_all(bag_id: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_loot_all(bag_id)
 
 func broadcast_miss(target: int) -> void:
 	if _state != State.CONNECTED_APP:
@@ -446,6 +477,16 @@ func _on_enemy_spawn(
 
 func _on_entity_target(id: int, target_id: int) -> void:
 	world_entity_target.emit(id, target_id)
+
+func _on_loot_bag_spawn(
+		bag_id: int,
+		pos: Vector3,
+		item_paths: PackedStringArray,
+		item_counts: PackedInt32Array) -> void:
+	world_loot_bag_spawn.emit(bag_id, pos, item_paths, item_counts)
+
+func _on_loot_granted(item_path: String, count: int) -> void:
+	world_loot_granted.emit(item_path, count)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:
