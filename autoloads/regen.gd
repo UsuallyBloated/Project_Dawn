@@ -41,6 +41,12 @@ func _process(delta: float) -> void:
 		_do_regen()
 
 func _do_regen() -> void:
+	# Track 6: server owns regen in launcher mode. The server reads sit
+	# state from Sit/Stand intents (broadcast by player.gd's state_changed
+	# handler) and fans HealthUpdate / ManaUpdate / StaminaUpdate back, so
+	# running the local tick would double-count.
+	if Net.is_launcher_mode():
+		return
 	if _in_combat:
 		return
 
@@ -75,8 +81,18 @@ func _st_regen_per_tick() -> float:
 	return ST_BASE_REGEN + PlayerStats.agility * ST_AGI_SCALE
 
 func _on_player_state_changed(new_state: int) -> void:
+	var was_sitting := _is_sitting
 	_is_sitting = new_state == PlayerCharacter.PlayerState.SITTING
 	_tick_timer = TICK_INTERVAL * 0.5
+	# Track 6: forward sit/stand transitions to the server so its regen
+	# tick can apply the same multiplier. Only fire on actual transitions
+	# to avoid spamming the wire on every state_changed (which also fires
+	# for crouch / stand-from-crouch).
+	if was_sitting != _is_sitting and Net.is_launcher_mode():
+		if _is_sitting:
+			Net.broadcast_sit()
+		else:
+			Net.broadcast_stand()
 
 func _on_target_changed(enemy) -> void:
 	_in_combat = enemy != null and is_instance_valid(enemy)

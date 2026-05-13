@@ -194,10 +194,10 @@ const W_GROUP_LEAVE         := "GroupLeave"
 const W_GROUP_KICK          := "GroupKick"
 const W_GM_COMMAND          := "GmCommand"
 
-# Track 4: owning-client → server broadcast of current resources. The server
-# fans out three separate SW_HEALTH_UPDATE / SW_MANA_UPDATE / SW_STAMINA_UPDATE
-# messages to each other ready peer. Throttled client-side; reliable channel.
-const W_RESOURCE_UPDATE     := "ResourceUpdate"
+# (Track 6 removed W_RESOURCE_UPDATE — resources are now server-
+# authoritative; the client no longer broadcasts them. Incoming
+# SW_HEALTH_UPDATE / SW_MANA_UPDATE / SW_STAMINA_UPDATE remain and are the
+# source of truth for own + peer resource bars.)
 
 # Track 4 follow-up: client signals it has left the lobby (Enter World button
 # pressed). Server gates EntitySpawn / Position fan-out on this so peers
@@ -223,10 +223,12 @@ const W_HIT_BROADCAST   := "HitBroadcast"
 const W_MISS_BROADCAST  := "MissBroadcast"
 const W_EVADE_BROADCAST := "EvadeBroadcast"
 
-# Track 4 sub-task 5: dying client signals HP-zero. Server relays as
-# SW_ENTITY_DIED to in_world peers. Respawn lands silently via the next
-# ResourceUpdate (no Respawn variant by design).
+# Track 4 sub-task 5 / Track 6: dying client signals HP-zero. Server
+# zeroes its conn.hp + fans HealthUpdate(0) + EntityDied so peers play
+# fall-over with their RemotePlayer bars dropping. Track 6 added the
+# paired W_RESPAWN tag fired by the dying client's local respawn timer.
 const W_DEATH_BROADCAST := "DeathBroadcast"
+const W_RESPAWN         := "Respawn"
 
 # ─── World: Server → Client message tags ────────────────────────────
 

@@ -204,18 +204,21 @@ func send_movement(direction: Vector3, jumping: bool = false) -> void:
 	_move_sequence += 1
 	send_move(_move_sequence, direction, jumping)
 
-# Track 4: gated wrapper around the GDExtension `send_resource_update`.
-# Throttling lives in NetCombatBroadcaster; this just rejects pre-app-ready
-# sends so local-save mode and the lobby phase stay quiet on the wire.
-func broadcast_resources(
-		hp: float, max_hp: float,
-		mp: float, max_mp: float,
-		stamina: float, max_stamina: float) -> void:
+# Track 6: Sit / Stand intents — server uses them to scale regen rates
+# server-side. Movement auto-stands on either side, so a dropped Stand
+# self-heals; the explicit intent just speeds the transition. Gated like
+# every other send wrapper so local-save mode stays quiet on the wire.
+func broadcast_sit() -> void:
 	if _state != State.CONNECTED_APP:
 		return
-	send_resource_update(hp, max_hp, mp, max_mp, stamina, max_stamina)
+	send_sit()
 
-# Track 4 sub-task 2: cast broadcast wrappers. Gated like broadcast_resources
+func broadcast_stand() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_stand()
+
+# Track 4 sub-task 2: cast broadcast wrappers. Gated like every other send
 # so local-save and lobby phases stay quiet on the wire.
 func broadcast_cast_start(spell_name: String, duration: float) -> void:
 	if _state != State.CONNECTED_APP:
@@ -282,6 +285,14 @@ func broadcast_death() -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_death_broadcast()
+
+# Track 6: local death timer elapsed; tell the server we're back. Server
+# resets conn.hp/mp/stamina to max and fans HealthUpdate / ManaUpdate /
+# StaminaUpdate so peer RemotePlayer bars stand back up.
+func broadcast_respawn() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_respawn()
 
 func leave_session() -> void:
 	# Send the app-layer Disconnect and drive renet a few times so the

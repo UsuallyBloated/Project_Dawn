@@ -134,12 +134,15 @@ func _on_position(id: int, pos: Vector3, _vel: Vector3, yaw: float, sequence: in
 		return
 	rp.on_position_update(pos, yaw, sequence)
 
-# Track 4: peer resource fan-out. Owner is filtered out (server already skips
-# self, but defensive). If we have no spawn record for `id`, drop — happens
-# only if EntityDespawn already cleared the record but a late HealthUpdate
-# slipped through the reliable channel.
+# Track 6: HP/MP/Stamina updates are server-authoritative. The owning-self
+# branch applies to PlayerStats directly (overriding any client-local cache
+# that diverged from server truth — e.g. server-side regen, kill-credit XP
+# level-ups, or sub-task 3's PvP HP application). Peer branch updates the
+# RemotePlayer's bars as before.
 func _on_health_update(id: int, hp: float, max_hp: float) -> void:
 	if id == Net.get_player_id():
+		PlayerStats.max_hp = max_hp
+		PlayerStats.set_hp(hp)
 		return
 	if not _spawn_data.has(id):
 		return
@@ -152,6 +155,8 @@ func _on_health_update(id: int, hp: float, max_hp: float) -> void:
 
 func _on_mana_update(id: int, mp: float, max_mp: float) -> void:
 	if id == Net.get_player_id():
+		PlayerStats.max_mp = max_mp
+		PlayerStats.set_mp(mp)
 		return
 	if not _spawn_data.has(id):
 		return
@@ -164,6 +169,8 @@ func _on_mana_update(id: int, mp: float, max_mp: float) -> void:
 
 func _on_stamina_update(id: int, stamina: float, maximum: float) -> void:
 	if id == Net.get_player_id():
+		PlayerStats.max_stamina = maximum
+		PlayerStats.set_stamina(stamina)
 		return
 	if not _spawn_data.has(id):
 		return

@@ -34,10 +34,10 @@ func _die() -> void:
 	if xp_loss > 0:
 		PlayerStats.lose_xp(xp_loss)
 		CombatLog.add_line("You lost %d experience points." % xp_loss, CombatLog.MsgType.DAMAGE_IN)
-	# Track 4 sub-task 5: notify the server so peers can play the
-	# fall-over animation on their RemotePlayer for us. The matching
-	# stand-up happens implicitly on the next ResourceUpdate (when
-	# _respawn() below sets HP back above zero).
+	# Track 4 sub-task 5 / Track 6: notify the server. The server zeroes
+	# its own conn.hp and fans HealthUpdate(0) + EntityDied so peer
+	# RemotePlayer bars drop and the fall-over animation plays. _respawn()
+	# below sends the matching Respawn intent once the delay elapses.
 	Net.broadcast_death()
 	player_died.emit()
 	get_tree().create_timer(RESPAWN_DELAY).timeout.connect(_respawn)
@@ -47,6 +47,12 @@ func _respawn() -> void:
 	PlayerStats.set_hp(PlayerStats.max_hp * 0.25)
 	PlayerStats.set_mp(PlayerStats.max_mp * 0.25)
 	PlayerStats.set_stamina(PlayerStats.max_stamina * 0.50)
+	# Track 6: tell the server we're alive again. Server resets conn.hp
+	# to the same weakened multipliers used above (matching avoids the
+	# server's HealthUpdate immediately overriding the local set_hp) and
+	# fans HealthUpdate / ManaUpdate / StaminaUpdate — peer RemotePlayer
+	# .apply_health_update sees was_dead && new_hp > 0 → _apply_respawn().
+	Net.broadcast_respawn()
 
 	var bind := PlayerStats.bind_zone_path
 	if bind != "" and FileAccess.file_exists(bind):
