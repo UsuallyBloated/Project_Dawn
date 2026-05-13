@@ -685,36 +685,31 @@ func _give_crafting_materials() -> void:
 	CombatLog.add_line("Crafting materials: " + ", ".join(parts) + ".", CombatLog.MsgType.INFO)
 
 func _give_bow() -> void:
-	var bow := ItemData.new()
-	bow.item_name       = "Hunter's Shortbow"
-	bow.description     = "A compact recurve bow, well-worn but reliable."
-	bow.type            = ItemData.Type.WEAPON
-	bow.rarity          = ItemData.Rarity.COMMON
-	bow.is_ranged       = true
-	bow.is_two_handed   = true
-	bow.weapon_skill    = "archery"
-	bow.weapon_damage_min = 6
-	bow.weapon_damage_max = 14
-	bow.weapon_delay    = 3.0
+	# Track 6 sub-task 2 (fix): load from .tres so weapon.resource_path is
+	# populated. The server's Attack handler looks up the path in
+	# items.toml to read damage_min/max + is_ranged; without the path it
+	# falls back to fists + melee range and the bow visually fires but
+	# does no damage. Same applies to Flamebrand below. .duplicate() to
+	# avoid sharing the disk-loaded singleton across inventory slots,
+	# then re-attach resource_path so the server lookup still works.
+	var src: ItemData = load("res://data/loot/items/hunters_shortbow.tres")
+	if src == null:
+		CombatLog.add_line("Failed to load Hunter's Shortbow.", CombatLog.MsgType.INFO)
+		return
+	var bow: ItemData = src.duplicate()
+	bow.resource_path = src.resource_path
 	if not Inventory.add_item(bow):
 		CombatLog.add_line("No bag space for the bow.", CombatLog.MsgType.INFO)
 		return
 	CombatLog.add_line("Hunter's Shortbow added to inventory. Right-click to equip.", CombatLog.MsgType.INFO)
 
 func _give_proc_weapon() -> void:
-	var sword := ItemData.new()
-	sword.item_name        = "Flamebrand"
-	sword.description      = "A blade that occasionally erupts in searing flame on a successful strike."
-	sword.type             = ItemData.Type.WEAPON
-	sword.rarity           = ItemData.Rarity.UNCOMMON
-	sword.weapon_skill     = "1h_slashing"
-	sword.weapon_damage_min = 8
-	sword.weapon_damage_max = 18
-	sword.weapon_delay     = 2.5
-	sword.proc_chance      = 0.15
-	sword.proc_damage      = 25
-	sword.proc_damage_type = SpellData.DamageType.FIRE
-	sword.proc_name        = "Flaming Strike"
+	var src: ItemData = load("res://data/loot/items/flamebrand.tres")
+	if src == null:
+		CombatLog.add_line("Failed to load Flamebrand.", CombatLog.MsgType.INFO)
+		return
+	var sword: ItemData = src.duplicate()
+	sword.resource_path = src.resource_path
 	if not Inventory.add_item(sword):
 		CombatLog.add_line("No bag space for Flamebrand.", CombatLog.MsgType.INFO)
 		return

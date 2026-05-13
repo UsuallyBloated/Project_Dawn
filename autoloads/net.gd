@@ -246,16 +246,15 @@ func broadcast_hit(target: int, amount: int, crit: bool, dmg_type: int) -> void:
 		return
 	send_hit_broadcast(target, amount, crit, dmg_type)
 
-# Track 5 sub-task 3 — player → server attack intent against a server-
-# spawned enemy. Server validates target liveness + range, applies HP,
-# and broadcasts Hit + HealthUpdate (+ EntityDied on kill) to in_world
-# peers. Client trusts itself on the damage roll for now (Track 4
-# trust model carried forward); Track 6 lifts to server-authoritative
-# combat math.
-func broadcast_attack(target_id: int, amount: int, crit: bool, dmg_type: int) -> void:
+# Track 6 sub-task 2 — player → server attack intent. Server runs the
+# damage formula against its own copy of attacker stats + the equipped
+# weapon (looked up by path in its items table) + main/offhand flag.
+# weapon_path is the .tres resource path ("" for bare-handed). Server
+# fans Hit + HealthUpdate + (on kill) EntityDied to in_world peers.
+func broadcast_attack(target_id: int, weapon_path: String, is_offhand: bool, dmg_type: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return
-	send_attack(target_id, amount, crit, dmg_type)
+	send_attack(target_id, weapon_path, is_offhand, dmg_type)
 
 # Track 5 sub-task 4 — player → server loot pickup intents. Server
 # validates pickup range + slot bounds, transfers the stack with a

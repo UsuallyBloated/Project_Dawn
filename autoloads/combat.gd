@@ -162,7 +162,7 @@ func _on_offhand_attack() -> void:
 		DamageNumbers.spawn_miss(current_target.global_position)
 		_update_offhand_interval()
 		return
-	deal_damage_to_target(calc_offhand_damage())
+	deal_damage_to_target(calc_offhand_damage(), NetProtocol.DamageType.PHYSICAL, true)
 	_try_fire_proc(oh)
 	_update_offhand_interval()
 
@@ -189,30 +189,39 @@ func _update_offhand_interval() -> void:
 	var haste := BuffManager.get_haste_amount()
 	_offhand_timer.wait_time = maxf(0.5, delay * (1.0 - haste))
 
-func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.PHYSICAL) -> void:
+func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.PHYSICAL, is_offhand: bool = false) -> void:
 	if not is_instance_valid(current_target) or current_target.is_dead:
 		return
 	var target_name: String = current_target.mob_name
 	var is_crit := _last_crit
 	_last_crit = false
 	var hit_pos: Vector3 = current_target.global_position
-	_apply_damage_to_node(current_target, amount, is_crit, dmg_type)
+	_apply_damage_to_node(current_target, amount, is_crit, dmg_type, is_offhand)
 	player_hit_enemy.emit(target_name, amount, is_crit)
 	DamageNumbers.spawn_damage(hit_pos, amount, is_crit)
 
 # Routes damage to the right authority for `target`:
-#   • RemotePlayer   → broadcast Hit (visual fan-out; PvP HP is Track 6)
-#   • RemoteEnemy    → broadcast Attack (server resolves + applies HP)
+#   • RemotePlayer   → broadcast Hit (visual fan-out; PvP HP is sub-task 3)
+#   • RemoteEnemy    → broadcast Attack (server rolls + applies HP). Track 6
+#                      sub-task 2 — the `amount` arg is now the client's
+#                      predictive damage (for floating-number flash); the
+#                      server ignores it and uses its own roll via
+#                      combat::calc_swing, then fans the authoritative
+#                      Hit with the real number.
 #   • local Enemy    → local take_damage (Test Room single-player path)
 # Centralising the branch keeps deal_damage_to_target, deal_aoe_spell_damage,
 # and the proc handler from diverging when the trust model evolves.
-func _apply_damage_to_node(target: Node, amount: int, is_crit: bool, dmg_type: int) -> void:
+func _apply_damage_to_node(target: Node, amount: int, is_crit: bool, dmg_type: int, is_offhand: bool = false) -> void:
 	if not is_instance_valid(target):
 		return
 	if target is RemotePlayer:
 		Net.broadcast_hit(target.char_id, amount, is_crit, dmg_type)
 	elif target is RemoteEnemy:
-		Net.broadcast_attack(target.enemy_id, amount, is_crit, dmg_type)
+		var weapon: ItemData = Equipment.equipped.get("offhand" if is_offhand else "weapon")
+		var weapon_path := ""
+		if weapon != null and weapon.resource_path != "":
+			weapon_path = weapon.resource_path
+		Net.broadcast_attack(target.enemy_id, weapon_path, is_offhand, dmg_type)
 	else:
 		target.take_damage(amount)
 
