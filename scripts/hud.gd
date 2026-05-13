@@ -855,4 +855,60 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line("You do not know the language '%s'." % lang_name, CombatLog.MsgType.INFO)
 		return
 
+	# Dev command — drop any ItemRegistry-known item into inventory.
+	# Syntax: `/give <substring> [count]`. Empty query lists nothing
+	# (the registry has ~100 entries; a dedicated /items command can
+	# dump them later). Ambiguous query lists candidates and bails
+	# without giving so the dev can refine. Single-match → gives.
+	# Inventory authority is client-only today; when it goes server
+	# side, this should gate on `accounts.is_gm`.
+	if lower.begins_with("/give "):
+		var rest := text.substr("/give ".length()).strip_edges()
+		if rest == "":
+			CombatLog.add_line("Usage: /give <item name> [count]", CombatLog.MsgType.INFO)
+			return
+		var count := 1
+		# Optional trailing integer = stack count. Walks back from the
+		# end so multi-word names with spaces still parse cleanly
+		# ("/give iron short sword 3" → name="iron short sword", count=3).
+		var tokens := rest.split(" ", false)
+		if tokens.size() > 1 and tokens[tokens.size() - 1].is_valid_int():
+			count = int(tokens[tokens.size() - 1])
+			tokens.remove_at(tokens.size() - 1)
+			rest = " ".join(tokens)
+		var matches := ItemRegistry.find_matches(rest, 10)
+		if matches.is_empty():
+			CombatLog.add_line("No items match '%s'." % rest, CombatLog.MsgType.INFO)
+			return
+		if matches.size() > 1:
+			CombatLog.add_line("Multiple matches for '%s':" % rest, CombatLog.MsgType.INFO)
+			for m: ItemData in matches:
+				CombatLog.add_line("  • %s" % m.item_name, CombatLog.MsgType.INFO)
+			CombatLog.add_line("Refine your search.", CombatLog.MsgType.INFO)
+			return
+		var item_name := (matches[0] as ItemData).item_name
+		if ItemRegistry.give_by_name(item_name, count):
+			var suffix := " x%d" % count if count > 1 else ""
+			CombatLog.add_line("Spawned %s%s." % [item_name, suffix], CombatLog.MsgType.INFO)
+		else:
+			CombatLog.add_line("Couldn't spawn %s (inventory full?)." % item_name, CombatLog.MsgType.INFO)
+		return
+
+	# Dev command — list items whose name matches a substring without
+	# spawning. Pairs with /give for discoverability without flooding
+	# the inventory.
+	if lower.begins_with("/items"):
+		var rest := text.substr("/items".length()).strip_edges()
+		if rest == "":
+			CombatLog.add_line("Usage: /items <substring> (registry has %d items)" % ItemRegistry.count(), CombatLog.MsgType.INFO)
+			return
+		var matches := ItemRegistry.find_matches(rest, 30)
+		if matches.is_empty():
+			CombatLog.add_line("No items match '%s'." % rest, CombatLog.MsgType.INFO)
+			return
+		CombatLog.add_line("Items matching '%s' (%d):" % [rest, matches.size()], CombatLog.MsgType.INFO)
+		for m: ItemData in matches:
+			CombatLog.add_line("  • %s" % m.item_name, CombatLog.MsgType.INFO)
+		return
+
 	CombatLog.add_line("Unknown command: %s" % text, CombatLog.MsgType.INFO)

@@ -60,6 +60,7 @@ RemotePlayerManager="*res://autoloads/remote_player_manager.gd"
 RemoteEnemyManager="*res://autoloads/remote_enemy_manager.gd"
 RemoteLootBagManager="*res://autoloads/remote_loot_bag_manager.gd"
 NetCombatBroadcaster="*res://autoloads/net_combat_broadcaster.gd"
+ItemRegistry="*res://autoloads/item_registry.gd"
 
 [display]
 
