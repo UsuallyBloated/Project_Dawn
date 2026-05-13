@@ -219,6 +219,17 @@ func broadcast_hit(target: int, amount: int, crit: bool, dmg_type: int) -> void:
 		return
 	send_hit_broadcast(target, amount, crit, dmg_type)
 
+# Track 5 sub-task 3 — player → server attack intent against a server-
+# spawned enemy. Server validates target liveness + range, applies HP,
+# and broadcasts Hit + HealthUpdate (+ EntityDied on kill) to in_world
+# peers. Client trusts itself on the damage roll for now (Track 4
+# trust model carried forward); Track 6 lifts to server-authoritative
+# combat math.
+func broadcast_attack(target_id: int, amount: int, crit: bool, dmg_type: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_attack(target_id, amount, crit, dmg_type)
+
 func broadcast_miss(target: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return

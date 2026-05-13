@@ -189,29 +189,39 @@ func _update_offhand_interval() -> void:
 	var haste := BuffManager.get_haste_amount()
 	_offhand_timer.wait_time = maxf(0.5, delay * (1.0 - haste))
 
-func deal_damage_to_target(amount: int) -> void:
+func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.PHYSICAL) -> void:
 	if not is_instance_valid(current_target) or current_target.is_dead:
 		return
 	var target_name: String = current_target.mob_name
 	var is_crit := _last_crit
 	_last_crit = false
 	var hit_pos: Vector3 = current_target.global_position
-	if current_target is RemotePlayer:
-		# Track 4 sub-task 4: peer target. Authority over the peer's HP
-		# belongs to that peer's client; we broadcast a visual hit and
-		# render our own floating number, but skip take_damage entirely.
-		# PvP damage application lands in Track 6.
-		Net.broadcast_hit(current_target.char_id, amount, is_crit, NetProtocol.DamageType.PHYSICAL)
-	else:
-		current_target.take_damage(amount)
+	_apply_damage_to_node(current_target, amount, is_crit, dmg_type)
 	player_hit_enemy.emit(target_name, amount, is_crit)
 	DamageNumbers.spawn_damage(hit_pos, amount, is_crit)
+
+# Routes damage to the right authority for `target`:
+#   • RemotePlayer   → broadcast Hit (visual fan-out; PvP HP is Track 6)
+#   • RemoteEnemy    → broadcast Attack (server resolves + applies HP)
+#   • local Enemy    → local take_damage (Test Room single-player path)
+# Centralising the branch keeps deal_damage_to_target, deal_aoe_spell_damage,
+# and the proc handler from diverging when the trust model evolves.
+func _apply_damage_to_node(target: Node, amount: int, is_crit: bool, dmg_type: int) -> void:
+	if not is_instance_valid(target):
+		return
+	if target is RemotePlayer:
+		Net.broadcast_hit(target.char_id, amount, is_crit, dmg_type)
+	elif target is RemoteEnemy:
+		Net.broadcast_attack(target.enemy_id, amount, is_crit, dmg_type)
+	else:
+		target.take_damage(amount)
 
 func deal_aoe_spell_damage(radius: float, amount: int, damage_type: SpellData.DamageType = SpellData.DamageType.NONE) -> void:
 	if not is_instance_valid(_player):
 		return
 	var center := _player.global_position
 	var hit_count := 0
+	var net_dmg_type := _spell_to_net_damage_type(damage_type)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if not is_instance_valid(enemy) or enemy.is_dead:
 			continue
@@ -224,7 +234,7 @@ func deal_aoe_spell_damage(radius: float, amount: int, damage_type: SpellData.Da
 		effective = max(0, int(effective * (1.0 - resist)))
 		if effective > 0:
 			var fx_color := spell_color(damage_type)
-			enemy.take_damage(effective)
+			_apply_damage_to_node(enemy, effective, _last_crit, net_dmg_type)
 			if is_instance_valid(enemy):
 				enemy.flash_spell_hit(fx_color)
 				spawn_impact_light(enemy.global_position, fx_color)
@@ -233,6 +243,22 @@ func deal_aoe_spell_damage(radius: float, amount: int, damage_type: SpellData.Da
 			hit_count += 1
 	if hit_count == 0:
 		CombatLog.add_line("Your spell finds no targets in range.", CombatLog.MsgType.INFO)
+
+# Map SpellData's authoring enum onto NetProtocol's wire enum (the latter
+# mirrors Rust's `#[repr(u8)] DamageType`). HEALING / NONE have no on-wire
+# equivalent — heals don't route through Attack and NONE falls back to
+# PHYSICAL for melee-flavoured spells.
+func _spell_to_net_damage_type(t: int) -> int:
+	match t:
+		SpellData.DamageType.FIRE:      return NetProtocol.DamageType.FIRE
+		SpellData.DamageType.ICE:       return NetProtocol.DamageType.ICE
+		SpellData.DamageType.LIGHTNING: return NetProtocol.DamageType.LIGHTNING
+		SpellData.DamageType.ARCANE:    return NetProtocol.DamageType.ARCANE
+		SpellData.DamageType.HOLY:      return NetProtocol.DamageType.HOLY
+		SpellData.DamageType.NATURE:    return NetProtocol.DamageType.NATURE
+		SpellData.DamageType.SPIRIT:    return NetProtocol.DamageType.SPIRIT
+		SpellData.DamageType.SHADOW:    return NetProtocol.DamageType.SHADOW
+		_:                              return NetProtocol.DamageType.PHYSICAL
 
 func deal_spell_damage(amount: int, damage_type: SpellData.DamageType = SpellData.DamageType.NONE) -> void:
 	if not has_valid_target():
@@ -246,7 +272,7 @@ func deal_spell_damage(amount: int, damage_type: SpellData.DamageType = SpellDat
 		CombatLog.add_line("%s resists your spell." % current_target.mob_name, CombatLog.MsgType.INFO)
 		return
 	var fx_target: Node = current_target
-	deal_damage_to_target(effective)
+	deal_damage_to_target(effective, _spell_to_net_damage_type(damage_type))
 	if is_instance_valid(fx_target):
 		var sc := spell_color(damage_type)
 		fx_target.flash_spell_hit(sc)
@@ -384,7 +410,7 @@ func _try_fire_proc(weapon: ItemData) -> void:
 	var fx_color := spell_color(weapon.proc_damage_type)
 	var fx_target: Node3D = current_target
 	var hit_pos: Vector3 = fx_target.global_position
-	current_target.take_damage(amount)
+	_apply_damage_to_node(current_target, amount, is_crit, _spell_to_net_damage_type(weapon.proc_damage_type))
 	if is_instance_valid(fx_target):
 		fx_target.flash_spell_hit(fx_color)
 		spawn_impact_light(hit_pos, fx_color)
