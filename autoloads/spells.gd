@@ -155,6 +155,22 @@ func _finish_cast() -> void:
 	_apply_spell(spell)
 
 func _apply_spell(spell: SpellData) -> void:
+	# Track 6 sub-task 3b: broadcast the cast intent so the server runs
+	# its authoritative damage / heal pipeline. The local mutations
+	# below still fire for instant visual feedback; the server's next
+	# HealthUpdate / ManaUpdate overrides PlayerStats with the
+	# authoritative value. Spells not in the server's spells.toml fall
+	# through silently (the server logs at debug); only the local
+	# effects land. target_id = 0 encodes "no target" for SELF.
+	if Net.is_launcher_mode() and Net.is_app_ready():
+		var target_id := 0
+		if Combat.current_target != null and is_instance_valid(Combat.current_target):
+			if Combat.current_target is RemotePlayer:
+				target_id = (Combat.current_target as RemotePlayer).char_id
+			elif Combat.current_target is RemoteEnemy:
+				target_id = (Combat.current_target as RemoteEnemy).enemy_id
+		Net.broadcast_cast_spell(spell.spell_name, target_id)
+
 	_cooldowns.start(spell.spell_name, spell.cooldown)
 	var effectiveness := _get_alignment_effectiveness(PlayerStats.player_class)
 	var dmg_mult    := CastingSkills.get_damage_mult(spell.discipline)
@@ -187,7 +203,11 @@ func _apply_spell(spell: SpellData) -> void:
 		PlayerStats.set_hp(PlayerStats.hp - spell.hp_cost)
 
 	if spell.dot_dps > 0.0 and spell.dot_duration > 0.0:
-		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target():
+		# Track 6 sub-task 3b: DoTs on RemotePlayer targets aren't
+		# applied client-side (BuffManager.add_dot expects an enemy
+		# node with take_damage etc.). Server-side DoT processing
+		# lands in sub-task 4 when buff state moves server-side.
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and not Combat.current_target is RemotePlayer:
 			BuffManager.add_dot(Combat.current_target, spell.dot_dps * effectiveness,
 				spell.dot_duration * dur_mult, spell.spell_name)
 
@@ -200,20 +220,25 @@ func _apply_spell(spell: SpellData) -> void:
 	if spell.damage_shield_amount > 0.0 and spell.damage_shield_duration > 0.0:
 		BuffManager.add_damage_shield(spell.damage_shield_amount * effectiveness, spell.damage_shield_duration * dur_mult, spell.spell_name)
 
+	# Track 6 sub-task 3b: CC / snare / silence / dispel only fire on
+	# enemy NPC targets that expose the matching methods. RemotePlayer
+	# stubs don't yet exist — sub-task 4 lifts these to server-side
+	# buff state. The has_method guards keep PvP casts crash-free
+	# while documenting the gap.
 	if spell.cc_duration > 0.0:
-		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target():
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("mesmerize"):
 			Combat.current_target.mesmerize(spell.cc_duration * dur_mult)
 
 	if spell.root_duration > 0.0:
-		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target():
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("root"):
 			Combat.current_target.root(spell.root_duration * dur_mult)
 
 	if spell.slow_amount > 0.0 and spell.slow_duration > 0.0:
-		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target():
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("snare"):
 			Combat.current_target.snare(spell.slow_amount, spell.slow_duration * dur_mult)
 
 	if spell.attack_slow_amount > 0.0 and spell.attack_slow_duration > 0.0:
-		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target():
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("apply_attack_slow"):
 			Combat.current_target.apply_attack_slow(spell.attack_slow_amount, spell.attack_slow_duration * dur_mult)
 
 	if spell.primary_stat_buff_duration > 0.0:
@@ -246,7 +271,7 @@ func _apply_spell(spell: SpellData) -> void:
 		BuffManager.add_stealth(spell.stealth_duration * dur_mult, spell.spell_name)
 
 	if spell.is_dispel:
-		if Combat.has_valid_target():
+		if Combat.has_valid_target() and Combat.current_target.has_method("strip_one_buff"):
 			var stripped: bool = Combat.current_target.strip_one_buff()
 			if stripped:
 				CombatLog.add_line("You strip a buff from %s." % Combat.current_target.mob_name, CombatLog.MsgType.INFO)
@@ -254,18 +279,24 @@ func _apply_spell(spell: SpellData) -> void:
 				CombatLog.add_line("%s has no buffs to strip." % Combat.current_target.mob_name, CombatLog.MsgType.INFO)
 
 	if spell.silence_duration > 0.0:
-		if Combat.has_valid_target():
+		if Combat.has_valid_target() and Combat.current_target.has_method("silence"):
 			Combat.current_target.silence(spell.silence_duration * dur_mult)
 
 	if spell.is_lich_form:
 		BuffManager.toggle_lich_form(spell.lich_mp_regen)
 
 	if spell.mana_drain > 0.0:
-		if Combat.has_valid_target():
+		# Mana drain (Exsanguinate) needs take_damage on the target;
+		# RemotePlayer doesn't expose that path yet (server handles HP
+		# via CastSpell). Caster still gets the mana, but the damage
+		# applies through the server's spell handler.
+		if Combat.has_valid_target() and Combat.current_target.has_method("take_damage"):
 			var drained := minf(spell.mana_drain * effectiveness * dmg_mult, Combat.current_target.hp)
 			Combat.current_target.take_damage(int(drained))
 			PlayerStats.set_mp(PlayerStats.mp + drained)
 			CombatLog.add_line("You drain %d life from %s into mana." % [int(drained), Combat.current_target.mob_name], CombatLog.MsgType.INFO)
+		elif Combat.has_valid_target():
+			PlayerStats.set_mp(PlayerStats.mp + spell.mana_drain * effectiveness * dmg_mult)
 
 	if spell.is_song:
 		BardSongs.activate_song(spell)

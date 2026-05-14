@@ -310,6 +310,16 @@ func broadcast_pvp_toggle(on: bool) -> void:
 		return
 	send_pvp_toggle(on)
 
+# Track 6 sub-task 3b: spell cast intent. Server looks up spell_name in
+# spells.toml, validates mana / target / range, applies authoritative
+# damage or heal, and fans HealthUpdate / ManaUpdate. target_id = 0
+# encodes "no target" (SELF / NONE spells); ENEMY / AOE spells supply
+# the chosen target's char_id (for player targets) or enemy id.
+func broadcast_cast_spell(spell_name: String, target_id: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_cast_spell(spell_name, target_id)
+
 # Track 6 sub-task 3 dev intents. Bypass the CastSpell pipeline so we
 # can verify server-driven HP/heal application before the spell port
 # lands.

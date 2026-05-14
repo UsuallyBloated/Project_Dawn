@@ -195,7 +195,7 @@ func _update_offhand_interval() -> void:
 	var haste := BuffManager.get_haste_amount()
 	_offhand_timer.wait_time = maxf(0.5, delay * (1.0 - haste))
 
-func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.PHYSICAL, is_offhand: bool = false) -> void:
+func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.PHYSICAL, is_offhand: bool = false, via_spell: bool = false) -> void:
 	if not is_instance_valid(current_target) or current_target.is_dead:
 		return
 	var target_name: String = current_target.mob_name
@@ -203,7 +203,7 @@ func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.P
 	_last_crit = false
 	var hit_pos: Vector3 = current_target.global_position
 	var target_is_pvp := current_target is RemotePlayer
-	_apply_damage_to_node(current_target, amount, is_crit, dmg_type, is_offhand)
+	_apply_damage_to_node(current_target, amount, is_crit, dmg_type, is_offhand, via_spell)
 	# Track 6 sub-task 3: for PvP swings the server applies armor
 	# reduction and fans an authoritative Hit — RemotePlayerManager
 	# ._on_hit then spawns the authoritative damage number. Suppressing
@@ -228,10 +228,17 @@ func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.P
 #   • local Enemy    → local take_damage (Test Room single-player path)
 # Centralising the branch keeps deal_damage_to_target, deal_aoe_spell_damage,
 # and the proc handler from diverging when the trust model evolves.
-func _apply_damage_to_node(target: Node, amount: int, is_crit: bool, dmg_type: int, is_offhand: bool = false) -> void:
+#
+# `via_spell` — Track 6 sub-task 3b: spell damage routes through the
+# server's CastSpell handler (Spells._apply_spell broadcasts that
+# separately). Suppressing the Attack broadcast here for spell context
+# avoids the server applying damage twice to the same target.
+func _apply_damage_to_node(target: Node, amount: int, is_crit: bool, dmg_type: int, is_offhand: bool = false, via_spell: bool = false) -> void:
 	if not is_instance_valid(target):
 		return
 	if target is RemotePlayer or target is RemoteEnemy:
+		if via_spell:
+			return  # CastSpell intent already in flight; server applies.
 		var weapon: ItemData = Equipment.equipped.get("offhand" if is_offhand else "weapon")
 		var weapon_path := ""
 		if weapon != null and weapon.resource_path != "":
@@ -259,7 +266,12 @@ func deal_aoe_spell_damage(radius: float, amount: int, damage_type: SpellData.Da
 		effective = max(0, int(effective * (1.0 - resist)))
 		if effective > 0:
 			var fx_color := spell_color(damage_type)
-			_apply_damage_to_node(enemy, effective, _last_crit, net_dmg_type)
+			# Track 6 sub-task 3b: AOE damage routes through CastSpell
+			# (server processes "AOE" target_type — currently logs
+			# unprocessed; sub-task 4+ will handle AOE server-side).
+			# Skip the Attack broadcast to avoid double-application
+			# once AOE is fully handled server-side.
+			_apply_damage_to_node(enemy, effective, _last_crit, net_dmg_type, false, true)
 			if is_instance_valid(enemy):
 				enemy.flash_spell_hit(fx_color)
 				spawn_impact_light(enemy.global_position, fx_color)
@@ -297,14 +309,28 @@ func deal_spell_damage(amount: int, damage_type: SpellData.DamageType = SpellDat
 		CombatLog.add_line("%s resists your spell." % current_target.mob_name, CombatLog.MsgType.INFO)
 		return
 	var fx_target: Node = current_target
-	deal_damage_to_target(effective, _spell_to_net_damage_type(damage_type))
+	# Track 6 sub-task 3b: spell damage application goes through the
+	# server's CastSpell handler (Spells._apply_spell broadcast). Skip
+	# the Attack broadcast here so the server doesn't apply damage
+	# twice. Local visual (floating number + flash) still fires.
+	deal_damage_to_target(effective, _spell_to_net_damage_type(damage_type), false, true)
 	if is_instance_valid(fx_target):
 		var sc := spell_color(damage_type)
 		fx_target.flash_spell_hit(sc)
 		spawn_impact_light(fx_target.global_position, sc)
 
 func has_valid_target() -> bool:
-	return current_target != null and is_instance_valid(current_target) and current_target.is_in_group("enemies") and not current_target.is_dead
+	# Track 6 sub-task 3b: PvP targets count too. RemotePlayer lives in
+	# the "remote_players" group, not "enemies", so the historical
+	# check rejected it and Spells.cast_spell fired "No valid target."
+	# before broadcasting. Damage / heal still gates server-side via
+	# combat::can_attack; this is just "is there *something* selected
+	# that a hostile spell can land on."
+	if current_target == null or not is_instance_valid(current_target):
+		return false
+	if current_target.is_dead:
+		return false
+	return current_target.is_in_group("enemies") or current_target is RemotePlayer
 
 func receive_player_damage(amount: int, attacker: Node = null, attacker_name: String = "") -> void:
 	if PlayerDeath.is_dead:

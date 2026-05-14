@@ -100,6 +100,18 @@ func set_targeted(_active: bool) -> void:
 	# doesn't no-op confusingly when targeting a peer.
 	pass
 
+# Track 6 sub-task 3b: stubs so Combat.deal_spell_damage doesn't crash
+# when the target is a peer (the spell path calls these on
+# current_target). Server is authoritative on spell damage — no resist
+# math on the client. flash_spell_hit's color tint is a visual nice-to-
+# have that can land later; for now spell hits show via the floating
+# damage number from RemotePlayerManager._on_hit.
+func get_spell_resist(_damage_type: int) -> float:
+	return 0.0
+
+func flash_spell_hit(_color: Color) -> void:
+	pass
+
 func apply_health_update(new_hp: float, new_max_hp: float) -> void:
 	# Track 4 sub-task 5: if we're currently in the death state and HP
 	# just came back above zero, that's the respawn trigger. Stand the
