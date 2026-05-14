@@ -229,13 +229,22 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, _dmg_type: int
 			var attacker_name := ""
 			if attacker_node != null and is_instance_valid(attacker_node):
 				attacker_name = attacker_node.mob_name
-			# Server already deducted HP server-side (sub-task 1 enemy-
-			# on-player armor reduction). The local call drives the
-			# client-side cast-interrupt + log + buff-trigger paths
-			# without re-applying HP — receive_player_damage's
-			# PlayerStats.set_hp call still runs but with a value the
-			# next HealthUpdate immediately overrides.
-			Combat.receive_player_damage(amount, attacker_node, attacker_name)
+			# Track 6 sub-task 4a fix: server already deducted HP in
+			# sub-task 1's enemy-on-player branch and fans the
+			# authoritative HealthUpdate; calling
+			# Combat.receive_player_damage here would now route through
+			# DamageSelf (sub-task 4a addition) and DOUBLE-APPLY the
+			# damage. Trigger the cast-interrupt side effect directly
+			# instead.
+			Spells.try_interrupt_cast()
+			Combat.player_attacked.emit(attacker_node)
+			CombatLog.add_line(
+				"%s hits you for %d damage." % [
+					attacker_name if attacker_name != "" else "Something",
+					amount,
+				],
+				CombatLog.MsgType.DAMAGE_IN,
+			)
 		else:
 			# PvP incoming attack — log the source player so the target
 			# knows who hit them. Server's HealthUpdate is the source

@@ -17,11 +17,12 @@ func _ready() -> void:
 	Spells.casting_started.connect(_on_casting_started)
 	Spells.spell_cast.connect(_on_spell_cast)
 	Spells.casting_cancelled.connect(_on_casting_cancelled)
-	# Sub-task 3: buff snapshot replication. BuffManager.buffs_changed
-	# fires on every buff add/expire/clear; we send a fresh snapshot each
-	# time. ~10 buffs × ~30 B per entry = ~300 B per change on the
-	# reliable channel — negligible.
-	BuffManager.buffs_changed.connect(_on_buffs_changed)
+	# Track 6 sub-task 4a removed the client-driven BuffSnapshot. The
+	# server originates BuffSnapshot from its own active_buffs state
+	# whenever buffs change server-side (HoT applied via CastSpell,
+	# MP regen buff, Lich Form toggle, expiration). BuffManager
+	# .buffs_changed still fires for client-side HUD updates; we just
+	# don't send the snapshot upstream anymore.
 	# Track 6 sub-task 3: armor sync. Server reads conn.equipped_armor in
 	# the damage formula and applies AC/(AC+100) reduction. Send on every
 	# equipment_changed (which covers all equip / unequip / swap paths
@@ -61,12 +62,10 @@ func _on_casting_cancelled() -> void:
 	_last_cast_spell_name = ""
 
 # ── Buff snapshot ───────────────────────────────────────────────────
-
-func _on_buffs_changed() -> void:
-	if not Net.is_app_ready():
-		return
-	var snap: Dictionary = BuffManager.get_snapshot_arrays()
-	Net.broadcast_buff_snapshot(snap["names"], snap["durations"])
+# (Track 6 sub-task 4a removed _on_buffs_changed — server originates
+# BuffSnapshot from its active_buffs state via tick.rs step 5a. The
+# Net.broadcast_buff_snapshot wrapper stays for now but is unused;
+# sub-task 4b removes the wire variant entirely.)
 
 # ── Equipment / armor sync (Track 6 sub-task 3) ────────────────────
 

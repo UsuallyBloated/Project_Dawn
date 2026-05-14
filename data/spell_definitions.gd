@@ -334,7 +334,7 @@ const ALL: Array = [
 	{"name": "Aria of Dismay",   "desc": "A discordant melody that saps the fighting spirit of the current target. Song: pulses an attack slow on your target every 3 seconds.", "mana_cost": 10.0, "cast_time": 0.0, "cooldown": 0.5, "base_damage": 0.0, "damage_type": "ARCANE", "target_type": "ENEMY", "heal_amount": 0.0, "attack_slow_amount": 0.35, "is_song": true, "min_level": 16, "classes": ["Bard"]},
 
 	# ── Necromancer (new) ─────────────────────────────────────────────────────────
-	{"name": "Lich Form", "desc": "Toggle. Channels undeath into your form: disables natural HP regeneration; in exchange, mana flows through you at extreme speed (15 MP/s).", "mana_cost": 0.0, "cast_time": 3.0, "cooldown": 5.0, "base_damage": 0.0, "damage_type": "SHADOW", "target_type": "SELF", "heal_amount": 0.0, "is_lich_form": true, "lich_mp_regen": 15.0, "min_level": 20, "classes": ["Necromancer"]},
+	{"name": "Lich Form", "desc": "Toggle. Channels undeath into your form: disables natural HP regeneration; in exchange, mana flows through you at accelerated speed (8 MP/s).", "mana_cost": 0.0, "cast_time": 3.0, "cooldown": 5.0, "base_damage": 0.0, "damage_type": "SHADOW", "target_type": "SELF", "heal_amount": 0.0, "is_lich_form": true, "lich_mp_regen": 8.0, "min_level": 20, "classes": ["Necromancer"]},
 
 	# ── Blood Mage (new) ──────────────────────────────────────────────────────────
 	{"name": "Exsanguinate", "desc": "Tears the blood from the target's veins, draining their life force directly into your mana pool.", "mana_cost": 50.0, "cast_time": 3.0, "cooldown": 30.0, "base_damage": 0.0, "damage_type": "SHADOW", "target_type": "ENEMY", "heal_amount": 0.0, "mana_drain": 60.0, "min_level": 20, "classes": ["Blood Mage"]},

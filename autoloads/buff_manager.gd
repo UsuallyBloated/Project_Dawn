@@ -385,6 +385,12 @@ func _tick_timed_buff(buff: Dictionary, delta: float) -> void:
 		buffs_changed.emit()
 
 func _tick_dots(delta: float) -> void:
+	# Track 6 sub-task 4a: server-side DoT application lands in 4b. In
+	# launcher mode skip the damage tick (RemoteEnemy.take_damage is a
+	# no-op, RemotePlayer has none) but still decrement remaining so
+	# the local DoT entry expires on schedule. Test Room single-player
+	# keeps the full local damage tick.
+	var launcher := Net.is_launcher_mode()
 	var i := _dots.size() - 1
 	while i >= 0:
 		var d: Dictionary = _dots[i]
@@ -393,30 +399,38 @@ func _tick_dots(delta: float) -> void:
 			i -= 1
 			continue
 		d.remaining -= delta
-		d.tick_acc += delta
-		if d.tick_acc >= TICK_INTERVAL:
-			d.tick_acc -= TICK_INTERVAL
-			var dmg := int(d.dps * TICK_INTERVAL)
-			d.target.take_damage(dmg)
-			if is_instance_valid(d.target) and not d.target.is_dead:
-				dot_ticked.emit(d.target.mob_name, dmg, d.spell_name)
+		if not launcher:
+			d.tick_acc += delta
+			if d.tick_acc >= TICK_INTERVAL:
+				d.tick_acc -= TICK_INTERVAL
+				var dmg := int(d.dps * TICK_INTERVAL)
+				d.target.take_damage(dmg)
+				if is_instance_valid(d.target) and not d.target.is_dead:
+					dot_ticked.emit(d.target.mob_name, dmg, d.spell_name)
 		if d.remaining <= 0.0:
 			_dots.remove_at(i)
 		i -= 1
 
 func _tick_hots(delta: float) -> void:
+	# Track 6 sub-task 4a: server owns HoT application — applies heal
+	# per tick to conn.hp and fans HealthUpdate. Skip the local heal
+	# mutation in launcher mode (would fight the server), but still
+	# decrement remaining so the HUD buff bar duration ticks down and
+	# the entry expires on its own timer.
+	var launcher := Net.is_launcher_mode()
 	var i := _hots.size() - 1
 	while i >= 0:
 		var h: Dictionary = _hots[i]
 		h.remaining -= delta
-		h.tick_acc += delta
-		if h.tick_acc >= TICK_INTERVAL:
-			h.tick_acc -= TICK_INTERVAL
-			var heal: float = h.hps * TICK_INTERVAL
-			_is_hot_healing = true
-			PlayerStats.set_hp(PlayerStats.hp + heal)
-			_is_hot_healing = false
-			hot_ticked.emit(int(heal), h.spell_name)
+		if not launcher:
+			h.tick_acc += delta
+			if h.tick_acc >= TICK_INTERVAL:
+				h.tick_acc -= TICK_INTERVAL
+				var heal: float = h.hps * TICK_INTERVAL
+				_is_hot_healing = true
+				PlayerStats.set_hp(PlayerStats.hp + heal)
+				_is_hot_healing = false
+				hot_ticked.emit(int(heal), h.spell_name)
 		if h.remaining <= 0.0:
 			_hots.remove_at(i)
 			buffs_changed.emit()

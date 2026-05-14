@@ -364,7 +364,17 @@ func receive_player_damage(amount: int, attacker: Node = null, attacker_name: St
 	effective = BuffManager.consume_absorb(effective)
 	if effective <= 0:
 		return
-	PlayerStats.set_hp(PlayerStats.hp - effective)
+	# Track 6 fix: in launcher mode the server is authoritative on HP.
+	# Mutating PlayerStats locally without telling the server creates a
+	# desync where peer-view target frames read the (full) server value
+	# while the owner sees the (reduced) local value. Route through
+	# DamageSelf so the server applies, recalculates regen, and fans the
+	# authoritative HealthUpdate back to all peers. Test Room (single-
+	# player) still uses the direct local mutation.
+	if Net.is_launcher_mode():
+		Net.broadcast_damage_self(effective)
+	else:
+		PlayerStats.set_hp(PlayerStats.hp - effective)
 	player_took_damage.emit(attacker_name if attacker_name != "" else "Something", effective)
 
 func calc_damage() -> int:
