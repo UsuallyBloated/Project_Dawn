@@ -21,6 +21,12 @@ func _ready() -> void:
 	PlayerStats.hp_changed.connect(func(_c, _m): _sync_stats())
 	PlayerStats.mp_changed.connect(func(_c, _m): _sync_stats())
 	PlayerStats.stamina_changed.connect(func(_c, _m): _sync_stats())
+	# Track 6 sub-task 5 — wire to server-driven group state in
+	# launcher mode. The legacy enet MultiplayerAPI RPCs below stay
+	# for Test Room single-player; in launcher mode they're dead code
+	# because the action methods route through Net early-return paths.
+	Net.world_group_invited.connect(_on_world_group_invited)
+	Net.world_group_roster.connect(_on_world_group_roster)
 
 func _sync_stats() -> void:
 	if not in_group or _stats_dirty:
@@ -51,11 +57,35 @@ func _flush_stats() -> void:
 # â”€â”€ Local actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 func invite_player(target_peer_id: int) -> void:
+	# Track 6 sub-task 5: launcher mode routes through Net (server
+	# resolves the target by name). The local-RPC path stays for
+	# Test Room single-player. target_peer_id is unused in launcher
+	# mode — UI passes 0 or the legacy ID.
+	if Net.is_launcher_mode():
+		# Caller should use invite_player_by_name in launcher mode.
+		push_warning("GroupManager.invite_player called in launcher mode — use invite_player_by_name")
+		return
 	if in_group and members.size() >= MAX_SIZE:
 		return
 	_rpc_receive_invite.rpc_id(target_peer_id, _my_peer_id, PlayerStats.player_name)
 
+# Track 6 sub-task 5 — chat / UI entry point for "/invite <name>" in
+# launcher mode. Server looks up the target by name in its
+# connections map. Test Room single-player has no server; logs a
+# message.
+func invite_player_by_name(target_name: String) -> void:
+	if Net.is_launcher_mode():
+		Net.broadcast_group_invite(target_name)
+	else:
+		push_warning("GroupManager.invite_player_by_name unsupported outside launcher mode")
+
 func accept_invite() -> void:
+	if Net.is_launcher_mode():
+		if pending_invite_from == 0:
+			return
+		Net.broadcast_group_accept_invite(pending_invite_from)
+		pending_invite_from = 0
+		return
 	if pending_invite_from == 0:
 		return
 	_rpc_receive_accept.rpc_id(pending_invite_from, _my_peer_id, _local_stats())
@@ -63,6 +93,13 @@ func accept_invite() -> void:
 
 func leave_group() -> void:
 	if not in_group:
+		return
+	if Net.is_launcher_mode():
+		Net.broadcast_group_leave()
+		# Server will fan an empty roster back; _on_world_group_roster
+		# clears local state. Optimistically clear here too so the UI
+		# updates without waiting for the round-trip.
+		_clear_group()
 		return
 	if is_leader:
 		if members.size() <= 1:
@@ -84,6 +121,43 @@ func leave_group() -> void:
 		_rpc_receive_leave.rpc_id(leader_peer_id, _my_peer_id)
 	_clear_group()
 
+# Track 6 sub-task 5 — leader-only kick by name (launcher mode).
+func kick_member_by_name(target_name: String) -> void:
+	if Net.is_launcher_mode():
+		Net.broadcast_group_kick(target_name)
+	else:
+		push_warning("GroupManager.kick_member_by_name unsupported outside launcher mode")
+
+# Track 6 sub-task 5 — Net signal handlers. Server is authoritative
+# on group membership in launcher mode; these handlers update the
+# local mirror so the rest of the GroupManager API (in_group,
+# members, is_leader, etc.) stays accurate without changing the
+# downstream consumers' code.
+func _on_world_group_invited(from_id: int, from_name: String) -> void:
+	pending_invite_from = from_id
+	invite_received.emit(from_id, from_name)
+
+func _on_world_group_roster(_group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray) -> void:
+	if member_ids.is_empty():
+		# Group dissolved or we got kicked.
+		_clear_group()
+		return
+	leader_peer_id = leader_id
+	is_leader = (Net.get_player_id() == leader_id)
+	in_group = true
+	members.clear()
+	for i in member_ids.size():
+		var nm := member_names[i] if i < member_names.size() else ""
+		members.append({
+			"peer_id": member_ids[i],
+			"name": nm,
+			"level": 0,
+			"hp": 0.0, "max_hp": 0.0,
+			"mp": 0.0, "max_mp": 0.0,
+			"sta": 0.0, "max_sta": 0.0,
+		})
+	group_updated.emit(true)
+
 func pass_leadership(new_leader_peer_id: int) -> void:
 	if not is_leader:
 		return
@@ -91,6 +165,12 @@ func pass_leadership(new_leader_peer_id: int) -> void:
 	_broadcast_state()
 
 func distribute_kill_xp(base_xp: int) -> void:
+	# Track 6 sub-task 5: server splits XP among the killer's group
+	# in launcher mode (kill credit branch in tick.rs). The local
+	# Net.xp_gained handler calls PlayerStats.gain_xp directly. This
+	# RPC path stays for Test Room single-player.
+	if Net.is_launcher_mode():
+		return
 	if not in_group or members.size() <= 1:
 		PlayerStats.gain_xp(base_xp)
 		return

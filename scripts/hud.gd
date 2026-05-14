@@ -917,6 +917,52 @@ func _handle_chat_input(text: String) -> void:
 		CombatLog.add_line("Dev damage self: %s" % arg, CombatLog.MsgType.INFO)
 		return
 
+	# Track 6 sub-task 5 — group commands (launcher mode). Test Room
+	# single-player can't form groups via these — invites need a real
+	# peer over renet.
+	if lower.begins_with("/invite "):
+		var target_name := text.substr("/invite ".length()).strip_edges()
+		if target_name == "":
+			CombatLog.add_line("Usage: /invite <character name>", CombatLog.MsgType.INFO)
+			return
+		if Net.is_launcher_mode():
+			GroupManager.invite_player_by_name(target_name)
+			CombatLog.add_line("Invited %s to your group." % target_name, CombatLog.MsgType.INFO)
+		else:
+			CombatLog.add_line("/invite requires multiplayer.", CombatLog.MsgType.INFO)
+		return
+
+	if lower == "/accept" or lower == "/accept invite":
+		if GroupManager.pending_invite_from == 0:
+			CombatLog.add_line("No pending group invite.", CombatLog.MsgType.INFO)
+			return
+		GroupManager.accept_invite()
+		CombatLog.add_line("Accepted the group invite.", CombatLog.MsgType.INFO)
+		return
+
+	if lower == "/leave" or lower == "/leave group":
+		if not GroupManager.in_group:
+			CombatLog.add_line("You aren't in a group.", CombatLog.MsgType.INFO)
+			return
+		GroupManager.leave_group()
+		CombatLog.add_line("You left the group.", CombatLog.MsgType.INFO)
+		return
+
+	if lower.begins_with("/kick "):
+		var target_name := text.substr("/kick ".length()).strip_edges()
+		if target_name == "":
+			CombatLog.add_line("Usage: /kick <character name>", CombatLog.MsgType.INFO)
+			return
+		if not GroupManager.is_leader:
+			CombatLog.add_line("Only the group leader can kick.", CombatLog.MsgType.INFO)
+			return
+		if Net.is_launcher_mode():
+			GroupManager.kick_member_by_name(target_name)
+			CombatLog.add_line("Kicked %s from the group." % target_name, CombatLog.MsgType.INFO)
+		else:
+			CombatLog.add_line("/kick requires multiplayer.", CombatLog.MsgType.INFO)
+		return
+
 	# Track 6 sub-task 3 dev — bypass-the-spell-system self heal.
 	# Verifies that server-applied heals stick (the regression we noted
 	# during sub-task 1 verification) before the CastSpell port lands.

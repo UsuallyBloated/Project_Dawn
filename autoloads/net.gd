@@ -106,6 +106,12 @@ signal world_loot_granted(item_path: String, count: int)
 # `current` / `to_next` are placeholder zeros from the server in
 # Track 5; PlayerStats.gain_xp computes them internally.
 signal world_xp_gained(amount: int, current: int, to_next: int)
+# Track 6 sub-task 5 — group state from the server.
+# group_invited: someone is asking us to join their group.
+# group_roster: the group we belong to has a new membership snapshot
+# (empty member arrays = the group dissolved or we were kicked).
+signal world_group_invited(from_id: int, from_name: String)
+signal world_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray)
 
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
@@ -149,6 +155,8 @@ func _ready() -> void:
 	loot_bag_spawn.connect(_on_loot_bag_spawn)
 	loot_granted.connect(_on_loot_granted)
 	xp_gained.connect(_on_xp_gained)
+	group_invited.connect(_on_group_invited)
+	group_roster.connect(_on_group_roster)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -332,6 +340,29 @@ func broadcast_heal_self(amount: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_heal_self(amount)
+
+# Track 6 sub-task 5 — group action wrappers. Server processes the
+# corresponding ClientWorldMsg variants, fans GroupInvited /
+# GroupRoster back through the typed signals above.
+func broadcast_group_invite(target_name: String) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_group_invite(target_name)
+
+func broadcast_group_accept_invite(from_id: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_group_accept_invite(from_id)
+
+func broadcast_group_leave() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_group_leave()
+
+func broadcast_group_kick(target_name: String) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_group_kick(target_name)
 
 func leave_session() -> void:
 	# Send the app-layer Disconnect and drive renet a few times so the
@@ -548,6 +579,12 @@ func _on_loot_granted(item_path: String, count: int) -> void:
 func _on_xp_gained(amount: int, current: int, to_next: int) -> void:
 	world_xp_gained.emit(amount, current, to_next)
 	PlayerStats.gain_xp(amount)
+
+func _on_group_invited(from_id: int, from_name: String) -> void:
+	world_group_invited.emit(from_id, from_name)
+
+func _on_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray) -> void:
+	world_group_roster.emit(group_id, leader_id, member_ids, member_names)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:
