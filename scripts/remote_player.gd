@@ -65,12 +65,16 @@ var cast_duration: float = 0.0
 var cast_start_time: float = 0.0
 
 # Buff snapshot — parallel arrays from the wire. Durations were the
-# remaining time at the moment of the broadcast; we don't tick them down
-# locally (HUD displays the value as-is). A fresh snapshot on every
-# BuffManager.buffs_changed keeps the display close enough to accurate
-# without per-frame countdown bookkeeping.
+# remaining time at the moment of the broadcast; we tick them down
+# locally between snapshots so the target HUD shows a live countdown.
+# Server fans a fresh snapshot when the set changes (apply / expire /
+# strip / dispel), which re-anchors these values.
 var buff_names: PackedStringArray = PackedStringArray()
 var buff_durations: PackedFloat32Array = PackedFloat32Array()
+# Infinite-duration sentinel from the server (Lich Form, Absorb pool).
+# We skip these in the local tick so they don't drift away from
+# "permanent" semantics.
+const _BUFF_INF_SENTINEL := 999999.0
 
 # Interpolation buffer of { time: float, pos: Vector3, yaw: float } dicts
 # ordered by `time`. Kept short — only the two snapshots straddling
@@ -216,7 +220,23 @@ func on_position_update(pos: Vector3, yaw: float, sequence: int) -> void:
 	if _snapshots.size() > BUFFER_CAPACITY:
 		_snapshots.pop_front()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	# Tick buff durations down so the target HUD shows a live countdown
+	# between server snapshots (server only fans BuffSnapshot when the
+	# set changes — apply / expire / strip — so otherwise values would
+	# freeze at the last snapshotted remaining). Floor at 0; the next
+	# snapshot will drop the entry. Skip infinite-duration sentinels.
+	if buff_durations.size() > 0:
+		var any_changed := false
+		for i in buff_durations.size():
+			var d: float = buff_durations[i]
+			if d > 0.0 and d < _BUFF_INF_SENTINEL:
+				var new_d: float = maxf(0.0, d - delta)
+				buff_durations[i] = new_d
+				any_changed = true
+		if any_changed:
+			buffs_changed.emit()
+
 	# Defensive cast-bar auto-end: if the casting peer crashed before
 	# sending CastComplete / CastFail, the cast bar would linger
 	# indefinitely without this. 0.5 s grace so a slightly-late server

@@ -208,7 +208,7 @@ func _on_cast_fail(caster: int, reason: String) -> void:
 		# why nothing happened. Also cancel any local cast bar that
 		# may still be running.
 		if reason != "":
-			CombatLog.add_line("Cast failed: %s" % reason, CombatLog.MsgType.SYSTEM)
+			CombatLog.add_line("Cast failed: %s" % reason, CombatLog.MsgType.INFO)
 		Spells.cancel_cast()
 		return
 	var rp = _by_id.get(caster)
