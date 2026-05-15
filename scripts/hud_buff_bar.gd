@@ -57,6 +57,12 @@ func _on_buffs_changed() -> void:
 	var stat := BuffManager.get_stat_buff()
 	if not stat.is_empty():
 		_timer_labels["stat"] = _add_icon("stat", stat.get("buff_name", "Focused"))
+	var pstat := BuffManager.get_primary_stat_buff()
+	if not pstat.is_empty():
+		_timer_labels["primary_stat"] = _add_icon("primary_stat", pstat.get("buff_name", "Bless"))
+	var dshield := BuffManager.get_damage_shield()
+	if not dshield.is_empty():
+		_timer_labels["damage_shield"] = _add_icon("damage_shield", dshield.get("buff_name", "Thorns"))
 	if BuffManager.is_stealthed():
 		_timer_labels["stealth"] = _add_icon("stealth", "Hidden")
 	if BuffManager.is_lich_form():
@@ -77,6 +83,8 @@ func _add_icon(type: String, spell_name: String) -> Label:
 		"haste":    style.border_color = Color(0.95, 0.85, 0.10)
 		"mp_regen": style.border_color = Color(0.30, 0.50, 1.00)
 		"stat":     style.border_color = Color(0.70, 0.40, 0.90)
+		"primary_stat":  style.border_color = Color(0.95, 0.80, 0.35)
+		"damage_shield": style.border_color = Color(0.85, 0.40, 0.20)
 		"stealth":  style.border_color = Color(0.45, 0.45, 0.55)
 		"lich":     style.border_color = Color(0.55, 0.10, 0.80)
 		_:          style.border_color = UITheme.C_BORDER
@@ -146,6 +154,14 @@ func _update_timers() -> void:
 				lbl.text = "%ds" % ceili(b.remaining)
 		elif key == "stat":
 			var b := BuffManager.get_stat_buff()
+			if not b.is_empty():
+				lbl.text = "%ds" % ceili(b.remaining)
+		elif key == "primary_stat":
+			var b := BuffManager.get_primary_stat_buff()
+			if not b.is_empty():
+				lbl.text = "%ds" % ceili(b.remaining)
+		elif key == "damage_shield":
+			var b := BuffManager.get_damage_shield()
 			if not b.is_empty():
 				lbl.text = "%ds" % ceili(b.remaining)
 		elif key == "stealth":

@@ -570,7 +570,16 @@ func _change_level(delta: int) -> void:
 	_level_lbl.text = str(PlayerStats.level)
 
 func _full_heal() -> void:
-	PlayerStats.set_hp(PlayerStats.max_hp)
+	# Launcher: HP is server-authoritative — a local set is overwritten
+	# by the next HealthUpdate. Route the missing HP through HealSelf
+	# so the server applies it. MP / stamina aren't server-driven for
+	# arbitrary dev heals, so the local set holds.
+	if Net.is_launcher_mode() and Net.is_app_ready():
+		var hp_missing := int(PlayerStats.max_hp - PlayerStats.hp)
+		if hp_missing > 0:
+			Net.broadcast_heal_self(hp_missing)
+	else:
+		PlayerStats.set_hp(PlayerStats.max_hp)
 	PlayerStats.set_mp(PlayerStats.max_mp)
 	PlayerStats.set_stamina(PlayerStats.max_stamina)
 

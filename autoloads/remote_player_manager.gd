@@ -305,6 +305,10 @@ func _on_evade(_attacker: int, target: int) -> void:
 # known list onto the new RemotePlayer instance.
 func _on_buff_snapshot(target: int, names: PackedStringArray, durations: PackedFloat32Array) -> void:
 	if target == Net.get_player_id():
+		# Own snapshot — server is authoritative for buff lifetime.
+		# Drops any locally tracked buff the server has dispelled or
+		# expired (e.g. Antimagic Ward stripping Bless).
+		BuffManager.reconcile_with_server_snapshot(names, durations)
 		return
 	if not _spawn_data.has(target):
 		return

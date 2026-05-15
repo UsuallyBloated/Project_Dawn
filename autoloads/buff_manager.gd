@@ -51,6 +51,12 @@ var _stealth_remaining: float = 0.0
 var _lich_form_active: bool = false
 var _lich_mp_regen: float = 0.0
 
+# Track 6 dispel sync — server is authoritative for buff lifetime in
+# launcher mode. reconcile_with_server_snapshot() drops any locally
+# tracked named buff that no longer appears in the server's snapshot
+# (e.g. after Antimagic Ward / Expose). Local-only buffs (food, drink,
+# stealth, evade) are skipped — the server doesn't track those.
+
 func _ready() -> void:
 	PlayerDeath.player_died.connect(clear_all)
 	ZoneLoader.zone_changed.connect(func(_z): clear_all())
@@ -321,6 +327,45 @@ func get_snapshot_arrays() -> Dictionary:
 		names.append("Lich")
 		durations.append(0.0)
 	return {"names": names, "durations": durations}
+
+func reconcile_with_server_snapshot(names: PackedStringArray, _durations: PackedFloat32Array) -> void:
+	var server_set: Dictionary = {}
+	for n in names:
+		server_set[n] = true
+	var changed := false
+	var i := _hots.size() - 1
+	while i >= 0:
+		if not server_set.has(_hots[i].spell_name):
+			_hots.remove_at(i)
+			changed = true
+		i -= 1
+	if not _primary_stat_buff.is_empty() and not server_set.has(_primary_stat_buff.get("buff_name", "")):
+		_undo_primary_stat_buff()
+		primary_stat_buff_changed.emit()
+		changed = true
+	if not _stat_buff.is_empty() and not server_set.has(_stat_buff.get("buff_name", "")):
+		_stat_buff.clear()
+		changed = true
+	if not _speed_buff.is_empty() and not server_set.has(_speed_buff.get("buff_name", "")):
+		_speed_buff.clear()
+		changed = true
+	if not _haste_buff.is_empty() and not server_set.has(_haste_buff.get("buff_name", "")):
+		_haste_buff.clear()
+		haste_changed.emit()
+		changed = true
+	if not _mp_regen_buff.is_empty() and not server_set.has(_mp_regen_buff.get("buff_name", "")):
+		_mp_regen_buff.clear()
+		changed = true
+	if not _damage_shield.is_empty() and not server_set.has(_damage_shield.get("buff_name", "")):
+		_damage_shield.clear()
+		changed = true
+	if _lich_form_active and not server_set.has("Lich Form"):
+		_lich_form_active = false
+		_lich_mp_regen = 0.0
+		lich_form_changed.emit(false)
+		changed = true
+	if changed:
+		buffs_changed.emit()
 
 func clear_all() -> void:
 	_dots.clear()
