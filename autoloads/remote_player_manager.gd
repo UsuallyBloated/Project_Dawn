@@ -48,6 +48,7 @@ func _ready() -> void:
 	Net.world_miss.connect(_on_miss)
 	Net.world_evade.connect(_on_evade)
 	Net.world_entity_died.connect(_on_entity_died)
+	Net.world_damage_shield_trigger.connect(_on_damage_shield_trigger)
 
 func _process(_delta: float) -> void:
 	var scene := get_tree().current_scene
@@ -202,6 +203,13 @@ func _on_cast_complete(caster: int, spell_name: String) -> void:
 
 func _on_cast_fail(caster: int, reason: String) -> void:
 	if caster == Net.get_player_id():
+		# Own cast rejected by the server (silenced / mezzed / etc.).
+		# Surface the reason in the combat log so the player knows
+		# why nothing happened. Also cancel any local cast bar that
+		# may still be running.
+		if reason != "":
+			CombatLog.add_line("Cast failed: %s" % reason, CombatLog.MsgType.SYSTEM)
+		Spells.cancel_cast()
 		return
 	var rp = _by_id.get(caster)
 	if rp != null and is_instance_valid(rp):
@@ -266,6 +274,33 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, _dmg_type: int
 		# armor reduction.
 		if attacker == Net.get_player_id():
 			CombatLog.add_line("You hit %s for %d damage%s." % [rp.player_name, amount, (" (Critical!)" if crit else "")], CombatLog.MsgType.DAMAGE_OUT)
+
+func _on_damage_shield_trigger(defender: int, attacker: int, amount: int, shield_name: String) -> void:
+	# Defender's POV — log the reflect and let them see what their
+	# shield did to whoever just attacked them.
+	if defender == Net.get_player_id():
+		var attacker_name := "the attacker"
+		if attacker >= RemoteEnemyManager.ENEMY_ID_BASE:
+			var att_node: Node = RemoteEnemyManager.get_enemy(attacker)
+			if att_node != null and is_instance_valid(att_node):
+				attacker_name = att_node.mob_name
+		else:
+			var att_rp = _by_id.get(attacker)
+			if att_rp != null and is_instance_valid(att_rp):
+				attacker_name = att_rp.player_name
+		CombatLog.add_line(
+			"%s has been hit by %d damage from %s." % [attacker_name, amount, shield_name],
+			CombatLog.MsgType.DAMAGE_OUT,
+		)
+		# Floating number on the attacker so the defender sees the reflect land.
+		if attacker >= RemoteEnemyManager.ENEMY_ID_BASE:
+			var att_node: Node = RemoteEnemyManager.get_enemy(attacker)
+			if att_node != null and is_instance_valid(att_node):
+				DamageNumbers.spawn_damage((att_node as Node3D).global_position, amount, false)
+		else:
+			var att_rp = _by_id.get(attacker)
+			if att_rp != null and is_instance_valid(att_rp):
+				DamageNumbers.spawn_damage((att_rp as Node3D).global_position, amount, false)
 
 func _on_miss(_attacker: int, target: int) -> void:
 	if target == Net.get_player_id():

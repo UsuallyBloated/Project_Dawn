@@ -6,6 +6,7 @@ const _VendorWindowScript   := preload("res://scripts/vendor_window.gd")
 const _HudDeathScreen       := preload("res://scripts/hud_death_screen.gd")
 const _HudCastBar           := preload("res://scripts/hud_cast_bar.gd")
 const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
+const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
 const _HudPetPanel          := preload("res://scripts/hud_pet_panel.gd")
 const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
 const _TrackWindowScript    := preload("res://scripts/track_window.gd")
@@ -128,6 +129,9 @@ func _build_components() -> void:
 
 	var buff_bar := _HudBuffBar.new()
 	add_child(buff_bar)
+
+	var debuff_bar := _HudDebuffBar.new()
+	add_child(debuff_bar)
 
 	_group_panel = _HudGroupPanel.new()
 	add_child(_group_panel)

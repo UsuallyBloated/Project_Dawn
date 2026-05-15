@@ -20,6 +20,12 @@ signal damage_shield_applied(amount: int, buff_name: String)
 const TICK_INTERVAL := 3.0
 
 var _absorb_hp: float = 0.0
+# Most recent absorb source name (spell or skill). Used by
+# reconcile_with_server_snapshot to clear the pool when the server
+# strips the absorb buff (e.g. drained to 0 by incoming damage in
+# launcher mode, since the local consume_absorb path isn't taken when
+# damage arrives via HealthUpdate).
+var _absorb_source: String = ""
 var _is_hot_healing: bool = false
 var _evade_boost_remaining: float = 0.0
 
@@ -98,6 +104,7 @@ func add_hot(hps: float, duration: float, spell_name: String) -> void:
 func add_absorb(amount: float, source_name: String) -> void:
 	var was_zero := _absorb_hp <= 0.0
 	_absorb_hp += amount
+	_absorb_source = source_name
 	absorb_applied.emit(int(_absorb_hp), source_name)
 	if was_zero:
 		buffs_changed.emit()
@@ -328,38 +335,81 @@ func get_snapshot_arrays() -> Dictionary:
 		durations.append(0.0)
 	return {"names": names, "durations": durations}
 
-func reconcile_with_server_snapshot(names: PackedStringArray, _durations: PackedFloat32Array) -> void:
-	var server_set: Dictionary = {}
-	for n in names:
-		server_set[n] = true
+func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedFloat32Array) -> void:
+	# Build a name -> remaining map. Matching local buffs get their
+	# remaining synced to the server's value so the HUD countdown
+	# tracks the authoritative timer (avoids a 50-100ms drift where
+	# the local timer expires before the server's 20Hz tick removes
+	# the buff — manifested as e.g. "thorns reflected after my buff
+	# icon disappeared"). Missing names trigger a local clear.
+	var server_remaining: Dictionary = {}
+	for idx in names.size():
+		var dur: float = durations[idx] if idx < durations.size() else 0.0
+		server_remaining[names[idx]] = dur
 	var changed := false
 	var i := _hots.size() - 1
 	while i >= 0:
-		if not server_set.has(_hots[i].spell_name):
+		var nm: String = _hots[i].spell_name
+		if not server_remaining.has(nm):
 			_hots.remove_at(i)
 			changed = true
+		else:
+			_hots[i].remaining = server_remaining[nm]
 		i -= 1
-	if not _primary_stat_buff.is_empty() and not server_set.has(_primary_stat_buff.get("buff_name", "")):
-		_undo_primary_stat_buff()
-		primary_stat_buff_changed.emit()
+	if not _primary_stat_buff.is_empty():
+		var nm: String = _primary_stat_buff.get("buff_name", "")
+		if not server_remaining.has(nm):
+			_undo_primary_stat_buff()
+			primary_stat_buff_changed.emit()
+			changed = true
+		else:
+			_primary_stat_buff.remaining = server_remaining[nm]
+	if not _stat_buff.is_empty():
+		var nm: String = _stat_buff.get("buff_name", "")
+		if not server_remaining.has(nm):
+			_stat_buff.clear()
+			changed = true
+		else:
+			_stat_buff.remaining = server_remaining[nm]
+	if not _speed_buff.is_empty():
+		var nm: String = _speed_buff.get("buff_name", "")
+		if not server_remaining.has(nm):
+			_speed_buff.clear()
+			changed = true
+		else:
+			_speed_buff.remaining = server_remaining[nm]
+	if not _haste_buff.is_empty():
+		var nm: String = _haste_buff.get("buff_name", "")
+		if not server_remaining.has(nm):
+			_haste_buff.clear()
+			haste_changed.emit()
+			changed = true
+		else:
+			_haste_buff.remaining = server_remaining[nm]
+	if not _mp_regen_buff.is_empty():
+		var nm: String = _mp_regen_buff.get("buff_name", "")
+		if not server_remaining.has(nm):
+			_mp_regen_buff.clear()
+			changed = true
+		else:
+			_mp_regen_buff.remaining = server_remaining[nm]
+	if not _damage_shield.is_empty():
+		var nm: String = _damage_shield.get("buff_name", "")
+		if not server_remaining.has(nm):
+			_damage_shield.clear()
+			changed = true
+		else:
+			_damage_shield.remaining = server_remaining[nm]
+	# Absorb: the server drains the pool and strips the buff when it
+	# hits 0. In launcher mode the local _absorb_hp never drains
+	# (damage arrives via HealthUpdate, bypassing local consume_absorb),
+	# so without this clear the "Shield Xhp" icon would linger forever.
+	if _absorb_hp > 0.0 and _absorb_source != "" and not server_remaining.has(_absorb_source):
+		_absorb_hp = 0.0
+		_absorb_source = ""
+		absorb_broken.emit()
 		changed = true
-	if not _stat_buff.is_empty() and not server_set.has(_stat_buff.get("buff_name", "")):
-		_stat_buff.clear()
-		changed = true
-	if not _speed_buff.is_empty() and not server_set.has(_speed_buff.get("buff_name", "")):
-		_speed_buff.clear()
-		changed = true
-	if not _haste_buff.is_empty() and not server_set.has(_haste_buff.get("buff_name", "")):
-		_haste_buff.clear()
-		haste_changed.emit()
-		changed = true
-	if not _mp_regen_buff.is_empty() and not server_set.has(_mp_regen_buff.get("buff_name", "")):
-		_mp_regen_buff.clear()
-		changed = true
-	if not _damage_shield.is_empty() and not server_set.has(_damage_shield.get("buff_name", "")):
-		_damage_shield.clear()
-		changed = true
-	if _lich_form_active and not server_set.has("Lich Form"):
+	if _lich_form_active and not server_remaining.has("Lich Form"):
 		_lich_form_active = false
 		_lich_mp_regen = 0.0
 		lich_form_changed.emit(false)
@@ -371,6 +421,7 @@ func clear_all() -> void:
 	_dots.clear()
 	_hots.clear()
 	_absorb_hp = 0.0
+	_absorb_source = ""
 	_evade_boost_remaining = 0.0
 	_food_buff.clear()
 	_drink_buff.clear()

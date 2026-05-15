@@ -112,6 +112,9 @@ signal world_xp_gained(amount: int, current: int, to_next: int)
 # (empty member arrays = the group dissolved or we were kicked).
 signal world_group_invited(from_id: int, from_name: String)
 signal world_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray)
+# damage_shield_trigger: a player's Thorns / Spellshield reflected
+# damage back at an attacker. defender = the player whose shield fired.
+signal world_damage_shield_trigger(defender: int, attacker: int, amount: int, shield_name: String)
 
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
@@ -157,6 +160,7 @@ func _ready() -> void:
 	xp_gained.connect(_on_xp_gained)
 	group_invited.connect(_on_group_invited)
 	group_roster.connect(_on_group_roster)
+	damage_shield_trigger.connect(_on_damage_shield_trigger)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -585,6 +589,9 @@ func _on_group_invited(from_id: int, from_name: String) -> void:
 
 func _on_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray) -> void:
 	world_group_roster.emit(group_id, leader_id, member_ids, member_names)
+
+func _on_damage_shield_trigger(defender: int, attacker: int, amount: int, shield_name: String) -> void:
+	world_damage_shield_trigger.emit(defender, attacker, amount, shield_name)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:
