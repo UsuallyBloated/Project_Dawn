@@ -70,6 +70,9 @@ func _ready() -> void:
 func get_hots() -> Array:
 	return _hots
 
+func get_absorb_source() -> String:
+	return _absorb_source
+
 func get_absorb_hp() -> float:
 	return _absorb_hp
 

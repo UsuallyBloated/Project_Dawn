@@ -36,7 +36,10 @@ func _on_buffs_changed() -> void:
 	for h in BuffManager.get_hots():
 		_timer_labels["hot:%s" % h.spell_name] = _add_icon("hot", h.spell_name)
 	if BuffManager.get_absorb_hp() > 0.0:
-		_timer_labels["absorb"] = _add_icon("absorb", "Shield")
+		var absorb_label: String = BuffManager.get_absorb_source()
+		if absorb_label == "":
+			absorb_label = "Shield"
+		_timer_labels["absorb"] = _add_icon("absorb", absorb_label)
 	if BuffManager.get_evade_remaining() > 0.0:
 		_timer_labels["evade"] = _add_icon("evade", "Evade")
 	var food := BuffManager.get_food_buff()
