@@ -196,8 +196,18 @@ func _apply_spell(spell: SpellData) -> void:
 		WarderAI.heal_warder(spell.heal_amount + PlayerStats.wisdom * 0.3)
 
 	if spell.heal_amount > 0.0 and spell.target_type != SpellData.TargetType.PET_HEAL:
-		var heal := (spell.heal_amount + PlayerStats.wisdom * 0.3) * effectiveness
-		PlayerStats.set_hp(PlayerStats.hp + heal)
+		# ALLY spells targeting a remote player are applied by the server;
+		# skip local heal so we don't double-apply before HealthUpdate arrives.
+		var targeting_remote_peer := (
+			spell.target_type == SpellData.TargetType.ALLY
+			and Net.is_launcher_mode()
+			and Combat.current_target != null
+			and is_instance_valid(Combat.current_target)
+			and Combat.current_target is RemotePlayer
+		)
+		if not targeting_remote_peer:
+			var heal := (spell.heal_amount + PlayerStats.wisdom * 0.3) * effectiveness
+			PlayerStats.set_hp(PlayerStats.hp + heal)
 
 	if spell.hp_cost > 0.0:
 		PlayerStats.set_hp(PlayerStats.hp - spell.hp_cost)
@@ -212,7 +222,15 @@ func _apply_spell(spell: SpellData) -> void:
 				spell.dot_duration * dur_mult, spell.spell_name)
 
 	if spell.hot_hps > 0.0 and spell.hot_duration > 0.0:
-		BuffManager.add_hot(spell.hot_hps * effectiveness, spell.hot_duration * dur_mult, spell.spell_name)
+		var targeting_remote_peer_for_hot := (
+			spell.target_type == SpellData.TargetType.ALLY
+			and Net.is_launcher_mode()
+			and Combat.current_target != null
+			and is_instance_valid(Combat.current_target)
+			and Combat.current_target is RemotePlayer
+		)
+		if not targeting_remote_peer_for_hot:
+			BuffManager.add_hot(spell.hot_hps * effectiveness, spell.hot_duration * dur_mult, spell.spell_name)
 
 	if spell.absorb_amount > 0.0:
 		BuffManager.add_absorb(spell.absorb_amount * effectiveness * absorb_mult, spell.spell_name)
