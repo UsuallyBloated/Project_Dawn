@@ -82,6 +82,19 @@ signal world_enemy_spawn(
 	hp: float,
 	pos: Vector3,
 	yaw: float)
+# Track 11 — server-spawned player-owned pet landed in AOI. `id` is in
+# the pet-id partition (>= 3_000_000_000) so the client can distinguish
+# from enemy / bag / player ids alone. `owner` is the summoner's
+# char_id (always in the player range, < ENEMY_ID_BASE).
+signal world_pet_spawn(
+	id: int,
+	owner: int,
+	pet_name: String,
+	level: int,
+	max_hp: float,
+	hp: float,
+	pos: Vector3,
+	yaw: float)
 # Track 5 sub-task 2 — server-driven aggro replication. `target_id == 0`
 # encodes "no target" (drop / leash); non-zero is the targeted entity's id.
 signal world_entity_target(id: int, target_id: int)
@@ -155,6 +168,7 @@ func _ready() -> void:
 	entity_died.connect(_on_entity_died)
 	enemy_spawn.connect(_on_enemy_spawn)
 	entity_target.connect(_on_entity_target)
+	pet_spawn.connect(_on_pet_spawn)
 	loot_bag_spawn.connect(_on_loot_bag_spawn)
 	loot_granted.connect(_on_loot_granted)
 	xp_gained.connect(_on_xp_gained)
@@ -566,6 +580,17 @@ func _on_enemy_spawn(
 		pos: Vector3,
 		yaw: float) -> void:
 	world_enemy_spawn.emit(id, mob_name, level, max_hp, hp, pos, yaw)
+
+func _on_pet_spawn(
+		id: int,
+		owner: int,
+		pet_name: String,
+		level: int,
+		max_hp: float,
+		hp: float,
+		pos: Vector3,
+		yaw: float) -> void:
+	world_pet_spawn.emit(id, owner, pet_name, level, max_hp, hp, pos, yaw)
 
 func _on_entity_target(id: int, target_id: int) -> void:
 	world_entity_target.emit(id, target_id)

@@ -279,3 +279,10 @@ const SW_BROADCAST_MESSAGE := "BroadcastMessage"
 # the client render a "what is the mob targeting" indicator.
 const SW_ENEMY_SPAWN       := "EnemySpawn"
 const SW_ENTITY_TARGET     := "EntityTarget"
+
+# Track 11: server-authoritative pets. SW_PET_SPAWN carries owner +
+# template identity when a player-summoned pet enters the recipient's
+# AOI. Pet ids land in the PET_ID_BASE partition (3B+); ongoing
+# Position / HealthUpdate / EntityDied / EntityDespawn reuse the
+# generic variants, routed by id partition on the client.
+const SW_PET_SPAWN         := "PetSpawn"
