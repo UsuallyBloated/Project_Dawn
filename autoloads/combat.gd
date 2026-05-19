@@ -266,11 +266,12 @@ func deal_aoe_spell_damage(radius: float, amount: int, damage_type: SpellData.Da
 		effective = max(0, int(effective * (1.0 - resist)))
 		if effective > 0:
 			var fx_color := spell_color(damage_type)
-			# Track 6 sub-task 3b: AOE damage routes through CastSpell
-			# (server processes "AOE" target_type — currently logs
-			# unprocessed; sub-task 4+ will handle AOE server-side).
-			# Skip the Attack broadcast to avoid double-application
-			# once AOE is fully handled server-side.
+			# Track 9 — server's AOE arm now applies damage authoritatively
+			# from the single CastSpell broadcast spells.gd already sent.
+			# _apply_damage_to_node with via_spell=true is a no-op for
+			# RemoteEnemy targets; the flash / light / damage number
+			# below are local predictive UX, and the server's HealthUpdate
+			# fan-out updates the actual enemy HP bar shortly after.
 			_apply_damage_to_node(enemy, effective, _last_crit, net_dmg_type, false, true)
 			if is_instance_valid(enemy):
 				enemy.flash_spell_hit(fx_color)
