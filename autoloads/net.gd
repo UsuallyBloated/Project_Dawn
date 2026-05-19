@@ -397,6 +397,21 @@ func broadcast_drop_item(location: String, slot: int, count: int) -> void:
 		return
 	send_drop_item(location, slot, count)
 
+# Track 13.3 — equip the item at (src_location, src_slot) into the
+# given paperdoll slot. equip_slot indexes match
+# NetProtocol.EquipSlot (WEAPON=0, OFFHAND=1, HEAD=2, ...).
+func broadcast_equip_item(src_location: String, src_slot: int, equip_slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_equip_item(src_location, src_slot, equip_slot)
+
+# Track 13.3 — unequip paperdoll slot into (dst_location, dst_slot).
+# Server swaps on dst-occupied.
+func broadcast_unequip_item(equip_slot: int, dst_location: String, dst_slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_unequip_item(equip_slot, dst_location, dst_slot)
+
 # Track 6 sub-task 3 dev intents. Bypass the CastSpell pipeline so we
 # can verify server-driven HP/heal application before the spell port
 # lands.

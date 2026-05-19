@@ -12,6 +12,32 @@ func _ready() -> void:
 	for s in SLOTS:
 		equipped[s] = null
 
+# Track 13.3 — server-driven apply path. The InventoryDelta /
+# InventorySnapshot for `equip` location routes here so the local
+# paperdoll reflects authoritative state. Skips stat recompute
+# (the server-side item registry isn't online yet — Track 13.3+).
+func apply_remote_equip(equip_slot_idx: int, item: ItemData) -> void:
+	if equip_slot_idx < 0 or equip_slot_idx >= SLOTS.size():
+		return
+	var slot_name: String = SLOTS[equip_slot_idx]
+	equipped[slot_name] = item
+	equipment_changed.emit(slot_name, item)
+
+func apply_remote_unequip(equip_slot_idx: int) -> void:
+	if equip_slot_idx < 0 or equip_slot_idx >= SLOTS.size():
+		return
+	var slot_name: String = SLOTS[equip_slot_idx]
+	equipped[slot_name] = null
+	equipment_changed.emit(slot_name, null)
+
+# Track 13.3 — wipe all paperdoll slots before applying a fresh
+# server snapshot. Avoids stale items lingering across reconnects.
+func apply_remote_snapshot_clear() -> void:
+	for s in SLOTS:
+		if equipped[s] != null:
+			equipped[s] = null
+			equipment_changed.emit(s, null)
+
 func can_dual_wield() -> bool:
 	return WeaponSkills.get_current("dual_wield") > 0
 
