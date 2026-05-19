@@ -787,6 +787,14 @@ func _handle_chat_input(text: String) -> void:
 	if lower == "/pet dismiss":
 		PetManager.dismiss_pet()
 		return
+	# Track 12 Piece A — direct pet commands. /pet attack uses the
+	# current target; /pet back returns to follow.
+	if lower == "/pet attack":
+		PetManager.command_attack()
+		return
+	if lower == "/pet back":
+		PetManager.command_back()
+		return
 
 	for prefix in ["/say ", "/s "]:
 		if lower.begins_with(prefix):

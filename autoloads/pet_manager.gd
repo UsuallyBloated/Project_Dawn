@@ -115,11 +115,71 @@ func dismiss_pet() -> void:
 func command_follow() -> void:
 	if not has_pet() or _pet_is_charmed:
 		return
+	# Track 12 Piece A — launcher mode routes through the wire.
+	# Solo / Test Room keeps the legacy local Pet.set_mode call.
+	if Net.is_launcher_mode():
+		Net.broadcast_pet_command(NetProtocol.PetCommand.FOLLOW, 0)
+		pet_info.emit("Your pet follows you.")
+		return
 	active_pet.set_mode(Pet.Mode.FOLLOW)
 	pet_info.emit("Your pet follows you.")
 
+# Track 12 Piece A — explicit "attack this target" command. Locks the
+# pet onto `target` until the sticky window expires (server-side) or
+# the player issues another command.
+func command_attack(target = null) -> void:
+	if not has_pet() or _pet_is_charmed:
+		return
+	if target == null:
+		target = Combat.current_target
+	if target == null or not is_instance_valid(target):
+		pet_info.emit("No target selected.")
+		return
+	if Net.is_launcher_mode():
+		# Pet attacks must target a server-known entity. RemoteEnemy
+		# carries an enemy_id; RemotePlayer (PvP pets) carries char_id.
+		var target_id := 0
+		if target is RemoteEnemy:
+			target_id = (target as RemoteEnemy).enemy_id
+		elif target is RemotePlayer:
+			target_id = (target as RemotePlayer).char_id
+		if target_id <= 0:
+			pet_info.emit("That target can't be attacked by your pet.")
+			return
+		Net.broadcast_pet_command(NetProtocol.PetCommand.ATTACK, target_id)
+		var target_name: String = target.get("mob_name")
+		if target_name == null or target_name == "":
+			target_name = target.get("player_name")
+		if target_name == null or target_name == "":
+			target_name = "target"
+		pet_info.emit("Your pet attacks %s!" % target_name)
+		return
+	# Solo / Test Room: local Pet has an attack method if available;
+	# otherwise just set its target via Combat plumbing.
+	if active_pet.has_method("attack_target"):
+		active_pet.attack_target(target)
+		pet_info.emit("Your pet attacks!")
+
+func command_back() -> void:
+	if not has_pet() or _pet_is_charmed:
+		return
+	if Net.is_launcher_mode():
+		Net.broadcast_pet_command(NetProtocol.PetCommand.BACK, 0)
+		pet_info.emit("Your pet returns to your side.")
+		return
+	# Solo: switch local Pet to FOLLOW mode (legacy semantics).
+	if active_pet.has_method("set_mode"):
+		active_pet.set_mode(Pet.Mode.FOLLOW)
+		pet_info.emit("Your pet returns to your side.")
+
 func command_guard() -> void:
 	if not has_pet() or _pet_is_charmed:
+		return
+	# Track 12 Piece A — Guard isn't wired server-side yet (reserved
+	# in the wire format). In launcher mode this is a no-op; solo
+	# mode keeps the legacy local Pet.set_guard_target call.
+	if Net.is_launcher_mode():
+		pet_info.emit("Pet guard not yet implemented in multiplayer.")
 		return
 	var guard_target = Combat.current_target
 	if guard_target == null or not is_instance_valid(guard_target):
@@ -135,6 +195,12 @@ func command_guard() -> void:
 
 func command_passive() -> void:
 	if not has_pet() or _pet_is_charmed:
+		return
+	# Track 12 Piece A — Sit/Passive isn't wired server-side yet
+	# (reserved in the wire format). Launcher mode is a no-op; solo
+	# keeps the legacy local Pet.set_mode call.
+	if Net.is_launcher_mode():
+		pet_info.emit("Pet passive not yet implemented in multiplayer.")
 		return
 	active_pet.set_mode(Pet.Mode.PASSIVE)
 	pet_info.emit("Your pet holds its position.")

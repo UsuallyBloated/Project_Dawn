@@ -346,6 +346,15 @@ func broadcast_cast_spell(spell_name: String, target_id: int) -> void:
 		return
 	send_cast_spell(spell_name, target_id)
 
+# Track 12 Piece A — direct a server-owned pet. `command` is one of
+# the values in NetProtocol.PetCommand (ATTACK / BACK / etc.).
+# `target_id` is required for ATTACK (the enemy id); pass 0 for
+# commands that don't carry a target.
+func broadcast_pet_command(command: int, target_id: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_pet_command(command, target_id)
+
 # Track 6 sub-task 3 dev intents. Bypass the CastSpell pipeline so we
 # can verify server-driven HP/heal application before the spell port
 # lands.

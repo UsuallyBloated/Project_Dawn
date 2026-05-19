@@ -286,3 +286,14 @@ const SW_ENTITY_TARGET     := "EntityTarget"
 # Position / HealthUpdate / EntityDied / EntityDespawn reuse the
 # generic variants, routed by id partition on the client.
 const SW_PET_SPAWN         := "PetSpawn"
+
+# Track 12 Piece A — pet command codes mirroring
+# `protocol::world::pet_command`. Sent on `ClientWorldMsg::PetCommand`
+# via Net.broadcast_pet_command. Follow=0 today aliases to Back (the
+# pet returns to following the owner); Guard/Sit are reserved.
+class PetCommand:
+	const FOLLOW := 0
+	const GUARD  := 1
+	const ATTACK := 2
+	const BACK   := 3
+	const SIT    := 4
