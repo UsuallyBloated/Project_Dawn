@@ -37,11 +37,52 @@ func register_warder_pet(pet: Pet) -> void:
 	_register_pet(pet, false)
 
 func summon(pet_type: String) -> void:
+	# Track 11.5 — in launcher mode the server is authoritative for
+	# pets and RemotePetManager will register the spawned RemotePet
+	# via register_remote_pet() once PetSpawn arrives. Skip the local
+	# Pet instantiation so we don't end up with two visuals.
+	if Net.is_launcher_mode():
+		return
 	match pet_type:
 		"skeleton":
 			_summon_skeleton()
 		_:
 			push_error("PetManager: unknown pet_type '%s'" % pet_type)
+
+# Track 11.5 — RemotePetManager calls this when the local player's
+# server-spawned pet first arrives (PetSpawn with owner ==
+# Net.get_player_id()). Mirrors _register_pet's signal contract so
+# the HUD pet panel and any other PetManager.pet_summoned listener
+# works in launcher mode without changes.
+func register_remote_pet(remote_pet) -> void:
+	if remote_pet == null or not is_instance_valid(remote_pet):
+		return
+	active_pet = remote_pet
+	_pet_is_charmed = false
+	_is_warder = false
+	if not remote_pet.is_connected("hp_changed", pet_hp_changed.emit):
+		remote_pet.hp_changed.connect(pet_hp_changed.emit)
+	if not remote_pet.is_connected("died", _on_remote_pet_died):
+		remote_pet.died.connect(_on_remote_pet_died.bind(remote_pet))
+	pet_summoned.emit(remote_pet)
+
+# Track 11.5 — RemotePetManager calls this when the local player's
+# pet despawns server-side (owner disconnect / EntityDespawn after
+# the corpse linger window).
+func dismiss_remote_pet() -> void:
+	if active_pet == null:
+		return
+	var was_remote := active_pet is RemotePet
+	active_pet = null
+	_pet_is_charmed = false
+	_is_warder = false
+	if was_remote:
+		pet_dismissed.emit()
+
+func _on_remote_pet_died(remote_pet) -> void:
+	if active_pet != remote_pet:
+		return
+	pet_died.emit(remote_pet)
 
 func charm_current_target(duration: float) -> void:
 	if not Combat.has_valid_target():

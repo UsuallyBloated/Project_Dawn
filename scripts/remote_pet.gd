@@ -16,6 +16,7 @@ class_name RemotePet
 # manager by id partition.
 
 signal hp_changed(current: float, maximum: float)
+signal died
 
 # Network identity. Set by RemotePetManager *before* add_child fires
 # _ready, so _ready can read them.
@@ -52,6 +53,7 @@ func apply_death() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	died.emit()
 	var tw := create_tween()
 	tw.tween_property(self, "rotation:z", PI * 0.5, 0.5)
 	if _name_label:

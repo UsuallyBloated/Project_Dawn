@@ -81,10 +81,22 @@ func _on_pet_spawn(
 			old.queue_free()
 		_by_id.erase(id)
 	_instantiate_into(id, scene)
+	# Track 11.5 — local player's pet routes through PetManager so
+	# the HUD pet panel + any other PetManager.pet_summoned listener
+	# fires uniformly across solo and launcher modes.
+	if owner == Net.get_player_id():
+		var rp = _by_id.get(id)
+		if rp != null and is_instance_valid(rp):
+			PetManager.register_remote_pet(rp)
 
 func _on_entity_despawn(id: int) -> void:
 	if not _is_pet_id(id):
 		return
+	# Track 11.5 — notify PetManager when the local player's pet
+	# despawns so the HUD pet panel clears.
+	var data: Dictionary = _spawn_data.get(id, {})
+	if data.get("owner", 0) == Net.get_player_id():
+		PetManager.dismiss_remote_pet()
 	_spawn_data.erase(id)
 	var rp = _by_id.get(id)
 	if rp != null:
