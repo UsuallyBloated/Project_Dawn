@@ -381,6 +381,22 @@ func broadcast_move_item(src_location: String, src_slot: int, dst_location: Stri
 		return
 	send_move_item(src_location, src_slot, dst_location, dst_slot)
 
+# Track 13.2.b — split `count` items off the src stack into dst. Dst
+# must be empty or hold the same item_path; the server rejects
+# different-item dst (use broadcast_move_item for swaps).
+func broadcast_split_stack(src_location: String, src_slot: int, dst_location: String, dst_slot: int, count: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_split_stack(src_location, src_slot, dst_location, dst_slot, count)
+
+# Track 13.2.b — drop `count` of the entry at (location, slot) at the
+# player's feet as a server-owned LootBag. `count <= 0` drops the
+# whole stack.
+func broadcast_drop_item(location: String, slot: int, count: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_drop_item(location, slot, count)
+
 # Track 6 sub-task 3 dev intents. Bypass the CastSpell pipeline so we
 # can verify server-driven HP/heal application before the spell port
 # lands.
