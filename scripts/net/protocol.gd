@@ -297,3 +297,16 @@ class PetCommand:
 	const ATTACK := 2
 	const BACK   := 3
 	const SIT    := 4
+
+# Track 13.2 — inventory authority. SW_INVENTORY_SNAPSHOT is fanned
+# privately to the owning client on EnterWorld; SW_INVENTORY_DELTA on
+# every server-side mutation (loot grant, MoveItem, drop). The wire
+# uses string `location`s — INV_LOCATION_BASE today, with INV_LOC_BAG_*
+# and INV_LOCATION_EQUIP reserved for Track 13.2.b / 13.3.
+const SW_INVENTORY_SNAPSHOT := "InventorySnapshot"
+const SW_INVENTORY_DELTA    := "InventoryDelta"
+const INV_LOCATION_BASE     := "base"
+const INV_LOCATION_EQUIP    := "equip"
+
+static func inv_location_bag(base_idx: int) -> String:
+	return "bag_%d" % base_idx

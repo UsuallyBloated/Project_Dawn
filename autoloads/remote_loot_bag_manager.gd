@@ -85,6 +85,13 @@ func _on_loot_granted(item_path: String, count: int) -> void:
 	if item == null:
 		push_warning("RemoteLootBagManager: LootGranted with unknown path '%s'" % item_path)
 		return
+	# Track 13.2 — in launcher mode the server's InventoryDelta does
+	# the slot mutation; we just log the pickup line. Solo / Test
+	# Room mode (Inventory autoload not server-driven) keeps the
+	# legacy local add_item path.
+	if Net.is_launcher_mode():
+		CombatLog.add_line("You loot: %s." % item.item_name, CombatLog.MsgType.LOOT)
+		return
 	if Inventory.add_item(item, count):
 		CombatLog.add_line("You loot: %s." % item.item_name, CombatLog.MsgType.LOOT)
 	else:

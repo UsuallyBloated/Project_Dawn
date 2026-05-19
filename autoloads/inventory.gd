@@ -20,6 +20,62 @@ func _ready() -> void:
 	base_slots.fill(null)
 	bag_contents.resize(BASE_SLOT_COUNT)
 	bag_contents.fill(null)
+	# Track 13.2 — in launcher mode the server is authoritative. The
+	# InventorySnapshot fired privately on EnterWorld seeds us with
+	# whatever was persisted; subsequent server-side mutations
+	# (loot, MoveItem, drop) arrive as InventoryDelta.
+	Net.world_inventory_snapshot.connect(_on_inventory_snapshot)
+	Net.world_inventory_delta.connect(_on_inventory_delta)
+
+# Track 13.2 — apply a server-authoritative snapshot. Wipes the
+# current base_slots / bag_contents and rebuilds from the wire
+# tuples. Caller is the InventorySnapshot fan-out on EnterWorld.
+# In solo / Test Room mode Net never fires this signal so the
+# legacy local autoload state is preserved.
+func _on_inventory_snapshot(
+		locations: PackedStringArray,
+		slots: PackedInt32Array,
+		item_paths: PackedStringArray,
+		counts: PackedInt32Array) -> void:
+	base_slots.fill(null)
+	bag_contents.fill(null)
+	var n: int = mini(mini(locations.size(), slots.size()), mini(item_paths.size(), counts.size()))
+	for i in n:
+		var loc: String = locations[i]
+		if loc != NetProtocol.INV_LOCATION_BASE:
+			# 13.2.b / 13.3 will route 'bag_<i>' / 'equip' here.
+			continue
+		var slot_idx: int = slots[i]
+		if slot_idx < 0 or slot_idx >= BASE_SLOT_COUNT:
+			continue
+		var path: String = item_paths[i]
+		var count: int = counts[i]
+		if path == "" or count <= 0:
+			continue
+		var item := load(path) as ItemData
+		if item == null:
+			push_warning("Inventory snapshot: unknown ItemData path '%s'" % path)
+			continue
+		base_slots[slot_idx] = {"item": item, "count": count}
+	inventory_changed.emit()
+
+# Track 13.2 — apply a single-slot mutation. Empty `item_path`
+# clears the slot; non-empty sets it to (item_path, count).
+func _on_inventory_delta(location: String, slot: int, item_path: String, count: int) -> void:
+	if location != NetProtocol.INV_LOCATION_BASE:
+		# 13.2.b / 13.3 will route 'bag_<i>' / 'equip' here.
+		return
+	if slot < 0 or slot >= BASE_SLOT_COUNT:
+		return
+	if item_path == "" or count <= 0:
+		base_slots[slot] = null
+	else:
+		var item := load(item_path) as ItemData
+		if item == null:
+			push_warning("Inventory delta: unknown ItemData path '%s'" % item_path)
+			return
+		base_slots[slot] = {"item": item, "count": count}
+	inventory_changed.emit()
 
 # ── Base slot API (used by InventoryWindow) ───────────────────────────────────
 

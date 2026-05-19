@@ -95,6 +95,21 @@ signal world_pet_spawn(
 	hp: float,
 	pos: Vector3,
 	yaw: float)
+# Track 13.2 — full inventory snapshot privately seeded on EnterWorld.
+# Parallel arrays: locations[i] / slots[i] / item_paths[i] / counts[i]
+# all describe the same entry. Empty arrays = empty inventory.
+signal world_inventory_snapshot(
+	locations: PackedStringArray,
+	slots: PackedInt32Array,
+	item_paths: PackedStringArray,
+	counts: PackedInt32Array)
+# Track 13.2 — single-slot mutation. `item_path == ""` means the slot
+# is now empty; otherwise the slot now holds `(item_path, count)`.
+signal world_inventory_delta(
+	location: String,
+	slot: int,
+	item_path: String,
+	count: int)
 # Track 5 sub-task 2 — server-driven aggro replication. `target_id == 0`
 # encodes "no target" (drop / leash); non-zero is the targeted entity's id.
 signal world_entity_target(id: int, target_id: int)
@@ -169,6 +184,8 @@ func _ready() -> void:
 	enemy_spawn.connect(_on_enemy_spawn)
 	entity_target.connect(_on_entity_target)
 	pet_spawn.connect(_on_pet_spawn)
+	inventory_snapshot.connect(_on_inventory_snapshot)
+	inventory_delta.connect(_on_inventory_delta)
 	loot_bag_spawn.connect(_on_loot_bag_spawn)
 	loot_granted.connect(_on_loot_granted)
 	xp_gained.connect(_on_xp_gained)
@@ -354,6 +371,15 @@ func broadcast_pet_command(command: int, target_id: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_pet_command(command, target_id)
+
+# Track 13.2 — request a slot-to-slot inventory move. The wire
+# format uses string `location`s (one of "base", "bag_<i>", "equip")
+# to stay future-proof. Server validates and fans InventoryDelta per
+# affected slot.
+func broadcast_move_item(src_location: String, src_slot: int, dst_location: String, dst_slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_move_item(src_location, src_slot, dst_location, dst_slot)
 
 # Track 6 sub-task 3 dev intents. Bypass the CastSpell pipeline so we
 # can verify server-driven HP/heal application before the spell port
@@ -600,6 +626,20 @@ func _on_pet_spawn(
 		pos: Vector3,
 		yaw: float) -> void:
 	world_pet_spawn.emit(id, owner, pet_name, level, max_hp, hp, pos, yaw)
+
+func _on_inventory_snapshot(
+		locations: PackedStringArray,
+		slots: PackedInt32Array,
+		item_paths: PackedStringArray,
+		counts: PackedInt32Array) -> void:
+	world_inventory_snapshot.emit(locations, slots, item_paths, counts)
+
+func _on_inventory_delta(
+		location: String,
+		slot: int,
+		item_path: String,
+		count: int) -> void:
+	world_inventory_delta.emit(location, slot, item_path, count)
 
 func _on_entity_target(id: int, target_id: int) -> void:
 	world_entity_target.emit(id, target_id)
