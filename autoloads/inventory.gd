@@ -27,9 +27,13 @@ func _ready() -> void:
 	Net.world_inventory_snapshot.connect(_on_inventory_snapshot)
 	Net.world_inventory_delta.connect(_on_inventory_delta)
 
-# Track 13.2 — apply a server-authoritative snapshot. Wipes the
-# current base_slots / bag_contents and rebuilds from the wire
-# tuples. Track 13.3 routes 'equip' entries to Equipment.
+# Track 13.2 / 14.3 — apply a server-authoritative snapshot. Wipes
+# the current base_slots / bag_contents and rebuilds from the wire
+# tuples. Track 13.3 routes 'equip' entries to Equipment; Track
+# 14.3 routes 'bag_<i>' entries into bag_contents (via a two-pass
+# walk so the bag's parent base entry — which determines the
+# inner Vec's size from item.bag_num_slots — is in place before
+# its contents arrive).
 # In solo / Test Room mode Net never fires this signal so the
 # legacy local autoload state is preserved.
 func _on_inventory_snapshot(
@@ -44,6 +48,9 @@ func _on_inventory_snapshot(
 	# prior session is wiped.
 	Equipment.apply_remote_snapshot_clear()
 	var n: int = mini(mini(locations.size(), slots.size()), mini(item_paths.size(), counts.size()))
+	# Pass 1 — base + equip. Bag entries hit _init_bag_contents
+	# via set_base_slot's normal path so pass 2 has somewhere to
+	# write.
 	for i in n:
 		var loc: String = locations[i]
 		var slot_idx: int = slots[i]
@@ -59,26 +66,66 @@ func _on_inventory_snapshot(
 			if slot_idx < 0 or slot_idx >= BASE_SLOT_COUNT:
 				continue
 			base_slots[slot_idx] = {"item": item, "count": count}
+			if item.type == ItemData.Type.BAG and bag_contents[slot_idx] == null:
+				_init_bag_contents(slot_idx, item.bag_num_slots)
 		elif loc == NetProtocol.INV_LOCATION_EQUIP:
 			Equipment.apply_remote_equip(slot_idx, item)
-		# 'bag_<i>' deferred until the server-side item registry lands.
+	# Pass 2 — bag_<i> entries. Skip rows whose parent base slot
+	# turned out not to hold a bag.
+	for i in n:
+		var loc: String = locations[i]
+		if not loc.begins_with("bag_"):
+			continue
+		var base_idx: int = loc.trim_prefix("bag_").to_int()
+		if base_idx < 0 or base_idx >= BASE_SLOT_COUNT:
+			continue
+		if bag_contents[base_idx] == null:
+			continue  # parent base slot wasn't a bag this snapshot.
+		var arr: Array = bag_contents[base_idx]
+		var slot_idx: int = slots[i]
+		var path: String = item_paths[i]
+		var count: int = counts[i]
+		if path == "" or count <= 0:
+			continue
+		if slot_idx < 0 or slot_idx >= arr.size():
+			continue
+		var item := load(path) as ItemData
+		if item == null:
+			push_warning("Inventory snapshot: unknown bag-inner ItemData path '%s'" % path)
+			continue
+		arr[slot_idx] = {"item": item, "count": count}
 	inventory_changed.emit()
 
-# Track 13.2 — apply a single-slot mutation. Empty `item_path`
-# clears the slot; non-empty sets it to (item_path, count).
-# Track 13.3 routes 'equip' to Equipment.
+# Track 13.2 / 14.3 — apply a single-slot mutation. Empty
+# `item_path` clears the slot; non-empty sets it to (item_path,
+# count). Track 13.3 routes 'equip' to Equipment; Track 14.3
+# routes 'bag_<i>' into bag_contents[i].
 func _on_inventory_delta(location: String, slot: int, item_path: String, count: int) -> void:
 	if location == NetProtocol.INV_LOCATION_BASE:
 		if slot < 0 or slot >= BASE_SLOT_COUNT:
 			return
 		if item_path == "" or count <= 0:
+			# Track 14.3 — clearing a base slot also drops any bag
+			# contents Vec attached to it. The server side ensures a
+			# non-empty bag can't reach this delta (move/drop rules
+			# reject), so dropping the Vec here can't orphan items.
 			base_slots[slot] = null
+			bag_contents[slot] = null
 		else:
 			var item := load(item_path) as ItemData
 			if item == null:
 				push_warning("Inventory delta: unknown ItemData path '%s'" % item_path)
 				return
 			base_slots[slot] = {"item": item, "count": count}
+			# Track 14.3 — a bag landing in this slot needs its
+			# inner Vec allocated so subsequent bag_<i> deltas have
+			# somewhere to write. Non-bag items get their Vec
+			# cleared.
+			if item.type == ItemData.Type.BAG:
+				if bag_contents[slot] == null:
+					_init_bag_contents(slot, item.bag_num_slots)
+			else:
+				bag_contents[slot] = null
 		inventory_changed.emit()
 		return
 	if location == NetProtocol.INV_LOCATION_EQUIP:
@@ -90,6 +137,28 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 				push_warning("Inventory delta: unknown ItemData path '%s'" % item_path)
 				return
 			Equipment.apply_remote_equip(slot, item)
+		return
+	# Track 14.3 — bag_<i> delta.
+	if location.begins_with("bag_"):
+		var base_idx: int = location.trim_prefix("bag_").to_int()
+		if base_idx < 0 or base_idx >= BASE_SLOT_COUNT:
+			return
+		if bag_contents[base_idx] == null:
+			# Parent base slot isn't a bag (yet, or anymore). Drop
+			# silently — the next snapshot will resync if needed.
+			return
+		var arr: Array = bag_contents[base_idx]
+		if slot < 0 or slot >= arr.size():
+			return
+		if item_path == "" or count <= 0:
+			arr[slot] = null
+		else:
+			var item := load(item_path) as ItemData
+			if item == null:
+				push_warning("Inventory delta: unknown bag-inner ItemData path '%s'" % item_path)
+				return
+			arr[slot] = {"item": item, "count": count}
+		inventory_changed.emit()
 
 # ── Base slot API (used by InventoryWindow) ───────────────────────────────────
 
