@@ -221,6 +221,18 @@ func spend_coins(amount: int) -> bool:
 	coins_changed.emit(coins)
 	return true
 
+# Track 14 follow-up — server-authoritative coins overwrite. Called
+# from Net._on_coins_update when the server fans a CoinsUpdate
+# (vendor BuyItem / SellItem, and any future coin-mutating flow).
+# In launcher mode this is the only path that changes `coins` —
+# vendor_window.gd no longer touches spend_coins / add_coins
+# directly when Net.is_launcher_mode() is true.
+func apply_remote_coins(new_coins: int) -> void:
+	if coins == new_coins:
+		return
+	coins = new_coins
+	coins_changed.emit(coins)
+
 func lose_xp(amount: int) -> void:
 	xp = max(0, xp - amount)
 	xp_changed.emit(xp, xp_to_next)

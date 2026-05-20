@@ -281,13 +281,28 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		begin_drag(slot["item"], slot["count"], -1, index)
-		Inventory.clear_base_slot(index)
+		# Track 14 follow-up — in launcher mode the server is
+		# authoritative; the source slot stays filled visually until
+		# the MoveItem InventoryDelta confirms the swap. Solo / Test
+		# Room mode keeps the optimistic local-clear path.
+		if not Net.is_launcher_mode():
+			Inventory.clear_base_slot(index)
 		_tooltip.visible = false
 		get_viewport().set_input_as_handled()
 	else:
 		# Can't drop a bag on an occupied slot
 		var existing = Inventory.base_slots[index]
 		if drag_item.type == ItemData.Type.BAG and existing != null:
+			get_viewport().set_input_as_handled()
+			return
+		if Net.is_launcher_mode():
+			# Server-authoritative path. Send MoveItem; the server
+			# fans InventoryDelta(s) which Inventory autoload
+			# applies. End the drag locally without mutating state.
+			var src_loc: String = NetProtocol.INV_LOCATION_BASE if drag_source_bi == -1 \
+				else NetProtocol.inv_location_bag(drag_source_bi)
+			Net.broadcast_move_item(src_loc, drag_source_si, NetProtocol.INV_LOCATION_BASE, index)
+			end_drag()
 			get_viewport().set_input_as_handled()
 			return
 		if existing == null:
@@ -347,6 +362,12 @@ func cancel_drag() -> void:
 
 func _return_drag_to_source() -> void:
 	if drag_item == null:
+		return
+	# Track 14 follow-up — in launcher mode the source slot was
+	# never cleared (the lift skips the optimistic local mutation),
+	# so there's nothing to put back. Just drop the drag overlay.
+	if Net.is_launcher_mode():
+		_clear_drag()
 		return
 	if drag_source_bi == -1:
 		if Inventory.get_base_slot(drag_source_si) == null:

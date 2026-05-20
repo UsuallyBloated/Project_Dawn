@@ -180,11 +180,31 @@ func _populate_list() -> void:
 			_list_vbox.add_child(btn)
 			_list_btns.append(btn)
 	else:
+		# Track 14 follow-up — walk base + bag slots directly so each
+		# sell entry carries its (location, slot) for the server-side
+		# SellItem dispatch. Inventory.all_slots() drops that
+		# context.
 		_sell_items.clear()
-		for slot in Inventory.all_slots():
-			var item: ItemData = slot["item"]
-			if item.vendor_price > 0:
-				_sell_items.append(slot)
+		for i in Inventory.BASE_SLOT_COUNT:
+			var base_slot = Inventory.base_slots[i]
+			if base_slot != null and base_slot["item"].vendor_price > 0:
+				_sell_items.append({
+					"item": base_slot["item"],
+					"count": base_slot["count"],
+					"location": NetProtocol.INV_LOCATION_BASE,
+					"slot_idx": i,
+				})
+			if Inventory.bag_contents[i] == null:
+				continue
+			for j in Inventory.bag_contents[i].size():
+				var bag_slot = Inventory.bag_contents[i][j]
+				if bag_slot != null and bag_slot["item"].vendor_price > 0:
+					_sell_items.append({
+						"item": bag_slot["item"],
+						"count": bag_slot["count"],
+						"location": NetProtocol.inv_location_bag(i),
+						"slot_idx": j,
+					})
 		for i in _sell_items.size():
 			var slot = _sell_items[i]
 			var item: ItemData = slot["item"]
@@ -332,6 +352,24 @@ func _do_buy() -> void:
 	if item == null:
 		return
 	var total := item.vendor_price * _qty
+	if Net.is_launcher_mode():
+		# Track 14 follow-up — server-authoritative buy. The server
+		# validates coins + inventory cap + item exists, then fans
+		# CoinsUpdate + InventoryDelta. Local state (PlayerStats.coins
+		# / Inventory) is overwritten by the server's reply, not
+		# the local optimistic write. vendor_id is informational
+		# for now (no server NPCs); 0 is fine.
+		if PlayerStats.coins < total:
+			_set_result("You don't have enough coins.", false)
+			return
+		Net.broadcast_buy_item(0, item.item_name, _qty)
+		_set_result("Ordered %s%s for %dg." % [
+			item.item_name,
+			" x%d" % _qty if _qty > 1 else "",
+			total], true)
+		_qty = 1
+		_refresh_detail()
+		return
 	if not PlayerStats.spend_coins(total):
 		_set_result("You don't have enough coins.", false)
 		return
@@ -355,6 +393,21 @@ func _do_sell() -> void:
 	var sell_price := item.vendor_price / 2
 	var actual_qty := mini(_qty, slot["count"])
 	var total := sell_price * actual_qty
+	if Net.is_launcher_mode():
+		# Track 14 follow-up — server-authoritative sell. Server
+		# computes sell_price = vendor_price / 2 itself and fans
+		# CoinsUpdate + InventoryDelta. _sell_items carries the
+		# (location, slot_idx) tuple captured in _populate_list.
+		var location: String = slot.get("location", NetProtocol.INV_LOCATION_BASE)
+		var slot_idx: int = slot.get("slot_idx", 0)
+		Net.broadcast_sell_item(location, slot_idx, actual_qty)
+		_set_result("Sold %s%s for %dg." % [
+			item.item_name,
+			" x%d" % actual_qty if actual_qty > 1 else "",
+			total], true)
+		_selected_index = -1
+		_qty = 1
+		return
 	_selected_index = -1
 	_qty = 1
 	Inventory.remove_item(item, actual_qty)  # fires inventory_changed -> _populate_list

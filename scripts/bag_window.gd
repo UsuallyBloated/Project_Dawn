@@ -263,10 +263,29 @@ func _on_slot_input(event: InputEvent, index: int) -> void:
 		if slot == null:
 			return
 		inv_win.begin_drag(slot["item"], slot["count"], bag_index, index)
-		Inventory.clear_slot(bag_index, index)
+		# Track 14 follow-up — in launcher mode keep the source
+		# slot visually populated until the server confirms the
+		# move.
+		if not Net.is_launcher_mode():
+			Inventory.clear_slot(bag_index, index)
 		_tooltip.visible = false
 		get_viewport().set_input_as_handled()
 	else:
+		if Net.is_launcher_mode():
+			# Server-authoritative MoveItem. Source is whatever the
+			# inventory_window's begin_drag captured (base or another
+			# bag); dst is this bag's inner slot.
+			var src_loc: String = NetProtocol.INV_LOCATION_BASE if inv_win.drag_source_bi == -1 \
+				else NetProtocol.inv_location_bag(inv_win.drag_source_bi)
+			Net.broadcast_move_item(
+				src_loc,
+				inv_win.drag_source_si,
+				NetProtocol.inv_location_bag(bag_index),
+				index,
+			)
+			inv_win.end_drag()
+			get_viewport().set_input_as_handled()
+			return
 		var existing = Inventory.get_slot(bag_index, index)
 		if existing == null:
 			Inventory.set_slot(bag_index, index, {"item": inv_win.drag_item, "count": inv_win.drag_count})

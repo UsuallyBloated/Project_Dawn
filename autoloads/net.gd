@@ -134,6 +134,12 @@ signal world_loot_granted(item_path: String, count: int)
 # `current` / `to_next` are placeholder zeros from the server in
 # Track 5; PlayerStats.gain_xp computes them internally.
 signal world_xp_gained(amount: int, current: int, to_next: int)
+
+# Track 14 follow-up — server-authoritative coin balance update.
+# Vendor BuyItem / SellItem (and any future coin-mutating flow)
+# fans this. PlayerStats overwrites `coins` and emits its own
+# `coins_changed` signal so existing UI subscribers stay wired.
+signal world_coins_update(coins: int)
 # Track 6 sub-task 5 — group state from the server.
 # group_invited: someone is asking us to join their group.
 # group_roster: the group we belong to has a new membership snapshot
@@ -189,6 +195,7 @@ func _ready() -> void:
 	loot_bag_spawn.connect(_on_loot_bag_spawn)
 	loot_granted.connect(_on_loot_granted)
 	xp_gained.connect(_on_xp_gained)
+	coins_update.connect(_on_coins_update)
 	group_invited.connect(_on_group_invited)
 	group_roster.connect(_on_group_roster)
 	damage_shield_trigger.connect(_on_damage_shield_trigger)
@@ -411,6 +418,23 @@ func broadcast_unequip_item(equip_slot: int, dst_location: String, dst_slot: int
 	if _state != State.CONNECTED_APP:
 		return
 	send_unequip_item(equip_slot, dst_location, dst_slot)
+
+# Track 14 follow-up — vendor purchase. Server validates item exists,
+# charges vendor_price * qty from conn.coins, grants via
+# add_item_locating, and fans CoinsUpdate + InventoryDelta. vendor_id
+# is informational today (no server NPCs yet).
+func broadcast_buy_item(vendor_id: int, item_name: String, qty: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_buy_item(vendor_id, item_name, qty)
+
+# Track 14 follow-up — vendor sell. `location` is "base" or "bag_<i>"
+# (equip slots reject server-side). Server credits coins = (vendor_price
+# / 2) * qty and fans CoinsUpdate + InventoryDelta.
+func broadcast_sell_item(location: String, slot: int, qty: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_sell_item(location, slot, qty)
 
 # Track 6 sub-task 3 dev intents. Bypass the CastSpell pipeline so we
 # can verify server-driven HP/heal application before the spell port
@@ -688,6 +712,14 @@ func _on_loot_granted(item_path: String, count: int) -> void:
 func _on_xp_gained(amount: int, current: int, to_next: int) -> void:
 	world_xp_gained.emit(amount, current, to_next)
 	PlayerStats.gain_xp(amount)
+
+func _on_coins_update(coins: int) -> void:
+	# Track 14 follow-up — server is authoritative. Push the value
+	# through PlayerStats.apply_remote_coins so existing UI
+	# subscribers (HUD coin label, vendor window footer) re-render
+	# via the existing coins_changed signal.
+	world_coins_update.emit(coins)
+	PlayerStats.apply_remote_coins(coins)
 
 func _on_group_invited(from_id: int, from_name: String) -> void:
 	world_group_invited.emit(from_id, from_name)
