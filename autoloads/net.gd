@@ -150,6 +150,17 @@ signal world_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64
 # damage back at an attacker. defender = the player whose shield fired.
 signal world_damage_shield_trigger(defender: int, attacker: int, amount: int, shield_name: String)
 
+# Track 18.1 — passive skill leveling moved to the server. Skill
+# tracker autoloads (WeaponSkills, ArmorSkills, CastingSkills) listen
+# for these signals to refresh their `_skills` caches and emit
+# `skill_advanced` so the character window repaints. `kind` is 0
+# (weapon), 1 (armor), or 2 (casting), matching protocol::world::SkillKind.
+signal world_skill_progress_update(kind: int, key: String, new_score: int)
+signal world_skill_progress_snapshot(
+	weapon_keys: PackedStringArray, weapon_scores: PackedInt32Array,
+	armor_keys: PackedStringArray, armor_scores: PackedInt32Array,
+	casting_keys: PackedStringArray, casting_scores: PackedInt32Array)
+
 var _state: State = State.DISCONNECTED
 var _session_token_bytes := PackedByteArray()
 var _char_id: int = -1
@@ -199,6 +210,8 @@ func _ready() -> void:
 	group_invited.connect(_on_group_invited)
 	group_roster.connect(_on_group_roster)
 	damage_shield_trigger.connect(_on_damage_shield_trigger)
+	skill_progress_update.connect(_on_skill_progress_update)
+	skill_progress_snapshot.connect(_on_skill_progress_snapshot)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -754,6 +767,18 @@ func _on_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Arra
 
 func _on_damage_shield_trigger(defender: int, attacker: int, amount: int, shield_name: String) -> void:
 	world_damage_shield_trigger.emit(defender, attacker, amount, shield_name)
+
+func _on_skill_progress_update(kind: int, key: String, new_score: int) -> void:
+	world_skill_progress_update.emit(kind, key, new_score)
+
+func _on_skill_progress_snapshot(
+		weapon_keys: PackedStringArray, weapon_scores: PackedInt32Array,
+		armor_keys: PackedStringArray, armor_scores: PackedInt32Array,
+		casting_keys: PackedStringArray, casting_scores: PackedInt32Array) -> void:
+	world_skill_progress_snapshot.emit(
+		weapon_keys, weapon_scores,
+		armor_keys, armor_scores,
+		casting_keys, casting_scores)
 
 func _on_heartbeat_tick() -> void:
 	if _state == State.CONNECTED_APP:

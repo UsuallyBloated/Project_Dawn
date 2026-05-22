@@ -227,7 +227,9 @@ func _refresh_cell(index: int) -> void:
 			Color(0.8, 0.7, 0.3) if is_open else UITheme.C_BORDER,
 			2 if is_open else 1)
 	else:
-		count_label.text = str(slot["count"]) if slot["count"] > 1 else ""
+		# Hide the count label during a drag too — the drag overlay is the
+		# one-and-only on-screen copy of the stack (matches bag_window).
+		count_label.text = "" if is_drag_source else (str(slot["count"]) if slot["count"] > 1 else "")
 		if badge: badge.text = ""
 		_apply_slot_style(cell, _rarity_color(item.rarity), UITheme.C_BORDER, 1)
 
@@ -387,9 +389,17 @@ func _return_drag_to_source() -> void:
 		return
 	# Track 14 follow-up — in launcher mode the source slot was
 	# never cleared (the lift skips the optimistic local mutation),
-	# so there's nothing to put back. Just drop the drag overlay.
+	# so there's nothing to put back. Just drop the drag overlay
+	# and repaint the source cell so the icon comes back (the cell
+	# was painted empty by _refresh_cell while drag_item was set).
 	if Net.is_launcher_mode():
+		var prev_bi := drag_source_bi
+		var prev_si := drag_source_si
 		_clear_drag()
+		if prev_bi == -1 and prev_si >= 0 and prev_si < _base_cells.size():
+			_refresh_cell(prev_si)
+		else:
+			Inventory.inventory_changed.emit()
 		return
 	if drag_source_bi == -1:
 		if Inventory.get_base_slot(drag_source_si) == null:
@@ -431,12 +441,35 @@ func _input(event: InputEvent) -> void:
 	for cell in _base_cells:
 		if cell.get_global_rect().has_point(mp):
 			return
+	# Track 16.0 bug 3 — Node-level _input fires before paperdoll's
+	# Control-level _gui_input. Without this check we'd cancel the drag
+	# before paperdoll can route it through Equipment.request_equip_from,
+	# so left-click + paperdoll-slot equip never lands.
+	var paperdoll := _find_paperdoll_window()
+	if paperdoll != null and paperdoll.visible and paperdoll.get_global_rect().has_point(mp):
+		return
 	if _trash_cell != null and _trash_cell.get_global_rect().has_point(mp):
 		_show_delete_confirm()
 		get_viewport().set_input_as_handled()
 		return
 	_return_drag_to_source()
 	get_viewport().set_input_as_handled()
+
+func _find_paperdoll_window() -> Control:
+	var root := get_tree().current_scene
+	if root == null:
+		return null
+	return _scan_for_paperdoll(root)
+
+func _scan_for_paperdoll(node: Node) -> Control:
+	var s := node.get_script()
+	if s != null and s.resource_path.ends_with("paperdoll_window.gd"):
+		return node as Control
+	for c in node.get_children():
+		var found := _scan_for_paperdoll(c)
+		if found != null:
+			return found
+	return null
 
 func _show_delete_confirm() -> void:
 	if _drag_icon != null:

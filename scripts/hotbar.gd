@@ -8,6 +8,11 @@ const C_BG     := Color(0.06, 0.05, 0.03, 0.90)
 const C_COOL   := Color(0.0, 0.0, 0.0, 0.65)
 const C_READY  := Color(0.30, 0.22, 0.08)
 const C_ACTIVE := Color(0.55, 0.40, 0.10)
+# Track 17.1 — lavender memorize-progress fill (rises from the bottom
+# of the slot during a 2 s commit). Differs from the cooldown overlay
+# colour so the player can tell "writing the spell in" from "the
+# spell just fired and is recharging".
+const C_MEMORIZE_FILL := Color(0.45, 0.30, 0.75, 0.55)
 
 const KEY_LABELS       := ["1","2","3","4","5","6","7","8","9","0"]
 const KEY_LABELS_SPELL := ["A+1","A+2","A+3","A+4","A+5","A+6","A+7","A+8","A+9","A+0"]
@@ -30,7 +35,12 @@ var _ctx_slot: int                = -1
 var _social_win: Window           = null
 var _social_label_edit: LineEdit  = null
 var _social_line_edits: Array[LineEdit] = []
-var _social_editing_slot: int     = -1
+var _social_list: ItemList        = null
+var _social_editing_id: String    = ""
+var _social_pick_mode: bool       = false
+var _social_status: Label         = null
+var _social_save_btn: Button      = null
+var _social_delete_btn: Button    = null
 
 var _hotkey_by_skill: Dictionary  = {}
 var _hotkey_by_spell: Dictionary  = {}
@@ -55,6 +65,17 @@ func _ready() -> void:
 	Spells.spells_changed.connect(_refresh_spell_slots)
 	SocialHotkeys.bank_changed.connect(_on_bank_changed)
 	SocialHotkeys.slot_changed.connect(_on_slot_changed)
+	# Track 16.1 — spell bar is now a memorize bar driven by SpellBar.
+	SpellBar.slot_changed.connect(func(_s): _refresh_spell_slots())
+	# Track 17.1 — re-render on level-up to drop newly unlocked
+	# slots' lock badges, and on memorize lifecycle to drive the
+	# in-slot progress overlay.
+	SpellBar.cap_changed.connect(func(_c): _refresh_spell_slots())
+	Memorize.candidate_changed.connect(_on_memorize_candidate_changed)
+	Memorize.memorize_started.connect(_on_memorize_started)
+	Memorize.memorize_progress.connect(_on_memorize_progress)
+	Memorize.memorize_cancelled.connect(_on_memorize_cancelled)
+	Memorize.memorize_completed.connect(_on_memorize_completed)
 	PlayerStats.level_changed.connect(func(_l): _refresh_spell_slots())
 
 	await get_tree().process_frame
@@ -234,6 +255,8 @@ func _build_spell_bar(bar_h: float) -> DraggablePanel:
 			"name_label":       null,
 			"cooldown_overlay": null,
 			"cooldown_label":   null,
+			"lock_label":       null,
+			"memorize_overlay": null,
 		}
 		var frame := Panel.new()
 		frame.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
@@ -254,6 +277,18 @@ func _build_spell_bar(bar_h: float) -> DraggablePanel:
 		cool_overlay.visible = false
 		frame.add_child(cool_overlay)
 		sd["cooldown_overlay"] = cool_overlay
+
+		# Track 17.1 — memorize progress overlay; lavender fill anchored
+		# bottom-up, sized to match the 2 s cast time.
+		var mem_overlay := ColorRect.new()
+		mem_overlay.color = C_MEMORIZE_FILL
+		mem_overlay.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+		mem_overlay.anchor_top = 1.0
+		mem_overlay.anchor_bottom = 1.0
+		mem_overlay.visible = false
+		mem_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		frame.add_child(mem_overlay)
+		sd["memorize_overlay"] = mem_overlay
 
 		var cool_lbl := Label.new()
 		cool_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -287,6 +322,20 @@ func _build_spell_bar(bar_h: float) -> DraggablePanel:
 		frame.add_child(name_lbl)
 		sd["name_label"] = name_lbl
 
+		# Track 17.1 — lock badge on slots above the level cap.
+		var lock_lbl := Label.new()
+		lock_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		lock_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lock_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lock_lbl.add_theme_font_size_override("font_size", 10)
+		lock_lbl.add_theme_color_override("font_color", Color(0.65, 0.60, 0.55))
+		lock_lbl.add_theme_color_override("font_outline_color", Color.BLACK)
+		lock_lbl.add_theme_constant_override("outline_size", 2)
+		lock_lbl.visible = false
+		lock_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		frame.add_child(lock_lbl)
+		sd["lock_label"] = lock_lbl
+
 		frame.mouse_entered.connect(_on_spell_hover.bind(i))
 		frame.mouse_exited.connect(func(): if _tooltip_panel: _tooltip_panel.visible = false)
 		frame.gui_input.connect(_on_spell_clicked.bind(i))
@@ -299,7 +348,11 @@ func _build_context_menu() -> void:
 	_ctx_menu = PopupMenu.new()
 	_ctx_menu.add_item("Assign Spell...",  0)
 	_ctx_menu.add_item("Assign Skill...",  1)
-	_ctx_menu.add_item("Create Social...", 2)
+	# Track 16.2 — Assign Social opens the library in pick mode (the
+	# clicked slot becomes the target). Manage Socials opens the same
+	# library in edit mode for create / edit / delete.
+	_ctx_menu.add_item("Assign Social...", 2)
+	_ctx_menu.add_item("Manage Socials...", 4)
 	_ctx_menu.add_separator()
 	_ctx_menu.add_item("Clear",            3)
 	_ctx_menu.id_pressed.connect(_on_ctx_menu_id)
@@ -318,6 +371,12 @@ func _on_hotkey_input(event: InputEvent, slot: int) -> void:
 		return
 	var mb := event as InputEventMouseButton
 	if mb.button_index == MOUSE_BUTTON_LEFT:
+		# Track 17.1 — memorize gestures only resolve through the spell
+		# bar (where the cost + cast bar are enforced). Clicking the
+		# hotkey bar with a candidate held just executes the slot — the
+		# candidate stays staged so the player can still complete the
+		# memorize on the spell bar. Assign-spell-to-hotkey is the
+		# context-menu route ("Assign Spell..."), unchanged.
 		SocialHotkeys.execute_slot(slot)
 	elif mb.button_index == MOUSE_BUTTON_RIGHT:
 		# Spell/skill slots clear on right-click directly — matches
@@ -335,8 +394,9 @@ func _on_ctx_menu_id(id: int) -> void:
 	match id:
 		0: _open_spell_assign_menu()
 		1: _open_skill_assign_menu()
-		2: _open_social_editor(_ctx_slot)
+		2: _open_social_library(true)
 		3: SocialHotkeys.clear_slot(_ctx_slot)
+		4: _open_social_library(false)
 
 func _open_spell_assign_menu() -> void:
 	var names: Array = []
@@ -367,25 +427,77 @@ func _on_skill_assign(id: int) -> void:
 		return
 	SocialHotkeys.set_slot_skill(_ctx_slot, Skills.available[id])
 
+# Track 16.2 — Social/Macro library browser. One window, two panes:
+#   left  — list of library entries + "New" / "Delete" + status text
+#   right — label + 5 command lines + "Save"
+# Two modes:
+#   browse — manage entries (default; "Save" updates the entry,
+#            "Delete" removes it, "New" creates a fresh draft)
+#   pick   — clicking an entry assigns it to _ctx_slot and closes
+#            (used by the "Assign Social..." context menu item)
 func _build_social_editor() -> void:
 	_social_win = Window.new()
 	_social_win.title = "Social / Macro"
-	_social_win.size = Vector2i(340, 280)
+	_social_win.size = Vector2i(560, 340)
 	_social_win.unresizable = true
 	_social_win.visible = false
 	_social_win.close_requested.connect(func(): _social_win.hide())
 	add_child(_social_win)
 
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 12; vbox.offset_top = 12
-	vbox.offset_right = -12; vbox.offset_bottom = -12
-	vbox.add_theme_constant_override("separation", 6)
-	_social_win.add_child(vbox)
+	var root := HBoxContainer.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.offset_left = 12; root.offset_top = 12
+	root.offset_right = -12; root.offset_bottom = -12
+	root.add_theme_constant_override("separation", 10)
+	_social_win.add_child(root)
 
-	# Label row
+	# ── Left rail: library list + actions ────────────────────────
+	var left := VBoxContainer.new()
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.add_theme_constant_override("separation", 6)
+	root.add_child(left)
+
+	var left_hdr := Label.new()
+	left_hdr.text = "Library"
+	left_hdr.add_theme_font_size_override("font_size", 12)
+	left_hdr.add_theme_color_override("font_color", UITheme.C_TITLE)
+	left.add_child(left_hdr)
+
+	_social_list = ItemList.new()
+	_social_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_social_list.item_selected.connect(_on_social_list_selected)
+	_social_list.item_activated.connect(_on_social_list_activated)
+	left.add_child(_social_list)
+
+	var left_btns := HBoxContainer.new()
+	left_btns.add_theme_constant_override("separation", 6)
+	left.add_child(left_btns)
+
+	var new_btn := Button.new()
+	new_btn.text = "New social"
+	new_btn.pressed.connect(_on_social_new)
+	left_btns.add_child(new_btn)
+
+	_social_delete_btn = Button.new()
+	_social_delete_btn.text = "Delete"
+	_social_delete_btn.add_theme_color_override("font_color", Color(0.9, 0.3, 0.3))
+	_social_delete_btn.disabled = true
+	_social_delete_btn.pressed.connect(_on_social_delete)
+	left_btns.add_child(_social_delete_btn)
+
+	# ── Right pane: editor ───────────────────────────────────────
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.add_theme_constant_override("separation", 6)
+	root.add_child(right)
+
+	_social_status = Label.new()
+	_social_status.add_theme_font_size_override("font_size", 11)
+	_social_status.add_theme_color_override("font_color", UITheme.C_TITLE)
+	right.add_child(_social_status)
+
 	var lbl_row := HBoxContainer.new()
-	vbox.add_child(lbl_row)
+	right.add_child(lbl_row)
 	var lbl_hdr := Label.new()
 	lbl_hdr.text = "Button Label (6 chars):"
 	lbl_hdr.add_theme_font_size_override("font_size", 11)
@@ -396,19 +508,17 @@ func _build_social_editor() -> void:
 	_social_label_edit.custom_minimum_size.x = 80
 	lbl_row.add_child(_social_label_edit)
 
-	# Help text
 	var help := Label.new()
 	help.text = "Commands: /say /yell /shout /group /tell name msg\n/sit  /stand  /attack\nVars: %t = target name,  %n = your name"
 	help.add_theme_font_size_override("font_size", 10)
 	help.add_theme_color_override("font_color", UITheme.C_TEXT)
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD
-	vbox.add_child(help)
+	right.add_child(help)
 
-	# Five command lines
 	_social_line_edits.clear()
 	for i in 5:
 		var row := HBoxContainer.new()
-		vbox.add_child(row)
+		right.add_child(row)
 
 		var lnum := Label.new()
 		lnum.text = "Line %d:" % (i + 1)
@@ -422,45 +532,122 @@ func _build_social_editor() -> void:
 		row.add_child(le)
 		_social_line_edits.append(le)
 
-	# Buttons
 	var btn_row := HBoxContainer.new()
 	btn_row.alignment = BoxContainer.ALIGNMENT_END
 	btn_row.add_theme_constant_override("separation", 8)
-	vbox.add_child(btn_row)
+	right.add_child(btn_row)
 
-	var btn_cancel := Button.new()
-	btn_cancel.text = "Cancel"
-	btn_cancel.pressed.connect(func(): _social_win.hide())
-	btn_row.add_child(btn_cancel)
+	var btn_close := Button.new()
+	btn_close.text = "Close"
+	btn_close.pressed.connect(func(): _social_win.hide())
+	btn_row.add_child(btn_close)
 
-	var btn_ok := Button.new()
-	btn_ok.text = "OK"
-	btn_ok.pressed.connect(_on_social_ok)
-	btn_row.add_child(btn_ok)
+	_social_save_btn = Button.new()
+	_social_save_btn.text = "Save"
+	_social_save_btn.pressed.connect(_on_social_save)
+	btn_row.add_child(_social_save_btn)
 
-func _open_social_editor(slot: int) -> void:
-	_social_editing_slot = slot
-	var sd: Dictionary = SocialHotkeys.get_slot(slot)
-	if sd["type"] == SocialHotkeys.TYPE_SOCIAL:
-		_social_label_edit.text = sd["label"]
-		var lines: Array = sd["lines"]
-		for i in 5:
-			_social_line_edits[i].text = lines[i] if i < lines.size() else ""
-	else:
-		_social_label_edit.text = ""
-		for le in _social_line_edits:
-			le.text = ""
+	SocialHotkeys.library_changed.connect(_refresh_social_list)
+
+func _open_social_library(pick_mode: bool) -> void:
+	_social_pick_mode = pick_mode
+	_social_editing_id = ""
+	_refresh_social_list()
+	_clear_social_editor()
+	_update_social_status()
 	_social_win.popup_centered()
 
-func _on_social_ok() -> void:
+func _refresh_social_list() -> void:
+	if _social_list == null:
+		return
+	_social_list.clear()
+	for entry: Dictionary in SocialHotkeys.library_list():
+		_social_list.add_item(entry["label"] if entry["label"] != "" else "(unnamed)")
+	if _social_list.item_count == 0:
+		_social_list.add_item("(no socials yet — click 'New social')")
+		_social_list.set_item_disabled(0, true)
+	# Reselect the entry we were editing, if it survived a rebuild.
+	if _social_editing_id != "":
+		var entries: Array = SocialHotkeys.library_list()
+		for i in entries.size():
+			if (entries[i] as Dictionary).get("id") == _social_editing_id:
+				_social_list.select(i)
+				break
+
+func _on_social_list_selected(idx: int) -> void:
+	var entries: Array = SocialHotkeys.library_list()
+	if idx < 0 or idx >= entries.size():
+		return
+	var entry: Dictionary = entries[idx]
+	_social_editing_id = entry["id"]
+	_social_label_edit.text = entry["label"]
+	var lines: Array = entry["lines"]
+	for i in 5:
+		_social_line_edits[i].text = lines[i] if i < lines.size() else ""
+	_social_delete_btn.disabled = false
+	_update_social_status()
+
+func _on_social_list_activated(idx: int) -> void:
+	# Double-click. In pick mode, this assigns and closes. In browse
+	# mode it just keeps the selection.
+	if not _social_pick_mode:
+		return
+	var entries: Array = SocialHotkeys.library_list()
+	if idx < 0 or idx >= entries.size():
+		return
+	var entry: Dictionary = entries[idx]
+	SocialHotkeys.set_slot_social_ref(_ctx_slot, entry["id"])
+	_social_win.hide()
+
+func _on_social_new() -> void:
+	_social_editing_id = ""
+	_clear_social_editor()
+	_social_delete_btn.disabled = true
+	_social_list.deselect_all()
+	_social_label_edit.grab_focus()
+	_update_social_status()
+
+func _on_social_save() -> void:
 	var lbl: String = _social_label_edit.text.strip_edges()
 	if lbl == "":
 		lbl = "Macro"
 	var lines: Array = []
 	for le: LineEdit in _social_line_edits:
 		lines.append(le.text)
-	SocialHotkeys.set_slot_social(_social_editing_slot, lbl, lines)
-	_social_win.hide()
+	if _social_editing_id == "":
+		# New entry. In pick mode, also assign it to the ctx slot
+		# (matches the muscle memory of the old single-shot editor:
+		# "create + use it now").
+		_social_editing_id = SocialHotkeys.library_add(lbl, lines)
+		if _social_pick_mode:
+			SocialHotkeys.set_slot_social_ref(_ctx_slot, _social_editing_id)
+			_social_win.hide()
+			return
+	else:
+		SocialHotkeys.library_edit(_social_editing_id, lbl, lines)
+	_update_social_status()
+
+func _on_social_delete() -> void:
+	if _social_editing_id == "":
+		return
+	SocialHotkeys.library_delete(_social_editing_id)
+	_social_editing_id = ""
+	_clear_social_editor()
+	_social_delete_btn.disabled = true
+	_update_social_status()
+
+func _clear_social_editor() -> void:
+	_social_label_edit.text = ""
+	for le in _social_line_edits:
+		le.text = ""
+
+func _update_social_status() -> void:
+	if _social_pick_mode:
+		_social_status.text = "Pick a social to assign to slot %d (or create a new one)." % (_ctx_slot + 1)
+	elif _social_editing_id == "":
+		_social_status.text = "New social — fill in the label and lines, then Save."
+	else:
+		_social_status.text = "Editing — changes Save to every slot using this social."
 
 func _refresh_hotkey_slots() -> void:
 	_bank_label.text = "Bank %d" % (SocialHotkeys.current_bank + 1)
@@ -492,17 +679,39 @@ func _update_hotkey_slot(i: int) -> void:
 			name_lbl.text = ""
 
 func _refresh_spell_slots() -> void:
+	# Track 16.1 — spell bar is now a player-configurable memorize bar.
+	# Each slot reads its memorized spell name from SpellBar; the auto-
+	# population from Spells.available is gone (clicking a spell in the
+	# book is what populates these slots now).
 	_spell_bar_idx.clear()
-	var spell_list: Array[SpellData] = Spells.available
 	for i in SLOT_COUNT:
 		var vis: Dictionary = _spell_slots[i]
-		if i < spell_list.size():
-			(vis["icon"] as TextureRect).texture = spell_list[i].icon
-			(vis["name_label"] as Label).text    = spell_list[i].spell_name
-			_spell_bar_idx[spell_list[i].spell_name] = i
+		var unlocked: bool = SpellBar.is_slot_unlocked(i)
+		var sp := SpellBar.get_spell(i)
+		var icon: TextureRect = vis["icon"]
+		var name_lbl: Label   = vis["name_label"]
+		var lock_lbl: Label   = vis["lock_label"]
+		if sp != null:
+			icon.texture     = sp.icon
+			icon.modulate    = Color.WHITE
+			name_lbl.text    = sp.spell_name
+			lock_lbl.visible = false
+			_spell_bar_idx[sp.spell_name] = i
 		else:
-			(vis["icon"] as TextureRect).texture = null
-			(vis["name_label"] as Label).text    = ""
+			icon.texture     = null
+			name_lbl.text    = ""
+			if unlocked:
+				lock_lbl.visible = false
+			else:
+				lock_lbl.text    = "Lv %d" % SpellBar.unlock_level_for_slot(i)
+				lock_lbl.visible = true
+		# Dim everything (icon + key label) on locked slots so the
+		# whole slot reads as "not yet available".
+		var dim: float = 1.0 if unlocked else 0.35
+		icon.modulate    = Color(1.0, 1.0, 1.0, dim) if sp != null else Color(1.0, 1.0, 1.0, 1.0)
+		name_lbl.modulate = Color(1.0, 1.0, 1.0, dim)
+		(vis["key_label"] as Label).modulate = Color(1.0, 1.0, 1.0, dim)
+		_style_spell_slot(vis)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
@@ -523,13 +732,95 @@ func _unhandled_input(event: InputEvent) -> void:
 	if slot_idx < 0:
 		return
 	if event.alt_pressed:
-		Spells.cast_by_index(slot_idx)
+		# Track 16.1 — Alt+digit now casts the memorized spell in the
+		# matching spell-bar slot, not the i-th spell from the
+		# (defunct) auto-populated list.
+		SpellBar.cast_slot(slot_idx)
 	else:
 		SocialHotkeys.execute_slot(slot_idx)
 
 func _on_spell_clicked(event: InputEvent, index: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		Spells.cast_by_index(index)
+	if not (event is InputEventMouseButton and event.pressed):
+		return
+	var mb := event as InputEventMouseButton
+	if mb.button_index == MOUSE_BUTTON_LEFT:
+		# Track 17.1 — with a memorize candidate held, left-click on
+		# a spell-bar slot starts a memorize cast (2 s, half-cost MP);
+		# Memorize.commit handles the sit / move / mana checks and
+		# writes the slot only on completion. Without a candidate,
+		# left-click casts the already-memorized spell.
+		if Memorize.candidate != null:
+			Memorize.commit(index)
+			return
+		SpellBar.cast_slot(index)
+	elif mb.button_index == MOUSE_BUTTON_RIGHT:
+		# Right-click clears the memorize. Closes the user's
+		# 2026-05-22 ask: "Right-click a spell on the hotbar, spell is
+		# not removed."
+		if SpellBar.get_slot(index) != "":
+			SpellBar.clear_slot(index)
+
+func _on_memorize_candidate_changed(_spell) -> void:
+	# 17.1 — only the spell bar highlights empty slots while a
+	# candidate is held; hotkey bar isn't a memorize target anymore.
+	for vis: Dictionary in _spell_slots:
+		_style_spell_slot(vis)
+
+func _on_memorize_started(spell: SpellData, _duration: float) -> void:
+	# Paint the target slot with the candidate icon at half opacity so
+	# the player sees which slot is receiving the spell. The lavender
+	# fill grows from the bottom as the cast progresses.
+	var slot: int = Memorize.get_commit_slot()
+	if slot < 0 or slot >= _spell_slots.size():
+		return
+	var vis: Dictionary = _spell_slots[slot]
+	(vis["icon"] as TextureRect).texture  = spell.icon
+	(vis["icon"] as TextureRect).modulate = Color(1.0, 1.0, 1.0, 0.55)
+	(vis["name_label"] as Label).text     = spell.spell_name
+	(vis["name_label"] as Label).modulate = Color(1.0, 1.0, 1.0, 0.7)
+	var overlay: ColorRect = vis["memorize_overlay"]
+	overlay.visible    = true
+	overlay.anchor_top = 1.0
+
+func _on_memorize_progress(elapsed: float, total: float) -> void:
+	var slot: int = Memorize.get_commit_slot()
+	if slot < 0 or slot >= _spell_slots.size():
+		return
+	var vis: Dictionary = _spell_slots[slot]
+	var overlay: ColorRect = vis["memorize_overlay"]
+	overlay.anchor_top = 1.0 - clampf(elapsed / total, 0.0, 1.0)
+
+func _on_memorize_cancelled(_reason: String) -> void:
+	# The slot was painted optimistically; restore from SpellBar.
+	for i in SLOT_COUNT:
+		var vis: Dictionary = _spell_slots[i]
+		(vis["memorize_overlay"] as ColorRect).visible = false
+	_refresh_spell_slots()
+
+func _on_memorize_completed(_spell: SpellData, _slot: int) -> void:
+	# SpellBar.set_slot already fired slot_changed → _refresh_spell_slots,
+	# so the icon now reflects the saved spell. Just hide the overlay.
+	for i in SLOT_COUNT:
+		var vis: Dictionary = _spell_slots[i]
+		(vis["memorize_overlay"] as ColorRect).visible = false
+
+func _style_spell_slot(vis: Dictionary) -> void:
+	# Highlight empty spell-bar slots while a memorize candidate is held
+	# (the same gold-border accent the open-bag pattern uses) so the
+	# player sees where to click next. Filled slots keep their normal
+	# look — overwriting an assigned slot is allowed but not advertised.
+	var frame: Panel = vis["frame"]
+	var s := StyleBoxFlat.new()
+	if Memorize.candidate != null and SpellBar.get_slot(vis["index"]) == "":
+		s.bg_color     = C_READY
+		s.border_color = UITheme.C_TITLE
+		s.set_border_width_all(2)
+	else:
+		s.bg_color     = C_READY
+		s.border_color = UITheme.C_BORDER
+		s.set_border_width_all(2)
+	s.set_corner_radius_all(3)
+	frame.add_theme_stylebox_override("panel", s)
 
 func _on_skill_cooldown(skill_name: String, remaining: float, total: float) -> void:
 	var idx: int = _hotkey_by_skill.get(skill_name, -1)
@@ -601,9 +892,11 @@ func _on_hotkey_hover(slot: int) -> void:
 
 func _on_spell_hover(index: int) -> void:
 	var text := ""
-	if index < Spells.available.size():
-		var sp := Spells.available[index]
+	var sp := SpellBar.get_spell(index)
+	if sp != null:
 		text = "%s\n%s\nMP: %.0f  CD: %.1fs" % [sp.spell_name, sp.description, sp.mana_cost, sp.cooldown]
+	elif Memorize.candidate != null:
+		text = "Click to memorize %s here." % Memorize.candidate.spell_name
 	if text == "":
 		_tooltip_panel.visible = false
 		return

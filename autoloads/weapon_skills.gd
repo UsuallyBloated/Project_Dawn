@@ -1,5 +1,29 @@
 extends PassiveSkillTracker
 
+const KIND_WEAPON := 0
+
+func _ready() -> void:
+	super._ready()
+	# Track 18.1 — server fans skill advances; subscribe to Net and
+	# route the matching kind into our score cache. Solo / Test Room
+	# fall through to the base class's local-roll path.
+	Net.world_skill_progress_update.connect(_on_skill_progress_update)
+	Net.world_skill_progress_snapshot.connect(_on_skill_progress_snapshot)
+
+func _on_skill_progress_update(kind: int, key: String, new_score: int) -> void:
+	if kind != KIND_WEAPON:
+		return
+	apply_remote_score(key, new_score)
+
+func _on_skill_progress_snapshot(
+		weapon_keys: PackedStringArray, weapon_scores: PackedInt32Array,
+		_armor_keys: PackedStringArray, _armor_scores: PackedInt32Array,
+		_casting_keys: PackedStringArray, _casting_scores: PackedInt32Array) -> void:
+	var entries: Dictionary = {}
+	for i in weapon_keys.size():
+		entries[weapon_keys[i]] = weapon_scores[i]
+	apply_remote_snapshot(entries)
+
 func initialize(player_class: String, level: int) -> void:
 	_player_class = player_class
 	_level = level

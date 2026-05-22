@@ -4,14 +4,22 @@ extends DraggablePanel
 const C_BG   := Color(0.07, 0.06, 0.04, 0.95)
 const C_ROW  := Color(0.12, 0.10, 0.07, 1.00)
 const C_HOVER := Color(0.20, 0.16, 0.10, 1.00)
+# Track 16.1 — gold-tinted highlight to mark the spell currently
+# selected for memorization. Matches the open-bag accent so the player
+# sees "this is staged, pick a spell-bar slot next".
+const C_MEMORIZE := Color(0.30, 0.22, 0.06, 1.00)
 const ROW_H  := 28
 
 var _vbox: VBoxContainer = null
 var _rows: Array = []
+# row data: {bg, normal_style, hover_style, memorize_style, spell, hovered}
+var _row_data: Array = []
 
 func _ready() -> void:
 	_build()
 	Spells.spells_changed.connect(_rebuild)
+	Memorize.candidate_changed.connect(_on_candidate_changed)
+	visibility_changed.connect(_on_visibility_changed)
 	_rebuild()
 
 func _build() -> void:
@@ -51,6 +59,15 @@ func _build() -> void:
 
 	outer.add_child(HSeparator.new())
 
+	# Track 16.1 — short usage hint so a player who hasn't read the
+	# release notes still discovers the sit+click+slot flow.
+	var hint := Label.new()
+	hint.text = "Sit, click a spell, then click a Spell Bar slot to memorize."
+	hint.add_theme_font_size_override("font_size", 10)
+	hint.add_theme_color_override("font_color", UITheme.C_TEXT)
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	outer.add_child(hint)
+
 	var col_row := HBoxContainer.new()
 	col_row.add_theme_constant_override("separation", 4)
 	outer.add_child(col_row)
@@ -84,10 +101,24 @@ func _rebuild() -> void:
 	for row in _rows:
 		row.queue_free()
 	_rows.clear()
+	_row_data.clear()
 	for spell in Spells.available:
 		var row := _make_row(spell)
 		_vbox.add_child(row)
 		_rows.append(row)
+	# Stale-candidate cleanup happens in SpellBar's spells_changed
+	# handler, but the spell book also wants to drop the highlight if
+	# the candidate's row is gone after a level-up rank refresh.
+	if Memorize.candidate != null:
+		var still_listed := false
+		for sp in Spells.available:
+			if sp == Memorize.candidate:
+				still_listed = true
+				break
+		if not still_listed:
+			Memorize.clear()
+	# Re-apply the highlight after rebuild.
+	_repaint_all()
 
 func _make_row(spell: SpellData) -> Panel:
 	var normal_style := StyleBoxFlat.new()
@@ -97,6 +128,12 @@ func _make_row(spell: SpellData) -> Panel:
 	var hover_style := StyleBoxFlat.new()
 	hover_style.bg_color = C_HOVER
 	hover_style.set_corner_radius_all(2)
+
+	var memorize_style := StyleBoxFlat.new()
+	memorize_style.bg_color = C_MEMORIZE
+	memorize_style.border_color = UITheme.C_TITLE
+	memorize_style.set_border_width_all(1)
+	memorize_style.set_corner_radius_all(2)
 
 	var bg := Panel.new()
 	bg.custom_minimum_size.y = ROW_H
@@ -139,11 +176,71 @@ func _make_row(spell: SpellData) -> Panel:
 	cd_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	row.add_child(cd_lbl)
 
-	bg.mouse_entered.connect(func(): bg.add_theme_stylebox_override("panel", hover_style))
-	bg.mouse_exited.connect(func(): bg.add_theme_stylebox_override("panel", normal_style))
+	var data := {
+		"bg":              bg,
+		"spell":           spell,
+		"normal_style":    normal_style,
+		"hover_style":     hover_style,
+		"memorize_style":  memorize_style,
+		"hovered":         false,
+	}
+	_row_data.append(data)
+
+	bg.mouse_entered.connect(func() -> void:
+		data["hovered"] = true
+		_repaint_row(data))
+	bg.mouse_exited.connect(func() -> void:
+		data["hovered"] = false
+		_repaint_row(data))
+	# Track 16.1 — row click no longer casts. Sit-gated select: tags
+	# the spell as the memorize candidate; spell / hotkey bar slot
+	# clicks then route it through SpellBar.set_slot / set_slot_spell.
 	bg.gui_input.connect(func(event: InputEvent) -> void:
 		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			Spells.cast_spell(spell)
+			_on_row_clicked(spell)
 			bg.accept_event())
 
 	return bg
+
+func _on_row_clicked(spell: SpellData) -> void:
+	var player := _find_local_player()
+	if player == null or player.state != PlayerCharacter.PlayerState.SITTING:
+		CombatLog.add_line("You must be sitting to memorize spells.", CombatLog.MsgType.INFO)
+		Memorize.clear()
+		return
+	# Toggle off if it's the same spell — second click cancels memo
+	# selection so the player can back out without closing the book.
+	if Memorize.candidate == spell:
+		Memorize.clear()
+		return
+	Memorize.set_candidate(spell)
+
+func _find_local_player() -> PlayerCharacter:
+	var nodes := get_tree().get_nodes_in_group("player")
+	for n in nodes:
+		if n is PlayerCharacter and (n as PlayerCharacter).is_multiplayer_authority():
+			return n
+	return null
+
+func _on_candidate_changed(_spell) -> void:
+	_repaint_all()
+
+func _on_visibility_changed() -> void:
+	# Closing the spellbook drops the candidate — the spell bar slot
+	# click belongs to the same gesture, and a stale candidate left
+	# alive after a close-and-reopen is more surprising than helpful.
+	if not visible:
+		Memorize.clear()
+
+func _repaint_all() -> void:
+	for data in _row_data:
+		_repaint_row(data)
+
+func _repaint_row(data: Dictionary) -> void:
+	var bg: Panel = data["bg"]
+	if Memorize.candidate == data["spell"]:
+		bg.add_theme_stylebox_override("panel", data["memorize_style"])
+	elif data["hovered"]:
+		bg.add_theme_stylebox_override("panel", data["hover_style"])
+	else:
+		bg.add_theme_stylebox_override("panel", data["normal_style"])

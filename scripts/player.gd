@@ -183,10 +183,21 @@ func _viewport_has_text_focus(vp: Viewport) -> bool:
 	var f := vp.gui_get_focus_owner()
 	if f != null and (f is LineEdit or f is TextEdit):
 		return true
-	for child in vp.get_children():
+	return _scan_for_text_window(vp)
+
+# Track 16.0 bug 5 — the previous walk only iterated direct children of
+# the root viewport, so a Window parented deep (CanvasLayer → Hotbar →
+# Window) was never reached and spacebar still jumped the character
+# while typing a macro. Recurse through the entire subtree, checking
+# each Window's own focus owner.
+func _scan_for_text_window(node: Node) -> bool:
+	for child in node.get_children():
 		if child is Window:
-			if _viewport_has_text_focus(child):
+			var inner := (child as Window).gui_get_focus_owner()
+			if inner != null and (inner is LineEdit or inner is TextEdit):
 				return true
+		if _scan_for_text_window(child):
+			return true
 	return false
 
 func _physics_process(delta: float) -> void:
