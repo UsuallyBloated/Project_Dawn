@@ -604,6 +604,25 @@ func _on_target_changed(enemy) -> void:
 	if enemy.is_in_group("remote_players"):
 		_setup_peer_target(enemy)
 		return
+	if enemy.is_in_group("pets") or enemy.is_in_group("remote_pets"):
+		# Pet target frame — render like enemies (HP bar + level)
+		# but key off pet_name. Subscribe to hp_changed + died so
+		# the bar tracks regen / damage / dismissal.
+		var pname: String = enemy.pet_name if "pet_name" in enemy else "Pet"
+		var plvl: int = enemy.level if "level" in enemy else 1
+		target_name_label.text = pname
+		target_level_label.text = "Level %d" % plvl
+		target_hp_bar.visible = true
+		target_hp_bar.max_value = enemy.max_hp
+		target_hp_bar.value = enemy.hp
+		if _target_hp_label:
+			_target_hp_label.text = "%d / %d" % [int(enemy.hp), int(enemy.max_hp)]
+			_target_hp_label.visible = true
+		if enemy.has_signal("hp_changed"):
+			enemy.hp_changed.connect(_on_target_hp_changed)
+		if enemy.has_signal("died"):
+			enemy.died.connect(_on_target_enemy_died)
+		return
 	if not enemy.is_in_group("enemies"):
 		var nm: String = enemy.vendor_name if enemy.is_in_group("vendor_npcs") else enemy.npc_name
 		var subtitle: String = enemy.vendor_type if enemy.is_in_group("vendor_npcs") else enemy.npc_title
@@ -781,7 +800,7 @@ func _handle_chat_input(text: String) -> void:
 	if lower == "/pet guard":
 		PetManager.command_guard()
 		return
-	if lower == "/pet passive":
+	if lower == "/pet passive" or lower == "/pet sit":
 		PetManager.command_passive()
 		return
 	if lower == "/pet dismiss":
@@ -899,6 +918,15 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line("Refine your search.", CombatLog.MsgType.INFO)
 			return
 		var item_name := (matches[0] as ItemData).item_name
+		# Track 15.2 follow-up — launcher mode routes /give through
+		# the wire so the spawned item exists server-side. The server
+		# fans InventoryDelta which Inventory autoload applies. Solo /
+		# Test Room keeps the legacy local ItemRegistry.give_by_name.
+		if Net.is_launcher_mode():
+			Net.broadcast_gm_command("give %s %d" % [item_name, count])
+			var suffix := " x%d" % count if count > 1 else ""
+			CombatLog.add_line("Requested %s%s from server." % [item_name, suffix], CombatLog.MsgType.INFO)
+			return
 		if ItemRegistry.give_by_name(item_name, count):
 			var suffix := " x%d" % count if count > 1 else ""
 			CombatLog.add_line("Spawned %s%s." % [item_name, suffix], CombatLog.MsgType.INFO)

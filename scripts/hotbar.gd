@@ -320,6 +320,14 @@ func _on_hotkey_input(event: InputEvent, slot: int) -> void:
 	if mb.button_index == MOUSE_BUTTON_LEFT:
 		SocialHotkeys.execute_slot(slot)
 	elif mb.button_index == MOUSE_BUTTON_RIGHT:
+		# Spell/skill slots clear on right-click directly — matches
+		# the classic-MMO muscle memory. Empty and social slots open
+		# the context menu so the player can assign / edit.
+		var sd: Dictionary = SocialHotkeys.get_slot(slot)
+		var t: String = sd.get("type", SocialHotkeys.TYPE_EMPTY)
+		if t == SocialHotkeys.TYPE_SPELL or t == SocialHotkeys.TYPE_SKILL:
+			SocialHotkeys.clear_slot(slot)
+			return
 		_ctx_slot = slot
 		_ctx_menu.popup(Rect2i(int(mb.global_position.x), int(mb.global_position.y), 0, 0))
 

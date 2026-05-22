@@ -175,11 +175,13 @@ func command_back() -> void:
 func command_guard() -> void:
 	if not has_pet() or _pet_is_charmed:
 		return
-	# Track 12 Piece A — Guard isn't wired server-side yet (reserved
-	# in the wire format). In launcher mode this is a no-op; solo
-	# mode keeps the legacy local Pet.set_guard_target call.
+	# Track 15.3 — server-side Guard parks the pet at its current
+	# spot. The pet drops any target, doesn't auto-inherit from
+	# owner attacks, but retaliates on incoming damage. Solo mode
+	# keeps the legacy local "guard a target" semantics.
 	if Net.is_launcher_mode():
-		pet_info.emit("Pet guard not yet implemented in multiplayer.")
+		Net.broadcast_pet_command(NetProtocol.PetCommand.GUARD, 0)
+		pet_info.emit("Your pet guards this spot.")
 		return
 	var guard_target = Combat.current_target
 	if guard_target == null or not is_instance_valid(guard_target):
@@ -196,11 +198,12 @@ func command_guard() -> void:
 func command_passive() -> void:
 	if not has_pet() or _pet_is_charmed:
 		return
-	# Track 12 Piece A — Sit/Passive isn't wired server-side yet
-	# (reserved in the wire format). Launcher mode is a no-op; solo
-	# keeps the legacy local Pet.set_mode call.
+	# Track 15.3 — server-side Sit puts the pet in full passive:
+	# drops target, stands still, ignores incoming damage. Solo mode
+	# keeps the legacy local PASSIVE mode call.
 	if Net.is_launcher_mode():
-		pet_info.emit("Pet passive not yet implemented in multiplayer.")
+		Net.broadcast_pet_command(NetProtocol.PetCommand.SIT, 0)
+		pet_info.emit("Your pet sits and waits.")
 		return
 	active_pet.set_mode(Pet.Mode.PASSIVE)
 	pet_info.emit("Your pet holds its position.")

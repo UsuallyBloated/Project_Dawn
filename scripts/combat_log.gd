@@ -206,11 +206,18 @@ func add_line(text: String, type: MsgType = MsgType.INFO) -> void:
 		_msg_vbox.get_child(0).queue_free()
 
 	if _auto_scroll:
-		call_deferred("_scroll_to_bottom")
+		_scroll_to_bottom()
 
 func _scroll_to_bottom() -> void:
-	if _scroll != null:
-		_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
+	if _scroll == null:
+		return
+	# A new label added to the VBox doesn't grow `v_scroll_bar.max_value`
+	# until the container re-lays out next frame. The previous
+	# `call_deferred` fired BEFORE that layout pass, so we'd land one
+	# or two lines above the new bottom. Wait one frame so the bar's
+	# max reflects the freshly-added content, then snap.
+	await get_tree().process_frame
+	_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
 
 func _on_back_to_bottom_pressed() -> void:
 	_auto_scroll = true

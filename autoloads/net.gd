@@ -412,6 +412,31 @@ func broadcast_equip_item(src_location: String, src_slot: int, equip_slot: int) 
 		return
 	send_equip_item(src_location, src_slot, equip_slot)
 
+# Track 15.1 — destroy `count` of the entry at (location, slot)
+# outright. Unlike broadcast_drop_item, no loot bag is spawned —
+# the item is gone for good. `count <= 0` destroys the whole stack.
+func broadcast_destroy_item(location: String, slot: int, count: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_destroy_item(location, slot, count)
+
+# Track 15.2 — consume one unit of the entry at (location, slot).
+# Server validates the item is a consumable (heal-on-use / food /
+# drink), decrements one, fans InventoryDelta, applies the effect,
+# fans HealthUpdate / ManaUpdate / BuffSnapshot.
+func broadcast_use_consumable(location: String, slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_use_consumable(location, slot)
+
+# Track 15.2 follow-up — GM command line (e.g. "give Crude Ale 3").
+# Server parses + executes. Until accounts.is_gm exists, any in-world
+# client can issue this; gate accordingly when the auth side lands.
+func broadcast_gm_command(line: String) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_gm_command(line)
+
 # Track 13.3 — unequip paperdoll slot into (dst_location, dst_slot).
 # Server swaps on dst-occupied.
 func broadcast_unequip_item(equip_slot: int, dst_location: String, dst_slot: int) -> void:

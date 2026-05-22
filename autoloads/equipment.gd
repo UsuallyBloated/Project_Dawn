@@ -63,7 +63,99 @@ func equip(item: ItemData) -> void:
 	_apply_stat_bonuses(item)
 	equipment_changed.emit(slot, item)
 
+# Track 15.1 — server-authoritative equip flow. The launcher-mode call
+# site picks the paperdoll slot client-side (dual-wield + 2H rules live
+# here) then ships EquipItem on the wire. Server-fanned InventoryDelta
+# + apply_remote_equip update local state.
+#
+# `src_location` is "base" or "bag_<N>"; `src_slot` is the index inside
+# that location. Returns false if the equip is blocked (no valid slot,
+# 2H swap with full inventory, etc.).
+func request_equip_from(src_location: String, src_slot: int, item: ItemData, target_slot_hint: String = "") -> bool:
+	# `target_slot_hint` lets the caller force a specific paperdoll
+	# slot — e.g. the paperdoll left-click "drop here" path. Empty
+	# string keeps the auto-pick behaviour used by right-click equip.
+	# An invalid hint (wrong item type for the slot) falls through to
+	# auto-pick so the caller doesn't have to pre-validate.
+	var slot_name := ""
+	if target_slot_hint != "" and _is_valid_target_slot(item, target_slot_hint):
+		slot_name = target_slot_hint
+	else:
+		slot_name = _pick_slot(item)
+	if slot_name == "":
+		# Offhand-while-2H is the only path that lands here; surface the
+		# reason so the player isn't left guessing.
+		if item.type == ItemData.Type.OFFHAND:
+			CombatLog.add_line("Can't equip an offhand while wielding a two-handed weapon.", CombatLog.MsgType.INFO)
+		return false
+	var equip_slot_idx: int = SLOTS.find(slot_name)
+	if equip_slot_idx < 0:
+		return false
+
+	if Net.is_launcher_mode():
+		# 2H weapon while offhand is occupied → unequip offhand to a free
+		# base slot first, then equip the 2H. Server processes the two
+		# intents in send order (renet reliable channel).
+		if item.type == ItemData.Type.WEAPON and item.is_two_handed \
+				and equipped.get("offhand") != null:
+			var dst := _first_free_base_slot()
+			if dst < 0:
+				CombatLog.add_line("Inventory full — free a slot to swap weapons.", CombatLog.MsgType.INFO)
+				return false
+			var oh_equip_idx: int = SLOTS.find("offhand")
+			Net.broadcast_unequip_item(oh_equip_idx, NetProtocol.INV_LOCATION_BASE, dst)
+		Net.broadcast_equip_item(src_location, src_slot, equip_slot_idx)
+		return true
+
+	# Solo / Test Room — preserve the optimistic local mutation path.
+	_local_remove_from_source(src_location, src_slot)
+	equip(item)
+	return true
+
+func unequip(slot: String) -> ItemData:
+	var item = equipped.get(slot)
+	if item == null:
+		return null
+	_remove_stat_bonuses(item)
+	equipped[slot] = null
+	equipment_changed.emit(slot, null)
+	Inventory.add_item(item)
+	return item
+
+# Track 15.1 — server-authoritative unequip. The server's
+# unequip_to_base requires a concrete dst; client picks the first
+# empty base slot. If inventory is full the unequip rejects with a
+# combat log line.
+func request_unequip(slot_name: String) -> bool:
+	if equipped.get(slot_name) == null:
+		return false
+	if Net.is_launcher_mode():
+		var dst := _first_free_base_slot()
+		if dst < 0:
+			CombatLog.add_line("Inventory full — no room to unequip.", CombatLog.MsgType.INFO)
+			return false
+		var equip_slot_idx: int = SLOTS.find(slot_name)
+		if equip_slot_idx < 0:
+			return false
+		Net.broadcast_unequip_item(equip_slot_idx, NetProtocol.INV_LOCATION_BASE, dst)
+		return true
+	unequip(slot_name)
+	return true
+
 func _resolve_slot(item: ItemData) -> String:
+	var slot := _pick_slot(item)
+	# Legacy path: the caller already removed the item from inventory,
+	# so a blocked offhand-while-2H push gets re-added here so it isn't
+	# lost. Launcher path uses _pick_slot directly to avoid the side
+	# effect (the item never left inventory there).
+	if slot == "" and item.type == ItemData.Type.OFFHAND:
+		Inventory.add_item(item)
+	return slot
+
+# Pure paperdoll-slot picker — no side effects. Encodes the dual-wield
+# + 2H rules used by both the legacy `equip` path and the new
+# request_equip_from launcher path.
+func _pick_slot(item: ItemData) -> String:
 	if item.type == ItemData.Type.WEAPON:
 		var main_wpn: ItemData = equipped.get("weapon")
 		# Main hand is empty → go there
@@ -84,20 +176,45 @@ func _resolve_slot(item: ItemData) -> String:
 	if item.type == ItemData.Type.OFFHAND:
 		var main_wpn: ItemData = equipped.get("weapon")
 		if main_wpn != null and main_wpn.is_two_handed:
-			Inventory.add_item(item)
 			return ""
 		return "offhand"
 	return _slot_for_type(item.type)
 
-func unequip(slot: String) -> ItemData:
-	var item = equipped.get(slot)
-	if item == null:
-		return null
-	_remove_stat_bonuses(item)
-	equipped[slot] = null
-	equipment_changed.emit(slot, null)
-	Inventory.add_item(item)
-	return item
+# True if `item` is eligible to land in the named paperdoll slot via
+# the equip pipeline. Mirrors the wider item-type rules so a user
+# clicking "Chest" with a sword in hand gets the auto-pick path
+# instead of a silent rejection.
+func _is_valid_target_slot(item: ItemData, slot_name: String) -> bool:
+	match slot_name:
+		"weapon":
+			return item.type == ItemData.Type.WEAPON
+		"offhand":
+			# Weapons may dual-wield; OFFHAND items (shield, focus)
+			# obviously fit. _pick_slot enforces the 2H-in-main-hand
+			# guard separately.
+			return item.type == ItemData.Type.OFFHAND or item.type == ItemData.Type.WEAPON
+		"head":  return item.type == ItemData.Type.HEAD
+		"chest": return item.type == ItemData.Type.CHEST
+		"legs":  return item.type == ItemData.Type.LEGS
+		"feet":  return item.type == ItemData.Type.FEET
+		"hands": return item.type == ItemData.Type.HANDS
+		"ring":  return item.type == ItemData.Type.RING
+		"neck":  return item.type == ItemData.Type.NECK
+	return false
+
+func _first_free_base_slot() -> int:
+	for i in Inventory.BASE_SLOT_COUNT:
+		if Inventory.base_slots[i] == null:
+			return i
+	return -1
+
+func _local_remove_from_source(src_location: String, src_slot: int) -> void:
+	if src_location == NetProtocol.INV_LOCATION_BASE:
+		Inventory.remove_base_at(src_slot)
+		return
+	if src_location.begins_with("bag_"):
+		var bag_idx := int(src_location.substr(4))
+		Inventory.remove_at(bag_idx, src_slot)
 
 func _apply_stat_bonuses(item: ItemData) -> void:
 	PlayerStats.apply_item_bonuses(item)

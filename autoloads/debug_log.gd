@@ -1,6 +1,12 @@
 extends Node
 
-const LOG_PATH := "res://debug.log"
+# `user://` resolves to a writable per-project data dir on every
+# platform, including exported builds where `res://` is read-only.
+# On Windows: %APPDATA%\Godot\app_userdata\Project_Dawn\debug.log.
+# Open from the editor via Project > Open User Data Folder, or
+# inspect `OS.get_user_data_dir()` to print the absolute path at
+# runtime.
+const LOG_PATH := "user://debug.log"
 const MAX_LINES := 2000
 
 var _file: FileAccess = null
@@ -11,6 +17,10 @@ func _ready() -> void:
 	if _file == null:
 		push_warning("DebugLog: could not open %s for writing (error %d)" % [LOG_PATH, FileAccess.get_open_error()])
 		return
+	# Print the resolved absolute path so the dev can locate the file
+	# even when running from the launcher (where the user:// dir lives
+	# under %APPDATA%\Godot\app_userdata\...).
+	print("DebugLog: writing to ", ProjectSettings.globalize_path(LOG_PATH))
 	_write_raw("=== Session started %s ===" % Time.get_datetime_string_from_system())
 
 func _notification(what: int) -> void:

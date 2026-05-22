@@ -210,10 +210,17 @@ func _refresh() -> void:
 			_set_slot_tint(cell, Color(UITheme.C_SLOT_BG))
 		else:
 			var item: ItemData = slot["item"]
-			icon_rect.texture = item.icon
-			count_label.text = str(slot["count"]) if slot["count"] > 1 else ""
+			# Hide source-slot icon during a drag from this same slot
+			# (matches the inventory_window UX so only the drag overlay
+			# is visible mid-move).
+			var is_drag_source: bool = inv_win != null \
+				and inv_win.drag_item != null \
+				and inv_win.drag_source_bi == bag_index \
+				and inv_win.drag_source_si == i
+			icon_rect.texture = null if is_drag_source else item.icon
+			count_label.text = "" if is_drag_source else (str(slot["count"]) if slot["count"] > 1 else "")
 			if name_label:
-				name_label.visible = item.icon == null
+				name_label.visible = (not is_drag_source) and item.icon == null
 				name_label.text = item.item_name
 			_set_slot_tint(cell, _rarity_slot_color(item.rarity))
 
@@ -250,8 +257,9 @@ func _on_slot_input(event: InputEvent, index: int) -> void:
 			_use_consumable(item, index)
 			get_viewport().set_input_as_handled()
 		elif item.type != ItemData.Type.MISC:
-			Inventory.remove_at(bag_index, index)
-			Equipment.equip(item)
+			# Track 15.1 — routes through Net.broadcast_equip_item in
+			# launcher mode; legacy local mutation in solo mode.
+			Equipment.request_equip_from(NetProtocol.inv_location_bag(bag_index), index, item)
 			get_viewport().set_input_as_handled()
 		return
 
@@ -321,6 +329,16 @@ func _show_destroy_confirm() -> void:
 func _confirm_destroy() -> void:
 	_confirm_panel.visible = false
 	var destroyed: ItemData = inv_win.drag_item
+	# Track 15.1 — in launcher mode the source slot still holds the
+	# item server-side (pickup doesn't clear). Send DestroyItem so
+	# the server fans an InventoryDelta. Solo mode preserves the
+	# legacy local-only flow (the source slot was cleared at pickup
+	# time, so cancel_drag is enough).
+	if Net.is_launcher_mode():
+		if destroyed != null:
+			var src_loc: String = NetProtocol.INV_LOCATION_BASE if inv_win.drag_source_bi == -1 \
+				else NetProtocol.inv_location_bag(inv_win.drag_source_bi)
+			Net.broadcast_destroy_item(src_loc, inv_win.drag_source_si, inv_win.drag_count)
 	inv_win.cancel_drag()
 	Inventory.item_removed.emit(destroyed)
 
@@ -328,6 +346,22 @@ func _cancel_destroy() -> void:
 	_confirm_panel.visible = false
 
 func _use_consumable(item: ItemData, index: int) -> void:
+	# Track 15.2 — server-authoritative consumable use. Mirrors the
+	# inventory_window arm; see the comment there for the full
+	# rationale.
+	if Net.is_launcher_mode():
+		if item.is_food:
+			Net.broadcast_use_consumable(NetProtocol.inv_location_bag(bag_index), index)
+			CombatLog.add_line("You eat %s." % item.item_name, CombatLog.MsgType.INFO)
+		elif item.is_drink:
+			Net.broadcast_use_consumable(NetProtocol.inv_location_bag(bag_index), index)
+			CombatLog.add_line("You drink %s." % item.item_name, CombatLog.MsgType.INFO)
+		elif item.heal_on_use > 0.0 or item.mp_on_use > 0.0:
+			Net.broadcast_use_consumable(NetProtocol.inv_location_bag(bag_index), index)
+			CombatLog.add_line("You use %s." % item.item_name, CombatLog.MsgType.INFO)
+		else:
+			CombatLog.add_line("You can't use %s that way." % item.item_name, CombatLog.MsgType.INFO)
+		return
 	if item.is_food:
 		if BuffManager.has_food_buff():
 			CombatLog.add_line("You are already eating something.", CombatLog.MsgType.INFO)

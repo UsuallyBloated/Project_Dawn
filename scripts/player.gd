@@ -169,8 +169,25 @@ func _unhandled_input(event: InputEvent) -> void:
 				_enter_state(PlayerState.STANDING)
 
 func _is_text_input_focused() -> bool:
+	# Main-viewport focus (chat input, vendor qty field, etc.).
 	var f := get_viewport().gui_get_focus_owner()
-	return f != null and (f is LineEdit or f is TextEdit)
+	if f != null and (f is LineEdit or f is TextEdit):
+		return true
+	# Sub-windows (Window nodes like the hotbar's Social / Macro editor)
+	# have their own viewports and their own focus owner. Without
+	# recursing, typing in those windows leaks to the player's movement
+	# inputs (spacebar → jump while editing a macro line).
+	return _viewport_has_text_focus(get_tree().root)
+
+func _viewport_has_text_focus(vp: Viewport) -> bool:
+	var f := vp.gui_get_focus_owner()
+	if f != null and (f is LineEdit or f is TextEdit):
+		return true
+	for child in vp.get_children():
+		if child is Window:
+			if _viewport_has_text_focus(child):
+				return true
+	return false
 
 func _physics_process(delta: float) -> void:
 	# Poll hardware state so camera works even when UI panels consume the event.

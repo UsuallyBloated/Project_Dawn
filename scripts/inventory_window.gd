@@ -207,9 +207,14 @@ func _refresh_cell(index: int) -> void:
 		return
 
 	var item: ItemData = slot["item"]
-	icon_rect.texture = item.icon
+	# Hide source-slot icon while it's being dragged so the UI shows
+	# one floating ghost (the drag overlay) instead of two copies of
+	# the item. The Inventory state is intact — we just paint empty
+	# until the drag ends (cancel restores; drop fans InventoryDelta).
+	var is_drag_source: bool = drag_item != null and drag_source_bi == -1 and drag_source_si == index
+	icon_rect.texture = null if is_drag_source else item.icon
 	if name_label:
-		name_label.visible = item.icon == null
+		name_label.visible = (not is_drag_source) and item.icon == null
 		name_label.text = item.item_name
 
 	if item.type == ItemData.Type.BAG:
@@ -264,8 +269,11 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 		elif item.type == ItemData.Type.CONSUMABLE:
 			_use_consumable(item, index)
 		elif item.type != ItemData.Type.MISC:
-			Inventory.remove_base_at(index)
-			Equipment.equip(item)
+			# Track 15.1 — Equipment.request_equip_from routes through
+			# Net.broadcast_equip_item in launcher mode (server fans
+			# InventoryDelta + apply_remote_equip); falls back to the
+			# legacy remove + equip in solo / Test Room mode.
+			Equipment.request_equip_from(NetProtocol.INV_LOCATION_BASE, index, item)
 		get_viewport().set_input_as_handled()
 		return
 
@@ -352,13 +360,27 @@ func begin_drag(item: ItemData, count: int, bi: int, si: int) -> void:
 	drag_source_si = si
 	_drag_icon.texture = item.icon
 	_drag_icon.visible = true
+	# Hide source-slot icon so the dragged item visibly leaves the slot
+	# (the drag overlay is the one-and-only on-screen copy).
+	if bi == -1 and si >= 0 and si < _base_cells.size():
+		_refresh_cell(si)
+	else:
+		Inventory.inventory_changed.emit()
 
 func end_drag() -> void:
 	Inventory.inventory_changed.emit()
 	_clear_drag()
 
 func cancel_drag() -> void:
+	var prev_bi := drag_source_bi
+	var prev_si := drag_source_si
 	_clear_drag()
+	# Restore source slot's visual after a cancel so the item icon
+	# comes back (state was never mutated).
+	if prev_bi == -1 and prev_si >= 0 and prev_si < _base_cells.size():
+		_refresh_cell(prev_si)
+	else:
+		Inventory.inventory_changed.emit()
 
 func _return_drag_to_source() -> void:
 	if drag_item == null:
@@ -422,7 +444,12 @@ func _show_delete_confirm() -> void:
 	if _delete_dialog == null:
 		_delete_dialog = ConfirmationDialog.new()
 		_delete_dialog.title = "Delete Item"
-		_delete_dialog.confirmed.connect(end_drag)
+		# Track 15.1 — route through DestroyItem on the wire in
+		# launcher mode (the server-owned slot was never cleared
+		# during pickup). Solo mode falls back to the legacy end_drag
+		# (which is a no-op for inventory state — the local clear
+		# happened at pickup time).
+		_delete_dialog.confirmed.connect(_confirm_trash_delete)
 		_delete_dialog.canceled.connect(_return_drag_to_source)
 		add_child(_delete_dialog)
 	if drag_count > 1:
@@ -431,9 +458,44 @@ func _show_delete_confirm() -> void:
 		_delete_dialog.dialog_text = "Delete %s?" % drag_item.item_name
 	_delete_dialog.popup_centered()
 
+# Track 15.1 — trash cell confirm. In launcher mode the source slot
+# still holds the item server-side (pickup doesn't clear). Send
+# DestroyItem so the server fans an InventoryDelta that removes the
+# slot client-side. Solo mode keeps the legacy "drag overlay was the
+# state" behaviour.
+func _confirm_trash_delete() -> void:
+	if Net.is_launcher_mode():
+		if drag_item != null:
+			var src_loc: String = NetProtocol.INV_LOCATION_BASE if drag_source_bi == -1 \
+				else NetProtocol.inv_location_bag(drag_source_bi)
+			Net.broadcast_destroy_item(src_loc, drag_source_si, drag_count)
+		_clear_drag()
+		return
+	end_drag()
+
 # ── Consumable use (base slot items) ─────────────────────────────────────────
 
 func _use_consumable(item: ItemData, index: int) -> void:
+	# Track 15.2 — server-authoritative consumable use. Server
+	# validates the item, decrements the stack, fans InventoryDelta,
+	# applies the heal / food / drink effect via the buff pipeline,
+	# and fans HealthUpdate / ManaUpdate / BuffSnapshot. The combat
+	# log line still fires locally for snappy feedback; gate the
+	# broadcast on client-side data so a non-consumable doesn't
+	# round-trip just to be rejected.
+	if Net.is_launcher_mode():
+		if item.is_food:
+			Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)
+			CombatLog.add_line("You eat %s." % item.item_name, CombatLog.MsgType.INFO)
+		elif item.is_drink:
+			Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)
+			CombatLog.add_line("You drink %s." % item.item_name, CombatLog.MsgType.INFO)
+		elif item.heal_on_use > 0.0 or item.mp_on_use > 0.0:
+			Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)
+			CombatLog.add_line("You use %s." % item.item_name, CombatLog.MsgType.INFO)
+		else:
+			CombatLog.add_line("You can't use %s that way." % item.item_name, CombatLog.MsgType.INFO)
+		return
 	if item.is_food:
 		if BuffManager.has_food_buff():
 			CombatLog.add_line("You are already eating something.", CombatLog.MsgType.INFO)

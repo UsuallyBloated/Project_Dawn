@@ -38,6 +38,12 @@ func _click_target(mouse_pos: Vector2) -> void:
 		Combat.set_target(body)
 	elif body.is_in_group("remote_players") and not body.is_dead:
 		Combat.set_target(body)
+	elif body.is_in_group("pets") or body.is_in_group("remote_pets"):
+		# Targeting own/remote pets is allowed — useful for inspecting
+		# pet HP on the target frame and as a base for buff/heal target
+		# resolution. Combat.can_attack still gates whether a pet is a
+		# legal hostile target (it isn't, by default).
+		Combat.set_target(body)
 	elif body.is_in_group("vendor_npcs") or body.is_in_group("dialogue_npcs"):
 		Combat.set_target(body)
 	elif body is Area3D:
