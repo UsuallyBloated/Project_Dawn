@@ -130,7 +130,15 @@ func cancel_cast() -> void:
 
 # Called by combat when the player takes a hit during a cast.
 # Uses Channeling skill to determine whether the cast is interrupted or survives.
+#
+# Track 19A — in launcher mode the server owns the roll and fans
+# CastFail("interrupted (hit during cast)") on a successful interrupt
+# (RemotePlayerManager._on_cast_fail handles the local cancel).
+# Channeling advance also lives server-side. So this is a no-op in
+# launcher mode; solo / Test Room keeps the local roll.
 func try_interrupt_cast() -> void:
+	if Net.is_launcher_mode():
+		return
 	if _casting == null:
 		return
 	if randf() < CastingSkills.get_interrupt_chance():
