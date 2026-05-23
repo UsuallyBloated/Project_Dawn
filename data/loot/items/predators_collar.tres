@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Predator's Collar"
+description = "A crude loop of cured hide strung with wolf teeth. Worn by the pack's champion."
+type = 8
+rarity = 1
+stack_size = 1
+bonus_strength = 3
+bonus_agility = 2
+vendor_price = 85

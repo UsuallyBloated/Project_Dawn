@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Bonecrusher's War Axe"
+description = "A brutishly large axe, well-maintained despite its crude appearance."
+type = 0
+rarity = 2
+stack_size = 1
+is_two_handed = true
+weapon_damage_min = 12
+weapon_damage_max = 24
+weapon_delay = 3.2
+weapon_skill = "2h_blunt"
+bonus_strength = 5
+vendor_price = 220

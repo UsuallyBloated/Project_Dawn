@@ -561,12 +561,20 @@ func apply_named(named_id: String) -> void:
 	if loot_table == null:
 		loot_table = _build_default_loot_table()
 
-	for d: Dictionary in data.get("guaranteed_loot", []):
-		_named_drops.append(NamedMobDefinitions.make_item(d))
+	# Track 20D — named drops resolve from authored .tres paths so
+	# the server registry knows about them; equip / sell / destroy
+	# now work end-to-end (was silently rejected when items were
+	# runtime-only inline dicts).
+	for path: String in data.get("guaranteed_loot", []):
+		var item := NamedMobDefinitions.load_item(path)
+		if item != null:
+			_named_drops.append(item)
 
 	for d: Dictionary in data.get("rare_loot", []):
 		if randf() < d.get("drop_chance", 0.2):
-			_named_drops.append(NamedMobDefinitions.make_item(d))
+			var item := NamedMobDefinitions.load_item(d["path"])
+			if item != null:
+				_named_drops.append(item)
 
 func flash_spell_hit(color: Color) -> void:
 	if state != State.DEAD:

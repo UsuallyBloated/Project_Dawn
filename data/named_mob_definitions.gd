@@ -12,14 +12,15 @@ class_name NamedMobDefinitions
 #   enrage_threshold  — fraction (0.0–1.0); enrage fires once when hp/max_hp drops below; 0 = disabled
 #   enrage_damage_mult — additional damage multiplier applied during enrage (stacks on damage_mult)
 #   enrage_speed_mult  — move speed multiplier during enrage
-#   guaranteed_loot   — Array of item dicts; always drops (one entry = one item in the bag)
-#   rare_loot         — Array of item dicts with drop_chance field; rolled at spawn time
+#   guaranteed_loot   — Array of resource paths; always drops
+#   rare_loot         — Array of { path: String, drop_chance: float } rolled at spawn time
 #
-# Item dict fields (all optional beyond "name"):
-#   name, desc, type (ItemData.Type key string), rarity, vendor_price
-#   bonus_strength/agility/dexterity/intelligence/wisdom/constitution
-#   bonus_max_hp, bonus_max_mp, bonus_armor
-#   weapon_damage_min, weapon_damage_max, weapon_delay, weapon_skill, is_two_handed
+# Track 20D — loot is now resource-path-based (was inline dicts).
+# Each path resolves to an authored .tres in data/loot/items/, which
+# means the server registry (items.toml) knows about these items.
+# Before this lift, named drops were runtime-only items with no
+# canonical path, so equip / sell / destroy silently failed server-
+# side with "unknown item path".
 
 const ALL: Dictionary = {
 	"rotfang": {
@@ -33,25 +34,10 @@ const ALL: Dictionary = {
 		"enrage_damage_mult": 1.4,
 		"enrage_speed_mult": 1.3,
 		"guaranteed_loot": [
-			{
-				"name": "Rotfang's Fang",
-				"desc": "A massive yellowed fang ripped from the beast's jaw. Prized by hunters.",
-				"type": "MISC",
-				"rarity": "UNCOMMON",
-				"vendor_price": 20
-			}
+			"res://data/loot/items/rotfangs_fang.tres",
 		],
 		"rare_loot": [
-			{
-				"name": "Predator's Collar",
-				"desc": "A crude loop of cured hide strung with wolf teeth. Worn by the pack's champion.",
-				"type": "NECK",
-				"rarity": "UNCOMMON",
-				"vendor_price": 85,
-				"bonus_strength": 3,
-				"bonus_agility": 2,
-				"drop_chance": 0.30
-			}
+			{"path": "res://data/loot/items/predators_collar.tres", "drop_chance": 0.30},
 		]
 	},
 
@@ -66,29 +52,10 @@ const ALL: Dictionary = {
 		"enrage_damage_mult": 1.5,
 		"enrage_speed_mult": 1.2,
 		"guaranteed_loot": [
-			{
-				"name": "Gnoll Chief's Seal",
-				"desc": "A stamped iron disc marking Greth's authority over the Flats gnolls.",
-				"type": "MISC",
-				"rarity": "UNCOMMON",
-				"vendor_price": 25
-			}
+			"res://data/loot/items/gnoll_chiefs_seal.tres",
 		],
 		"rare_loot": [
-			{
-				"name": "Bonecrusher's War Axe",
-				"desc": "A brutishly large axe, well-maintained despite its crude appearance.",
-				"type": "WEAPON",
-				"rarity": "RARE",
-				"vendor_price": 220,
-				"weapon_damage_min": 12,
-				"weapon_damage_max": 24,
-				"weapon_delay": 3.2,
-				"weapon_skill": "2h_blunt",
-				"is_two_handed": true,
-				"bonus_strength": 5,
-				"drop_chance": 0.25
-			}
+			{"path": "res://data/loot/items/bonecrushers_war_axe.tres", "drop_chance": 0.25},
 		]
 	},
 
@@ -103,26 +70,10 @@ const ALL: Dictionary = {
 		"enrage_damage_mult": 1.3,
 		"enrage_speed_mult": 1.4,
 		"guaranteed_loot": [
-			{
-				"name": "Pristine Venom Sac",
-				"desc": "Intact and full — a rare find. Alchemists pay well for these.",
-				"type": "MISC",
-				"rarity": "UNCOMMON",
-				"vendor_price": 35
-			}
+			"res://data/loot/items/pristine_venom_sac.tres",
 		],
 		"rare_loot": [
-			{
-				"name": "Chitinous Ring",
-				"desc": "A ring cut from the creature's carapace, hardened by decades in the dark.",
-				"type": "RING",
-				"rarity": "RARE",
-				"vendor_price": 160,
-				"bonus_agility": 4,
-				"bonus_constitution": 3,
-				"bonus_max_hp": 30.0,
-				"drop_chance": 0.25
-			}
+			{"path": "res://data/loot/items/chitinous_ring.tres", "drop_chance": 0.25},
 		]
 	},
 
@@ -137,26 +88,10 @@ const ALL: Dictionary = {
 		"enrage_damage_mult": 1.0,
 		"enrage_speed_mult": 1.0,
 		"guaranteed_loot": [
-			{
-				"name": "Sable Wing Membrane",
-				"desc": "Thin as parchment and dark as a moonless sky. Sought by leatherworkers.",
-				"type": "MISC",
-				"rarity": "UNCOMMON",
-				"vendor_price": 15
-			}
+			"res://data/loot/items/sable_wing_membrane.tres",
 		],
 		"rare_loot": [
-			{
-				"name": "Shadow Signet",
-				"desc": "A ring of polished jet. Seems to absorb light around it.",
-				"type": "RING",
-				"rarity": "UNCOMMON",
-				"vendor_price": 120,
-				"bonus_agility": 3,
-				"bonus_intelligence": 2,
-				"bonus_max_mp": 20.0,
-				"drop_chance": 0.20
-			}
+			{"path": "res://data/loot/items/shadow_signet.tres", "drop_chance": 0.20},
 		]
 	},
 
@@ -171,74 +106,20 @@ const ALL: Dictionary = {
 		"enrage_damage_mult": 1.6,
 		"enrage_speed_mult": 1.1,
 		"guaranteed_loot": [
-			{
-				"name": "Undying Marrow",
-				"desc": "Pulsing faintly with a sickly light. Necromancers value it highly.",
-				"type": "MISC",
-				"rarity": "RARE",
-				"vendor_price": 60
-			}
+			"res://data/loot/items/undying_marrow.tres",
 		],
 		"rare_loot": [
-			{
-				"name": "Cursed Femur",
-				"desc": "A blackened bone weapon pitted with necrotic runes. Unnaturally heavy.",
-				"type": "WEAPON",
-				"rarity": "RARE",
-				"vendor_price": 260,
-				"weapon_damage_min": 14,
-				"weapon_damage_max": 26,
-				"weapon_delay": 2.8,
-				"weapon_skill": "1h_blunt",
-				"bonus_strength": 6,
-				"bonus_max_hp": 20.0,
-				"drop_chance": 0.20
-			}
+			{"path": "res://data/loot/items/cursed_femur.tres", "drop_chance": 0.20},
 		]
 	}
 }
 
-# Builds an ItemData from a loot entry dict. Used by enemy.apply_named().
-static func make_item(d: Dictionary) -> ItemData:
-	var item := ItemData.new()
-	item.item_name   = d.get("name", "Unknown")
-	item.description = d.get("desc", "")
-	item.type        = _parse_type(d.get("type", "MISC"))
-	item.rarity      = _parse_rarity(d.get("rarity", "UNCOMMON"))
-	item.vendor_price       = d.get("vendor_price", 0)
-	item.bonus_strength     = d.get("bonus_strength", 0)
-	item.bonus_dexterity    = d.get("bonus_dexterity", 0)
-	item.bonus_agility      = d.get("bonus_agility", 0)
-	item.bonus_intelligence = d.get("bonus_intelligence", 0)
-	item.bonus_wisdom       = d.get("bonus_wisdom", 0)
-	item.bonus_constitution = d.get("bonus_constitution", 0)
-	item.bonus_max_hp       = d.get("bonus_max_hp", 0.0)
-	item.bonus_max_mp       = d.get("bonus_max_mp", 0.0)
-	item.bonus_armor        = d.get("bonus_armor", 0)
-	item.weapon_damage_min  = d.get("weapon_damage_min", 0)
-	item.weapon_damage_max  = d.get("weapon_damage_max", 0)
-	item.weapon_delay       = d.get("weapon_delay", 2.0)
-	item.weapon_skill       = d.get("weapon_skill", "")
-	item.is_two_handed      = d.get("is_two_handed", false)
-	return item
-
-static func _parse_type(s: String) -> ItemData.Type:
-	match s:
-		"WEAPON":      return ItemData.Type.WEAPON
-		"OFFHAND":     return ItemData.Type.OFFHAND
-		"HEAD":        return ItemData.Type.HEAD
-		"CHEST":       return ItemData.Type.CHEST
-		"LEGS":        return ItemData.Type.LEGS
-		"FEET":        return ItemData.Type.FEET
-		"HANDS":       return ItemData.Type.HANDS
-		"RING":        return ItemData.Type.RING
-		"NECK":        return ItemData.Type.NECK
-		"CONSUMABLE":  return ItemData.Type.CONSUMABLE
-		_:             return ItemData.Type.MISC
-
-static func _parse_rarity(s: String) -> ItemData.Rarity:
-	match s:
-		"UNCOMMON": return ItemData.Rarity.UNCOMMON
-		"RARE":     return ItemData.Rarity.RARE
-		"EPIC":     return ItemData.Rarity.EPIC
-		_:          return ItemData.Rarity.COMMON
+# Loads an ItemData by resource path. Returns null with a warning if
+# the file is missing — protects boss kills from silently dropping
+# nothing because an authoring typo broke the path. Used by
+# enemy.apply_named().
+static func load_item(path: String) -> ItemData:
+	if not ResourceLoader.exists(path):
+		push_warning("named mob loot path missing: %s" % path)
+		return null
+	return load(path) as ItemData
