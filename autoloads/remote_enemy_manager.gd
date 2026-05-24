@@ -42,6 +42,11 @@ func _ready() -> void:
 	Net.world_entity_died.connect(_on_entity_died)
 	Net.world_entity_despawn.connect(_on_entity_despawn)
 
+# Track 21B — public accessor for the target-of-target frame to
+# resolve a server-sent target_id back to a RemoteEnemy node.
+func get_by_id(id: int) -> Node:
+	return _by_id.get(id)
+
 func _process(_delta: float) -> void:
 	var scene := get_tree().current_scene
 	if scene != _last_scene:

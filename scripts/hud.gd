@@ -60,6 +60,11 @@ var _tot_frame: DraggablePanel = null
 var _tot_name_label: Label = null
 var _tot_hp_bar: ProgressBar = null
 var _tot_hp_label: Label = null
+# Track 21B — node the ToT frame is currently rendering. Cached so
+# we can disconnect its hp/death signals on retarget without a
+# scene-tree walk; null when ToT is hidden or pointing at the local
+# player (PlayerStats is the source there).
+var _tot_entity: Node = null
 
 var _self_targeted: bool = false
 
@@ -497,7 +502,11 @@ func _on_hp_changed(current: float, maximum: float) -> void:
 	health_bar.value = current
 	if _hp_label:
 		_hp_label.text = "%d / %d" % [int(current), int(maximum)]
-	if _tot_frame != null and _tot_frame.visible:
+	# Track 21B — ToT mirrors PlayerStats only when it's rendering
+	# the local player (self-target case: tracked enemy is hitting
+	# you). When ToT is bound to a remote entity, that entity's
+	# hp_changed feeds the bar via _on_tot_entity_hp_changed.
+	if _tot_frame != null and _tot_frame.visible and _tot_entity == null:
 		_tot_hp_bar.max_value = maximum
 		_tot_hp_bar.value = current
 		if _tot_hp_label:
@@ -580,6 +589,13 @@ func _on_target_changed(enemy) -> void:
 			_tracked_target.buffs_changed.disconnect(_on_target_buffs_changed)
 		if _tracked_target.has_signal("died") and _tracked_target.is_connected("died", _on_target_enemy_died):
 			_tracked_target.died.disconnect(_on_target_enemy_died)
+		# Track 21B — drop the RemoteEnemy target_changed sub so the
+		# old target's targeting doesn't bleed into ToT after retarget.
+		if _tracked_target.has_signal("target_changed") and _tracked_target.is_connected("target_changed", _on_tracked_target_target_changed):
+			_tracked_target.target_changed.disconnect(_on_tracked_target_target_changed)
+	# Track 21B — also drop any binding to the previous target-of-
+	# target entity. _refresh_tot will rebuild + rebind below.
+	_clear_tot_entity_binding()
 	_tracked_target = enemy
 	# MP/Stamina/Cast/Buffs are peer-only; hide on every transition and
 	# re-show in the remote-player branch below if applicable.
@@ -644,6 +660,12 @@ func _on_target_changed(enemy) -> void:
 		_target_hp_label.visible = true
 	enemy.hp_changed.connect(_on_target_hp_changed)
 	enemy.died.connect(_on_target_enemy_died)
+	# Track 21B — RemoteEnemy fires target_changed when the server's
+	# EntityTarget broadcast lands; subscribe so the ToT frame
+	# follows the tracked enemy's target across the fight (e.g. an
+	# enemy switching from the tank to the healer).
+	if enemy.has_signal("target_changed"):
+		enemy.target_changed.connect(_on_tracked_target_target_changed)
 	_refresh_tot()
 
 # Targeting a remote player. Resources are server-replicated via Track 4
@@ -750,19 +772,150 @@ func _on_target_hp_changed(current: float, maximum: float) -> void:
 func _on_target_enemy_died(_enemy) -> void:
 	_tracked_target = null
 	target_frame.visible = false
+	# Track 21B — also drop the ToT binding so the next target's
+	# ToT doesn't carry a stale hp_changed subscription from the
+	# previous one.
+	_clear_tot_entity_binding()
 	if _tot_frame != null:
 		_tot_frame.visible = false
 
+# Track 21B — resolves "what is my target currently targeting?" and
+# renders it in the ToT frame.
+#
+# Source of truth varies by tracked-target kind:
+#   - RemoteEnemy: server-sent `target_id` field (driven by EntityTarget
+#     broadcasts). Resolved through the id partition to a RemotePlayer
+#     / RemoteEnemy / RemotePet / local player.
+#   - Local Enemy (solo / Test Room): the legacy local AI always
+#     chases the player when aggro'd, so we show "You" iff the enemy
+#     is in CHASE / ATTACK. Hidden in IDLE / LEASH / FLEE / DEAD.
+#   - Other tracked kinds (peer player, vendor, pet target frame
+#     usage, etc.): hidden — server doesn't broadcast peer→peer
+#     targeting yet.
 func _refresh_tot() -> void:
-	if _tot_frame == null or _tracked_target == null:
+	if _tot_frame == null:
+		_clear_tot_entity_binding()
 		return
-	var pname := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
-	_tot_name_label.text = pname
-	_tot_hp_bar.max_value = PlayerStats.max_hp
-	_tot_hp_bar.value = PlayerStats.hp
+	if _tracked_target == null or not is_instance_valid(_tracked_target):
+		_clear_tot_entity_binding()
+		_tot_frame.visible = false
+		return
+
+	var tot_id: int = _resolve_tracked_target_target_id()
+	if tot_id == 0:
+		_clear_tot_entity_binding()
+		_tot_frame.visible = false
+		return
+
+	# Self-target sentinel: tracked target is hitting the local player.
+	# PlayerStats is the source; we keep _tot_entity = null and let the
+	# existing _on_hp_changed handler tick the bar.
+	var own_id: int = Net.get_player_id() if Net.get_player_id() > 0 else -1
+	if tot_id == own_id or tot_id == -1:
+		_clear_tot_entity_binding()
+		var pname := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
+		_tot_name_label.text = pname
+		_tot_hp_bar.max_value = maxf(PlayerStats.max_hp, 1.0)
+		_tot_hp_bar.value = PlayerStats.hp
+		if _tot_hp_label:
+			_tot_hp_label.text = "%d / %d" % [int(PlayerStats.hp), int(PlayerStats.max_hp)]
+		_tot_frame.visible = true
+		return
+
+	# Otherwise resolve to a remote entity by id partition. If the
+	# entity isn't visible yet (AOI gap, despawn race), hide the
+	# frame until the next refresh.
+	var entity: Node = _resolve_remote_entity(tot_id)
+	if entity == null or not is_instance_valid(entity):
+		_clear_tot_entity_binding()
+		_tot_frame.visible = false
+		return
+
+	_bind_tot_entity(entity)
+	_render_tot_entity()
+
+func _resolve_tracked_target_target_id() -> int:
+	# RemoteEnemy carries the authoritative target_id from the
+	# server's EntityTarget broadcasts.
+	if _tracked_target.is_in_group("remote_enemies") and "target_id" in _tracked_target:
+		return int(_tracked_target.target_id)
+	# Local Enemy: solo / Test Room only. Approximate via state — the
+	# stock enemy AI in enemy.gd always chases the local player.
+	if _tracked_target.is_in_group("enemies") and "state" in _tracked_target:
+		var s: int = _tracked_target.state
+		# Enemy.State.CHASE = 1, Enemy.State.ATTACK = 2. Use literals
+		# rather than the enum reference so a future enum reorder is
+		# caught here.
+		if s == 1 or s == 2:
+			return -1  # sentinel: local player
+	return 0
+
+func _resolve_remote_entity(id: int) -> Node:
+	if id <= 0:
+		return null
+	const _ENEMY_BASE: int = 1_000_000_000
+	const _LOOT_BAG_BASE: int = 2_000_000_000
+	const _PET_BASE: int = 3_000_000_000
+	if id >= _PET_BASE:
+		return RemotePetManager.get_by_id(id)
+	if id >= _LOOT_BAG_BASE:
+		return null  # bags aren't combat targets
+	if id >= _ENEMY_BASE:
+		return RemoteEnemyManager.get_by_id(id)
+	# Player char_ids land below ENEMY_ID_BASE.
+	return RemotePlayerManager.get_by_id(id)
+
+func _bind_tot_entity(entity: Node) -> void:
+	if _tot_entity == entity:
+		return
+	_clear_tot_entity_binding()
+	_tot_entity = entity
+	if entity.has_signal("hp_changed"):
+		entity.hp_changed.connect(_on_tot_entity_hp_changed)
+	if entity.has_signal("died"):
+		entity.died.connect(_on_tot_entity_died)
+
+func _clear_tot_entity_binding() -> void:
+	if not is_instance_valid(_tot_entity):
+		_tot_entity = null
+		return
+	if _tot_entity.has_signal("hp_changed") and _tot_entity.is_connected("hp_changed", _on_tot_entity_hp_changed):
+		_tot_entity.hp_changed.disconnect(_on_tot_entity_hp_changed)
+	if _tot_entity.has_signal("died") and _tot_entity.is_connected("died", _on_tot_entity_died):
+		_tot_entity.died.disconnect(_on_tot_entity_died)
+	_tot_entity = null
+
+func _render_tot_entity() -> void:
+	if not is_instance_valid(_tot_entity):
+		return
+	var nm := "Unknown"
+	if "mob_name" in _tot_entity and _tot_entity.mob_name != "":
+		nm = _tot_entity.mob_name
+	elif "pet_name" in _tot_entity:
+		nm = _tot_entity.pet_name
+	var hp: float = _tot_entity.hp if "hp" in _tot_entity else 0.0
+	var max_hp: float = _tot_entity.max_hp if "max_hp" in _tot_entity else 1.0
+	_tot_name_label.text = nm
+	_tot_hp_bar.max_value = maxf(max_hp, 1.0)
+	_tot_hp_bar.value = hp
 	if _tot_hp_label:
-		_tot_hp_label.text = "%d / %d" % [int(PlayerStats.hp), int(PlayerStats.max_hp)]
+		_tot_hp_label.text = "%d / %d" % [int(hp), int(max_hp)]
 	_tot_frame.visible = true
+
+func _on_tot_entity_hp_changed(current: float, maximum: float) -> void:
+	_tot_hp_bar.max_value = maxf(maximum, 1.0)
+	_tot_hp_bar.value = current
+	if _tot_hp_label:
+		_tot_hp_label.text = "%d / %d" % [int(current), int(maximum)]
+
+func _on_tot_entity_died(_who) -> void:
+	_clear_tot_entity_binding()
+	if _tot_frame != null:
+		_tot_frame.visible = false
+
+func _on_tracked_target_target_changed(_target_id: int) -> void:
+	# RemoteEnemy fired its target_changed signal. Re-resolve.
+	_refresh_tot()
 
 # ── Player state ──────────────────────────────────────────────────────────────
 

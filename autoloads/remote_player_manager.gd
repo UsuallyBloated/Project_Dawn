@@ -50,6 +50,11 @@ func _ready() -> void:
 	Net.world_entity_died.connect(_on_entity_died)
 	Net.world_damage_shield_trigger.connect(_on_damage_shield_trigger)
 
+# Track 21B — public accessor used by the target-of-target frame
+# to resolve a peer char_id back to its RemotePlayer node.
+func get_by_id(id: int) -> Node:
+	return _by_id.get(id)
+
 func _process(_delta: float) -> void:
 	var scene := get_tree().current_scene
 	if scene != _last_scene:
