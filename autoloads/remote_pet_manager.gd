@@ -42,7 +42,7 @@ func get_by_id(id: int) -> Node:
 	return _by_id.get(id)
 
 func _process(_delta: float) -> void:
-	var scene := get_tree().current_scene
+	var scene: Node = get_tree().current_scene
 	if scene != _last_scene:
 		for rp in _by_id.values():
 			if is_instance_valid(rp):
@@ -77,7 +77,7 @@ func _on_pet_spawn(
 		"pos": pos,
 		"yaw": yaw,
 	}
-	var scene := get_tree().current_scene
+	var scene: Node = get_tree().current_scene
 	if scene == null or not _scene_hosts_local_player(scene):
 		return
 	if _by_id.has(id):

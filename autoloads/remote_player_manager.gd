@@ -56,7 +56,7 @@ func get_by_id(id: int) -> Node:
 	return _by_id.get(id)
 
 func _process(_delta: float) -> void:
-	var scene := get_tree().current_scene
+	var scene: Node = get_tree().current_scene
 	if scene != _last_scene:
 		# Scene swap (or `current_scene` transitioning through null between
 		# change_scene_to_file and the actual swap — Godot does this briefly).
@@ -102,7 +102,7 @@ func _on_entity_spawn(
 		"pos": pos,
 		"yaw": yaw,
 	}
-	var scene := get_tree().current_scene
+	var scene: Node = get_tree().current_scene
 	if scene == null or not _scene_hosts_local_player(scene):
 		return
 	# Duplicate spawn (stale message after a despawn). Replace.

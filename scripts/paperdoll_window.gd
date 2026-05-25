@@ -221,18 +221,17 @@ func _find_inventory_window() -> Node:
 	# Inventory window isn't grouped; walk the scene tree once. Cheap
 	# (~10 top-level UI nodes); avoids hard-coding a path that breaks
 	# when the HUD reshapes.
-	var root := get_tree().current_scene
+	var root: Node = get_tree().current_scene
 	if root == null:
 		return null
 	return _scan_for_inventory_window(root)
 
 func _scan_for_inventory_window(node: Node) -> Node:
-	if node.get_script() != null:
-		var s = node.get_script()
-		if s.resource_path.ends_with("inventory_window.gd"):
-			return node
+	var s: Script = node.get_script() as Script
+	if s != null and s.resource_path.ends_with("inventory_window.gd"):
+		return node
 	for c in node.get_children():
-		var found := _scan_for_inventory_window(c)
+		var found: Node = _scan_for_inventory_window(c)
 		if found != null:
 			return found
 	return null

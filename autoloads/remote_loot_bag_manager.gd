@@ -34,7 +34,7 @@ func _ready() -> void:
 	Net.world_loot_granted.connect(_on_loot_granted)
 
 func _process(_delta: float) -> void:
-	var scene := get_tree().current_scene
+	var scene: Node = get_tree().current_scene
 	if scene != _last_scene:
 		for bag in _by_id.values():
 			if is_instance_valid(bag):
@@ -58,7 +58,7 @@ func _on_loot_bag_spawn(
 		item_counts: PackedInt32Array) -> void:
 	var items := _materialize_items(item_paths, item_counts)
 	_spawn_data[bag_id] = {"pos": pos, "items": items}
-	var scene := get_tree().current_scene
+	var scene: Node = get_tree().current_scene
 	if scene == null or not _scene_hosts_local_player(scene):
 		return
 	var existing = _by_id.get(bag_id)

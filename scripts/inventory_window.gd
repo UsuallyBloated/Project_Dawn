@@ -28,6 +28,12 @@ func _ready() -> void:
 	Inventory.inventory_changed.connect(_refresh_all)
 	visibility_changed.connect(_on_visibility_changed)
 	_refresh_all()
+	# Center the window on the viewport at startup. Waits one frame so
+	# custom_minimum_size from _build_ui has settled into the actual
+	# `size`. DraggablePanel lets the player move it from there.
+	await get_tree().process_frame
+	var vp_size := get_viewport_rect().size
+	position = ((vp_size - size) * 0.5).round()
 
 func _build_ui() -> void:
 	var style := StyleBoxFlat.new()
@@ -456,17 +462,17 @@ func _input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 func _find_paperdoll_window() -> Control:
-	var root := get_tree().current_scene
+	var root: Node = get_tree().current_scene
 	if root == null:
 		return null
 	return _scan_for_paperdoll(root)
 
 func _scan_for_paperdoll(node: Node) -> Control:
-	var s := node.get_script()
+	var s: Script = node.get_script() as Script
 	if s != null and s.resource_path.ends_with("paperdoll_window.gd"):
 		return node as Control
 	for c in node.get_children():
-		var found := _scan_for_paperdoll(c)
+		var found: Control = _scan_for_paperdoll(c)
 		if found != null:
 			return found
 	return null

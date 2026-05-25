@@ -2,98 +2,107 @@
 
 [ext_resource type="Script" uid="uid://4xqe6iejlere" path="res://scripts/hud.gd" id="1_hudgd"]
 [ext_resource type="PackedScene" path="res://scenes/character_window.tscn" id="2_charwin"]
-[ext_resource type="Script" path="res://scripts/inventory_window.gd" id="3_invwin"]
-[ext_resource type="Script" path="res://scripts/paperdoll_window.gd" id="4_paperdoll"]
-[ext_resource type="Script" path="res://scripts/draggable_panel.gd" id="5_drag"]
+[ext_resource type="Script" uid="uid://vlu2gaa3a28w" path="res://scripts/inventory_window.gd" id="3_invwin"]
+[ext_resource type="Script" uid="uid://64i3y5wf5645" path="res://scripts/paperdoll_window.gd" id="4_paperdoll"]
+[ext_resource type="Script" uid="uid://cs43i2occl6ya" path="res://scripts/draggable_panel.gd" id="5_drag"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hudgd")
 
 [node name="Panel" type="Panel" parent="."]
-anchors_preset = -1
-anchor_top = 0.0
-anchor_bottom = 0.0
-offset_left = 10.0
-offset_top = 10.0
-offset_right = 320.0
-offset_bottom = 100.0
+offset_left = 32.0
+offset_top = 30.0
+offset_right = 342.0
+offset_bottom = 160.0
 script = ExtResource("5_drag")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 8.0
+offset_left = 2.0
 offset_top = 8.0
-offset_right = -8.0
-offset_bottom = -8.0
+offset_right = -12.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 4
 
+[node name="PlayerNameLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+
 [node name="HPRow" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
 [node name="HPLabel" type="Label" parent="Panel/VBoxContainer/HPRow"]
 custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "HP"
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 12
 
 [node name="HealthBar" type="ProgressBar" parent="Panel/VBoxContainer/HPRow"]
 custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
 value = 100.0
 show_percentage = false
 
 [node name="MPRow" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
 [node name="MPLabel" type="Label" parent="Panel/VBoxContainer/MPRow"]
 custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "MP"
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 12
 
 [node name="ManaBar" type="ProgressBar" parent="Panel/VBoxContainer/MPRow"]
 custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
 value = 100.0
 show_percentage = false
 
 [node name="STARow" type="HBoxContainer" parent="Panel/VBoxContainer"]
+layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 6
 
 [node name="STALabel" type="Label" parent="Panel/VBoxContainer/STARow"]
 custom_minimum_size = Vector2(32, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
 text = "STA"
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 12
 
 [node name="StaminaBar" type="ProgressBar" parent="Panel/VBoxContainer/STARow"]
 custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
 value = 100.0
 show_percentage = false
 
 [node name="TargetFrame" type="Panel" parent="."]
 visible = false
-anchors_preset = -1
+anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-anchor_top = 0.0
-anchor_bottom = 0.0
-offset_left = -120.0
-offset_top = 10.0
-offset_right = 120.0
-offset_bottom = 100.0
+offset_left = -119.0
+offset_top = 42.0
+offset_right = 121.0
+offset_bottom = 182.0
+grow_horizontal = 2
 script = ExtResource("5_drag")
 
 [node name="VBox" type="VBoxContainer" parent="TargetFrame"]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -101,68 +110,84 @@ offset_left = 8.0
 offset_top = 6.0
 offset_right = -8.0
 offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 4
 
 [node name="NameLabel" type="Label" parent="TargetFrame/VBox"]
-text = ""
-horizontal_alignment = 1
+layout_mode = 2
 theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
 
 [node name="LevelLabel" type="Label" parent="TargetFrame/VBox"]
-text = ""
-horizontal_alignment = 1
+layout_mode = 2
 theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
 
 [node name="HPBar" type="ProgressBar" parent="TargetFrame/VBox"]
 custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
 value = 100.0
 show_percentage = false
 
 [node name="MPBar" type="ProgressBar" parent="TargetFrame/VBox"]
 visible = false
 custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
 value = 100.0
 show_percentage = false
 
 [node name="StaminaBar" type="ProgressBar" parent="TargetFrame/VBox"]
 visible = false
 custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
 size_flags_horizontal = 3
-max_value = 100.0
 value = 100.0
 show_percentage = false
 
 [node name="CastBar" type="ProgressBar" parent="TargetFrame/VBox"]
 visible = false
 custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
 size_flags_horizontal = 3
 max_value = 1.0
-value = 0.0
 show_percentage = false
 
 [node name="CastLabel" type="Label" parent="TargetFrame/VBox"]
 visible = false
-text = ""
-horizontal_alignment = 1
+layout_mode = 2
 theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
 
 [node name="BuffsLabel" type="Label" parent="TargetFrame/VBox"]
 visible = false
-text = ""
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 autowrap_mode = 2
-theme_override_font_sizes/font_size = 10
 
 [node name="CharacterWindow" parent="." instance=ExtResource("2_charwin")]
+offset_left = -662.0
+offset_top = -258.0
+offset_right = -352.0
+offset_bottom = 202.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="InventoryWindow" type="Panel" parent="."]
 visible = false
+offset_left = 3.0
+offset_top = 6.0
+offset_right = 3.0
+offset_bottom = 6.0
 script = ExtResource("3_invwin")
 
 [node name="PaperdollWindow" type="Panel" parent="."]
 visible = false
+offset_left = 636.0
+offset_top = 293.0
+offset_right = 636.0
+offset_bottom = 293.0
 script = ExtResource("4_paperdoll")

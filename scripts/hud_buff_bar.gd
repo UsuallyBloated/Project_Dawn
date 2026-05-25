@@ -4,14 +4,18 @@ var _hbox: HBoxContainer = null
 var _timer_labels: Dictionary = {}
 
 func _ready() -> void:
+	# Default position: directly below the player stat panel at top-
+	# left (left=32, right=342, ending at y=133). 8 px gap below the
+	# panel; matches the panel's width (310) for visual alignment.
+	# DraggablePanel lets the player move it at runtime if they want.
 	anchor_left   = 0.0
-	anchor_top    = 1.0
+	anchor_top    = 0.0
 	anchor_right  = 0.0
-	anchor_bottom = 1.0
-	offset_left   = 10.0
-	offset_right  = 310.0
-	offset_bottom = -152.0
-	offset_top    = -200.0
+	anchor_bottom = 0.0
+	offset_left   = 32.0
+	offset_right  = 342.0
+	offset_top    = 141.0
+	offset_bottom = 189.0
 	clip_contents = true
 
 	apply_style(Color(0.04, 0.03, 0.02, 0.70), UITheme.C_BORDER)

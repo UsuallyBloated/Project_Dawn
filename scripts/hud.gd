@@ -37,7 +37,7 @@ var _mp_label: Label = null
 var _sta_label: Label = null
 var _xp_bar: ProgressBar = null
 var _xp_label: Label = null
-var _alignment_label: Label = null
+@onready var _player_name_label: Label = $Panel/VBoxContainer/PlayerNameLabel
 
 var _window_stack: Array = []
 var _tracked_target = null
@@ -114,7 +114,8 @@ func _ready() -> void:
 		w.visibility_changed.connect(_on_window_visibility_changed.bind(w))
 
 	_build_xp_bar()
-	_build_alignment_label()
+	_refresh_player_name_label()
+	PlayerStats.character_applied.connect(_refresh_player_name_label)
 	_build_clock()
 	_build_state_label()
 	_build_command_input()
@@ -123,7 +124,6 @@ func _ready() -> void:
 	_build_vendor_window()
 	_build_components()
 	_connect_player_state()
-	Alignment.alignment_changed.connect(_on_alignment_changed)
 
 func _build_components() -> void:
 	var death_screen := _HudDeathScreen.new()
@@ -250,31 +250,13 @@ func _on_xp_changed(current_xp: int, xp_to_next: int) -> void:
 	_xp_bar.value = current_xp
 	_xp_label.text = "%d / %d" % [current_xp, xp_to_next]
 
-# ── Alignment label ───────────────────────────────────────────────────────────
+# ── Player name label ─────────────────────────────────────────────────────────
 
-func _build_alignment_label() -> void:
-	_alignment_label = Label.new()
-	_alignment_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_alignment_label.add_theme_font_size_override("font_size", 11)
-	_alignment_label.add_theme_color_override("font_color", _alignment_color(Alignment.alignment_tier))
-	_alignment_label.text = Alignment.alignment_tier
-	_alignment_label.custom_minimum_size = Vector2(0, 16)
-	$Panel/VBoxContainer.add_child(_alignment_label)
-
-func _on_alignment_changed(tier: String, _score: int) -> void:
-	if _alignment_label == null:
+func _refresh_player_name_label() -> void:
+	if _player_name_label == null:
 		return
-	_alignment_label.text = tier
-	_alignment_label.add_theme_color_override("font_color", _alignment_color(tier))
-
-func _alignment_color(tier: String) -> Color:
-	match tier:
-		"Exalted": return Color(1.00, 0.88, 0.20)
-		"Good":    return Color(0.40, 0.85, 1.00)
-		"Neutral": return Color(0.65, 0.65, 0.65)
-		"Bad":     return Color(1.00, 0.55, 0.15)
-		"Evil":    return Color(0.85, 0.15, 0.15)
-	return Color(0.65, 0.65, 0.65)
+	var nm := PlayerStats.player_name
+	_player_name_label.text = nm if nm != "" else "Adventurer"
 
 # ── Utility windows ───────────────────────────────────────────────────────────
 

@@ -413,7 +413,7 @@ func spell_color(damage_type: SpellData.DamageType) -> Color:
 func _spawn_arrow_fx(target_pos: Vector3) -> void:
 	if not is_instance_valid(_player):
 		return
-	var scene := get_tree().current_scene
+	var scene: Node = get_tree().current_scene
 	if scene == null:
 		return
 	var start := _player.global_position + Vector3.UP * 1.2
@@ -443,7 +443,7 @@ func _spawn_arrow_fx(target_pos: Vector3) -> void:
 	tw.tween_callback(mesh_inst.queue_free)
 
 func spawn_impact_light(pos: Vector3, color: Color) -> void:
-	var scene := get_tree().current_scene
+	var scene: Node = get_tree().current_scene
 	if scene == null:
 		return
 	var light := OmniLight3D.new()

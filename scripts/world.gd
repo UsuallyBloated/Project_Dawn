@@ -59,6 +59,6 @@ func _on_peer_disconnected(id: int) -> void:
 
 @rpc("authority", "call_local", "reliable")
 func _remove_player(peer_id: int) -> void:
-	var player := players_container.get_node_or_null(str(peer_id))
+	var player: Node = players_container.get_node_or_null(str(peer_id))
 	if player:
 		player.queue_free()

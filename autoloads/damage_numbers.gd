@@ -38,7 +38,7 @@ func spawn_xp(amount: int) -> void:
 	_spawn((players[0] as Node3D).global_position, amount, _Script.Type.XP)
 
 func _spawn(pos: Vector3, amount: int, type: DamageNumber.Type) -> void:
-	var scene := get_tree().current_scene
+	var scene: Node = get_tree().current_scene
 	if scene == null:
 		return
 	var lbl := Label3D.new()
