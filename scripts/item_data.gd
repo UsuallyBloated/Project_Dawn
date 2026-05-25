@@ -57,6 +57,16 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 # Bag (BAG type only)
 @export var bag_num_slots: int = 0
 
+# Track 22.C — Mount whistle. Right-clicking an item with is_mount=true
+# routes through MountManager.summon: applies the mount speed
+# multiplier (which overrides all other speed sources), enters the
+# mounted state, dismounts on any incoming damage / death / zone
+# entry into a no-mount zone. Whistles are not consumed (single-use
+# would feel bad for a travel tool); they remain in inventory.
+@export var is_mount: bool = false
+@export var mount_speed_mult: float = 1.6   # speed multiplier while mounted
+@export var mount_name: String = ""         # display label, e.g. "Brown Steed"
+
 # On-hit proc effect (WEAPON type only). proc_chance 0 = disabled.
 @export var proc_chance: float = 0.0         # 0.0–1.0; probability per hit
 @export var proc_damage: int = 0             # flat damage on proc fire

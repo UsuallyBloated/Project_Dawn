@@ -253,7 +253,15 @@ func _on_slot_input(event: InputEvent, index: int) -> void:
 		if slot == null:
 			return
 		var item: ItemData = slot["item"]
-		if item.type == ItemData.Type.CONSUMABLE:
+		if item.is_mount:
+			# Track 22.C — mount whistle. Toggles summon/dismount; the
+			# whistle item is not consumed.
+			if MountManager.is_mounted() and MountManager.current_mount == item:
+				MountManager.dismount()
+			else:
+				MountManager.summon(item)
+			get_viewport().set_input_as_handled()
+		elif item.type == ItemData.Type.CONSUMABLE:
 			_use_consumable(item, index)
 			get_viewport().set_input_as_handled()
 		elif item.type != ItemData.Type.MISC:

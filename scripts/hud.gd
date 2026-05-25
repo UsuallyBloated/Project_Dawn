@@ -929,6 +929,12 @@ func _handle_chat_input(text: String) -> void:
 		if is_instance_valid(_player):
 			_player.stand()
 		return
+	# Track 22.C — manual dismount. Summon is right-click-the-whistle;
+	# this command lets the player step off without using the whistle
+	# again or waiting to take a hit.
+	if lower == "/dismount":
+		MountManager.dismount()
+		return
 	if lower == "/pet follow":
 		PetManager.command_follow()
 		return

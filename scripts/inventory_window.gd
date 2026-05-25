@@ -272,7 +272,14 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 		if slot == null:
 			return
 		var item: ItemData = slot["item"]
-		if item.type == ItemData.Type.BAG:
+		if item.is_mount:
+			# Track 22.C — mount whistle. Summon/dismount toggles
+			# through MountManager; the whistle is not consumed.
+			if MountManager.is_mounted() and MountManager.current_mount == item:
+				MountManager.dismount()
+			else:
+				MountManager.summon(item)
+		elif item.type == ItemData.Type.BAG:
 			_toggle_bag(index)
 		elif item.type == ItemData.Type.CONSUMABLE:
 			_use_consumable(item, index)

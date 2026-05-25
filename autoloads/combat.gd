@@ -341,6 +341,9 @@ func receive_player_damage(amount: int, attacker: Node = null, attacker_name: St
 	if attacker != null and is_instance_valid(attacker):
 		player_attacked.emit(attacker)
 	Spells.try_interrupt_cast()
+	# Track 22.C — any incoming hit dismounts the rider. Classic-EQ
+	# feel; mounts are travel tools, not combat platforms.
+	MountManager.dismount("hit")
 	if BuffManager.is_evade_boosted():
 		player_evaded_attack.emit(attacker_name if attacker_name != "" else "the attack")
 		WeaponSkills.try_advance("dodge")

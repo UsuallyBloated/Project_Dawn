@@ -74,3 +74,11 @@ const STARTER_ZONE_CAMPS: Array = [
 # Add a zone's res:// path here when it is built as a dungeon/instance.
 const NON_BINDABLE_ZONES: Array[String] = [
 ]
+
+# Track 22.C — zone paths where mount whistles refuse to summon
+# (and where the player auto-dismounts on entry). Mirrors the
+# NON_BINDABLE_ZONES list — add a dungeon / city interior scene's
+# res:// path here to mark it as no-mount. Empty list = mounts
+# allowed everywhere by default.
+const NO_MOUNT_ZONES: Array[String] = [
+]

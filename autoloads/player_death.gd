@@ -30,6 +30,10 @@ func _on_hp_changed(current: float, _max: float) -> void:
 func _die() -> void:
 	is_dead = true
 	Combat.set_target(null)
+	# Track 22.C — death dismounts (the killing blow's receive_player_damage
+	# also dismounts, but death from a non-damage path — fall, scripted
+	# event — needs this safety net).
+	MountManager.dismount("died")
 	var xp_loss := int(PlayerStats.xp * XP_LOSS_PERCENT)
 	if xp_loss > 0:
 		PlayerStats.lose_xp(xp_loss)

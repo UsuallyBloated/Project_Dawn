@@ -251,7 +251,11 @@ func _physics_process(delta: float) -> void:
 			direction += transform.basis.x
 
 	var base_speed := CROUCH_SPEED if state == PlayerState.CROUCHING else SPEED
-	var current_speed := base_speed * BuffManager.get_speed_mult()
+	# Track 22.C — mount overrides every other speed source. When
+	# mounted, BuffManager.get_speed_mult() is ignored and the mount's
+	# own multiplier applies. MountManager.get_effective_speed_mult
+	# falls through to the BuffManager value when not mounted.
+	var current_speed := base_speed * MountManager.get_effective_speed_mult()
 	if direction != Vector3.ZERO:
 		direction = direction.normalized()
 		velocity.x = direction.x * current_speed
