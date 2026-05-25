@@ -319,6 +319,15 @@ func broadcast_attack(target_id: int, weapon_path: String, is_offhand: bool, dmg
 		return
 	send_attack(target_id, weapon_path, is_offhand, dmg_type)
 
+# Track 22.H — peer target broadcast. Combat.set_target calls this
+# whenever the local player retargets so the server can fan an
+# EntityTarget to in-world peers. target_id == 0 (or negative) =
+# no target (encoded as None on the wire).
+func broadcast_set_target(target_id: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_set_target(target_id)
+
 # Track 5 sub-task 4 — player → server loot pickup intents. Server
 # validates pickup range + slot bounds, transfers the stack with a
 # private LootGranted, and re-broadcasts the bag (or despawns it when

@@ -116,6 +116,9 @@ func _ready() -> void:
 	_build_xp_bar()
 	_refresh_player_name_label()
 	PlayerStats.character_applied.connect(_refresh_player_name_label)
+	_build_portrait()
+	_refresh_portrait()
+	PlayerStats.character_applied.connect(_refresh_portrait)
 	_build_clock()
 	_build_state_label()
 	_build_command_input()
@@ -257,6 +260,52 @@ func _refresh_player_name_label() -> void:
 		return
 	var nm := PlayerStats.player_name
 	_player_name_label.text = nm if nm != "" else "Adventurer"
+
+# ── Player portrait ───────────────────────────────────────────────────────────
+
+# Track 22.I — race/class portrait slot. TextureRect floats to the
+# right of the player stat panel; populates from
+# assets/sprites/portraits/portrait_<race>_<class>.png matching the
+# naming in docs/concepts/lore/portraits/prompts.md. Missing files
+# hide the slot — saves can land incrementally as art is generated.
+var _portrait_rect: TextureRect = null
+
+func _build_portrait() -> void:
+	_portrait_rect = TextureRect.new()
+	_portrait_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	_portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_portrait_rect.custom_minimum_size = Vector2(96, 96)
+	# Position: right of the player stat panel (which sits at
+	# offset_left=32 → offset_right=342). 4 px gap, top-aligned.
+	_portrait_rect.position = Vector2(346, 8)
+	_portrait_rect.size = Vector2(96, 96)
+	_portrait_rect.visible = false
+	add_child(_portrait_rect)
+
+func _refresh_portrait() -> void:
+	if _portrait_rect == null:
+		return
+	var race: String = PlayerStats.race
+	var cls: String = PlayerStats.player_class
+	if race == "" or cls == "":
+		_portrait_rect.visible = false
+		return
+	# Slugify: "Dark Elf" → "dark_elf", "Shadow Knight" → "shadow_knight".
+	# Lowercased, spaces to underscores, backticks stripped (Kel`varath).
+	var race_slug := race.to_lower().replace(" ", "_").replace("`", "")
+	var cls_slug := cls.to_lower().replace(" ", "_").replace("`", "")
+	var path := "res://assets/sprites/portraits/portrait_%s_%s.png" % [race_slug, cls_slug]
+	if not ResourceLoader.exists(path):
+		_portrait_rect.visible = false
+		_portrait_rect.texture = null
+		return
+	var tex := load(path) as Texture2D
+	if tex == null:
+		_portrait_rect.visible = false
+		_portrait_rect.texture = null
+		return
+	_portrait_rect.texture = tex
+	_portrait_rect.visible = true
 
 # ── Utility windows ───────────────────────────────────────────────────────────
 
@@ -688,8 +737,12 @@ func _setup_peer_target(peer) -> void:
 	if peer.is_casting():
 		_show_target_cast_bar(peer.cast_spell_name)
 	_refresh_target_buffs_label()
-	if _tot_frame != null:
-		_tot_frame.visible = false
+	# Track 22.H — RemotePlayer now broadcasts target_changed when
+	# the server's EntityTarget for them lands. Subscribe + refresh
+	# so the ToT frame shows what tracked peers are attacking.
+	if peer.has_signal("target_changed"):
+		peer.target_changed.connect(_on_tracked_target_target_changed)
+	_refresh_tot()
 
 func _on_target_mp_changed(current: float, maximum: float) -> void:
 	target_mp_bar.max_value = maxf(maximum, 1.0)
@@ -817,9 +870,12 @@ func _refresh_tot() -> void:
 	_render_tot_entity()
 
 func _resolve_tracked_target_target_id() -> int:
-	# RemoteEnemy carries the authoritative target_id from the
-	# server's EntityTarget broadcasts.
-	if _tracked_target.is_in_group("remote_enemies") and "target_id" in _tracked_target:
+	# RemoteEnemy / RemotePlayer both carry an authoritative
+	# target_id from the server's EntityTarget broadcasts (Track 21B
+	# for enemies, Track 22.H for peers). Same field name on both.
+	if (_tracked_target.is_in_group("remote_enemies")
+			or _tracked_target.is_in_group("remote_players")) \
+			and "target_id" in _tracked_target:
 		return int(_tracked_target.target_id)
 	# Local Enemy: solo / Test Room only. Approximate via state — the
 	# stock enemy AI in enemy.gd always chases the local player.

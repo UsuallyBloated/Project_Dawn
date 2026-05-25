@@ -30,6 +30,11 @@ signal cast_ended
 # from `buff_names` / `buff_durations`.
 signal buffs_changed
 
+# Track 22.H — fires when the server's EntityTarget broadcast for
+# this peer lands. ToT HUD subscribes so it can resolve what tracked
+# remote players are attacking. Mirror of RemoteEnemy.target_changed.
+signal target_changed(target_id: int)
+
 # Network identity — set by RemotePlayerManager *before* add_child fires
 # _ready, so _ready can read them.
 var char_id: int = -1
@@ -37,6 +42,9 @@ var player_name: String = ""
 var race: String = ""
 var player_class: String = ""
 var level: int = 1
+
+# Track 22.H — server-fanned current target id (0 = no target).
+var target_id: int = 0
 
 # Replicated resource cache. Starts at "not yet known" — the HUD treats
 # zero max as "no data" and the bars stay hidden until a ResourceUpdate
@@ -157,6 +165,15 @@ func apply_cast_fail(_reason: String) -> void:
 	cast_spell_name = ""
 	cast_duration = 0.0
 	cast_ended.emit()
+
+# Track 22.H — server-fanned EntityTarget for this peer. ToT HUD
+# subscribes via target_changed; refreshes on any transition
+# (including transitions to 0 = no target).
+func apply_target_change(new_target_id: int) -> void:
+	if new_target_id == target_id:
+		return
+	target_id = new_target_id
+	target_changed.emit(new_target_id)
 
 func is_casting() -> bool:
 	return cast_spell_name != ""

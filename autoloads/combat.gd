@@ -86,6 +86,21 @@ func set_target(node) -> void:
 		_auto_attack_timer.stop()
 		_offhand_timer.stop()
 	target_changed.emit(current_target)
+	# Track 22.H — broadcast the new target id to the server so peers
+	# can render target-of-target for the local player. Extracts the
+	# id from whichever node type the target is (RemoteEnemy /
+	# RemotePlayer / RemotePet). Solo / Test Room targets have no
+	# server id and broadcast 0 (no-op for peers since there are none).
+	if Net.is_launcher_mode():
+		var tid: int = 0
+		if is_instance_valid(current_target):
+			if "enemy_id" in current_target:
+				tid = current_target.enemy_id
+			elif "char_id" in current_target:
+				tid = current_target.char_id
+			elif "pet_id" in current_target:
+				tid = current_target.pet_id
+		Net.broadcast_set_target(tid)
 
 func _is_dual_wielding() -> bool:
 	var oh: ItemData = Equipment.equipped.get("offhand")

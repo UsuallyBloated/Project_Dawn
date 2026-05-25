@@ -49,6 +49,11 @@ func _ready() -> void:
 	Net.world_evade.connect(_on_evade)
 	Net.world_entity_died.connect(_on_entity_died)
 	Net.world_damage_shield_trigger.connect(_on_damage_shield_trigger)
+	# Track 22.H — peer target broadcast routes through the same
+	# shared EntityTarget signal RemoteEnemyManager uses. We filter
+	# by id partition (< ENEMY_ID_BASE = player) so the two managers
+	# don't collide.
+	Net.world_entity_target.connect(_on_entity_target)
 
 # Track 21B — public accessor used by the target-of-target frame
 # to resolve a peer char_id back to its RemotePlayer node.
@@ -326,6 +331,19 @@ func _on_entity_died(id: int) -> void:
 	var rp = _by_id.get(id)
 	if rp != null and is_instance_valid(rp):
 		rp.apply_death()
+
+# Track 22.H — peer target broadcast. EntityTarget is shared with
+# enemy AI; filter by id partition (< ENEMY_ID_BASE = player) so
+# we don't fight RemoteEnemyManager over the same signal.
+const _ENEMY_ID_BASE: int = 1_000_000_000
+func _on_entity_target(id: int, target_id: int) -> void:
+	if id >= _ENEMY_ID_BASE:
+		return  # enemy / bag / pet — not ours
+	if id == Net.get_player_id():
+		return  # own target broadcast (peers don't send to themselves)
+	var rp = _by_id.get(id)
+	if rp != null and is_instance_valid(rp):
+		rp.apply_target_change(target_id)
 
 func _on_evade(_attacker: int, target: int) -> void:
 	# DamageNumbers has no spawn_evade; reuse spawn_miss — same visual

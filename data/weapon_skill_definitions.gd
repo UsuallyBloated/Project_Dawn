@@ -51,5 +51,11 @@ static func get_cap(player_class: String, skill: String, level: int) -> int:
 	return max(1, int(max_cap * level / MAX_LEVEL))
 
 static func get_starting_value(player_class: String, skill: String) -> int:
+	# Track 22.F: starting score is L1 cap / 4 with a floor of 1 so
+	# fresh characters have headroom to advance immediately. Classes
+	# that can't train the skill (cap == 0) still start at 0.
 	var cap := get_cap(player_class, skill, 1)
-	return cap
+	if cap == 0:
+		return 0
+	@warning_ignore("integer_division")
+	return max(1, cap / 4)
