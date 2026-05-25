@@ -32,8 +32,17 @@ var _back_btn: Button = null
 var _chat_input: LineEdit = null
 var _last_hp: float = 0.0
 var _auto_scroll := true
+# Sentinel: -1 means "haven't seen a level_changed yet". The first one
+# is the initial apply_character seed (not a real level-up); skip it.
+var _last_logged_level: int = -1
 
 func _ready() -> void:
+	# CanvasLayer defaults to visible = true. Hide until the local
+	# player's _ready (player.gd:95) flips it on after entering
+	# world.tscn — otherwise the chat panel renders over the lobby /
+	# Enter World screen, and any pre-world signals (e.g. level-up
+	# from `apply_character` firing on ConnectOk) would log there.
+	visible = false
 	_build_ui()
 	_connect_signals()
 	_last_hp = PlayerStats.hp
@@ -140,7 +149,14 @@ func _connect_signals() -> void:
 	Spells.spell_failed.connect(func(reason):
 		add_line(reason, MsgType.DAMAGE_IN))
 	PlayerStats.level_changed.connect(func(lvl):
-		add_line("You have reached level %d!" % lvl, MsgType.LEVEL_UP))
+		# Suppress the initial apply_character emit (level loaded
+		# from save / server) — only log actual level-ups.
+		if _last_logged_level < 0:
+			_last_logged_level = lvl
+			return
+		if lvl > _last_logged_level:
+			add_line("You have reached level %d!" % lvl, MsgType.LEVEL_UP)
+		_last_logged_level = lvl)
 	PlayerStats.hp_changed.connect(_on_player_hp_changed)
 	Combat.target_changed.connect(func(enemy):
 		if enemy != null and is_instance_valid(enemy):

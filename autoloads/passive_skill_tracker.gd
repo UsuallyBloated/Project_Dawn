@@ -49,11 +49,18 @@ func apply_remote_score(skill_name: String, new_score: int) -> void:
 # known key with the server's value; unknown keys are skipped (the
 # initialize() pass populates the canonical key set first, so the
 # snapshot's keys should match exactly).
+#
+# Note: no broadcast emit. An earlier version fired
+# `skill_advanced.emit("", 0, 0)` as a "snapshot landed" nudge for the
+# character window to re-render — but CombatLog also subscribes to
+# `skill_advanced` and logged "Your  skill has increased to 0
+# (cap: 0)." three times (once per tracker) on every world entry.
+# Character window already calls `_refresh()` in its _ready and is
+# closed by default; opening it after a snapshot reads fresh values.
 func apply_remote_snapshot(entries: Dictionary) -> void:
 	for k in entries:
 		if _skills.has(k):
 			_skills[k] = int(entries[k])
-	skill_advanced.emit("", 0, 0)  # broadcast "snapshot landed" — UI re-reads
 
 func get_current(skill_name: String) -> int:
 	return _skills.get(skill_name, 0)
