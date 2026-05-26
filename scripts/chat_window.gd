@@ -2,10 +2,9 @@ extends DraggablePanel
 class_name ChatWindow
 
 # Per-window chat output panel. Subscribes to CombatLog.line_added and
-# renders every line for now — per-window filters are deferred to the
-# next chat chunk. The chat input bar is owned by ChatWindowManager,
-# not this window, so deleting any window (including the first) leaves
-# the player able to type.
+# gates each line through `filters` (a per-window MsgType allow-list)
+# before rendering. The chat input bar at the bottom is owned by this
+# window — pressing Enter focuses the active window's input.
 
 signal window_renamed(id: int, new_name: String)
 signal close_requested(id: int)
@@ -39,6 +38,10 @@ const C_GROUP    := Color(0.45, 0.80, 1.00)
 
 var window_id: int = 0
 var window_name: String = "Chat"
+# Per-window MsgType filter set. Keys are FILTER_KEYS values; values are
+# bool. Missing keys default to enabled so that layouts saved before
+# chunk 2 still show everything on load.
+var filters: Dictionary = {}
 
 var _title_label: Label = null
 var _scroll: ScrollContainer = null
@@ -47,8 +50,39 @@ var _back_btn: Button = null
 var _chat_input: LineEdit = null
 var _auto_scroll: bool = true
 
+# Filter keys used in the `filters` dict and persisted to settings.cfg.
+# Index of each entry MUST match the corresponding `CombatLog.MsgType`
+# enum value — that's how `_filter_key_for(type)` resolves an incoming
+# line's type to its filter key. Strings (not ints) are persisted so
+# settings.cfg stays human-readable and survives enum reorderings IF
+# this array is reordered to match.
+const FILTER_KEYS: Array[String] = [
+	"damage_out",  # MsgType.DAMAGE_OUT
+	"damage_in",   # MsgType.DAMAGE_IN
+	"heal",        # MsgType.HEAL
+	"info",        # MsgType.INFO
+	"level_up",    # MsgType.LEVEL_UP
+	"loot",        # MsgType.LOOT
+	"evade",       # MsgType.EVADE
+	"say",         # MsgType.SAY
+	"shout",       # MsgType.SHOUT
+	"ooc",         # MsgType.OOC
+	"tell_out",    # MsgType.TELL_OUT
+	"tell_in",     # MsgType.TELL_IN
+	"group_chat",  # MsgType.GROUP_CHAT
+	"crit",        # MsgType.CRIT
+]
+
+static func default_filters() -> Dictionary:
+	var d: Dictionary = {}
+	for key in FILTER_KEYS:
+		d[key] = true
+	return d
+
 func _ready() -> void:
 	apply_style(C_BG, C_BORDER)
+	if filters.is_empty():
+		filters = default_filters()
 	_build_title_bar()
 	_build_scroll()
 	_build_back_button()
@@ -168,6 +202,8 @@ func set_window_name(new_name: String) -> void:
 func add_line(text: String, type: int) -> void:
 	if _msg_vbox == null:
 		return
+	if not _passes_filter(type):
+		return
 	var lbl := Label.new()
 	lbl.text = text
 	lbl.add_theme_font_size_override("font_size", LINE_FONT_SZ)
@@ -203,12 +239,13 @@ func _on_back_to_bottom_pressed() -> void:
 
 func get_layout() -> Dictionary:
 	return {
-		"id":   window_id,
-		"name": window_name,
-		"x":    position.x,
-		"y":    position.y,
-		"w":    size.x,
-		"h":    size.y,
+		"id":      window_id,
+		"name":    window_name,
+		"x":       position.x,
+		"y":       position.y,
+		"w":       size.x,
+		"h":       size.y,
+		"filters": filters.duplicate(),
 	}
 
 func apply_layout(d: Dictionary) -> void:
@@ -216,6 +253,30 @@ func apply_layout(d: Dictionary) -> void:
 	set_window_name(String(d.get("name", window_name)))
 	position = Vector2(float(d.get("x", position.x)), float(d.get("y", position.y)))
 	size = Vector2(float(d.get("w", size.x)), float(d.get("h", size.y)))
+	var saved_filters = d.get("filters", null)
+	if saved_filters is Dictionary:
+		filters = _merge_filters_with_defaults(saved_filters)
+
+func set_filters(new_filters: Dictionary) -> void:
+	filters = _merge_filters_with_defaults(new_filters)
+
+func _passes_filter(type: int) -> bool:
+	return bool(filters.get(_filter_key_for(type), true))
+
+func _filter_key_for(type: int) -> String:
+	if type < 0 or type >= FILTER_KEYS.size():
+		return "info"
+	return FILTER_KEYS[type]
+
+# Fold saved filters onto a fresh defaults dict so layouts written before
+# a new MsgType was added still show the new category by default rather
+# than silently hiding it.
+func _merge_filters_with_defaults(saved: Dictionary) -> Dictionary:
+	var merged := default_filters()
+	for key in saved:
+		if merged.has(key):
+			merged[key] = bool(saved[key])
+	return merged
 
 func _color_for(type: int) -> Color:
 	# Mirrors the legacy CombatLog._color_for switch. Kept here (not on

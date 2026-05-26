@@ -30,6 +30,9 @@ var _rename_line_edit: LineEdit = null
 var _rename_target_id: int = 0
 var _context_menu: PopupMenu = null
 var _context_target_id: int = 0
+var _filters_dialog: AcceptDialog = null
+var _filters_checkboxes: Dictionary = {}  # filter_key -> CheckBox
+var _filters_target_id: int = 0
 
 func _ready() -> void:
 	# Match the legacy CombatLog behaviour: hidden until the local
@@ -38,6 +41,7 @@ func _ready() -> void:
 	# screen and catch pre-world signal noise.
 	visible = false
 	_build_rename_dialog()
+	_build_filters_dialog()
 	_build_context_menu()
 	_restore_or_seed_windows()
 	CombatLog.show_chat_input_requested.connect(_on_show_chat_input)
@@ -110,14 +114,42 @@ func _on_window_close_requested(id: int) -> void:
 
 # ── Right-click context menu ─────────────────────────────────────────────────
 
-const _MENU_ID_NEW    := 1
-const _MENU_ID_RENAME := 2
-const _MENU_ID_DELETE := 3
+const _MENU_ID_NEW     := 1
+const _MENU_ID_RENAME  := 2
+const _MENU_ID_FILTERS := 3
+const _MENU_ID_DELETE  := 4
+
+# Filter dialog layout. Each entry is [group_label, rows] where rows is
+# an array of [filter_key, display_label]. filter_key matches one of
+# ChatWindow.FILTER_KEYS.
+const _FILTER_GROUPS := [
+	["Combat", [
+		["damage_out", "Damage Dealt"],
+		["damage_in",  "Damage Taken"],
+		["crit",       "Critical Hits"],
+		["heal",       "Heals"],
+		["evade",      "Evades"],
+	]],
+	["Chat", [
+		["say",        "Say"],
+		["shout",      "Shout"],
+		["ooc",        "OOC"],
+		["tell_out",   "Tells (Out)"],
+		["tell_in",    "Tells (In)"],
+		["group_chat", "Group"],
+	]],
+	["System", [
+		["info",       "System"],
+		["level_up",   "Level Up"],
+		["loot",       "Loot"],
+	]],
+]
 
 func _build_context_menu() -> void:
 	_context_menu = PopupMenu.new()
 	_context_menu.add_item("New Window", _MENU_ID_NEW)
 	_context_menu.add_item("Rename...",  _MENU_ID_RENAME)
+	_context_menu.add_item("Filters...", _MENU_ID_FILTERS)
 	_context_menu.add_item("Delete",     _MENU_ID_DELETE)
 	_context_menu.id_pressed.connect(_on_context_menu_selected)
 	add_child(_context_menu)
@@ -136,6 +168,8 @@ func _on_context_menu_selected(menu_id: int) -> void:
 			new_window()
 		_MENU_ID_RENAME:
 			_open_rename_dialog(_context_target_id)
+		_MENU_ID_FILTERS:
+			_open_filters_dialog(_context_target_id)
 		_MENU_ID_DELETE:
 			delete_window(_context_target_id)
 
@@ -169,6 +203,55 @@ func _on_rename_confirmed() -> void:
 	if new_name.is_empty():
 		return
 	rename_window(_rename_target_id, new_name)
+
+# ── Filters dialog ───────────────────────────────────────────────────────────
+
+func _build_filters_dialog() -> void:
+	_filters_dialog = AcceptDialog.new()
+	_filters_dialog.title = "Chat Window Filters"
+	_filters_dialog.dialog_hide_on_ok = true
+	_filters_dialog.min_size = Vector2i(280, 360)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	_filters_dialog.add_child(vbox)
+	for group_any in _FILTER_GROUPS:
+		var group: Array = group_any
+		var header := Label.new()
+		header.text = String(group[0])
+		header.add_theme_font_size_override("font_size", 13)
+		header.add_theme_color_override("font_color", Color(0.85, 0.78, 0.55))
+		vbox.add_child(header)
+		var rows: Array = group[1]
+		for row_any in rows:
+			var row: Array = row_any
+			var key := String(row[0])
+			var cb := CheckBox.new()
+			cb.text = String(row[1])
+			vbox.add_child(cb)
+			_filters_checkboxes[key] = cb
+	_filters_dialog.confirmed.connect(_on_filters_confirmed)
+	add_child(_filters_dialog)
+
+func _open_filters_dialog(id: int) -> void:
+	var w: ChatWindow = _windows_by_id.get(id, null)
+	if w == null:
+		return
+	_filters_target_id = id
+	for key in _filters_checkboxes:
+		var cb: CheckBox = _filters_checkboxes[key]
+		cb.button_pressed = bool(w.filters.get(key, true))
+	_filters_dialog.popup_centered()
+
+func _on_filters_confirmed() -> void:
+	var w: ChatWindow = _windows_by_id.get(_filters_target_id, null)
+	if w == null:
+		return
+	var new_filters: Dictionary = {}
+	for key in _filters_checkboxes:
+		var cb: CheckBox = _filters_checkboxes[key]
+		new_filters[key] = cb.button_pressed
+	w.set_filters(new_filters)
+	_save_layout()
 
 # ── Chat input routing ───────────────────────────────────────────────────────
 #
@@ -221,6 +304,9 @@ func _restore_or_seed_windows() -> void:
 		)
 		w.setup(pos_v, size_v, MIN_SIZE)
 		w.set_window_name(String(d.get("name", "Chat %d" % id)))
+		var saved_filters = d.get("filters", null)
+		if saved_filters is Dictionary:
+			w.set_filters(saved_filters)
 		_wire_window_signals(w)
 		add_child(w)
 		_windows.append(w)
