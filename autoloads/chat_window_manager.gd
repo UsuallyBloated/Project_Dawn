@@ -33,6 +33,14 @@ var _context_target_id: int = 0
 var _filters_dialog: AcceptDialog = null
 var _filters_checkboxes: Dictionary = {}  # filter_key -> CheckBox
 var _filters_target_id: int = 0
+var _display_dialog: AcceptDialog = null
+var _display_bg_slider: HSlider = null
+var _display_bg_label: Label = null
+var _display_font_slider: HSlider = null
+var _display_font_label: Label = null
+var _display_size_spin: SpinBox = null
+var _display_channel_option: OptionButton = null
+var _display_target_id: int = 0
 
 func _ready() -> void:
 	# Match the legacy CombatLog behaviour: hidden until the local
@@ -42,6 +50,7 @@ func _ready() -> void:
 	visible = false
 	_build_rename_dialog()
 	_build_filters_dialog()
+	_build_display_dialog()
 	_build_context_menu()
 	_restore_or_seed_windows()
 	CombatLog.show_chat_input_requested.connect(_on_show_chat_input)
@@ -117,7 +126,8 @@ func _on_window_close_requested(id: int) -> void:
 const _MENU_ID_NEW     := 1
 const _MENU_ID_RENAME  := 2
 const _MENU_ID_FILTERS := 3
-const _MENU_ID_DELETE  := 4
+const _MENU_ID_DISPLAY := 4
+const _MENU_ID_DELETE  := 5
 
 # Filter dialog layout. Each entry is [group_label, rows] where rows is
 # an array of [filter_key, display_label]. filter_key matches one of
@@ -150,6 +160,7 @@ func _build_context_menu() -> void:
 	_context_menu.add_item("New Window", _MENU_ID_NEW)
 	_context_menu.add_item("Rename...",  _MENU_ID_RENAME)
 	_context_menu.add_item("Filters...", _MENU_ID_FILTERS)
+	_context_menu.add_item("Display...", _MENU_ID_DISPLAY)
 	_context_menu.add_item("Delete",     _MENU_ID_DELETE)
 	_context_menu.id_pressed.connect(_on_context_menu_selected)
 	add_child(_context_menu)
@@ -170,6 +181,8 @@ func _on_context_menu_selected(menu_id: int) -> void:
 			_open_rename_dialog(_context_target_id)
 		_MENU_ID_FILTERS:
 			_open_filters_dialog(_context_target_id)
+		_MENU_ID_DISPLAY:
+			_open_display_dialog(_context_target_id)
 		_MENU_ID_DELETE:
 			delete_window(_context_target_id)
 
@@ -253,6 +266,101 @@ func _on_filters_confirmed() -> void:
 	w.set_filters(new_filters)
 	_save_layout()
 
+# ── Display dialog ───────────────────────────────────────────────────────────
+
+func _build_display_dialog() -> void:
+	_display_dialog = AcceptDialog.new()
+	_display_dialog.title = "Chat Window Display"
+	_display_dialog.dialog_hide_on_ok = true
+	_display_dialog.min_size = Vector2i(320, 220)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 8)
+	_display_dialog.add_child(grid)
+
+	_display_bg_slider = _build_slider_row(grid, "Window Opacity:", 0, 100)
+	_display_bg_label = _attach_value_label(_display_bg_slider)
+	_display_font_slider = _build_slider_row(grid, "Font Opacity:",
+			ChatWindow.FONT_ALPHA_MIN, 100)
+	_display_font_label = _attach_value_label(_display_font_slider)
+
+	grid.add_child(_build_label("Font Size:"))
+	_display_size_spin = SpinBox.new()
+	_display_size_spin.min_value = ChatWindow.FONT_SIZE_MIN
+	_display_size_spin.max_value = ChatWindow.FONT_SIZE_MAX
+	_display_size_spin.step = 1
+	grid.add_child(_display_size_spin)
+
+	grid.add_child(_build_label("Default Channel:"))
+	_display_channel_option = OptionButton.new()
+	for key in ChatWindow.CHANNEL_KEYS:
+		_display_channel_option.add_item(
+				String(ChatWindow.CHANNEL_LABELS.get(key, key)))
+	grid.add_child(_display_channel_option)
+
+	_display_dialog.confirmed.connect(_on_display_confirmed)
+	add_child(_display_dialog)
+
+func _build_label(text: String) -> Label:
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.add_theme_color_override("font_color", Color(0.85, 0.78, 0.55))
+	return lbl
+
+func _build_slider_row(grid: GridContainer, label_text: String,
+		min_v: int, max_v: int) -> HSlider:
+	grid.add_child(_build_label(label_text))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	var slider := HSlider.new()
+	slider.min_value = min_v
+	slider.max_value = max_v
+	slider.step = 1
+	slider.custom_minimum_size = Vector2(160, 0)
+	row.add_child(slider)
+	grid.add_child(row)
+	return slider
+
+func _attach_value_label(slider: HSlider) -> Label:
+	var lbl := Label.new()
+	lbl.custom_minimum_size = Vector2(32, 0)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	slider.get_parent().add_child(lbl)
+	slider.value_changed.connect(func(v: float) -> void:
+		lbl.text = "%d" % int(v))
+	return lbl
+
+func _open_display_dialog(id: int) -> void:
+	var w: ChatWindow = _windows_by_id.get(id, null)
+	if w == null:
+		return
+	_display_target_id = id
+	_display_bg_slider.value = w.bg_alpha
+	_display_bg_label.text = "%d" % w.bg_alpha
+	_display_font_slider.value = w.font_alpha
+	_display_font_label.text = "%d" % w.font_alpha
+	_display_size_spin.value = w.font_size
+	var ch_idx := ChatWindow.CHANNEL_KEYS.find(w.default_channel)
+	_display_channel_option.selected = ch_idx if ch_idx >= 0 else 0
+	_display_dialog.popup_centered()
+
+func _on_display_confirmed() -> void:
+	var w: ChatWindow = _windows_by_id.get(_display_target_id, null)
+	if w == null:
+		return
+	var selected_idx := _display_channel_option.selected
+	var channel := ""
+	if selected_idx >= 0 and selected_idx < ChatWindow.CHANNEL_KEYS.size():
+		channel = ChatWindow.CHANNEL_KEYS[selected_idx]
+	w.set_display_settings({
+		"bg_alpha":        int(_display_bg_slider.value),
+		"font_alpha":      int(_display_font_slider.value),
+		"font_size":       int(_display_size_spin.value),
+		"default_channel": channel,
+	})
+	_save_layout()
+
 # ── Chat input routing ───────────────────────────────────────────────────────
 #
 # Each ChatWindow owns its own LineEdit at the bottom (matches the legacy
@@ -307,6 +415,7 @@ func _restore_or_seed_windows() -> void:
 		var saved_filters = d.get("filters", null)
 		if saved_filters is Dictionary:
 			w.set_filters(saved_filters)
+		w.set_display_settings(d)
 		_wire_window_signals(w)
 		add_child(w)
 		_windows.append(w)

@@ -19,8 +19,30 @@ const TITLE_BAR_H := 18
 const INPUT_BAR_H := 28
 
 const C_BG       := Color(0.04, 0.03, 0.02, 0.80)
+const C_BG_RGB   := Color(0.04, 0.03, 0.02)
 const C_BORDER   := Color(0.20, 0.15, 0.05)
 const C_TITLE_BG := Color(0.10, 0.08, 0.05, 0.95)
+
+const BG_ALPHA_DEFAULT   := 80
+const FONT_ALPHA_DEFAULT := 100
+const FONT_SIZE_DEFAULT  := 12
+const FONT_SIZE_MIN      := 9
+const FONT_SIZE_MAX      := 21
+const FONT_ALPHA_MIN     := 10
+
+# Channel keys for the "default channel" dropdown. Empty string means
+# the input field has no default — typed text is submitted as-is and
+# falls through to the hud's command parser (which treats no-prefix as
+# a /say). Other values match the slash-command verb used by
+# `hud.gd._handle_chat_input`.
+const CHANNEL_KEYS: Array[String] = ["", "say", "shout", "ooc", "group"]
+const CHANNEL_LABELS: Dictionary = {
+	"":      "Default (passthrough)",
+	"say":   "Say",
+	"shout": "Shout",
+	"ooc":   "OOC",
+	"group": "Group",
+}
 const C_DMG_OUT  := Color(0.95, 0.78, 0.25)
 const C_CRIT     := Color(1.00, 0.92, 0.30)
 const C_DMG_IN   := Color(0.90, 0.30, 0.25)
@@ -42,6 +64,14 @@ var window_name: String = "Chat"
 # bool. Missing keys default to enabled so that layouts saved before
 # chunk 2 still show everything on load.
 var filters: Dictionary = {}
+
+# Per-window display settings (chunk 3). All persisted alongside layout.
+var bg_alpha: int = BG_ALPHA_DEFAULT
+var font_alpha: int = FONT_ALPHA_DEFAULT
+var font_size: int = FONT_SIZE_DEFAULT
+# Slash-command verb auto-prepended in `_on_chat_text_submitted` when the
+# user types a line that doesn't begin with `/`. Empty = no default.
+var default_channel: String = ""
 
 var _title_label: Label = null
 var _scroll: ScrollContainer = null
@@ -80,14 +110,20 @@ static func default_filters() -> Dictionary:
 	return d
 
 func _ready() -> void:
-	apply_style(C_BG, C_BORDER)
+	_apply_panel_style()
 	if filters.is_empty():
 		filters = default_filters()
 	_build_title_bar()
 	_build_scroll()
 	_build_back_button()
 	_build_chat_input()
+	_apply_input_placeholder()
 	CombatLog.line_added.connect(add_line)
+
+func _apply_panel_style() -> void:
+	var bg := C_BG_RGB
+	bg.a = float(bg_alpha) / 100.0
+	apply_style(bg, C_BORDER)
 
 func _build_title_bar() -> void:
 	var title_bg := ColorRect.new()
@@ -158,11 +194,19 @@ func _build_chat_input() -> void:
 	_chat_input.offset_left = 6; _chat_input.offset_right = -6
 	_chat_input.offset_top = -(INPUT_BAR_H + 2)
 	_chat_input.offset_bottom = -2
-	_chat_input.placeholder_text = "Press Enter to type..."
 	_chat_input.visible = false
 	_chat_input.text_submitted.connect(_on_chat_text_submitted)
 	_chat_input.focus_exited.connect(func(): _chat_input.visible = false)
 	add_child(_chat_input)
+
+func _apply_input_placeholder() -> void:
+	if _chat_input == null:
+		return
+	if default_channel == "":
+		_chat_input.placeholder_text = "Press Enter to type..."
+	else:
+		_chat_input.placeholder_text = "[%s] Press Enter to type..." % \
+				CHANNEL_LABELS.get(default_channel, default_channel.capitalize())
 
 func show_input() -> void:
 	if _chat_input == null:
@@ -180,6 +224,11 @@ func _on_chat_text_submitted(text: String) -> void:
 	var trimmed := text.strip_edges()
 	if trimmed.is_empty():
 		return
+	# Apply the window's default channel when the user types raw text.
+	# Lines already prefixed with `/` are passed through so a user can
+	# always override (e.g. /tell <name> ... from a Say-default window).
+	if default_channel != "" and not trimmed.begins_with("/"):
+		trimmed = "/%s %s" % [default_channel, trimmed]
 	text_submitted.emit(window_id, trimmed)
 
 func _gui_input(event: InputEvent) -> void:
@@ -206,10 +255,14 @@ func add_line(text: String, type: int) -> void:
 		return
 	var lbl := Label.new()
 	lbl.text = text
-	lbl.add_theme_font_size_override("font_size", LINE_FONT_SZ)
+	lbl.add_theme_font_size_override("font_size", font_size)
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl.clip_text = true
-	lbl.add_theme_color_override("font_color", _color_for(type))
+	# Tag the MsgType so apply_display_settings can re-derive the base
+	# colour when the user changes font_alpha (the stored colour on the
+	# Label already has alpha baked in and isn't reversible).
+	lbl.set_meta("msg_type", type)
+	lbl.add_theme_color_override("font_color", _color_with_alpha(type))
 	_msg_vbox.add_child(lbl)
 
 	if _msg_vbox.get_child_count() > MAX_LINES:
@@ -217,6 +270,31 @@ func add_line(text: String, type: int) -> void:
 
 	if _auto_scroll:
 		_scroll_to_bottom()
+
+func _color_with_alpha(type: int) -> Color:
+	var c := _color_for(type)
+	c.a = float(font_alpha) / 100.0
+	return c
+
+func apply_display_settings() -> void:
+	_apply_panel_style()
+	_apply_input_placeholder()
+	if _msg_vbox == null:
+		return
+	for child in _msg_vbox.get_children():
+		if child is Label:
+			var lbl: Label = child
+			lbl.add_theme_font_size_override("font_size", font_size)
+			var type := int(lbl.get_meta("msg_type", CombatLog.MsgType.INFO))
+			lbl.add_theme_color_override("font_color", _color_with_alpha(type))
+
+func set_display_settings(d: Dictionary) -> void:
+	bg_alpha = clampi(int(d.get("bg_alpha", bg_alpha)), 0, 100)
+	font_alpha = clampi(int(d.get("font_alpha", font_alpha)), FONT_ALPHA_MIN, 100)
+	font_size = clampi(int(d.get("font_size", font_size)), FONT_SIZE_MIN, FONT_SIZE_MAX)
+	var ch := String(d.get("default_channel", default_channel))
+	default_channel = ch if ch in CHANNEL_KEYS else ""
+	apply_display_settings()
 
 func _scroll_to_bottom() -> void:
 	if _scroll == null:
@@ -239,13 +317,17 @@ func _on_back_to_bottom_pressed() -> void:
 
 func get_layout() -> Dictionary:
 	return {
-		"id":      window_id,
-		"name":    window_name,
-		"x":       position.x,
-		"y":       position.y,
-		"w":       size.x,
-		"h":       size.y,
-		"filters": filters.duplicate(),
+		"id":              window_id,
+		"name":            window_name,
+		"x":               position.x,
+		"y":               position.y,
+		"w":               size.x,
+		"h":               size.y,
+		"filters":         filters.duplicate(),
+		"bg_alpha":        bg_alpha,
+		"font_alpha":      font_alpha,
+		"font_size":       font_size,
+		"default_channel": default_channel,
 	}
 
 func apply_layout(d: Dictionary) -> void:
@@ -256,6 +338,7 @@ func apply_layout(d: Dictionary) -> void:
 	var saved_filters = d.get("filters", null)
 	if saved_filters is Dictionary:
 		filters = _merge_filters_with_defaults(saved_filters)
+	set_display_settings(d)
 
 func set_filters(new_filters: Dictionary) -> void:
 	filters = _merge_filters_with_defaults(new_filters)

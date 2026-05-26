@@ -193,10 +193,10 @@ These are cheap rules — they apply to new code (or code we're already touching
 - [ ] **Target-of-target frame** — Show what your target is targeting (essential for group play)
 - [x] **HP numbers on target frame** — Show actual HP values, not just a bar
 - [ ] **Player portrait** — Race/class portrait in the HUD panel
-- [ ] **EQ-style multi-window chat system** — Three separable chunks:
+- [x] **EQ-style multi-window chat system** — Three separable chunks (tab docking still pending as separate work):
   - [x] **Multi-window framework** — `CombatLog` is now a pure broker emitting `line_added(text, type)`; `autoloads/chat_window_manager.gd` owns N `ChatWindow` instances (each its own `DraggablePanel` with title bar + scroll + per-window LineEdit); right-click a window for New / Rename / Delete; layout (id/name/pos/size per window) persists through `GameSettings.chat_windows`. Tab docking deferred to a later chunk.
   - [x] **Per-window message filters** — `ChatWindow.filters: Dictionary[String, bool]` keyed by `FILTER_KEYS` (one entry per `CombatLog.MsgType`); `add_line` short-circuits if the incoming type's key is false. Right-click → **Filters...** opens a grouped checkbox dialog (Combat / Chat / System). State persists alongside layout via `GameSettings.chat_windows`. Default for new and pre-chunk-2 windows is all enabled.
-  - **Per-window display settings** — Window alpha (0–100), font alpha (10–100), font size (9–21pt), default channel for input field when window is active
+  - [x] **Per-window display settings** — `ChatWindow.bg_alpha` (0–100), `font_alpha` (10–100), `font_size` (9–21pt), `default_channel` ("", "say", "shout", "ooc", "group"). Right-click → **Display...** opens a dialog with two sliders, a SpinBox, and an OptionButton. `apply_display_settings` re-styles the panel and walks existing labels (each tagged with `msg_type` meta) to update font size and re-derive color at the new alpha. `default_channel` prepends `/<channel>` to non-slash input in `_on_chat_text_submitted`. Layout dict carries all four fields.
 - [ ] **Map / minimap** — Simple zone map showing player position
 - [x] **Quest journal window** — `scripts/quest_journal.gd`; split panel (list/detail); Active/Completed tabs; objectives with ✓/○; toggle via J (keybind registered in settings.gd); QuestManager signals connected
 - [x] **Inventory "stack all" button** — "Stack All" button in each BagWindow calls `Inventory.stack_all()`
