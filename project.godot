@@ -65,6 +65,7 @@ RemoteLootBagManager="*res://autoloads/remote_loot_bag_manager.gd"
 RemotePetManager="*res://autoloads/remote_pet_manager.gd"
 NetCombatBroadcaster="*res://autoloads/net_combat_broadcaster.gd"
 ItemRegistry="*res://autoloads/item_registry.gd"
+ChatWindowManager="*res://autoloads/chat_window_manager.gd"
 
 [display]
 

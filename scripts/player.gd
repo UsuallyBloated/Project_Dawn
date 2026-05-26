@@ -92,7 +92,7 @@ func _ready() -> void:
 	add_to_group("player")
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(55.0)
-	CombatLog.visible = true
+	ChatWindowManager.visible = true
 	PlayerDeath.set_respawn_point(global_position)
 	PlayerDeath.register_player(self)
 	Targeting.register_camera(camera)
@@ -142,13 +142,8 @@ func stand() -> void:
 func _input(event: InputEvent) -> void:
 	if not _is_local:
 		return
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			spring_arm.spring_length = maxf(spring_arm.spring_length - ZOOM_STEP, ZOOM_MIN)
-			get_viewport().set_input_as_handled()
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			spring_arm.spring_length = minf(spring_arm.spring_length + ZOOM_STEP, ZOOM_MAX)
-			get_viewport().set_input_as_handled()
+	# Mouse motion stays in `_input` so right-click camera drag keeps
+	# working even when the cursor crosses over UI panels.
 	if event is InputEventMouseMotion and is_camera_active:
 		rotate_y(-event.relative.x * MOUSE_SENSITIVITY)
 		camera_pivot.rotate_x(-event.relative.y * MOUSE_SENSITIVITY)
@@ -156,6 +151,24 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not _is_local:
+		return
+	# Wheel zoom: skip when the cursor is over any UI Control. Godot's
+	# ScrollContainer scrolls on wheel but doesn't mark the event handled,
+	# so without this gate the camera would zoom while the chat / test
+	# panel / character window scrolled. `gui_get_hovered_control` returns
+	# non-null whenever the cursor is over an interactive Control (windows
+	# and HUD widgets), null when over the 3D world.
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			if get_viewport().gui_get_hovered_control() != null:
+				return
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			spring_arm.spring_length = maxf(spring_arm.spring_length - ZOOM_STEP, ZOOM_MIN)
+			get_viewport().set_input_as_handled()
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			spring_arm.spring_length = minf(spring_arm.spring_length + ZOOM_STEP, ZOOM_MAX)
+			get_viewport().set_input_as_handled()
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.is_action("toggle_crouch"):
 			if state == PlayerState.STANDING:

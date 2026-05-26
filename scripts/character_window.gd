@@ -18,8 +18,9 @@ extends DraggablePanel
 @onready var atk_value: Label = $MarginContainer/VBox/AttribGrid/V_ATK
 @onready var xp_bar: ProgressBar = $MarginContainer/VBox/XPBar
 
-var _skills_rows: Dictionary = {}       # weapon skill_key -> {name: Label, val: Label}
-var _armor_skill_rows: Dictionary = {}  # armor skill_key -> {name: Label, val: Label}
+var _skills_rows: Dictionary = {}         # weapon skill_key -> {name: Label, val: Label}
+var _armor_skill_rows: Dictionary = {}    # armor skill_key -> {name: Label, val: Label}
+var _casting_skill_rows: Dictionary = {}  # casting skill_key -> {name: Label, val: Label}
 
 @onready var _l_hp: Label = $MarginContainer/VBox/VitalsGrid/L_HP
 @onready var _l_mp: Label = $MarginContainer/VBox/VitalsGrid/L_MP
@@ -56,6 +57,7 @@ func _ready() -> void:
 	_build_skills_section()
 	WeaponSkills.skill_advanced.connect(_on_skill_advanced)
 	ArmorSkills.skill_advanced.connect(_on_armor_skill_advanced)
+	CastingSkills.skill_advanced.connect(_on_casting_skill_advanced)
 
 func _apply_panel_style() -> void:
 	var style := StyleBoxFlat.new()
@@ -217,6 +219,39 @@ func _build_skills_section() -> void:
 
 	_refresh_armor_skills()
 
+	inner.add_child(HSeparator.new())
+
+	var casting_header := Label.new()
+	casting_header.text = "Casting Skills"
+	casting_header.add_theme_color_override("font_color", UITheme.C_TITLE)
+	casting_header.add_theme_font_size_override("font_size", 12)
+	casting_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	inner.add_child(casting_header)
+
+	var casting_grid := GridContainer.new()
+	casting_grid.columns = 2
+	casting_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	casting_grid.add_theme_constant_override("h_separation", 8)
+	casting_grid.add_theme_constant_override("v_separation", 3)
+	inner.add_child(casting_grid)
+
+	for skill in CastingSkillDefinitions.ALL:
+		var name_lbl := Label.new()
+		name_lbl.text = CastingSkillDefinitions.DISPLAY.get(skill, skill)
+		name_lbl.add_theme_font_size_override("font_size", 11)
+		name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
+		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		casting_grid.add_child(name_lbl)
+
+		var val_lbl := Label.new()
+		val_lbl.add_theme_font_size_override("font_size", 11)
+		val_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
+		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		casting_grid.add_child(val_lbl)
+		_casting_skill_rows[skill] = {"name": name_lbl, "val": val_lbl}
+
+	_refresh_casting_skills()
+
 func _refresh_skills() -> void:
 	for skill in _skills_rows:
 		var cap := WeaponSkills.get_cap(skill)
@@ -250,3 +285,20 @@ func _refresh_armor_skills() -> void:
 
 func _on_armor_skill_advanced(_skill_name: String, _new_value: int, _cap: int) -> void:
 	_refresh_armor_skills()
+
+func _refresh_casting_skills() -> void:
+	for skill in _casting_skill_rows:
+		var cap := CastingSkills.get_cap(skill)
+		var row: Dictionary = _casting_skill_rows[skill]
+		var name_lbl: Label = row["name"]
+		var val_lbl: Label = row["val"]
+		if cap == 0:
+			name_lbl.visible = false
+			val_lbl.visible = false
+		else:
+			name_lbl.visible = true
+			val_lbl.visible = true
+			val_lbl.text = "%d / %d" % [CastingSkills.get_current(skill), cap]
+
+func _on_casting_skill_advanced(_skill_name: String, _new_value: int, _cap: int) -> void:
+	_refresh_casting_skills()

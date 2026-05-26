@@ -55,6 +55,10 @@ var floating_text_xp:      bool = true
 # Keybinds: action_id -> Key enum value
 var keybinds: Dictionary = {}
 
+# Chat windows: array of dicts {id, name, x, y, w, h}. Empty on first
+# run; ChatWindowManager seeds a single default window if so.
+var chat_windows: Array = []
+
 func _ready() -> void:
 	load_settings()
 	apply_all()
@@ -142,6 +146,7 @@ func save_settings() -> void:
 	cfg.set_value("interface", "floating_text_xp",      floating_text_xp)
 	for action: Dictionary in REBINDABLE_ACTIONS:
 		cfg.set_value("keybinds", action.id, keybinds.get(action.id, action.default_key))
+	cfg.set_value("chat", "windows", chat_windows)
 	cfg.save(SAVE_PATH)
 
 func is_reserved_key(keycode: int) -> bool:
@@ -173,5 +178,6 @@ func load_settings() -> void:
 			saved = action.default_key
 			sanitized = true
 		keybinds[action.id] = saved
+	chat_windows = cfg.get_value("chat", "windows", [])
 	if sanitized:
 		save_settings()

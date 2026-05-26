@@ -2,6 +2,8 @@
 
 note for claude:  I will add play testing notes to the docs\playtest_notes\  Please have a look.  if this can be organized better, you're welcome to move it after i make additions.
 
+You're doing a great job, Claude.  Thanks for the hard work!
+
 ## Engine
 - Godot 4.3 (or whatever version you're on)
 - GDScript only, no C#
@@ -10,13 +12,44 @@ note for claude:  I will add play testing notes to the docs\playtest_notes\  Ple
 ## Project structure
 - scenes/ — all .tscn scene files
 - scripts/ — standalone .gd scripts not tied to a scene
-- assets/ — sprites, sounds, fonts
 - autoloads/ — singleton scripts registered in project.godot
+- assets/ — game-ready art and audio (imported by Godot)
+  - models/ — .glb / .gltf 3D models (characters, creatures, props, environment, weapons, armor)
+  - textures/ — 2D textures for 3D models (characters, creatures, props, environment, ui)
+  - materials/ — .tres material resources
+  - sprites/ — 2D sprites (ui, icons/spells, icons/items)
+  - fonts/ — .ttf / .otf
+  - audio/ — .ogg / .wav (sfx, music, ambient, voice)
+- ../Project_Dawn_Source/ — sibling folder for raw source files (.blend, .psd, .kra); NOT inside the Godot project to keep the import database lean. Export game-ready files into assets/ when ready.
 
-## Conventions
+## Code style
+
+These are cheap rules — they apply to new code (or code we're already touching for another reason). They are not a mandate to stop and refactor existing files.
+
+### Naming & structure
 - Use snake_case for variables and functions (GDScript standard)
 - Use PascalCase for class_name declarations
 - Prefer signals over direct node references for cross-scene communication
+- Use type hints on function signatures and exported vars (`func foo(x: int) -> bool:`, `var hp: int = 100`). Catches mistakes the editor can flag immediately instead of at runtime.
+
+### File and function shape
+- ~500–600 lines is the "ask yourself" threshold, not a hard cap. When a file crosses it, the question is "does this still have one responsibility?" — not "split it now." For reference, autoloads like `PetManager`→`WarderAI` and `PlayerStats`→`Alignment` were extracted when one autoload started owning two unrelated concerns. Follow the same pattern.
+- `scripts/test_panel.gd` is a debug tool, not a feature drawer. It should only *invoke* systems (call public methods on autoloads), never contain gameplay logic. If logic accumulates there, it belongs in the system it's testing.
+
+### Comments
+- Do not put sprint labels (e.g. "Track 17.1 —", "Track 22.E —") in code comments. Keep the *content* of the comment — the *why* — but drop the label. Sprint context belongs in `docs/session_notes/`, not in source, because the label rots the moment the sprint ends.
+- Only write a comment when the *why* is non-obvious: a hidden constraint, a workaround for a specific bug, a subtle invariant, behavior that would surprise a reader. Don't explain *what* the code does — good names should already do that.
+- No commented-out code. If we delete it, delete it. Git history is the archive.
+
+### UI
+- Prefer `.tscn` scenes over `_build_xxx()` imperative UI construction in new HUD work. Scenes are easier to tweak visually and easier for a future contributor (or designer) to read than long chains of `Label.new()` + `add_theme_color_override()` calls.
+
+### Constants and helpers
+- Magic numbers and strings live at the top of the file as named constants. [autoloads/combat.gd](autoloads/combat.gd) is the reference — match it. This includes group names (e.g. `"enemies"`), asset path templates, and small string transforms.
+- Inline string-munging like the portrait slugify in `hud.gd` (`race.to_lower().replace(" ", "_")...`) should be a small named helper, not buried in a UI method. Helpers make intent obvious and are reusable.
+
+### Touch hygiene
+- Leave a file cleaner than you found it. When editing for a feature, do small in-place cleanups: drop a dead branch, rename a confusing local, extract a constant. Don't *refactor* — just small wins as you pass through.
 
 ## What I'm building
 - The game is similar to classic MMORPGs.
@@ -63,7 +96,8 @@ note for claude:  I will add play testing notes to the docs\playtest_notes\  Ple
 | `TimeOfDay` | Day/night cycle, emits `hour_changed` |
 | `VisionSystem` | Infravision/ultravision post-processing at night |
 | `ZoneLoader` | Zone transitions, current zone path/name |
-| `CombatLog` | Chat/combat log lines with `MsgType` color categories |
+| `CombatLog` | Chat broker — listens to gameplay signals, emits `line_added(text, type)`; preserves the `add_line` / `chat_submitted` / `show_chat_input` API for existing callers |
+| `ChatWindowManager` | Owns N `ChatWindow` (`scripts/chat_window.gd`) instances; create/rename/delete via right-click; layout persists through `GameSettings.chat_windows` |
 | `DebugLog` | Timestamped log to `debug.log`; rotates at 2000 lines |
 | `Settings` | Keybind persistence, UI panel positions, rebindable actions list |
 
@@ -160,7 +194,7 @@ note for claude:  I will add play testing notes to the docs\playtest_notes\  Ple
 - [x] **HP numbers on target frame** — Show actual HP values, not just a bar
 - [ ] **Player portrait** — Race/class portrait in the HUD panel
 - [ ] **EQ-style multi-window chat system** — Three separable chunks:
-  - **Multi-window framework** — Create/rename/delete independent chat windows; dock together as tabs in a parent window or detach to float separately; persist layout to settings
+  - [x] **Multi-window framework** — `CombatLog` is now a pure broker emitting `line_added(text, type)`; `autoloads/chat_window_manager.gd` owns N `ChatWindow` instances (each its own `DraggablePanel` with title bar + scroll + per-window LineEdit); right-click a window for New / Rename / Delete; layout (id/name/pos/size per window) persists through `GameSettings.chat_windows`. Tab docking deferred to a later chunk. Filters not yet wired — every window receives every line.
   - **Per-window message filters** — Right-click menu to choose which `CombatLog.MsgType` categories display in each window (Say, OOC, Group, Tell, Guild, Raid, Auction, damage dealt, damage taken, heals, system, pet actions, etc.); leverages existing `MsgType` enum
   - **Per-window display settings** — Window alpha (0–100), font alpha (10–100), font size (9–21pt), default channel for input field when window is active
 - [ ] **Map / minimap** — Simple zone map showing player position

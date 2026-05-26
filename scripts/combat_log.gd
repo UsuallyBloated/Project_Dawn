@@ -1,145 +1,55 @@
-extends CanvasLayer
+extends Node
 
-const MAX_LINES    := 200
-const PANEL_HEIGHT := 148
+# Chat broker. Listens to gameplay signals from every system (Combat,
+# Skills, Spells, BuffManager, etc.), converts them to user-facing chat
+# lines, and emits `line_added`. ChatWindowManager subscribes per-window
+# and renders the line where the user chose to see it.
+#
+# Public API preserved for existing callers (~30 files):
+# - add_line(text, type)          → fan out to windows
+# - add_damage_out / add_evade    → convenience helpers
+# - show_chat_input()             → asks the manager to focus the input
+# - is_chat_input_focused()       → manager state passthrough
+# - chat_submitted (signal)       → emitted by the manager on submit
+# - MsgType (enum)                → the canonical message taxonomy
 
-const C_BG       := Color(0.04, 0.03, 0.02, 0.80)
-const C_BORDER   := Color(0.20, 0.15, 0.05)
-const C_DMG_OUT  := Color(0.95, 0.78, 0.25)
-const C_CRIT     := Color(1.00, 0.92, 0.30)
-const C_DMG_IN   := Color(0.90, 0.30, 0.25)
-const C_HEAL     := Color(0.35, 0.90, 0.45)
-const C_INFO     := Color(0.70, 0.65, 0.55)
-const C_LEVEL    := Color(0.60, 0.85, 1.00)
-const C_LOOT     := Color(0.55, 0.90, 0.55)
-const C_EVADE    := Color(0.55, 0.75, 0.95)
-const C_SAY      := Color(1.00, 1.00, 1.00)
-const C_SHOUT    := Color(1.00, 0.75, 0.20)
-const C_OOC      := Color(0.30, 0.85, 0.70)
-const C_TELL_OUT := Color(0.90, 0.55, 1.00)
-const C_TELL_IN  := Color(1.00, 0.70, 1.00)
-const C_GROUP    := Color(0.45, 0.80, 1.00)
+signal line_added(text: String, type: int)
+signal chat_submitted(text: String)
+signal show_chat_input_requested()
 
 enum MsgType { DAMAGE_OUT, DAMAGE_IN, HEAL, INFO, LEVEL_UP, LOOT, EVADE,
 			   SAY, SHOUT, OOC, TELL_OUT, TELL_IN, GROUP_CHAT, CRIT }
 
-signal chat_submitted(text: String)
-
-var _scroll: ScrollContainer = null
-var _msg_vbox: VBoxContainer = null
-var _panel: DraggablePanel = null
-var _back_btn: Button = null
-var _chat_input: LineEdit = null
 var _last_hp: float = 0.0
-var _auto_scroll := true
 # Sentinel: -1 means "haven't seen a level_changed yet". The first one
 # is the initial apply_character seed (not a real level-up); skip it.
 var _last_logged_level: int = -1
 
 func _ready() -> void:
-	# CanvasLayer defaults to visible = true. Hide until the local
-	# player's _ready (player.gd:95) flips it on after entering
-	# world.tscn — otherwise the chat panel renders over the lobby /
-	# Enter World screen, and any pre-world signals (e.g. level-up
-	# from `apply_character` firing on ConnectOk) would log there.
-	visible = false
-	_build_ui()
 	_connect_signals()
 	_last_hp = PlayerStats.hp
 
-func _build_ui() -> void:
-	_panel = DraggablePanel.new()
-	_panel.anchor_left   = 0.0
-	_panel.anchor_right  = 0.0
-	_panel.anchor_top    = 1.0
-	_panel.anchor_bottom = 1.0
-	_panel.offset_left   = 10
-	_panel.offset_right  = 310
-	_panel.offset_bottom = -80
-	_panel.offset_top    = -(PANEL_HEIGHT + 80)
+func add_line(text: String, type: int = MsgType.INFO) -> void:
+	line_added.emit(text, type)
 
-	var style := StyleBoxFlat.new()
-	style.bg_color     = C_BG
-	style.border_color = C_BORDER
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	_panel.add_theme_stylebox_override("panel", style)
-	add_child(_panel)
+func add_damage_out(target_name: String, amount: int, is_crit: bool = false) -> void:
+	if is_crit:
+		add_line("** You critically hit %s for %d damage! **" % [target_name, amount], MsgType.CRIT)
+	else:
+		add_line("You hit %s for %d damage." % [target_name, amount], MsgType.DAMAGE_OUT)
 
-	_scroll = ScrollContainer.new()
-	_scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_scroll.offset_left = 6; _scroll.offset_top = 6
-	_scroll.offset_right = -6; _scroll.offset_bottom = -32
-	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	_panel.add_child(_scroll)
+func add_evade(attacker_name: String) -> void:
+	add_line("You evade %s's attack!" % attacker_name, MsgType.EVADE)
 
-	_msg_vbox = VBoxContainer.new()
-	_msg_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_msg_vbox.add_theme_constant_override("separation", 1)
-	_scroll.add_child(_msg_vbox)
-
-	_scroll.get_v_scroll_bar().value_changed.connect(_on_scroll_value_changed)
-
-	_back_btn = Button.new()
-	_back_btn.text = "▼  latest"
-	_back_btn.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_back_btn.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_back_btn.offset_left   =  6.0
-	_back_btn.offset_right  = -6.0
-	_back_btn.offset_top    = -26.0
-	_back_btn.offset_bottom = -6.0
-	_back_btn.add_theme_font_size_override("font_size", 10)
-	var btn_style := StyleBoxFlat.new()
-	btn_style.bg_color = Color(0.10, 0.08, 0.05, 0.90)
-	btn_style.border_color = UITheme.C_GOLDEN_BORDER
-	btn_style.set_border_width_all(1)
-	btn_style.set_corner_radius_all(2)
-	_back_btn.add_theme_stylebox_override("normal",  btn_style)
-	_back_btn.add_theme_stylebox_override("hover",   btn_style)
-	_back_btn.add_theme_stylebox_override("pressed", btn_style)
-	_back_btn.add_theme_color_override("font_color", UITheme.C_TITLE)
-	_back_btn.visible = false
-	_back_btn.pressed.connect(_on_back_to_bottom_pressed)
-	_panel.add_child(_back_btn)
-
-	_chat_input = LineEdit.new()
-	_chat_input.anchor_left = 0.0
-	_chat_input.anchor_top = 1.0
-	_chat_input.anchor_right = 1.0
-	_chat_input.anchor_bottom = 1.0
-	_chat_input.offset_left = 6
-	_chat_input.offset_right = -6
-	_chat_input.offset_top = -28
-	_chat_input.offset_bottom = -2
-	_chat_input.placeholder_text = "Press Enter to type..."
-	_chat_input.visible = false
-	_chat_input.text_submitted.connect(_on_chat_submitted)
-	_chat_input.focus_exited.connect(func(): _chat_input.visible = false)
-	_panel.add_child(_chat_input)
+# ── Chat input delegation ────────────────────────────────────────────────────
 
 func show_chat_input() -> void:
-	if _chat_input == null:
-		return
-	_chat_input.visible = true
-	_chat_input.text = ""
-	_chat_input.grab_focus()
+	show_chat_input_requested.emit()
 
 func is_chat_input_focused() -> bool:
-	return _chat_input != null and _chat_input.has_focus()
+	return ChatWindowManager.is_chat_input_focused()
 
-func _on_chat_submitted(text: String) -> void:
-	_chat_input.visible = false
-	_chat_input.text = ""
-	var trimmed := text.strip_edges()
-	if trimmed.is_empty():
-		return
-	chat_submitted.emit(trimmed)
-
-func _on_scroll_value_changed(value: float) -> void:
-	var bar := _scroll.get_v_scroll_bar()
-	_auto_scroll = value >= bar.max_value - bar.page
-	_back_btn.visible = not _auto_scroll
+# ── Gameplay signal → chat line wiring ───────────────────────────────────────
 
 func _connect_signals() -> void:
 	Skills.skill_used.connect(func(sk):
@@ -149,8 +59,8 @@ func _connect_signals() -> void:
 	Spells.spell_failed.connect(func(reason):
 		add_line(reason, MsgType.DAMAGE_IN))
 	PlayerStats.level_changed.connect(func(lvl):
-		# Suppress the initial apply_character emit (level loaded
-		# from save / server) — only log actual level-ups.
+		# Suppress the initial apply_character emit (level loaded from
+		# save / server) — only log actual level-ups.
 		if _last_logged_level < 0:
 			_last_logged_level = lvl
 			return
@@ -208,60 +118,3 @@ func _on_player_hp_changed(current: float, _max: float) -> void:
 	if diff > 0.0 and not BuffManager.is_hot_healing():
 		add_line("You recover %d health." % int(diff), MsgType.HEAL)
 	_last_hp = current
-
-func add_line(text: String, type: MsgType = MsgType.INFO) -> void:
-	var lbl := Label.new()
-	lbl.text = text
-	lbl.add_theme_font_size_override("font_size", 12)
-	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl.clip_text = true
-	lbl.add_theme_color_override("font_color", _color_for(type))
-	_msg_vbox.add_child(lbl)
-
-	if _msg_vbox.get_child_count() > MAX_LINES:
-		_msg_vbox.get_child(0).queue_free()
-
-	if _auto_scroll:
-		_scroll_to_bottom()
-
-func _scroll_to_bottom() -> void:
-	if _scroll == null:
-		return
-	# A new label added to the VBox doesn't grow `v_scroll_bar.max_value`
-	# until the container re-lays out next frame. The previous
-	# `call_deferred` fired BEFORE that layout pass, so we'd land one
-	# or two lines above the new bottom. Wait one frame so the bar's
-	# max reflects the freshly-added content, then snap.
-	await get_tree().process_frame
-	_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
-
-func _on_back_to_bottom_pressed() -> void:
-	_auto_scroll = true
-	_back_btn.visible = false
-	_scroll_to_bottom()
-
-func _color_for(type: MsgType) -> Color:
-	match type:
-		MsgType.DAMAGE_OUT: return C_DMG_OUT
-		MsgType.DAMAGE_IN:  return C_DMG_IN
-		MsgType.HEAL:       return C_HEAL
-		MsgType.LEVEL_UP:   return C_LEVEL
-		MsgType.LOOT:       return C_LOOT
-		MsgType.EVADE:      return C_EVADE
-		MsgType.SAY:        return C_SAY
-		MsgType.SHOUT:      return C_SHOUT
-		MsgType.OOC:        return C_OOC
-		MsgType.TELL_OUT:   return C_TELL_OUT
-		MsgType.TELL_IN:    return C_TELL_IN
-		MsgType.GROUP_CHAT: return C_GROUP
-		MsgType.CRIT:       return C_CRIT
-		_:                  return C_INFO
-
-func add_damage_out(target_name: String, amount: int, is_crit: bool = false) -> void:
-	if is_crit:
-		add_line("** You critically hit %s for %d damage! **" % [target_name, amount], MsgType.CRIT)
-	else:
-		add_line("You hit %s for %d damage." % [target_name, amount], MsgType.DAMAGE_OUT)
-
-func add_evade(attacker_name: String) -> void:
-	add_line("You evade %s's attack!" % attacker_name, MsgType.EVADE)
