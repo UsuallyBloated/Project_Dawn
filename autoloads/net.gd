@@ -116,6 +116,16 @@ signal world_entity_target(id: int, target_id: int)
 # Inbound chat. `channel` is one of CHAT_CHANNEL_*. Routing to a chat
 # line happens in `_on_chat_message`.
 signal world_chat_message(speaker: String, channel: int, text: String, lang: String)
+# Reply to a broadcast_inspect_player request. `slot_keys` and
+# `item_paths` are parallel arrays — slot_keys[i] is the EquipSlot
+# discriminant (0–8) holding item_paths[i]. Empty arrays = target
+# offline or unknown. The inspect window subscribes to render.
+signal world_inspect_result(
+	target_char_id: int,
+	target_name: String,
+	slot_keys: PackedInt32Array,
+	item_paths: PackedStringArray,
+)
 
 # Wire-side ChatChannel discriminants. Must mirror the int returned by
 # `gdext_net::chat_channel_to_int`. Outbound `broadcast_chat` takes one
@@ -229,6 +239,7 @@ func _ready() -> void:
 	skill_progress_update.connect(_on_skill_progress_update)
 	skill_progress_snapshot.connect(_on_skill_progress_snapshot)
 	chat_message.connect(_on_chat_message)
+	inspect_result.connect(_on_inspect_result)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -354,6 +365,13 @@ func broadcast_chat(channel: int, text: String, target_name: String = "") -> voi
 	if _state != State.CONNECTED_APP:
 		return
 	send_chat(channel, text, target_name)
+
+# Request the equipped-items snapshot for another player by char_id.
+# Server fans the reply privately as `world_inspect_result`.
+func broadcast_inspect_player(target_char_id: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_inspect_player(target_char_id)
 
 # Track 5 sub-task 4 — player → server loot pickup intents. Server
 # validates pickup range + slot bounds, transfers the stack with a
@@ -775,6 +793,14 @@ func _on_entity_target(id: int, target_id: int) -> void:
 
 func _on_chat_message(speaker: String, channel: int, text: String, lang: String) -> void:
 	world_chat_message.emit(speaker, channel, text, lang)
+
+func _on_inspect_result(
+	target_char_id: int,
+	target_name: String,
+	slot_keys: PackedInt32Array,
+	item_paths: PackedStringArray,
+) -> void:
+	world_inspect_result.emit(target_char_id, target_name, slot_keys, item_paths)
 
 func _on_loot_bag_spawn(
 		bag_id: int,

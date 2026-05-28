@@ -13,6 +13,7 @@ const _TrackWindowScript    := preload("res://scripts/track_window.gd")
 const _SpellBookScript      := preload("res://scripts/spell_book.gd")
 const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
 const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
+const _InspectWindowScript  := preload("res://scripts/inspect_window.gd")
 
 @onready var health_bar: ProgressBar = $Panel/VBoxContainer/HPRow/HealthBar
 @onready var stamina_bar: ProgressBar = $Panel/VBoxContainer/STARow/StaminaBar
@@ -52,6 +53,7 @@ var _track_window: TrackWindow = null
 var _spell_book: Panel = null
 var _quest_journal: Panel = null
 var _dialogue_window: Panel = null
+var _inspect_window: InspectWindow = null
 var _target_hp_label: Label = null
 var _target_mp_label: Label = null
 var _target_st_label: Label = null
@@ -163,6 +165,11 @@ func _build_components() -> void:
 	_dialogue_window = _DialogueWindowScript.new()
 	_dialogue_window.visible = false
 	add_child(_dialogue_window)
+
+	_inspect_window = _InspectWindowScript.new()
+	_inspect_window.visible = false
+	add_child(_inspect_window)
+	_inspect_window.visibility_changed.connect(_on_window_visibility_changed.bind(_inspect_window))
 
 	_build_tot_frame()
 
@@ -1055,6 +1062,20 @@ func _handle_chat_input(text: String) -> void:
 			# (no Godot multiplayer peer); that path was the bug.
 			Net.broadcast_chat(Net.CHAT_CHANNEL_GROUP, msg)
 			return
+
+	if lower == "/inspect":
+		var target = Combat.current_target
+		if not is_instance_valid(target) or not (target is RemotePlayer):
+			CombatLog.add_line("Target a player to inspect.", CombatLog.MsgType.INFO)
+			return
+		var rp: RemotePlayer = target
+		if rp.char_id < 0:
+			CombatLog.add_line("Target has no character id.", CombatLog.MsgType.INFO)
+			return
+		if _inspect_window != null:
+			_inspect_window.open_for(rp.char_id, rp.player_name)
+		Net.broadcast_inspect_player(rp.char_id)
+		return
 
 	if lower == "/sense" or lower == "/sense heading":
 		if is_instance_valid(_player):
