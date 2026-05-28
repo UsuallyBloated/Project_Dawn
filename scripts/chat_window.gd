@@ -502,6 +502,7 @@ func get_layout() -> Dictionary:
 		"font_size":       font_size,
 		"default_channel": default_channel,
 		"group_id":        group_id,
+		"is_active_tab":   is_active_tab,
 	}
 
 func apply_layout(d: Dictionary) -> void:

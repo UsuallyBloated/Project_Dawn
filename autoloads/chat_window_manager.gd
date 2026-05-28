@@ -399,10 +399,23 @@ func _build_filters_dialog() -> void:
 	_filters_dialog = AcceptDialog.new()
 	_filters_dialog.title = "Chat Window Filters"
 	_filters_dialog.dialog_hide_on_ok = true
-	_filters_dialog.min_size = Vector2i(280, 360)
+	_filters_dialog.min_size = Vector2i(280, 400)
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 	_filters_dialog.add_child(vbox)
+
+	var toggle_row := HBoxContainer.new()
+	toggle_row.add_theme_constant_override("separation", 8)
+	var enable_btn := Button.new()
+	enable_btn.text = "Enable All"
+	enable_btn.pressed.connect(_on_filters_enable_all)
+	toggle_row.add_child(enable_btn)
+	var disable_btn := Button.new()
+	disable_btn.text = "Disable All"
+	disable_btn.pressed.connect(_on_filters_disable_all)
+	toggle_row.add_child(disable_btn)
+	vbox.add_child(toggle_row)
+
 	for group_any in _FILTER_GROUPS:
 		var group: Array = group_any
 		var header := Label.new()
@@ -441,6 +454,14 @@ func _on_filters_confirmed() -> void:
 		new_filters[key] = cb.button_pressed
 	w.set_filters(new_filters)
 	_save_layout()
+
+func _on_filters_enable_all() -> void:
+	for cb in _filters_checkboxes.values():
+		cb.button_pressed = true
+
+func _on_filters_disable_all() -> void:
+	for cb in _filters_checkboxes.values():
+		cb.button_pressed = false
 
 # ── Display dialog ───────────────────────────────────────────────────────────
 
@@ -573,12 +594,18 @@ func _restore_or_seed_windows() -> void:
 	# below the minimum. Without this a corrupted settings.cfg or a window
 	# dragged outside the viewport at quit time would silently hide.
 	var vp_size := get_viewport().get_visible_rect().size
+	# Per-group winner from the saved `is_active_tab` flag. Lets reloads
+	# land on the tab the user had visible when they quit, not just the
+	# first member encountered.
+	var saved_active_per_group: Dictionary = {}
 	for d_any in layouts:
 		var d: Dictionary = d_any
 		var w := _ChatWindowScript.new()
 		var id := int(d.get("id", _next_window_id))
 		w.window_id = id
 		w.group_id = int(d.get("group_id", id))
+		if bool(d.get("is_active_tab", false)):
+			saved_active_per_group[w.group_id] = id
 		var size_v := Vector2(
 			maxf(MIN_SIZE.x, float(d.get("w", DEFAULT_SIZE.x))),
 			maxf(MIN_SIZE.y, float(d.get("h", DEFAULT_SIZE.y))),
@@ -598,13 +625,15 @@ func _restore_or_seed_windows() -> void:
 		_windows.append(w)
 		_windows_by_id[id] = w
 		_next_window_id = max(_next_window_id, id + 1)
-	# Rebuild groups from each window's restored group_id. The first
-	# encountered member of a group is the initial active tab (matches
-	# the layout's natural ordering).
+	# Rebuild groups from each window's restored group_id. Active tab
+	# defaults to the saved `is_active_tab` winner per group, falling
+	# back to the first encountered member if no member claimed active
+	# (older layouts without the field).
 	for w in _windows:
 		var gid := w.group_id
 		if not _groups.has(gid):
-			_groups[gid] = {"members": [], "active": w.window_id}
+			var initial_active: int = saved_active_per_group.get(gid, w.window_id)
+			_groups[gid] = {"members": [], "active": initial_active}
 		_groups[gid]["members"].append(w.window_id)
 		# Keep the allocator past any saved id so future new_window /
 		# undock calls can't collide with restored groups.
