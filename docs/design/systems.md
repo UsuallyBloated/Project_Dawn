@@ -465,7 +465,7 @@ Checked in `Combat.receive_player_damage()` before armor reduction. Max evasion:
 | TimeOfDay | autoloads/time_of_day.gd | Live |
 | VisionSystem | autoloads/vision_system.gd | Live — race vision types; night brightness/tint |
 | SenseHeading | autoloads/sense_heading.gd | Live — /sense command, compass direction |
-| CombatLog | scripts/combat_log.gd | Live |
+| CombatLog | autoloads/combat_log.gd | Live |
 | Targeting | autoloads/targeting.gd | Live |
 | Loot | autoloads/loot.gd | Live |
 | ZoneLoader | autoloads/zone_loader.gd | Live — scene switching with transitions |
