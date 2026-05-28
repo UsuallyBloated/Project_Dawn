@@ -1049,7 +1049,11 @@ func _handle_chat_input(text: String) -> void:
 		if lower.begins_with(prefix):
 			var msg := text.substr(prefix.length())
 			CombatLog.add_line("[Group] %s: %s" % [my_name, msg], CombatLog.MsgType.GROUP_CHAT)
-			GroupManager.broadcast_group_chat(my_name, msg)
+			# Server fans this to every other group member via the new
+			# Group arm in the chat handler. GroupManager.broadcast_group_chat
+			# uses Godot's RPC system which isn't wired in launcher mode
+			# (no Godot multiplayer peer); that path was the bug.
+			Net.broadcast_chat(Net.CHAT_CHANNEL_GROUP, msg)
 			return
 
 	if lower == "/sense" or lower == "/sense heading":
@@ -1161,10 +1165,17 @@ func _handle_chat_input(text: String) -> void:
 	# Track 6 sub-task 5 — group commands (launcher mode). Test Room
 	# single-player can't form groups via these — invites need a real
 	# peer over renet.
-	if lower.begins_with("/invite "):
-		var target_name := text.substr("/invite ".length()).strip_edges()
+	if lower == "/invite" or lower.begins_with("/invite "):
+		var target_name := ""
+		if lower.begins_with("/invite "):
+			target_name = text.substr("/invite ".length()).strip_edges()
+		# No name given → fall back to the currently-targeted RemotePlayer.
 		if target_name == "":
-			CombatLog.add_line("Usage: /invite <character name>", CombatLog.MsgType.INFO)
+			var target = Combat.current_target
+			if is_instance_valid(target) and target is RemotePlayer:
+				target_name = target.player_name
+		if target_name == "":
+			CombatLog.add_line("Usage: /invite <character name> — or target a player first.", CombatLog.MsgType.INFO)
 			return
 		if Net.is_launcher_mode():
 			GroupManager.invite_player_by_name(target_name)

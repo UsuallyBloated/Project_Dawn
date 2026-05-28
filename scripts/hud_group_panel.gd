@@ -199,10 +199,24 @@ func _build_member_row(member: Dictionary) -> Dictionary:
 func _on_action_pressed() -> void:
 	if GroupManager.pending_invite_from != 0:
 		GroupManager.accept_invite()
-	else:
-		var target = Combat.current_target
-		if not is_instance_valid(target):
+		return
+	var target = Combat.current_target
+	if not is_instance_valid(target):
+		CombatLog.add_line("Target a player to invite.", CombatLog.MsgType.INFO)
+		return
+	# Launcher mode requires the name-based path (server resolves by
+	# name); the peer-id-based `invite_player` is RPC-only and warns +
+	# no-ops when launcher mode is active.
+	if Net.is_launcher_mode():
+		if not (target is RemotePlayer):
+			CombatLog.add_line("Target must be a player.", CombatLog.MsgType.INFO)
 			return
+		var nm: String = target.player_name
+		if nm == "":
+			return
+		GroupManager.invite_player_by_name(nm)
+		CombatLog.add_line("Invited %s to your group." % nm, CombatLog.MsgType.INFO)
+	else:
 		if not target.is_in_group("player"):
 			return
 		var peer_id: int = target.get_meta("peer_id", 0)

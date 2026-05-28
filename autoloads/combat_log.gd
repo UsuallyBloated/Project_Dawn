@@ -127,6 +127,8 @@ func _on_remote_chat_message(speaker: String, channel: int, text: String, _lang:
 			add_line("[OOC] %s: %s" % [speaker, text], MsgType.OOC)
 		Net.CHAT_CHANNEL_TELL:
 			add_line("%s tells you, '%s'" % [speaker, text], MsgType.TELL_IN)
+		Net.CHAT_CHANNEL_GROUP:
+			add_line("[Group] %s: %s" % [speaker, text], MsgType.GROUP_CHAT)
 		Net.CHAT_CHANNEL_SYSTEM:
 			add_line(text, MsgType.INFO)
 		_:
