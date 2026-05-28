@@ -1016,17 +1016,20 @@ func _handle_chat_input(text: String) -> void:
 		if lower.begins_with(prefix):
 			var msg := text.substr(prefix.length())
 			CombatLog.add_line("%s says, '%s'" % [my_name, msg], CombatLog.MsgType.SAY)
+			Net.broadcast_chat(Net.CHAT_CHANNEL_SAY, msg)
 			return
 
 	for prefix in ["/shout ", "/sh "]:
 		if lower.begins_with(prefix):
 			var msg := text.substr(prefix.length())
 			CombatLog.add_line("%s shouts, '%s'" % [my_name, msg], CombatLog.MsgType.SHOUT)
+			Net.broadcast_chat(Net.CHAT_CHANNEL_SHOUT, msg)
 			return
 
 	if lower.begins_with("/ooc "):
 		var msg := text.substr("/ooc ".length())
 		CombatLog.add_line("[OOC] %s: %s" % [my_name, msg], CombatLog.MsgType.OOC)
+		Net.broadcast_chat(Net.CHAT_CHANNEL_OOC, msg)
 		return
 
 	for prefix in ["/tell ", "/t "]:
@@ -1037,6 +1040,7 @@ func _handle_chat_input(text: String) -> void:
 				var target_name := rest.substr(0, space_idx)
 				var msg := rest.substr(space_idx + 1)
 				CombatLog.add_line("You -> %s: %s" % [target_name, msg], CombatLog.MsgType.TELL_OUT)
+				Net.broadcast_chat(Net.CHAT_CHANNEL_TELL, msg, target_name)
 			else:
 				CombatLog.add_line("Usage: /tell <name> <message>", CombatLog.MsgType.INFO)
 			return

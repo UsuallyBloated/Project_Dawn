@@ -113,6 +113,22 @@ signal world_inventory_delta(
 # Track 5 sub-task 2 — server-driven aggro replication. `target_id == 0`
 # encodes "no target" (drop / leash); non-zero is the targeted entity's id.
 signal world_entity_target(id: int, target_id: int)
+# Inbound chat. `channel` is one of CHAT_CHANNEL_*. Routing to a chat
+# line happens in `_on_chat_message`.
+signal world_chat_message(speaker: String, channel: int, text: String, lang: String)
+
+# Wire-side ChatChannel discriminants. Must mirror the int returned by
+# `gdext_net::chat_channel_to_int`. Outbound `broadcast_chat` takes one
+# of these.
+const CHAT_CHANNEL_SAY     := 0
+const CHAT_CHANNEL_OOC     := 1
+const CHAT_CHANNEL_GROUP   := 2
+const CHAT_CHANNEL_TELL    := 3
+const CHAT_CHANNEL_GUILD   := 4
+const CHAT_CHANNEL_RAID    := 5
+const CHAT_CHANNEL_AUCTION := 6
+const CHAT_CHANNEL_SYSTEM  := 7
+const CHAT_CHANNEL_SHOUT   := 8
 # Track 5 sub-task 4 — server-spawned loot bag landed in the AOI.
 # `item_paths` and `item_counts` are parallel arrays of the bag's
 # current contents. Re-fires (with shrinking arrays) every time the
@@ -212,6 +228,7 @@ func _ready() -> void:
 	damage_shield_trigger.connect(_on_damage_shield_trigger)
 	skill_progress_update.connect(_on_skill_progress_update)
 	skill_progress_snapshot.connect(_on_skill_progress_snapshot)
+	chat_message.connect(_on_chat_message)
 
 	_heartbeat_timer = Timer.new()
 	_heartbeat_timer.wait_time = HEARTBEAT_INTERVAL_SEC
@@ -327,6 +344,16 @@ func broadcast_set_target(target_id: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_set_target(target_id)
+
+# Personal chat channels (Say / Shout / Ooc / Tell). `target_name` is the
+# `/tell` recipient; pass "" for the other channels. Server fans
+# `ChatMessage` to recipients (AOI peers for Say, every in-world peer for
+# Shout/Ooc, the single target for Tell). The sender's own echo is added
+# locally by `hud.gd`, not via the server.
+func broadcast_chat(channel: int, text: String, target_name: String = "") -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_chat(channel, text, target_name)
 
 # Track 5 sub-task 4 — player → server loot pickup intents. Server
 # validates pickup range + slot bounds, transfers the stack with a
@@ -745,6 +772,9 @@ func _on_inventory_delta(
 
 func _on_entity_target(id: int, target_id: int) -> void:
 	world_entity_target.emit(id, target_id)
+
+func _on_chat_message(speaker: String, channel: int, text: String, lang: String) -> void:
+	world_chat_message.emit(speaker, channel, text, lang)
 
 func _on_loot_bag_spawn(
 		bag_id: int,

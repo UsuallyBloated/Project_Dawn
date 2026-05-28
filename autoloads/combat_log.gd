@@ -112,6 +112,25 @@ func _connect_signals() -> void:
 	Combat.enemy_mez_broke.connect(func(n): add_line("The mesmerize on %s breaks!" % n, MsgType.INFO))
 	Combat.enemy_charmed_attacked.connect(func(atk, tgt, amt): add_line("%s hits %s for %d." % [atk, tgt, amt], MsgType.DAMAGE_OUT))
 	Combat.enemy_silenced.connect(func(n): add_line("%s is silenced!" % n, MsgType.INFO))
+	Net.world_chat_message.connect(_on_remote_chat_message)
+
+# Routes inbound Net.world_chat_message to a typed chat line. Outbound
+# echoes (the sender's own line) are still added directly by hud.gd —
+# the server doesn't echo back to the sender to avoid double-rendering.
+func _on_remote_chat_message(speaker: String, channel: int, text: String, _lang: String) -> void:
+	match channel:
+		Net.CHAT_CHANNEL_SAY:
+			add_line("%s says, '%s'" % [speaker, text], MsgType.SAY)
+		Net.CHAT_CHANNEL_SHOUT:
+			add_line("%s shouts, '%s'" % [speaker, text], MsgType.SHOUT)
+		Net.CHAT_CHANNEL_OOC:
+			add_line("[OOC] %s: %s" % [speaker, text], MsgType.OOC)
+		Net.CHAT_CHANNEL_TELL:
+			add_line("%s tells you, '%s'" % [speaker, text], MsgType.TELL_IN)
+		Net.CHAT_CHANNEL_SYSTEM:
+			add_line(text, MsgType.INFO)
+		_:
+			add_line(text, MsgType.INFO)
 
 func _on_player_hp_changed(current: float, _max: float) -> void:
 	var diff := current - _last_hp
