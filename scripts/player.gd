@@ -57,6 +57,13 @@ var is_crouching: bool:
 	get: return state == PlayerState.CROUCHING
 
 var is_camera_active := false
+# Cursor position when camera mode last engaged, in screen coordinates.
+# MOUSE_MODE_CAPTURED parks the cursor at the window centre and Godot's
+# Input.warp_mouse + Viewport.get_mouse_position pair applies different
+# transforms (canvas vs window), causing a small constant offset on
+# round-trip. DisplayServer's get/warp pair is in raw screen coords —
+# no transforms — so the restore lands exactly where the capture happened.
+var _cursor_before_camera: Vector2i = Vector2i.ZERO
 var _is_local := false
 var _heading_train_accum: float = 0.0
 var _was_on_floor: bool = true
@@ -216,9 +223,25 @@ func _scan_for_text_window(node: Node) -> bool:
 func _physics_process(delta: float) -> void:
 	# Poll hardware state so camera works even when UI panels consume the event.
 	var want_cam := Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
+	# Don't engage camera if the right-click started over a UI Control —
+	# right-clicking a chat window for its context menu would otherwise
+	# capture the mouse and snap the cursor to the screen centre. Only
+	# gate the transition into camera mode; while already held, allow
+	# the cursor to cross over UI without losing camera control.
+	if want_cam and not is_camera_active:
+		if get_viewport().gui_get_hovered_control() != null:
+			want_cam = false
 	if want_cam != is_camera_active:
 		is_camera_active = want_cam
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if want_cam else Input.MOUSE_MODE_VISIBLE
+		if want_cam:
+			_cursor_before_camera = DisplayServer.mouse_get_position()
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		else:
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+			# DisplayServer.warp_mouse takes window-relative coords, so
+			# subtract the window's screen position from the saved screen
+			# position.
+			DisplayServer.warp_mouse(_cursor_before_camera - get_window().position)
 
 	var chat_focused := _is_text_input_focused()
 

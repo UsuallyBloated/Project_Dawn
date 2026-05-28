@@ -11,6 +11,17 @@ signal close_requested(id: int)
 signal context_menu_requested(id: int, screen_pos: Vector2)
 signal focus_requested(id: int)
 signal text_submitted(id: int, text: String)
+# Emitted when the user finishes dragging this window. Manager decides
+# whether the drop position falls on another window's title/tab strip
+# and should trigger a dock-merge, or whether to leave the window where
+# it landed.
+signal drag_ended(id: int, drop_pos: Vector2)
+# A tab button inside this window's strip wants to activate a peer in
+# the same group.
+signal tab_activated(target_id: int)
+# A tab button was dragged outside its strip — manager undocks that tab
+# into a new floating window at drop_pos.
+signal tab_dragged_out(member_id: int, drop_pos: Vector2)
 
 const MAX_LINES   := 200
 const LINE_FONT_SZ := 12
@@ -73,12 +84,32 @@ var font_size: int = FONT_SIZE_DEFAULT
 # user types a line that doesn't begin with `/`. Empty = no default.
 var default_channel: String = ""
 
+# Tab-docking group ID. 0 sentinel = "not assigned yet" (manager sets
+# it on creation). Windows sharing a group_id render as tabs in the
+# active member; non-active members are hidden but kept in the tree so
+# their message history and per-window state survive tab switches.
+var group_id: int = 0
+# True for the currently visible tab in this window's group; the only
+# member whose scroll, input, and back-button are shown. Solo windows
+# (group of 1) are always active.
+var is_active_tab: bool = true
+
+var _title_bar: Control = null
 var _title_label: Label = null
+var _tab_strip: HBoxContainer = null
 var _scroll: ScrollContainer = null
 var _msg_vbox: VBoxContainer = null
 var _back_btn: Button = null
 var _chat_input: LineEdit = null
 var _auto_scroll: bool = true
+
+# Drag tracking for tab buttons. A tab Button receives mouse-down,
+# motion, and release — we use motion-distance to distinguish a click
+# (activate) from a drag (potential undock).
+const _TAB_DRAG_THRESHOLD := 8.0
+var _tab_drag_member_id: int = 0
+var _tab_drag_start_pos: Vector2 = Vector2.ZERO
+var _tab_dragging: bool = false
 
 # Filter keys used in the `filters` dict and persisted to settings.cfg.
 # Index of each entry MUST match the corresponding `CombatLog.MsgType`
@@ -114,6 +145,7 @@ func _ready() -> void:
 	if filters.is_empty():
 		filters = default_filters()
 	_build_title_bar()
+	_build_tab_strip()
 	_build_scroll()
 	_build_back_button()
 	_build_chat_input()
@@ -126,25 +158,45 @@ func _apply_panel_style() -> void:
 	apply_style(bg, C_BORDER)
 
 func _build_title_bar() -> void:
+	# Wrap the title bg + label so we can hide both with one toggle when
+	# this window is part of a multi-tab group (the tab strip replaces
+	# the title bar visually).
+	_title_bar = Control.new()
+	_title_bar.anchor_left = 0.0; _title_bar.anchor_right = 1.0
+	_title_bar.anchor_top = 0.0; _title_bar.anchor_bottom = 0.0
+	_title_bar.offset_left = 1; _title_bar.offset_right = -1
+	_title_bar.offset_top = 1; _title_bar.offset_bottom = TITLE_BAR_H
+	_title_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_title_bar)
+
 	var title_bg := ColorRect.new()
 	title_bg.color = C_TITLE_BG
-	title_bg.anchor_left = 0.0; title_bg.anchor_right = 1.0
-	title_bg.anchor_top = 0.0; title_bg.anchor_bottom = 0.0
-	title_bg.offset_left = 1; title_bg.offset_right = -1
-	title_bg.offset_top = 1; title_bg.offset_bottom = TITLE_BAR_H
+	title_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	title_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(title_bg)
+	_title_bar.add_child(title_bg)
 
 	_title_label = Label.new()
 	_title_label.text = window_name
 	_title_label.add_theme_font_size_override("font_size", TITLE_FONT_SZ)
 	_title_label.add_theme_color_override("font_color", Color(0.85, 0.78, 0.55))
-	_title_label.anchor_left = 0.0; _title_label.anchor_right = 1.0
+	_title_label.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_title_label.offset_left = 6; _title_label.offset_right = -6
-	_title_label.offset_top = 2; _title_label.offset_bottom = TITLE_BAR_H
+	_title_label.offset_top = 2
 	_title_label.clip_text = true
 	_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_title_label)
+	_title_bar.add_child(_title_label)
+
+func _build_tab_strip() -> void:
+	# Lazily built — only solo windows in a brand-new project never need
+	# this. Same vertical slot as the title bar; show one or the other.
+	_tab_strip = HBoxContainer.new()
+	_tab_strip.anchor_left = 0.0; _tab_strip.anchor_right = 1.0
+	_tab_strip.anchor_top = 0.0; _tab_strip.anchor_bottom = 0.0
+	_tab_strip.offset_left = 2; _tab_strip.offset_right = -2
+	_tab_strip.offset_top = 1; _tab_strip.offset_bottom = TITLE_BAR_H
+	_tab_strip.add_theme_constant_override("separation", 2)
+	_tab_strip.visible = false
+	add_child(_tab_strip)
 
 func _build_scroll() -> void:
 	_scroll = ScrollContainer.new()
@@ -296,6 +348,127 @@ func set_display_settings(d: Dictionary) -> void:
 	default_channel = ch if ch in CHANNEL_KEYS else ""
 	apply_display_settings()
 
+# ── Group / tab state (driven by ChatWindowManager) ──────────────────────────
+
+func set_group_state(members: Array, active_id: int) -> void:
+	# `members` is Array[{id: int, name: String}] in tab order. When the
+	# group has one member this window renders as solo (title bar, body
+	# always visible). When it has two or more, the title bar is hidden
+	# behind a tab strip and only the active member shows its body.
+	if members.size() <= 1:
+		_set_solo()
+	else:
+		_set_grouped(members, active_id)
+
+func _set_solo() -> void:
+	visible = true
+	if _title_bar != null:
+		_title_bar.visible = true
+	if _tab_strip != null:
+		_tab_strip.visible = false
+		_clear_tab_strip()
+	is_active_tab = true
+	if _back_btn != null:
+		_back_btn.visible = not _auto_scroll
+
+func _set_grouped(members: Array, active_id: int) -> void:
+	is_active_tab = (active_id == window_id)
+	if is_active_tab:
+		# Active tab renders the panel + tab strip; the body's scroll
+		# and input belong to this member.
+		visible = true
+		if _title_bar != null:
+			_title_bar.visible = false
+		if _tab_strip == null:
+			_build_tab_strip()
+		_tab_strip.visible = true
+		_populate_tab_strip(members, active_id)
+		if _back_btn != null:
+			_back_btn.visible = not _auto_scroll
+	else:
+		# Non-active members hide the whole panel — the active member's
+		# tab strip lists every group member, including this one, and
+		# clicking that tab swaps activity over. Lines keep accumulating
+		# into the hidden vbox so the history is preserved on return.
+		visible = false
+		if _chat_input != null:
+			_chat_input.visible = false
+		if _back_btn != null:
+			_back_btn.visible = false
+
+func _populate_tab_strip(members: Array, active_id: int) -> void:
+	_clear_tab_strip()
+	for m_any in members:
+		var m: Dictionary = m_any
+		var member_id := int(m.get("id", 0))
+		var member_name := String(m.get("name", "Chat"))
+		var btn := Button.new()
+		btn.text = member_name
+		btn.flat = (member_id != active_id)
+		btn.add_theme_font_size_override("font_size", TITLE_FONT_SZ)
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.clip_text = true
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.gui_input.connect(_on_tab_button_gui_input.bind(member_id))
+		_tab_strip.add_child(btn)
+
+func _clear_tab_strip() -> void:
+	if _tab_strip == null:
+		return
+	for child in _tab_strip.get_children():
+		child.queue_free()
+
+func _on_tab_button_gui_input(event: InputEvent, member_id: int) -> void:
+	# Distinguish click (activate this tab) from drag (undock to a new
+	# floating window). Threshold-based: any motion > _TAB_DRAG_THRESHOLD
+	# while the button is held is treated as the start of a drag, and
+	# the release decides between "stayed in strip" (no-op) and "dropped
+	# outside" (undock).
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_tab_drag_member_id = member_id
+			_tab_drag_start_pos = get_global_mouse_position()
+			_tab_dragging = false
+		else:
+			var drop_pos := get_global_mouse_position()
+			if _tab_dragging:
+				if _tab_strip != null and _tab_strip.get_global_rect().has_point(drop_pos):
+					pass
+				else:
+					tab_dragged_out.emit(member_id, drop_pos)
+			else:
+				tab_activated.emit(member_id)
+			_tab_drag_member_id = 0
+			_tab_dragging = false
+	elif event is InputEventMouseMotion:
+		if _tab_drag_member_id != 0 and not _tab_dragging:
+			if get_global_mouse_position().distance_to(_tab_drag_start_pos) > _TAB_DRAG_THRESHOLD:
+				_tab_dragging = true
+
+# ── Window drag-to-merge ─────────────────────────────────────────────────────
+
+func _stop_interaction() -> void:
+	# Capture pre-super state so we can tell drag from resize. The base
+	# clobbers both flags before returning.
+	var was_dragging := _dragging
+	super._stop_interaction()
+	if was_dragging:
+		drag_ended.emit(window_id, get_global_mouse_position())
+
+# Returns the global rect of either the title bar (solo) or the tab strip
+# (grouped). Used by the manager to hit-test docking drops.
+func get_drop_target_rect() -> Rect2:
+	# Hidden group members would otherwise return their stale tab-strip
+	# rect — _tab_strip.visible stays true from when this window was
+	# last active — and become spurious dock targets while invisible.
+	if not visible:
+		return Rect2()
+	if _tab_strip != null and _tab_strip.visible:
+		return _tab_strip.get_global_rect()
+	if _title_bar != null and _title_bar.visible:
+		return _title_bar.get_global_rect()
+	return Rect2()
+
 func _scroll_to_bottom() -> void:
 	if _scroll == null:
 		return
@@ -328,6 +501,7 @@ func get_layout() -> Dictionary:
 		"font_alpha":      font_alpha,
 		"font_size":       font_size,
 		"default_channel": default_channel,
+		"group_id":        group_id,
 	}
 
 func apply_layout(d: Dictionary) -> void:
@@ -335,6 +509,7 @@ func apply_layout(d: Dictionary) -> void:
 	set_window_name(String(d.get("name", window_name)))
 	position = Vector2(float(d.get("x", position.x)), float(d.get("y", position.y)))
 	size = Vector2(float(d.get("w", size.x)), float(d.get("h", size.y)))
+	group_id = int(d.get("group_id", group_id))
 	var saved_filters = d.get("filters", null)
 	if saved_filters is Dictionary:
 		filters = _merge_filters_with_defaults(saved_filters)

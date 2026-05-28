@@ -24,6 +24,13 @@ var _windows: Array[ChatWindow] = []
 var _windows_by_id: Dictionary = {}
 var _next_window_id: int = 1
 var _active_window_id: int = 0
+# Tab-docking state. Each group is { "members": Array[int], "active": int }.
+# Group ids are allocated from `_next_group_seq` and are deliberately
+# disjoint from window ids — otherwise undocking a window whose original
+# solo group_id happened to equal its window_id would overwrite the live
+# multi-tab group that still uses that key (and orphan its siblings).
+var _groups: Dictionary = {}
+var _next_group_seq: int = 1
 
 var _rename_dialog: AcceptDialog = null
 var _rename_line_edit: LineEdit = null
@@ -60,8 +67,10 @@ func _ready() -> void:
 func new_window(window_name: String = "") -> ChatWindow:
 	var id := _next_window_id
 	_next_window_id += 1
+	var gid := _allocate_group_id()
 	var w := _ChatWindowScript.new()
 	w.window_id = id
+	w.group_id = gid
 	var name_to_use := window_name if window_name != "" else "Chat %d" % id
 	var pos := DEFAULT_POS + NEW_WINDOW_CASCADE * (_windows.size())
 	w.setup(pos, DEFAULT_SIZE, MIN_SIZE)
@@ -70,10 +79,17 @@ func new_window(window_name: String = "") -> ChatWindow:
 	add_child(w)
 	_windows.append(w)
 	_windows_by_id[id] = w
+	_groups[gid] = {"members": [id], "active": id}
+	_refresh_group(gid)
 	if _active_window_id == 0:
 		_set_active(id)
 	_save_layout()
 	return w
+
+func _allocate_group_id() -> int:
+	var gid := _next_group_seq
+	_next_group_seq += 1
+	return gid
 
 func _wire_window_signals(w: ChatWindow) -> void:
 	w.window_renamed.connect(_on_window_renamed)
@@ -81,6 +97,9 @@ func _wire_window_signals(w: ChatWindow) -> void:
 	w.context_menu_requested.connect(_on_window_context_menu_requested)
 	w.focus_requested.connect(_on_window_focus_requested)
 	w.text_submitted.connect(_on_window_text_submitted)
+	w.drag_ended.connect(_on_window_drag_ended)
+	w.tab_activated.connect(_on_tab_activated)
+	w.tab_dragged_out.connect(_on_tab_dragged_out)
 
 func delete_window(id: int) -> void:
 	if _windows.size() <= 1:
@@ -88,9 +107,13 @@ func delete_window(id: int) -> void:
 	var w: ChatWindow = _windows_by_id.get(id, null)
 	if w == null:
 		return
+	var gid := w.group_id
 	_windows.erase(w)
 	_windows_by_id.erase(id)
 	w.queue_free()
+	_remove_from_group(id, gid)
+	if _groups.has(gid):
+		_refresh_group(gid)
 	if _active_window_id == id:
 		_set_active(_windows[0].window_id if not _windows.is_empty() else 0)
 	_save_layout()
@@ -100,6 +123,9 @@ func rename_window(id: int, new_name: String) -> void:
 	if w == null:
 		return
 	w.set_window_name(new_name)
+	# Tab-strip button text mirrors window_name; siblings need to redraw.
+	if _groups.has(w.group_id):
+		_refresh_group(w.group_id)
 
 # ── Active window tracking ───────────────────────────────────────────────────
 
@@ -120,6 +146,156 @@ func _on_window_renamed(_id: int, _new_name: String) -> void:
 
 func _on_window_close_requested(id: int) -> void:
 	delete_window(id)
+
+# ── Tab docking ──────────────────────────────────────────────────────────────
+#
+# A "group" is a set of windows that share a position/size and render a
+# tab strip in place of the title bar. Groups are keyed by an int id.
+# Solo windows live in a group of size 1 whose group_id equals the
+# window's own id; that invariant lets us allocate fresh group ids
+# without a counter and lets a window's "go solo" state be implicit
+# whenever its members list shrinks to one.
+
+func dock(source_id: int, target_group_id: int) -> void:
+	var source_w: ChatWindow = _windows_by_id.get(source_id, null)
+	if source_w == null or not _groups.has(target_group_id):
+		return
+	var src_group_id := source_w.group_id
+	if src_group_id == target_group_id:
+		return
+
+	_remove_from_group(source_id, src_group_id)
+	source_w.group_id = target_group_id
+	_groups[target_group_id]["members"].append(source_id)
+
+	# Snap source onto the target group's current rect, then make the
+	# newly docked tab active so the user sees what they just dropped.
+	var target_active_id: int = _groups[target_group_id]["active"]
+	var target_w: ChatWindow = _windows_by_id.get(target_active_id, null)
+	if target_w != null:
+		source_w.position = target_w.position
+		source_w.size = target_w.size
+	_groups[target_group_id]["active"] = source_id
+
+	if _groups.has(src_group_id):
+		_refresh_group(src_group_id)
+	_refresh_group(target_group_id)
+	# Newly docked tab is the visible one — keep the input-routing
+	# pointer in sync so Enter focuses the right window.
+	_set_active(source_id)
+	_save_layout()
+
+func undock(member_id: int, screen_pos: Vector2) -> void:
+	var w: ChatWindow = _windows_by_id.get(member_id, null)
+	if w == null:
+		return
+	var old_group_id := w.group_id
+	if not _groups.has(old_group_id):
+		return
+	if _groups[old_group_id]["members"].size() <= 1:
+		return  # already solo
+
+	_remove_from_group(member_id, old_group_id)
+	var new_gid := _allocate_group_id()
+	w.group_id = new_gid
+	_groups[new_gid] = {"members": [member_id], "active": member_id}
+
+	# Drop the undocked window so the cursor lands roughly on its title
+	# bar — feels natural after a tab drag. Clamp inside the viewport.
+	var vp_size := get_viewport().get_visible_rect().size
+	var pos := Vector2(
+		clampf(screen_pos.x - w.size.x * 0.5, 0.0, maxf(0.0, vp_size.x - w.size.x)),
+		clampf(screen_pos.y, 0.0, maxf(0.0, vp_size.y - w.size.y)),
+	)
+	w.position = pos
+
+	if _groups.has(old_group_id):
+		_refresh_group(old_group_id)
+	_refresh_group(new_gid)
+	_save_layout()
+
+func set_active_tab(group_id: int, new_active_id: int) -> void:
+	if not _groups.has(group_id):
+		return
+	var group: Dictionary = _groups[group_id]
+	var old_active_id: int = group["active"]
+	if old_active_id == new_active_id:
+		return
+	var old_w: ChatWindow = _windows_by_id.get(old_active_id, null)
+	var new_w: ChatWindow = _windows_by_id.get(new_active_id, null)
+	if new_w == null:
+		return
+	# Carry position/size across the swap so the group's window-frame
+	# stays put when the user switches tabs.
+	if old_w != null:
+		new_w.position = old_w.position
+		new_w.size = old_w.size
+	group["active"] = new_active_id
+	_refresh_group(group_id)
+
+func _refresh_group(gid: int) -> void:
+	if not _groups.has(gid):
+		return
+	var group: Dictionary = _groups[gid]
+	var members_data: Array = []
+	for member_id in group["members"]:
+		var w: ChatWindow = _windows_by_id.get(member_id, null)
+		if w != null:
+			members_data.append({"id": member_id, "name": w.window_name})
+	var active_id: int = group["active"]
+	for member_id in group["members"]:
+		var w: ChatWindow = _windows_by_id.get(member_id, null)
+		if w != null:
+			w.set_group_state(members_data, active_id)
+
+func _remove_from_group(removed_id: int, gid: int) -> void:
+	if not _groups.has(gid):
+		return
+	var members: Array = _groups[gid]["members"]
+	members.erase(removed_id)
+	if members.is_empty():
+		_groups.erase(gid)
+		return
+	if _groups[gid]["active"] == removed_id:
+		_groups[gid]["active"] = members[0]
+
+func _find_dock_target(source_id: int, pos: Vector2) -> ChatWindow:
+	# Hit-test all other windows' drop-target rects (title bar for solo,
+	# tab strip when grouped). Excludes the source's own group so that
+	# dragging within a group can't recurse-dock onto itself.
+	var source_w: ChatWindow = _windows_by_id.get(source_id, null)
+	if source_w == null:
+		return null
+	var source_gid := source_w.group_id
+	for w in _windows:
+		if w.window_id == source_id:
+			continue
+		if w.group_id == source_gid:
+			continue
+		if w.get_drop_target_rect().has_point(pos):
+			return w
+	return null
+
+func _on_window_drag_ended(source_id: int, drop_pos: Vector2) -> void:
+	var target := _find_dock_target(source_id, drop_pos)
+	if target != null:
+		dock(source_id, target.group_id)
+	else:
+		# Plain reposition — persist so the new position survives quit.
+		_save_layout()
+
+func _on_tab_activated(target_id: int) -> void:
+	var target_w: ChatWindow = _windows_by_id.get(target_id, null)
+	if target_w == null:
+		return
+	set_active_tab(target_w.group_id, target_id)
+	# `_active_window_id` drives `show_chat_input` and friends; keep it
+	# in sync with the visible tab so Enter focuses the right LineEdit.
+	_set_active(target_id)
+
+func _on_tab_dragged_out(member_id: int, drop_pos: Vector2) -> void:
+	undock(member_id, drop_pos)
+	_set_active(member_id)
 
 # ── Right-click context menu ─────────────────────────────────────────────────
 
@@ -402,6 +578,7 @@ func _restore_or_seed_windows() -> void:
 		var w := _ChatWindowScript.new()
 		var id := int(d.get("id", _next_window_id))
 		w.window_id = id
+		w.group_id = int(d.get("group_id", id))
 		var size_v := Vector2(
 			maxf(MIN_SIZE.x, float(d.get("w", DEFAULT_SIZE.x))),
 			maxf(MIN_SIZE.y, float(d.get("h", DEFAULT_SIZE.y))),
@@ -421,8 +598,27 @@ func _restore_or_seed_windows() -> void:
 		_windows.append(w)
 		_windows_by_id[id] = w
 		_next_window_id = max(_next_window_id, id + 1)
+	# Rebuild groups from each window's restored group_id. The first
+	# encountered member of a group is the initial active tab (matches
+	# the layout's natural ordering).
+	for w in _windows:
+		var gid := w.group_id
+		if not _groups.has(gid):
+			_groups[gid] = {"members": [], "active": w.window_id}
+		_groups[gid]["members"].append(w.window_id)
+		# Keep the allocator past any saved id so future new_window /
+		# undock calls can't collide with restored groups.
+		if gid >= _next_group_seq:
+			_next_group_seq = gid + 1
+	for gid in _groups:
+		_refresh_group(gid)
+	# Pick an initial active that's actually visible — the first
+	# window's `group["active"]`, not the first window itself, since
+	# the first window may be a hidden tab.
 	if not _windows.is_empty():
-		_set_active(_windows[0].window_id)
+		var first_gid: int = _windows[0].group_id
+		var initial_active: int = _groups[first_gid]["active"]
+		_set_active(initial_active)
 
 func _save_layout() -> void:
 	var out: Array = []
