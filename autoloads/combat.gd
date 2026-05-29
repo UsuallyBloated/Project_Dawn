@@ -39,6 +39,9 @@ var current_target = null
 # swings fire only against valid combat targets (currently NPC enemies;
 # RemotePlayers are silent-skipped until PvP target validation lands).
 var is_auto_attacking: bool = false
+# Edge-trigger latch for the "Target is out of range." chat hint so it
+# logs once per range-transition instead of every 2-second swing tick.
+var _logged_out_of_range: bool = false
 
 var _auto_attack_timer: Timer
 var _offhand_timer: Timer
@@ -82,11 +85,36 @@ func set_target(node) -> void:
 			if node.has_signal("died") and not node.is_connected("died", _on_target_died):
 				node.died.connect(_on_target_died)
 		_sync_auto_attack_timer()
+		# Targeting feedback when auto-attack is engaged but the target
+		# won't be swung at (peer / friendly NPC / non-combat object).
+		# Helps the player notice they're locked in attack stance before
+		# they walk up to a friendly NPC and start (or fail to start) a
+		# fight by accident.
+		if is_auto_attacking and not _target_is_attackable():
+			var nm := _target_display_name(node)
+			if nm != "":
+				CombatLog.add_line("You cannot attack %s." % nm, CombatLog.MsgType.INFO)
+			else:
+				CombatLog.add_line("You cannot attack that target.", CombatLog.MsgType.INFO)
 	else:
 		current_target = null
 		_auto_attack_timer.stop()
 		_offhand_timer.stop()
+	_logged_out_of_range = false
 	target_changed.emit(current_target)
+
+func _target_display_name(node) -> String:
+	if node == null:
+		return ""
+	if "mob_name" in node:
+		var mn = node.get("mob_name")
+		if mn != null and String(mn) != "":
+			return String(mn)
+	if "player_name" in node:
+		var pn = node.get("player_name")
+		if pn != null and String(pn) != "":
+			return String(pn)
+	return ""
 	# Track 22.H — broadcast the new target id to the server so peers
 	# can render target-of-target for the local player. Extracts the
 	# id from whichever node type the target is (RemoteEnemy /
@@ -106,6 +134,7 @@ func set_target(node) -> void:
 func toggle_auto_attack() -> void:
 	is_auto_attacking = not is_auto_attacking
 	auto_attack_toggled.emit(is_auto_attacking)
+	_logged_out_of_range = false
 	_sync_auto_attack_timer()
 
 func _target_is_attackable() -> bool:
@@ -155,8 +184,12 @@ func _on_auto_attack() -> void:
 	var is_ranged_weapon := weapon != null and weapon.is_ranged
 	var max_range := RANGED_RANGE if is_ranged_weapon else MELEE_RANGE
 	if dist > max_range:
+		if not _logged_out_of_range:
+			CombatLog.add_line("Target is out of range.", CombatLog.MsgType.INFO)
+			_logged_out_of_range = true
 		_update_attack_interval()
 		return
+	_logged_out_of_range = false
 	var skill_name := _get_weapon_skill_name()
 	WeaponSkills.try_advance(skill_name)
 	var miss_chance := maxf(0.0, WeaponSkills.get_miss_chance(skill_name) - BuffManager.get_accuracy_bonus())

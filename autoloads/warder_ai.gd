@@ -29,6 +29,13 @@ func is_retreating() -> bool:
 	return _retreating
 
 func setup_for_class(player_class: String) -> void:
+	# Server owns warder lifecycle in launcher mode (EnterWorld
+	# auto-summon + respawn after retreat per Track 12B). A local
+	# summon here would create a phantom client-only pet that the
+	# server can't see — and the level_changed handler would
+	# re-trigger this every level-up, stacking phantoms.
+	if Net.is_launcher_mode():
+		return
 	if player_class == "Beast Master" and not PetManager.has_pet() and not _retreating:
 		summon_warder()
 
