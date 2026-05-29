@@ -16,6 +16,9 @@ signal enemy_mez_applied(mob_name: String)
 signal enemy_mez_broke(mob_name: String)
 signal enemy_charmed_attacked(attacker: String, target: String, amount: int)
 signal enemy_silenced(mob_name: String)
+# Fired when the auto-attack toggle flips. UI subscribers (e.g. a HUD
+# indicator) and combat_log render based on this.
+signal auto_attack_toggled(on: bool)
 
 const MELEE_RANGE             := 3.0
 const RANGED_RANGE            := 25.0
@@ -31,6 +34,11 @@ const OFFHAND_DELAY_MULT      := 1.50
 const ARMOR_DR_DIVISOR        := 100.0
 
 var current_target = null
+# Auto-attack toggle (keybind: `toggle_auto_attack`, default Q). When
+# false, the swing timer never starts, regardless of target. When true,
+# swings fire only against valid combat targets (currently NPC enemies;
+# RemotePlayers are silent-skipped until PvP target validation lands).
+var is_auto_attacking: bool = false
 
 var _auto_attack_timer: Timer
 var _offhand_timer: Timer
@@ -66,21 +74,14 @@ func set_target(node) -> void:
 	if node != null and is_instance_valid(node):
 		if node.has_method("set_targeted"):
 			node.set_targeted(true)
-		# Track 6 sub-task 3: RemotePlayer targets also start the auto-
-		# attack timer so PvP swings actually fire. Server's can_attack
-		# chokepoint gates whether the damage applies; the timer firing
-		# here is just "are we trying to attack." Pure-NPC targets
-		# (vendors / dialogue NPCs) fall through and don't start the
-		# timer.
+		# Subscribe to death so the timer stops when the target dies
+		# even if the player keeps auto-attack engaged. RemotePlayer
+		# is included here so the targeting bookkeeping still fires;
+		# the timer-start gate below silent-skips peer auto-attack.
 		if node.is_in_group("enemies") or node is RemotePlayer:
 			if node.has_signal("died") and not node.is_connected("died", _on_target_died):
 				node.died.connect(_on_target_died)
-			_auto_attack_timer.start()
-			if _is_dual_wielding():
-				_offhand_timer.start()
-		else:
-			_auto_attack_timer.stop()
-			_offhand_timer.stop()
+		_sync_auto_attack_timer()
 	else:
 		current_target = null
 		_auto_attack_timer.stop()
@@ -102,6 +103,29 @@ func set_target(node) -> void:
 				tid = current_target.pet_id
 		Net.broadcast_set_target(tid)
 
+func toggle_auto_attack() -> void:
+	is_auto_attacking = not is_auto_attacking
+	auto_attack_toggled.emit(is_auto_attacking)
+	_sync_auto_attack_timer()
+
+func _target_is_attackable() -> bool:
+	if not is_instance_valid(current_target):
+		return false
+	# Silent skip: peer auto-attack is gated until PvP target validation
+	# lands. NPC enemies are the only auto-attack target type today.
+	if current_target is RemotePlayer:
+		return false
+	return current_target.is_in_group("enemies")
+
+func _sync_auto_attack_timer() -> void:
+	if is_auto_attacking and _target_is_attackable():
+		_auto_attack_timer.start()
+		if _is_dual_wielding():
+			_offhand_timer.start()
+	else:
+		_auto_attack_timer.stop()
+		_offhand_timer.stop()
+
 func _is_dual_wielding() -> bool:
 	var oh: ItemData = Equipment.equipped.get("offhand")
 	return oh != null and oh.type == ItemData.Type.WEAPON
@@ -109,11 +133,9 @@ func _is_dual_wielding() -> bool:
 func _on_equipment_changed(slot: String, _item) -> void:
 	if slot not in ["weapon", "offhand"] or current_target == null:
 		return
-	if _is_dual_wielding():
-		if _offhand_timer.is_stopped():
-			_offhand_timer.start()
-	else:
-		_offhand_timer.stop()
+	# Dual-wield onset/offset honors the auto-attack toggle. Re-syncing
+	# both timers keeps the main + offhand cadence consistent.
+	_sync_auto_attack_timer()
 
 func _on_target_died(enemy) -> void:
 	if enemy == current_target:

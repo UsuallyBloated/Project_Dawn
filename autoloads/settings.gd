@@ -24,6 +24,7 @@ const REBINDABLE_ACTIONS: Array[Dictionary] = [
 	{id = "interact",          label = "Interact / Talk",   category = "World",    default_key = KEY_F},
 	{id = "target_cycle",      label = "Cycle Target",      category = "Combat",   default_key = KEY_TAB},
 	{id = "target_self",       label = "Target Self",       category = "Combat",   default_key = KEY_F1},
+	{id = "toggle_auto_attack",label = "Toggle Auto Attack",category = "Combat",   default_key = KEY_Q},
 	{id = "move_forward",      label = "Move Forward",      category = "Movement", default_key = KEY_W},
 	{id = "move_backward",     label = "Move Back",         category = "Movement", default_key = KEY_S},
 	{id = "move_left",         label = "Strafe Left",       category = "Movement", default_key = KEY_A},

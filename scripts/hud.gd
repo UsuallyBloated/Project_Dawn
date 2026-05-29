@@ -441,6 +441,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action("toggle_quest_journal"):
 			if _quest_journal != null:
 				_quest_journal.visible = !_quest_journal.visible
+		elif event.is_action("toggle_auto_attack"):
+			Combat.toggle_auto_attack()
 		elif event.is_action("interact"):
 			if _try_open_targeted_npc():
 				pass

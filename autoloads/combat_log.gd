@@ -112,6 +112,8 @@ func _connect_signals() -> void:
 	Combat.enemy_mez_broke.connect(func(n): add_line("The mesmerize on %s breaks!" % n, MsgType.INFO))
 	Combat.enemy_charmed_attacked.connect(func(atk, tgt, amt): add_line("%s hits %s for %d." % [atk, tgt, amt], MsgType.DAMAGE_OUT))
 	Combat.enemy_silenced.connect(func(n): add_line("%s is silenced!" % n, MsgType.INFO))
+	Combat.auto_attack_toggled.connect(func(on: bool):
+		add_line("Auto attack is now %s." % ("ON" if on else "OFF"), MsgType.INFO))
 	Net.world_chat_message.connect(_on_remote_chat_message)
 
 # Routes inbound Net.world_chat_message to a typed chat line. Outbound
