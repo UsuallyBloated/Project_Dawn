@@ -71,8 +71,7 @@ func _connect_signals() -> void:
 	PlayerStats.hp_changed.connect(_on_player_hp_changed)
 	Combat.target_changed.connect(func(enemy):
 		if enemy != null and is_instance_valid(enemy):
-			var tname: String = enemy.get("mob_name") if "mob_name" in enemy else enemy.name
-			add_line("You target %s." % tname, MsgType.INFO))
+			add_line("You target %s." % _target_display_name(enemy), MsgType.INFO))
 	Combat.player_hit_enemy.connect(func(t, a, c): add_damage_out(t, a, c))
 	Combat.player_missed_enemy.connect(func(t): add_line("You miss %s." % t, MsgType.DAMAGE_OUT))
 	Combat.player_evaded_attack.connect(func(n): add_evade(n))
@@ -142,3 +141,25 @@ func _on_player_hp_changed(current: float, _max: float) -> void:
 	if diff > 0.0 and not BuffManager.is_hot_healing():
 		add_line("You recover %d health." % int(diff), MsgType.HEAL)
 	_last_hp = current
+
+# Best-effort display name across the entity zoo (NPCs, pets, peers).
+# Order: mob_name (NPCs / and peer RemotePlayer mirrors player_name into
+# mob_name), pet_name (pets), player_name (peers without mirror).
+# Falls through to the Godot Node name only if none of those are set,
+# which is the case the user reported ("@CharacterBody3D@969" / "RemotePet").
+func _target_display_name(target) -> String:
+	if target == null:
+		return ""
+	if "mob_name" in target:
+		var mn = target.get("mob_name")
+		if mn != null and String(mn) != "":
+			return String(mn)
+	if "pet_name" in target:
+		var pn = target.get("pet_name")
+		if pn != null and String(pn) != "":
+			return String(pn)
+	if "player_name" in target:
+		var pln = target.get("player_name")
+		if pln != null and String(pln) != "":
+			return String(pln)
+	return String(target.name)

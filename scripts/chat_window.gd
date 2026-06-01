@@ -476,9 +476,15 @@ func get_drop_target_rect() -> Rect2:
 func _scroll_to_bottom() -> void:
 	if _scroll == null:
 		return
-	# A new label added to the VBox doesn't grow `v_scroll_bar.max_value`
-	# until the container re-lays out next frame. Wait one frame so the
-	# bar's max reflects the freshly-added content, then snap.
+	# A new label needs TWO frames for its size to settle: one for the
+	# VBoxContainer to mark itself dirty when add_child fires, and a
+	# second for the label to measure its text against the available
+	# width and propagate `minimum_size_changed` back to the container.
+	# Waiting only one frame snapped to the max_value of the PREVIOUS
+	# layout pass, which produced the "scroll only snaps every other
+	# message" symptom — the bar caught up one line behind the latest
+	# label every time.
+	await get_tree().process_frame
 	await get_tree().process_frame
 	_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
 
