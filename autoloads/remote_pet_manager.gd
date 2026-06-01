@@ -57,6 +57,17 @@ func _process(_delta: float) -> void:
 	for id in _spawn_data:
 		if not _by_id.has(id):
 			_instantiate_into(id, scene)
+			# Match the post-spawn registration that `_on_pet_spawn`
+			# does for live spawns. Without this the rehydrated pet
+			# exists in the scene but PetManager.active_pet stays
+			# null — pet-damage chat lines + /pet attack + the HUD
+			# pet panel all silently fail until the pet dies and the
+			# next PetSpawn lands while the scene is already current.
+			var owner_id: int = _spawn_data[id].get("owner", 0)
+			if owner_id == Net.get_player_id():
+				var rp = _by_id.get(id)
+				if rp != null and is_instance_valid(rp):
+					PetManager.register_remote_pet(rp)
 	_needs_rehydrate = false
 
 func _on_pet_spawn(
@@ -97,11 +108,19 @@ func _on_pet_spawn(
 func _on_entity_despawn(id: int) -> void:
 	if not _is_pet_id(id):
 		return
-	# Track 11.5 — notify PetManager when the local player's pet
-	# despawns so the HUD pet panel clears.
+	# Notify PetManager when the local player's pet despawns so the
+	# HUD pet panel clears. Identity-gated: during warder respawn the
+	# new PetSpawn can arrive before the old corpse's EntityDespawn,
+	# briefly making `active_pet` point at the new pet while this
+	# handler runs for the old pet. Without the id check we'd orphan
+	# the new pet and silently break pet-damage chat + /pet attack
+	# until the next death cycle.
 	var data: Dictionary = _spawn_data.get(id, {})
 	if data.get("owner", 0) == Net.get_player_id():
-		PetManager.dismiss_remote_pet()
+		var active = PetManager.active_pet
+		if active != null and is_instance_valid(active) and active is RemotePet:
+			if (active as RemotePet).pet_id == id:
+				PetManager.dismiss_remote_pet()
 	_spawn_data.erase(id)
 	var rp = _by_id.get(id)
 	if rp != null:

@@ -18,7 +18,8 @@ signal chat_submitted(text: String)
 signal show_chat_input_requested()
 
 enum MsgType { DAMAGE_OUT, DAMAGE_IN, HEAL, INFO, LEVEL_UP, LOOT, EVADE,
-			   SAY, SHOUT, OOC, TELL_OUT, TELL_IN, GROUP_CHAT, CRIT }
+			   SAY, SHOUT, OOC, TELL_OUT, TELL_IN, GROUP_CHAT, CRIT,
+			   PET_DAMAGE_OUT, PET_DAMAGE_IN }
 
 var _last_hp: float = 0.0
 # Sentinel: -1 means "haven't seen a level_changed yet". The first one

@@ -310,11 +310,13 @@ const _MENU_ID_DELETE  := 5
 # ChatWindow.FILTER_KEYS.
 const _FILTER_GROUPS := [
 	["Combat", [
-		["damage_out", "Damage Dealt"],
-		["damage_in",  "Damage Taken"],
-		["crit",       "Critical Hits"],
-		["heal",       "Heals"],
-		["evade",      "Evades"],
+		["damage_out",     "Damage Dealt"],
+		["damage_in",      "Damage Taken"],
+		["crit",           "Critical Hits"],
+		["heal",           "Heals"],
+		["evade",          "Evades"],
+		["pet_damage_out", "Pet Damage Dealt"],
+		["pet_damage_in",  "Pet Damage Taken"],
 	]],
 	["Chat", [
 		["say",        "Say"],

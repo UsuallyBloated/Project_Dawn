@@ -68,6 +68,8 @@ const C_OOC      := Color(0.30, 0.85, 0.70)
 const C_TELL_OUT := Color(0.90, 0.55, 1.00)
 const C_TELL_IN  := Color(1.00, 0.70, 1.00)
 const C_GROUP    := Color(0.45, 0.80, 1.00)
+const C_PET_OUT  := Color(0.78, 0.95, 0.40)
+const C_PET_IN   := Color(0.85, 0.55, 0.25)
 
 var window_id: int = 0
 var window_name: String = "Chat"
@@ -118,20 +120,22 @@ var _tab_dragging: bool = false
 # settings.cfg stays human-readable and survives enum reorderings IF
 # this array is reordered to match.
 const FILTER_KEYS: Array[String] = [
-	"damage_out",  # MsgType.DAMAGE_OUT
-	"damage_in",   # MsgType.DAMAGE_IN
-	"heal",        # MsgType.HEAL
-	"info",        # MsgType.INFO
-	"level_up",    # MsgType.LEVEL_UP
-	"loot",        # MsgType.LOOT
-	"evade",       # MsgType.EVADE
-	"say",         # MsgType.SAY
-	"shout",       # MsgType.SHOUT
-	"ooc",         # MsgType.OOC
-	"tell_out",    # MsgType.TELL_OUT
-	"tell_in",     # MsgType.TELL_IN
-	"group_chat",  # MsgType.GROUP_CHAT
-	"crit",        # MsgType.CRIT
+	"damage_out",     # MsgType.DAMAGE_OUT
+	"damage_in",      # MsgType.DAMAGE_IN
+	"heal",           # MsgType.HEAL
+	"info",           # MsgType.INFO
+	"level_up",       # MsgType.LEVEL_UP
+	"loot",           # MsgType.LOOT
+	"evade",          # MsgType.EVADE
+	"say",            # MsgType.SAY
+	"shout",          # MsgType.SHOUT
+	"ooc",            # MsgType.OOC
+	"tell_out",       # MsgType.TELL_OUT
+	"tell_in",        # MsgType.TELL_IN
+	"group_chat",     # MsgType.GROUP_CHAT
+	"crit",           # MsgType.CRIT
+	"pet_damage_out", # MsgType.PET_DAMAGE_OUT
+	"pet_damage_in",  # MsgType.PET_DAMAGE_IN
 ]
 
 static func default_filters() -> Dictionary:
@@ -555,4 +559,6 @@ func _color_for(type: int) -> Color:
 		CombatLog.MsgType.TELL_IN:    return C_TELL_IN
 		CombatLog.MsgType.GROUP_CHAT: return C_GROUP
 		CombatLog.MsgType.CRIT:       return C_CRIT
+		CombatLog.MsgType.PET_DAMAGE_OUT: return C_PET_OUT
+		CombatLog.MsgType.PET_DAMAGE_IN:  return C_PET_IN
 		_:                            return C_INFO

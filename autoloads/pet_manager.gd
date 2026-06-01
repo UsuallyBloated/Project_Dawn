@@ -18,8 +18,58 @@ const PET_SCENE_PATH := "res://scenes/pet.tscn"
 
 func _ready() -> void:
 	Combat.player_attacked.connect(_on_player_attacked)
+	# Pet combat lines are routed here in launcher mode where the local
+	# Pet.hit_target signal doesn't fire (the pet lives server-side as
+	# a RemotePet). Server fans the same Hit message it does for player
+	# swings; we resolve attacker/target against the local pet id and
+	# route to a dedicated MsgType.
+	Net.world_hit.connect(_on_world_hit)
 	if ResourceLoader.exists(PET_SCENE_PATH):
 		_pet_scene = load(PET_SCENE_PATH)
+
+func _on_world_hit(attacker: int, target: int, amount: int, _crit: bool, _dmg_type: int) -> void:
+	var my_pet_id := -1
+	if active_pet != null and is_instance_valid(active_pet) and active_pet is RemotePet:
+		my_pet_id = (active_pet as RemotePet).pet_id
+	if my_pet_id < 0:
+		return
+	var pet_name := _pet_display_name()
+	if attacker == my_pet_id:
+		# My pet hit (or missed if amount==0) something. Resolve target
+		# name from RemoteEnemy (most common) or fall back generic.
+		var target_name := "the target"
+		if target >= RemoteEnemyManager.ENEMY_ID_BASE:
+			var out_target = RemoteEnemyManager.get_enemy(target)
+			if out_target != null and is_instance_valid(out_target) and "mob_name" in out_target:
+				target_name = out_target.mob_name
+		if amount > 0:
+			CombatLog.add_line("%s hits %s for %d damage." % [pet_name, target_name, amount],
+					CombatLog.MsgType.PET_DAMAGE_OUT)
+		else:
+			CombatLog.add_line("%s misses %s." % [pet_name, target_name],
+					CombatLog.MsgType.PET_DAMAGE_OUT)
+		return
+	if target == my_pet_id:
+		var attacker_name := "Something"
+		if attacker >= RemoteEnemyManager.ENEMY_ID_BASE:
+			var in_attacker = RemoteEnemyManager.get_enemy(attacker)
+			if in_attacker != null and is_instance_valid(in_attacker) and "mob_name" in in_attacker:
+				attacker_name = in_attacker.mob_name
+		if amount > 0:
+			CombatLog.add_line("%s hits %s for %d damage." % [attacker_name, pet_name, amount],
+					CombatLog.MsgType.PET_DAMAGE_IN)
+		else:
+			CombatLog.add_line("%s misses %s." % [attacker_name, pet_name],
+					CombatLog.MsgType.PET_DAMAGE_IN)
+
+func _pet_display_name() -> String:
+	if active_pet == null or not is_instance_valid(active_pet):
+		return "Your pet"
+	if "pet_name" in active_pet:
+		var nm = active_pet.get("pet_name")
+		if nm != null and String(nm) != "":
+			return "Your %s" % String(nm)
+	return "Your pet"
 
 # ── public API ────────────────────────────────────────────────────────────────
 
