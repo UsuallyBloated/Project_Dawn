@@ -39,9 +39,6 @@ var current_target = null
 # swings fire only against valid combat targets (currently NPC enemies;
 # RemotePlayers are silent-skipped until PvP target validation lands).
 var is_auto_attacking: bool = false
-# Edge-trigger latch for the "Target is out of range." chat hint so it
-# logs once per range-transition instead of every 2-second swing tick.
-var _logged_out_of_range: bool = false
 
 var _auto_attack_timer: Timer
 var _offhand_timer: Timer
@@ -51,6 +48,9 @@ var god_mode: bool = false
 
 func register_player(node: Node3D) -> void:
 	_player = node
+
+func is_player_seated() -> bool:
+	return is_instance_valid(_player) and _player.state == PlayerCharacter.PlayerState.SITTING
 
 func unregister_player() -> void:
 	_player = null
@@ -67,6 +67,11 @@ func _ready() -> void:
 	add_child(_offhand_timer)
 
 	Equipment.equipment_changed.connect(_on_equipment_changed)
+	# Disengage auto-attack when the local player dies (PvP knockout,
+	# fall, etc.). Without this the timer keeps firing on the corpse
+	# and the "Auto attack is now OFF." cue never appears, which left
+	# Round-3 verification flagging the case.
+	PlayerDeath.player_died.connect(_on_player_died)
 
 func set_target(node) -> void:
 	if current_target == node:
@@ -81,7 +86,7 @@ func set_target(node) -> void:
 		# even if the player keeps auto-attack engaged. RemotePlayer
 		# is included here so the targeting bookkeeping still fires;
 		# the timer-start gate below silent-skips peer auto-attack.
-		if node.is_in_group("enemies") or node is RemotePlayer:
+		if node.is_in_group("enemies") or node is RemotePlayer or node is RemotePet:
 			if node.has_signal("died") and not node.is_connected("died", _on_target_died):
 				node.died.connect(_on_target_died)
 		_sync_auto_attack_timer()
@@ -100,7 +105,6 @@ func set_target(node) -> void:
 		current_target = null
 		_auto_attack_timer.stop()
 		_offhand_timer.stop()
-	_logged_out_of_range = false
 	target_changed.emit(current_target)
 
 func _target_display_name(node) -> String:
@@ -110,6 +114,10 @@ func _target_display_name(node) -> String:
 		var mn = node.get("mob_name")
 		if mn != null and String(mn) != "":
 			return String(mn)
+	if "pet_name" in node:
+		var pet_nm = node.get("pet_name")
+		if pet_nm != null and String(pet_nm) != "":
+			return String(pet_nm)
 	if "player_name" in node:
 		var pn = node.get("player_name")
 		if pn != null and String(pn) != "":
@@ -134,17 +142,26 @@ func _target_display_name(node) -> String:
 func toggle_auto_attack() -> void:
 	is_auto_attacking = not is_auto_attacking
 	auto_attack_toggled.emit(is_auto_attacking)
-	_logged_out_of_range = false
 	_sync_auto_attack_timer()
 
 func _target_is_attackable() -> bool:
 	if not is_instance_valid(current_target):
 		return false
-	# Silent skip: peer auto-attack is gated until PvP target validation
-	# lands. NPC enemies are the only auto-attack target type today.
-	if current_target is RemotePlayer:
+	# Own pet is never a valid auto-attack target — pre-reject before
+	# the timer starts so the player doesn't get spammed with
+	# "Unable to attack <Self>'s Wolf." on every swing.
+	if current_target is RemotePet and (current_target as RemotePet).owner_id == Net.get_player_id():
 		return false
-	return current_target.is_in_group("enemies")
+	# Peers (RemotePlayer) and player-owned pets (RemotePet) are also
+	# attackable from the client's POV — the server's PvP gate decides
+	# whether the swing actually lands. Rejected swings fan an explicit
+	# "Unable to attack X." chat line back to the attacker, so the
+	# player gets clear feedback either way.
+	return (
+		current_target.is_in_group("enemies")
+		or current_target is RemotePlayer
+		or current_target is RemotePet
+	)
 
 func _sync_auto_attack_timer() -> void:
 	if is_auto_attacking and _target_is_attackable():
@@ -166,8 +183,19 @@ func _on_equipment_changed(slot: String, _item) -> void:
 	# both timers keeps the main + offhand cadence consistent.
 	_sync_auto_attack_timer()
 
+func _on_player_died() -> void:
+	if is_auto_attacking:
+		toggle_auto_attack()
+	set_target(null)
+
 func _on_target_died(enemy) -> void:
 	if enemy == current_target:
+		# Target death disengages auto-attack — the player must
+		# acquire a new target and re-press the toggle. Matches the
+		# WoW-style explicit-engage flow (rather than EQ's persistent
+		# auto-attack that follows you to the next target).
+		if is_auto_attacking:
+			toggle_auto_attack()
 		set_target(null)
 
 func _on_auto_attack() -> void:
@@ -184,12 +212,12 @@ func _on_auto_attack() -> void:
 	var is_ranged_weapon := weapon != null and weapon.is_ranged
 	var max_range := RANGED_RANGE if is_ranged_weapon else MELEE_RANGE
 	if dist > max_range:
-		if not _logged_out_of_range:
-			CombatLog.add_line("Target is out of range.", CombatLog.MsgType.INFO)
-			_logged_out_of_range = true
+		# Log every tick — the player asked for the "Target is out of
+		# range." line to keep firing at the swing cadence as a visible
+		# reminder that auto-attack is still engaged.
+		CombatLog.add_line("Target is out of range.", CombatLog.MsgType.INFO)
 		_update_attack_interval()
 		return
-	_logged_out_of_range = false
 	var skill_name := _get_weapon_skill_name()
 	WeaponSkills.try_advance(skill_name)
 	var miss_chance := maxf(0.0, WeaponSkills.get_miss_chance(skill_name) - BuffManager.get_accuracy_bonus())
@@ -268,20 +296,27 @@ func _update_offhand_interval() -> void:
 func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.PHYSICAL, is_offhand: bool = false, via_spell: bool = false) -> void:
 	if not is_instance_valid(current_target) or current_target.is_dead:
 		return
-	var target_name: String = current_target.mob_name
+	var target_name: String = ""
+	if "mob_name" in current_target:
+		target_name = current_target.mob_name
+	elif "pet_name" in current_target:
+		target_name = current_target.pet_name
 	var is_crit := _last_crit
 	_last_crit = false
 	var hit_pos: Vector3 = current_target.global_position
-	var target_is_pvp := current_target is RemotePlayer
+	# Server is authoritative for damage on any remote network entity
+	# (RemotePlayer / RemoteEnemy / RemotePet). For all three the
+	# client suppresses the predictive damage number and chat line —
+	# the server's Hit fan-out drives the visible damage, and a
+	# rejected attack (PvP gate or otherwise) shouldn't leave a
+	# misleading "You hit X" in the log.
+	var target_is_remote := (
+		current_target is RemotePlayer
+		or current_target is RemoteEnemy
+		or current_target is RemotePet
+	)
 	_apply_damage_to_node(current_target, amount, is_crit, dmg_type, is_offhand, via_spell)
-	# Track 6 sub-task 3: for PvP swings the server applies armor
-	# reduction and fans an authoritative Hit — RemotePlayerManager
-	# ._on_hit then spawns the authoritative damage number. Suppressing
-	# the predictive number here avoids the visual double-spawn where
-	# the higher pre-armor value would mask the lower post-armor one.
-	# The combat log line is also deferred to _on_hit so it matches the
-	# applied amount.
-	if not target_is_pvp:
+	if not target_is_remote:
 		player_hit_enemy.emit(target_name, amount, is_crit)
 		DamageNumbers.spawn_damage(hit_pos, amount, is_crit)
 
@@ -306,14 +341,20 @@ func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.P
 func _apply_damage_to_node(target: Node, amount: int, is_crit: bool, dmg_type: int, is_offhand: bool = false, via_spell: bool = false) -> void:
 	if not is_instance_valid(target):
 		return
-	if target is RemotePlayer or target is RemoteEnemy:
+	if target is RemotePlayer or target is RemoteEnemy or target is RemotePet:
 		if via_spell:
 			return  # CastSpell intent already in flight; server applies.
 		var weapon: ItemData = Equipment.equipped.get("offhand" if is_offhand else "weapon")
 		var weapon_path := ""
 		if weapon != null and weapon.resource_path != "":
 			weapon_path = weapon.resource_path
-		var target_id: int = (target as RemotePlayer).char_id if target is RemotePlayer else (target as RemoteEnemy).enemy_id
+		var target_id: int = 0
+		if target is RemotePlayer:
+			target_id = (target as RemotePlayer).char_id
+		elif target is RemoteEnemy:
+			target_id = (target as RemoteEnemy).enemy_id
+		elif target is RemotePet:
+			target_id = (target as RemotePet).pet_id
 		Net.broadcast_attack(target_id, weapon_path, is_offhand, dmg_type)
 	else:
 		target.take_damage(amount)
@@ -377,15 +418,24 @@ func deal_spell_damage(amount: int, damage_type: SpellData.DamageType = SpellDat
 	var effective: int = max(1, int(amount * randf_range(1.5, 2.0))) if _last_crit else amount
 	effective = max(0, int(effective * (1.0 - resist)))
 	if effective <= 0:
-		CombatLog.add_line("%s resists your spell." % current_target.mob_name, CombatLog.MsgType.INFO)
+		var nm := _target_display_name(current_target)
+		CombatLog.add_line("%s resists your spell." % (nm if nm != "" else "The target"), CombatLog.MsgType.INFO)
 		return
 	var fx_target: Node = current_target
-	# Track 6 sub-task 3b: spell damage application goes through the
-	# server's CastSpell handler (Spells._apply_spell broadcast). Skip
-	# the Attack broadcast here so the server doesn't apply damage
-	# twice. Local visual (floating number + flash) still fires.
+	var fx_is_remote := (
+		fx_target is RemotePlayer
+		or fx_target is RemoteEnemy
+		or fx_target is RemotePet
+	)
+	# Spell damage application goes through the server's CastSpell
+	# handler (Spells._apply_spell broadcast). Skip the Attack broadcast
+	# here so the server doesn't apply damage twice. For remote targets
+	# we also defer the elemental flash + impact light until the server
+	# confirms the hit (see RemotePlayerManager._on_hit); otherwise a
+	# PvP-rejected or out-of-range cast still flashes the victim, which
+	# misreads as "spell landed."
 	deal_damage_to_target(effective, _spell_to_net_damage_type(damage_type), false, true)
-	if is_instance_valid(fx_target):
+	if not fx_is_remote and is_instance_valid(fx_target):
 		var sc := spell_color(damage_type)
 		fx_target.flash_spell_hit(sc)
 		spawn_impact_light(fx_target.global_position, sc)
@@ -401,7 +451,7 @@ func has_valid_target() -> bool:
 		return false
 	if current_target.is_dead:
 		return false
-	return current_target.is_in_group("enemies") or current_target is RemotePlayer
+	return current_target.is_in_group("enemies") or current_target is RemotePlayer or current_target is RemotePet
 
 func receive_player_damage(amount: int, attacker: Node = null, attacker_name: String = "") -> void:
 	if PlayerDeath.is_dead:
@@ -470,6 +520,22 @@ func calc_damage() -> int:
 	_last_crit = randf() < crit_chance
 	var crit_mult := randf_range(1.5, 2.0) if _last_crit else 1.0
 	return max(1, int(base * skill_mult * crit_mult))
+
+# NetProtocol.DamageType → elemental color. Used by the server-Hit
+# fan-back render path so spell visuals (flash, impact light) only fire
+# on confirmed landings. PHYSICAL returns WHITE; melee hit flashes use
+# a separate mesh-tint path and shouldn't burst an OmniLight.
+func net_damage_color(net_dt: int) -> Color:
+	match net_dt:
+		NetProtocol.DamageType.FIRE:      return Color(1.0, 0.45, 0.10)
+		NetProtocol.DamageType.ICE:       return Color(0.50, 0.85, 1.0)
+		NetProtocol.DamageType.LIGHTNING: return Color(1.0, 1.0, 0.20)
+		NetProtocol.DamageType.ARCANE:    return Color(0.90, 0.40, 1.0)
+		NetProtocol.DamageType.HOLY:      return Color(1.0, 1.0, 0.60)
+		NetProtocol.DamageType.NATURE:    return Color(0.20, 1.0, 0.30)
+		NetProtocol.DamageType.SPIRIT:    return Color(0.70, 0.50, 1.0)
+		NetProtocol.DamageType.SHADOW:    return Color(0.50, 0.10, 0.80)
+	return Color.WHITE
 
 func spell_color(damage_type: SpellData.DamageType) -> Color:
 	match damage_type:

@@ -237,7 +237,7 @@ func _on_cast_fail(caster: int, reason: String) -> void:
 # Combat.receive_player_damage call is kept only for enemy attackers
 # to drive client-side combat-log + buff-trigger side effects that
 # haven't migrated server-side yet.
-func _on_hit(attacker: int, target: int, amount: int, crit: bool, _dmg_type: int) -> void:
+func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int) -> void:
 	if target == Net.get_player_id():
 		var players := get_tree().get_nodes_in_group("player")
 		if not players.is_empty():
@@ -284,6 +284,50 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, _dmg_type: int
 		# armor reduction.
 		if attacker == Net.get_player_id():
 			CombatLog.add_line("You hit %s for %d damage%s." % [rp.player_name, amount, (" (Critical!)" if crit else "")], CombatLog.MsgType.DAMAGE_OUT)
+		_play_spell_impact_fx(rp, amount, dmg_type)
+		return
+	# Outgoing damage from us on a server-authoritative non-player target
+	# (RemoteEnemy or RemotePet). Local prediction is suppressed in
+	# Combat.deal_damage_to_target for these, so we render here off the
+	# server's authoritative Hit fan-out.
+	if attacker != Net.get_player_id():
+		return
+	if target >= RemotePetManager.PET_ID_BASE:
+		var pet_node = RemotePetManager.get_pet(target)
+		if pet_node != null and is_instance_valid(pet_node):
+			DamageNumbers.spawn_damage(pet_node.global_position, amount, crit)
+			var pname: String = pet_node.pet_name if "pet_name" in pet_node else "the pet"
+			if amount > 0:
+				CombatLog.add_line("You hit %s for %d damage%s." % [pname, amount, (" (Critical!)" if crit else "")], CombatLog.MsgType.DAMAGE_OUT)
+			else:
+				CombatLog.add_line("You miss %s." % pname, CombatLog.MsgType.DAMAGE_OUT)
+			_play_spell_impact_fx(pet_node, amount, dmg_type)
+	elif target >= RemoteEnemyManager.ENEMY_ID_BASE:
+		var en_node = RemoteEnemyManager.get_enemy(target)
+		if en_node != null and is_instance_valid(en_node):
+			DamageNumbers.spawn_damage(en_node.global_position, amount, crit)
+			var ename: String = en_node.mob_name if "mob_name" in en_node else "the target"
+			if amount > 0:
+				CombatLog.add_line("You hit %s for %d damage%s." % [ename, amount, (" (Critical!)" if crit else "")], CombatLog.MsgType.DAMAGE_OUT)
+			else:
+				CombatLog.add_line("You miss %s." % ename, CombatLog.MsgType.DAMAGE_OUT)
+			_play_spell_impact_fx(en_node, amount, dmg_type)
+
+# Elemental flash + impact light on confirmed spell landings. Server-
+# authoritative — only fires when the server's Hit fan-back lands, so
+# PvP-rejected casts no longer leave a phantom flash on the target.
+# PHYSICAL hits skip the OmniLight burst (mesh flash is handled by the
+# per-node hit reactions, not here).
+func _play_spell_impact_fx(node: Node, amount: int, dmg_type: int) -> void:
+	if amount <= 0 or not is_instance_valid(node):
+		return
+	if dmg_type == NetProtocol.DamageType.PHYSICAL:
+		return
+	var color := Combat.net_damage_color(dmg_type)
+	if node.has_method("flash_spell_hit"):
+		node.flash_spell_hit(color)
+	if node is Node3D:
+		Combat.spawn_impact_light((node as Node3D).global_position, color)
 
 func _on_damage_shield_trigger(defender: int, attacker: int, amount: int, shield_name: String) -> void:
 	# Defender's POV — log the reflect and let them see what their

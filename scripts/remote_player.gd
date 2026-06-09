@@ -20,6 +20,9 @@ class_name RemotePlayer
 signal hp_changed(current: float, maximum: float)
 signal mp_changed(current: float, maximum: float)
 signal stamina_changed(current: float, maximum: float)
+# Emitted from `apply_death` so listeners (Combat auto-attack
+# disengage, target frame clears, etc.) react when this peer dies.
+signal died(peer)
 # Track 4 sub-task 2 cast bar. cast_started fires when a fresh CastStart
 # arrives (or a late-joiner seed mid-cast). cast_ended fires on Complete /
 # Fail and on the defensive duration-elapsed timeout in _process.
@@ -200,6 +203,7 @@ func apply_death() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	died.emit(self)
 	var tw := create_tween()
 	tw.tween_property(self, "rotation:x", PI * 0.5, 0.5)
 	if name_label:

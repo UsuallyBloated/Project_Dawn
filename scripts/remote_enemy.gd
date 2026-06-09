@@ -21,6 +21,12 @@ class_name RemoteEnemy
 
 signal hp_changed(current: float, maximum: float)
 signal target_changed(target_id: int)
+# Emitted by `apply_death` when the server's EntityDied lands on this
+# enemy. Combat.set_target subscribes so auto-attack disengages on kill;
+# without this signal a remote enemy's death wouldn't reach the
+# `_on_target_died` handler and auto-attack would stay toggled on
+# against the corpse.
+signal died(enemy)
 
 # Network identity. Set by RemoteEnemyManager *before* add_child fires
 # _ready, so _ready can read them.
@@ -79,6 +85,7 @@ func apply_death() -> void:
 	if is_dead:
 		return
 	is_dead = true
+	died.emit(self)
 	if _target_indicator:
 		_target_indicator.visible = false
 	var tw := create_tween()
