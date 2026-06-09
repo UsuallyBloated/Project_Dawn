@@ -1,0 +1,238 @@
+# Systems Overview
+
+What's built and how it hangs together — a per-system map of the client. This absorbs the
+"what exists" knowledge that used to live in the completed (`[x]`) section of the root
+`CLAUDE.md` to-do list. Dated history (what changed when, and why) lives in
+`docs/session_notes/`; anything that crosses the wire is contracted in
+`server/docs/server_design.md`.
+
+This is a reference, not an exhaustive API. When in doubt, the code is truth.
+
+---
+
+## Combat
+
+- **Auto-attack:** `Combat._on_auto_attack()` fires on a timer. `MELEE_RANGE = 3.0` m;
+  `RANGED_RANGE = 25.0` m when `ItemData.is_ranged`. Ranged damage uses the DEX bonus,
+  melee uses STR. Each landing hit calls `WeaponSkills.try_advance()`. Magic numbers
+  (ranges, evasion, crit constants) are named consts at the top of `autoloads/combat.gd`.
+- **Dual wield:** an off-hand timer fires when the off-hand weapon slot is occupied; +20%
+  miss penalty on off-hand swings, which also call `try_advance("dual_wield")`.
+- **Critical hits:** auto/skill crits scale with DEX (0–30%); spell crits scale with INT
+  (0–20%). Both roll a 1.5–2.0× multiplier and log with the bright-gold `MsgType.CRIT`.
+- **Procs:** `ItemData.proc_chance/proc_damage/proc_damage_type/proc_name`;
+  `Combat._try_fire_proc()` rolls on every main- and off-hand hit, with elemental FX + a
+  combat-log line.
+- **AOE:** `SpellData.TargetType.AOE` → `Combat.deal_aoe_spell_damage()` hits all enemies
+  within a radius.
+- **Elemental resistances:** enemies carry per-element resist values that reduce incoming
+  spell damage; undead carry shadow resist, etc.
+- **Damage shield (thorns):** attacker takes X damage when hitting the shielded target
+  (Druid / Enchanter).
+- **Enemy state machine:** IDLE → CHASE → ATTACK → FLEE/LEASH. Caster enemies kite at
+  `caster_range`; healer enemies flee to spawn below `healer_flee_hp`. Relevant exports:
+  `spell_damage`, `caster_range`, `flee_range`.
+- **Hit reactions / VFX:** physical hits flash the mesh white; spell hits flash an
+  elemental color + spawn an `OmniLight3D` burst at the impact point, via
+  `enemy.flash_spell_hit(color)` from `Combat.deal_spell_damage()`. Color per type: fire
+  orange, ice blue, lightning yellow, arcane purple, holy gold, nature green, spirit
+  lavender, shadow dark-purple.
+- **Death:** enemies and the player fall over rather than vanishing.
+
+---
+
+## Spells & casting
+
+- **Cast flow:** `Spells.cast_spell(spell)` → optional cast bar → `_apply_spell()` →
+  damage / heal / buff routed to the right system. Casting skills advance on cast;
+  Channeling advances when a hit survives interruption.
+- **Availability:** `SpellData.min_level` gates a spell; `setup_for_class()` filters
+  `available[]` by class + level on every level-up.
+- **Ranks:** `SpellData.rank` (1/2/3) + `SpellData.base_name`. `setup_for_class()` keeps
+  only the highest accessible rank per base spell. Rank II ≈ lvl 6–12 (+40% power), Rank
+  III ≈ lvl 14–16 (+90%). Discipline inherits from `base_name`, so rank variants need no
+  separate `DISCIPLINE` entry.
+- **Buffs route to `BuffManager`:** primary-stat buffs, HoT, DoT, absorb, haste, speed,
+  clarity (MP regen), damage shield, stealth, lich form. Stat buffs apply directly to
+  `PlayerStats` and undo on expire / death / zone change.
+- **Ports:** `TargetType.PORT` with `port_zone_path` / `port_entry_id`; Gate uses empty
+  strings to resolve to the bind point.
+- **Notable resolved spells:** Complete Heal (Cleric, self-heal for now), Torpor (Shaman),
+  Clarity/Breeze (Enchanter), Haste (Enchanter), Spirit of Wolf (Druid/Shaman), Lich Form
+  (Necromancer — skips HP regen, extreme MP regen), Gate (Wizard), Exsanguinate (Blood
+  Mage — damage = min(drain, target.hp), converted to caster MP). Ranger (Ensnaring Roots,
+  Camouflage, Hunter's Eye) and Witch Hunter (Spellbreak silence, Antimagic Ward dispel,
+  Expose dispel) lines are in `data/spell_definitions.gd`.
+
+---
+
+## Status effects & control
+
+- **Stun:** `SkillData.EffectType.STUN` → `enemy.stun()`; stunned enemies skip the whole
+  physics state machine (no move, no attack). Shield Bash (Warrior/Paladin/Shadow Knight).
+- **Slow:** `enemy.apply_attack_slow()`; attack cooldown scaled by `(1.0 + slow_amount)`.
+  Shaman/Enchanter "Slow"; Torpor and some Bard songs also slow.
+- **Root:** `enemy.root()`; blocks movement in `_tick_chase()` while still allowing attack.
+  Ensnare (Druid), Immobilize (Enchanter).
+- **Silence:** Witch Hunter Spellbreak (`silence_duration`).
+
+---
+
+## Active skills
+
+- `Skills.use_skill(skill)` resolves via the `SkillData.EffectType` enum
+  (STUN, FEIGN_DEATH, STEALTH, …). Defined in `scripts/skill_definitions.gd`.
+- **Feign Death (Monk):** 80% success; all grouped enemies de-aggro via
+  `feign_death_deaggro()`.
+- **Sneak & Hide (Rogue):** `BuffManager.add_stealth()`; enemy aggro range vs. stealthed
+  players is reduced; breaks on attacking.
+- **Track (Ranger):** `scripts/track_window.gd` lists enemies within 60 m (name / level /
+  distance), refreshing every 2 s.
+
+---
+
+## Passive skills
+
+- `WeaponSkills`, `ArmorSkills`, `CastingSkills` all extend
+  `autoloads/passive_skill_tracker.gd` (shared `try_advance()`).
+- Weapon skills (1H Slashing, Piercing, 2H Blunt, Defense, Dodge, Archery, Dual Wield,
+  Hand to Hand…) train through use; per-class caps at lvl 60 in
+  `data/weapon_skill_definitions.gd`; higher skill = better hit/damage. Shown live in the
+  character window's Combat Skills section.
+- Casting disciplines (evocation, alteration, channeling, …) advance on cast / surviving
+  interruption.
+
+---
+
+## Progression & sustain
+
+- **PlayerStats** owns HP/MP/stamina, STR/AGI/INT/WIS/CON(/CHA), level, XP, race/class,
+  bind point.
+- **Meditation:** sitting applies 5× HP/MP and 3× stamina regen multipliers in `regen.gd`;
+  movement or acquiring a target auto-stands (`player.gd`, `Regen._on_target_changed`).
+- **Food & drink:** `ItemData.is_food/is_drink/food_hp_regen/food_mp_regen/food_duration`;
+  right-click in inventory calls `add_food_buff` / `add_drink_buff`; regen stacks
+  additively on top of meditation. (Planned rework: gate base regen instead of stacking —
+  see the to-do.)
+- **Bind points:** Bind Affinity stores `bind_zone_path/entry_id/zone_name` on PlayerStats;
+  `player_death._respawn()` routes through `ZoneLoader.travel_to()` when set (falls back to
+  `_respawn_position`). XP loss is logged to the combat log.
+- **Group XP:** `GroupManager.distribute_kill_xp(base_xp)` splits XP with a 20% group bonus;
+  `enemy._die()` routes through it; `_rpc_receive_xp` delivers each remote member's share.
+
+---
+
+## Items, inventory, equipment
+
+- **Inventory:** bag slots + item stacks; `add_item()` / `remove_item()` / `stack_all()`
+  (the "Stack All" button per bag window calls the latter). Base layout is flat slots with
+  bags-as-items.
+- **Equipment:** paperdoll slots, equip/unequip; `can_dual_wield()` gates the off-hand
+  weapon slot; `_resolve_slot()` routes a second weapon to "offhand" when the dual_wield
+  skill > 0.
+- **Augmentation/socketing:** `ItemData.gem_slots`, `socketed_augments`, `Type.AUGMENT`
+  (data shape only; combine UI deferred).
+- **Item registry:** `ItemRegistry` autoload; the canonical item table is exported to the
+  server's `items.toml` via `tools/export_items.gd`.
+
+---
+
+## Pets, warders, transforms, mounts
+
+- **PetManager:** generic pet lifecycle (summon / unsummon / charm).
+- **WarderAI:** Beast Master warder behavior (retreat / fury / `setup_for_class`),
+  extracted from PetManager. Warder idle state faces the player's look direction.
+- **Transformations:** e.g. Revenant — grants ultravision; tradeskill scores carry over
+  automatically (they live outside PlayerStats).
+- **MountManager:** client-side v1 — item whistles summon, per-zone `NO_MOUNT_ZONES`
+  blacklist, any incoming damage dismounts, mount speed multiplier overrides other speed
+  sources. Not fully wired (see to-do).
+
+---
+
+## World & environment
+
+- **Zones:** `ZoneLoader` owns transitions and the current zone path/name.
+- **Day/night:** `TimeOfDay` emits `hour_changed`. EnemySpawner `night_only` mobs spawn at
+  hour 20, despawn at hour 6. (Per-client today; server broadcast planned.)
+- **Vision:** `VisionSystem` adjusts brightness + infravision green tint at night by race —
+  ultravision (Dark Elf, Ogre, Troll, Kel\`varath), infravision (Elf, Wood Elf, Half-Elf,
+  Dwarf, Gnome, Halfling, Fae, Felhari, Kobold), normal (Human, Minotaur, Half-Ogre).
+- **Spawns:** spawn points with respawn timers keep the world populated.
+- **Named/boss mobs:** `data/named_mob_definitions.gd` (Rotfang, Greth Bonecrusher, Ancient
+  Crawler, Sable, The Undying). `EnemySpawner.named_mob_id` + `named_respawn_time`;
+  `enemy.apply_named()` sets a gold nameplate, scales HP/XP/damage, arms `_named_drops`
+  (guaranteed + chance-based rare loot), and enrages below a configurable HP% (speed +
+  damage boost, red name). `Loot._on_enemy_died()` appends `_named_drops` after the normal
+  table roll.
+- **Fall damage:** `_on_land()` in `player.gd`; threshold 9 m/s; `(speed - threshold) × 5`
+  HP via `Combat.receive_player_damage()`. (TODO: skip under Levitate / Feather Fall.)
+
+---
+
+## NPCs, dialogue, quests, vendors
+
+- **Dialogue:** `DialogueNPC` (Area3D proximity register) + `DialogueManager` autoload;
+  trees in `data/dialogue_definitions.gd` (node ids → text + numbered responses with
+  goto/close/open_vendor/give_quest/complete_quest actions; `quest_condition` filters
+  responses by quest state). `scripts/dialogue_window.gd` renders it. Interact priority:
+  DialogueManager > VendorManager > crafting station > skinning/mining.
+- **Quests:** `QuestManager` (ACTIVE/COMPLETED/FAILED, objectives, signals) +
+  `data/quest_definitions.gd`. Kill tracking is automatic via `notify_kill()` in
+  `enemy._die()`. `complete_quest()` delivers XP + item rewards through `Inventory`.
+  Journal: `scripts/quest_journal.gd` (J key; Active/Completed tabs).
+- **Vendors:** `VendorManager` + `scenes/vendor_npc.tscn` / `scripts/vendor_npc.gd`
+  (proximity register, F to open); types in `data/vendor_definitions.gd`; buy/sell window
+  functional.
+
+---
+
+## Tradeskills & crafting
+
+- `Crafting` autoload (XP, success formula, racial multipliers, access gates) +
+  `crafting_window.gd` (K to open) + `data/recipe_definitions.gd` (15 tradeskills:
+  Smelting, Tanning, Leatherworking, Tailoring, Blacksmithing, Weaponsmithing, Woodworking,
+  Fletching, Alchemy, Poison Making, Baking, Brewing, Jewelry Crafting, Pottery, Tinkering).
+- Mob crafting-material drops via `data/loot_tables.gd` archetypes (`.tres`-backed).
+  Skinning: `skinning_knife.tres` + `enemy.try_skin()` (F key; pelt quality by skill).
+- `StationManager` tracks station proximity (display; not yet enforced). Phase detail in
+  `docs/concepts/tradeskills/todo_list.md`.
+
+---
+
+## UI / HUD
+
+- **HUD core** (`scripts/hud.gd`) split into a `hud_*.gd` family: DeathScreen, CastBar,
+  BuffBar, PetPanel, GroupPanel. Includes the always-visible XP bar, target frame with
+  actual HP numbers, and a target-of-target frame.
+- **Buff/debuff bar:** icons with countdown timers (absorb, HoT, evade, etc.).
+- **Floating numbers:** `DamageNumbers` — damage (with crit), incoming damage, heals,
+  misses, XP gains; billboard `Label3D` that faces the camera; per-category toggles in
+  Options → Interface.
+- **Spell book** (view known spells, memorize workflow) and **Hotbar** (signal-driven from
+  `spell_cooldown_updated` / `skill_cooldown_updated`). Memorize is gated through `SpellBar`.
+- **Multi-window chat:** `CombatLog` is a pure broker emitting `line_added(text, type)`;
+  `ChatWindowManager` owns N `ChatWindow` instances (each a `DraggablePanel`). Per-window
+  filters (by `MsgType`), display settings (bg/font alpha, font size, default channel), and
+  tab docking (`group_id` groups windows; drag to dock/undock). Layout persists through
+  `GameSettings.chat_windows`.
+- **Settings:** keybinds, UI panel positions, and chat prefs persist to disk via
+  `GameSettings`.
+
+---
+
+## Networking (client)
+
+> The world simulation server is not built yet; the client runs **local-save** until it
+> lands. Read `server/docs/server_design.md` before touching anything here.
+
+- `Network` / `Net` — connection + wire message routing.
+- `SaveManager` — local persistence today; server-authoritative once the world server is
+  online. (Watch the Godot-4 `_notification`-on-close save pitfall noted in past audits.)
+- `RemotePlayerManager`, `RemoteEnemyManager`, `RemoteLootBagManager`, `RemotePetManager` —
+  spawn and update peer-owned entities from server broadcasts; each exposes a `get_by_id()`
+  accessor used by the target-of-target resolver.
+- `NetCombatBroadcaster` — relays local combat events onto the wire.
+- **Known gaps** (also in the root to-do): incoming `/tell`, PvP flagging + pet PvP flag
+  inheritance, ALLY-target buff routing for peers (only heals route via server today),
+  `RemotePet` friend/foe visual distinction.
