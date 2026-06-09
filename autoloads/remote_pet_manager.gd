@@ -35,6 +35,24 @@ func _ready() -> void:
 	Net.world_health_update.connect(_on_health_update)
 	Net.world_entity_died.connect(_on_entity_died)
 	Net.world_entity_despawn.connect(_on_entity_despawn)
+	# Central refresh of every live pet's allegiance tint when group
+	# membership changes or the local /pvp flag flips. RemotePet nodes
+	# also subscribe per-instance, but the Round-7 playtest showed pets
+	# stuck on the wrong color after `group_updated` fired — this
+	# central loop is the redundant path that guarantees the refresh.
+	GroupManager.group_updated.connect(_refresh_all_allegiances)
+	Net.pvp_toggled.connect(_refresh_all_allegiances_pvp)
+
+func _refresh_all_allegiances(_membership_changed: bool) -> void:
+	_refresh_all_allegiances_impl()
+
+func _refresh_all_allegiances_pvp(_on: bool) -> void:
+	_refresh_all_allegiances_impl()
+
+func _refresh_all_allegiances_impl() -> void:
+	for rp in _by_id.values():
+		if is_instance_valid(rp) and rp.has_method("refresh_allegiance"):
+			rp.refresh_allegiance()
 
 # Track 21B — public accessor used by the target-of-target frame
 # to resolve a server-sent pet_id back to its RemotePet node.
