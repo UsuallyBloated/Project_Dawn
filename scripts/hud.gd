@@ -14,6 +14,7 @@ const _SpellBookScript      := preload("res://scripts/spell_book.gd")
 const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
 const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
 const _InspectWindowScript  := preload("res://scripts/inspect_window.gd")
+const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 
 @onready var health_bar: ProgressBar = $Panel/VBoxContainer/HPRow/HealthBar
 @onready var stamina_bar: ProgressBar = $Panel/VBoxContainer/STARow/StaminaBar
@@ -54,6 +55,7 @@ var _spell_book: Panel = null
 var _quest_journal: Panel = null
 var _dialogue_window: Panel = null
 var _inspect_window: InspectWindow = null
+var _debug_console: DebugConsole = null
 var _target_hp_label: Label = null
 var _target_mp_label: Label = null
 var _target_st_label: Label = null
@@ -170,6 +172,15 @@ func _build_components() -> void:
 	_inspect_window.visible = false
 	add_child(_inspect_window)
 	_inspect_window.visibility_changed.connect(_on_window_visibility_changed.bind(_inspect_window))
+
+	# In-game DebugLog tail. Independent of the user-data debug.log
+	# file (which gets corrupted when two clients share the same
+	# Godot user dir), so this stays useful in multi-client testing.
+	# Built in code (no .tscn) so the preload doesn't fail on first
+	# touch before Godot has imported the scene file. Toggle with F2
+	# (see _unhandled_input).
+	_debug_console = _DebugConsoleScript.new()
+	add_child(_debug_console)
 
 	_build_tot_frame()
 
@@ -420,6 +431,20 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			elif _options_screen != null:
 				_options_screen.visible = !_options_screen.visible
+				get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_F2 or event.keycode == KEY_QUOTELEFT:
+			# Dev-only: in-game tail of DebugLog. Hardcoded (not in
+			# Settings.actions) since it's a diagnostic tool, not a
+			# rebindable gameplay control. F2 or backtick (`).
+			if _debug_console != null:
+				_debug_console.toggle()
+				CombatLog.add_line(
+					"Debug console: %s (%d lines buffered)" % [
+						"ON" if _debug_console.visible else "OFF",
+						DebugLog.recent_lines.size(),
+					],
+					CombatLog.MsgType.INFO,
+				)
 				get_viewport().set_input_as_handled()
 		elif event.is_action("target_self"):
 			if _self_targeted:
@@ -1170,6 +1195,21 @@ func _handle_chat_input(text: String) -> void:
 		var on := lower != "/pvp off"
 		Net.broadcast_pvp_toggle(on)
 		CombatLog.add_line("PvP override: %s" % ("on" if on else "off"), CombatLog.MsgType.INFO)
+		return
+
+	# Dev-only — backup trigger for the in-game debug console when the
+	# F2 keybind isn't reaching the game window (editor focus, OS
+	# steals, etc.). Round-7B fallback.
+	if lower == "/console":
+		if _debug_console != null:
+			_debug_console.toggle()
+			CombatLog.add_line(
+				"Debug console: %s (%d lines buffered)" % [
+					"ON" if _debug_console.visible else "OFF",
+					DebugLog.recent_lines.size(),
+				],
+				CombatLog.MsgType.INFO,
+			)
 		return
 
 	# Track 6 sub-task 3 dev — bypass-the-spell-system self damage.

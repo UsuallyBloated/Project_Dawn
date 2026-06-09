@@ -5,9 +5,21 @@ extends Node
 # On Windows: %APPDATA%\Godot\app_userdata\Project_Dawn\debug.log.
 # Open from the editor via Project > Open User Data Folder, or
 # inspect `OS.get_user_data_dir()` to print the absolute path at
-# runtime.
+# runtime. The in-game console (F2) reads from `recent_lines` and
+# subscribes to `line_emitted` for live tail without needing to
+# open the file.
 const LOG_PATH := "user://debug.log"
 const MAX_LINES := 2000
+const RING_CAPACITY := 2000
+
+# Emitted on every successful _write so the in-game DebugConsole can
+# tail without re-reading the file. `level` is one of INFO/WARN/
+# ERROR/COMBAT for colorization.
+signal line_emitted(text: String, level: String)
+
+# Ring buffer of the most recent lines so the console can seed from
+# whatever has accumulated before the player opened the window.
+var recent_lines: Array[Dictionary] = []
 
 var _file: FileAccess = null
 var _line_count: int = 0
@@ -33,24 +45,41 @@ func _notification(what: int) -> void:
 # ── Public API ────────────────────────────────────────────────────────────────
 
 func info(msg: String) -> void:
-	_write("[INFO ] %s" % msg)
+	_write("INFO", msg)
 
 func warn(msg: String) -> void:
-	_write("[WARN ] %s" % msg)
+	_write("WARN", msg)
 	push_warning(msg)
 
 func error(msg: String) -> void:
-	_write("[ERROR] %s" % msg)
+	_write("ERROR", msg)
 	push_error(msg)
 
 func combat(msg: String) -> void:
-	_write("[COMBТ] %s" % msg)
+	_write("COMBAT", msg)
 
 # ── Internal ──────────────────────────────────────────────────────────────────
 
-func _write(msg: String) -> void:
+func _write(level: String, msg: String) -> void:
 	var ts := Time.get_time_string_from_system()
-	_write_raw("%s %s" % [ts, msg])
+	# Explicit String type — Dictionary.get returns Variant, which the
+	# strict-mode linter (Warnings = Errors in project.godot) rejects
+	# when assigned via `:=` inference.
+	var tag: String
+	match level:
+		"WARN":   tag = "[WARN ]"
+		"ERROR":  tag = "[ERROR]"
+		"COMBAT": tag = "[COMBT]"
+		_:        tag = "[INFO ]"
+	var line := "%s %s %s" % [ts, tag, msg]
+	_write_raw(line)
+	# Maintain in-memory ring for the in-game console and emit the
+	# signal whether or not the file write succeeded — the console
+	# stays useful even if file IO is broken.
+	recent_lines.append({"text": line, "level": level})
+	if recent_lines.size() > RING_CAPACITY:
+		recent_lines.pop_front()
+	line_emitted.emit(line, level)
 
 func _write_raw(line: String) -> void:
 	if _file == null:
