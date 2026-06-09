@@ -187,22 +187,33 @@ func command_attack(target = null) -> void:
 		return
 	if Net.is_launcher_mode():
 		# Pet attacks must target a server-known entity. RemoteEnemy
-		# carries an enemy_id; RemotePlayer (PvP pets) carries char_id.
+		# carries an enemy_id; RemotePlayer (PvP pets) carries char_id;
+		# RemotePet (pet-on-pet PvP) carries pet_id. The server's
+		# PetCommand::ATTACK handler runs the can_attack gate when the
+		# target is a pet, so we don't need to know peer PvP state here.
 		var target_id := 0
 		if target is RemoteEnemy:
 			target_id = (target as RemoteEnemy).enemy_id
 		elif target is RemotePlayer:
 			target_id = (target as RemotePlayer).char_id
+		elif target is RemotePet:
+			target_id = (target as RemotePet).pet_id
 		if target_id <= 0:
 			pet_info.emit("That target can't be attacked by your pet.")
 			return
 		Net.broadcast_pet_command(NetProtocol.PetCommand.ATTACK, target_id)
-		var target_name: String = target.get("mob_name")
-		if target_name == null or target_name == "":
-			target_name = target.get("player_name")
-		if target_name == null or target_name == "":
-			target_name = "target"
-		pet_info.emit("Your pet attacks %s!" % target_name)
+		# Confirmation line only fires for NPC targets where the command
+		# cannot be PvP-rejected. For RemotePlayer / RemotePet the
+		# server's gate may refuse — emitting "Your pet attacks X!"
+		# optimistically reads as a contradiction when the rejection
+		# chat lands the same tick (Round-5 playtest report). Visible
+		# pet engagement is the success cue for PvP targets; rejection
+		# fans its own "Unable to attack X." chat line.
+		if target is RemoteEnemy:
+			var target_name: String = target.get("mob_name")
+			if target_name == null or target_name == "":
+				target_name = "target"
+			pet_info.emit("Your pet attacks %s!" % target_name)
 		return
 	# Solo / Test Room: local Pet has an attack method if available;
 	# otherwise just set its target via Combat plumbing.
