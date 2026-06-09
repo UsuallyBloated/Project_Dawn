@@ -103,10 +103,8 @@ func complete_quest(quest_id: String) -> void:
 	q["status"] = Status.COMPLETED
 	var xp: int = q.get("xp_reward", 0)
 	if xp > 0:
-		PlayerStats.gain_xp(xp)
-		CombatLog.add_line(
-			"Quest complete: %s! You gain %d XP." % [q["name"], xp],
-			CombatLog.MsgType.INFO)
+		PlayerStats.gain_xp(xp, "quest")
+		CombatLog.add_line("Quest complete: %s!" % q["name"], CombatLog.MsgType.INFO)
 	else:
 		CombatLog.add_line("Quest complete: %s!" % q["name"], CombatLog.MsgType.INFO)
 	for d: Dictionary in q.get("item_rewards", []):

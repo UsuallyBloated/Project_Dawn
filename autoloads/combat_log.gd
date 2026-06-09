@@ -69,6 +69,21 @@ func _connect_signals() -> void:
 			add_line("You have reached level %d!" % lvl, MsgType.LEVEL_UP)
 		_last_logged_level = lvl)
 	PlayerStats.hp_changed.connect(_on_player_hp_changed)
+	# XP gain announce — text only, no number per playtest feedback.
+	# Source distinguishes quest turn-ins from kill credit:
+	#   - "quest" → "You received experience."
+	#   - "kill"  → solo vs party based on GroupManager.in_group
+	# Group state is read at the moment XP lands (server-side split
+	# already happened); this is purely a presentation cue.
+	PlayerStats.xp_gained.connect(func(_amount: int, source: String):
+		var line: String
+		if source == "quest":
+			line = "You received experience."
+		elif GroupManager.in_group:
+			line = "You gained party experience."
+		else:
+			line = "You gained experience!"
+		add_line(line, MsgType.INFO))
 	Combat.target_changed.connect(func(enemy):
 		if enemy != null and is_instance_valid(enemy):
 			add_line("You target %s." % _target_display_name(enemy), MsgType.INFO))
@@ -138,8 +153,14 @@ func _on_remote_chat_message(speaker: String, channel: int, text: String, _lang:
 
 func _on_player_hp_changed(current: float, _max: float) -> void:
 	var diff := current - _last_hp
-	if diff > 0.0 and not BuffManager.is_hot_healing():
-		add_line("You recover %d health." % int(diff), MsgType.HEAL)
+	# Threshold the chat line so per-tick noise from food / drink / HoT
+	# regen (typically 1-5 HP per tick) doesn't spam the log. Spell heals
+	# clear this threshold with room to spare. Server-driven HoT in
+	# launcher mode bypasses BuffManager._is_hot_healing entirely, so the
+	# threshold is the only suppressor that works for both modes.
+	const MIN_HEAL_DISPLAY := 10
+	if diff >= MIN_HEAL_DISPLAY and not BuffManager.is_hot_healing():
+		add_line("You were healed for %d health." % int(diff), MsgType.HEAL)
 	_last_hp = current
 
 # Best-effort display name across the entity zoo (NPCs, pets, peers).

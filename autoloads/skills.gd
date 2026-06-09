@@ -31,6 +31,9 @@ func setup_for_class(_player_class: String) -> void:
 	skills_changed.emit()
 
 func use_skill(skill: SkillData) -> bool:
+	if Combat.is_player_seated():
+		CombatLog.add_line("You cannot use skills while sitting.", CombatLog.MsgType.INFO)
+		return false
 	if _cooldowns.is_active(skill.skill_name) and not no_cooldowns:
 		return false
 	if PlayerStats.stamina < skill.stamina_cost:

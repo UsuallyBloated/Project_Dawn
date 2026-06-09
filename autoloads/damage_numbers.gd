@@ -4,7 +4,12 @@ const _Script := preload("res://scripts/damage_number.gd")
 
 func _ready() -> void:
 	PlayerStats.healed.connect(spawn_heal)
-	PlayerStats.xp_gained.connect(spawn_xp)
+	# XP gain is announced via the chat broker now (CombatLog subscribes
+	# to xp_gained and emits "You gained experience!" / party variant);
+	# the floating number above the player was a leftover from the
+	# pre-multiplayer era and read as visual noise. spawn_xp() and the
+	# floating_text_xp setting are kept so any future "show XP" toggle
+	# can re-subscribe without re-introducing the function.
 
 func spawn_damage(pos: Vector3, amount: int, is_crit: bool) -> void:
 	if not GameSettings.floating_text_enabled or not GameSettings.floating_text_damage:
@@ -23,6 +28,12 @@ func spawn_miss(pos: Vector3) -> void:
 
 func spawn_heal(amount: int) -> void:
 	if not GameSettings.floating_text_enabled or not GameSettings.floating_text_heals:
+		return
+	# Same threshold as combat_log's "You were healed for X" line —
+	# food / drink / HoT regen ticks (1-5 HP) shouldn't litter the
+	# screen with floating numbers. Real spell heals (25+) still show.
+	const MIN_HEAL_DISPLAY := 10
+	if amount < MIN_HEAL_DISPLAY:
 		return
 	var players := get_tree().get_nodes_in_group("player")
 	if players.is_empty():

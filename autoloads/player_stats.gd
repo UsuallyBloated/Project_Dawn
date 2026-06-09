@@ -5,7 +5,7 @@ signal mp_changed(current: float, maximum: float)
 signal stamina_changed(current: float, maximum: float)
 signal level_changed(new_level: int)
 signal xp_changed(current_xp: int, xp_to_next: int)
-signal xp_gained(amount: int)
+signal xp_gained(amount: int, source: String)
 signal healed(amount: int)
 signal stats_changed
 signal character_applied
@@ -145,9 +145,13 @@ func apply_character(race_id: String, cls: String, lvl: int) -> void:
 	stats_changed.emit()
 	character_applied.emit()
 
-func gain_xp(amount: int) -> void:
+# `source` differentiates kill XP from quest turn-ins so the chat
+# broker can render distinct lines ("You gained experience!" vs
+# "You received experience."). Defaults to "kill" so legacy callers
+# don't need updating; quest turn-ins must pass "quest" explicitly.
+func gain_xp(amount: int, source: String = "kill") -> void:
 	xp += amount
-	xp_gained.emit(amount)
+	xp_gained.emit(amount, source)
 	while xp >= xp_to_next:
 		xp -= xp_to_next
 		_level_up()

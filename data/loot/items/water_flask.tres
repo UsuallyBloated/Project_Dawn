@@ -5,8 +5,11 @@
 [resource]
 script = ExtResource("1_item")
 item_name = "Water Flask"
-description = "A flask filled with fresh water. Used in cooking, brewing, and alchemy combines."
+description = "A flask filled with fresh water. Restores mana slowly out of combat."
 type = 9
 rarity = 0
 stack_size = 10
 vendor_price = 3
+is_drink = true
+food_mp_regen = 5.0
+food_duration = 180.0

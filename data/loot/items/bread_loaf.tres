@@ -10,3 +10,6 @@ type = 9
 rarity = 0
 stack_size = 10
 vendor_price = 4
+is_food = true
+food_hp_regen = 4.0
+food_duration = 180.0
