@@ -27,6 +27,15 @@ func _ready() -> void:
 	# because the action methods route through Net early-return paths.
 	Net.world_group_invited.connect(_on_world_group_invited)
 	Net.world_group_roster.connect(_on_world_group_roster)
+	# Round-7 playtest fix — on transport disconnect (relog / zone-out)
+	# the server drops us from any group server-side but never re-fans
+	# our own state on reconnect (the server's GroupRoster fan only
+	# targets remaining group members, and the leaver is already gone).
+	# Clearing the local mirror here prevents stale group state from
+	# leaking across the disconnect, which surfaced as "I'm not in a
+	# group anymore but my pet allegiance still treats peers as
+	# group-mates" after a relog.
+	Net.app_disconnected.connect(func(_reason): _clear_group())
 
 func _sync_stats() -> void:
 	if not in_group or _stats_dirty:
@@ -272,6 +281,18 @@ func _rpc_group_chat(sender_name: String, msg: String) -> void:
 	CombatLog.add_line("[Group] %s: %s" % [sender_name, msg], CombatLog.MsgType.GROUP_CHAT)
 
 # â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+# True when `peer_id` (a server char_id in launcher mode, or an enet
+# unique-id in Test Room) is a current member of the group. Used by
+# friend/foe UI (RemotePet allegiance tint) and PvP heal pre-checks
+# (spells.gd) to distinguish group-mate from neutral / hostile.
+func is_member(peer_id: int) -> bool:
+	if not in_group:
+		return false
+	for m in members:
+		if int(m.get("peer_id", 0)) == peer_id:
+			return true
+	return false
 
 func _local_stats() -> Dictionary:
 	return {

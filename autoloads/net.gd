@@ -419,12 +419,30 @@ func broadcast_equip_update(armor: int) -> void:
 		return
 	send_equip_update(armor)
 
+# Local mirror of the server's per-connection pvp_override_on. The
+# client tracks its own state so cast / attack code can pre-reject
+# offensive actions vs. peers / peer-pets before sending an intent the
+# server would just refuse. Peer state remains server-side; this only
+# resolves the "I forgot I'm /pvp off" case.
+var _local_pvp_on: bool = false
+
+# Emitted whenever the local /pvp flag flips so UI that derives
+# allegiance / threat colors from it (RemotePet tint, future
+# RemotePlayer nameplate) can refresh without polling.
+signal pvp_toggled(on: bool)
+
+func is_local_pvp_on() -> bool:
+	return _local_pvp_on
+
 # Track 6 sub-task 3: dev /pvp toggle. Server caches the flag on the
 # sender's PerConnection; combat::can_attack requires both attacker and
 # target to have the flag on.
 func broadcast_pvp_toggle(on: bool) -> void:
 	if _state != State.CONNECTED_APP:
 		return
+	if _local_pvp_on != on:
+		_local_pvp_on = on
+		pvp_toggled.emit(on)
 	send_pvp_toggle(on)
 
 # Track 6 sub-task 3b: spell cast intent. Server looks up spell_name in
