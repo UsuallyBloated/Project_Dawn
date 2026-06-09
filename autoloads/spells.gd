@@ -68,6 +68,9 @@ func _get_alignment_effectiveness(player_class: String) -> float:
 func cast_spell(spell: SpellData) -> bool:
 	if _casting != null:
 		return false
+	if Combat.is_player_seated():
+		spell_failed.emit("You cannot cast while sitting.")
+		return false
 	if _cooldowns.is_active(spell.spell_name) and not no_cooldowns:
 		spell_failed.emit("Spell is on cooldown.")
 		return false
@@ -78,6 +81,49 @@ func cast_spell(spell: SpellData) -> bool:
 		if not Combat.has_valid_target():
 			spell_failed.emit("No valid target.")
 			return false
+		# Local-side gates for damage casts against allied targets, run
+		# before the cast bar starts so no mana is spent and no
+		# elemental flash misreads as a hit landing. Two cases:
+		#   1. Own pet — server would reject ("Your pet won't attack
+		#      itself.") but we should never even ask.
+		#   2. Peer / peer-pet while local /pvp is off — server's PvP
+		#      gate rejects after the cast. If local /pvp is on but the
+		#      peer's flag is off, the cast must still proceed because
+		#      peer state is server-only.
+		if Net.is_launcher_mode():
+			var t = Combat.current_target
+			if t is RemotePet and (t as RemotePet).owner_id == Net.get_player_id():
+				spell_failed.emit("You cannot attack your own pet.")
+				return false
+			if not Net.is_local_pvp_on():
+				var t_is_pvp_target := false
+				if t is RemotePlayer:
+					t_is_pvp_target = (t as RemotePlayer).char_id != Net.get_player_id()
+				elif t is RemotePet:
+					t_is_pvp_target = (t as RemotePet).owner_id != Net.get_player_id()
+				if t_is_pvp_target:
+					spell_failed.emit("PvP is off. Type /pvp on to attack other players.")
+					return false
+	# ALLY heal pre-check. Mirrors the damage-cast pre-check above so
+	# the cast bar doesn't run + mana isn't spent when the server's
+	# PvP heal gate would refuse. Triggers when local /pvp is on and
+	# the target isn't self / group-mate. False positives are possible
+	# (peer might be /pvp off, meaning the heal would land) but in
+	# practice a /pvp-on healer shouldn't be casting on a hostile-
+	# tinted target anyway.
+	if spell.target_type == SpellData.TargetType.ALLY and spell.heal_amount > 0.0:
+		if Net.is_launcher_mode() and Net.is_local_pvp_on():
+			var t = Combat.current_target
+			if t is RemotePet:
+				var ownr := (t as RemotePet).owner_id
+				if ownr != Net.get_player_id() and not GroupManager.is_member(ownr):
+					spell_failed.emit("You cannot heal an enemy's pet.")
+					return false
+			elif t is RemotePlayer:
+				var cid := (t as RemotePlayer).char_id
+				if cid != Net.get_player_id() and not GroupManager.is_member(cid):
+					spell_failed.emit("You cannot heal an enemy.")
+					return false
 	if spell.target_type == SpellData.TargetType.PET_CHARM:
 		if not Combat.has_valid_target():
 			spell_failed.emit("No valid target to charm.")
@@ -228,7 +274,7 @@ func _apply_spell(spell: SpellData) -> void:
 		# applied client-side (BuffManager.add_dot expects an enemy
 		# node with take_damage etc.). Server-side DoT processing
 		# lands in sub-task 4 when buff state moves server-side.
-		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and not Combat.current_target is RemotePlayer:
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and not (Combat.current_target is RemotePlayer or Combat.current_target is RemotePet):
 			BuffManager.add_dot(Combat.current_target, spell.dot_dps * effectiveness,
 				spell.dot_duration * dur_mult, spell.spell_name)
 
@@ -466,6 +512,7 @@ func _parse_target_type(s: String) -> SpellData.TargetType:
 	match s:
 		"ENEMY":      return SpellData.TargetType.ENEMY
 		"SELF":       return SpellData.TargetType.SELF
+		"ALLY":       return SpellData.TargetType.ALLY
 		"PET_SUMMON": return SpellData.TargetType.PET_SUMMON
 		"PET_CHARM":  return SpellData.TargetType.PET_CHARM
 		"PET_HEAL":   return SpellData.TargetType.PET_HEAL
