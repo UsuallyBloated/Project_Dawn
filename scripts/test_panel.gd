@@ -570,16 +570,17 @@ func _change_level(delta: int) -> void:
 	_level_lbl.text = str(PlayerStats.level)
 
 func _full_heal() -> void:
-	# Launcher: HP is server-authoritative — a local set is overwritten
-	# by the next HealthUpdate. Route the missing HP through HealSelf
-	# so the server applies it. MP / stamina aren't server-driven for
-	# arbitrary dev heals, so the local set holds.
+	# Launcher: HP / MP / stamina are all server-authoritative. A client-only
+	# set is overwritten by the next update — and for MP it won't unblock
+	# casting, since the server gates mana independently (this bit us in
+	# playtest: bars looked full while the server still rejected for
+	# "insufficient mana"). Route through HealSelf, which the server treats as
+	# a full dev restore (HP + MP + stamina) and fans the authoritative values
+	# back. Always send — even at full HP — so a drained-mana top-off reaches
+	# the server. The local sets below are optimistic for an instant bar fill.
 	if Net.is_launcher_mode() and Net.is_app_ready():
-		var hp_missing := int(PlayerStats.max_hp - PlayerStats.hp)
-		if hp_missing > 0:
-			Net.broadcast_heal_self(hp_missing)
-	else:
-		PlayerStats.set_hp(PlayerStats.max_hp)
+		Net.broadcast_heal_self(maxi(int(PlayerStats.max_hp - PlayerStats.hp), 0))
+	PlayerStats.set_hp(PlayerStats.max_hp)
 	PlayerStats.set_mp(PlayerStats.max_mp)
 	PlayerStats.set_stamina(PlayerStats.max_stamina)
 

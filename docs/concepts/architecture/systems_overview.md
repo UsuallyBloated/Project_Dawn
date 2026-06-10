@@ -55,6 +55,20 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
 - **Buffs route to `BuffManager`:** primary-stat buffs, HoT, DoT, absorb, haste, speed,
   clarity (MP regen), damage shield, stealth, lich form. Stat buffs apply directly to
   `PlayerStats` and undo on expire / death / zone change.
+- **ALLY-target buffs cast on a peer** route through the server like heals. The 10 curated
+  ally-castable buffs (`TargetType.ALLY` — Bless, Valor, Brilliance, Clarity, Strength,
+  Gift of Insight, Spirit of the Bear, Spirit of Wolf, Haste, Thorns) skip the caster's
+  local `BuffManager.add_*` when a `RemotePlayer` is targeted (`Spells._ally_target_is_remote`);
+  the server applies them to the target conn (`tick.rs::apply_player_spell_buffs`, shared by
+  the SELF and ALLY arms) and fans a `BuffSnapshot`. The recipient's
+  `BuffManager.reconcile_with_server_snapshot()` is now **additive** — a snapshot buff it
+  doesn't track locally is reconstructed from the spell definition by name
+  (`Spells.get_spell_by_name`), so the buffed player's own `PlayerStats` + bar reflect it
+  and the subtractive pass still undoes it on expiry/dispel. Self-cast (no target) keeps the
+  local-apply path. Pet targets fall back to self for pure buffs (server pets have no
+  replicated buff state yet); heals/HoTs still route to pets. Damage shields (Thorns,
+  Spellshield, Rune/Primal Bond absorb) are self-only by design except Thorns, which is
+  ally-castable.
 - **Ports:** `TargetType.PORT` with `port_zone_path` / `port_entry_id`; Gate uses empty
   strings to resolve to the bind point.
 - **Notable resolved spells:** Complete Heal (Cleric, self-heal for now), Torpor (Shaman),
@@ -234,5 +248,6 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   accessor used by the target-of-target resolver.
 - `NetCombatBroadcaster` — relays local combat events onto the wire.
 - **Known gaps** (also in the root to-do): incoming `/tell`, PvP flagging + pet PvP flag
-  inheritance, ALLY-target buff routing for peers (only heals route via server today),
-  `RemotePet` friend/foe visual distinction.
+  inheritance, `RemotePet` friend/foe visual distinction. (ALLY-target buff routing for
+  peers landed — see Spells & casting; pet buffs still deferred, no replicated pet buff
+  state on the server `Entity`.)

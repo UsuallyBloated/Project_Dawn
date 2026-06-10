@@ -46,9 +46,11 @@ var _mp_regen_buff: Dictionary = {}
 var _haste_buff: Dictionary = {}
 # {accuracy, crit, remaining, buff_name}
 var _stat_buff: Dictionary = {}
-# {str, agi, int, wis, con, max_hp, max_mp, remaining, buff_name}
-# Values are already applied to PlayerStats; undone on expire or clear_all.
-var _primary_stat_buff: Dictionary = {}
+# Array of {str, agi, int, wis, con, max_hp, max_mp, remaining, buff_name}.
+# Multiple stat buffs stack (Bless + Valor + Strength + …), keyed by buff_name,
+# matching the server which keys its StatBuffs by name. Each entry's deltas are
+# already applied to PlayerStats; undone per-entry on expire / dispel / clear_all.
+var _primary_stat_buffs: Array = []
 # {amount, remaining, buff_name}
 var _damage_shield: Dictionary = {}
 # stealth state
@@ -224,11 +226,12 @@ func get_damage_shield() -> Dictionary:
 
 func add_primary_stat_buff(str_b: int, agi_b: int, int_b: int, wis_b: int, con_b: int,
 		max_hp_b: float, max_mp_b: float, duration: float, buff_name: String) -> void:
-	if not _primary_stat_buff.is_empty():
-		_undo_primary_stat_buff()
-	_primary_stat_buff = {strength = str_b, agility = agi_b, intelligence = int_b,
+	# Stacks with other stat buffs; re-casting the same-named one refreshes
+	# it (undo old deltas first so a refresh doesn't double-apply).
+	_undo_one_primary_stat_buff(buff_name)
+	_primary_stat_buffs.append({strength = str_b, agility = agi_b, intelligence = int_b,
 		wisdom = wis_b, constitution = con_b, max_hp = max_hp_b, max_mp = max_mp_b,
-		remaining = duration, buff_name = buff_name}
+		remaining = duration, buff_name = buff_name})
 	PlayerStats.strength     += str_b
 	PlayerStats.agility      += agi_b
 	PlayerStats.intelligence += int_b
@@ -240,23 +243,28 @@ func add_primary_stat_buff(str_b: int, agi_b: int, int_b: int, wis_b: int, con_b
 	primary_stat_buff_changed.emit()
 	buffs_changed.emit()
 
-func get_primary_stat_buff() -> Dictionary:
-	return _primary_stat_buff
+func get_primary_stat_buffs() -> Array:
+	return _primary_stat_buffs
 
-func _undo_primary_stat_buff() -> void:
-	if _primary_stat_buff.is_empty():
-		return
-	PlayerStats.strength     -= _primary_stat_buff.strength
-	PlayerStats.agility      -= _primary_stat_buff.agility
-	PlayerStats.intelligence -= _primary_stat_buff.intelligence
-	PlayerStats.wisdom       -= _primary_stat_buff.wisdom
-	PlayerStats.constitution -= _primary_stat_buff.constitution
-	PlayerStats.max_hp        = maxf(PlayerStats.max_hp - _primary_stat_buff.max_hp, 1.0)
-	PlayerStats.max_mp        = maxf(PlayerStats.max_mp - _primary_stat_buff.max_mp, 0.0)
-	PlayerStats.set_hp(PlayerStats.hp)
-	PlayerStats.set_mp(PlayerStats.mp)
-	PlayerStats.stats_changed.emit()
-	_primary_stat_buff.clear()
+# Undo + remove the named stat buff's deltas if present. Returns true if one
+# was removed. Drives refresh (re-cast), expiry, dispel, and clear_all.
+func _undo_one_primary_stat_buff(buff_name: String) -> bool:
+	for i in _primary_stat_buffs.size():
+		var b: Dictionary = _primary_stat_buffs[i]
+		if b.buff_name == buff_name:
+			PlayerStats.strength     -= b.strength
+			PlayerStats.agility      -= b.agility
+			PlayerStats.intelligence -= b.intelligence
+			PlayerStats.wisdom       -= b.wisdom
+			PlayerStats.constitution -= b.constitution
+			PlayerStats.max_hp        = maxf(PlayerStats.max_hp - b.max_hp, 1.0)
+			PlayerStats.max_mp        = maxf(PlayerStats.max_mp - b.max_mp, 0.0)
+			PlayerStats.set_hp(PlayerStats.hp)
+			PlayerStats.set_mp(PlayerStats.mp)
+			PlayerStats.stats_changed.emit()
+			_primary_stat_buffs.remove_at(i)
+			return true
+	return false
 
 func add_stealth(duration: float, _buff_name: String) -> void:
 	var was_stealthed := _stealth_remaining > 0.0
@@ -324,9 +332,9 @@ func get_snapshot_arrays() -> Dictionary:
 	if not _stat_buff.is_empty():
 		names.append(_stat_buff.get("buff_name", "Focused"))
 		durations.append(_stat_buff.get("remaining", 0.0))
-	if not _primary_stat_buff.is_empty():
-		names.append(_primary_stat_buff.get("buff_name", "Bless"))
-		durations.append(_primary_stat_buff.get("remaining", 0.0))
+	for b in _primary_stat_buffs:
+		names.append(b.get("buff_name", "Bless"))
+		durations.append(b.get("remaining", 0.0))
 	if not _damage_shield.is_empty():
 		names.append(_damage_shield.get("buff_name", "Thorns"))
 		durations.append(_damage_shield.get("remaining", 0.0))
@@ -359,14 +367,17 @@ func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedF
 		else:
 			_hots[i].remaining = server_remaining[nm]
 		i -= 1
-	if not _primary_stat_buff.is_empty():
-		var nm: String = _primary_stat_buff.get("buff_name", "")
-		if not server_remaining.has(nm):
-			_undo_primary_stat_buff()
-			primary_stat_buff_changed.emit()
-			changed = true
+	var pstat_expired: Array = []
+	for b in _primary_stat_buffs:
+		if not server_remaining.has(b.buff_name):
+			pstat_expired.append(b.buff_name)
 		else:
-			_primary_stat_buff.remaining = server_remaining[nm]
+			b.remaining = server_remaining[b.buff_name]
+	for nm in pstat_expired:
+		_undo_one_primary_stat_buff(nm)
+	if not pstat_expired.is_empty():
+		primary_stat_buff_changed.emit()
+		changed = true
 	if not _stat_buff.is_empty():
 		var nm: String = _stat_buff.get("buff_name", "")
 		if not server_remaining.has(nm):
@@ -417,8 +428,91 @@ func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedF
 		_lich_mp_regen = 0.0
 		lich_form_changed.emit(false)
 		changed = true
+	# Additive reconcile: a buff in the server's snapshot that we don't
+	# track locally is one another player cast on us (ALLY buff routing).
+	# Reconstruct it from the spell definition so our PlayerStats + buff
+	# bar reflect it; the subtractive pass above removes it when the
+	# server later drops it. Names that don't resolve to a spell (food /
+	# drink / "Shield" / "Evade" / etc.) are skipped.
+	for idx in names.size():
+		var nm: String = names[idx]
+		if _is_buff_locally_tracked(nm):
+			continue
+		var spell: SpellData = Spells.get_spell_by_name(nm)
+		if spell == null:
+			continue
+		var rem: float = durations[idx] if idx < durations.size() else 0.0
+		if _reconstruct_buff_from_spell(spell, rem):
+			changed = true
 	if changed:
 		buffs_changed.emit()
+
+# True if `nm` is already represented in one of our spell-backed buff
+# buckets — guards the additive reconcile against re-adding a buff we cast
+# on ourselves (or re-adding on a later snapshot).
+func _is_buff_locally_tracked(nm: String) -> bool:
+	for h in _hots:
+		if h.spell_name == nm:
+			return true
+	for b in _primary_stat_buffs:
+		if b.buff_name == nm:
+			return true
+	if _stat_buff.get("buff_name", "") == nm:
+		return true
+	if _speed_buff.get("buff_name", "") == nm:
+		return true
+	if _haste_buff.get("buff_name", "") == nm:
+		return true
+	if _mp_regen_buff.get("buff_name", "") == nm:
+		return true
+	if _damage_shield.get("buff_name", "") == nm:
+		return true
+	if _absorb_source == nm:
+		return true
+	return false
+
+# Recreate a buff another player cast on us from its spell definition,
+# using the server's remaining time as the local duration. Single-slot
+# buffs are only filled when empty so this never clobbers a buff we cast
+# on ourselves; HoTs append by name. Values are raw (server-authoritative)
+# — no caster effectiveness, since the snapshot reflects the server's
+# numbers. Returns true if anything was added.
+func _reconstruct_buff_from_spell(spell: SpellData, remaining: float) -> bool:
+	var did := false
+	if spell.primary_stat_buff_duration > 0.0:
+		var any_stat := (spell.str_buff != 0 or spell.agi_buff != 0 or spell.int_buff != 0
+			or spell.wis_buff != 0 or spell.con_buff != 0
+			or spell.max_hp_buff != 0.0 or spell.max_mp_buff != 0.0)
+		if any_stat:
+			add_primary_stat_buff(spell.str_buff, spell.agi_buff, spell.int_buff,
+				spell.wis_buff, spell.con_buff, spell.max_hp_buff, spell.max_mp_buff,
+				remaining, spell.spell_name)
+			did = true
+	if spell.mp_regen_hps > 0.0 and spell.mp_regen_duration > 0.0 and _mp_regen_buff.is_empty():
+		add_mp_regen_buff(spell.mp_regen_hps, remaining, spell.spell_name)
+		did = true
+	if spell.haste_amount > 0.0 and spell.haste_duration > 0.0 and _haste_buff.is_empty():
+		add_haste_buff(spell.haste_amount, remaining, spell.spell_name)
+		did = true
+	if spell.move_speed_mult > 0.0 and spell.move_speed_duration > 0.0 and _speed_buff.is_empty():
+		add_speed_buff(spell.move_speed_mult, remaining, spell.spell_name)
+		did = true
+	if spell.damage_shield_amount > 0.0 and spell.damage_shield_duration > 0.0 and _damage_shield.is_empty():
+		add_damage_shield(spell.damage_shield_amount, remaining, spell.spell_name)
+		did = true
+	if (spell.accuracy_buff > 0.0 or spell.crit_buff > 0.0) and spell.stat_buff_duration > 0.0 and _stat_buff.is_empty():
+		add_stat_buff(spell.accuracy_buff, spell.crit_buff, remaining, spell.spell_name)
+		did = true
+	if spell.hot_hps > 0.0 and spell.hot_duration > 0.0 and not _has_hot(spell.spell_name):
+		add_hot(spell.hot_hps, remaining, spell.spell_name)
+		did = true
+	return did
+
+func _has_hot(spell_name: String) -> bool:
+	for h in _hots:
+		if h.spell_name == spell_name:
+			return true
+	return false
 
 func clear_all() -> void:
 	_dots.clear()
@@ -433,8 +527,12 @@ func clear_all() -> void:
 	_haste_buff.clear()
 	_stat_buff.clear()
 	_damage_shield.clear()
-	if not _primary_stat_buff.is_empty():
-		_undo_primary_stat_buff()
+	if not _primary_stat_buffs.is_empty():
+		var pstat_names: Array = []
+		for b in _primary_stat_buffs:
+			pstat_names.append(b.buff_name)
+		for nm in pstat_names:
+			_undo_one_primary_stat_buff(nm)
 		primary_stat_buff_changed.emit()
 	if _stealth_remaining > 0.0:
 		stealth_changed.emit(false)
@@ -465,10 +563,15 @@ func _process(delta: float) -> void:
 			haste_changed.emit()
 			buffs_changed.emit()
 	_tick_timed_buff(_stat_buff, delta)
-	if not _primary_stat_buff.is_empty():
-		_primary_stat_buff.remaining -= delta
-		if _primary_stat_buff.remaining <= 0.0:
-			_undo_primary_stat_buff()
+	if not _primary_stat_buffs.is_empty():
+		var pstat_expired: Array = []
+		for b in _primary_stat_buffs:
+			b.remaining -= delta
+			if b.remaining <= 0.0:
+				pstat_expired.append(b.buff_name)
+		for nm in pstat_expired:
+			_undo_one_primary_stat_buff(nm)
+		if not pstat_expired.is_empty():
 			primary_stat_buff_changed.emit()
 			buffs_changed.emit()
 	_tick_dots(delta)

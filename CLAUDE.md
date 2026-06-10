@@ -205,7 +205,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (pointer at `docs/concepts/architecture/README.md`)
 - **Design concepts** (lore, classes, races, tradeskills, alignment) → `docs/concepts/`
 - **Per-session changelog** → `docs/session_notes/` (index in its `README.md`)
-- **Playtest bug reports** → `docs/playtest_notes/`
+- **Playtest bug reports & checklists** → `docs/playtest_notes/`. Author new playtest
+  checklists from `docs/playtest_notes/TEMPLATE_checklist.md` (the default format): numbered
+  sections of `- [ ] **action** → expected result. notes:` rows the tester fills in place
+  with `[x]`/`[-]` + findings. Keep the per-row `notes:` hooks — they're what makes a
+  "didn't work" result triage-able against `server.log`.
 
 ---
 
@@ -220,9 +224,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. Pets should
   inherit the owner's PvP flag (today any player can attack any pet).
-- [ ] **ALLY-target buff routing over the network** — stat/haste/clarity/shield buffs
-  still apply to the caster even when the ALLY target is a peer; only heals route via the
-  server.
+- [ ] **Pet buffs over the network** — ALLY buffs on a *pet* fall back to a self-cast today
+  (server pets have no replicated `active_buffs` on `Entity`). ALLY buff routing for *player*
+  peers landed (2026-06-09); buffing a pet is the remaining slice.
 - [ ] **Player inspect** — right-click a player to see their equipment *(in progress:
   `scripts/inspect_window.gd`)*
 - [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**

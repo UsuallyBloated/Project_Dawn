@@ -64,9 +64,8 @@ func _on_buffs_changed() -> void:
 	var stat := BuffManager.get_stat_buff()
 	if not stat.is_empty():
 		_timer_labels["stat"] = _add_icon("stat", stat.get("buff_name", "Focused"))
-	var pstat := BuffManager.get_primary_stat_buff()
-	if not pstat.is_empty():
-		_timer_labels["primary_stat"] = _add_icon("primary_stat", pstat.get("buff_name", "Bless"))
+	for pstat in BuffManager.get_primary_stat_buffs():
+		_timer_labels["primary_stat:%s" % pstat.buff_name] = _add_icon("primary_stat", pstat.buff_name)
 	var dshield := BuffManager.get_damage_shield()
 	if not dshield.is_empty():
 		_timer_labels["damage_shield"] = _add_icon("damage_shield", dshield.get("buff_name", "Thorns"))
@@ -163,10 +162,12 @@ func _update_timers() -> void:
 			var b := BuffManager.get_stat_buff()
 			if not b.is_empty():
 				lbl.text = "%ds" % ceili(b.remaining)
-		elif key == "primary_stat":
-			var b := BuffManager.get_primary_stat_buff()
-			if not b.is_empty():
-				lbl.text = "%ds" % ceili(b.remaining)
+		elif key.begins_with("primary_stat:"):
+			var sname: String = key.substr(13)
+			for b in BuffManager.get_primary_stat_buffs():
+				if b.buff_name == sname:
+					lbl.text = "%ds" % ceili(b.remaining)
+					break
 		elif key == "damage_shield":
 			var b := BuffManager.get_damage_shield()
 			if not b.is_empty():
