@@ -703,6 +703,11 @@ func _on_target_changed(enemy) -> void:
 			enemy.hp_changed.connect(_on_target_hp_changed)
 		if enemy.has_signal("died"):
 			enemy.died.connect(_on_target_enemy_died)
+		# Track 13 — pets carry a buff snapshot now; render it in the
+		# target frame like a peer's (RemotePet mirrors the buff surface).
+		if enemy.has_signal("buffs_changed"):
+			enemy.buffs_changed.connect(_on_target_buffs_changed)
+		_refresh_target_buffs_label()
 		return
 	if not enemy.is_in_group("enemies"):
 		var nm: String = enemy.vendor_name if enemy.is_in_group("vendor_npcs") else enemy.npc_name

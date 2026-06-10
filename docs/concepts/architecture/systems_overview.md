@@ -156,6 +156,17 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
 - **PetManager:** generic pet lifecycle (summon / unsummon / charm).
 - **WarderAI:** Beast Master warder behavior (retreat / fury / `setup_for_class`),
   extracted from PetManager. Warder idle state faces the player's look direction.
+- **Pet stats & buffs (server-authoritative):** the server `Entity` carries `PrimaryStats`
+  (`stats` + `base_stats`) and `active_buffs`. Pets get a level-derived stat base on summon;
+  melee damage adds the STR *buff delta* `(stats.strength − base_stats.strength)/5` on top of
+  `mob.dmg`, so unbuffed pets are unchanged and a Strength buff raises pet DPS like it does a
+  player's. ALLY buffs cast on a pet route through `tick.rs::apply_pet_spell_buffs`: stat
+  (str→damage, max_hp→Valor), Haste (→ `attack_interval`), Spirit of Wolf (→ `move_speed`),
+  and HoT all apply; the pet's `tick_buffs` heals/expires them and a `BuffSnapshot` fans under
+  the pet id (`RemotePet` renders it in the target frame). **Deferred:** Thorns *reflect* on a
+  pet (tracked + shown, but no damage reflected yet — kill-credit routing); AGI/INT/WIS combat
+  effect (stored/buffable but display-only — no pet dodge / spell-power model). MP-regen /
+  accuracy buffs aren't routed to pets (no pet mana / crit).
 - **Transformations:** e.g. Revenant — grants ultravision; tradeskill scores carry over
   automatically (they live outside PlayerStats).
 - **MountManager:** client-side v1 — item whistles summon, per-zone `NO_MOUNT_ZONES`

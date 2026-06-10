@@ -17,6 +17,10 @@ class_name RemotePet
 
 signal hp_changed(current: float, maximum: float)
 signal died(pet)
+# Track 13 — pet buff bar. Server fans a BuffSnapshot under the pet id
+# (haste / Spirit of Wolf / stat buffs / HoT / Thorns); the HUD target
+# frame renders these when the pet is targeted, same as a peer's buffs.
+signal buffs_changed
 
 # Network identity. Set by RemotePetManager *before* add_child fires
 # _ready, so _ready can read them.
@@ -28,6 +32,12 @@ var hp: float = 0.0
 var max_hp: float = 0.0
 
 var is_dead: bool = false
+
+# Track 13 — buff snapshot mirror (matches RemotePlayer's surface so the
+# HUD target frame's `_refresh_target_buffs_label` reads it uniformly).
+const _BUFF_INF_SENTINEL := 999999.0
+var buff_names: PackedStringArray = PackedStringArray()
+var buff_durations: PackedFloat32Array = PackedFloat32Array()
 
 # Snapshot interpolation buffer of { time, pos, yaw } dicts. Identical
 # pattern to RemoteEnemy — see that file's header for rationale.
@@ -165,6 +175,28 @@ func apply_health_update(new_hp: float, new_max_hp: float) -> void:
 	hp = new_hp
 	max_hp = new_max_hp
 	hp_changed.emit(hp, max_hp)
+
+# Track 13 — server fans this under the pet id whenever the pet's buff
+# set changes (apply / expire). Mirror of RemotePlayer.apply_buff_snapshot.
+func apply_buff_snapshot(names: PackedStringArray, durations: PackedFloat32Array) -> void:
+	buff_names = names.duplicate()
+	buff_durations = durations.duplicate()
+	buffs_changed.emit()
+
+# Tick buff durations down between snapshots so a targeted pet shows a
+# live countdown (the server only re-fans on set changes). Mirrors the
+# RemotePlayer countdown.
+func _process(delta: float) -> void:
+	if buff_durations.is_empty():
+		return
+	var any_changed := false
+	for i in buff_durations.size():
+		var d: float = buff_durations[i]
+		if d > 0.0 and d < _BUFF_INF_SENTINEL:
+			buff_durations[i] = maxf(0.0, d - delta)
+			any_changed = true
+	if any_changed:
+		buffs_changed.emit()
 
 func apply_death() -> void:
 	if is_dead:

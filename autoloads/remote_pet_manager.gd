@@ -33,6 +33,7 @@ func _ready() -> void:
 	Net.world_pet_spawn.connect(_on_pet_spawn)
 	Net.world_position.connect(_on_position)
 	Net.world_health_update.connect(_on_health_update)
+	Net.world_buff_snapshot.connect(_on_buff_snapshot)
 	Net.world_entity_died.connect(_on_entity_died)
 	Net.world_entity_despawn.connect(_on_entity_despawn)
 	# Central refresh of every live pet's allegiance tint when group
@@ -165,6 +166,20 @@ func _on_health_update(id: int, hp: float, max_hp: float) -> void:
 	var rp = _by_id.get(id)
 	if rp != null and is_instance_valid(rp):
 		rp.apply_health_update(hp, max_hp)
+
+# Track 13 — server-fanned pet buff snapshot (haste / SoW / stat / HoT /
+# Thorns). Cache on the spawn dict so a pet instantiated later picks it
+# up, and push to the live node so a targeting HUD shows it immediately.
+func _on_buff_snapshot(target: int, names: PackedStringArray, durations: PackedFloat32Array) -> void:
+	if not _is_pet_id(target):
+		return
+	if _spawn_data.has(target):
+		var data: Dictionary = _spawn_data[target]
+		data["buff_names"] = names
+		data["buff_durations"] = durations
+	var rp = _by_id.get(target)
+	if rp != null and is_instance_valid(rp):
+		rp.apply_buff_snapshot(names, durations)
 
 func _on_entity_died(id: int) -> void:
 	if not _is_pet_id(id):

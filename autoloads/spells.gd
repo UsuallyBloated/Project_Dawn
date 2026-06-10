@@ -231,13 +231,11 @@ func _apply_spell(spell: SpellData) -> void:
 	var dmg_mult    := CastingSkills.get_damage_mult(spell.discipline)
 	var dur_mult    := CastingSkills.get_duration_mult(spell.discipline)
 	var absorb_mult := CastingSkills.get_absorb_mult(spell.discipline)
-	# ALLY beneficial spells cast on a remote recipient are applied by
-	# the server (which fans the authoritative result back); skip the
-	# local mutation here so we don't double-apply or buff the caster
-	# instead of the target. Buffs route to peers only; heals/HoTs also
-	# route to pets.
-	var ally_remote_peer := _ally_target_is_remote(spell, false)
-	var ally_remote_heal := _ally_target_is_remote(spell, true)
+	# ALLY beneficial spells cast on a remote recipient (peer OR pet) are
+	# applied by the server, which fans the authoritative result back; skip
+	# the local mutation so we don't double-apply or buff the caster instead
+	# of the target. Pets are server-authoritative buff/heal recipients now.
+	var ally_remote := _ally_target_is_remote(spell)
 
 	if spell.target_type == SpellData.TargetType.ENEMY:
 		Combat.deal_spell_damage(int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness * dmg_mult), spell.damage_type)
@@ -258,7 +256,7 @@ func _apply_spell(spell: SpellData) -> void:
 		WarderAI.heal_warder(spell.heal_amount + PlayerStats.wisdom * 0.3)
 
 	if spell.heal_amount > 0.0 and spell.target_type != SpellData.TargetType.PET_HEAL:
-		if not ally_remote_heal:
+		if not ally_remote:
 			var heal := (spell.heal_amount + PlayerStats.wisdom * 0.3) * effectiveness
 			PlayerStats.set_hp(PlayerStats.hp + heal)
 
@@ -275,13 +273,13 @@ func _apply_spell(spell: SpellData) -> void:
 				spell.dot_duration * dur_mult, spell.spell_name)
 
 	if spell.hot_hps > 0.0 and spell.hot_duration > 0.0:
-		if not ally_remote_heal:
+		if not ally_remote:
 			BuffManager.add_hot(spell.hot_hps * effectiveness, spell.hot_duration * dur_mult, spell.spell_name)
 
-	if spell.absorb_amount > 0.0 and not ally_remote_peer:
+	if spell.absorb_amount > 0.0 and not ally_remote:
 		BuffManager.add_absorb(spell.absorb_amount * effectiveness * absorb_mult, spell.spell_name)
 
-	if spell.damage_shield_amount > 0.0 and spell.damage_shield_duration > 0.0 and not ally_remote_peer:
+	if spell.damage_shield_amount > 0.0 and spell.damage_shield_duration > 0.0 and not ally_remote:
 		BuffManager.add_damage_shield(spell.damage_shield_amount * effectiveness, spell.damage_shield_duration * dur_mult, spell.spell_name)
 
 	# Track 6 sub-task 3b: CC / snare / silence / dispel only fire on
@@ -305,7 +303,7 @@ func _apply_spell(spell: SpellData) -> void:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("apply_attack_slow"):
 			Combat.current_target.apply_attack_slow(spell.attack_slow_amount, spell.attack_slow_duration * dur_mult)
 
-	if spell.primary_stat_buff_duration > 0.0 and not ally_remote_peer:
+	if spell.primary_stat_buff_duration > 0.0 and not ally_remote:
 		BuffManager.add_primary_stat_buff(
 			spell.str_buff, spell.agi_buff, spell.int_buff,
 			spell.wis_buff, spell.con_buff,
@@ -319,16 +317,16 @@ func _apply_spell(spell: SpellData) -> void:
 		_execute_bind()
 
 	if not spell.is_song:
-		if spell.move_speed_mult > 0.0 and spell.move_speed_duration > 0.0 and not ally_remote_peer:
+		if spell.move_speed_mult > 0.0 and spell.move_speed_duration > 0.0 and not ally_remote:
 			BuffManager.add_speed_buff(spell.move_speed_mult, spell.move_speed_duration * dur_mult, spell.spell_name)
 
-		if spell.mp_regen_hps > 0.0 and spell.mp_regen_duration > 0.0 and not ally_remote_peer:
+		if spell.mp_regen_hps > 0.0 and spell.mp_regen_duration > 0.0 and not ally_remote:
 			BuffManager.add_mp_regen_buff(spell.mp_regen_hps * effectiveness, spell.mp_regen_duration * dur_mult, spell.spell_name)
 
-		if spell.haste_amount > 0.0 and spell.haste_duration > 0.0 and not ally_remote_peer:
+		if spell.haste_amount > 0.0 and spell.haste_duration > 0.0 and not ally_remote:
 			BuffManager.add_haste_buff(spell.haste_amount, spell.haste_duration * dur_mult, spell.spell_name)
 
-		if (spell.accuracy_buff > 0.0 or spell.crit_buff > 0.0) and not ally_remote_peer:
+		if (spell.accuracy_buff > 0.0 or spell.crit_buff > 0.0) and not ally_remote:
 			BuffManager.add_stat_buff(spell.accuracy_buff, spell.crit_buff, spell.stat_buff_duration * dur_mult, spell.spell_name)
 
 	if spell.is_stealth:
@@ -376,15 +374,11 @@ func _apply_spell(spell: SpellData) -> void:
 # True when a spell's beneficial effect lands on the recipient as HP/MP
 # (heal or HoT) — these can route to pets, where pure stat/haste/etc.
 # buffs cannot (server pets have no replicated buff state yet).
-func _spell_heals(spell: SpellData) -> bool:
-	return spell.heal_amount > 0.0 or (spell.hot_hps > 0.0 and spell.hot_duration > 0.0)
-
 # Network target id for a cast. Damage/AOE/charm etc. send whatever entity
-# is targeted. An ALLY (beneficial) spell only accepts a peer as a remote
-# target — or a pet when the spell heals; an enemy/NPC target, or a pet hit
-# by a pure buff, falls back to a self-cast (id 0) since beneficial magic
-# shouldn't be flung at a hostile and pet buffs aren't replicated yet.
-# id 0 == "no target / self" to the server.
+# is targeted. An ALLY (beneficial) spell accepts a peer OR a pet as a
+# remote target — both are server-authoritative heal/buff recipients now.
+# An enemy/NPC target falls back to a self-cast (id 0), since beneficial
+# magic shouldn't be flung at a hostile. id 0 == "no target / self".
 func _cast_target_id(spell: SpellData) -> int:
 	var t = Combat.current_target
 	if t == null or not is_instance_valid(t):
@@ -392,7 +386,7 @@ func _cast_target_id(spell: SpellData) -> int:
 	if spell.target_type == SpellData.TargetType.ALLY:
 		if t is RemotePlayer:
 			return (t as RemotePlayer).char_id
-		if t is RemotePet and _spell_heals(spell):
+		if t is RemotePet:
 			return (t as RemotePet).pet_id
 		return 0
 	if t is RemotePlayer:
@@ -403,23 +397,18 @@ func _cast_target_id(spell: SpellData) -> int:
 		return (t as RemotePet).pet_id
 	return 0
 
-# True when an ALLY-target spell is being cast on a remote recipient the
-# server (not the client) will apply it to. Buffs route to peers only;
-# heals/HoTs (include_pets) also route to pets. When true, the caster
-# skips its local BuffManager / heal mutation — the server fans the
-# authoritative result back, and the recipient reconstructs it from the
-# BuffSnapshot (BuffManager.reconcile_with_server_snapshot).
-func _ally_target_is_remote(spell: SpellData, include_pets: bool) -> bool:
+# True when an ALLY-target spell is being cast on a remote recipient (peer
+# or pet) the server — not the client — applies it to. The caster skips its
+# local BuffManager / heal mutation; the server fans the authoritative
+# result back (the recipient reconstructs a player buff from the
+# BuffSnapshot; pets are server-authoritative throughout).
+func _ally_target_is_remote(spell: SpellData) -> bool:
 	if spell.target_type != SpellData.TargetType.ALLY or not Net.is_launcher_mode():
 		return false
 	var t = Combat.current_target
 	if t == null or not is_instance_valid(t):
 		return false
-	if t is RemotePlayer:
-		return true
-	if include_pets and t is RemotePet and _spell_heals(spell):
-		return true
-	return false
+	return t is RemotePlayer or t is RemotePet
 
 func _execute_bind() -> void:
 	var zone_path := ZoneLoader.current_zone_path

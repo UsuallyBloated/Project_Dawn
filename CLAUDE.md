@@ -224,9 +224,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. Pets should
   inherit the owner's PvP flag (today any player can attack any pet).
-- [ ] **Pet buffs over the network** — ALLY buffs on a *pet* fall back to a self-cast today
-  (server pets have no replicated `active_buffs` on `Entity`). ALLY buff routing for *player*
-  peers landed (2026-06-09); buffing a pet is the remaining slice.
+- [ ] **Pet buffs — remaining slices** — pets are now stat-driven and take ALLY buffs
+  (STR→pet melee dmg, Valor→max HP, Haste→attack speed, Spirit of Wolf→move speed, HoT) as of
+  2026-06-10 (`Entity` has `PrimaryStats` + `active_buffs`; see systems_overview). Still open:
+  **Thorns reflect on a pet** (buff is tracked + shown but doesn't reflect — needs kill-credit
+  routing to the owner) and **AGI/INT/WIS combat mappings** (stored + buffable, but no pet
+  dodge / spell-power model yet, so display-only).
 - [ ] **Player inspect** — right-click a player to see their equipment *(in progress:
   `scripts/inspect_window.gd`)*
 - [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**
@@ -247,6 +250,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 
 ### UI polish
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
+- [ ] **Target-frame buff icons** — the target frame (peer + pet buffs) renders a plain text
+  list (`hud.gd::_refresh_target_buffs_label`). Replace with small buff icons reusing the
+  player main buff-bar art, sized + scaled to fit the target HUD.
 
 ### Tradeskill depth
 - [ ] **Consumables system** (food/drink regen loop, fermentation, ritual components)
