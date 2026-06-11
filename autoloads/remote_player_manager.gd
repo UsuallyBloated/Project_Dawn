@@ -355,6 +355,23 @@ func _on_damage_shield_trigger(defender: int, attacker: int, amount: int, shield
 			var att_rp = _by_id.get(attacker)
 			if att_rp != null and is_instance_valid(att_rp):
 				DamageNumbers.spawn_damage((att_rp as Node3D).global_position, amount, false)
+		return
+	# Pet's POV — the owner sees their pet's Thorns reflect onto the enemy.
+	# The attacker is always an enemy (enemy → pet hits). get_by_id is
+	# non-null only for a pet we track; the owner check limits the line to
+	# the pet's own master.
+	var pet_node: Node = RemotePetManager.get_by_id(defender)
+	if pet_node != null and is_instance_valid(pet_node) and (pet_node as RemotePet).owner_id == Net.get_player_id():
+		var att_node3: Node = RemoteEnemyManager.get_enemy(attacker)
+		var att_nm3 := "the attacker"
+		if att_node3 != null and is_instance_valid(att_node3):
+			att_nm3 = att_node3.mob_name
+		CombatLog.add_line(
+			"%s has been hit by %d damage from your pet's %s." % [att_nm3, amount, shield_name],
+			CombatLog.MsgType.DAMAGE_OUT,
+		)
+		if att_node3 != null and is_instance_valid(att_node3):
+			DamageNumbers.spawn_damage((att_node3 as Node3D).global_position, amount, false)
 
 func _on_miss(_attacker: int, target: int) -> void:
 	if target == Net.get_player_id():

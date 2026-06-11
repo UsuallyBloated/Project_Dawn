@@ -18,10 +18,16 @@ A multiplayer MMORPG inspired by classic EverQuest-era games. **Two repos:** a G
 
 ### Server (`F:\Projects\server` — Rust, toolchain pinned to 1.95.0)
 - Run:   `cargo run -p projectdawn-server`  (auth WebSocket on `0.0.0.0:8765`)
+- **Playtest run (dev commands):** set `PD_DEV_CMDS=1` or the dev-gated handlers
+  (`HealSelf`/`DamageSelf` behind the Test Panel's **Full Heal** etc.) are silently
+  ignored server-side — the client fills the bars optimistically but the server doesn't,
+  so Full Heal looks like it works and doesn't. PowerShell:
+  `$env:PD_DEV_CMDS=1; cargo run -p projectdawn-server`. (`/pvp on` is *not* dev-gated, so
+  it works regardless — which masked this.)
 - Test:  `cargo test`                       (~30s including build)
 - Build: `cargo build --release`
 - DB:    SQLite `world.db`; `sqlx` auto-applies migrations on first boot
-- Dev helper: `scripts/dev-run.sh`
+- Dev helper: `scripts/dev-run.sh` (sources `.env` — put `PD_DEV_CMDS=1` there)
 
 > Don't modify anything above `F:\Projects\`.
 
@@ -224,12 +230,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. Pets should
   inherit the owner's PvP flag (today any player can attack any pet).
-- [ ] **Pet buffs — remaining slices** — pets are now stat-driven and take ALLY buffs
-  (STR→pet melee dmg, Valor→max HP, Haste→attack speed, Spirit of Wolf→move speed, HoT) as of
-  2026-06-10 (`Entity` has `PrimaryStats` + `active_buffs`; see systems_overview). Still open:
-  **Thorns reflect on a pet** (buff is tracked + shown but doesn't reflect — needs kill-credit
-  routing to the owner) and **AGI/INT/WIS combat mappings** (stored + buffable, but no pet
-  dodge / spell-power model yet, so display-only).
+- [ ] **Pet buffs — AGI/INT/WIS combat mappings** — pets are stat-driven and take ALLY buffs
+  (STR→pet melee dmg, Valor→max HP, Haste→attack speed, Spirit of Wolf→move speed, HoT,
+  Thorns reflect) as of 2026-06-10 (`Entity` has `PrimaryStats` + `active_buffs`; see
+  systems_overview). Still open: AGI/INT/WIS are stored + buffable but have no pet
+  dodge / spell-power model yet, so they're display-only.
 - [ ] **Player inspect** — right-click a player to see their equipment *(in progress:
   `scripts/inspect_window.gd`)*
 - [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**

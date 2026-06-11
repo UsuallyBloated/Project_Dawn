@@ -43,6 +43,21 @@ var _xp_label: Label = null
 
 var _window_stack: Array = []
 var _tracked_target = null
+# Target-frame buff icon row (small versions of the main buff-bar panels),
+# created lazily under the BuffsLabel's parent and rebuilt on each refresh.
+var _target_buff_icons: HFlowContainer = null
+# Buff-name → border color, matching the main buff bar's per-type colors
+# (gold stat / blue clarity / yellow haste / green speed / orange shield).
+# Unknown names (HoTs etc.) fall back to a green default.
+const _TARGET_BUFF_COLORS := {
+	"Bless": Color(0.95, 0.80, 0.35), "Valor": Color(0.95, 0.80, 0.35),
+	"Brilliance": Color(0.95, 0.80, 0.35), "Strength": Color(0.95, 0.80, 0.35),
+	"Spirit of the Bear": Color(0.95, 0.80, 0.35), "Gift of Insight": Color(0.95, 0.80, 0.35),
+	"Clarity": Color(0.30, 0.50, 1.00), "Breeze": Color(0.30, 0.50, 1.00),
+	"Haste": Color(0.95, 0.85, 0.10),
+	"Spirit of Wolf": Color(0.40, 0.85, 0.40),
+	"Thorns": Color(0.85, 0.40, 0.20), "Spellshield": Color(0.85, 0.40, 0.20),
+}
 var _player: Node3D = null
 var _options_screen: Panel = null
 var _crafting_window: Panel = null
@@ -92,6 +107,8 @@ func _ready() -> void:
 	target_cast_bar.visible = false
 	target_cast_label.visible = false
 	target_buffs_label.visible = false
+	if _target_buff_icons != null and is_instance_valid(_target_buff_icons):
+		_target_buff_icons.visible = false
 	if _target_mp_label:
 		_target_mp_label.visible = false
 	if _target_st_label:
@@ -669,6 +686,8 @@ func _on_target_changed(enemy) -> void:
 	target_cast_bar.visible = false
 	target_cast_label.visible = false
 	target_buffs_label.visible = false
+	if _target_buff_icons != null and is_instance_valid(_target_buff_icons):
+		_target_buff_icons.visible = false
 	if _target_mp_label:
 		_target_mp_label.visible = false
 	if _target_st_label:
@@ -811,31 +830,103 @@ func _show_target_cast_bar(spell_name: String) -> void:
 func _on_target_buffs_changed() -> void:
 	_refresh_target_buffs_label()
 
-# Render the peer's buff list as a single multi-line label. Lightweight by
-# design — sub-task 3 is "show the buffs", not "show colored icons" — and
-# trivially extensible to a proper icon row in a future polish pass.
+# Render the target's buffs as a small icon row (wrapping HFlowContainer)
+# — the same colored-border panel style as the main buff bar, scaled down
+# to fit the target frame. Works for any target exposing the buff snapshot
+# surface (peer or pet).
 func _refresh_target_buffs_label() -> void:
-	if not is_instance_valid(_tracked_target):
-		target_buffs_label.visible = false
-		return
-	if not _tracked_target.has_method("apply_buff_snapshot"):
-		target_buffs_label.visible = false
+	var container := _ensure_target_buff_container()
+	for child in container.get_children():
+		child.queue_free()
+	if not is_instance_valid(_tracked_target) or not _tracked_target.has_method("apply_buff_snapshot"):
+		container.visible = false
 		return
 	var names: PackedStringArray = _tracked_target.buff_names
 	var durations: PackedFloat32Array = _tracked_target.buff_durations
 	if names.is_empty():
-		target_buffs_label.visible = false
-		target_buffs_label.text = ""
+		container.visible = false
 		return
-	var lines: PackedStringArray = PackedStringArray()
 	for i in names.size():
 		var d: float = durations[i] if i < durations.size() else 0.0
-		if d > 0.0:
-			lines.append("%s  %ds" % [names[i], int(ceil(d))])
-		else:
-			lines.append(names[i])
-	target_buffs_label.text = "\n".join(lines)
-	target_buffs_label.visible = true
+		container.add_child(_make_target_buff_icon(names[i], d))
+	container.visible = true
+
+# Lazily create the icon row under the (now-hidden) BuffsLabel's parent so
+# it lives inside the target frame's VBox and scales with the HUD layout.
+func _ensure_target_buff_container() -> HFlowContainer:
+	if _target_buff_icons != null and is_instance_valid(_target_buff_icons):
+		return _target_buff_icons
+	target_buffs_label.visible = false
+	_target_buff_icons = HFlowContainer.new()
+	_target_buff_icons.add_theme_constant_override("h_separation", 2)
+	_target_buff_icons.add_theme_constant_override("v_separation", 2)
+	var parent := target_buffs_label.get_parent()
+	parent.add_child(_target_buff_icons)
+	parent.move_child(_target_buff_icons, target_buffs_label.get_index() + 1)
+	return _target_buff_icons
+
+func _buff_icon_color(buff_name: String) -> Color:
+	return _TARGET_BUFF_COLORS.get(buff_name, Color(0.45, 0.65, 0.45))
+
+# Short label that fits a 30px icon AND stays distinguishable. Multi-word
+# buffs become initials of their significant words ("Spirit of the Bear" →
+# "SB", "Spirit of Wolf" → "SW") so similar names don't collapse to the
+# same 4-char prefix; single-word buffs use their first 4 characters. The
+# full name is on the icon's tooltip.
+func _buff_abbrev(buff_name: String) -> String:
+	var base := buff_name
+	var rk := base.find(" Rk.")
+	if rk != -1:
+		base = base.substr(0, rk)
+	var significant: Array = []
+	for w in base.split(" ", false):
+		if (w as String).to_lower() in ["of", "the", "a", "an"]:
+			continue
+		significant.append(w)
+	if significant.size() >= 2:
+		var s := ""
+		for w in significant:
+			s += (w as String).substr(0, 1).to_upper()
+		return s
+	return base.left(4)
+
+# A 30×30 dark panel with a colored border + truncated name and (if timed)
+# a countdown — the target-frame-scale twin of hud_buff_bar's _add_icon.
+func _make_target_buff_icon(buff_name: String, remaining: float) -> Panel:
+	var icon := Panel.new()
+	icon.custom_minimum_size = Vector2(30.0, 30.0)
+	icon.mouse_filter = Control.MOUSE_FILTER_STOP
+	icon.tooltip_text = buff_name
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.05, 0.05, 0.85)
+	style.border_color = _buff_icon_color(buff_name)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(3)
+	icon.add_theme_stylebox_override("panel", style)
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 0)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.add_child(vbox)
+	var name_lbl := Label.new()
+	name_lbl.text = _buff_abbrev(buff_name)
+	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_lbl.add_theme_font_size_override("font_size", 7)
+	name_lbl.clip_text = true
+	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(name_lbl)
+	# Timed buffs get a countdown; infinite-duration sentinels (Lich) show
+	# just the icon.
+	if remaining > 0.0 and remaining < 99999.0:
+		var t_lbl := Label.new()
+		t_lbl.text = "%ds" % int(ceil(remaining))
+		t_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		t_lbl.add_theme_font_size_override("font_size", 8)
+		t_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 0.7))
+		t_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		vbox.add_child(t_lbl)
+	return icon
 
 func _on_target_hp_changed(current: float, maximum: float) -> void:
 	target_hp_bar.max_value = maximum
