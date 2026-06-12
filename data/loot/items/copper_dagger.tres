@@ -14,3 +14,4 @@ weapon_damage_min = 3
 weapon_damage_max = 7
 weapon_skill = "piercing"
 vendor_price = 22
+weight = 2.0

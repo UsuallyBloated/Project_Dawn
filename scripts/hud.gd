@@ -34,6 +34,7 @@ const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 
 var _clock_label: Label = null
 var _state_label: Label = null
+var _encumbrance_label: Label = null
 var _hp_label: Label = null
 var _mp_label: Label = null
 var _sta_label: Label = null
@@ -142,6 +143,7 @@ func _ready() -> void:
 	PlayerStats.character_applied.connect(_refresh_portrait)
 	_build_clock()
 	_build_state_label()
+	_build_encumbrance_indicator()
 	_build_command_input()
 	_build_options_screen()
 	_build_crafting_window()
@@ -401,6 +403,33 @@ func _build_state_label() -> void:
 	_state_label.add_theme_font_size_override("font_size", 13)
 	_state_label.visible = false
 	add_child(_state_label)
+
+# Weight warning tucked under the stat panel — appears only while over
+# capacity, so the player knows why they're slow without opening the
+# character window. Yellow = encumbered (slowed), red = overloaded
+# (≥ 2× capacity, stamina regen stopped).
+func _build_encumbrance_indicator() -> void:
+	_encumbrance_label = Label.new()
+	var panel: Panel = $Panel
+	_encumbrance_label.position = panel.position + Vector2(4.0, panel.size.y + 2.0)
+	_encumbrance_label.add_theme_font_size_override("font_size", 11)
+	_encumbrance_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_encumbrance_label.add_theme_constant_override("outline_size", 3)
+	_encumbrance_label.visible = false
+	add_child(_encumbrance_label)
+	Encumbrance.encumbrance_changed.connect(_on_encumbrance_changed)
+	_on_encumbrance_changed(Encumbrance.total_weight, Encumbrance.capacity)
+
+func _on_encumbrance_changed(weight: float, capacity: float) -> void:
+	if weight <= capacity:
+		_encumbrance_label.visible = false
+		return
+	var overloaded := weight >= capacity * Encumbrance.OVERLOADED_RATIO
+	_encumbrance_label.text = "%s  %.1f / %.1f" % \
+		["Overloaded!" if overloaded else "Encumbered", weight, capacity]
+	_encumbrance_label.add_theme_color_override("font_color",
+		UITheme.C_OVERLOADED if overloaded else UITheme.C_ENCUMBERED)
+	_encumbrance_label.visible = true
 
 func _build_command_input() -> void:
 	CombatLog.chat_submitted.connect(_handle_chat_input)

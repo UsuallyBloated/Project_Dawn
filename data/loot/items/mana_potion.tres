@@ -11,3 +11,4 @@ rarity = 0
 stack_size = 10
 mp_on_use = 80.0
 vendor_price = 22
+weight = 0.3

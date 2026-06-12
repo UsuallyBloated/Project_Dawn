@@ -84,7 +84,7 @@ func _build_header(parent: VBoxContainer) -> void:
 
 	_coins_lbl = Label.new()
 	_coins_lbl.text = _coins_text()
-	_coins_lbl.add_theme_color_override("font_color", Color(1.00, 0.88, 0.30))
+	_coins_lbl.add_theme_color_override("font_color", UITheme.C_COINS)
 	_coins_lbl.add_theme_font_size_override("font_size", 12)
 	row.add_child(_coins_lbl)
 

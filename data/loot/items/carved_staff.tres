@@ -14,3 +14,4 @@ weapon_damage_min = 4
 weapon_damage_max = 11
 weapon_skill = "2h_blunt"
 vendor_price = 50
+weight = 5.0

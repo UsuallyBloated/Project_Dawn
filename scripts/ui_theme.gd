@@ -41,6 +41,11 @@ const C_POSITIVE := Color(0.40, 0.90, 0.40)
 const C_NEGATIVE := Color(0.90, 0.35, 0.35)
 const C_NEUTRAL  := Color(0.75, 0.70, 0.55)
 
+# Currency & encumbrance
+const C_COINS      := Color(1.00, 0.88, 0.30)  # wallet text (vendor + inventory windows)
+const C_ENCUMBERED := Color(0.95, 0.85, 0.30)  # weight over capacity — movement slowed
+const C_OVERLOADED := Color(0.95, 0.30, 0.25)  # weight ≥ 2× capacity — stamina regen stopped
+
 # Resource bars
 const C_BAR_HP      := Color(0.80, 0.10, 0.10)
 const C_BAR_STAMINA := Color(0.85, 0.75, 0.00)

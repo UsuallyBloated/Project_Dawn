@@ -16,6 +16,7 @@ extends DraggablePanel
 @onready var cha_value: Label = $MarginContainer/VBox/AttribGrid/V_CHA
 @onready var con_value: Label = $MarginContainer/VBox/AttribGrid/V_CON
 @onready var atk_value: Label = $MarginContainer/VBox/AttribGrid/V_ATK
+@onready var wt_value: Label = $MarginContainer/VBox/AttribGrid/V_WT
 @onready var xp_bar: ProgressBar = $MarginContainer/VBox/XPBar
 
 var _skills_rows: Dictionary = {}         # weapon skill_key -> {name: Label, val: Label}
@@ -34,6 +35,7 @@ var _casting_skill_rows: Dictionary = {}  # casting skill_key -> {name: Label, v
 @onready var _l_cha: Label = $MarginContainer/VBox/AttribGrid/L_CHA
 @onready var _l_con: Label = $MarginContainer/VBox/AttribGrid/L_CON
 @onready var _l_atk: Label = $MarginContainer/VBox/AttribGrid/L_ATK
+@onready var _l_wt: Label = $MarginContainer/VBox/AttribGrid/L_WT
 
 @onready var _close_btn: Button = $MarginContainer/VBox/TitleRow/CloseBtn
 @onready var _title_lbl: Label = $MarginContainer/VBox/TitleRow/Title
@@ -51,6 +53,7 @@ func _ready() -> void:
 	PlayerStats.xp_changed.connect(_on_xp_changed)
 	PlayerStats.stats_changed.connect(_refresh)
 	Equipment.equipment_changed.connect(func(_slot, _item) -> void: _refresh())
+	Encumbrance.encumbrance_changed.connect(_on_encumbrance_changed)
 	_style_xp_bar()
 	_setup_tooltips()
 	_refresh()
@@ -80,6 +83,7 @@ func _setup_tooltips() -> void:
 	_l_cha.tooltip_text = "Charisma — force of personality. Improves NPC reactions, merchant prices, and group leadership bonuses."
 	_l_con.tooltip_text = "Constitution — physical toughness. Increases maximum HP and your health regeneration rate."
 	_l_atk.tooltip_text = "Attack — your melee damage range. Weapon damage is fixed; Strength adds a bonus (STR / 5) on top."
+	_l_wt.tooltip_text = "Weight — everything you carry: coins, inventory, and worn equipment, against your capacity (10 + STR). Over capacity slows movement; at double capacity stamina stops regenerating."
 
 func _style_xp_bar() -> void:
 	var fill := StyleBoxFlat.new()
@@ -108,6 +112,7 @@ func _refresh() -> void:
 	con_value.text = str(PlayerStats.constitution)
 	atk_value.text = _get_attack_range()
 	ac_value.text = str(Equipment.get_armor_class())
+	_refresh_weight(Encumbrance.total_weight, Encumbrance.capacity)
 
 func _get_attack_range() -> String:
 	@warning_ignore("integer_division")
@@ -116,6 +121,20 @@ func _get_attack_range() -> String:
 	if weapon != null and weapon.weapon_damage_max > 0:
 		return "%d - %d" % [weapon.weapon_damage_min + str_bonus, weapon.weapon_damage_max + str_bonus]
 	return "%d - %d" % [1 + str_bonus, 4 + str_bonus]
+
+func _on_encumbrance_changed(weight: float, capacity: float) -> void:
+	_refresh_weight(weight, capacity)
+
+# Carried weight vs capacity, colored at the two penalty thresholds
+# (Encumbrance: > capacity slows movement, ≥ 2× stops stamina regen).
+func _refresh_weight(weight: float, capacity: float) -> void:
+	wt_value.text = "%.1f / %.1f" % [weight, capacity]
+	if weight >= capacity * Encumbrance.OVERLOADED_RATIO:
+		wt_value.add_theme_color_override("font_color", UITheme.C_OVERLOADED)
+	elif weight > capacity:
+		wt_value.add_theme_color_override("font_color", UITheme.C_ENCUMBERED)
+	else:
+		wt_value.remove_theme_color_override("font_color")
 
 func _on_hp_changed(current: float, maximum: float) -> void:
 	hp_value.text = "%d / %d" % [int(current), int(maximum)]

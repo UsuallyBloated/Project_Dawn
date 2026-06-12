@@ -16,3 +16,4 @@ weapon_damage_max = 14
 weapon_delay = 3.0
 weapon_skill = "archery"
 vendor_price = 80
+weight = 3.0

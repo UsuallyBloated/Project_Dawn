@@ -162,13 +162,24 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
 - **Encumbrance (2026-05-21):** carry weight vs STR-driven capacity
   (`10 + STR`, in the `Encumbrance` autoload). Weight = coins (flat 0.02/coin **per
   coin regardless of tier** — the designed pressure to convert hoards) + inventory +
-  worn equipment (`ItemData.weight`, default 0; most items untagged pending a content
-  pass). Over capacity: movement slows linearly to a 0.25 floor (applied after the
-  mount mult in `player.gd`) and stamina regen halves (stops at 2× capacity, in
-  `regen.gd`); "You are encumbered!" CombatLog line on threshold crossings.
-  Client-side v1 — the server's movement clamp picks up the slowdown via the scaled
-  direction vector; no server-side weight model yet. No weight readout UI yet
-  (character-window line is the natural follow-up).
+  worn equipment (`ItemData.weight`, default 0; ~20 representative items tagged
+  2026-06-12 — weapons 2–8, armor 1–10 by class, potions 0.3, reagents 0.1 — the
+  full ~169-item pass is still pending, user in the loop on values). Over capacity:
+  movement slows linearly to a 0.25 floor (applied after the mount mult in
+  `player.gd`) and stamina regen halves (stops at 2× capacity, in `regen.gd`);
+  "You are encumbered!" CombatLog line on threshold crossings. Client-side v1 — the
+  server's movement clamp picks up the slowdown via the scaled direction vector; no
+  server-side weight model yet.
+- **Currency & encumbrance visibility UI (2026-06-12):** the wallet renders in the
+  inventory window (gold line above the trash slot — raw per-tier stacks via
+  `Currency.format_coins`, live on `PlayerStats.coins_changed`) as well as the vendor
+  footer; both use `UITheme.C_COINS`. The character window's attribute grid gained a
+  `WT` row showing `Encumbrance.total_weight / capacity` ("12.4 / 60.0"), colored
+  `UITheme.C_ENCUMBERED` (yellow) past capacity and `UITheme.C_OVERLOADED` (red) at
+  ≥ 2×, tooltip explaining both thresholds. The HUD shows an encumbered/overloaded
+  warning label under the stat panel only while over capacity
+  (`hud.gd::_build_encumbrance_indicator`), so the slowdown is explained without
+  opening any window.
 
 ---
 

@@ -19,6 +19,7 @@ var _tooltip: PanelContainer = null
 var _tooltip_label: Label = null
 var _trash_cell: Panel = null
 var _delete_dialog: ConfirmationDialog = null
+var _wallet_label: Label = null
 
 func _ready() -> void:
 	_bag_windows.resize(Inventory.BASE_SLOT_COUNT)
@@ -26,6 +27,7 @@ func _ready() -> void:
 	_build_ui()
 	_build_drag_icon()
 	Inventory.inventory_changed.connect(_refresh_all)
+	PlayerStats.coins_changed.connect(_on_coins_changed)
 	visibility_changed.connect(_on_visibility_changed)
 	_refresh_all()
 	# Center the window on the viewport at startup. Waits one frame so
@@ -44,8 +46,8 @@ func _build_ui() -> void:
 	add_theme_stylebox_override("panel", style)
 
 	var rows := ceili(float(Inventory.BASE_SLOT_COUNT) / float(COLS))
-	# header (24) + grid + separator (8) + trash slot + margins (24)
-	custom_minimum_size = Vector2(COLS * SLOT_SIZE + 24, rows * SLOT_SIZE + 24 + SLOT_SIZE + 32)
+	# header (24) + grid + wallet line (20) + trash slot + margins (24)
+	custom_minimum_size = Vector2(COLS * SLOT_SIZE + 24, rows * SLOT_SIZE + 24 + 20 + SLOT_SIZE + 32)
 
 	var vbox := VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -90,6 +92,17 @@ func _build_ui() -> void:
 		var cell := _make_slot_cell(i)
 		grid.add_child(cell)
 		_base_cells.append(cell)
+
+	# Wallet line — raw per-tier stacks, same format as the vendor window
+	# footer. Never the reduced form: a 4,000-copper hoard reads "4000c".
+	_wallet_label = Label.new()
+	_wallet_label.text = _wallet_text()
+	_wallet_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_wallet_label.add_theme_font_size_override("font_size", 12)
+	_wallet_label.add_theme_color_override("font_color", UITheme.C_COINS)
+	_wallet_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	_wallet_label.tooltip_text = "Your coins, as carried — stacks are never consolidated automatically. Every coin has weight."
+	vbox.add_child(_wallet_label)
 
 	_trash_cell = _make_trash_cell()
 	vbox.add_child(_trash_cell)
@@ -238,6 +251,14 @@ func _refresh_cell(index: int) -> void:
 		count_label.text = "" if is_drag_source else (str(slot["count"]) if slot["count"] > 1 else "")
 		if badge: badge.text = ""
 		_apply_slot_style(cell, _rarity_color(item.rarity), UITheme.C_BORDER, 1)
+
+# Mirrors vendor_window._coins_text — actual stacks, never reduced.
+func _wallet_text() -> String:
+	return Currency.format_coins(
+		PlayerStats.platinum, PlayerStats.gold, PlayerStats.silver, PlayerStats.copper)
+
+func _on_coins_changed(platinum: int, gold: int, silver: int, copper: int) -> void:
+	_wallet_label.text = Currency.format_coins(platinum, gold, silver, copper)
 
 # ── Input ─────────────────────────────────────────────────────────────────────
 

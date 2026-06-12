@@ -13,3 +13,4 @@ vendor_price = 3
 is_drink = true
 food_mp_regen = 5.0
 food_duration = 180.0
+weight = 0.5

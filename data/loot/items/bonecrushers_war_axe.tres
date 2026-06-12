@@ -16,3 +16,4 @@ weapon_delay = 3.2
 weapon_skill = "2h_blunt"
 bonus_strength = 5
 vendor_price = 220
+weight = 8.0

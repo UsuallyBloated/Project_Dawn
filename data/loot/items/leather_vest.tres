@@ -14,3 +14,4 @@ bonus_max_hp = 15.0
 bonus_armor = 8
 armor_type = "leather"
 vendor_price = 70
+weight = 4.0
