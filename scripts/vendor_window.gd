@@ -288,7 +288,8 @@ func _refresh_detail() -> void:
 
 	_detail_vbox.add_child(HSeparator.new())
 
-	var price_lbl := "Price: %dg" % price if _mode == Mode.BUY else "Sell value: %dg each" % price
+	var price_lbl := "Price: %s" % _price_text(price) if _mode == Mode.BUY \
+			else "Sell value: %s each" % _price_text(price)
 	_add_detail_label(price_lbl, UITheme.C_POSITIVE, 12)
 
 	# Qty selector
@@ -316,14 +317,14 @@ func _refresh_detail() -> void:
 	plus.pressed.connect(_on_qty_plus.bind(max_qty))
 	qty_row.add_child(plus)
 
-	_add_detail_label("Total: %dg" % (price * _qty), UITheme.C_TEXT, 12)
+	_add_detail_label("Total: %s" % _price_text(price * _qty), UITheme.C_TEXT, 12)
 
 	_detail_vbox.add_child(HSeparator.new())
 
 	var action_label := "Buy" if _mode == Mode.BUY else "Sell"
 	_action_btn = UITheme.make_button(action_label)
 	if _mode == Mode.BUY:
-		_action_btn.disabled = PlayerStats.coins < price * _qty
+		_action_btn.disabled = PlayerStats.total_copper() < price * _qty
 	_action_btn.pressed.connect(_on_action_pressed)
 	_detail_vbox.add_child(_action_btn)
 
@@ -359,14 +360,14 @@ func _do_buy() -> void:
 		# / Inventory) is overwritten by the server's reply, not
 		# the local optimistic write. vendor_id is informational
 		# for now (no server NPCs); 0 is fine.
-		if PlayerStats.coins < total:
+		if PlayerStats.total_copper() < total:
 			_set_result("You don't have enough coins.", false)
 			return
 		Net.broadcast_buy_item(0, item.item_name, _qty)
-		_set_result("Ordered %s%s for %dg." % [
+		_set_result("Ordered %s%s for %s." % [
 			item.item_name,
 			" x%d" % _qty if _qty > 1 else "",
-			total], true)
+			_price_text(total)], true)
 		_qty = 1
 		_refresh_detail()
 		return
@@ -377,10 +378,10 @@ func _do_buy() -> void:
 		PlayerStats.add_coins(total)  # refund
 		_set_result("Your inventory is full.", false)
 		return
-	_set_result("Purchased %s%s for %dg." % [
+	_set_result("Purchased %s%s for %s." % [
 		item.item_name,
 		" x%d" % _qty if _qty > 1 else "",
-		total], true)
+		_price_text(total)], true)
 	_qty = 1
 	_refresh_detail()
 
@@ -401,10 +402,10 @@ func _do_sell() -> void:
 		var location: String = slot.get("location", NetProtocol.INV_LOCATION_BASE)
 		var slot_idx: int = slot.get("slot_idx", 0)
 		Net.broadcast_sell_item(location, slot_idx, actual_qty)
-		_set_result("Sold %s%s for %dg." % [
+		_set_result("Sold %s%s for %s." % [
 			item.item_name,
 			" x%d" % actual_qty if actual_qty > 1 else "",
-			total], true)
+			_price_text(total)], true)
 		_selected_index = -1
 		_qty = 1
 		return
@@ -412,10 +413,10 @@ func _do_sell() -> void:
 	_qty = 1
 	Inventory.remove_item(item, actual_qty)  # fires inventory_changed -> _populate_list
 	PlayerStats.add_coins(total)
-	_set_result("Sold %s%s for %dg." % [
+	_set_result("Sold %s%s for %s." % [
 		item.item_name,
 		" x%d" % actual_qty if actual_qty > 1 else "",
-		total], true)
+		_price_text(total)], true)
 	_show_detail_hint()
 
 func _set_result(msg: String, ok: bool) -> void:
@@ -437,15 +438,23 @@ func _add_detail_label(text: String, color: Color, font_size: int) -> void:
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_detail_vbox.add_child(lbl)
 
+# Wallet footer: the player's actual stacks ("3g 41s 250c"), not a reduced
+# total — raw copper held by choice should look like raw copper.
 func _coins_text() -> String:
-	return "%dg" % PlayerStats.coins
+	return Currency.format_coins(
+		PlayerStats.platinum, PlayerStats.gold, PlayerStats.silver, PlayerStats.copper)
 
-func _on_coins_changed(amount: int) -> void:
-	_coins_lbl.text = "%dg" % amount
+# Price tags: vendor_price is a copper amount; show it reduced ("2s 50c").
+func _price_text(amount_copper: int) -> String:
+	var t := Currency.from_copper(amount_copper)
+	return Currency.format_coins(t[0], t[1], t[2], t[3])
+
+func _on_coins_changed(platinum: int, gold: int, silver: int, copper: int) -> void:
+	_coins_lbl.text = Currency.format_coins(platinum, gold, silver, copper)
 	if _action_btn != null and _mode == Mode.BUY and _selected_index >= 0:
 		var item := _load_item(_stock[_selected_index])
 		if item != null:
-			_action_btn.disabled = PlayerStats.coins < item.vendor_price * _qty
+			_action_btn.disabled = PlayerStats.total_copper() < item.vendor_price * _qty
 
 func _on_inventory_changed() -> void:
 	if visible and _mode == Mode.SELL:

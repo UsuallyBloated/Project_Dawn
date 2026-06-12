@@ -163,9 +163,9 @@ signal world_xp_gained(amount: int, current: int, to_next: int)
 
 # Track 14 follow-up — server-authoritative coin balance update.
 # Vendor BuyItem / SellItem (and any future coin-mutating flow)
-# fans this. PlayerStats overwrites `coins` and emits its own
-# `coins_changed` signal so existing UI subscribers stay wired.
-signal world_coins_update(coins: int)
+# fans this. Carries the four-tier wallet; PlayerStats overwrites its
+# stacks and emits its own `coins_changed` so existing UI stays wired.
+signal world_coins_update(platinum: int, gold: int, silver: int, copper: int)
 # Track 6 sub-task 5 — group state from the server.
 # group_invited: someone is asking us to join their group.
 # group_roster: the group we belong to has a new membership snapshot
@@ -559,6 +559,14 @@ func broadcast_heal_self(amount: int) -> void:
 		return
 	send_heal_self(amount)
 
+# Dev intent — credit exact per-tier coin stacks (Test Panel money buttons).
+# Server-gated on PD_DEV_CMDS; the wallet comes back via CoinsUpdate, so no
+# optimistic local fill (a silently-ignored grant should LOOK ignored).
+func broadcast_give_coins(platinum: int, gold: int, silver: int, copper: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_give_coins(platinum, gold, silver, copper)
+
 # Track 6 sub-task 5 — group action wrappers. Server processes the
 # corresponding ClientWorldMsg variants, fans GroupInvited /
 # GroupRoster back through the typed signals above.
@@ -834,13 +842,13 @@ func _on_xp_gained(amount: int, current: int, to_next: int) -> void:
 	world_xp_gained.emit(amount, current, to_next)
 	PlayerStats.gain_xp(amount)
 
-func _on_coins_update(coins: int) -> void:
-	# Track 14 follow-up — server is authoritative. Push the value
+func _on_coins_update(platinum: int, gold: int, silver: int, copper: int) -> void:
+	# Track 14 follow-up — server is authoritative. Push the wallet
 	# through PlayerStats.apply_remote_coins so existing UI
 	# subscribers (HUD coin label, vendor window footer) re-render
 	# via the existing coins_changed signal.
-	world_coins_update.emit(coins)
-	PlayerStats.apply_remote_coins(coins)
+	world_coins_update.emit(platinum, gold, silver, copper)
+	PlayerStats.apply_remote_coins(platinum, gold, silver, copper)
 
 func _on_group_invited(from_id: int, from_name: String) -> void:
 	world_group_invited.emit(from_id, from_name)

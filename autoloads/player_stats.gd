@@ -9,9 +9,17 @@ signal xp_gained(amount: int, source: String)
 signal healed(amount: int)
 signal stats_changed
 signal character_applied
-signal coins_changed(new_amount: int)
+signal coins_changed(platinum: int, gold: int, silver: int, copper: int)
 
-var coins: int = 100
+# Four independent coin stacks (100:1 per tier — see autoloads/currency.gd and
+# docs/concepts/world/currency.md). Independent on purpose: holding raw copper
+# vs. converted silver is a player choice with a weight cost, so nothing may
+# silently consolidate these. Server-authoritative in launcher mode via
+# apply_remote_coins.
+var platinum: int = 0
+var gold: int = 0
+var silver: int = 0
+var copper: int = 100
 
 var hp: float = 100.0
 var max_hp: float = 100.0
@@ -214,28 +222,60 @@ func remove_item_bonuses(item: ItemData) -> void:
 	set_stamina(stamina)
 	stats_changed.emit()
 
-func add_coins(amount: int) -> void:
-	coins = max(0, coins + amount)
-	coins_changed.emit(coins)
+# Total wallet value in copper-equivalents — for affordability checks and
+# display totals. Never write back from this; the four stacks are the truth.
+func total_copper() -> int:
+	return Currency.total_copper(platinum, gold, silver, copper)
 
+# Credit exact per-tier stacks, no reduction — a 1000-copper grant stays
+# 1000 raw copper. For loot drops that specify tiers and dev grants; vendor
+# payouts use add_coins (reduced) instead.
+func add_coin_stacks(p: int, g: int, s: int, c: int) -> void:
+	platinum = maxi(platinum + p, 0)
+	gold = maxi(gold + g, 0)
+	silver = maxi(silver + s, 0)
+	copper = maxi(copper + c, 0)
+	coins_changed.emit(platinum, gold, silver, copper)
+
+# Credit a payout of `amount` copper-equivalents, reduced to minimal coins
+# (a 250c payout arrives as 2s 50c). Existing stacks are not re-reduced.
+func add_coins(amount: int) -> void:
+	var payout := Currency.from_copper(amount)
+	platinum += payout[0]
+	gold += payout[1]
+	silver += payout[2]
+	copper += payout[3]
+	coins_changed.emit(platinum, gold, silver, copper)
+
+# Spend `amount` copper-equivalents with make-change: low coins go first, a
+# higher coin is broken only when the lower stacks fall short (see
+# Currency.spend). Returns false (wallet untouched) if unaffordable.
 func spend_coins(amount: int) -> bool:
-	if coins < amount:
+	var wallet: Array[int] = [platinum, gold, silver, copper]
+	if not Currency.spend(wallet, amount):
 		return false
-	coins -= amount
-	coins_changed.emit(coins)
+	platinum = wallet[0]
+	gold = wallet[1]
+	silver = wallet[2]
+	copper = wallet[3]
+	coins_changed.emit(platinum, gold, silver, copper)
 	return true
 
 # Track 14 follow-up — server-authoritative coins overwrite. Called
 # from Net._on_coins_update when the server fans a CoinsUpdate
 # (vendor BuyItem / SellItem, and any future coin-mutating flow).
-# In launcher mode this is the only path that changes `coins` —
+# In launcher mode this is the only path that changes the wallet —
 # vendor_window.gd no longer touches spend_coins / add_coins
 # directly when Net.is_launcher_mode() is true.
-func apply_remote_coins(new_coins: int) -> void:
-	if coins == new_coins:
+func apply_remote_coins(new_platinum: int, new_gold: int, new_silver: int, new_copper: int) -> void:
+	if platinum == new_platinum and gold == new_gold \
+			and silver == new_silver and copper == new_copper:
 		return
-	coins = new_coins
-	coins_changed.emit(coins)
+	platinum = new_platinum
+	gold = new_gold
+	silver = new_silver
+	copper = new_copper
+	coins_changed.emit(platinum, gold, silver, copper)
 
 func lose_xp(amount: int) -> void:
 	xp = max(0, xp - amount)
@@ -253,7 +293,7 @@ func save_state() -> Dictionary:
 		"level": level,
 		"xp": xp,
 		"xp_to_next": xp_to_next,
-		"coins": coins,
+		"platinum": platinum, "gold": gold, "silver": silver, "copper": copper,
 		"max_hp": _base_max_hp, "max_mp": _base_max_mp, "max_stamina": _base_max_stamina,
 		"hp": hp, "mp": mp, "stamina": stamina,
 		"strength": _base_strength, "dexterity": _base_dexterity, "agility": _base_agility,
@@ -271,7 +311,12 @@ func load_state(d: Dictionary) -> void:
 	level          = int(d.get("level", 1))
 	xp             = int(d.get("xp", 0))
 	xp_to_next     = int(d.get("xp_to_next", 100))
-	coins          = int(d.get("coins", 100))
+	# Four-tier wallet; a pre-currency save's single "coins" count carries
+	# forward into copper (it was a flat count with no tiers).
+	platinum       = int(d.get("platinum", 0))
+	gold           = int(d.get("gold", 0))
+	silver         = int(d.get("silver", 0))
+	copper         = int(d.get("copper", d.get("coins", 100)))
 	# Intrinsic stats restored. No gear is equipped at load time, so public
 	# fields mirror the base values until Equipment re-equips items.
 	_base_max_hp        = float(d.get("max_hp", 100.0))
@@ -306,6 +351,6 @@ func load_state(d: Dictionary) -> void:
 	stamina_changed.emit(stamina, max_stamina)
 	xp_changed.emit(xp, xp_to_next)
 	level_changed.emit(level)
-	coins_changed.emit(coins)
+	coins_changed.emit(platinum, gold, silver, copper)
 	stats_changed.emit()
 	character_applied.emit()
