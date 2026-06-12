@@ -13,3 +13,4 @@ bonus_agility = 3
 bonus_intelligence = 2
 bonus_max_mp = 20.0
 vendor_price = 120
+weight = 0.1

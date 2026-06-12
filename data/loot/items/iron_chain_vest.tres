@@ -15,4 +15,4 @@ bonus_max_hp = 25.0
 bonus_armor = 18
 armor_type = "chain"
 vendor_price = 130
-weight = 10.0
+weight = 6.0

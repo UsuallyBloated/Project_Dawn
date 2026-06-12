@@ -12,3 +12,4 @@ stack_size = 1
 bonus_agility = 2
 bonus_max_hp = 8.0
 vendor_price = 120
+weight = 0.1

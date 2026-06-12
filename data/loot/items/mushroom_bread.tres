@@ -12,3 +12,4 @@ stack_size = 20
 heal_on_use = 25.0
 mp_on_use = 25.0
 vendor_price = 5
+weight = 0.4

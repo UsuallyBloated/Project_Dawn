@@ -1,11 +1,10 @@
 # Item Weight Proposal — Full Content Pass
 
-**Status: AWAITING SIGN-OFF.** Nothing has been applied to the `.tres` files yet.
-
-**How to approve:** edit any number in the tables below in place (same as a playtest
-checklist), answer the open questions, and tell me it's approved. I apply *exactly*
-what this doc says at that point — including anything you changed. If you want a
-scenario recomputed first (a kit total, a stack burden), just ask.
+**Status: APPROVED & APPLIED (2026-06-12).** Rulings: chain rescale Option B (three
+anchors changed with permission); ore > ingot confirmed; universal 0.1 floor, no
+zero-weight items; Arrow Bundle Option A (`stack_size` 200→20); Gold Ingot 2.0,
+Brown Steed Whistle 0.1, meats 0.25. Tables below show the final applied values —
+this doc is the record; `tools/item_weight_audit.gd` regenerates the live catalog.
 
 **How this was produced:** the audit tool (`tools/item_weight_audit.gd`) generated the
 catalog; weights were proposed per category against the 20 playtested anchors, then
@@ -57,7 +56,8 @@ before the first copper.
 - **Option C — count worn gear at 50%** in `encumbrance.gd`. Systems change, not a
   content change, and EQ counted worn at 100% — a feel departure. Not recommended.
 
-**Your ruling:** _______
+**Ruling: Option B — applied**, anchor changes included. Iron kit + sword is now
+22.5 (Human Warrior 70%, 9.5 free); copper kit + mace 19.5 (Human Cleric 89%).
 
 ### 2. Refining direction — confirm ore > ingot
 
@@ -68,7 +68,7 @@ the same trip home as 2.5 ingots at 3.75. Strong, correctly-shaped incentive; +3
 = +1 ore per trip gives STR real economic value. One dependency: field-smelting only
 exists where forges sit near mining nodes (all smelting requires `station=forge`).
 
-**Confirm ore 3.0 / ingot 1.5, or set both equal:** _______
+**Ruling: confirmed — ore 3.0 / ingot 1.5 applied.**
 
 ### 3. Zero-weight allowlist
 
@@ -77,7 +77,7 @@ held at the floor: **Pottery Sketch** (one sheet of paper; the natural test case
 you ever want a "recipe/paper" weightless class) and **Mithril Ingot** (lore says
 "nearly weightless"; 0.1 reads as that without a true-zero exception).
 
-**Keep universal 0.1 minimum, or allowlist something:** _______
+**Ruling: universal 0.1 minimum kept — no item in the game weighs 0.**
 
 ### 4. Stack pressure + the Arrow Bundle ruling
 
@@ -85,7 +85,7 @@ Worst full-stack burdens at proposed weights (fresh capacity = 20.0 for scale):
 
 | Item | Per | × stack | Full stack |
 |---|---|---|---|
-| Arrow Bundle | 1.0 | 200 | **200.0** ← see ruling below |
+| Arrow Bundle | 1.0 | 20 (was 200) | 20.0 after the ruling below |
 | Adamantite Ore | 6.0 | 20 | 120.0 (lore-dense flagship; carry cap binds first, harmless) |
 | Standard ores (×5) | 3.0 | 20 | 60.0 (= exactly one STR-50 capacity) |
 | Adamantite Ingot | 3.0 | 10 | 30.0 |
@@ -107,7 +107,8 @@ stale "200 arrows" from before the item became a bundle. The mass itself is righ
 - **Option B:** the stack unit is a single arrow — weight 0.1, but the name and
   description then need rewording (also beyond weight-only).
 
-**Your ruling (A / B / weight-only-for-now):** _______
+**Ruling: Option A — weight 1.0 kept, `stack_size` 200→20 applied** (full stack =
+400 arrows = 20.0).
 
 ### 5. Quick confirms (one-liners — edit the number if you disagree)
 
@@ -115,17 +116,14 @@ stale "200 arrows" from before the item became a bundle. The mass itself is righ
   in the game, just under the 2H war axe (8.0). Softer: 5.0–6.0. Punishing: 8.0+.
 - **Mechanical Trap 3.0** — top of the handoff band; a 5-stack is 15.0. Drop to 2.0
   for casual utility, raise to 4.0 if trap loadouts should really hurt.
-- **Gold Ingot 1.5** — uniform band ("price informs tier, not mass"). Bump to 2.5 if
-  you want gold's famous heft to read in tooltips; encumbrance impact is negligible.
+- **Gold Ingot** — ruled **2.0** for gold-heft flavor (was 1.5 uniform band).
 - **Cloth Slippers 0.5 vs Patched Cloth Boots 1.0** — slippers are lore-light; the
   patched boots are *boots* (more material), so the 2c junk outweighs the 18c clean
   item. Intentional; unify both at 0.5 or 1.0 if it bugs you.
 - **Empty Bottle 0.2** (handoff seeded 0.1) — so bottle (0.2) + drink = flask/ale 0.5
   and vial (0.1) + draught = potion 0.3 both add up.
-- **Meats flat 0.5** — one "standard butchered cut" regardless of animal (hides scale
-  by animal instead). Alternative: rat/snake 0.3.
-- **Brown Steed Whistle 0.5** — flask-weight for a wooden whistle is a deliberate
-  standing tax on permanent mount convenience, not realism.
+- **Meats** — ruled flat **0.25** per cut (all four; hides still scale by animal).
+- **Brown Steed Whistle** — ruled **0.1** (realism wins: it's a wooden whistle).
 
 ---
 
@@ -152,36 +150,36 @@ context). All other rows get `weight = <value>` appended in their `.tres`.
 | Rusty Short Sword | 1 | 4 | 4.0 | rust loses no mass |
 | Splintered Staff | 1 | 3 | 5.0 | junk twin of Carved Staff |
 
-### Armor — chest by material (cloth 2 / leather 4 / copper chain 8 / iron chain 10); legs ×0.8, head & boots ×0.5, gloves ×0.25; junk = clean
-*(These are the Option-A values; if you pick Option B in question 1, I substitute the rescaled chain numbers listed there.)*
+### Armor — chest by material (cloth 2 / leather 4 / copper chain 5 / iron chain 6); legs ×0.8, head & boots ×0.5, gloves ×0.25; junk = clean
+*(Option B applied: chain rescaled ~45%, including the three rescaled anchors.)*
 
 | Item | Slot | Vendor (c) | Weight | Note |
 |---|---|---|---|---|
 | Cloth Cap | HEAD | 18 | (anchor) 1.0 | |
-| Copper Chain Coif | HEAD | 40 | (anchor) 4.0 | |
-| Iron Chain Coif | HEAD | 65 | 5.0 | iron chest ×0.5 |
+| Copper Chain Coif | HEAD | 40 | 2.5 | rescaled anchor (was 4.0) |
+| Iron Chain Coif | HEAD | 65 | 3.0 | iron chest ×0.5 |
 | Leather Cap | HEAD | 35 | 2.0 | leather chest ×0.5 |
 | Worn Cloth Cap | HEAD | 2 | 1.0 | junk = Cloth Cap |
 | Cloth Robe | CHEST | 38 | (anchor) 2.0 | |
-| Copper Chain Vest | CHEST | 90 | 8.0 | between leather 4 and iron 10 |
+| Copper Chain Vest | CHEST | 90 | 5.0 | between leather 4 and iron 6 |
 | Cracked Leather Vest | CHEST | 3 | 4.0 | junk = Leather Vest |
-| Iron Chain Vest | CHEST | 130 | (anchor) 10.0 | |
+| Iron Chain Vest | CHEST | 130 | 6.0 | rescaled anchor (was 10.0) |
 | Leather Vest | CHEST | 70 | (anchor) 4.0 | |
 | Tattered Cloth Tunic | CHEST | 2 | 2.0 | junk = Cloth Robe |
 | Cloth Pants | LEGS | 28 | 1.5 | cloth chest ×0.8 |
-| Copper Chain Leggings | LEGS | 55 | 6.0 | copper chest ×0.8 |
+| Copper Chain Leggings | LEGS | 55 | 4.0 | copper chest ×0.8 |
 | Frayed Cloth Pants | LEGS | 2 | 1.5 | junk = Cloth Pants |
-| Iron Chain Leggings | LEGS | 110 | (anchor) 8.0 | |
+| Iron Chain Leggings | LEGS | 110 | 5.0 | rescaled anchor (was 8.0) |
 | Leather Leggings | LEGS | 60 | 3.0 | leather chest ×0.8 |
 | Cloth Slippers | FEET | 18 | 0.5 | lore-light; see quick confirm |
-| Copper Chain Boots | FEET | 35 | 4.0 | copper chest ×0.5 |
-| Iron Chain Boots | FEET | 75 | 5.0 | iron chest ×0.5 |
+| Copper Chain Boots | FEET | 35 | 2.5 | copper chest ×0.5 |
+| Iron Chain Boots | FEET | 75 | 3.0 | iron chest ×0.5 |
 | Leather Boots | FEET | 40 | (anchor) 2.0 | |
 | Patched Cloth Boots | FEET | 2 | 1.0 | cloth *boots*, not slippers |
 | Scraped Leather Boots | FEET | 2 | 2.0 | junk = Leather Boots |
 | Cloth Gloves | HANDS | 18 | 0.5 | cloth chest ×0.25 |
-| Copper Chain Gloves | HANDS | 35 | 2.0 | copper chest ×0.25 |
-| Iron Chain Gloves | HANDS | 65 | 2.5 | iron chest ×0.25 |
+| Copper Chain Gloves | HANDS | 35 | 1.5 | copper chest ×0.25 |
+| Iron Chain Gloves | HANDS | 65 | 1.5 | iron chest ×0.25 |
 | Leather Gloves | HANDS | 35 | 1.0 | leather chest ×0.25 |
 | Rough Leather Bracers | HANDS | 2 | 1.0 | wrist piece, gloves band |
 | Torn Cloth Gloves | HANDS | 2 | 0.5 | junk = Cloth Gloves |
@@ -232,7 +230,7 @@ context). All other rows get `weight = <value>` appended in their `.tres`.
 | Coal | 20 | 4 | 1.0 | 20-stack = one fresh capacity |
 | Copper Ingot | 10 | 14 | 1.5 | |
 | Copper Ore | 20 | 6 | 3.0 | ~5 ore fills a STR-10 miner with pickaxe |
-| Gold Ingot | 10 | 82 | 1.5 | uniform band — see quick confirm |
+| Gold Ingot | 10 | 82 | 2.0 | ruled above band for gold-heft flavor |
 | Gold Ore | 20 | 35 | 3.0 | |
 | Iron Ingot | 10 | 22 | 1.5 | |
 | Iron Ore | 20 | 10 | 3.0 | |
@@ -293,7 +291,7 @@ context). All other rows get `weight = <value>` appended in their `.tres`.
 
 | Item | Stack | Vendor (c) | Weight | Note |
 |---|---|---|---|---|
-| Arrow Bundle | 200 | 10 | 1.0 | **pending question 4 ruling** |
+| Arrow Bundle | 20 | 10 | 1.0 | ruled: `stack_size` 200→20 applied |
 | Arrow Fletching | 20 | 5 | 0.1 | |
 | Feather | 20 | 3 | 0.1 | |
 | Flint | 20 | 2 | 0.2 | raw stone chunk, denser than one knapped point |
@@ -334,30 +332,30 @@ context). All other rows get `weight = <value>` appended in their `.tres`.
 | Tinkering Kit | 1 | 25 | 2.0 | per handoff |
 | Unfired Pottery | 5 | 5 | 0.5 | shaped clay, same mass as the lump |
 
-### Cooking & brewing — portions 0.2–0.5 around the bread anchor; meats flat 0.5 (standard cut)
+### Cooking & brewing — portions 0.2–0.5 around the bread anchor; meats flat 0.25 (standard cut, ruled)
 
 | Item | Stack | Vendor (c) | Weight | Note |
 |---|---|---|---|---|
 | Barley | 20 | 3 | 0.3 | recipe portion, not a sack |
 | Flour | 20 | 4 | 0.3 | 2 flour → 1 loaf; portion-sized |
-| Gnoll Meat | 10 | 2 | 0.5 | |
+| Gnoll Meat | 10 | 2 | 0.25 | |
 | Honey | 20 | 5 | 0.4 | dense pot, smaller than a flask |
 | Hops | 20 | 3 | 0.2 | dried flowers |
 | Raw Egg | 20 | 3 | 0.2 | |
-| Rat Meat | 10 | 2 | 0.5 | standard cut — see quick confirm |
+| Rat Meat | 10 | 2 | 0.25 | standard cut |
 | Salt | 20 | 3 | 0.3 | pantry pouch |
-| Snake Meat | 10 | 3 | 0.5 | |
+| Snake Meat | 10 | 3 | 0.25 | |
 | Wild Berries | 20 | 4 | 0.2 | a handful |
 | Wild Fruit | 20 | 4 | 0.3 | |
 | Wild Mushroom | 20 | 4 | 0.1 | single mushroom |
-| Wolf Meat | 10 | 4 | 0.5 | |
+| Wolf Meat | 10 | 4 | 0.25 | |
 | Yeast | 20 | 3 | 0.1 | small cake |
 
-### Quest tokens & special — tiny stackables 0.1; palm-sized uniques 0.3–0.5; whistle 0.5
+### Quest tokens & special — tiny stackables 0.1; palm-sized uniques 0.3–0.5; whistle 0.1 (ruled)
 
 | Item | Stack | Vendor (c) | Weight | Note |
 |---|---|---|---|---|
-| Brown Steed Whistle | 1 | 350 | 0.5 | deliberate mount-convenience tax |
+| Brown Steed Whistle | 1 | 350 | 0.1 | ruled: realism over carry-tax |
 | Gnoll Chief's Seal | 1 | 25 | 0.4 | stamped iron disc |
 | Gnoll Tooth | 20 | 3 | 0.1 | |
 | Rotfang's Fang | 1 | 20 | 0.5 | lore: "massive" |
@@ -371,7 +369,10 @@ context). All other rows get `weight = <value>` appended in their `.tres`.
 - **Fae casters break the capacity formula.** Creation stats have no floor; Fae STR
   −15 → a Fae Wizard has STR −5 and capacity **5.0** — under the 5.5 cloth kit alone.
   Needs a capacity floor (e.g. 15.0) in `encumbrance.gd` or a creation STR floor.
-  Systems task, not content.
+  Systems task, not content. **User direction (2026-06-12): Fae get their own line
+  of clothing** — they're far smaller than even gnomes, so a unique Fae gear
+  category (its own weights, presumably much lighter) is planned design work, not
+  a patch to the human-sized cloth set.
 - **Wolf pelt stack asymmetry:** Damaged stacks to 20 (full stack 12.0) while
   Fresh/Pristine stack to 5 (3.0) — the junk pelt is the heaviest to hoard by 4×.
   Stack sizes are out of scope; flagging the oddity.

@@ -11,3 +11,4 @@ rarity = 0
 stack_size = 20
 heal_on_use = 30.0
 vendor_price = 5
+weight = 0.2

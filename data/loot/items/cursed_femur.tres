@@ -16,3 +16,4 @@ weapon_skill = "1h_blunt"
 bonus_strength = 6
 bonus_max_hp = 20.0
 vendor_price = 260
+weight = 7.0

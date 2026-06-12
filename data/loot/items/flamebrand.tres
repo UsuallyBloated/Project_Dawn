@@ -18,3 +18,4 @@ proc_damage = 25
 proc_damage_type = 1
 proc_name = "Flaming Strike"
 vendor_price = 0
+weight = 4.0

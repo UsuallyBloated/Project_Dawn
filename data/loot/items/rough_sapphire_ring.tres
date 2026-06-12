@@ -12,3 +12,4 @@ stack_size = 1
 bonus_intelligence = 2
 bonus_max_mp = 10.0
 vendor_price = 115
+weight = 0.1

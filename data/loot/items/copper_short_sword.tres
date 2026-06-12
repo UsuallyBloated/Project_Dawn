@@ -14,3 +14,4 @@ weapon_damage_min = 4
 weapon_damage_max = 9
 weapon_skill = "1h_slashing"
 vendor_price = 40
+weight = 4.0

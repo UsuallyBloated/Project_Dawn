@@ -11,3 +11,4 @@ rarity = 0
 stack_size = 1
 bag_num_slots = 4
 vendor_price = 20
+weight = 0.5

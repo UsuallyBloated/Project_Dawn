@@ -12,3 +12,4 @@ stack_size = 1
 bonus_strength = 3
 bonus_agility = 2
 vendor_price = 85
+weight = 0.2

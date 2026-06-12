@@ -13,3 +13,4 @@ bonus_agility = 4
 bonus_constitution = 3
 bonus_max_hp = 30.0
 vendor_price = 160
+weight = 0.1

@@ -13,3 +13,4 @@ is_mount = true
 mount_speed_mult = 1.6
 mount_name = "Brown Steed"
 vendor_price = 350
+weight = 0.1

@@ -10,3 +10,4 @@ type = 10
 rarity = 0
 stack_size = 1
 vendor_price = 25
+weight = 2.0

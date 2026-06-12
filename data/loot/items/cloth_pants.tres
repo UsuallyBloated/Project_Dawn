@@ -13,3 +13,4 @@ bonus_max_hp = 6.0
 bonus_armor = 3
 armor_type = "cloth"
 vendor_price = 28
+weight = 1.5

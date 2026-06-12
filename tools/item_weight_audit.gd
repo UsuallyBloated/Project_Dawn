@@ -49,7 +49,7 @@ func _initialize() -> void:
 	var untagged: Array[String] = []
 	for r in rows:
 		var type_name: String = TYPE_NAMES[r["type"]] if r["type"] < TYPE_NAMES.size() else "UNKNOWN(%d)" % r["type"]
-		print("| %s | %s | %d | %d | %.1f |" % [r["name"], type_name, r["stack_size"], r["vendor_price"], r["weight"]])
+		print("| %s | %s | %d | %d | %s |" % [r["name"], type_name, r["stack_size"], r["vendor_price"], String.num(r["weight"], 2)])
 		if r["weight"] == 0.0:
 			untagged.append(r["name"])
 

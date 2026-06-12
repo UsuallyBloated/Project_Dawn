@@ -12,3 +12,4 @@ stack_size = 1
 bonus_intelligence = 1
 bonus_wisdom = 1
 vendor_price = 55
+weight = 0.1

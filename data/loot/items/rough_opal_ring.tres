@@ -11,3 +11,4 @@ rarity = 1
 stack_size = 1
 bonus_charisma = 2
 vendor_price = 90
+weight = 0.1
