@@ -74,7 +74,12 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 @export var proc_name: String = ""           # combat log label, e.g. "Flaming Strike"
 
 # Economy
-@export var vendor_price: int = 0  # buy price; sell = vendor_price / 2
+@export var vendor_price: int = 0  # buy price in copper; sell = vendor_price / 2
+
+# Carry weight (encumbrance units; see autoloads/encumbrance.gd). 0 = weightless.
+# Most items are still untagged (default 0) pending a content pass — coins are
+# the primary weight source today.
+@export var weight: float = 0.0
 
 # ── Save / load (Tier 2) ──────────────────────────────────────────────────────
 
@@ -114,6 +119,7 @@ func _to_snapshot() -> Dictionary:
 		"proc_chance": proc_chance, "proc_damage": proc_damage,
 		"proc_damage_type": int(proc_damage_type), "proc_name": proc_name,
 		"vendor_price": vendor_price,
+		"weight": weight,
 	}
 
 static func from_save_dict(d: Dictionary) -> ItemData:
@@ -171,4 +177,5 @@ static func from_save_dict(d: Dictionary) -> ItemData:
 	item.proc_damage_type   = snap.get("proc_damage_type", SpellData.DamageType.NONE)
 	item.proc_name          = snap.get("proc_name", "")
 	item.vendor_price       = snap.get("vendor_price", 0)
+	item.weight             = snap.get("weight", 0.0)
 	return item

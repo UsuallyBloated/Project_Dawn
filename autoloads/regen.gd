@@ -57,7 +57,10 @@ func _do_regen() -> void:
 
 	var hp_mult := SITTING_HP_MULT if _is_sitting else 1.0
 	var mp_mult := SITTING_MP_MULT if _is_sitting else 1.0
-	var st_mult := SITTING_ST_MULT if _is_sitting else 1.0
+	# Carrying too much weight halves stamina recovery (or stops it entirely
+	# at double capacity) — see autoloads/encumbrance.gd.
+	var st_mult := (SITTING_ST_MULT if _is_sitting else 1.0) \
+			* Encumbrance.get_stamina_regen_mult()
 
 	var food_hp := BuffManager.get_food_hp_regen() + BuffManager.get_drink_hp_regen()
 	var food_mp := BuffManager.get_food_mp_regen() + BuffManager.get_drink_mp_regen()

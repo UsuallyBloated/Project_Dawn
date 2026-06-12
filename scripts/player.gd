@@ -393,7 +393,10 @@ func _physics_process(delta: float) -> void:
 	# mounted, BuffManager.get_speed_mult() is ignored and the mount's
 	# own multiplier applies. MountManager.get_effective_speed_mult
 	# falls through to the BuffManager value when not mounted.
-	var current_speed := base_speed * MountManager.get_effective_speed_mult()
+	# Encumbrance applies after the mount — an overloaded mount is
+	# still overloaded (carry weight vs STR; see autoloads/encumbrance.gd).
+	var current_speed := base_speed * MountManager.get_effective_speed_mult() \
+			* Encumbrance.get_speed_mult()
 	if direction != Vector3.ZERO:
 		direction = direction.normalized()
 		velocity.x = direction.x * current_speed
