@@ -214,6 +214,18 @@ func _build_resources_section() -> void:
 	die_btn.pressed.connect(_trigger_death)
 	_sec_resources.add_child(die_btn)
 
+	var copper_btn := _make_btn("Give 1,000 Copper", Color(0.55, 0.30, 0.15, 1.0))
+	copper_btn.pressed.connect(_give_copper_hoard)
+	_sec_resources.add_child(copper_btn)
+
+	var purse_btn := _make_btn("Give 1p 5g 5s", Color(0.70, 0.65, 0.45, 1.0))
+	purse_btn.pressed.connect(_give_mixed_purse)
+	_sec_resources.add_child(purse_btn)
+
+	var broke_btn := _make_btn("Clear Money", Color(0.40, 0.25, 0.25, 1.0))
+	broke_btn.pressed.connect(_clear_money)
+	_sec_resources.add_child(broke_btn)
+
 	var bags_btn := _make_btn("Give Bags", Color(0.45, 0.35, 0.15, 1.0))
 	bags_btn.pressed.connect(_give_bags)
 	_sec_resources.add_child(bags_btn)
@@ -586,6 +598,29 @@ func _full_heal() -> void:
 
 func _trigger_death() -> void:
 	PlayerStats.set_hp(0.0)
+
+# Dev coin grants. Launcher: coins are server-authoritative, so route through
+# GiveCoins (PD_DEV_CMDS-gated) and do NOT fill locally — if the server
+# silently ignores the grant, the wallet visibly not moving is the correct
+# signal (the optimistic fill on Full Heal masked exactly this once).
+# Raw copper on purpose: 1,000 coins = 20 weight, the encumbrance driver.
+func _give_copper_hoard() -> void:
+	_give_coins(0, 0, 0, 1000)
+
+func _give_mixed_purse() -> void:
+	_give_coins(1, 5, 5, 0)
+
+# Negative grant; both the server handler and add_coin_stacks floor each
+# stack at 0, so this empties the wallet regardless of holdings.
+func _clear_money() -> void:
+	const WIPE := -1_000_000_000
+	_give_coins(WIPE, WIPE, WIPE, WIPE)
+
+func _give_coins(p: int, g: int, s: int, c: int) -> void:
+	if Net.is_launcher_mode() and Net.is_app_ready():
+		Net.broadcast_give_coins(p, g, s, c)
+		return
+	PlayerStats.add_coin_stacks(p, g, s, c)
 
 func _give_consumables() -> void:
 	var bread := ItemData.new()
