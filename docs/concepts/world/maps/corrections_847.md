@@ -63,6 +63,14 @@ The binding review surfaced a pattern the Hall is not equipped to adjudicate: **
 
 The Hall files the recurrence as coincidence, with reservations. If the recurrence is deliberate — a naming tradition that crossed peoples, or a single older source both drew from — that is lore, and lore is not the Hall's desk. If it is not deliberate, the names are cheap to change before they accrete history, and expensive after. The Hall recommends the question be settled before the binding's successor edition, and notes that *Mireth* in particular will eventually be asked about by someone holding both documents.
 
+### Addendum — ruled, same season
+
+The lore-keeper has ruled, and faster than the Hall is accustomed to. The dispositions:
+
+- **Vrekka and Threkka — adjudicated as a standing dispute, not an error.** The recurrence is real in-world: the parties learned of one another through the Year 839 CR Counting House ledger error (a payment for *"Vrekka, smith"* posted to the wrong end of the continent), and the positions have been canvassed. The Ashfang smith claims the northern pair are wearing stolen names; the Stone-Singer says the stones know who is who; the Deeps' position is denial at the Junction and the hope of never meeting. The Hall now carries three readings — coincidence, theft, and the Dominion work-roster theory (that *vrekka* and *threkka* were Imperial job-titles both cultures inherited along with their Dominion-built sites, in which case nobody is the real one) — and endorses none. The full filing is at `vrekka_and_threkka.md`. The Hall observes that it asked for a ruling and received a mystery, and that on reflection this is the lore-keeper's prerogative and probably the right call.
+- **Mireth — ruled convergent; closed.** The Troll healer's name is an old Troll given-name with no connection to the southern goddess; Troll healing is its own tradition, not pantheon-tradition, and the plate already said so. The Laughing Company's recorded reaction — that a genuine coincidence involving the goddess of coincidence is exactly the kind of joke she would make — is noted and is not the Hall's problem.
+- **Kethri — ruled coincidence; closed.** Not every echo is a bell. The Hall is relieved to file at least one of these and have it stay filed.
+
 ---
 
 *Filed under the seal of the High Cartography Hall — Archivist Valex, Hall of Records, Aelindra · Stillmonth, Year 847 of the Current Reckoning.*

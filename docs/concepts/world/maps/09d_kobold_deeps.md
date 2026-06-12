@@ -801,11 +801,11 @@ For the artist's character work:
 
 | Name | Role | Location | Brief |
 |---|---|---|---|
-| **Krzlik of the Whisper-Tongue** | Long-Nose chief; Compact escort licensee | Junction Office (day); Long-Nose Den (night) | Forty-five; speaks Common, Common-Dwarven, Pack-language; quiet authority; a single black-quartz pendant at the throat |
+| **Krzlik of the Whisper-Tongue** | Long-Nose chief; Compact escort licensee | Junction Office (day); Long-Nose Den (night) | Forty-five; speaks Common, Common-Dwarven, Pack-language; quiet authority; a single black-quartz pendant at the throat; his standing instruction at the Junction is that if an Ogre ever asks after Vrekka, no one in the Deeps has heard of her (see `vrekka_and_threkka.md`) |
 | **Mokra of the Iron-Bloom** | Iron-Whisker chief | Iron-Whisker Den | Sixty-three; iron crystallisation in old forge-burn scar on left hand (the working luck-mark); the Pack's veteran iron-trader |
 | **Vrissil of the Long-Tail** | Coppertooth chief | Coppertooth Den | Seventy-one; the Pack's longest-serving current chief; an unusually long Kobold tail visible in the Coppertooth banner-iconography |
-| **Threkka of the Quiet-Step** | Smokeback chief | Smokeback Den | Forty-nine; former Glow-Vein-tender; her by-name from the Smokeback discipline of moving without disturbing the fungus |
-| **Vrekka of the Black Bellows** | Iron-Whisker forge-master | Iron-Whisker Forge | Forty-nine; the Deeps' principal forgemaster; iron-banded apron, iron-shod boots, hammer-callus at both hands |
+| **Threkka of the Quiet-Step** | Smokeback chief | Smokeback Den | Forty-nine; former Glow-Vein-tender; her by-name from the Smokeback discipline of moving without disturbing the fungus; the Smokeback Pack extends Krzlik's no-one-has-heard-of-her courtesy to their chief's name unprompted, which Threkka has neither requested nor discouraged |
+| **Vrekka of the Black Bellows** | Iron-Whisker forge-master | Iron-Whisker Forge | Forty-nine; the Deeps' principal forgemaster; iron-banded apron, iron-shod boots, hammer-callus at both hands; aware, since the Year 839 CR ledger error, that an Ogre smith at the far end of the continent claims her name is stolen; her filed assessment is that the Ogres are "very large and very confused" and her working hope is that they never meet |
 | **Phossit of the Six-Strands** | Coppertooth carriage-master | Coppertooth Workshop | Forty-six; a fitter's apron with copper-and-leather pockets at every angle; designs five of the six Pack cart-strapping types |
 | **Eshreth Mushroom-Speaker** | Smokeback Glow-Vein senior tender | Glow-Vein chamber | Sixty-four; the Compact's Underdark Office's principal Pack contact through Krzlik; carries cypress-bark scrolls of fungal growth-cycle records |
 | **Yressa of the Quiet-Pool** | Quartzfall water-keeper | Quartzfall chamber | Thirty-eight; Long-Nose Pack member but reports collectively to all four chiefs; only fixed-station job in the Deep tier |
