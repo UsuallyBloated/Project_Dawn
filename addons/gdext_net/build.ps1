@@ -1,4 +1,4 @@
-# Build the gdext-net GDExtension and copy the .dll into this directory.
+﻿# Build the gdext-net GDExtension and copy the .dll into this directory.
 #
 # Run from anywhere (path-agnostic). On first build the gdext crate compiles
 # from scratch and takes ~3 minutes; later rebuilds are ~30 seconds.
