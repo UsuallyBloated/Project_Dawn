@@ -449,10 +449,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif _options_screen != null:
 				_options_screen.visible = !_options_screen.visible
 				get_viewport().set_input_as_handled()
-		elif event.keycode == KEY_F2 or event.keycode == KEY_QUOTELEFT:
+		elif event.keycode == KEY_QUOTELEFT:
 			# Dev-only: in-game tail of DebugLog. Hardcoded (not in
 			# Settings.actions) since it's a diagnostic tool, not a
-			# rebindable gameplay control. F2 or backtick (`).
+			# rebindable gameplay control. Backtick (`) toggles it; F2 is
+			# now EQ's "target group member 1". `/console` is the fallback.
 			if _debug_console != null:
 				_debug_console.toggle()
 				CombatLog.add_line(

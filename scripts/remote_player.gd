@@ -105,7 +105,7 @@ func _ready() -> void:
 		name_label.text = player_name
 	mob_name = player_name
 	# Same group enemies use for "the local target can be set to this" —
-	# Targeting._click_target / Combat.set_target branch on the group.
+	# Targeting.click_target / Combat.set_target branch on the group.
 	add_to_group("remote_players")
 
 func set_targeted(_active: bool) -> void:

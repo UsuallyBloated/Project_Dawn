@@ -13,7 +13,7 @@ class_name RemoteEnemy
 # Targeting / Combat compatibility: this node mirrors the public
 # interface that `enemy.gd` exposes (is_dead, mob_name, set_targeted,
 # take_damage, get_spell_resist, flash_spell_hit, hp / max_hp,
-# hp_changed). It joins the `enemies` group so Targeting._click_target
+# hp_changed). It joins the `enemies` group so Targeting.click_target
 # and Combat.set_target pick it up without a type switch. `take_damage`
 # is a no-op while sub-task 3 (player → server Attack intent) is
 # unwritten — the existing local-damage path keeps calling it harmlessly

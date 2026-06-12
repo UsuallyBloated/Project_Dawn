@@ -14,13 +14,41 @@ func unregister_player() -> void:
 	_player = null
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.is_action("target_cycle") and event.pressed and not event.echo:
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	if event.is_action("target_cycle"):
 		_cycle_target()
+		return
+	# F2–F6 → group members 1–5 (F1/self is handled in the HUD).
+	for slot in range(1, 6):
+		if event.is_action("target_group_%d" % slot):
+			_target_group_slot(slot)
+			return
 
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_click_target(event.position)
+# Target the Nth (1-based) other member of the group, in roster order. Our
+# combat targeting is node-based, so a member who isn't loaded in-zone (no
+# RemotePlayer node) can't be targeted — we say so rather than silently fail.
+func _target_group_slot(slot: int) -> void:
+	if not GroupManager.in_group:
+		return
+	var self_id := Net.get_player_id()
+	var others: Array = []
+	for m in GroupManager.members:
+		var pid: int = int(m.get("peer_id", 0))
+		if pid != 0 and pid != self_id:
+			others.append(pid)
+	if slot < 1 or slot > others.size():
+		return
+	var node := RemotePlayerManager.get_by_id(others[slot - 1])
+	if node == null or not is_instance_valid(node):
+		CombatLog.add_line("That group member is not nearby.", CombatLog.MsgType.INFO)
+		return
+	Combat.set_target(node)
 
-func _click_target(mouse_pos: Vector2) -> void:
+# Select whatever is under `mouse_pos` (viewport coords). Called by the local
+# player on a clean left-click — a left *drag* orbits the camera instead, so the
+# player script owns the click-vs-drag split and forwards only true clicks here.
+func click_target(mouse_pos: Vector2) -> void:
 	var camera := _camera
 	if camera == null:
 		return

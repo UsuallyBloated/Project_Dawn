@@ -6,10 +6,20 @@ const CROUCH_SPEED = 2.5
 const GRAVITY = -20.0
 const JUMP_VELOCITY = 7.0
 const MOUSE_SENSITIVITY = 0.003
+# Pixels the cursor must travel with the left button held before a click turns
+# into a camera-orbit drag. Below this, a left press is a target-select click.
+const CAMERA_DRAG_THRESHOLD = 6.0
+# How fast (per second) the camera swings back behind the body after a left-drag
+# look-around, once you steer or move. exp-based so it's framerate-stable.
+const CAM_YAW_RECENTER_RATE = 12.0
 const THIRD_PERSON_DISTANCE = 3.0
 const ZOOM_STEP = 0.5
-const ZOOM_MIN = 0.5
+const ZOOM_MIN = 0.0   # 0 lets the wheel scroll all the way into first person
 const ZOOM_MAX = 10.0
+# F9 view cycle: first-person → close → far. Below FIRST_PERSON_HIDE_DIST the
+# own capsule is hidden so the camera (parked at head height) isn't inside it.
+const VIEW_PRESETS := [0.0, THIRD_PERSON_DISTANCE, 7.0]
+const FIRST_PERSON_HIDE_DIST = 0.6
 const STAND_HEIGHT = 2.0
 const CROUCH_HEIGHT = 1.0
 const STAND_CAMERA_Y = 1.6
@@ -57,6 +67,26 @@ var is_crouching: bool:
 	get: return state == PlayerState.CROUCHING
 
 var is_camera_active := false
+# Left-drag camera orbit (EQ left-mouse look-around): swing the camera around
+# the body without turning the body. Engaged only after the cursor drags past
+# CAMERA_DRAG_THRESHOLD, so a plain left-click still selects a target.
+var is_look_active := false
+# Sticky mouselook (EQ F12): a latched equivalent of holding the right button,
+# so you can steer with the mouse hands-free. Suspended while a text field is
+# focused so the cursor frees up for typing; re-engages when you close it.
+var _mouselook_toggled := false
+var _lmb_was_down := false
+var _lmb_tracking := false          # left press began over the 3D world (eligible to click/drag)
+var _lmb_dragged := false           # this hold crossed the drag threshold
+var _lmb_press_screen: Vector2i = Vector2i.ZERO
+# Camera pitch (both drag modes) and yaw offset behind the body (left-drag
+# only). Held as explicit Euler components so re-centering can't accumulate roll.
+var _cam_pitch: float = 0.0
+var _cam_yaw: float = 0.0
+# Autorun (EQ `\`): latched run-forward, cancelled by tapping back or re-pressing.
+var _autorun := false
+# F9 view-cycle index into VIEW_PRESETS; starts at close third-person (3.0).
+var _view_index := 1
 # Cursor position when camera mode last engaged, in screen coordinates.
 # MOUSE_MODE_CAPTURED parks the cursor at the window centre and Godot's
 # Input.warp_mouse + Viewport.get_mouse_position pair applies different
@@ -81,6 +111,7 @@ signal state_changed(new_state: int)
 @onready var spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
 @onready var camera: Camera3D = $CameraPivot/SpringArm3D/Camera3D
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
+@onready var visual: MeshInstance3D = $Visual
 
 func _ready() -> void:
 	var peer_id := str(name).to_int() if str(name).is_valid_int() else 1
@@ -96,6 +127,9 @@ func _ready() -> void:
 
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	spring_arm.spring_length = THIRD_PERSON_DISTANCE
+	# Seed pitch/yaw from whatever the scene authored so the first drag doesn't snap.
+	_cam_pitch = camera_pivot.rotation.x
+	_cam_yaw = camera_pivot.rotation.y
 	add_to_group("player")
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(55.0)
@@ -149,13 +183,79 @@ func stand() -> void:
 func _input(event: InputEvent) -> void:
 	if not _is_local:
 		return
-	# Mouse motion stays in `_input` so right-click camera drag keeps
-	# working even when the cursor crosses over UI panels.
-	if event is InputEventMouseMotion and is_camera_active:
-		rotate_y(-event.relative.x * MOUSE_SENSITIVITY)
-		camera_pivot.rotate_x(-event.relative.y * MOUSE_SENSITIVITY)
-		camera_pivot.rotation.x = clamp(camera_pivot.rotation.x, -PI / 2.0, PI / 2.0)
+	# Mouse motion stays in `_input` so click-drag keeps working even when the
+	# cursor crosses over UI panels. Right-drag turns the body; left-drag swings
+	# the camera around a stationary body. Pitch is shared by both.
+	if event is InputEventMouseMotion and (is_camera_active or is_look_active):
+		var rel: Vector2 = event.relative
+		_cam_pitch = clamp(_cam_pitch - rel.y * MOUSE_SENSITIVITY, -PI / 2.0, PI / 2.0)
+		if is_camera_active:
+			rotate_y(-rel.x * MOUSE_SENSITIVITY)   # steer: camera follows, locked behind
+		else:
+			_cam_yaw -= rel.x * MOUSE_SENSITIVITY   # orbit: camera only, body unchanged
+		_apply_camera_pivot()
 		get_viewport().set_input_as_handled()
+
+func _apply_camera_pivot() -> void:
+	camera_pivot.rotation = Vector3(_cam_pitch, _cam_yaw, 0.0)
+
+# Drives the three-state mouse rig (EQ-style): right-drag steers the body,
+# left-drag orbits the camera, both buttons run forward. The F12 mouselook
+# toggle latches the right-drag steer on hands-free. Polls hardware button
+# state (not events) so it keeps working even when a UI panel eats the event.
+# All gated so a drag that starts over UI never grabs the camera, and a plain
+# left-click still falls through to target selection.
+func _update_mouse_camera(chat_focused: bool) -> void:
+	var rmb := Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
+	var lmb := Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	# Latched mouselook acts like a held right button, but stands down while
+	# typing so the mouse is free for the chat/UI underneath.
+	var toggle_cam := _mouselook_toggled and not chat_focused
+
+	# Right button (or the toggle) → body mouselook. Gate only fresh RMB presses
+	# on UI; the toggle is an explicit command, so it engages regardless. While
+	# held, let the cursor cross UI without dropping camera.
+	var want_cam := rmb or toggle_cam
+	if rmb and not toggle_cam and not is_camera_active:
+		if get_viewport().gui_get_hovered_control() != null:
+			want_cam = false
+	is_camera_active = want_cam
+	if is_camera_active:
+		# RMB takes over from any in-progress left orbit.
+		is_look_active = false
+		_lmb_tracking = false
+
+	# Left button edges: a click selects a target, a drag orbits the camera.
+	if lmb and not _lmb_was_down:
+		_lmb_press_screen = DisplayServer.mouse_get_position()
+		var over_ui := get_viewport().gui_get_hovered_control() != null
+		_lmb_tracking = not over_ui and not is_camera_active
+		_lmb_dragged = false
+	elif not lmb and _lmb_was_down:
+		if is_look_active:
+			is_look_active = false
+		elif _lmb_tracking and not _lmb_dragged and not is_camera_active:
+			Targeting.click_target(get_viewport().get_mouse_position())
+		_lmb_tracking = false
+		_lmb_dragged = false
+	_lmb_was_down = lmb
+
+	# Promote a held left press to an orbit once it drags past the threshold.
+	if _lmb_tracking and not _lmb_dragged and not is_camera_active:
+		var moved := Vector2(DisplayServer.mouse_get_position() - _lmb_press_screen).length()
+		if moved > CAMERA_DRAG_THRESHOLD:
+			_lmb_dragged = true
+			is_look_active = true
+
+	# Single owner of mouse_mode: capture while either drag is live, restore the
+	# cursor (to where the drag began) when both end.
+	var want_capture := is_camera_active or is_look_active
+	if want_capture and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		_cursor_before_camera = DisplayServer.mouse_get_position()
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif not want_capture and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		DisplayServer.warp_mouse(_cursor_before_camera - get_window().position)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not _is_local:
@@ -172,9 +272,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 			spring_arm.spring_length = maxf(spring_arm.spring_length - ZOOM_STEP, ZOOM_MIN)
+			_update_view_visibility()
 			get_viewport().set_input_as_handled()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			spring_arm.spring_length = minf(spring_arm.spring_length + ZOOM_STEP, ZOOM_MAX)
+			_update_view_visibility()
 			get_viewport().set_input_as_handled()
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.is_action("toggle_crouch"):
@@ -187,6 +289,20 @@ func _unhandled_input(event: InputEvent) -> void:
 				_enter_state(PlayerState.SITTING)
 			elif state == PlayerState.SITTING:
 				_enter_state(PlayerState.STANDING)
+		elif event.is_action("toggle_mouselook"):
+			_mouselook_toggled = not _mouselook_toggled
+		elif event.is_action("toggle_autorun"):
+			_autorun = not _autorun
+		elif event.is_action("cycle_view"):
+			_view_index = (_view_index + 1) % VIEW_PRESETS.size()
+			spring_arm.spring_length = VIEW_PRESETS[_view_index]
+			_update_view_visibility()
+
+# Hide the own capsule once the camera is close enough to sit inside it
+# (first person / heavy zoom-in). Shared by the F9 cycle and the wheel zoom so
+# both keep the mesh state consistent.
+func _update_view_visibility() -> void:
+	visual.visible = spring_arm.spring_length >= FIRST_PERSON_HIDE_DIST
 
 func _is_text_input_focused() -> bool:
 	# Main-viewport focus (chat input, vendor qty field, etc.).
@@ -221,38 +337,19 @@ func _scan_for_text_window(node: Node) -> bool:
 	return false
 
 func _physics_process(delta: float) -> void:
-	# Poll hardware state so camera works even when UI panels consume the event.
-	var want_cam := Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
-	# Don't engage camera if the right-click started over a UI Control —
-	# right-clicking a chat window for its context menu would otherwise
-	# capture the mouse and snap the cursor to the screen centre. Only
-	# gate the transition into camera mode; while already held, allow
-	# the cursor to cross over UI without losing camera control.
-	if want_cam and not is_camera_active:
-		if get_viewport().gui_get_hovered_control() != null:
-			want_cam = false
-	if want_cam != is_camera_active:
-		is_camera_active = want_cam
-		if want_cam:
-			_cursor_before_camera = DisplayServer.mouse_get_position()
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		else:
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-			# DisplayServer.warp_mouse takes window-relative coords, so
-			# subtract the window's screen position from the saved screen
-			# position.
-			DisplayServer.warp_mouse(_cursor_before_camera - get_window().position)
-
 	var chat_focused := _is_text_input_focused()
+	_update_mouse_camera(chat_focused)
+	# Both buttons held → run forward, steered by the right-button mouselook.
+	var mouse_run := is_camera_active and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 
 	if state == PlayerState.SITTING:
-		var moving := not chat_focused and (
+		var moving := mouse_run or _autorun or (not chat_focused and (
 			Input.is_action_pressed("move_forward") or
 			Input.is_action_pressed("move_left") or
 			Input.is_action_pressed("move_backward") or
 			Input.is_action_pressed("move_right") or
 			Input.is_action_pressed("jump")
-		)
+		))
 		if moving:
 			_enter_state(PlayerState.STANDING)
 		else:
@@ -281,10 +378,15 @@ func _physics_process(delta: float) -> void:
 			direction -= transform.basis.z
 		if Input.is_action_pressed("move_backward"):
 			direction += transform.basis.z
+			_autorun = false   # tapping back cancels autorun (EQ behaviour)
 		if Input.is_action_pressed("move_left"):
 			direction -= transform.basis.x
 		if Input.is_action_pressed("move_right"):
 			direction += transform.basis.x
+	# Mouse-run and autorun both work regardless of chat focus — they're latched
+	# states / explicit gestures, not keys that could leak from typing.
+	if mouse_run or _autorun:
+		direction -= transform.basis.z
 
 	var base_speed := CROUCH_SPEED if state == PlayerState.CROUCHING else SPEED
 	# Track 22.C — mount overrides every other speed source. When
@@ -304,6 +406,14 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, current_speed)
 		velocity.z = move_toward(velocity.z, 0.0, current_speed)
 		_heading_train_accum = 0.0
+
+	# Re-center the camera behind the body while steering or moving, then hold
+	# wherever you leave it when you stop — so a left-drag glance-around relaxes
+	# back to the chase view as soon as you run. An in-progress orbit is exempt.
+	if not is_look_active and (is_camera_active or direction != Vector3.ZERO):
+		var recenter := 1.0 - exp(-CAM_YAW_RECENTER_RATE * delta)
+		_cam_yaw = lerp_angle(_cam_yaw, 0.0, recenter)
+		_apply_camera_pivot()
 
 	if Net.is_app_ready():
 		# Throttle to server tick rate (20 Hz). Subtract instead of zeroing so

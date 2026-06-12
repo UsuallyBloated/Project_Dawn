@@ -3,8 +3,8 @@ class_name DebugConsole
 
 # In-game tail of DebugLog. Subscribes to DebugLog.line_emitted plus
 # seeds from DebugLog.recent_lines on open. Toggle visibility from
-# hud.gd (F2 by default). No file IO; everything is in-memory so this
-# stays useful even if DebugLog's FileAccess is borked.
+# hud.gd (backtick `, or /console). No file IO; everything is in-memory
+# so this stays useful even if DebugLog's FileAccess is borked.
 #
 # Built entirely in code (no .tscn) so the HUD's preload doesn't fail
 # on first-touch before Godot has imported the scene file.
@@ -19,7 +19,7 @@ func _ready() -> void:
 	_build_ui()
 	visible = false
 	# Seed from whatever DebugLog has accumulated before this scene
-	# was open. Caller (hud.gd) calls toggle() on F2.
+	# was open. Caller (hud.gd) calls toggle() on backtick (`).
 	for entry in DebugLog.recent_lines:
 		_append_line(entry["text"], entry["level"])
 	DebugLog.line_emitted.connect(_on_line_emitted)
@@ -56,7 +56,7 @@ func _build_ui() -> void:
 	_bg.add_child(vbox)
 
 	var title := Label.new()
-	title.text = "Debug Console — F2 / ` toggle, ESC closes, /console in chat"
+	title.text = "Debug Console — ` toggle, ESC closes, /console in chat"
 	title.add_theme_font_size_override("font_size", 12)
 	title.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
 	vbox.add_child(title)
