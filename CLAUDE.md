@@ -56,7 +56,7 @@ read `debug.log`, and it keeps working even if file IO is broken (it reads
 
 ## Architecture: two repos, one game
 
-- **Client** (this repo): Godot 4.4. Nearly all gameplay lives in ~49 autoload singletons.
+- **Client** (this repo): Godot 4.4. Nearly all gameplay lives in ~51 autoload singletons.
 - **Server** (`F:\Projects\server`): Rust authoritative server. **Pre-alpha — auth only**
   (Register / Login / CharList / CharCreate / CharDelete / Logout). The world UDP
   simulation is **not built yet**; clients run **local-save** until it lands.
@@ -174,13 +174,13 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
 
 ## Architecture reference
 
-### Autoloads (49, grouped — source of truth is the `[autoload]` block in `project.godot`)
+### Autoloads (51, grouped — source of truth is the `[autoload]` block in `project.godot`)
 
 | Domain | Autoloads |
 |---|---|
 | **Progression** | `PlayerStats`, `Alignment`, `Skills`, `Spells`, `WeaponSkills`, `ArmorSkills`, `CastingSkills`, `Memorize`, `SpellBar`, `Regen`, `CharacterSetup` |
 | **Combat** | `Combat`, `BuffManager`, `DamageNumbers`, `PlayerDeath`, `Targeting`, `Loot`, `NetCombatBroadcaster` |
-| **Items / economy** | `Inventory`, `Equipment`, `ItemRegistry`, `VendorManager`, `Crafting`, `StationManager` |
+| **Items / economy** | `Inventory`, `Equipment`, `ItemRegistry`, `VendorManager`, `Crafting`, `StationManager`, `Currency`, `Encumbrance` |
 | **Pets / transforms** | `PetManager`, `WarderAI`, `Transformations`, `MountManager` |
 | **World / environment** | `ZoneLoader`, `TimeOfDay`, `VisionSystem`, `SenseHeading` |
 | **Social / quest / UI** | `GroupManager`, `QuestManager`, `DialogueManager`, `CombatLog`, `ChatWindowManager`, `BardSongs`, `Languages`, `SocialHotkeys`, `GameSettings`, `DebugLog` |

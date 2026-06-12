@@ -148,6 +148,27 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   (data shape only; combine UI deferred).
 - **Item registry:** `ItemRegistry` autoload; the canonical item table is exported to the
   server's `items.toml` via `tools/export_items.gd`.
+- **Currency (2026-05-21):** four-tier coin — copper/silver/gold/platinum at 100:1 per
+  tier — held as **four independent stacks** on `PlayerStats` (`platinum/gold/silver/
+  copper`), never silently consolidated. Tier math (totals, reduction, make-change
+  `spend`) lives in the `Currency` autoload, mirroring the server's
+  `protocol::world::Coins` (Rust) — keep the two in sync. Server-authoritative in
+  launcher mode: `CoinsUpdate` carries the four-int wallet (wire bump PD_W0013, DB
+  migration `0004_currency.sql` carries legacy `coins`→`copper`); legacy client saves
+  load their single `coins` value into copper. Prices stay single-int copper
+  (`ItemData.vendor_price`); the vendor window shows prices reduced ("2s 50c") but the
+  wallet footer shows actual stacks (a 350-copper hoard reads "350c"). Design:
+  `docs/concepts/world/currency.md`. Smoke: `tools/currency_smoke.gd` (headless).
+- **Encumbrance (2026-05-21):** carry weight vs STR-driven capacity
+  (`10 + STR`, in the `Encumbrance` autoload). Weight = coins (flat 0.02/coin **per
+  coin regardless of tier** — the designed pressure to convert hoards) + inventory +
+  worn equipment (`ItemData.weight`, default 0; most items untagged pending a content
+  pass). Over capacity: movement slows linearly to a 0.25 floor (applied after the
+  mount mult in `player.gd`) and stamina regen halves (stops at 2× capacity, in
+  `regen.gd`); "You are encumbered!" CombatLog line on threshold crossings.
+  Client-side v1 — the server's movement clamp picks up the slowdown via the scaled
+  direction vector; no server-side weight model yet. No weight readout UI yet
+  (character-window line is the natural follow-up).
 
 ---
 
