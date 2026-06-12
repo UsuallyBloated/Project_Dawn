@@ -35,6 +35,12 @@ Eighteen playable classes, each with its own file. For the overview — roles, a
 | [necromancer.md](necromancer.md) | Necromancer | Undead Master | Evil preferred |
 | [blood_mage.md](blood_mage.md) | Blood Mage | Dark Caster | Neutral–Evil |
 
+## Design Sketches (Not Yet Committed)
+
+| File | Class | Role | Status |
+|---|---|---|---|
+| [citizen.md](citizen.md) | Citizen | Non-Combat / Economic | Sketch — currency-exchange role committed; rest of kit being scoped |
+
 *Planned future classes not yet filed: Assassin (stealth / kill), Warlock (pact magic).*
 
 ---

@@ -1,5 +1,5 @@
 # Troll
-*Evil ”” Swamp Hunters ”” The Unkillable*
+*Evil, ” Swamp Hunters ”, The Unkillable*
 
 ## Overview
 The defining fact about Trolls is regeneration. Wounds that would kill a Human close in hours; wounds that would incapacitate a Dwarf close in minutes. Trolls have been fighting a slow, grinding war of territorial attrition against every adjacent race for centuries, and they are still here, largely because the cost of removing them permanently is higher than most enemies want to pay. They know this. It has shaped a culture of patient aggression ”” take the hit, let it close, keep moving.
@@ -11,8 +11,8 @@ The evil alignment reflects genuine predatory amorality more than malice. Trolls
 ## Physical Description
 | Sex | Height | Weight | Build | Notes |
 |---|---|---|---|---|
-| Male | 7'0"”“8'0" | 300”“500 lbs | Long-limbed, hunched, hollow cheeks | Warts larger and more clustered; visibly damaged and not slowed by it |
-| Female | 6'6"”“7'6" | 260”“430 lbs | Slightly shorter, same warty texture | More moss-clung on average; bioluminescent eye-glow fractionally brighter |
+| Male | 7'0" to 8'0" | 300 to 500 lbs | Long-limbed, hunched, hollow cheeks | Warts larger and more clustered; visibly damaged and not slowed by it |
+| Female | 6'6" to 7'6" | 260 to 430 lbs | Slightly shorter, same warty texture | More moss-clung on average; bioluminescent eye-glow fractionally brighter |
 
 Trolls are tall, loose-limbed, and built with an almost architectural quality ”” long bones, wide joints, skin that looks like it has been repaired several times (because it has). Skin is grey-green to deep viridian, warted and rough, frequently carrying moss, algae, and the marks of old injury. The most distinctive feature is the eyes: a bioluminescent yellow-green glow that persists in darkness and dims slightly when the Troll is at rest. Old Trolls accumulate scars that never quite closed evenly, giving their skin a layered, terrain-map quality that serves as an inadvertent record of their history.
 

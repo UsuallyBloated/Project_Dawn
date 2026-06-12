@@ -35,4 +35,16 @@ Sixteen playable races, each with its own file. For the overview — alignment t
 
 ---
 
+## In Design — Not Yet Playable
+
+*Greenlit in `docs/design/race_expansion_brainstorm.md`; not in `data/character_data.gd` yet.*
+
+| File | Race | Default Alignment | Starting Zone |
+|---|---|---|---|
+| [aerathi.md](aerathi.md) | Aerathi (the Stoop-kin) | Neutral | TBD — cliff eyrie |
+| [vesperin.md](vesperin.md) | Vesperin | Neutral | TBD — jungle canopy city |
+| [sylphari.md](sylphari.md) | Sylphari | Neutral | TBD — jungle groves |
+
+---
+
 *Race/class restrictions are tracked in `data/character_data.gd` (`LOCKED_COMBOS`). Zone lore for starting areas is in `docs/concepts/world/`.*

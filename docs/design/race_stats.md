@@ -1,6 +1,6 @@
 # Race Stats Reference
 
-*Mechanical reference for all 17 playable races. For lore, culture, and narrative context see individual race files in `docs/concepts/races/`.*
+*Mechanical reference for all 16 playable races, plus draft blocks for in-design races at the bottom. For lore, culture, and narrative context see individual race files in `docs/concepts/races/`.*
 
 ---
 
@@ -207,4 +207,56 @@
 - **Endurance** — Fatigue takes 20% longer to accumulate
 
 **Starting skill bonuses:** +5 2H Weapons; +5 1H Weapons; +5 Defense
+
+---
+
+## In Design — Not Yet Implemented
+
+*Draft blocks for races greenlit in `docs/design/race_expansion_brainstorm.md`
+(2026-05-18). Not in `data/character_data.gd`; numbers are first-pass and unbalanced.
+Race files: `docs/concepts/races/aerathi.md`, `vesperin.md`, `sylphari.md`.*
+
+| Race | STR | STA | AGI | DEX | WIS | INT | CHA | Total |
+|------|-----|-----|-----|-----|-----|-----|-----|-------|
+| Aerathi | 80 | 60 | 99 | 85 | 70 | 65 | 70 | 529 |
+| Vesperin | 55 | 55 | 90 | 80 | 65 | 85 | 95 | 525 |
+| Sylphari | 60 | 60 | 80 | 70 | 95 | 80 | 75 | 520 |
+
+*Signature stats: Aerathi take the game's highest AGI (99, mirroring Dark Elf/Gnome INT
+99); Sylphari take the game's highest WIS (95, above Elf 85); Vesperin tie Fae for top
+CHA (95) but are bard-coded rather than illusion-coded.*
+
+### Aerathi (draft)
+**Racial abilities:**
+- **Glide** — While airborne, spread wings to glide: no fall damage, ~3m forward per 1m of descent
+- **Raptor Sight** — Visual detection range doubled; +10 to perception checks at range
+- **Talons** — Natural attack: 12 base damage; usable as an off-hand attack
+- **Stoop** — Active (60s cooldown): diving strike while gliding; +5% weapon damage per meter of descent, capped at +100%
+- **Hollow Bones** — Knockback distance against Aerathi +40%; carry capacity −15%
+
+**Starting skill bonuses:** +5 H2H; +5 Archery; +5 Tracking
+
+---
+
+### Vesperin (draft)
+**Racial abilities:**
+- **Glide** — While airborne, spread wings to glide: no fall damage, ~3m forward per 1m of descent
+- **Mimicry** — Can reproduce any voice or sound heard; Languages skill-up rate +50%
+- **Songblood** — +10 starting skill in all Bard performance disciplines; own song effects last 10% longer
+- **Vivid Plumage** — +10 to social/CHA-based checks; plumage as readable as a Felhari tail to those who know the flock
+- **Hollow Bones** — Knockback distance against Vesperin +40%; carry capacity −15%
+
+**Starting skill bonuses:** +10 Performance (Bard disciplines); +5 to any one casting school; +5 Foraging
+
+---
+
+### Sylphari (draft)
+**Racial abilities:**
+- **Photosynthesis** — +2 HP/s out-of-combat regen in direct sunlight; no bonus at night, indoors, or underground (interaction with planned food/water regen gating TBD)
+- **Barkskin** — Natural 4 AC at all times, regardless of equipment
+- **Sapblood** — +20 resist vs poison and disease; −15 resist vs fire (sap ignites)
+- **Rooted** — While stationary: knockback reduced 60%; immune to trip effects
+- **Seasonal Aspect** — Appearance shifts with the world calendar (spring blossom → summer green → autumn amber → winter dormant); cosmetic only in v1
+
+**Starting skill bonuses:** +10 Foraging; +5 Alchemy; +5 to any one WIS-based casting school
 
