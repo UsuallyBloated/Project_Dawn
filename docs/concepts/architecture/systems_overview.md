@@ -162,9 +162,11 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
 - **Encumbrance (2026-05-21):** carry weight vs STR-driven capacity
   (`10 + STR`, in the `Encumbrance` autoload). Weight = coins (flat 0.02/coin **per
   coin regardless of tier** — the designed pressure to convert hoards) + inventory +
-  worn equipment (`ItemData.weight`, default 0; ~20 representative items tagged
-  2026-06-12 — weapons 2–8, armor 1–10 by class, potions 0.3, reagents 0.1 — the
-  full ~169-item pass is still pending, user in the loop on values). Over capacity:
+  worn equipment (`ItemData.weight`; **all 169 items tagged 2026-06-12** per the
+  approved `docs/design/item_weight_proposal.md` — weapons 2–8, chain armor rescaled
+  ~45% from the starter anchors, ore 3.0 / ingot 1.5 with mithril/adamantite lore
+  exceptions, universal 0.1 floor so nothing weighs 0; coverage check:
+  `tools/item_weight_audit.gd`, run headless with `--script`). Over capacity:
   movement slows linearly to a 0.25 floor (applied after the mount mult in
   `player.gd`) and stamina regen halves (stops at 2× capacity, in `regen.gd`);
   "You are encumbered!" CombatLog line on threshold crossings. Client-side v1 — the
