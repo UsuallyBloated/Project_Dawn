@@ -85,11 +85,11 @@ needed.
 - **"WT" → "Weight" (notes) — renamed** in the character window.
 
 Re-test:
-- [ ] **Hover Weight in the character window** → tooltip appears (coins+items+gear,
+- [x] **Hover Weight in the character window** → tooltip appears (coins+items+gear,
   10 + STR, both penalties). notes:
-- [ ] **Hover a few others (STR, AC, HP)** → those tooltips appear too (first time
-  ever). notes:
-- [ ] **Drag the character window by grabbing a label** → still drags. notes:
+- [x] **Hover a few others (STR, AC, HP)** → those tooltips appear too (first time
+  ever). notes: 
+- [x] **Drag the character window by grabbing a label** → still drags. notes:
 
 Answers to first-round questions:
 - *Row 5.1 "Not sure what you're looking for here"* — just that the vendor window
@@ -97,3 +97,7 @@ Answers to first-round questions:
   the reduced form ("2s 50c"). Your [x] covers it.
 - `server.log` reviewed: clean — every grant/buy/sell/equip in the run logged with
   correct totals, no errors, no `coin checkpoint failed`.
+
+
+  Notes:
+  - Great work with the tool tips!  You're killing it.
