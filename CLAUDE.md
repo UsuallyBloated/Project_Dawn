@@ -6,6 +6,7 @@ A multiplayer MMORPG inspired by classic EverQuest-era games. **Two repos:** a G
 > Note for Claude: playtest feedback lands in `docs/playtest_notes/` — skim it before
 > starting a session. You're doing great work; thanks for the care.
 
+> Please do the required research and dont fabricate answers.
 ---
 
 ## Commands
@@ -40,9 +41,10 @@ The fastest way to chase a bug is the **in-game debug console** (`scripts/debug_
 read `debug.log`, and it keeps working even if file IO is broken (it reads
 `DebugLog.recent_lines` + the `line_emitted` signal, not the file).
 
-- **Toggle:** `F2` or backtick `` ` ``; `ESC` closes; `/console` in chat is a fallback for
+- **Toggle:** backtick `` ` ``; `ESC` closes; `/console` in chat is a fallback for
   when the keybind isn't reaching the game window. Intentionally *not* rebindable — it's
-  a diagnostic tool, not a gameplay control.
+  a diagnostic tool, not a gameplay control. (`F2` used to toggle it too, but is now EQ's
+  "target group member 1" — see `docs/concepts/controls/`.)
 - **Color-coded by level:** ERROR (red), WARN (yellow), COMBAT (blue), info (gray).
 - **The loop:** instrument the suspect path with `DebugLog.info/warn/error/combat(msg)`,
   run the game, and watch it live in the console. Lines also persist to `debug.log`
@@ -186,6 +188,9 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
 
 Per-autoload responsibilities and the combat/spell deep dive live in
 `docs/concepts/architecture/systems_overview.md`.
+### Godot .exe location
+
+"F:\GODOT Engine\Godot_v4.4.1-stable_win64.exe\Godot_v4.4.1-stable_win64.exe"
 
 ### Key data files
 
@@ -228,8 +233,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 ### Multiplayer / networking
 - [ ] **Incoming `/tell` RPC** — receiving tells from other players (outbound done)
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
-  alignment kill deltas defined in `docs/concepts/alignment/events.md`. Pets should
-  inherit the owner's PvP flag (today any player can attack any pet).
+  alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
+  inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
+  AOE; see systems_overview.)
 - [ ] **Pet buffs — AGI/INT/WIS combat mappings** — pets are stat-driven and take ALLY buffs
   (STR→pet melee dmg, Valor→max HP, Haste→attack speed, Spirit of Wolf→move speed, HoT,
   Thorns reflect) as of 2026-06-10 (`Entity` has `PrimaryStats` + `active_buffs`; see
@@ -245,6 +251,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Corpse run** — gear stays on corpse; respawn naked and retrieve (optional hardcore)
 - [ ] **Resurrection (Cleric)** — scaffolded; blocked on the corpse system
 
+### Combat / weapons
+- [ ] **Two-handed damage arc (cleave)** — large 2H weapons (axes/polearms) hit multiple
+  enemies in a frontal cone on auto-attack, giving 2H its own identity vs. dual-wield.
+  Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it
+  doesn't trivialize multi-pulls; needs server-side resolution like spell AOE. Design note:
+  `docs/design/two_handed_cleave.md`.
+
 ### World systems
 - [ ] **Mount system** — *`MountManager` autoload exists (client-side v1); feature is not
   fully wired* (server speed clamp, Animal Husbandry / Spirit-of-Wolf stacking / Selos'
@@ -255,9 +268,6 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 
 ### UI polish
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
-- [ ] **Target-frame buff icons** — the target frame (peer + pet buffs) renders a plain text
-  list (`hud.gd::_refresh_target_buffs_label`). Replace with small buff icons reusing the
-  player main buff-bar art, sized + scaled to fit the target HUD.
 
 ### Tradeskill depth
 - [ ] **Consumables system** (food/drink regen loop, fermentation, ritual components)
