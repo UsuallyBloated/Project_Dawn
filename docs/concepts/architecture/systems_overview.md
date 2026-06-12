@@ -260,7 +260,13 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   spawn and update peer-owned entities from server broadcasts; each exposes a `get_by_id()`
   accessor used by the target-of-target resolver.
 - `NetCombatBroadcaster` — relays local combat events onto the wire.
-- **Known gaps** (also in the root to-do): incoming `/tell`, PvP flagging + pet PvP flag
-  inheritance, `RemotePet` friend/foe visual distinction. (ALLY-target buff routing for
-  peers landed — see Spells & casting; pet buffs still deferred, no replicated pet buff
-  state on the server `Entity`.)
+- **Pet PvP inheritance:** a player-owned pet inherits its owner's `/pvp` flag — it's only
+  damageable when the attacker could attack the owner directly (`combat::can_attack(attacker,
+  pet.owner)`; you can never damage your own pet). Gated on all three player→pet damage paths
+  in `tick.rs`: melee, single-target spell, and AOE (the AOE arm now *includes* pets in its
+  radius scan — they were previously excluded by the loot-bag id bound, so AOE hit no pets at
+  all — and gates each by the same rule). World mobs (`entity.owner == None`) are always
+  attackable.
+- **Known gaps** (also in the root to-do): incoming `/tell`, the broader PvP-flagging design
+  (when/how PvP is triggered + consequences), `RemotePet` friend/foe visual distinction.
+  (ALLY-target buff routing and pet buffs both landed — see Spells & casting + Pets.)
