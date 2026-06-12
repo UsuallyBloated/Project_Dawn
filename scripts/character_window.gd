@@ -84,6 +84,12 @@ func _setup_tooltips() -> void:
 	_l_con.tooltip_text = "Constitution — physical toughness. Increases maximum HP and your health regeneration rate."
 	_l_atk.tooltip_text = "Attack — your melee damage range. Weapon damage is fixed; Strength adds a bonus (STR / 5) on top."
 	_l_wt.tooltip_text = "Weight — everything you carry: coins, inventory, and worn equipment, against your capacity (10 + STR). Over capacity slows movement; at double capacity stamina stops regenerating."
+	# Labels ignore the mouse by default, which also suppresses tooltips.
+	# PASS makes them hoverable while clicks still fall through to the
+	# window (so dragging the panel from atop a label keeps working).
+	for lbl: Label in [_l_hp, _l_mp, _l_st, _l_ac, _l_str, _l_dex, _l_agi,
+			_l_int, _l_wis, _l_cha, _l_con, _l_atk, _l_wt]:
+		lbl.mouse_filter = Control.MOUSE_FILTER_PASS
 
 func _style_xp_bar() -> void:
 	var fill := StyleBoxFlat.new()

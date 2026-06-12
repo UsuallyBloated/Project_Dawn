@@ -100,7 +100,9 @@ func _build_ui() -> void:
 	_wallet_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_wallet_label.add_theme_font_size_override("font_size", 12)
 	_wallet_label.add_theme_color_override("font_color", UITheme.C_COINS)
-	_wallet_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	# PASS (not STOP): tooltips need a non-IGNORE filter, and clicks should
+	# still fall through so the window can be dragged from the wallet line.
+	_wallet_label.mouse_filter = Control.MOUSE_FILTER_PASS
 	_wallet_label.tooltip_text = "Your coins, as carried — stacks are never consolidated automatically. Every coin has weight."
 	vbox.add_child(_wallet_label)
 

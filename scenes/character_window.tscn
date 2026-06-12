@@ -200,7 +200,7 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 11
 
 [node name="L_WT" type="Label" parent="MarginContainer/VBox/AttribGrid"]
-text = "WT"
+text = "Weight"
 theme_override_font_sizes/font_size = 11
 
 [node name="V_WT" type="Label" parent="MarginContainer/VBox/AttribGrid"]
