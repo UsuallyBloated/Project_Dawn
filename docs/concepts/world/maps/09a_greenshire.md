@@ -35,6 +35,21 @@ The chief artist's hand is asked to honour the gentleness. Greenshire's atmosphe
 
 ---
 
+## The Rose and the Scale
+
+```
+                  N
+                ╲ │ ╱
+            W ──  ✛  ── E        one grid square ≈ half a league march
+                ╱ │ ╲            (approximate; the Hall's chains were not
+                  S               dragged over every furlong of it)
+
+            the Hall's rose — for the painted impression, render as the
+            six-fingered rose per the Drafting Standards sheet
+```
+
+---
+
 ## Plate IX-A — Greenshire (Survey Detail · ½ league per grid square)
 
 ```
@@ -118,7 +133,7 @@ The chief artist's hand is asked to honour the gentleness. Greenshire's atmosphe
                                                                             │           ░  sixteen sheep, four cattle,                                                  
                                                                             │           ░  two goats currently)                                                          
                                                                             │           ░                                                                                
-                                                                            │           ░ ⛩ Wardens' Standing Patrol                                                    
+                                                                            │           ░ ⛯ Wardens' Standing Patrol                                                    
                                                                             │           ░    (the patrol post; staffed                                                  
                                                                             │           ░     daylight only; Warden                                                      
                                                                             │           ░     Tovin Beech; the dog,                                                      
@@ -209,7 +224,7 @@ The chief artist's hand is asked to honour the gentleness. Greenshire's atmosphe
                                                                             │   ║                                                                            ║            
                                                                             │   ║                                                                            ║            
                                                                             │   ║                                                                            ║            
-                                                                            │   ║   ⛩ The Wandering Pilgrim's Bench  (a wooden bench at                    ║            
+                                                                            │   ║   ※ The Wandering Pilgrim's Bench  (a wooden bench at                    ║            
                                                                             │   ║       the village edge for travellers waiting on the                     ║            
                                                                             │   ║       road; carved with the names of pilgrims by their                    ║            
                                                                             │   ║       own hands; some names have been there a long time)                  ║            

@@ -31,6 +31,21 @@ The scale of the plate is **not constant**. Depth is compressed at the upper lay
 
 ---
 
+## The Gauge in Place of the Rose
+
+```
+            SURFACE ════════════════
+               │
+               ▼  depth                  this plate carries no rose; the
+               │                         Underdark does not keep a north.
+               ▼                         depth is the axis — compressed at
+               │                         the upper layers, expanded below,
+               ▼                         per the prefatory note.
+            UNCHARTED ──────────────
+```
+
+---
+
 ## Plate VI — The Underdark, in Vertical Section
 
 ```
@@ -357,6 +372,18 @@ The Vel'Sharath administration's standing position on the Underdark Crossing is 
 The arbitration panel did not pursue the matter further. Grix's pack documented his subsequent behavioural changes and filed the documentation with the Compact; the Hall does not consider those changes geographic data and does not include them on this plate.
 
 The plate plots the **Lit Space** because the statement is the only field datum the Hall has for the volume east of Vel'Sharath's Deep Ward, and rendering the volume blank would be wrong: the volume is *there*, regardless of the Hall's confidence in any particular feature within it. The dimensions, the light source, the floor's nature, and any inhabitation are unknown. The Hall has filed the rendering as a working approximation and will revise it when (if) Vel'Sharath issues a survey authorisation or another statement of comparable specificity reaches the Hall.
+
+### Visual Character — for the Chief Artist
+
+Plate VI is the strata plate and should be painted like a geological section: horizontal bands of darkness descending, each band keeping its own light. The Kobold Deeps band is lantern-warm — browns, ochres, small steady flames. The Crossing band is mixed: lantern-light in the Kobold north, the Grey Market's massed glow at centre, and the Dark Elf south cooling toward violet-black. Vel'Sharath is its own register — pale spell-light and deep shadow, a city that has never needed the sun. And at the plate's foot, the **Lit Space**: a vast uncharted volume rendered almost entirely black, with a thin under-glow rising from below its far side — the single most restrained and most important light on the plate.
+
+The signature visuals — for the artist's notebook:
+
+- **The descent** — the eye should travel downward through the plate the way a traveller would: brightness thinning, warmth cooling, the bands narrowing toward the unknown.
+- **The Quiet Dig** — a sealed side-branch off the Crossing, the Third Digger's construction blocking it, the gold ✦ behind the seal barely visible. The seal is drawn whole; nothing leaks.
+- **The Dreaming Grove and the Vault** — two side-channels that do not touch the trunk: the Grove softly green-lit at Aelindra's root, the Vault sealed beneath Ixareth-Kul.
+- **Grix's line** — *"too large to see across, and the far side of it is lit from below"* — lettered in the Archivist's hand beside the Lit Space; the words carry what the paint must not.
+- **The depth-compression note** — the painted impression should keep the Hall's admission that the scale is not constant; honesty about distortion is part of the Hall's style.
 
 ### What This Plate Does Not Resolve
 

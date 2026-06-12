@@ -35,6 +35,21 @@ The chief artist's hand is asked to render the Bonecourt as the working religiou
 
 ---
 
+## The Rose and the Scale
+
+```
+                  N
+                ╲ │ ╱
+            W ──  ✛  ── E        one grid square ≈ half a league march
+                ╱ │ ╲            (approximate; the Hall's chains were not
+                  S               dragged over every furlong of it)
+
+            the Hall's rose — for the painted impression, render as the
+            six-fingered rose per the Drafting Standards sheet
+```
+
+---
+
 ## Plate IX-C — The Bonecourt (Survey Detail · ½ league per grid square)
 
 ```
@@ -518,6 +533,257 @@ The chief artist's hand is asked to render the Bonecourt as the working religiou
    ▒▒                                                                                                                                                                      ▒▒
    ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
    ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+```
+
+---
+
+## Plate IX-C.i — Vignettes for the Artist's Hand
+
+The vignettes that follow render the principal points of interest at a scale and a level of definition that the artist's working sketches can read directly. The spatial map above shows where each feature sits in the zone; the vignettes below show what each feature *is*. Annotations adjacent to each vignette carry the working colour, dimension, and atmospheric notes the artist will need at the easel. The Bonewright Council has reviewed these vignettes and corrected two of them; the corrections are incorporated and the Council's patience is acknowledged.
+
+---
+
+### The Bonewright Hostel — Seven Halls Around a Court
+
+```
+                  ♣♣♣  the cypress canopy closes over the compound's edges  ♣♣♣
+
+          ┌────────────────────────────────────────────────┐
+          │            THE MASTER'S HALL (north)            │   ─── all seven halls: cypress
+          │     (the Council Hall inside; nine seats)       │       upper storey weathered to
+          └──────┬─────────────────────────────────┬───────┘       the luminous pale grey-white
+                 │                                 │                that is the Bonecourt's
+   ┌─────────────┴──┐                          ┌───┴────────────┐   signature; dark Kel'varath
+   │   THE NOVICE   │                          │     THE        │   stone at the lower courses;
+   │   DORMITORY    │      ☉                   │   REFECTORY    │   cypress-shingle roofs
+   │  (sixteen in   │   the courtyard          │  (one long     │
+   │   residence)   │   firepit — UNLIT        │   table; the   │   ─── THE COURTYARD: flagstone,
+   ├────────────────┤   except at the          │   Hostel eats  │       swept; the unlit firepit
+   │   THE NOVICE   │   equinoxes              │   together)    │       at centre is a discipline,
+   │   HALL (east)  │                          ├────────────────┤       not a neglect — it burns
+   │  (seven low    │   the flagstones         │  THE OUTER     │       twice a year and the
+   │   tables; the  │   are laid in a          │  WATCH HALL    │       courtyard's emptiness
+   │   door open    │   spiral the new         │  (south-west;  │       between equinoxes is part
+   │   first-light  │   novice is told         │   six Watchmen │       of the Bonecourt's quiet
+   │   to dark)     │   to notice and          │   in rotation) │
+   ├────────────────┤   most do not            └────────────────┘   ─── smoke rises beyond the
+   │  THE VISITORS' │                                                    southern roofline — the
+   │  DORMITORY     │                          ┌────────────────┐       Pyre Court is east; its
+   │  (six bunks;   │                          │  THE LIBRARY   │       pale low smoke-column is
+   │   tutorial     │                          │  (south; the   │       visible from the court
+   │   characters   │                          │   cypress-bark │       at all working hours
+   │   bunk here)   │                          │   scrolls —    │
+   └────────────────┘                          │   12,400)      │
+                                               └────────────────┘
+
+  Working notes for the artist:
+    · the compound reads as a cloister, not a fort: no wall, no gate — the jungle and
+                the Watch are the wall; the halls' doorways face the court
+    · scale — single-storey halls with high cypress-beam ceilings; Kel'varath-tall
+                doorframes (the Bonewrights are a tall people)
+    · the courtyard at first-light with the Refectory's lamps lit and mist between the
+                halls is the canonical mood; cicadas at noon are the loudest the
+                Bonecourt ever gets
+    · Master Sereth Korr-Vahn crossing the court: tall, a single white braid, unhurried;
+                the Master walks as if the flagstones were a text he has already read
+```
+
+---
+
+### The Pyre Court — Seven Fires, Seven Ages
+
+```
+                          ♣ ♣ ♣  cypress ring  ♣ ♣ ♣
+                       ♣                            ♣
+                    ♣          1 ▂▂▂                   ♣        ─── seven low stone platforms
+                            (the First Pyre;                        around a flagstone circle a
+                  ♣          lit Year 583 CR;             ♣         hundred feet across; each
+                       7 ▂▂▂  never out)      2 ▂▂▂                 platform knee-height, two
+                  ♣   (the youngest;         (second-      ♣        strides across, an iron
+                       extinguished           season                grate set square in the
+                       four times)            novices)              stone
+                  ♣                                        ♣
+                       6 ▂▂▂                  3 ▂▂▂             ─── THE FLAME IS LOW: cypress-
+                  ♣   (the silent            (third-       ♣        resin and worked-bone fuel
+                       pyre; equinox          season                burning at the temperature
+                       only)                  novices)              of patience; visible as a
+                  ♣                                        ♣        ground-level glow, not a
+                       5 ▂▂▂        4 ▂▂▂                           blaze; the smoke is a thin
+                    ♣ (visiting    (the cleansing       ♣           pale column
+                       masters)     pyre)
+                       ♣                            ♣           ─── ⛪ the Pyre Court Shrine at
+                          ♣ ♣ ♣   ⛪ (east)  ♣ ♣ ♣                   the eastern entrance: open-
+                                                                    fronted; offerings of resin
+                                                                    and bundled herbs; the
+                                                                    invocation is spoken here
+                                                                    before every novice session
+
+  Working notes for the artist:
+    · the Pyre Court must not read as sinister: it is a teaching circle, the working
+                equivalent of a university's lecture benches; novices kneel at their
+                season's pyre with the Pyre-Master walking the circle behind them
+    · the seven smoke-columns (when all seven burn) lean together in the canopy
+                draught — a visual the Bonewrights regard as the Court's signature
+    · Akkro Vellis-Korn lighting the First Pyre at first-light, iron flame-pin at his
+                collar, is the canonical opening image of the Bonecourt's day
+    · palette anchors: pale flagstone · knee-high stone platforms · low amber glow ·
+                thin pale smoke · the green-black cypress ring closing overhead
+```
+
+---
+
+### The Antecedent's Doorpost — the Four Hands
+
+```
+                         ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+                       ▓▓   lintel-stones  ▓▓               ─── the Doorpost stands the height
+                      ▓▓ ┌────────────────┐▓▓                   of two Kel'varath at the Lost
+                      ▓▓ │      ◠◠◠       │▓▓                   Temple's northern entry; a
+                      ▓▓ │     (head)      │▓▓                   single carved stone in low
+                      ▓▓ │                │▓▓                   relief, set into the surviving
+                      ▓▓ │ ⟬palm⟭  ⟬book⟭ │▓▓                   lintel-stones of the Approach
+                      ▓▓ │ (open      (the │▓▓                   Hall
+                      ▓▓ │  hand)     book)│▓▓
+                      ▓▓ │                │▓▓               ─── THE FOUR HANDS, reading from
+                      ▓▓ │ ⟬flame⟭  ⟬key⟭ │▓▓                   the figure's upper right and
+                      ▓▓ │ (the       (the │▓▓                   circling: a BOOK, a FLAME, a
+                      ▓▓ │  flame)     key) │▓▓                  KEY, an OPEN PALM — the four
+                      ▓▓ │                │▓▓                   working virtues: record,
+                      ▓▓ │   (standing     │▓▓                   practice, access, welcome
+                      ▓▓ │    figure,      │▓▓
+                      ▓▓ │    robed)       │▓▓               ─── lichen and orchid-growth
+                      ▓▓ └────────────────┘▓▓                   partially obscure the deeper
+                       ▓▓  ferns at the   ▓▓                    detail; the Bonewrights trim
+                         ▓▓  base       ▓▓                      it carefully every Plowsmonth
+                           ▓▓▓▓▓▓▓▓▓▓▓▓▓                        — tended, never stripped
+
+  Working notes for the artist:
+    · NOTE FOR THE PAINTED IMPRESSION: the hand-glyphs above are the Hall's shorthand;
+                render the four hands as carved low-relief stone, not as emblems — each
+                hand emerging from the robed figure's shoulders in the Kel'varath
+                four-armed iconographic convention
+    · the stone is the dark ash-grey Kel'varath working stone; wet-season sheen on the
+                carving with green light through the canopy is the canonical condition
+    · the figure's face is weathered to near-blankness; the Bonewrights have NOT
+                re-carved it and will not; the blankness is original loss, honestly kept
+    · every Bonewright's scapular virtue is one of this figure's four hands — costume
+                and monument quote each other, and an attentive viewer should catch it
+```
+
+---
+
+### The Mother Cypress — the Tree That Will Not Be Cut
+
+```
+                         ♣♣♣♣♣♣♣♣♣♣♣♣
+                     ♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣                     ─── the crown stands clear above
+                   ♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣                       the grove canopy — the one
+                  ♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣                       tree in the Bonecourt visible
+                    ♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣                          from outside the jungle
+                       ♣♣♣♣♣♣♣♣♣♣♣
+                          ║║║║║                              ─── ring-counted at one thousand
+                          ║║║║║                                  four hundred years; older than
+                          ║║║║║                                  the Lost Temple's working
+                         ╱║║║║║╲                                 stratum; NOT on the cutting
+                        ╱ ║║║║║ ╲                                register; she will not be cut
+                       ╱  ║║║║║  ╲
+                  ▁▁▁╱▁▁▁▁║║║║║▁▁▁▁╲▁▁▁                      ─── the buttress roots flare two
+                 ╱   the buttress roots   ╲                      Kel'varath-heights from the
+                ╱  (knee-walls of living    ╲                    trunk; novices' pole-bearing
+               ╱    wood; the grove path     ╲                   path bends around them — the
+                    bends around them)                           path yields, not the tree
+
+           ⛏ the Year 847 cutting station                    ─── cypress #476 (selected
+             (cypress #476, two hundred                          Stillmonth, falls Lateharvest)
+              paces east; the contrast                           stands within sight: the
+              is deliberate and felt)                            register and the exception
+                                                                 in one frame
+
+  Working notes for the artist:
+    · Tarrik of the Slow Axe names every tree that falls; he has never named the
+                Mother and, per his filed position, the question is not asked at the
+                grove — render him at her base as a keeper, the Slow Axe slung, not held
+    · her bark is older and darker than the grove's — green-black ridged with grey;
+                the buttress hollows hold standing water that reflects the canopy
+    · scale figure: a Kel'varath at the trunk reaches perhaps a tenth of her girth
+    · the light at the Mother is the Bonecourt's darkest green; what reaches the
+                ground arrives pre-filtered through fourteen centuries of canopy
+```
+
+---
+
+### The Memorial Path — Twelve Cairns and a Name Each
+
+```
+      from the Hostel courtyard (south edge)
+        │
+        ╰─✚──────✚────────✚─────✚───────✚──────✚───╮          ─── twelve numbered cairns along
+          1      2        3     4       5      6   │              a slow south-then-east curve;
+                                                   │              each waist-height to a
+            (the Path bends past the Pyre Court)   │              Kel'varath; each built of
+                                                   │              stones carried from the dead
+        ╭─✚───────✚──────✚────────✚──────✚─────✚──╯              master's HOME settlement —
+        │ 12      11     10       9      8     7                  twelve cairns, twelve building
+        │                                                         styles, deliberately unmatched
+        ▼
+      to the Lost Temple's northern face                      ─── a single carved cypress-bark
+                                                                  name-tag at each cairn's top,
+      ✚ #12 — Hesh Ulren-Vahd, master 819–838 CR,                renewed when weather takes it;
+        completed Year 839 CR; the newest stones                  the names are recited at every
+        still hold their quarry-edges                             fortnight's Restday
+
+  Working notes for the artist:
+    · Tanrik Voll-Esh walks the Path at first-light daily, stone pendant at his
+                throat; the canonical image is Tanrik at cairn #12 with the Temple's
+                overgrown face rising behind — continuity facing antecedent
+    · the cairns' irregularity is the point: river-rounded stones at #3, split slate
+                at #7, marsh-black basalt at #9 — twelve home-grounds in twelve heaps;
+                do not regularise them
+    · the Path itself is packed earth, one walker wide; grass grows to its edge and
+                stops — walked enough, never widened
+    · second-season novices walk it once with Tanrik and must carry three names away;
+                a novice counting under their breath is a legitimate detail
+```
+
+---
+
+### The Black Channels — Punting the Dark Water
+
+```
+   ♣♣♣♣♣♣♣♣♣            canopy closes overhead             ♣♣♣♣♣♣♣♣♣
+   ♣♣♣  ║║ ♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣  ║║ ♣♣♣
+        ║║   cypress trunks at the waterline;          ║║          ─── the channel: six to ten
+        ║║╲  roots reaching into the water           ╱║║              feet wide; the water is
+        ║║ ╲                                        ╱ ║║              BLACK and still — peat-
+        ║║  ╲              ──────                  ╱  ║║              steeped, reflective as
+     ~~~║║~~~╲~~~~~~~~~~~ ╱ punt ╲ ~~~~~~~~~~~~~~~╱~~~║║~~~           lacquer when undisturbed;
+     ~~~~~~~~~~~~~~~~~~~ ╱________╲ ~~~~~~~~~~~~~~~~~~~~~~            the punt's wake closes
+     ~~~~~~~~~~~~~~~~~~~~~~~~│~~~~~~~~~~~~~~~~~~~~~~~~~~~             behind it and the mirror
+                             │                                        repairs itself
+                             │  the iron-shod pole
+                             │  (navigation aid and,               ─── the punter stands aft;
+                             ▼  against the vipers,                   the pole's strike on the
+                          (strikes the                                channel-bottom carries
+                           channel-bottom;                            down the water for half
+                           the sound carries)                         a league — punts announce
+                                                                      themselves whether they
+        ◉ ◉  ← eyes at the waterline, mid-distance                    wish to or not
+           (jungle viper — the Bonewrights' name
+            for the crocodile; the register does                  ─── light: green at noon,
+            not distinguish and neither does the                      amber at dusk, and at
+            prudent punter)                                           night the punt-lantern's
+                                                                      single warm point doubled
+                                                                      in the black mirror
+
+  Working notes for the artist:
+    · the channels are the Bonecourt's roads in dry season; a punt laden with
+                cypress-bark scroll-cases under oilcloth is the standard cargo scene
+    · the doubled reflection is the signature: trunks, lantern, punter all repeated
+                exactly in the black water — the Reflection Below belongs to Fae Mere,
+                but the Marshlands' water quietly rehearses the idea
+    · scale: the punt seats three Kel'varath and cargo; freeboard is a handsbreadth
+    · the viper's eyes at mid-distance are the correct amount of menace; the
+                Bonewrights' relationship with the channels is respect, not fear
 ```
 
 ---

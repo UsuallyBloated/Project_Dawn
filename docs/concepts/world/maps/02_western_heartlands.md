@@ -29,6 +29,21 @@ The scale is roughly three league marches per grid square — about three times 
 
 ---
 
+## The Rose and the Scale
+
+```
+                  N
+                ╲ │ ╱
+            W ──  ✛  ── E        one grid square ≈ three league marches
+                ╱ │ ╲            (approximate; the Hall's chains were not
+                  S               dragged over every furlong of it)
+
+            the Hall's rose — for the painted impression, render as the
+            six-fingered rose per the Drafting Standards sheet
+```
+
+---
+
 ## Plate II — The Western Heartlands
 
 ```
@@ -314,6 +329,18 @@ The Greyfen's interior detail centres on the four named outcrops where the Found
 The **Wallflowers** are the curtain-wall districts; the wall is six-gated, and the districts inside each gate are named for the gate they serve. From north clockwise: **Highgate**, **Eastgate**, **Trunkgate** (where the East Trunk Road exits), **Southgate**, **Hollowgate** (the river-mouth gate, by the Wharves), and **Greengate** (which is also the name of the Greenshire toll station, which is a separate place; the duplication has been the subject of three formal complaints to the Hall, none of which the Hall has been willing to enforce a resolution to).
 
 The **Threefold Bridge** is the single load-bearing crossing of the river confluence and consists of three spans named **Ardenwise** (north-to-centre, over the Sable's Run), **Greenward** (west-to-centre, over the Ardenmere), and **Eastreach** (centre-to-east, over the combined Greymere). The Threefold Bridge is the only point at which a wagon may cross the confluence without unloading; the alternative is the river ferry, which does not run in storm-season.
+
+### Visual Character — for the Chief Artist
+
+The Western Heartlands plate is a study in greens with one wound. The palette runs from the pale honey-gold and hedge-green of the Greenshire ploughland, through the deep layered green of Ardenmoor's canopy, to the silver-green of Aelindra's spire-court in the deep forest — and then the **blight**, which is the plate's argument: a grey-violet stain advancing into all that green, its western edge hard, its interior fading to ash tones around Rotwood Hollow.
+
+The signature visuals — for the artist's notebook:
+
+- **The blight boundary** — the single most important line on the plate. West of it, full green; east of it, grey-violet and the Withering Stand's bare trunks. The Silent Edge may be suggested as a faint second line where the wash thins — the boundary where the birdsong stops.
+- **Aelindra's hexagon** — the Six Spires in their hexagonal court with the Heartwood at centre; render as a jewel of ordered geometry inside the organic forest mass.
+- **The Greyfen** — peat-brown and reed-grey between forest and river meadow, with the four Foundation Ring outcrops as small gold marks half-sunk in the bog.
+- **Greyveil at the confluence** — the Threefold Bridge's three spans where two rivers become one; the six-gated wall; the city is the plate's anchor-weight at the south.
+- **Sable's Run** — drawn warm: a thin steam-line over the upper river where Cogsworth's drainage heats it.
 
 ### What This Plate Does Not Resolve
 

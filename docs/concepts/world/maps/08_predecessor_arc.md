@@ -9,7 +9,7 @@
 
 This plate is the closing sheet of the regional series and the only plate that does not render geography directly. It renders the network. The Architects built eleven confirmed sites and at least one speculative site; the sites are connected as a working system; the system has roles, signal flows, and a trigger condition that the network has been waiting on for four hundred and forty years. This plate is the Hall's working diagram of the network as currently understood.
 
-Three views are filed here. **Plate VIII A** renders the geographic arc — the positions of all twelve sites overlaid on a simplified continental outline. **Plate VIII B** renders the network topology — the nodes and the cross-references between them, drawn as a graph rather than a map. **Plate VIII C** renders the Calibration State flow and the Survey Chain — the sequence of operations the network performs when a complete survey is delivered, and the dependency order that opens the Dominion Vault.
+Five views are filed here. **Plate VIII A** renders the geographic arc — the positions of all twelve sites overlaid on a simplified continental outline. **Plate VIII B** renders the network topology — the nodes and the cross-references between them, drawn as a graph rather than a map. **Plate VIII C** is the site catalogue. **Plate VIII D** renders the Calibration State flow — the sequence of operations the network performs when a complete survey is delivered. **Plate VIII E** renders the Survey Chain — the dependency order that opens the Dominion Vault.
 
 The plate is a synthesis of field data from the Walking Name Order's network file, the Compact's Drowned Hold expedition records, the Kethara Hold Astronomical Observatory's Year 407 CR Calibration State log, the Dreaming Warden's reception correspondence, and the Aelindra Sealed Archive's restricted records (which the Hall has access to in summary only). Where the field data are partial, the plate marks the partiality and does not extrapolate.
 
@@ -28,6 +28,12 @@ The Hall will revise this plate as new survey returns. The plate is, by its natu
   ◆ network role label                ⇄ cross-reference / notation          ⓒⓒ trigger / fire
   ─│ network edge                    ─x─ unknown / pending edge
 ```
+
+---
+
+## No Rose Is Filed
+
+This plate is a diagram, not a map. It carries no rose, no scale, and no apology for either; positions are carried on Plate I, and the views below are graph-theoretic. The painted impression should be rendered in the scriptorium-diagram convention rather than the terrain convention — see the Drafting Standards sheet.
 
 ---
 
@@ -514,6 +520,18 @@ The Hall expects this plate to require re-issue more often than the other seven 
 5. **The Maren survey could return Architect data.** The Walking Name Order's three Remnant Sea licences and the Compact's Maren-approach licensing both suggest the network may extend across the Vah'tharan Passage. If it does, this plate's geographic arc extends.
 
 The Hall accepts the re-issue burden as a courtesy of the work.
+
+### Visual Character — for the Chief Artist
+
+Plate VIII is not a landscape and must not be painted as one. The right register is the scriptorium diagram: the Hall's working wall-sheet, ink and chalk-line on dark slate or on heavy drafting linen, with the eleven confirmed sites as labelled nodes and the cross-references as ruled edges. Restraint is the style; the network's content is strange enough that the rendering should be sober.
+
+The signature visuals — for the artist's notebook:
+
+- **Gold is rationed.** Each node carries one small gold six-fingered handprint; the only larger gold on the sheet is the Roofless Hall's throne glyph (☉) at the terminus. Everything else is ink.
+- **The Convergence Point as status board** — the one node with an edge to every other; its star-burst of connections should be visually unmistakable.
+- **The Calibration State flow** (VIII D) reads top-to-bottom as a liturgy: trigger, intensify, transmit, process, conclude — five framed stages, the last one's content conspicuously blank.
+- **The Drowned Hold's reading** — *PENDING: FINAL CALIBRATION* lettered in the Architect script, the only line of that script rendered at legible size on the sheet.
+- **Hands on the diagram** — the painted impression may show the working marks of forty-one years of Walking Name Order study: pinned notes, corrected edges, a faded earlier version beneath. The diagram is a living document and should look used.
 
 ### What This Plate Does Not Resolve
 

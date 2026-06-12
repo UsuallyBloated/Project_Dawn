@@ -24,13 +24,28 @@ The chief artist's hand is asked to render the harshness with respect. The Ogres
 ```
   ≈ open sky / sun-bleached       ★ named figure or post (Ogre/Troll)  ⌂ tent or hide structure
   # badland / hard scrub           ☆ minor figure                       ⌧ smithy / open forge
-  ⛯ Warlord's Tower (fixed)         ◊ named landmark                     ⛪ healer's tent / shaman
+  ⛯ tower / watch-platform          ◊ named landmark                     ⛪ healer's tent / shaman
   ░░ sand-drift / bleach-flat       ⌬ butcher / ration ground            ⛩ training ground
   ▓ ironstone outcrop                ⚐ trophy pole / banner pole          ⊠ pen or holding ground
   ⊕ Pit (gladiatorial)              ☉ camp common / fire-pit              ☽ shaman's circle
   ─│ trail or footpath              ═║ Trader's Walk (only outsider road)  ↓→ wind / dust
   ☠ wreckage / bone heap            ✚ memorial cairn / clan-stone        ※ rare landmark
   ⛏ quarry / digging                ⊞ partially buried Dominion stonework
+```
+
+---
+
+## The Rose and the Scale
+
+```
+                  N
+                ╲ │ ╱
+            W ──  ✛  ── E        one grid square ≈ half a league march
+                ╱ │ ╲            (approximate; the Hall's chains were not
+                  S               dragged over every furlong of it)
+
+            the Hall's rose — for the painted impression, render as the
+            six-fingered rose per the Drafting Standards sheet
 ```
 
 ---
@@ -527,6 +542,263 @@ The chief artist's hand is asked to render the harshness with respect. The Ogres
 
 
    ↓ south — to the open scrub of the Eastern Badlands' inner reaches (Plate III); badlands proper begin two leagues south
+```
+
+---
+
+## Plate IX-B.i — Vignettes for the Artist's Hand
+
+The vignettes that follow render the principal points of interest at a scale and a level of definition that the artist's working sketches can read directly. The spatial map above shows where each feature sits in the zone; the vignettes below show what each feature *is*. Annotations adjacent to each vignette carry the working colour, dimension, and atmospheric notes the artist will need at the easel. The Hall notes that these vignettes are drawn from Cellis Vereth's three permitted visits and the filed statements; the Hold has not seen them and the Hold's seal is not on them.
+
+---
+
+### The Warlord's Tower — the Black Cylinder
+
+```
+                        ⚑                                 ─── the banner-pole: a single iron
+                        │                                     pole set in the central roof-
+                ┌───────┴───────┐                             stone. THE BANNER STATES:
+                │   the Watch    │                             · raised — Warlord in residence
+                │     Roof       │                             · half — Warlord travels
+                ├───────────────┤                              · absent — Warlord at the Pit
+                │ ▆▆▆▆▆▆▆▆▆▆▆▆▆ │
+                │ ▆           ▆ │  ── third storey:        ─── BLACK-GREY BASALT, unmortared;
+                │ ▆  ─┐       ▆ │     the Warlord's            each block roughly the size of
+                │ ▆   │window ▆ │     Quarters (cot,           a Halfling; the joints are dry
+                │ ▆  ─┘ slot  ▆ │     chest, brazier;          and tight enough that no light
+                │ ▆           ▆ │     sleeps alone)            passes; the surface has a dull
+                │ ▆▆▆▆▆▆▆▆▆▆▆▆▆ │                              iron sheen at dawn and dusk
+                │ ▆           ▆ │
+                │ ▆   ◯ ◯ ◯   ▆ │  ── second storey:       ─── the six standing stones of the
+                │ ▆  ◯     ◯  ▆ │     the Standing-            Standing-Stones Hall ring the
+                │ ▆   ◯ ◯ ◯   ▆ │     Stones Hall              floor-opening: three upright,
+                │ ▆           ▆ │     (clan markers)           two tipped, one missing — the
+                │ ▆▆▆▆▆▆▆▆▆▆▆▆▆ │                              count is current to Drosk's
+                │ ▆           ▆ │                              tenure and is political data
+                │ ▆    ▄▄▄    ▆ │  ── ground floor:
+                │ ▆   ▄▄▄▄▄   ▆ │     the Audience         ─── the Warlord's chair: Ogre-scaled,
+                │ ▆    ▄▄▄    ▆ │     Floor (38 ft             cut from the same basalt, set
+                │ ▆     ☐     ▆ │     across; firepit          against the eastern wall; it did
+                │ ▆▆▆▆▆▆▆▆▆▆▆▆▆ │     at centre; the           not come with the Tower and the
+                └───────────────┘     chair east)              difference in the cutting shows
+              ━━━━━━━━━━━━━━━━━━━━━
+           ░░░░░░░░░░░░░░░░░░░░░░░░░░  ── the foundation   ─── the buried Dominion foundation
+          ░░  ⊞              ⊞    ░░     ring: a faint         ring extends ~20 feet beyond the
+                                          stone circle          visible Tower in every direction;
+              ⚐  ⚐  ⚐  ⚐  ⚐  ⚐           in the scrub          the Walking Name Order suspects
+            (the six trophy poles                               further; the Order has not been
+             in a half-arc, north)                              permitted to investigate
+
+  Working notes for the artist:
+    · scale — sixty feet tall, forty across; three storeys; the only vertical in a flat
+                bleached land; visible from the Salt Pillars three days' march away
+    · the Tower is the darkest value on the entire plate; everything else at Ashfang is
+                bleached — the Tower absorbs light and the camp reflects it
+    · smoke rises through the original circular ceiling-openings — a thin grey thread from
+                the Audience Floor firepit when the Warlord holds audience
+    · the trophy-pole skulls face deliberately varied directions: markers, not threats
+    · Drosk of the Sundered Hand at the chair: eight feet six at the shoulder; the sundered
+                right hand (two fingers) rests on the chair-arm in audience and is not hidden
+```
+
+---
+
+### The Pit — the Regulated Circle
+
+```
+                    ░░░░░ vultures circling ░░░░░            ─── the vultures are the Pit's
+                  ⌄   ⌄       ⌄        ⌄      ⌄                  weather-vane: their density
+                                                                 above the Bone Yard (west)
+        ▗▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▖                 reports the matches better
+      ▗▄▀                                      ▀▄▖               than any banner
+     ▐▌    the earthwork ring — packed earth,    ▐▌
+     ▐▌    four feet high, seats four hundred    ▐▌          ─── the earthwork: rammed red-
+     ▐▌    standing                              ▐▌              brown earth, stake-reinforced
+     ▐▌                                          ▐▌              at the entrance gap; spectators
+     ▐▌         ·  ·  ·  ·  ·  ·  ·  ·          ▐▌              stand on the ring's flat top
+     ▐▌      ·                        ·         ▐▌
+     ▐▌    ·     THE SAND FLOOR         ·       ▐▌          ─── THE SAND: paler than the
+     ▐▌   ·      (sixty feet across;     ·      ▐▌              surrounding scrub from regular
+     ▐▌   ·       raked between every    ·      ▐▌              raking; rake-lines visible in
+     ▐▌   ·       match; the rake-       ·       ▐▌             low light like a combed field;
+     ▐▌    ·      lines are part of      ·      ▐▌              old stains rake out, mostly
+     ▐▌      ·    the discipline)      ·        ▐▌
+     ▐▌         ·  ·  ·  ·  ·  ·  ·  ·          ▐▌          ─── the eastern entrance gap: the
+     ▐▌                                          ▐▌              only break in the ring; both
+      ▝▀▄                                      ▄▀▘               contestants enter through it,
+        ▝▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▄▄  ▄▄▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▘                 one after the other, the
+                          ▐▌▐▌                                   challenged first by custom
+                       the entrance
+                          gap (east)
+         ☠ ☠ ☠
+       the Bone Yard                                         ─── Korrik Three-Brand stands at
+       (adjacent, west;                                          the gap's northern shoulder
+        bone-white drifting                                      through every match; the three
+        to yellow-grey)                                          clan-brands on his forearm are
+                                                                 visible at this station
+
+  Working notes for the artist:
+    · the surrender-call is "earth"; a kneeling contestant is a finished match, not a
+                kill — one death in fourteen matches by the Hall's working ratio; the
+                artist should render the crowd accordingly: appraising, not baying
+    · open every Heartmonth full moon — night matches under torch-rings are canonical
+    · the Pit Apprentices' Ground (stakes and hung sandbags) sits south of the ring and
+                should read as a training yard, not a punishment yard
+    · palette anchors: pale raked sand · red-brown earthwork · bone-white west · black
+                vulture silhouettes
+```
+
+---
+
+### The Shaman's Circle — Seven Stones That Travel
+
+```
+                  ↓→  ↓→  the hot wind, always  ↓→  ↓→
+
+              ▆            ▆                                ─── seven low standing stones,
+                                                                 each about chest-height to
+          ▆                    ▆                                 an Ogre, rough-dressed, set
+                                                                 in a ring ~30 feet across
+                    ▄▄▄▄
+                   ▄▄▄▄▄▄        ← the central stone        ─── THE CENTRAL STONE: flat,
+          ▆        ▄▄▄▄▄▄          (flat; the stain)            table-like; the bloodstain of
+                    ▄▄▄▄                                         Mokk Eight-Tooth (killed here
+                                                                 in the Year 838 CR challenge
+          ▆                    ▆                                 that raised Drosk) is preserved
+                                                                 in the stone — a dark patina
+              ▆            ▆                                     the Camp does not scrub
+
+                                                             ─── the stones TRAVEL: at every
+       ☆ Threkka the Stone-Singer at the                        Camp relocation the seven are
+         eastern stone, first light                              lifted, carted, and re-set in
+         (the singing carries across the                         the same relative ring; the
+          whole Camp; it is the Camp's                           central stone travels last
+          wake-call)
+
+  Working notes for the artist:
+    · sunrise is the canonical hour: long shadows west, the stones' east faces lit
+                amber, Threkka mid-song with both hands open at her sides
+    · the stones are the Camp's only unbleached surfaces — they keep a darker, oiled
+                tone from generations of handling
+    · no fence, no boundary-line: the circle's authority is behavioural, and Camp
+                foot-traffic bends around it without marking why
+    · render the ring slightly irregular — these stones have been re-set hundreds of
+                times by hand and eye, never by chain and stake
+```
+
+---
+
+### The Trader's Walk — One Road In
+
+```
+   WEST GATE                                                              THE TOWER
+      │                                                                  (southern face)
+      ▼                                                                        ▲
+   ═══╪══════⚐═════════⚐══════[⚖]══════⚐═════════⚐══════════⚐══════════════╪═══
+      │      100         100    │        100        100         100           │
+      │      paces       paces  │        paces      paces       paces         │
+      │                         │                                             │
+   ⌧ the Trader's            the Trader's                            outsiders who
+     Forge (hide canopy;     Counter (a stone                        reach this point
+     Vrekka works the        counter set across                      may enter the
+     Iron Furrows iron       the Walk; Oggrim                        Audience Floor —
+     Oggrim brings in;       mediates every                          the only legitimate
+     first formal trade      deal made here;                         way for an outsider
+     station)                second formal                           to see the Warlord
+                             station)
+
+      ⚐ = a trophy pole: stripped ironwood, clan-colour banner-rag at the top,
+          a string of skulls below — BLEACHED AND RE-BLEACHED; these are the
+          Walk's milestones, the Hold's equivalent of waystones, re-set unchanged
+          for at least six Warlord-tenures
+
+  Working notes for the artist:
+    · the Walk is packed earth, two Ogre-strides wide, dead straight — the only
+                straight line at Ashfang apart from the Tower's verticals
+    · outsiders may not leave the Walk FOR ANY PURPOSE; render travellers tightly
+                centred on it, with the Camp's life flowing past at a remove
+    · Oggrim of the Long Hand at the Counter: the most-travelled Ogre in the Hold,
+                four working languages, a courier's habit of standing at rest with
+                his weight even — render him as the diplomat he functionally is
+    · the milestone skulls are clean white; the Tower's trophy-pole skulls (north
+                half-arc) are not — the difference is deliberate and legible
+```
+
+---
+
+### The Camp Rings and the Centre Fire — the Movable Town
+
+```
+                        ⌂ ⌂ ⌂ ⌂ ⌂ ⌂ ⌂ ⌂                      ─── OUTER RINGS: visiting clan
+                    ⌂ ⌂               ⌂ ⌂                        tents and mixed service tents;
+                 ⌂ ⌂     ⌂ ⌂ ⌂ ⌂ ⌂     ⌂ ⌂                      hide tones vary by herd —
+               ⌂ ⌂    ⌂ ⌂         ⌂ ⌂    ⌂ ⌂                    cattle-brown, aurochs-grey,
+              ⌂ ⌂   ⌂ ⌂   INNER     ⌂ ⌂   ⌂ ⌂                   goat-pale
+              ⌂    ⌂ ⌂    RING       ⌂ ⌂    ⌂
+              ⌂    ⌂     (Sundered    ⌂     ⌂               ─── INNER RING: Sundered Hand
+              ⌂    ⌂      Hand)   ☉   ⌂     ⌂                   clan housing; the tents are
+              ⌂    ⌂                  ⌂     ⌂                   larger and older, the hide
+              ⌂    ⌂ ⌂   the Centre  ⌂ ⌂    ⌂                   the colour of dried blood
+              ⌂ ⌂   ⌂ ⌂   Fire ↑   ⌂ ⌂   ⌂ ⌂
+               ⌂ ⌂    ⌂ ⌂         ⌂ ⌂    ⌂ ⌂                ─── THE CENTRE FIRE (☉): perpetual;
+                 ⌂ ⌂     ⌂ ⌂ ⌂ ⌂ ⌂     ⌂ ⌂                      a single smoke column on still
+                    ⌂ ⌂               ⌂ ⌂                        days; the smoke's colour keeps
+                        ⌂ ⌂ ⌂ ⌂ ⌂ ⌂ ⌂                            the Camp's clock — pale grey at
+                                                                 first kindling, pale orange at
+                ⌂ ⌂ ⌂ ⌂ ⌂ ⌂ ⌂ ⌂ ⌂ ⌂ ⌂ ⌂                          morning reigniting, a thin
+            ─── the Half-Ogre ring (southernmost; ───            clear trail by midday
+                 nearest the Trader's Walk;
+                 this is not a coincidence)
+
+  Working notes for the artist:
+    · the rings are concentric but not neat; tents shift with the wind and the
+                politics, and the gaps between rings are working ground — the Ration
+                Ground, the Open Forge, the Healer's Tent, the Shaman's Circle all sit
+                in the spaces between
+    · tent-sides are weighted with packed sand-bags at the base; banners and
+                bone-strings shift constantly in the hot wind — nothing at Ashfang
+                hangs still
+    · the whole Camp orbits the Tower at half a league; in any wide view the black
+                vertical should sit on the horizon over the tents
+    · the Old Camp Site (one league south-east) is fire-scorched ground and
+                post-holes; a wide shot may include it as the Camp's shed skin
+```
+
+---
+
+### The Tributary Pens — Policy, Not Improvisation
+
+```
+        ⊠▔▔▔▔▔▔⊠   ⊠▔▔▔▔▔▔⊠   ⊠▔▔▔▔▔▔⊠   ⊠▔▔▔▔▔▔⊠          ─── eight pens in two rows of
+        ▕ Pen 1 ▏   ▕ Pen 2 ▏   ▕ Pen 3 ▏   ▕ Pen 4 ▏            four; each ~12 feet square;
+        ▕       ▏   ▕       ▏   ▕ the   ▏   ▕       ▏            lashed-pole walls of upright
+        ⊠▁▁▌▐▁▁⊠   ⊠▁▁▌▐▁▁⊠   ⊠▁▁▌▐▁▁⊠   ⊠▁▁▌▐▁▁⊠            stakes braced horizontal;
+             gate        gate    courier      gate               hide roofs in a pitched ridge
+                                                                 to shed rain
+        ⊠▔▔▔▔▔▔⊠   ⊠▔▔▔▔▔▔⊠   ⊠▔▔▔▔▔▔⊠   ⊠▔▔▔▔▔▔⊠
+        ▕ Pen 5 ▏   ▕ Pen 6 ▏   ▕ Pen 7 ▏   ▕ Pen 8 ▏        ─── each gate is single hardwood,
+        ▕ the   ▏   ▕       ▏   ▕ the   ▏   ▕       ▏            secured by a wedge-bar; the
+        ⊠▁▁▌▐▁▁⊠   ⊠▁▁▌▐▁▁⊠   ⊠▁▁▌▐▁▁⊠   ⊠▁▁▌▐▁▁⊠            wedge-bars hang on a board at
+           clansman      gate     raiders      gate              Brogga's post when pens stand
+                                                                 open — the board is the Pens'
+              ★ Brogga of the Long Tooth's post                  public register
+                (a hide awning, a stool, the
+                 register-board, the ration-chest)           ─── the pens are UNIFORM in build
+                                                                 and material; the uniformity
+                                                                 is the visual mark that the
+                                                                 construction is policy
+
+  Working notes for the artist:
+    · Brogga: Ogre, sixty; the left tusk conspicuously longer than the right; her
+                authority is absolute inside the Pens and ends at their edge; render her
+                as an administrator with a warder's patience, not a jailer with a whip
+    · Pen 3's Compact courier teaching Common to Camp children through the stakes on a
+                Restday afternoon is a sanctioned scene (Brogga's permission) and the
+                Pens' single best image — captivity, custom, and curiosity in one frame
+    · the Pens stand slightly apart from the Camp rings, downwind; the ground between
+                is kept clear so the pens are visible from the Centre Fire
+    · palette: weathered pole-grey, hide-brown roofing, bleached ground; no iron — the
+                Pens are wood, hide, and rule
 ```
 
 ---

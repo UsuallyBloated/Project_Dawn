@@ -29,6 +29,27 @@ The four offshore Architect sites are shown at their charted positions. The Sunk
 
 ---
 
+## The Wind Rose
+
+```
+                        N
+                   ⌇    │    ⌇
+                NW ╲    │    ╱ NE        the sea does not keep a grid; distances
+                    ╲   │   ╱            on this plate are carried in days' sail
+              W ────────✛──────── E      in the lane schedule below. the Khala's
+                    ╱   │   ╲            named winds gather at the Singing Stones
+                SW ╱    │    ╲ SE        and are answered at the Drum Rocks; the
+                   ⌇    │    ⌇           Compact borrows four of their names for
+                        S                the quarter-winds of the southern charts.
+                                         the seasonal westerly that brings ships
+            the painted impression       home from Maren runs Harvestmonth through
+            may give the named winds     Stillmonth and answers to no one's name
+            their faces — see the        the Hall has on record.
+            Drafting Standards sheet
+```
+
+---
+
 ## Plate VII — Maritime Routes & Sea-Lanes of Valdis
 
 ```
@@ -268,7 +289,7 @@ The four offshore Architect sites are shown at their charted positions. The Sunk
    ≈   ║          unconfirmed; Walking Name Order survey                                                                                      ║                                          ≈
    ≈   ║          request pending six years)                                                                                                  ║                                          ≈
    ≈   ║                                                                                                                                    ║                                          ≈
-   ≈   ║      (Maren interior on Plate IX when issued — the Hall has not yet                                                                  ║                                          ≈
+   ≈   ║      (Maren interior on Plate X when issued  — the Hall has not yet                                                                  ║                                          ≈
    ≈   ║       committed to the Maren regional sheet; Archivist Valex has                                                                    ║                                          ≈
    ≈   ║       not been to Maren and the Hall does not file plates from second-                                                              ║                                          ≈
    ≈   ║       hand sources without the principal hand's signed concurrence)                                                                ║                                          ≈
@@ -278,6 +299,55 @@ The four offshore Architect sites are shown at their charted positions. The Sunk
    ≈                                                                                                                                                                                  ≈
    ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈
                                                                   (open Vah'tharan; uncharted south)
+```
+
+---
+
+## The Lanes, Connected — Working Schematic
+
+*The plate above charts the water; the schematic below threads the lanes through it, port to port, the way a captain reads them. Distances are in days' sail under reasonable conditions; the lane schedule beneath carries the seasons and the licensing.*
+
+```
+   ⚐ The Outer Marker ····☼···· GREYMERE SUMMER LANE ····☼···· ⚐ The Stranger's Buoy
+                                                                        │
+                                                                        │  (unregistered vessels
+                                                                        │   clear at Harrowmere)
+                                                                        ▼
+                              ✦ THE DROWNED HOLD ◄──── expedition ──── ⚓ H A R R O W M E R E
+                                (licensed pier only)      licence       │ │
+                                                                        │ └──── river ⇋ Greyveil
+                                                                        │       (year-round; no licence;
+                                                                        ·       barge traffic)
+                                                                        ·  COASTAL LANE ☼
+                                                                        ·  (≈ 4 days' sail; Stovecove
+                                                                        ·   storm-shelter at midpoint)
+                                                                        ▼
+                                                          ⚓ T H E   C I N D E R   D O C K S
+                                                                        ·
+                                                                        ·  COASTAL LANE ☼ (continued;
+                                                                        ·   ≈ 3 days' sail)
+                                                                        ▼
+                                                          ⚓ T H E   B O N E W R I G H T   W H A R V E S
+                                                                        ·
+                                                                        ·  EASTERN COASTAL LANE ☼
+                                                                        ·  (hugs the coast; ≈ 3 days)
+                                                                        ▼
+                                                          ⚐ C A P E   B O N E W R I G H T   B U O Y
+                                                                        ·
+                                                                        ·  THE BONE REACH WINDOW ☼ ※
+                                                                        ·  (half a watch wide; summer
+                                                                        ·   high tide; Tier 2+)
+                                                                        ▼
+                                                          ⚐ T H E   T I D A L   W I N D O W   B U O Y
+                                                                        │
+                                                                        │  MAREN APPROACH LANE
+                                                                        │  (Harvestmonth–Stillmonth;
+                                                                        │   Tier 1+ AND the Drowned Hold
+                                                                        │   questline; outbound ≈ 37–43
+                                                                        │   days; the return is harder)
+                                                                        ▼
+                                                          ⚓ T H E   V A R E T H I A N   S H O R E
+                                                              (Maren / Vah'thara — see the Atlas)
 ```
 
 ---
@@ -338,11 +408,23 @@ The Bonewrights of the Southeastern Marshlands maintain the **Bonewright Wharves
 
 The Compact's standing position is that the Bonewright Wharves are a recognised port. The Compact does not licence Bonewright vessels for sea-going traffic and does not require Bonewrights to seek Compact licence for their estuary navigation; the Bonewrights' working chart of the Black Channels is held by the Bonewright Council and is not a Compact chart. The Compact has not asked for it.
 
+### Visual Character — for the Chief Artist
+
+Plate VII is the portolan: the one plate where the sea is the subject and the land is an outline. The continent's interior is bare parchment with a single fine coastline; everything that matters is in the water — lane-lines, buoys, lighthouses, wrecks, storm-cells, and the long empty run of the Vah'tharan Passage south to a coast that is mostly conjecture. The palette is parchment, sea-green washes deepening with charted depth, and sepia rhumb lines radiating from the wind rose.
+
+The signature visuals — for the artist's notebook:
+
+- **The lanes as drawn routes** — the painted impression should connect what the broadsheet schedule lists: Harrowmere to Cinder Docks to the Bonewright Wharves to Cape Bonewright to the Bone Reach window, in dashed seasonal line-work (see the lane schematic below).
+- **The wreck fields** — the Bone Reach's massed ⚒ glyphs and the Cinder Deep's three named losses; the Stove Wreck alone is drawn visible above water.
+- **The named winds** — the wind rose may carry small wind-faces at the quarters; the Khala's winds have personal names and the artist is permitted to give them expressions, provided the expressions are not friendly.
+- **The Maren stub** — the second continent enters the plate only as a partial northern coastline that fades to nothing, with Captain Marn's line — *"we have not found a corner"* — lettered where the coast gives out.
+- **The empty south** — most of the plate's lower third is open water and should stay that way; the Passage's loneliness is the crossing's character.
+
 ### What This Plate Does Not Resolve
 
 - **The Walking Name Order's three Remnant shelf sites at chart detail.** Reserved by the Order.
 - **The Drowned Hold's role in Maren licensing.** The Compact does not explain. The Hall does not press.
-- **Maren's interior beyond the coastal stub.** Reserved for Plate IX if and when issued. Archivist Valex has not been to Maren.
+- **Maren's interior beyond the coastal stub.** Reserved for Plate X if and when issued. Archivist Valex has not been to Maren.
 - **The Cinder Deep below 40 fathoms.** Compact policy. The plate marks the depth limit and does not chart below it.
 - **The Bone Reach wreck register.** The wrecks are charted; the register is the Compact's hazard register (Charter Vol. IV); the plate renders the wreck concentration as a glyph density and does not list individual entries.
 

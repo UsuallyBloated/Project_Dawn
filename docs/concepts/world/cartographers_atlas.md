@@ -10,7 +10,7 @@
 
 This atlas represents the landmass of Valdis as surveyed through the current reckoning year. The word "surveyed" is used with the precision that word deserves. Several areas on the surface map are rendered by inference from adjacent zone data rather than direct observation. The underwater shelf of the Remnant Sea below the tidal zone remains uncharted. The underground diagram below the Vel'Sharath level is theoretical, and is marked as such.
 
-The Architect sites are marked with a distinct symbol. This is the fourth edition of this atlas. Each prior edition added one Architect site to the map. In three of those four cases, the site had been present in surveyor field notes for years before anyone recognized it as such. The cartographer's office has instructed all current field teams to assume there are more.
+The Architect sites are marked with a distinct symbol. This is the second edition of this atlas, and the fourth charting of Valdis the Hall has issued. Each prior charting added one Architect site to the map. In three of those four cases, the site had been present in surveyor field notes for years before anyone recognized it as such. The cartographer's office has instructed all current field teams to assume there are more.
 
 The zone now listed as *The Greyfen* represents a surveyed corridor between the Ardenmoor treeline and the Greyveil river approach that has existed on every map as unlabeled transition terrain. It is labeled here for the first time because three separate field teams independently recommended it. The Foundation Ring directly beneath central Greyveil is confirmed. The Greyveil City Council's official position is that it is not. Both statements are recorded.
 
@@ -84,7 +84,7 @@ What the Architects called it — the civilization whose construction signatures
   ≈   ✦ island|          (revenant territory)   .   25–40]      ≈
   ░   offshore|                                 . {Bone         ≈
   ░ [ASHEN    ≈≈≈≈≈(Cinder Deep)≈≈≈≈≈≈≈          .  Citadel    ≈
-  ░  COAST    ≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈              .  ✦}       ≈
+  ░  COAST    ≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈              .  ✧}       ≈
   ░  20–35]    ≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈   [ASHFANG · 1–10]        ≈
   ░ ✦[Tide     ≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈   (warlord camp)#########   ≈
   ░  Marks]    ≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈  ~~~[KHALA SAVANNAHS·30–45]  ≈

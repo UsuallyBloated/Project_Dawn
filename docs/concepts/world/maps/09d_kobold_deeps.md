@@ -25,13 +25,29 @@ The chief artist's hand is asked to render the Pack as a community of working sc
   # rough rock / cave wall          ★ pack chief or ranking figure         ⌂ chamber / den
   ░ smoothed Dominion masonry        ☆ named Pack member                    ⛩ trainer cave
   ▒ tunnel-fill / debris             ◊ named landmark                       ⛪ shrine / altar
-  ⌇ Glow-Vein fungus (bioluminescent) ★ chief-stone (clan marker)           ✦ Architect site
+  ⌇ Glow-Vein fungus (bioluminescent) ⚐ chief-stone (clan marker)           ✦ Architect site
   ~ underground water                ⚐ banner / pack-marker                    (confirmed)
   ─│ unlit passage                  ═║ Dominion-cut artery / kept road     ✧ Architect site
   ↓→ shaft or current               ⊕ contested ground                          (probable)
   ⛯ lantern station                  ⛏ active digging face                  ▼ deeper descent
   ⌬ forge / workshop                 ⊠ sealed or restricted chamber         ⊞ partially cleared
   ⚖ Bone Market / trade ground        ☉ council fire / ceremonial fire     ※ rare landmark
+```
+
+---
+
+## The Rose and the Scale
+
+```
+                  N
+                ╲ │ ╱
+            W ──  ✛  ── E        one grid square ≈ a quarter-league march
+                ╱ │ ╲            (approximate; surveyed under escort and
+                  S               lanternlight; the rose marks the surface
+                                  north — the Deeps keep it for courtesy)
+
+            the Hall's rose — for the painted impression, render as the
+            six-fingered rose per the Drafting Standards sheet
 ```
 
 ---
@@ -118,7 +134,7 @@ The chief artist's hand is asked to render the Pack as a community of working sc
    ##         │                                                          │  │                                                          │                                            ##
    ##         │   ★ Chief Krzlik of the Whisper-Tongue (yes, the same    │  │   ★ Chief Mokra of the Iron-Bloom                          │                                            ##
    ##         │      Krzlik; Long-Nose chief by election Year 836 CR;     │  │      (Iron-Whisker chief by inheritance Year 829 CR;     │                                            ##
-   ##         │      negotiator role added Year 842 CR; sleeps at the     │  │      a Pack veteran of the iron-trade since               │                                            ®®
+   ##         │      negotiator role added Year 842 CR; sleeps at the     │  │      a Pack veteran of the iron-trade since               │                                            ##
    ##         │      Junction Office most nights since)                   │  │      first apprenticing at age twelve; sixty-three        │                                            ##
    ##         │                                                          │  │      now; the by-name from the iron-bloom that             │                                            ##
    ##         │   ★ Long-Nose Shaman Pessrik of the Bone-Eye               │  │      grew on Mokra's left hand from a forge-burn         │                                            ##
@@ -134,7 +150,7 @@ The chief artist's hand is asked to render the Pack as a community of working sc
    ##         │   ⛩ The Long-Nose Pup Cave                                │  │      tenure; Pack-record her best-known                   │                                            ##
    ##         │      (the Pack's nursery and training cave;               │  │      apprentice now runs the Smokeback forge)             │                                            ##
    ##         │      pups attend daily lessons in pack-language,          │  │                                                          │                                            ##
-   ®®         │      glow-vein-tending, lantern-craft, and the            │  │   ⌬ The Iron-Whisker Forge (the Pack's principal           │                                            ##
+   ##         │      glow-vein-tending, lantern-craft, and the            │  │   ⌬ The Iron-Whisker Forge (the Pack's principal           │                                            ##
    ##         │      basic Junction-protocol; the Pup-Tender              │  │      forge; the largest in the Deeps; iron-               │                                            ##
    ##         │      is Pessrik's apprentice Kemrik of the                │  │      working since the Compact's iron-trade               │                                            ##
    ##         │      Quick-Step)                                          │  │      began in Year 638 CR; six bellows-stations,         │                                            ##
@@ -193,7 +209,7 @@ The chief artist's hand is asked to render the Pack as a community of working sc
    ##         │       the Pack's longest-serving current chief;           │  │       a Glow-Vein-tender before her election;           │                                              ##
    ##         │       seventy-one; an unusually long Kobold tail —         │  │       the by-name from her practice of moving            │                                              ##
    ##         │       half again the standard length — visible           │  │       through the Glow-Vein chamber without              │                                              ##
-   ®®         │       in the Pack's banner-iconography)                   │  │       disturbing the fungus, which the                  │                                              ##
+   ##         │       in the Pack's banner-iconography)                   │  │       disturbing the fungus, which the                  │                                              ##
    ##         │                                                          │  │       Smokeback Pack consider a working                  │                                              ##
    ##         │   ★ Coppertooth Carriage-Master Phossit of                 │  │       discipline)                                        │                                              ##
    ##         │      the Six-Strands                                      │  │                                                          │                                              ##
@@ -312,7 +328,7 @@ The chief artist's hand is asked to render the Pack as a community of working sc
    ##         ║                          │      falls into a clear pool; the           │              │      bioluminescent fungus the Smokeback   │                                  ║   ##
    ##         ║                          │      stream-bed is lined with quartz       │              │      Pack tends; cool blue-green light;     │                                  ║   ##
    ##         ║                          │      crystals that catch lantern-light     │              │      visible at distance through any        │                                  ║   ##
-   ®®         │                          │      and Glow-Vein-light alike — the       │              │      passage that connects to the chamber)  │                                  ##
+   ##         │                          │      and Glow-Vein-light alike — the       │              │      passage that connects to the chamber)  │                                  ##
    ##         ║                          │      "fall" is the local Pack name for     │              │                                            │                                  ║   ##
    ##         ║                          │      both the waterfall and the chamber)   │              │                                            │                                  ║   ##
    ##         ║                          │                                            │              │   ⌇ The Glow-Vein's working extent:         │                                  ║   ##
@@ -335,7 +351,7 @@ The chief artist's hand is asked to render the Pack as a community of working sc
    ##         ║                          │      (a small chamber beyond the Pool;       │              │                                            │                                  ║   ##
    ##         ║                          │       walls and floor heavily lined          │              │   ⛪ The Glow-Vein Shrine                    │                                  ║   ##
    ##         ║                          │       with quartz crystal — the Pack's        │              │      (a small alcove at the chamber's      │                                  ║   ##
-   ®®         │                          │       working ceremonial space for           │              │       eastern wall; offerings of small        │                                  ##
+   ##         │                          │       working ceremonial space for           │              │       eastern wall; offerings of small        │                                  ##
    ##         ║                          │       individual reflection; pups visit       │              │       carved cypress-wood pieces (also       │                                  ║   ##
    ##         ║                          │       the chamber once at the                │              │       imported from the Marshlands);       │                                  ║   ##
    ##         ║                          │       conclusion of their first lessons)     │              │       this is the Deeps' only working       │                                  ║   ##
@@ -363,7 +379,7 @@ The chief artist's hand is asked to render the Pack as a community of working sc
    ##         ║              ⛩ The Pup Trainer Cave (separate from the Long-Nose                                                                                                    ║   ##
    ##         ║                 Pup Cave; this is the cross-Pack trainer cave for                                                                                                  ║   ##
    ##         ║                 pups whose families are inter-Pack — pups born                                                                                                    ║   ##
-   ##         ║                 of two-Pack matings, of which there are                                                                                                            ║   ®®
+   ##         ║                 of two-Pack matings, of which there are                                                                                                            ║   ##
    ##         ║                 currently eleven in the Deeps; the cross-Pack pups                                                                                                  ║   ##
    ##         ║                 are taught by Pup-Tender Veshrik of the Open-Hand,                                                                                                  ║   ##
    ##         ║                 who has retired from his Iron-Whisker post for                                                                                                      ║   ##
@@ -404,7 +420,7 @@ The chief artist's hand is asked to render the Pack as a community of working sc
    ##         ░░    ★ Probe-Master Trissel of the Long-Pace                                                                                                                    ░░       ##
    ##         ░░       (Long-Nose Pack; fifty-three; the Pack's working                                                                                                          ░░       ##
    ##         ░░       master of the Expansion programme; the by-name comes                                                                                                      ░░       ##
-   ##         ░░       from her gait — Trissel walks at a pace that is half                                                                                                      ░░       ®®
+   ##         ░░       from her gait — Trissel walks at a pace that is half                                                                                                      ░░       ##
    ##         ░░       again as long as a typical Kobold's, which the Pack                                                                                                      ░░       ##
    ##         ░░       reads as a working sign of her commitment to the                                                                                                          ░░       ##
    ##         ░░       Expansion's progress)                                                                                                                                    ░░       ##
@@ -484,6 +500,274 @@ The chief artist's hand is asked to render the Pack as a community of working sc
 
 
    ↓ deeper — to the Underdark Crossing (Plate VI) and beyond
+```
+
+---
+
+## Plate IX-D.i — Vignettes for the Artist's Hand
+
+The vignettes that follow render the principal points of interest at a scale and a level of definition that the artist's working sketches can read directly. The spatial map above shows where each feature sits in the network; the vignettes below show what each feature *is*. Annotations adjacent to each vignette carry the working colour, dimension, and atmospheric notes the artist will need at the easel. The Hall reminds the artist of the standing scale note: Kobolds stand approximately three-quarters of Halfling height, and the Deeps are built for Kobolds. Every doorway in these vignettes is low. Visitors who do not duck are not given a second invitation.
+
+---
+
+### The Contested Junction — the Lantern That Has Never Gone Out
+
+```
+            COGSWORTH, TIER VI (above)
+        ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+        ░░          ▼ descent          ░░                   ─── the licensing post: a stone-
+        ░░   ┌─────────────────────┐   ░░                       carved arch at the meeting of
+        ░░   │  THE LICENSING ARCH  │   ░░                       Cogsworth's Tier VI and the
+        ░░   │                     │   ░░                       Pack tier; Dominion-cut stone
+        ░░   │  [Compact]  [Pack]  │   ░░                       dressed by Kobold hands
+        ░░   │   licence-   escort │   ░░
+        ░░   │   stone      banner │   ░░                   ─── the COMPACT'S LICENCE-STONE set
+        ░░   │      ┌─────┐        │   ░░                       into the western pier; the
+        ░░   │      │ ⛯  │        │   ░░                       PACK'S ESCORT BANNER hung from
+        ░░   │      │     │ ← the  │   ░░                       the eastern; between them the
+        ░░   │      └─────┘  alcove│   ░░                       small carved plaque carrying
+        ░░   │   the Junction      │   ░░                       the licence-holder's mark —
+        ░░   │   Lantern           │   ░░                       Krzlik's mark since Year 842
+        ░░   └──────────┬──────────┘   ░░
+        ░░    standing  │  standing    ░░                   ─── THE JUNCTION LANTERN: iron-and-
+        ░░    watch     │  watch       ░░                       glass, oil-fed, set in its stone
+        ░░   (Cogsworth │  (Pack       ░░                       alcove beneath a carved relief —
+        ░░    side)     │   side)      ░░                       the Compact's wheel-mark on one
+        ░░              ▼              ░░                       side, the Long-Nose banner-mark
+        ░░     to the Pack tier        ░░                       on the other; CONTINUOUSLY LIT
+        ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░                       SINCE YEAR 638 CR, relit through
+                                                                every shift change without
+          ⌂ Krzlik's Junction Office                            extinguishment; the flame is the
+            (adjacent; stone table, two                         accord, rendered in oil and glass
+             Kobold-scaled chairs, rolled
+             licence-records on a wall-shelf;
+             every non-Pack visitor is
+             interviewed here before passage)
+
+  Working notes for the artist:
+    · the arch is Kobold-scaled: a Human passes it stooped, a Halfling barely clears
+                it, a Kobold walks it true — render a mixed party at the arch and the
+                scaling explains itself
+    · two standing watches face each other across the threshold in working courtesy,
+                not confrontation; both sets of watchers are bored, which is the accord
+                functioning as designed
+    · the lantern's warm point against the cool dark of the descent behind it is the
+                vignette's light-logic: one flame, two authorities, nine generations
+    · Krzlik of the Whisper-Tongue at interview: black sash, single-knot; black-quartz
+                pendant; does not raise his voice — render the visitor leaning in
+```
+
+---
+
+### The Glow-Vein — the Deeps' Daylight
+
+```
+                  ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇
+              ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇             ─── the domed chamber: forty feet
+           ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇ ⌇            across; the ceiling FULLY
+          ⌇ ⌇ ⌇                          ⌇ ⌇ ⌇                 colonised by the bioluminescent
+         ⌇ ⌇        (the dome, fully        ⌇ ⌇                fungus; the walls in partial
+         ⌇ ⌇         colonised; cool         ⌇ ⌇               colonisation, maintained that
+        ⌇ ⌇          blue-green light,        ⌇ ⌇              way by deliberate pruning
+        ⌇ ⌇          steady, even —           ⌇ ⌇
+        ⌇ ⌇          no flicker)              ⌇ ⌇          ─── THE LIGHT: cool blue-green,
+        ⌇ ⌇                                  ⌇ ⌇               steady, shadowless near the
+         ⌇ ⌇   ┌──┐                         ⌇ ⌇                centre — the closest thing to
+         ⌇ ⌇   │  │ ← tending scaffold     ⌇ ⌇                 daylight the Deeps possess;
+          ⌇    │  │   (poles and a         ⌇                   lanternlight is forbidden in
+           ⌇   └──┘    platform; the                            the chamber except at the
+                       Smokeback work       ⛪ ← the             tenders' need, and the tenders
+               ☆       it on Eshreth's        Glow-Vein         rarely need it
+            (a tender,  schedule)             Shrine
+             moving                          (eastern        ─── ⛪ the shrine: a small alcove;
+             quiet-                           alcove)            offerings of carved cypress-wood
+             stepped)                                            pieces imported from the
+                                                                 Marshlands; the Deeps' ONLY
+                                                                 working shrine; all four Packs
+                                                                 share it
+
+  Working notes for the artist:
+    · the Glow-Vein is the Deeps' cathedral and should be painted with a cathedral's
+                hush: figures small under the dome, voices low, the fungus-light even
+                across every surface
+    · Eshreth Mushroom-Speaker on the scaffold with her cypress-bark scrolls is the
+                canonical figure: sixty-four, dark blue-green sash, working slowly
+    · the Smokeback discipline — moving without disturbing the fungus — should show
+                in the figures' gait: weight placed, not dropped
+    · colour-logic for the whole plate hangs on this chamber: warm lantern tones
+                everywhere else, cool blue-green here, and a Kobold can tell territory
+                by light alone — so should the viewer
+```
+
+---
+
+### Quartzfall and the Crystal Cave — Water Over Light
+
+```
+            ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+           ▒▒        the stream        ▒▒                   ─── an underground stream cuts
+          ▒▒   ~~~~~~~~~~~~~~~~~~~~~    ▒▒                      through quartz-bearing rock
+          ▒▒   ~ (quartz-lined bed;  ~   ▒▒                     and falls a short drop into
+          ▒▒   ~  the crystals catch ~   ▒▒                     a clear pool; the stream-bed
+          ▒▒   ~  every light that   ~   ▒▒                     is lined with quartz crystal
+          ▒▒   ~  enters)            ~   ▒▒
+          ▒▒   ~~~~~~~~~~╲~~~~~~~~~~~    ▒▒                 ─── THE FALL: the sound of falling
+          ▒▒              ╲ ╲             ▒▒                     water is the Deeps' most
+          ▒▒               ╲ ╲ ← the fall  ▒▒                    distinctive ambient sound,
+          ▒▒                ╲ ╲            ▒▒                    audible from the Council
+          ▒▒          ~~~~~~~▽~~~~~~~     ▒▒                    Chamber's western passage
+          ▒▒        ~~ THE POOL ~~~~~~    ▒▒
+          ▒▒       ~~ (clear; ten feet ~~  ▒▒               ─── the pool: the Deeps' principal
+          ▒▒        ~~ at the deepest) ~~  ▒▒                    drinking water; Yressa of the
+          ▒▒          ~~~~~~~~~~~~~~~~     ▒▒                    Quiet-Pool tends it and reports
+          ▒▒                │              ▒▒                    to all four chiefs collectively
+          ▒▒                ▼              ▒▒                    — the only such post in the
+          ▒▒        THE CRYSTAL CAVE       ▒▒                    Deeps
+          ▒▒    (beyond the pool; walls
+          ▒▒     and floor heavily lined                     ─── THE CRYSTAL CAVE: ceremonial
+          ▒▒     with quartz; pups visit                         ground for individual
+          ▒▒     once at the end of their                        reflection; every Kobold in
+          ▒▒     first lessons)                                  the Deeps has stood in it
+          ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒                          exactly once as a pup, and
+                                                                 carries the memory
+
+  Working notes for the artist:
+    · light-logic: the chamber has no light of its own — it borrows lantern-warm from
+                the west passage and Glow-Vein-cool from the east, and the quartz
+                refracts both across the walls in a slow doubled shimmer the Pack
+                considers a sacred sight; paint BOTH temperatures in one frame
+    · crystal slugs (pale, translucent, slow) on the pool's rim are canonical and are
+                not to be disturbed — a pup crouched watching one is the Deeps'
+                gentlest possible image
+    · the pool's clarity matters: ten feet down to clean stone, every pebble legible;
+                this is the only water in the zone that is not black
+```
+
+---
+
+### The Pack Council Chamber — Four Stones at the Fire
+
+```
+                 ▗▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▖
+              ▗▄▀     the oval vault rises     ▀▄▖           ─── the largest chamber in the
+            ▗▀     sixty feet at the apex —       ▀▖             Deeps: an oval Dominion-cut
+           ▐▌      bats sleep in the dark          ▐▌            hall; eight lantern stations
+           ▐▌      above the lantern-line          ▐▌            around the wall; the central
+           ▐▌                                      ▐▌            council fire lit only in
+           ▐▌   ⛯           ⛯           ⛯         ▐▌            session
+           ▐▌                                      ▐▌
+           ▐▌   ⚐ (W)                    ⚐ (E)     ▐▌        ─── the four PACK-STONES at the
+           ▐▌   Long-Nose            Iron-Whisker  ▐▌            compass-points, each on a low
+           ▐▌                                      ▐▌            pedestal, placed at session
+           ▐▌                ☉                     ▐▌            and returned to the camps
+           ▐▌          the Council Fire            ▐▌            after:
+           ▐▌          (Cogsworth wood;            ▐▌             · W — polished black-quartz
+           ▐▌           the Deeps have no          ▐▌             · E — iron-streaked stone
+           ▐▌           wood of their own;         ▐▌             · SW — copper-and-malachite
+           ▐▌           the fire IS the            ▐▌             · SE — black-quartz veined
+           ▐▌           interdependence)           ▐▌                  with blue-green calcite
+           ▐▌                                      ▐▌
+           ▐▌   ⚐ (SW)                  ⚐ (SE)     ▐▌        ─── off-session the chamber is
+           ▐▌   Coppertooth              Smokeback ▐▌            QUIET by design: any Kobold of
+           ▐▌                                      ▐▌            any Pack may enter and sit at
+            ▝▄     ⛯           ⛯           ⛯     ▄▘             a lantern station to think;
+              ▝▀▄▄                            ▄▄▀▘               render one doing exactly that
+                  ▀▀▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▀▀
+
+  Working notes for the artist:
+    · in session: four chiefs at the compass-points, the senior shaman (Pessrik) at
+                the fire, firelight warm-orange against the vault's dark; the chamber's
+                acoustic is part of protocol — mouths close to the fire, words carry
+    · off-session: cooler, lantern-only, one or two solitary thinkers at the wall
+                stations — paint both states; they are the same room and not the same room
+    · the bats above the lantern-line come out during session, which the Pack reads
+                as auspicious; a thin scatter of wings at the vault is canonical
+    · a new Pack member's first-attendance — the chief setting a mineral chip into
+                their sash in the silent minutes before convening — is the Deeps'
+                tutorial-culmination scene and the chamber's best intimate image
+```
+
+---
+
+### The Old Dominion Trace and the Expansion Face — the Straight Dark
+
+```
+   (from the Pack Council Chamber, eastward)
+
+   ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+   ░                                                               ░     ─── THE TRACE: a single
+   ░   ⛯─────────50 paces─────────⛯─────────50 paces─────────⛯    ░         straight Dominion-cut
+   ░                                                               ░         artery, three-quarters
+   ░     the walls are SMOOTHED DOMINION MASONRY — the same        ░         of a league (and
+   ░     coursing-and-buttress style as Ixareth-Kul's harbour      ░         growing); the only
+   ░     district; the Pack calls it inheritance                   ░         dead-straight passage
+   ░                                                               ░         in a network of
+   ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▄▄▄░         organic curves
+                                                              ▄▄██
+        a spoil-cart (Coppertooth                            ▄████       ─── THE EXPANSION FACE:
+        manufacture; Phossit's                              ██████           raw rock; pick-and-
+        strapping) rolls west ◄──────                       ██████           shovel work in three
+                                                            ██▛▀▀▀           six-hour shifts; the
+                                          ⛏ ⛏               ▌                face advances ~three
+                                       (the Probe team       ▌               feet per working day
+                                        at the face;         ▌
+                                        Kobold-scaled        ⛯ ← THE     ─── THE FACE LANTERN: the
+                                        picks; rubble            FACE        day-marker; when it
+                                        baskets)                 LANTERN     moves forward to the
+                                                                             new face, the day's
+        ✧ somewhere beyond the rock, eastward:                               work is recorded; it
+          the inferred terminus — the Quiet Dig                              is the easternmost
+          (the Pack does not confirm; the Hall                               flame in the Deeps,
+          does not press; the dark past the                                  and past it, nothing
+          lantern does not comment)
+
+  Working notes for the artist:
+    · the vignette's composition is a corridor of receding lantern-points ending at
+                one bright working face and then NOTHING — the dark past the Face
+                Lantern should occupy real canvas; it is the subject
+    · Trissel of the Long-Pace mid-stride between stations, her gait half again a
+                Kobold's length, is the canonical figure
+    · contrast-logic: smoothed grey Dominion masonry behind the team, raw broken rock
+                at the face — eight hundred years of inheritance meeting tomorrow
+                morning's work in a single seam
+    · the sealed Probe-tier descent (the Pack's silence on it is on plate) may appear
+                as a barred side-shaft in deep shadow; do not light it
+```
+
+---
+
+### The Four Pack-Stones — an Object Study
+
+```
+      ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+      │  ▄▄▄▄▄  │    │  ▄▄▄▄▄  │    │  ▄▄▄▄▄  │    │  ▄▄▄▄▄  │       ─── each stone is KOBOLD-
+      │ ▟█████▙ │    │ ▟█▒█▒█▙ │    │ ▟█▓█▓█▙ │    │ ▟█⌇█⌇█▙ │           FIST-sized, set on a
+      │ ███████ │    │ █▒█▒█▒█ │    │ █▓█▓█▓█ │    │ █⌇█⌇█⌇█ │           low stone pedestal at
+      │ ▜█████▛ │    │ ▜█▒█▒█▛ │    │ ▜█▓█▓█▛ │    │ ▜█⌇█⌇█▛ │           its Den's entrance,
+      │  ▀▀▀▀▀  │    │  ▀▀▀▀▀  │    │  ▀▀▀▀▀  │    │  ▀▀▀▀▀  │           polished by the chiefs'
+      ├─────────┤    ├─────────┤    ├─────────┤    ├─────────┤           touch over generations
+      │LONG-NOSE│    │  IRON-  │    │ COPPER- │    │ SMOKE-  │
+      │         │    │ WHISKER │    │  TOOTH  │    │  BACK   │       ─── the polish is the
+      └─────────┘    └─────────┘    └─────────┘    └─────────┘           detail: each stone's
+                                                                         upper face is mirror-
+      polished        iron-streaked   polished        black-quartz       smooth where hands
+      BLACK-QUARTZ;   stone; the      COPPER-AND-     veined with        have rested; the
+      tradition       Year 559 CR     MALACHITE;      the Glow-Vein's    lower faces keep
+      holds it        foundation      the Pack        BLUE-GREEN         their quarry-tooth
+      older than      inscription     split of        CALCITE; the
+      the Pack        Mokra permits   Year 622 CR     youngest stone
+      itself          no one to read                  (Year 681 CR)
+
+  Working notes for the artist:
+    · these four objects carry the Deeps' whole political structure and should be
+                painted as portraiture: one canvas, four stones, museum light
+    · new chiefs touch the stone at election; chiefs wear their stone's mineral as a
+                fist-sized pendant — costume and monument quote each other, as at the
+                Bonecourt
+    · the Iron-Whisker stone's inscription faces AWAY in any rendering; what it says
+                is not the artist's to depict, and the turned face is the better image
+    · in council the four travel to the chamber's compass-points; in any Den scene
+                the resident stone sits at the entrance with a warrior in casual reach
 ```
 
 ---

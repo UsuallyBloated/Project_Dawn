@@ -9,7 +9,7 @@
 
 This plate is the second of the regional sheets and zooms upon the eastern half of the continent — the Harrow Strait and the port of Harrowmere, the offshore Drowned Hold on its Architect seamount, the Minotaur grassland of Auroch's Rest, the Eastern Badlands with its three named mesas and two Architect sites, the Ogre warlord camp at Ashfang Hold, and the contested siege ground at the Breach.
 
-The southern edge of the plate adjoins the Ashen Marches and the Khala Savannahs. Those zones are the subject of Plate IV when issued. The eastern edge of the Badlands fades into uncharted scrubland for which the Hall has no field data; the dotted line at the eastern margin marks the limit of confirmed survey.
+The southern edge of the plate adjoins the Ashen Marches and the Khala Savannahs. Those zones are the subject of Plate IV. The eastern edge of the Badlands fades into uncharted scrubland for which the Hall has no field data; the dotted line at the eastern margin marks the limit of confirmed survey.
 
 The scale is roughly three league marches per grid square, the same as Plate II. Harrowmere's districts are resolved as on Greyveil. The Drowned Hold's floors are laid out as a vertical inset because the structure does not render usefully in plan view.
 
@@ -22,9 +22,24 @@ The scale is roughly three league marches per grid square, the same as Plate II.
   ~ marsh / fen          ♣ deep forest          ☆ village or hamlet        (confirmed)
   . plains / pasture     " savannah / steppe    ◊ named landmark        ✧ Architect site
   # badland / scrub      * mesa / butte         ▲ underground entry        (probable)
-  ░ volcanic / ashflat   ⌂ farmstead / lodge    ▼ sub-surface descent   ✚ shrine / cairn
+  ░ volcanic / ashflat   ⌂ farmstead / camp     ▼ sub-surface descent   ✚ shrine / cairn
   ─│ trail or footpath   ═║ road / king's way   ↓→ river or current     ⊕ contested ground
-  ☠ abandoned / ruin     ☉ siege engine         ⚑ banner / standard      ⌂ camp
+  ☠ abandoned / ruin     ☉ siege engine         ⚑ banner / standard            
+```
+
+---
+
+## The Rose and the Scale
+
+```
+                  N
+                ╲ │ ╱
+            W ──  ✛  ── E        one grid square ≈ three league marches
+                ╱ │ ╲            (approximate; the Hall's chains were not
+                  S               dragged over every furlong of it)
+
+            the Hall's rose — for the painted impression, render as the
+            six-fingered rose per the Drafting Standards sheet
 ```
 
 ---
@@ -206,9 +221,9 @@ The scale is roughly three league marches per grid square, the same as Plate II.
    ≈    ####         the summer of Year 798 CR; the crown has not regrown but the lightning                                                                ####         ≈
    ≈    ####         continues to strike there in preference to the surrounding plain)                                                                    ####         ≈
    ≈    ####                                                                                                                                              ####         ≈
-   ≈    ####     ─── confirmed Architect sites ───                                                                                                        ####         ≈
+   ≈    ####     ─── Architect sites ───                                                                                                                  ####         ≈
    ≈    ####                                                                                                                                              ####         ≈
-   ≈    ####     ✦ The Bone Citadel (western edge; built from bones too large for any local fauna;                                                         ####         ≈
+   ≈    ####     ✧ The Bone Citadel (western edge; built from bones too large for any local fauna;                                                         ####         ≈
    ≈    ####         the Ogre clans treat it as a territorial marker; carbon dating of recovered samples                                                   ####         ≈
    ≈    ####         places construction at Year 300 CR or earlier)                                                                                       ####         ≈
    ≈    ####                                                                                                                                              ####         ≈
@@ -272,7 +287,7 @@ The scale is roughly three league marches per grid square, the same as Plate II.
    ≈                                                  ╚══════════════════════════════════════════════════════════╝                                                    ≈
    ≈                                                                                                                                                                  ≈
    ≈                                                                                                                                                                  ≈
-   ≈                       ↓ south to the Ashen Marches and the Khala Savannahs — see Plate IV when issued                                                            ≈
+   ≈                       ↓ south to the Ashen Marches and the Khala Savannahs — see Plate IV                                                                        ≈
    ≈                                                                                                                                                                  ≈
    ≈                                                                                                                                                                  ≈
    ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈
@@ -311,6 +326,8 @@ The three named mesas — **Durrath's Mesa**, **the Skullback**, and **the Crack
 
 The **Calibration Tower** is collapsed, separate from the Bone Citadel, and unsurveyed in its interior. The Ogre clans treat it and the Citadel as territorial markers for separate purposes — the Citadel demarcates the western frontier, the Tower demarcates a route the clans do not walk and consider a clan-internal matter rather than a survey matter. Both positions appear on this plate.
 
+The **Bone Citadel's glyph is corrected in this impression** from ✦ (confirmed Architect) to ✧ (probable). The Citadel is anomalous — the bones are too large for any local fauna, and the structure has stood since Year 300 CR at minimum — but anomalous is not Architect. No Architect notation, no remainder warmth, and no network cross-reference has been recovered there, and the network catalogue on Plate VIII has never carried it. The earlier ✦ was set by a hand that read *predates the current communities* as *Architect*, which is an inference the Hall no longer makes. The Walking Name Order concurs with the downgrade and notes, separately, that the question of what the Citadel is instead remains open, and that the Order finds the open question more interesting than the closed one.
+
 ### The Breach — Six-Hour Windows and the Gate-Key
 
 The Breach is a contested zone with structurally engineered alternation: control of the **Gate** rotates on six-hour windows, and the holder of the Gate-Key — there is exactly one — controls the rotation. The Key has not been stolen, dropped, or otherwise lost since the structure was put in place; transfers occur when a faction takes the Gate from the holder, after which the Key changes hands by a procedure that is the Gate-Warden's responsibility to enforce.
@@ -324,6 +341,18 @@ The **Gate-Warden's Tower** is the neutral structure between the camps. The Ward
 Ashfang Hold is, in the technical sense, not a hold. The **warlord's seat** — Ashfang Camp itself — is movable and relocates approximately every two years; the only fixed structure is the **Warlord's Tower**, a single tower of Dominion-era stone the Camp orbits. The Tower's age and provenance are pre-Ashfang and the Tower has been there longer than any current Ogre clan can document; the warlord lineage uses it as the legitimacy anchor for the title, on the ground that whichever warlord sits at the Tower is the warlord.
 
 The **Trader's Walk** is the only ground on which outsiders are permitted. It runs from the western edge of the camp to the Tower. Outsiders may not leave the Walk for any purpose. The penalty for doing so is the Pit; the penalty for surviving the Pit is the next Pit; the penalty for surviving three Pits is, at the warlord's discretion, an offer of bondsmanship to the warlord. Three outsiders are on Compact record as having taken the offer in the past century. None have left.
+
+### Visual Character — for the Chief Artist
+
+The Eastern Territories plate divides at its waist. The north is maritime — the cold grey-blue of the Greymere softening into the sheltered slate-calm of Harrow Strait, Harrowmere's roofs and wharves in weathered timber and salt-bleached grey, the Drowned Hold a dark vertical silhouette on its seamount with the garrison standard still raised. The south is dry — the open gold-green of Auroch's Rest grassland giving way to the rust-red clay and broken rock of the Badlands, with the three mesas as the horizon's anchors.
+
+The signature visuals — for the artist's notebook:
+
+- **The Drowned Hold inset** — the vertical section is the plate's centrepiece artifact: six floors descending from the raised standard to the unreached seamount level, the lower floors darkening, Floor VI rendered in near-black with the gold ✦ at its base and *PENDING: FINAL CALIBRATION* in the Architect's script.
+- **Harrowmere's six ports** — a working harbour's clutter: the Compact Docks' order, the Old Mole's age, the Stranger's Quay's motley, the lighthouse on the Grey Spit.
+- **The Breach** — two fortified camps glaring across a neutral rim, trebuchets north and bombards south, the Gate-Warden's Tower alone between them.
+- **The three mesas** — Durrath's Mesa with the temple carved into its north face, the flat-topped Skullback, the Cracked Crown with its lightning-scarred summit; the only verticals in the red waste.
+- **Auroch's Rest** — earthwork halls and horn-marker cemeteries side by side, the Hornways fanning out in paved cattle-tracks; render the living quarter and the burial ground as one settlement, because they are.
 
 ### What This Plate Does Not Resolve
 

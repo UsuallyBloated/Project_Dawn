@@ -31,6 +31,21 @@ The scale is roughly three league marches per grid square, the same as Plates II
 
 ---
 
+## The Rose and the Scale
+
+```
+                  N
+                ╲ │ ╱
+            W ──  ✛  ── E        one grid square ≈ three league marches
+                ╱ │ ╲            (approximate; the Hall's chains were not
+                  S               dragged over every furlong of it)
+
+            the Hall's rose — for the painted impression, render as the
+            six-fingered rose per the Drafting Standards sheet
+```
+
+---
+
 ## Plate IV — The Southern Reaches
 
 ```
@@ -398,7 +413,7 @@ The scale is roughly three league marches per grid square, the same as Plates II
    ≈                                                  T H E    R E M N A N T    S E A                                                                                  ≈
    ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈ ≈
                             (south to the Bone Reach; warm · blue-green · Architect shelf sites confirmed at multiple points)
-                                          (the Vah'tharan Passage runs to Maren beyond — see Plate VII when issued)
+                                          (the Vah'tharan Passage runs to Maren beyond — see Plate VII)
 ```
 
 ---
@@ -448,6 +463,18 @@ The **Lost Temple** at the Bonecourt is older than the Bonewrights' arrival and 
 The **Roofless Hall** at Ixareth-Kul is the network's primary survey terminus. The Throne is intact. *Something sits the throne*. The plate marks both the Hall and the Vault descent below. The three Order Houses — **Walking Name**, **Bonewright**, and **Coalition Remnant** — dispute access to the Vault on grounds that are mutually incompatible and have not been resolved in any available forum. The Hall does not render the dispute on plate.
 
 The **Last Audience Chamber** is intact. The chair is not. Whether the chair was removed before the Dominion's collapse or destroyed during it is a question the Walking Name Order's archive working group has been investigating since Year 838 CR; their current position is that the chair was removed, and that the removal was deliberate, and that the chair is somewhere. The Hall has filed the position without endorsement.
+
+### Visual Character — for the Chief Artist
+
+The Southern Reaches plate carries more contrast than any other regional sheet, and the contrasts should be allowed to sit hard against one another: the Fae Mere's silver-green dream-light; the Ashen Coast's black sand, red vent-glow, and white surf; the Marches' ash-grey field with three faded banners still standing; the Khala's running gold grassland; the Marshlands' green-black cypress and still black water; the jungle-swallowed dark stone of the Bonecourt and Ixareth-Kul. Five of the network's gold ✦ marks sit on this one sheet — the densest stretch of the arc — and the gold should visibly gather toward the south-east as the eye travels.
+
+The signature visuals — for the artist's notebook:
+
+- **The Roofless Hall** — the fallen capital's centre: an intact throne under open sky, rendered small but unmistakable. *Something sits the throne* is lettered in the margin, not depicted.
+- **The Sunken Ziggurat** — a stepped shadow beneath still marsh water, the Stillwater Pools steaming faintly around its surface marker; the Cypress Mile a single pale causeway-thread reaching it.
+- **The three banners of the Marches** — Dominion, Coalition, and the Third Banner, which should be drawn in a pattern that matches nothing else on any plate.
+- **The Rising Shell offshore** — a curved suggestion of something large breaking the Cinder Deep's surface, water streaming off stone that has not seen sky in living memory.
+- **The Fae Mere's edge** — the Twin Trees as the gateway; inside them the rendering may go slightly wrong on purpose: reflections that do not quite agree with what casts them.
 
 ### What This Plate Does Not Resolve
 

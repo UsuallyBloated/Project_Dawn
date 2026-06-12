@@ -9,7 +9,7 @@
 
 This plate is the fourth of the regional sheets and zooms upon the northern stretch of the continent — the Dwarven Mountain Holds along the high range, the Gnome-and-Kobold industrial city of Cogsworth nestled at the southern foothills, the Iron Way that runs between them, and the surface entries to the Kobold Deeps that lie beneath Cogsworth's lower levels.
 
-The Holds are an underground civilisation by inhabitation. Their named halls are interior to the mountain rather than upon it. The plate accordingly renders the Holds as named hold-gates on the surface, with a summary hall-list at each gate; the hall-by-hall interior layouts are a Plate VI matter and will appear on the Underdark plate when issued. The Kobold Deeps are likewise interior; the surface entries are shown here, the tunnel network is shown on Plate VI.
+The Holds are an underground civilisation by inhabitation. Their named halls are interior to the mountain rather than upon it. The plate accordingly renders the Holds as named hold-gates on the surface, with a summary hall-list at each gate; the hall-by-hall interior layouts are a Plate VI matter and are carried on the Underdark plate. The Kobold Deeps are likewise interior; the surface entries are shown here, the tunnel network is shown on Plate VI.
 
 The cross-section inset on the right of the plate renders Cogsworth's vertical structure — the city is built on terraced foothills and runs deeper than its surface footprint suggests, with the Kobold Deeps continuous with Cogsworth's lower levels at the contested junction the Compact licences and the Long-Nose Pack patrol.
 
@@ -27,6 +27,21 @@ The scale is roughly three league marches per grid square, the same as Plates II
   # tundra / talus       ⌂ farmstead / lodge    ▼ sub-surface descent   ✚ shrine / cairn
   ─│ trail or footpath   ═║ road / king's way   ↓→ river or current     ⛯ lighthouse
   ⚙ industrial works     ⊙ tower / spire        ☠ abandoned / ruin       ⛏ mine / pit
+```
+
+---
+
+## The Rose and the Scale
+
+```
+                  N
+                ╲ │ ╱
+            W ──  ✛  ── E        one grid square ≈ three league marches
+                ╱ │ ╲            (approximate; the Hall's chains were not
+                  S               dragged over every furlong of it)
+
+            the Hall's rose — for the painted impression, render as the
+            six-fingered rose per the Drafting Standards sheet
 ```
 
 ---
@@ -214,7 +229,7 @@ The scale is roughly three league marches per grid square, the same as Plates II
 
 ### The Three Holds — Surface Survey
 
-The Holds are interior structures. The plate renders them as named hold-gates on the mountain surface and lists each hold's principal halls in summary. The hall-by-hall layouts are interior to the mountain and will appear on Plate VI when the Underdark plate is filed. The three named holds the Hall has confirmed at survey date are:
+The Holds are interior structures. The plate renders them as named hold-gates on the mountain surface and lists each hold's principal halls in summary. The hall-by-hall layouts are interior to the mountain and are carried on Plate VI, the Underdark plate. The three named holds the Hall has confirmed at survey date are:
 
 - **Kethara Hold** — the senior hold; the king's seat. The Kethara Vault holds the royal treasury; the Reading Room holds the ancient texts the Hold keeps under restricted access; the **Astronomical Observatory** has filed Calibration State logs since Year 311 CR and is the only Hold facility the Hall maintains a working correspondence with. The Observatory's Year 407 CR log entries are the Calibration State documentation the Hall cross-references against the Aelindra archive's "sky was wrong" event.
 - **Stoneholt** — the lesser hold; the Mason-Quarter and the Hall of Lineages are housed here. Stoneholt's working speciality is masonry and Runeforge stonework; the Mason-Hold is where the Runeforge masons live. **The Old Hold** above is a former hall now in ceremonial use only; it has been abandoned for current operations since Year 612 CR and is kept open for funerary purposes.
@@ -247,12 +262,24 @@ The Deeps are an underground civilisation; the surface entry from Cogsworth is t
 
 The **Probe tier** is where the Expansion Tunnels begin. The **Old Dominion Trace** is the original Dominion construction beneath Cogsworth — the tunnels were Dominion supply lines before passing to Kobold independence after the Year 558 CR collapse. The **Expansion Tunnels** are the current Kobold-only digging programme; the Long-Nose Pack maintains exclusive access. The tunnels' direction has been inferred from compact-licensed surface readings; the inferred terminus is somewhere in the direction of the Quiet Dig, which is on Plate VI. Whether the Pack knows what the inferred terminus is, or whether the Pack is digging toward it without knowing, is the question the Compact's intelligence office has been pursuing for nineteen years without an answer that the office considers usable.
 
+### Visual Character — for the Chief Artist
+
+The Industrial Belt is the continent's only plate where the made outweighs the grown. The palette is metal and mountain: the cold blue-grey of the high range under snow, the warm brass-and-copper glow of Cogsworth's terraced tiers, forge-orange at the Smelteries and the Greatforge, the iron-dark of the Holds' gates in the mountain faces, and the perpetual industrial haze — steam from Pipefall Square, smelter-smoke, the warm breath of Sable's Run leaving the city.
+
+The signature visuals — for the artist's notebook:
+
+- **Cogsworth's cross-section** — the inset is the plate's centrepiece: six tiers descending from the Grand Clock Tower's surface to the contested junction, warm-lit at the working tiers, dimming through the Kobold Outers, ending where the Deeps begin.
+- **The Grand Clock Tower** — the city's crown, its bells eighty years slightly off; the artist may render the clock-face reading a minute the rest of the plate does not keep.
+- **The Iron Way** — a kept mountain road with its stations: the Iron Bridge over the gulley, the Halfway Hostel's lit windows, the Snow-Watchers' Hut at the pass.
+- **The three hold-gates** — Kethara, Stoneholt, Deepforge: carved mountain faces, each gate distinct (king's seat, mason's hall, working forge); the mountains keep their interiors.
+- **The Disputed Valve** — small, iron, unopened for eighty years; render it plainly. It is a valve. That is the joke, and the joke is load-bearing.
+
 ### What This Plate Does Not Resolve
 
 - **The Hold interior layouts.** Each Hold's halls are listed in summary on plate; the hall-by-hall plans are an Underdark plate matter and are reserved for Plate VI. Stonemason Vell of Stoneholt's plan submission has been received and is in the queue.
-- **The Underdark Crossing proper.** The deep-tunnel descents from Kethara and Deepforge are marked here as ▲ entries. The tunnels themselves are on Plate VI when issued.
+- **The Underdark Crossing proper.** The deep-tunnel descents from Kethara and Deepforge are marked here as ▲ entries. The tunnels themselves are on Plate VI.
 - **The Expansion Tunnels' actual route.** As above. The plate marks the entry and notes the inferred terminus; the route between is not surveyed and is not on plate.
-- **The Astronomical Observatory's Calibration State logs.** The Observatory's Year 407 CR log is the longest single Calibration State observation in the Hall's records, and a Plate VIII (the Architect Site Network) is in preparation to render the Observatory's correspondences against the network's confirmed sites. The Observatory's logs themselves are not the Hall's to publish.
+- **The Astronomical Observatory's Calibration State logs.** The Observatory's Year 407 CR log is the longest single Calibration State observation in the Hall's records, and Plate VIII (the Architect Site Network) renders the Observatory's correspondences against the network's confirmed sites. The Observatory's logs themselves are not the Hall's to publish.
 
 ---
 

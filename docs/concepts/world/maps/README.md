@@ -26,12 +26,24 @@ The series is filed in two volumes:
 
 ## Volume II — Starting-Zone Plates
 
+Each starting-zone plate carries a vignette volume (the `.i` series) — the artist's-hand renderings of the zone's principal points of interest, with colour, dimension, and atmospheric notes at the easel's working scale.
+
 | Plate | Title | Filed | Status |
 |---|---|---|---|
-| IX-A | [Greenshire at Survey Detail](09a_greenshire.md) | Stillmonth, 847 CR | Filed (Halfling/Human/Half-Elf starter) |
-| IX-B | [Ashfang Hold at Survey Detail](09b_ashfang_hold.md) | Stillmonth, 847 CR | Filed (Ogre/Troll/Half-Ogre starter) |
-| IX-C | [The Bonecourt at Survey Detail](09c_bonecourt.md) | Stillmonth, 847 CR | Filed (Kel'varath starter) |
-| IX-D | [The Kobold Deeps at Survey Detail](09d_kobold_deeps.md) | Stillmonth, 847 CR | Filed (Kobold starter) |
+| IX-A | [Greenshire at Survey Detail](09a_greenshire.md) | Stillmonth, 847 CR | Filed (Halfling/Human/Half-Elf starter) · vignettes IX-A.i |
+| IX-B | [Ashfang Hold at Survey Detail](09b_ashfang_hold.md) | Stillmonth, 847 CR | Filed (Ogre/Troll/Half-Ogre starter) · vignettes IX-B.i |
+| IX-C | [The Bonecourt at Survey Detail](09c_bonecourt.md) | Stillmonth, 847 CR | Filed (Kel'varath starter) · vignettes IX-C.i |
+| IX-D | [The Kobold Deeps at Survey Detail](09d_kobold_deeps.md) | Stillmonth, 847 CR | Filed (Kobold starter) · vignettes IX-D.i |
+
+## Annex Appendices
+
+| Sheet | Purpose |
+|---|---|
+| [The Hall's Drafting Standards](drafting_standards.md) | The conventions that make twelve plates read as one atlas — border, rose, seal, lettering, glyph-to-icon table, and the rendering of other authorities' documents |
+| [The Table of Leagues](appendix_league_table.md) | Hub-to-hub road-league distances and travel times at the Hall's working paces |
+| [Corrections Sheet, Stillmonth 847](corrections_847.md) | The corrections applied before the Lateharvest binding, the additions of this impression, and the matters filed for the lore-keeper |
+
+*Out-of-world: the per-plate art-commission briefs for the painted impressions live at `docs/design/map_commission_briefs.md`.*
 
 ## Plates Possible (Not Yet Committed)
 

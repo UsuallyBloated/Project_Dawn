@@ -29,6 +29,21 @@ The conventions of the Atlas plate remain canonical for that document. The legen
 
 ---
 
+## The Rose and the Scale
+
+```
+                  N
+                ╲ │ ╱
+            W ──  ✛  ── E        one grid square ≈ eight league marches
+                ╱ │ ╲            (approximate; the Hall's chains were not
+                  S               dragged over every furlong of it)
+
+            the Hall's rose — for the painted impression, render as the
+            six-fingered rose per the Drafting Standards sheet
+```
+
+---
+
 ## Plate I — The Surface
 
 ```
@@ -114,7 +129,7 @@ The conventions of the Atlas plate remain canonical for that document. The legen
    ≈     ↓ ↓   ♣♣                                  ♣♣         ║                                                  ║                                    ≈
    ≈     ↓ ↓   ♣♣                                  ♣          ║                                                  ║                                    ≈
    ≈     ↓ ↓   ♣♣  ★ Wood Elf canopy villages      ♣          ╠══════════════════════════════════════════════════╝       (40,000 souls;               ≈
-   ≈     ↓ ↓   ♣♣  ◊ Millhaven (hamlet)            ♣          ║      the Greymere river route                            seven Compact council        ≈
+   ≈     ↓ ↓   ♣♣  ◊ Millhaven (hamlet)            ♣          ║      the Greymere river (↓→)                             seven Compact council        ≈
    ≈     ↓ ↓   ♣♣  ◊ Witherbeck Stone              ♣          ║                                                          seats; two always empty)     ≈
    ≈     ↓ ↓   ♣♣  ◊ The Wood Elf Council Tree     ♣          ║                                                                                       ≈
    ≈     ↓ ↓   ♣♣                                  ♣          ║                                                                                       ≈
@@ -173,7 +188,7 @@ The conventions of the Atlas plate remain canonical for that document. The legen
    ≈            ♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣                                                 │        #####       [ E A S T E R N    B A D L A N D S ]              ##    ≈
    ≈          ♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣♣                                                 │        ####                  · 25–40 ·                              ####   ≈
    ≈         ♣♣♣                  ♣♣♣                                                │        ####                                                          ####  ≈
-   ≈        ♣♣      [ F A E         ♣♣                                               │        ####     ◊ Bone Citadel ✦                                    ####  ≈
+   ≈        ♣♣      [ F A E         ♣♣                                               │        ####     ◊ Bone Citadel ✧                                    ####  ≈
    ≈        ♣♣          M E R E ]   ♣♣                                               │        ####       (bones too large for any local fauna; Year 300+) ####  ≈
    ≈        ♣♣        · 25–35 ·     ♣♣                                               │        ####                                                          ####  ≈
    ≈        ♣♣                      ♣♣                                               │        ####     ◊ The Calibration Tower ✦                            ####  ≈
@@ -262,7 +277,7 @@ The conventions of the Atlas plate remain canonical for that document. The legen
    ≈                                                  T H E    R E M N A N T    S E A                                                                                        ≈
    ≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈
                   (warm · blue-green · Architect shelf sites confirmed at multiple shallow points; Walking Name Order holds three active survey licences)
-                       (south to the Bone Reach; the Vah'tharan Passage runs from there to Maren / Vah'thara beyond — see Plate VII when issued)
+                       (south to the Bone Reach; the Vah'tharan Passage runs from there to Maren / Vah'thara beyond — see Plate VII)
 ```
 
 ---
@@ -326,10 +341,22 @@ The two underground sites — the **Quiet Dig** (Underdark Crossing) and the **D
 
 **Ixareth-Kul and the Dominion Vault.** The Vault's ▼ glyph indicates the sub-surface descent from the inner ring. The Vault is accessed from beneath the Roofless Hall and is, as of filing, sealed. No survey team has reached it. The three Dominion Orders dispute access; this plate does not record their positions in any detail because the Hall does not consider their dispute a cartographic matter.
 
+### Visual Character — for the Chief Artist
+
+Plate I is the continental statement and should read as one. The ground is aged broadsheet parchment; the inks are sepia and iron-gall; the washes are muted and regional — cold grey-blue for the Greymere, warm blue-green for the Remnant, honey-and-green for the Heartlands, rust-red for the Badlands, black-stippled grey for the volcanic coast, grey-violet for the blight. No single region may shout; the plate's argument is the whole.
+
+The signature visuals — for the artist's notebook:
+
+- **The Architect arc** is the only gold on the plate. Ten ✦ sites rendered as small gold-leaf six-fingered handprints (per the Drafting Standards); a reader's eye sweeping the plate should find the arc before they know they are looking for it.
+- **The two offshore sites** — the Drowned Hold in Harrow Bay and the Rising Shell in the Cinder Deep — sit in open water with room around them; their isolation is the point.
+- **The road and river net** is fine-lined and quiet: the Iron Way, the Northern Road, the East Trunk, Sable's Run, and the Greymere river are the strings that hold the regions together.
+- **The blight edge** at Ardenmoor's east is the plate's one hard line — a wash boundary that does not feather.
+- **The empty east** — the uncharted scrub past the Badlands fades to bare parchment with the Hall's *no field data* note in the Archivist's hand. Blank parchment is a feature, not a failure.
+
 ### What the Plate Does Not Show
 
 - **The Underdark.** Plate VI carries the underground network. The surface entry points (▲) at Cogsworth lower, Dwarven Holds deep, Aelindra root, and Ixareth-Kul sub-surface are shown here for reference; everything below the entry is on Plate VI.
-- **The second continent.** The Vah'tharan Passage runs south-southeast of the Bone Reach into open water and is not shown on this plate. The Maren / Vah'thara sketch carried in the Atlas remains the working document. A dedicated maritime plate (VII) is in preparation.
+- **The second continent.** The Vah'tharan Passage runs south-southeast of the Bone Reach into open water and is not shown on this plate. The Maren / Vah'thara sketch carried in the Atlas remains the working document for the second continent; the maritime detail is carried on Plate VII.
 - **Faction territory overlays.** Where a zone's de facto control is disputed (the Breach, the Ashen Marches, sections of the Underdark Crossing), the plate marks the contest with ⊕ but does not attempt to render shifting territorial lines. The Breach Warden's operational documents are the reference for current control state and are updated more often than this plate is.
 
 ---
