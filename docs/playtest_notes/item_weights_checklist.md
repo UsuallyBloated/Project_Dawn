@@ -10,7 +10,7 @@ Key numbers under test (full table: `docs/design/item_weight_proposal.md`):
 | Thing | Effect | Who/Where | Notes |
 |---|---|---|---|
 | Capacity | `10 + STR` | character window Weight row | yellow > capacity, red ≥ 2× |
-| Ore / pickaxe | 3.0 each / 5.0 | mining haul | ~5 iron ore fills a STR-10 miner with pickaxe |
+| Ore / pickaxe | 0.25 each / 5.0 | mining haul | family rescaled ÷12 post-sign-off; full 20-stack of ore = 5.0 |
 | Iron chain kit | 18.5 worn (coif 3, vest 6, leggings 5, boots 3, gloves 1.5) | paperdoll | rescaled this pass — was 30.5 |
 | Potions / reagents | 0.3 / 0.1 each | bags | 10-potion stack = 3.0 |
 | Arrow Bundle | 1.0 each, **stack cap now 20** | inventory | was stack 200 (= 200.0 weight) |
@@ -23,16 +23,18 @@ Diagnostics: in-game console (backtick or `/console`); `Encumbrance.total_weight
 - [ ] Server running with `PD_DEV_CMDS=1` (only for the money-button regression rows)
 - [ ] Client logged in; character window open so the Weight row is visible
 
-## 1 — Ore run (the heavy haul)
-The designed gathering pressure: ore is the heaviest common stackable.
+## 1 — Mining & smelting loop (ore rescaled to 0.25 post-sign-off)
+Ore is deliberately light now; the smelt should still shrink the haul.
 
 - [ ] **Carry a pickaxe** → Weight row +5.0. notes:
-- [ ] **Add iron/copper ore one at a time** → +3.0 per ore; on a fresh-STR character
-  the encumbered transition ("You are encumbered!" + yellow Weight + HUD label) hits
-  around the 5th–6th ore. notes:
-- [ ] **While encumbered, move** → visibly slower; keep stacking toward 2× capacity →
-  Weight turns red, HUD says "Overloaded!". notes:
-- [ ] **Drop/vendor the ore** → speed and colors recover, "no longer encumbered". notes:
+- [ ] **A full 20-stack of iron ore** → +5.0 total (0.25 each; fractions render in
+  the Weight row). notes:
+- [ ] **Smelt 2 ore → 1 ingot at a forge** → those items' carried weight drops
+  0.5 → 0.1. notes:
+- [ ] **Heavy-haul encumbrance check** (ore no longer triggers it): stack thick
+  leather slabs (1.5) / lumps of clay (0.5) / ale (0.5) until over capacity →
+  "You are encumbered!" + yellow Weight + HUD label; movement visibly slower; keep
+  going toward 2× → red "Overloaded!"; drop the load → recovers. notes:
 
 ## 2 — Full armor kit (worn gear counts; chain was rescaled)
 - [ ] **Equip full iron chain + iron short sword** (22.5 worn total) → Weight row
@@ -53,8 +55,8 @@ The designed gathering pressure: ore is the heaviest common stackable.
   stack adds 20.0 weight. notes:
 
 ## 5 — Flavor spot-checks
-- [ ] **Mithril ingot (0.1) vs adamantite ingot (3.0)** → the lore reads in the Weight
-  row when carrying a stack of each. notes:
+- [ ] **Mithril ore stack (20 = 2.0) vs adamantite ore stack (20 = 10.0)** → the
+  lore still reads in the Weight row, post-rescale. notes:
 - [ ] **Brown Steed Whistle** → barely registers (0.1). notes:
 
 ## 6 — Regression: currency & encumbrance UI unchanged (from currency_ui_checklist §5)

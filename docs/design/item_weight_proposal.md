@@ -3,7 +3,9 @@
 **Status: APPROVED & APPLIED (2026-06-12).** Rulings: chain rescale Option B (three
 anchors changed with permission); ore > ingot confirmed; universal 0.1 floor, no
 zero-weight items; Arrow Bundle Option A (`stack_size` 200→20); Gold Ingot 2.0,
-Brown Steed Whistle 0.1, meats 0.25. Tables below show the final applied values —
+Brown Steed Whistle 0.1, meats 0.25. **Amended later same day:** smithing family
+rescaled ÷12 (ore 0.25 / ingot 0.1 / gold ingot 0.2 / coal 0.2 / mithril 0.1·0.1 /
+adamantite 0.5·0.2). Tables below show the final applied values —
 this doc is the record; `tools/item_weight_audit.gd` regenerates the live catalog.
 
 **How this was produced:** the audit tool (`tools/item_weight_audit.gd`) generated the
@@ -70,6 +72,14 @@ exists where forges sit near mining nodes (all smelting requires `station=forge`
 
 **Ruling: confirmed — ore 3.0 / ingot 1.5 applied.**
 
+**Amended (later same day): the whole smithing family rescaled ÷12** — ore 0.25 /
+ingot 0.1, gold ingot 0.2 (flavor bump kept), coal 0.2, mithril ore 0.1 / ingot 0.1,
+adamantite ore 0.5 / ingot 0.2. Ore > ingot survives (2 ore = 0.5 → 1 ingot = 0.1,
+a 5:1 smelt compression) and every lore ordering holds, but ore hauling is no longer
+an encumbrance pressure point — a full 20-stack is 5.0, and a STR-10 miner with a
+pickaxe can carry three full stacks. The miner's weight lever is now coins and bulk
+goods (slabs, clay, drink), not the ore itself.
+
 ### 3. Zero-weight allowlist
 
 Proposal ships with **no zero-weight items** — everything is ≥ 0.1. Two near-misses
@@ -86,13 +96,17 @@ Worst full-stack burdens at proposed weights (fresh capacity = 20.0 for scale):
 | Item | Per | × stack | Full stack |
 |---|---|---|---|
 | Arrow Bundle | 1.0 | 20 (was 200) | 20.0 after the ruling below |
-| Adamantite Ore | 6.0 | 20 | 120.0 (lore-dense flagship; carry cap binds first, harmless) |
-| Standard ores (×5) | 3.0 | 20 | 60.0 (= exactly one STR-50 capacity) |
-| Adamantite Ingot | 3.0 | 10 | 30.0 |
-| Coal / Mithril Ore | 1.0 | 20 | 20.0 (= one fresh capacity; forge-stocking is a decision) |
-| Ingots (×6) / Thick Leather Slab / Mechanical Trap | 1.5–3.0 | 5–10 | 15.0 |
+| Thick Leather Slab | 1.5 | 10 | 15.0 |
+| Mechanical Trap | 3.0 | 5 | 15.0 |
 | Damaged Wolf Pelt | 0.6 | 20 | 12.0 |
 | Crude Ale / Honey Mead / Meat Pie / Lump of Clay | 0.5 | 20 | 10.0 |
+| Adamantite Ore | 0.5 | 20 | 10.0 (post-rescale; was 120.0) |
+| Bear Hide | 1.5 | 5 | 7.5 |
+| Metal Bits / Ruined Metal Scraps | 0.3 | 20 | 6.0 |
+| Standard ores (×5) | 0.25 | 20 | 5.0 (post-rescale; was 60.0) |
+
+*(The smithing rows that used to top this table collapsed after the ÷12 family
+rescale — see the question-2 amendment.)*
 
 **Arrow Bundle is broken in the data, not the weight.** The item is "a bundle of
 twenty fletched arrows" (10c) but ships with `stack_size = 200` — a full stack is
@@ -116,7 +130,8 @@ stale "200 arrows" from before the item became a bundle. The mass itself is righ
   in the game, just under the 2H war axe (8.0). Softer: 5.0–6.0. Punishing: 8.0+.
 - **Mechanical Trap 3.0** — top of the handoff band; a 5-stack is 15.0. Drop to 2.0
   for casual utility, raise to 4.0 if trap loadouts should really hurt.
-- **Gold Ingot** — ruled **2.0** for gold-heft flavor (was 1.5 uniform band).
+- **Gold Ingot** — ruled **2.0** for gold-heft flavor, then **0.2** after the family
+  rescale (the flavor bump survives, now over the 0.1 ingot band).
 - **Cloth Slippers 0.5 vs Patched Cloth Boots 1.0** — slippers are lore-light; the
   patched boots are *boots* (more material), so the 2c junk outweighs the 18c clean
   item. Intentional; unify both at 0.5 or 1.0 if it bugs you.
@@ -220,29 +235,34 @@ context). All other rows get `weight = <value>` appended in their `.tres`.
 | Stale Bread | 20 | 1 | 0.3 | staleness isn't lighter |
 | Water Flask | 10 | 3 | (anchor) 0.5 | |
 
-### Mining & smithing — ore 3.0 / ingot 1.5 / coal 1.0; lore deviations: mithril light, adamantite dense; scrap 0.2–0.3
+### Mining & smithing — ore 0.25 / ingot 0.1 / coal 0.2 (÷12 family rescale, later ruling); mithril light, adamantite dense; scrap 0.2–0.3
 
 | Item | Stack | Vendor (c) | Weight | Note |
 |---|---|---|---|---|
-| Adamantite Ingot | 10 | 360 | 3.0 | dense lore carries through smelting |
-| Adamantite Ore | 20 | 150 | 6.0 | "extraordinarily dense" — hauling it should hurt |
-| Bronze Ingot | 10 | 22 | 1.5 | alloy conserves: 1.5+1.5 in → 2×1.5 out |
-| Coal | 20 | 4 | 1.0 | 20-stack = one fresh capacity |
-| Copper Ingot | 10 | 14 | 1.5 | |
-| Copper Ore | 20 | 6 | 3.0 | ~5 ore fills a STR-10 miner with pickaxe |
-| Gold Ingot | 10 | 82 | 2.0 | ruled above band for gold-heft flavor |
-| Gold Ore | 20 | 35 | 3.0 | |
-| Iron Ingot | 10 | 22 | 1.5 | |
-| Iron Ore | 20 | 10 | 3.0 | |
-| Metal Bits | 20 | 4 | 0.3 | pocket scrap |
-| Mithril Ingot | 10 | 180 | 0.1 | "nearly weightless" — held at floor, not 0 |
-| Mithril Ore | 20 | 75 | 1.0 | lore-light; smelting purifies away the waste rock |
+| Adamantite Ingot | 10 | 360 | 0.2 | dense lore carries through smelting (2× band) |
+| Adamantite Ore | 20 | 150 | 0.5 | "extraordinarily dense" — 2× the ore band |
+| Bronze Ingot | 10 | 22 | 0.1 | |
+| Coal | 20 | 4 | 0.2 | |
+| Copper Ingot | 10 | 14 | 0.1 | |
+| Copper Ore | 20 | 6 | 0.25 | full 20-stack = 5.0 |
+| Gold Ingot | 10 | 82 | 0.2 | flavor bump over the 0.1 band (ruled) |
+| Gold Ore | 20 | 35 | 0.25 | |
+| Iron Ingot | 10 | 22 | 0.1 | |
+| Iron Ore | 20 | 10 | 0.25 | |
+| Metal Bits | 20 | 4 | 0.3 | pocket scrap — now outweighs an ingot; flagged below |
+| Mithril Ingot | 10 | 180 | 0.1 | "nearly weightless" — floor |
+| Mithril Ore | 20 | 75 | 0.1 | lore-light, still the lightest ore |
 | Ruined Metal Scraps | 20 | 1 | 0.3 | same scrap as Metal Bits |
 | Rusted Buckle | 20 | 1 | 0.2 | single small fitting |
-| Silver Ingot | 10 | 42 | 1.5 | |
-| Silver Ore | 20 | 18 | 3.0 | |
-| Tin Ingot | 10 | 12 | 1.5 | |
-| Tin Ore | 20 | 5 | 3.0 | |
+| Silver Ingot | 10 | 42 | 0.1 | |
+| Silver Ore | 20 | 18 | 0.25 | |
+| Tin Ingot | 10 | 12 | 0.1 | |
+| Tin Ore | 20 | 5 | 0.25 | |
+
+*(Rescale side-effect, not yet ruled: the scrap band (Metal Bits / Ruined Metal
+Scraps 0.3, Rusted Buckle 0.2) wasn't part of the family rescale and now outweighs
+finished ingots (0.1) and matches/exceeds ore (0.25). Say the word to drop scrap to
+0.1 across the board.)*
 
 ### Hides & tailoring — hides by animal size (condition is a price axis, not mass); fibers/threads 0.1
 

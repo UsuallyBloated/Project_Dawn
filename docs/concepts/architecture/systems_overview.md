@@ -164,7 +164,7 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   coin regardless of tier** — the designed pressure to convert hoards) + inventory +
   worn equipment (`ItemData.weight`; **all 169 items tagged 2026-06-12** per the
   approved `docs/design/item_weight_proposal.md` — weapons 2–8, chain armor rescaled
-  ~45% from the starter anchors, ore 3.0 / ingot 1.5 with mithril/adamantite lore
+  ~45% from the starter anchors, ore 0.25 / ingot 0.1 with mithril/adamantite lore
   exceptions, universal 0.1 floor so nothing weighs 0; coverage check:
   `tools/item_weight_audit.gd`, run headless with `--script`). Over capacity:
   movement slows linearly to a 0.25 floor (applied after the mount mult in
