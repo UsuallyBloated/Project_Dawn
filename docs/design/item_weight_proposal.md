@@ -102,8 +102,8 @@ Worst full-stack burdens at proposed weights (fresh capacity = 20.0 for scale):
 | Crude Ale / Honey Mead / Meat Pie / Lump of Clay | 0.5 | 20 | 10.0 |
 | Adamantite Ore | 0.5 | 20 | 10.0 (post-rescale; was 120.0) |
 | Bear Hide | 1.5 | 5 | 7.5 |
-| Metal Bits / Ruined Metal Scraps | 0.3 | 20 | 6.0 |
 | Standard ores (×5) | 0.25 | 20 | 5.0 (post-rescale; was 60.0) |
+| Metal Bits / Ruined Metal Scraps | 0.1 | 20 | 2.0 |
 
 *(The smithing rows that used to top this table collapsed after the ÷12 family
 rescale — see the question-2 amendment.)*
@@ -249,20 +249,19 @@ context). All other rows get `weight = <value>` appended in their `.tres`.
 | Gold Ore | 20 | 35 | 0.25 | |
 | Iron Ingot | 10 | 22 | 0.1 | |
 | Iron Ore | 20 | 10 | 0.25 | |
-| Metal Bits | 20 | 4 | 0.3 | pocket scrap — now outweighs an ingot; flagged below |
+| Metal Bits | 20 | 4 | 0.1 | pocket scrap — dropped to ingot floor with the rescale |
 | Mithril Ingot | 10 | 180 | 0.1 | "nearly weightless" — floor |
 | Mithril Ore | 20 | 75 | 0.1 | lore-light, still the lightest ore |
-| Ruined Metal Scraps | 20 | 1 | 0.3 | same scrap as Metal Bits |
-| Rusted Buckle | 20 | 1 | 0.2 | single small fitting |
+| Ruined Metal Scraps | 20 | 1 | 0.1 | same scrap as Metal Bits |
+| Rusted Buckle | 20 | 1 | 0.1 | single small fitting |
 | Silver Ingot | 10 | 42 | 0.1 | |
 | Silver Ore | 20 | 18 | 0.25 | |
 | Tin Ingot | 10 | 12 | 0.1 | |
 | Tin Ore | 20 | 5 | 0.25 | |
 
-*(Rescale side-effect, not yet ruled: the scrap band (Metal Bits / Ruined Metal
-Scraps 0.3, Rusted Buckle 0.2) wasn't part of the family rescale and now outweighs
-finished ingots (0.1) and matches/exceeds ore (0.25). Say the word to drop scrap to
-0.1 across the board.)*
+*(Rescale follow-up, ruled: the scrap band (Metal Bits / Ruined Metal Scraps /
+Rusted Buckle) was dropped to the 0.1 floor so loose scrap no longer outweighs a
+finished ingot.)*
 
 ### Hides & tailoring — hides by animal size (condition is a price axis, not mass); fibers/threads 0.1
 
