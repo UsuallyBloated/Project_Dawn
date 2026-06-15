@@ -134,15 +134,24 @@ Rolled server-side on death, stored on the bag. Tunable constants in `loot.rs`.
 ## Round Robin rotation (per-corpse) — precise rules
 
 - Each `Group` holds a `loot_turn` pointer (index into `members`).
-- When a corpse spawns owned by a group, assign `assigned_looter` = the next member
-  in rotation **who is eligible** (online + within `GROUP_COIN_SHARE_RANGE` of the
-  corpse), then advance the pointer. If none are in range, fall back to the
-  kill-creditor. Solo owner → `assigned_looter` = the killer.
-- In RR, **only `assigned_looter`** may loot that corpse's **items**. Other group
-  members are rejected ("Not your turn.").
-- **Coin ignores the turn** — it splits to all eligible (30m) members the moment the
-  corpse is looted, regardless of who the assigned looter is.
-- In FFA, `assigned_looter` is unset; any group member may loot items.
+- **Assignment is lazy — on the first loot attempt, not at spawn.** The corpse stores
+  `assigned_looter: Option<ClientId>`, `None` until claimed. The first time any group
+  member tries to loot an RR-owned corpse, the server assigns it to the next member in
+  rotation **who is eligible** (online + within `GROUP_COIN_SHARE_RANGE` of the corpse)
+  and advances the pointer past them. (Implemented lazily rather than at spawn so the
+  spell/pet death paths don't need the group state, and so a corpse nobody loots never
+  burns anyone's turn — strictly fairer.)
+- In RR, **only `assigned_looter`** may take that corpse's **items**; other members are
+  rejected ("Not your turn."). A rejected attempt still *claims* the corpse for the
+  rotation member (the clicker doesn't get the turn), so it can't be gamed.
+- **Coin ignores the turn** but is gated behind it in the handler: a not-your-turn
+  attempt `continue`s before the coin step, so coin is paid only when the rightful
+  looter loots — then it splits to all eligible (30m) members per the unified rule.
+- Solo / ungrouped / FFA → `assigned_looter` stays `None`; any member with loot rights
+  may take items.
+- **v1 limitation:** if the assigned member never loots their claimed corpse, it
+  expires with items lost (their turn was spent on the claim). Acceptable use-it-or-
+  lose-it; revisit if playtest dislikes it.
 
 ---
 
