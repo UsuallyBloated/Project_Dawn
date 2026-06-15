@@ -57,9 +57,14 @@ read `debug.log`, and it keeps working even if file IO is broken (it reads
 ## Architecture: two repos, one game
 
 - **Client** (this repo): Godot 4.4. Nearly all gameplay lives in ~51 autoload singletons.
-- **Server** (`F:\Projects\server`): Rust authoritative server. **Pre-alpha — auth only**
-  (Register / Login / CharList / CharCreate / CharDelete / Logout). The world UDP
-  simulation is **not built yet**; clients run **local-save** until it lands.
+- **Server** (`F:\Projects\server`): Rust authoritative server. Auth (Register / Login /
+  CharList / Char{Create,Delete} / Logout over WebSocket) **plus a live world UDP
+  simulation** (renet, 20 Hz): server-authoritative movement, combat, regen, enemy AI,
+  pets, inventory/equipment, four-tier currency + coin loot drops, group state + loot
+  rights, passive skills. Wire protocol is **PD_W0014** (`crates/protocol`); the client
+  bridges it via the `gdext_net` GDExtension (source in the server repo, shares the
+  `protocol` crate). A `--local-save` dev path still exists for solo iteration without a
+  server. (This line was "auth-only, world not built" through ~early 2026 — long stale.)
 - **The project is multiplayer-only.** There is no supported solo mode — don't scope
   features or tests around a solo path. Existing solo plumbing is vestigial.
 - **Before any change that crosses the wire**, read the canonical contract:

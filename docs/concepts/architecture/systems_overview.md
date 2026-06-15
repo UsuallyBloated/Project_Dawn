@@ -182,6 +182,28 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   warning label under the stat panel only while over capacity
   (`hud.gd::_build_encumbrance_indicator`), so the slowdown is explained without
   opening any window.
+- **Group loot rights & coin drops (2026-06-15, server-authoritative, wire PD_W0014):**
+  the faucet + the rules the economy was missing. Design:
+  `docs/design/group_loot_and_coin.md`.
+  - **Coin drops** — mobs roll coin on death by tier (`loot::roll_coin_for_mob`, scaled
+    by mob level per `currency.md`: wildlife 0, low humanoid 5–50c, mid 50–300c, named
+    1–20s, boss 1–10g/rare plat; beasts identified by a name list). The coin rides on the
+    `LootBag` (`coins: Coins`) and shows as a gold "Coins:" row in the loot window.
+  - **Ownership** — a corpse belongs to the kill-creditor (top damager) and, resolved
+    live at loot time, their group (`LootBag.owner_killer` + `can_loot`). Strangers are
+    refused (`LootRejected` → "That isn't your loot."). Player-dropped bags stay public.
+  - **Loot mode** (per `Group`, leader-set, default Round Robin; `groups::LootMode`):
+    **Round Robin** rotates item turns per corpse (lazy first-loot claim via
+    `next_loot_turn`, "Not your turn to loot." otherwise) and auto-splits coin evenly
+    among group members within `GROUP_COIN_SHARE_RANGE` (30 m) of the corpse; **FFA** lets
+    any member loot anything and gives all coin to the looter. Coin credit reuses the
+    vendor-payout path (`Coins::add_payout` + `CoinsUpdate`).
+  - **Per-player `/autosplit`** (`PerConnection.autosplit`, default on): off keeps coin
+    *you* loot for yourself instead of splitting (EQ-style).
+  - **Client**: `/autosplit on|off` and leader `/loot rr|ffa` chat commands (`hud.gd`);
+    `GroupManager.loot_mode` mirrors the roster; group-panel header shows `[RR]`/`[FFA]`;
+    coin + reject feedback flow through `RemoteLootBagManager`. XP split is unchanged
+    (still distance-agnostic — a deliberate asymmetry vs coin's proximity gate).
 
 ---
 
