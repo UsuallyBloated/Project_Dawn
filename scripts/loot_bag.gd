@@ -9,6 +9,18 @@ extends Area3D
 # so LootWindow doesn't care.
 var items: Array = []
 
+# PD_W0014 — coin sitting on this corpse, shown in the loot window.
+# Server-authoritative; written by RemoteLootBagManager from each
+# LootBagSpawn snapshot. Looting any item (or Take All) credits it
+# server-side and a re-snapshot zeroes these. Local-mode bags stay 0.
+var coin_platinum: int = 0
+var coin_gold: int = 0
+var coin_silver: int = 0
+var coin_copper: int = 0
+
+func has_coins() -> bool:
+	return coin_platinum > 0 or coin_gold > 0 or coin_silver > 0 or coin_copper > 0
+
 # Track 5 sub-task 4 — when non-negative, this bag is server-owned and
 # its lifecycle is driven by LootBagSpawn / EntityDespawn broadcasts.
 # Local single-player bags leave this at -1; they keep the legacy

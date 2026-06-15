@@ -71,8 +71,25 @@ func refresh() -> void:
 		return
 	for child in _rows.get_children():
 		child.queue_free()
+	# PD_W0014 — coin sits at the top of the corpse contents. It's
+	# informational: looting any item (or Take All) auto-credits the coin
+	# server-side, so there's no per-coin Take button.
+	if bag.has_coins():
+		_add_coin_row()
 	for i in bag.items.size():
 		_add_row(bag.items[i], i)
+
+func _add_coin_row() -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	_rows.add_child(row)
+	var lbl := Label.new()
+	lbl.text = "Coins: " + Currency.format_coins(
+		bag.coin_platinum, bag.coin_gold, bag.coin_silver, bag.coin_copper)
+	lbl.add_theme_color_override("font_color", UITheme.C_COINS)
+	lbl.add_theme_font_size_override("font_size", 12)
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(lbl)
 
 func _add_row(entry: Dictionary, slot_idx: int) -> void:
 	var item: ItemData = entry["item"]

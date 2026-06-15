@@ -32,6 +32,7 @@ func _ready() -> void:
 	Net.world_loot_bag_spawn.connect(_on_loot_bag_spawn)
 	Net.world_entity_despawn.connect(_on_entity_despawn)
 	Net.world_loot_granted.connect(_on_loot_granted)
+	Net.world_loot_rejected.connect(_on_loot_rejected)
 
 func _process(_delta: float) -> void:
 	var scene: Node = get_tree().current_scene
@@ -55,9 +56,17 @@ func _on_loot_bag_spawn(
 		bag_id: int,
 		pos: Vector3,
 		item_paths: PackedStringArray,
-		item_counts: PackedInt32Array) -> void:
+		item_counts: PackedInt32Array,
+		coin_platinum: int,
+		coin_gold: int,
+		coin_silver: int,
+		coin_copper: int) -> void:
 	var items := _materialize_items(item_paths, item_counts)
-	_spawn_data[bag_id] = {"pos": pos, "items": items}
+	var coins := {
+		"platinum": coin_platinum, "gold": coin_gold,
+		"silver": coin_silver, "copper": coin_copper,
+	}
+	_spawn_data[bag_id] = {"pos": pos, "items": items, "coins": coins}
 	var scene: Node = get_tree().current_scene
 	if scene == null or not _scene_hosts_local_player(scene):
 		return
@@ -66,9 +75,21 @@ func _on_loot_bag_spawn(
 		# Re-snapshot for an existing bag: assignment + signal lets the
 		# open LootWindow (if any) refresh without us touching it.
 		existing.items = items
+		_apply_coins(existing, coins)
 		existing.items_changed.emit()
 		return
 	_instantiate_into(bag_id, scene)
+
+func _apply_coins(bag, coins: Dictionary) -> void:
+	bag.coin_platinum = coins.get("platinum", 0)
+	bag.coin_gold = coins.get("gold", 0)
+	bag.coin_silver = coins.get("silver", 0)
+	bag.coin_copper = coins.get("copper", 0)
+
+# PD_W0014 — the server refused a loot attempt (wrong group / not our
+# Round Robin turn). Surface the reason in the combat log.
+func _on_loot_rejected(reason: String) -> void:
+	CombatLog.add_line(reason, CombatLog.MsgType.INFO)
 
 func _on_entity_despawn(id: int) -> void:
 	if id < LOOT_BAG_ID_BASE:
@@ -107,6 +128,7 @@ func _instantiate_into(bag_id: int, scene: Node) -> void:
 	var bag = LOOT_BAG_SCENE.new()
 	bag.bag_id = bag_id
 	bag.items = data["items"]
+	_apply_coins(bag, data.get("coins", {}))
 	scene.add_child(bag)
 	bag.global_position = data["pos"]
 	_by_id[bag_id] = bag
