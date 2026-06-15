@@ -171,7 +171,7 @@ signal world_coins_update(platinum: int, gold: int, silver: int, copper: int)
 # group_roster: the group we belong to has a new membership snapshot
 # (empty member arrays = the group dissolved or we were kicked).
 signal world_group_invited(from_id: int, from_name: String)
-signal world_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray)
+signal world_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray, loot_mode: int)
 # damage_shield_trigger: a player's Thorns / Spellshield reflected
 # damage back at an attacker. defender = the player whose shield fired.
 signal world_damage_shield_trigger(defender: int, attacker: int, amount: int, shield_name: String)
@@ -453,6 +453,14 @@ func broadcast_autosplit(on: bool) -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_autosplit(on)
+
+# PD_W0014: leader sets the group's loot mode (0 = Round Robin,
+# 1 = Free-for-all). Server validates leadership and re-fans the roster
+# with the new mode, which arrives back via world_group_roster.
+func broadcast_set_group_loot_mode(mode: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_set_group_loot_mode(mode)
 
 # Track 6 sub-task 3b: spell cast intent. Server looks up spell_name in
 # spells.toml, validates mana / target / range, applies authoritative
@@ -862,8 +870,8 @@ func _on_coins_update(platinum: int, gold: int, silver: int, copper: int) -> voi
 func _on_group_invited(from_id: int, from_name: String) -> void:
 	world_group_invited.emit(from_id, from_name)
 
-func _on_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray) -> void:
-	world_group_roster.emit(group_id, leader_id, member_ids, member_names)
+func _on_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray, loot_mode: int) -> void:
+	world_group_roster.emit(group_id, leader_id, member_ids, member_names, loot_mode)
 
 func _on_damage_shield_trigger(defender: int, attacker: int, amount: int, shield_name: String) -> void:
 	world_damage_shield_trigger.emit(defender, attacker, amount, shield_name)

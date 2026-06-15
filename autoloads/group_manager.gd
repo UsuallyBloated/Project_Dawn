@@ -13,6 +13,13 @@ var leader_peer_id := 0
 var members: Array = []
 var pending_invite_from := 0
 
+# PD_W0014 — group loot distribution mode, server-authoritative (mirrors
+# the roster's loot_mode field). 0 = Round Robin (default), 1 = Free-for-all.
+# See docs/design/group_loot_and_coin.md.
+const LOOT_ROUND_ROBIN := 0
+const LOOT_FREE_FOR_ALL := 1
+var loot_mode := LOOT_ROUND_ROBIN
+
 var _my_peer_id := 0
 var _stats_dirty := false
 
@@ -146,11 +153,12 @@ func _on_world_group_invited(from_id: int, from_name: String) -> void:
 	pending_invite_from = from_id
 	invite_received.emit(from_id, from_name)
 
-func _on_world_group_roster(_group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray) -> void:
+func _on_world_group_roster(_group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray, p_loot_mode: int) -> void:
 	if member_ids.is_empty():
 		# Group dissolved or we got kicked.
 		_clear_group()
 		return
+	loot_mode = p_loot_mode
 	leader_peer_id = leader_id
 	is_leader = (Net.get_player_id() == leader_id)
 	in_group = true
@@ -166,6 +174,17 @@ func _on_world_group_roster(_group_id: int, leader_id: int, member_ids: PackedIn
 			"sta": 0.0, "max_sta": 0.0,
 		})
 	group_updated.emit(true)
+
+# PD_W0014 — leader requests a loot-mode change. The server validates
+# leadership and re-fans the roster, which updates `loot_mode` here and
+# fires group_updated. No-op for non-leaders.
+func set_loot_mode(mode: int) -> void:
+	if not is_leader:
+		return
+	Net.broadcast_set_group_loot_mode(mode)
+
+func loot_mode_name() -> String:
+	return "Free-for-all" if loot_mode == LOOT_FREE_FOR_ALL else "Round Robin"
 
 func pass_leadership(new_leader_peer_id: int) -> void:
 	if not is_leader:

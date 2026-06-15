@@ -90,7 +90,7 @@ func _refresh() -> void:
 		_action_btn.visible = show_invite
 		_action_btn.text = "Invite"
 		_leave_btn.visible = true
-		_header_lbl.text = "GROUP (Leader)" if GroupManager.is_leader else "GROUP"
+		_header_lbl.text = ("GROUP (Leader)" if GroupManager.is_leader else "GROUP") + (" [FFA]" if GroupManager.loot_mode == GroupManager.LOOT_FREE_FOR_ALL else " [RR]")
 		size.y = 60.0 + GroupManager.members.size() * 54.0
 	else:
 		_members_vbox.visible = false

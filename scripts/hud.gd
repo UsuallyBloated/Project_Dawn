@@ -1332,6 +1332,22 @@ func _handle_chat_input(text: String) -> void:
 		CombatLog.add_line("Auto-split loot: %s" % ("on" if split_on else "off"), CombatLog.MsgType.INFO)
 		return
 
+	# Group loot distribution mode (leader only). Bare /loot reports the
+	# current mode; /loot rr | ffa sets it. See group_loot_and_coin.md.
+	if lower.begins_with("/loot"):
+		if lower == "/loot":
+			CombatLog.add_line("Loot mode: %s. Leader: /loot rr or /loot ffa." % GroupManager.loot_mode_name(), CombatLog.MsgType.INFO)
+			return
+		if lower == "/loot rr" or lower == "/loot roundrobin" or lower == "/loot ffa" or lower == "/loot freeforall":
+			if not GroupManager.is_leader:
+				CombatLog.add_line("Only the group leader can set the loot mode.", CombatLog.MsgType.INFO)
+				return
+			var ffa := lower == "/loot ffa" or lower == "/loot freeforall"
+			var mode := GroupManager.LOOT_FREE_FOR_ALL if ffa else GroupManager.LOOT_ROUND_ROBIN
+			GroupManager.set_loot_mode(mode)
+			CombatLog.add_line("Loot mode set to %s." % ("Free-for-all" if ffa else "Round Robin"), CombatLog.MsgType.INFO)
+			return
+
 	# Dev-only — backup trigger for the in-game debug console when the
 	# F2 keybind isn't reaching the game window (editor focus, OS
 	# steals, etc.). Round-7B fallback.
