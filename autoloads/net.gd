@@ -445,6 +445,15 @@ func broadcast_pvp_toggle(on: bool) -> void:
 		pvp_toggled.emit(on)
 	send_pvp_toggle(on)
 
+# PD_W0014: per-player /autosplit toggle. Server caches the flag on the
+# sender's PerConnection; coin the player loots splits to the nearby group
+# (on, the default) or stays with them (off). See the loot-rights design
+# doc. No local mirror needed — the chat command echoes the new state.
+func broadcast_autosplit(on: bool) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_autosplit(on)
+
 # Track 6 sub-task 3b: spell cast intent. Server looks up spell_name in
 # spells.toml, validates mana / target / range, applies authoritative
 # damage or heal, and fans HealthUpdate / ManaUpdate. target_id = 0

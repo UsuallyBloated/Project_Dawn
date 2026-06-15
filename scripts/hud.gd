@@ -1323,6 +1323,15 @@ func _handle_chat_input(text: String) -> void:
 		CombatLog.add_line("PvP override: %s" % ("on" if on else "off"), CombatLog.MsgType.INFO)
 		return
 
+	# Per-player loot auto-split. /autosplit off keeps coin you loot for
+	# yourself instead of splitting it among the nearby group in Round
+	# Robin. See docs/design/group_loot_and_coin.md.
+	if lower == "/autosplit" or lower == "/autosplit on" or lower == "/autosplit off":
+		var split_on := lower != "/autosplit off"
+		Net.broadcast_autosplit(split_on)
+		CombatLog.add_line("Auto-split loot: %s" % ("on" if split_on else "off"), CombatLog.MsgType.INFO)
+		return
+
 	# Dev-only — backup trigger for the in-game debug console when the
 	# F2 keybind isn't reaching the game window (editor focus, OS
 	# steals, etc.). Round-7B fallback.
