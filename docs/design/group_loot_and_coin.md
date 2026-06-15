@@ -64,7 +64,28 @@ governs **both** items and coin.
 | | **Round Robin** (default) | **Free-for-all** |
 |---|---|---|
 | **Items** | per-**corpse** turn rotation: each corpse is assigned to the next eligible member; only they loot its items | any group member can take any item (master looter grabs all) |
-| **Coin** | auto-split evenly among group members within **30m** of the corpse | **all** coin to the looter (master looter pools it, splits manually later) |
+| **Coin** | split evenly among group members within **30m** — *if the looter's `/autosplit` is on* (default); otherwise all to the looter | **all** coin to the looter (master looter pools it, splits manually later) |
+
+### Per-player `/autosplit` (EQ-style)
+A per-player toggle (default **on**), set with `/autosplit on|off` (next to
+`/pvp` in `hud.gd`). It governs **only what happens to coin from corpses *that
+player* loots**:
+- **on** + RR mode → that player's looted coin splits among the nearby (30m) group.
+- **off** → that player's looted coin goes entirely to them (no split). Items still
+  follow Round Robin — `/autosplit off` never turns items into FFA.
+- In FFA mode it's a no-op (coin already goes to the looter).
+
+Motivation: coin has weight, so some players want to refuse it — already real today
+(coin weight slows movement + gates stamina regen via Encumbrance), and EQ-authentic
+for Monks (a future weight→AC penalty; **not yet in code** — Monks have the skill
+caps but nothing degrades AC from carry weight). **Known consequence of the EQ
+semantics:** a player still *receives* split shares when a group-mate loots with
+autosplit on; to keep coin off a Monk, the **looters** set autosplit off (coin stays
+on them). A receive-side opt-out can be added later if playtest wants it.
+
+The unified coin rule: **coin from a looted corpse goes to the looter alone if
+(mode == FFA) OR (looter's autosplit == off); otherwise it splits evenly among
+online group members within 30m of the corpse** (remainder copper → looter).
 
 ### Coin mechanic
 - **Auto-acquired on loot** — credited straight to the wallet, no inventory slot,
@@ -152,8 +173,10 @@ from the 2026-05-21 session).
    Fixes stranger-stealing. Pure Rust, `cargo test`. *(no wire/client yet — strangers
    just get silently/explicitly rejected.)*
 2. **Server — coin drops + distribution.** `roll_coin_for_mob` by tier; store on bag;
-   on loot, RR → 30m even split, FFA → looter-takes-all; credit via `add_payout` +
-   `CoinsUpdate` (+ `CoinLooted`). Bag spawns if items **or** coin present.
+   on loot apply the unified coin rule (FFA or looter-autosplit-off → looter; else
+   30m even split); credit via `add_payout` + `CoinsUpdate`. Add the per-player
+   `autosplit` flag (PerConnection, default on; the `/autosplit` chat command itself
+   lands in Layer 4). Bag spawns if items **or** coin present.
 3. **Server — Round Robin item turns.** Per-corpse `assigned_looter` assignment +
    gate item loot by turn in RR.
 4. **Wire + client.** Protocol bump, gdext rebuild, `SetGroupLootMode`, roster
@@ -169,3 +192,4 @@ from the 2026-05-21 session).
 - Coin tier bands + occasional/rare chances (table above).
 - Remainder copper → looter.
 - Loot mode default = Round Robin.
+- `/autosplit` default = on (per player, session-scoped for v1).
