@@ -192,14 +192,20 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   - **Ownership** — a corpse belongs to the kill-creditor (top damager) and, resolved
     live at loot time, their group (`LootBag.owner_killer` + `can_loot`). Strangers are
     refused (`LootRejected` → "That isn't your loot."). Player-dropped bags stay public.
-  - **Loot mode** (per `Group`, leader-set, default Round Robin; `groups::LootMode`):
-    **Round Robin** rotates item turns per corpse (lazy first-loot claim via
-    `next_loot_turn`, "Not your turn to loot." otherwise) and auto-splits coin evenly
-    among group members within `GROUP_COIN_SHARE_RANGE` (30 m) of the corpse; **FFA** lets
-    any member loot anything and gives all coin to the looter. Coin credit reuses the
-    vendor-payout path (`Coins::add_payout` + `CoinsUpdate`).
-  - **Per-player `/autosplit`** (`PerConnection.autosplit`, default on): off keeps coin
-    *you* loot for yourself instead of splitting (EQ-style).
+  - **Loot mode** (per `Group`, leader-set, default Round Robin; `groups::LootMode`)
+    governs **item turns only**: **Round Robin** rotates per corpse (lazy first-loot claim
+    via `next_loot_turn`, "Not your turn to loot." otherwise); **FFA** lets any member loot
+    anything, any time.
+  - **Coin distribution follows the looter's `/autosplit`, independent of mode**
+    (`PerConnection.autosplit`, default on; revised in the 2026-06-15 playtest): **on** →
+    split evenly among group members within `GROUP_COIN_SHARE_RANGE` (30 m) of the corpse
+    (remainder→looter); **off** → looter keeps it (master-looter = FFA + autosplit off).
+    Solo/ungrouped never splits. Credit reuses the vendor-payout path (`Coins::add_payout`
+    + `CoinsUpdate`).
+  - **Group leadership** is server-authoritative end to end: invite/accept/leave/kick
+    **and `PassLeadership`** all resolve in the tick loop and re-fan `GroupRoster` (the
+    leadership handoff was added 2026-06-15 — it had been local-only, a latent bug now
+    load-bearing since leadership gates `/loot`).
   - **Client**: `/autosplit on|off` and leader `/loot rr|ffa` chat commands (`hud.gd`);
     `GroupManager.loot_mode` mirrors the roster; group-panel header shows `[RR]`/`[FFA]`;
     coin + reject feedback flow through `RemoteLootBagManager`. XP split is unchanged
