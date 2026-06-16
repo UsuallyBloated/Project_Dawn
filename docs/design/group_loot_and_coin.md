@@ -58,22 +58,23 @@ without "this corpse belongs to the killer's group."
 - Solo killer: everything is theirs; mode is irrelevant.
 
 ### Loot mode (per group, leader-set, default **Round Robin**)
-Stored server-side on the `Group`; synced to clients in the roster. The mode
-governs **both** items and coin.
+Stored server-side on the `Group`; synced to clients in the roster. **The mode
+governs only item turns; coin always follows `/autosplit`** (revised after the
+2026-06-15 playtest — originally "mode affects both").
 
 | | **Round Robin** (default) | **Free-for-all** |
 |---|---|---|
-| **Items** | per-**corpse** turn rotation: each corpse is assigned to the next eligible member; only they loot its items | any group member can take any item (master looter grabs all) |
-| **Coin** | split evenly among group members within **30m** — *if the looter's `/autosplit` is on* (default); otherwise all to the looter | **all** coin to the looter (master looter pools it, splits manually later) |
+| **Items** | per-**corpse** turn rotation: each corpse is assigned to the next eligible member; only they loot its items | any group member can loot any item, as often as they like |
+| **Coin** | follows the looter's `/autosplit` (see below) | follows the looter's `/autosplit` (see below) — master-looter = FFA + autosplit off |
 
 ### Per-player `/autosplit` (EQ-style)
 A per-player toggle (default **on**), set with `/autosplit on|off` (next to
-`/pvp` in `hud.gd`). It governs **only what happens to coin from corpses *that
-player* loots**:
-- **on** + RR mode → that player's looted coin splits among the nearby (30m) group.
+`/pvp` in `hud.gd`). It is the **sole determinant of coin distribution** (mode-
+independent, as of the 2026-06-15 playtest revision) for corpses *that player* loots:
+- **on** → that player's looted coin splits among the nearby (30m) group.
 - **off** → that player's looted coin goes entirely to them (no split). Items still
-  follow Round Robin — `/autosplit off` never turns items into FFA.
-- In FFA mode it's a no-op (coin already goes to the looter).
+  follow the group mode — `/autosplit off` never changes item rules.
+- Works the same in RR and FFA; solo/ungrouped never splits.
 
 Motivation: coin has weight, so some players want to refuse it — already real today
 (coin weight slows movement + gates stamina regen via Encumbrance), and EQ-authentic
@@ -83,9 +84,10 @@ semantics:** a player still *receives* split shares when a group-mate loots with
 autosplit on; to keep coin off a Monk, the **looters** set autosplit off (coin stays
 on them). A receive-side opt-out can be added later if playtest wants it.
 
-The unified coin rule: **coin from a looted corpse goes to the looter alone if
-(mode == FFA) OR (looter's autosplit == off); otherwise it splits evenly among
-online group members within 30m of the corpse** (remainder copper → looter).
+The unified coin rule (post-playtest): **coin from a looted corpse goes to the looter
+alone if the looter's autosplit is off (or they're solo/ungrouped); otherwise it
+splits evenly among online group members within 30m of the corpse** (remainder copper
+→ looter). Loot mode does not enter into coin distribution.
 
 ### Coin mechanic
 - **Auto-acquired on loot** — credited straight to the wallet, no inventory slot,
