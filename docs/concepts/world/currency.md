@@ -7,7 +7,7 @@
 
 Project Dawn uses a four-tier coin system inspired by the EverQuest tradition but on a 100:1 economy: Copper, Silver, Gold, Platinum. Each tier is worth **one hundred** of the tier below it. Coins are **physical objects with weight**, held as four independent stacks. They do not auto-convert.
 
-The design intent: wealth is heavy. A player who has hoarded ten thousand copper coins is encumbered by them. The only ways to make that wealth portable are (a) spend it, (b) convert it at a moneychanger, or (c) deposit it at a bank. Each of those choices has friction, and that friction is the point — it creates errands, geography, and risk.
+The design intent: wealth is heavy. A player who has hoarded ten thousand copper coins is encumbered by them. The only ways to make that wealth portable are (a) spend it, or (b) convert or deposit it at a bank (the Banker NPC does both). Each of those choices has friction, and that friction is the point — it creates errands, geography, and risk.
 
 ---
 
@@ -64,42 +64,47 @@ All coins weigh the same per coin. This is the key mechanic: 1,000,000 copper co
 
 ---
 
-## Moneychangers and Banks
+## Banking & Currency Exchange
 
-Two distinct services with different counterparties.
+> **Decision (2026-06-16):** there is **no standalone "moneychanger" NPC** — the
+> **Banker** is the one NPC that both holds wealth and converts coin between tiers
+> (storage + exchange in a single stop). An earlier draft, tangled up with
+> Citizen-class brainstorming, spun out a separate NPC moneychanger; it's redundant
+> with the Banker and has been folded in. The Citizen class's field exchange stays a
+> separate, optional player-to-player convenience.
 
-### Moneychanging — primarily a Citizen-class player service
+### Currency exchange (the Banker, or a Citizen in the field)
 
-Moneychanging is one of the [Citizen class's](../classes/citizen.md) core revenue streams. A Citizen camped at a dungeon entrance can convert the night's loot for an adventuring party in the field, saving them a vend run back to town. The exchange ratio is fixed at **100:1** in both directions (100 copper ↔ 1 silver, etc.); the Citizen's profit is the fee they negotiate on top.
+Field money-exchange is one of the [Citizen class's](../classes/citizen.md) core revenue streams. A Citizen camped at a dungeon entrance can convert the night's loot for an adventuring party in the field, saving them a vend run back to town. The exchange ratio is fixed at **100:1** in both directions (100 copper ↔ 1 silver, etc.); the Citizen's profit is the fee they negotiate on top.
 
-NPC moneychangers also exist in major town hubs as a **baseline floor**. They charge a published, regulated rate. Their job is to ensure exchange is always available even when no Citizens are online, and to anchor the market price that Citizens compete against. Players will use NPCs by default; they'll seek out Citizens for better rates or — more often — for the convenience of "I don't have to walk back to town."
+The **Banker** (NPC, town-anchored — see below) is the canonical exchange: always available, published regulated rates, and it anchors the market price Citizens compete against. Players use the Banker by default; they seek out a Citizen for a better rate or — more often — the convenience of "I don't have to walk back to town."
 
-Suggested fee bands (Citizens and NPCs both):
+Suggested fee bands (the Banker and Citizens both):
 
 - **Up-conversion fee** (small → large): 2–5% of the converted amount.
 - **Down-conversion fee** (large → small): 0–1%, because the converter profits from re-circulating low-tier coin.
 - Hard floor and ceiling on Citizen-set rates (see *Rate caps* below) so the class can't be undercut to zero and can't gouge.
 
-Fee rates also vary by location and faction standing for NPCs. The Dockmasters' Compact (Harrowmere) has standardized NPC rates published weekly. The Grey Market does conversions with rates that depend on standing. Wilderness NPC moneychangers (where they exist) charge whatever they can get.
+Rates also vary by location and faction standing. The Dockmasters' Compact (Harrowmere) has standardized Banker rates published weekly. The Grey Market converts at rates that depend on standing.
 
-#### Four mechanical concerns for the Citizen-as-moneychanger system
+#### Four mechanical concerns for the Citizen field-exchange system
 
 These need to be designed into the system from day one or it doesn't work:
 
 1. **Capital float.** A Citizen converting 100c → 1s needs to actually have 1 silver on hand. New Citizens won't be able to serve every request; they'll specialize (small conversions only, only one direction) until they build up a working float across all four tiers. This is a feature — it gives the class economic progression on an axis other than combat — but the UX needs to communicate "this Citizen doesn't have the silver to fulfill your request" gracefully.
 2. **Atomic trade window.** Exchanges must go through the trade UI: both parties confirm, server-validated atomic swap of (player coin in) ↔ (Citizen coin out + fee retained by Citizen). Never "hand me the coin and I'll give it back" — that's a scam vector and the class becomes uninhabitable.
-3. **Discovery.** Players need to find Citizens to do business. Some combination of: a visible "Citizen — Moneychanger" tag on the nameplate, a `/who Citizen` filter, notice-board listings in town hubs ("Mara at Greyveil East Gate, 3% up / 0.5% down"), or a Citizen-specific LFG-style "open for business" flag. At minimum, one of these must exist before the class ships.
+3. **Discovery.** Players need to find Citizens to do business. Some combination of: a visible "Citizen — Exchange" tag on the nameplate, a `/who Citizen` filter, notice-board listings in town hubs ("Mara at Greyveil East Gate, 3% up / 0.5% down"), or a Citizen-specific LFG-style "open for business" flag. At minimum, one of these must exist before the class ships.
 4. **Rate caps.** Hard floor and ceiling on Citizen-set fees. The floor prevents a race-to-the-bottom that breaks the class (Citizens charging 0% drive out everyone who needs to make a living at this). The ceiling prevents gouging desperate players in remote zones who have no alternative. Baseline suggestion: floor 0.5%, ceiling 10%. Tune in playtest.
 
-### Banks — NPC, town-anchored
+### The Banker — NPC, town-anchored (storage + exchange)
 
-Banks accept deposits and hold coin (and items, eventually) between visits. Coin in the bank has zero weight on the player. Banks are **NPC-only and town-anchored** by design:
+The Banker accepts deposits and holds coin (and items, eventually) between visits — and converts coin between tiers (the exchange role above, folded in from the old standalone "moneychanger"). Coin in the bank has zero weight on the player. The Banker is **NPC-only and town-anchored** by design:
 
 - Persistent storage needs a reliable counterparty. Players go offline, quit, or get bored — none of that can be allowed to lose a depositor's wealth.
 - Banks have effectively unlimited capacity, which would be unworkable to hold on a player.
 - Banks are infrastructure, not a player service. The geography of "where can I deposit" is part of the world map.
 
-Banks are tier-agnostic — a deposit of 10,000 copper stays as 10,000 copper until the player asks for consolidation (which the bank can also do, at NPC moneychanger rates).
+The Banker is tier-agnostic — a deposit of 10,000 copper stays as 10,000 copper until the player asks for consolidation (which the Banker does at the exchange fee bands above).
 
 Bank fees TBD:
 - A flat deposit/withdrawal fee per session, or
@@ -173,7 +178,7 @@ These need decisions during implementation:
 
 ## Implementation Notes
 
-**Status (2026-05-21): the plumbing is built.** Four-tier wallet end to end (server `Coins` + wire PD_W0013 + DB migration `0004` + client `PlayerStats`/`Currency`/vendor UI), plus encumbrance v1 (`Encumbrance` autoload: coin/item/equipment weight vs `10 + STR` capacity, movement + stamina-regen penalties). See `docs/concepts/architecture/systems_overview.md` for what exists. Not yet built: moneychanger NPCs, banks, the Citizen trade-window mode, item-weight content pass, weight readout UI. The list below was the pre-implementation file map, kept for orientation:
+**Status (2026-05-21): the plumbing is built.** Four-tier wallet end to end (server `Coins` + wire PD_W0013 + DB migration `0004` + client `PlayerStats`/`Currency`/vendor UI), plus encumbrance v1 (`Encumbrance` autoload: coin/item/equipment weight vs `10 + STR` capacity, movement + stamina-regen penalties). See `docs/concepts/architecture/systems_overview.md` for what exists. Not yet built: the Banker NPC (storage + exchange), the Citizen field-exchange trade-window mode, item-weight content pass, weight readout UI. The list below was the pre-implementation file map, kept for orientation:
 
 - [autoloads/player_stats.gd](../../../autoloads/player_stats.gd) — replace `coins: int` with four fields, plus signal and save/load
 - [scripts/net/protocol.gd](../../../scripts/net/protocol.gd) — extend `CoinsUpdate` to carry four ints
@@ -182,9 +187,8 @@ These need decisions during implementation:
 - HUD — wherever a coin total is shown
 - [scripts/item_data.gd](../../../scripts/item_data.gd) — decide whether `vendor_price` becomes four fields or stays as copper-total (probably copper-total, since vendor items have a single canonical price)
 - New: `format_currency(p, g, s, c) -> String` helper, probably on a new `Currency` autoload
-- New: NPC moneychanger scene/script (town-baseline only; Citizens use the player-to-player trade window with a moneychanger mode)
-- New: Citizen-class moneychanger trade-window mode — extend the standard trade UI so a Citizen can offer an exchange rate, the requesting player sees the math, and both confirm atomically. Capital-float check on the Citizen side.
-- New: bank NPC scene/script
+- New: Banker NPC scene/script — deposit/withdraw (zero-weight storage) **and** tier conversion (the folded-in exchange role)
+- New: Citizen-class field-exchange trade-window mode — extend the standard trade UI so a Citizen can offer an exchange rate, the requesting player sees the math, and both confirm atomically. Capital-float check on the Citizen side.
 - New: weight contribution from coin counts, integrated with the encumbrance system
 
-The plumbing change is moderate. The UX work (make-change flow, moneychanger UI, bank UI) is where most of the time will go.
+The plumbing change is moderate. The UX work (make-change flow, Banker UI for storage + exchange) is where most of the time will go.

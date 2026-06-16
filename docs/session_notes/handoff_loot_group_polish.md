@@ -162,10 +162,13 @@ like "Aria set auto-split off"; solo players see only their own echo; no double-
   you ship — these are all observable, human-verified behaviors.
 
 ## After this (ranked backlog, don't start without asking)
-1. **Moneychanger NPC** — convert coin tiers (the coin-weight relief valve; `currency.md`
-   specs fee bands). The headline next-step now that coins drop + have weight.
-2. **Bank NPC** — zero-weight storage (new DB table).
-3. **Citizen-class trade-window exchange** (blocked on the class).
-4. **Fae gear line + capacity floor** — Fae caster STR −5 → capacity 5.0 < starter cloth
+1. **Banker NPC** — one town NPC that does **both** zero-weight storage (deposit/withdraw,
+   new DB table) **and** coin tier exchange (the coin-weight relief valve; `currency.md`
+   specs the fee bands). The headline next-step now that coins drop + have weight. *(There
+   is intentionally no separate "moneychanger" NPC — the Banker absorbs exchange; decided
+   2026-06-16, see `currency.md`.)*
+2. **Citizen-class field-exchange trade-window** — the optional player-run field exchange
+   (blocked on the class).
+3. **Fae gear line + capacity floor** — Fae caster STR −5 → capacity 5.0 < starter cloth
    kit (see `[[fae-gear-line]]` / item-weight session follow-ups).
-5. **Flaky `world_two_clients.rs` hardening** — serial run / adaptive timeouts.
+4. **Flaky `world_two_clients.rs` hardening** — serial run / adaptive timeouts.

@@ -534,7 +534,7 @@ Filename pattern: `portrait_npc_[name]_[role].png`
 
 ---
 
-## Banker / Moneychanger — Template
+## Banker — Template
 *Ratio: 3:4*
 
 > Oil painting, interior of a counting house or bank alcove, [RACE] banker behind a heavy old desk, three-quarter bust. Scales on the desk. An open ledger with columns of fine figures. Several stacks of coin beside it — arranged for work, not display. [DETAIL]. Expression: contained, professional — the face of someone who has decided that trustworthiness is a commodity and invests in it accordingly. The desk is heavy and old. Their clothing is excellent but not ostentatious; they understand the difference. Window bars casting a striped shadow across the desk. Painterly oil aesthetic. The coin stacks are rendered with careful attention to the glint of metal — not glamorised, just accurate. Palette: dark wood and cool stone; coin stacks in warm gold-ochre; their clothes deep grey or navy; one warm lamp over the desk; everything else slightly cool.

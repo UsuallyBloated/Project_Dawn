@@ -1,7 +1,7 @@
 # Citizen
-*Non-Combat / Economic — Any Alignment — Mobile merchant, moneychanger, and employer of hired arms*
+*Non-Combat / Economic — Any Alignment — Mobile merchant, field money-exchanger, and employer of hired arms*
 
-> **Status:** Design sketch. The **field moneychanger** role (copper→platinum exchange at adventurer camps) is committed; the rest of the kit is still being scoped. Not yet on the to-do list — author additional sections only when a system here is being implemented.
+> **Status:** Design sketch. The **field money-exchange** role (copper→platinum conversion at adventurer camps — the player-run counterpart to the Banker's NPC exchange; there is no separate "moneychanger" NPC, see `world/currency.md`) is committed; the rest of the kit is still being scoped. Not yet on the to-do list — author additional sections only when a system here is being implemented.
 
 ## Overview
 
