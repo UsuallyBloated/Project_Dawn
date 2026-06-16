@@ -189,6 +189,13 @@ func loot_mode_name() -> String:
 func pass_leadership(new_leader_peer_id: int) -> void:
 	if not is_leader:
 		return
+	if Net.is_launcher_mode():
+		# Server validates (current leader → member) and re-fans the
+		# roster, which updates leader_peer_id / is_leader for everyone.
+		# No optimistic local change — the old local-only path was the bug
+		# (the next server roster snapped leadership back to the original).
+		Net.broadcast_pass_leadership(new_leader_peer_id)
+		return
 	leader_peer_id = new_leader_peer_id
 	_broadcast_state()
 

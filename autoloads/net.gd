@@ -470,6 +470,15 @@ func broadcast_set_group_loot_mode(mode: int) -> void:
 		return
 	send_set_group_loot_mode(mode)
 
+# PD_W0014: current leader hands leadership to new_leader (a member's
+# char_id). The server validates and re-fans the roster, which updates
+# every member's leader_peer_id / is_leader. Fixes the launcher-mode gap
+# where pass-leadership was a local-only change the next roster undid.
+func broadcast_pass_leadership(new_leader: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_pass_leadership(new_leader)
+
 # Track 6 sub-task 3b: spell cast intent. Server looks up spell_name in
 # spells.toml, validates mana / target / range, applies authoritative
 # damage or heal, and fans HealthUpdate / ManaUpdate. target_id = 0
