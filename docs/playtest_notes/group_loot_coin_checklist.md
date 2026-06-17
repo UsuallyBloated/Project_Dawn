@@ -125,17 +125,45 @@ save/reload all verified. Findings:
   handoff (validates current-leader → member, re-fans the roster). Server `381acc0`,
   client `10a0674`. *(Pre-existing bug, now load-bearing since leadership gates `/loot`.)*
 
-**Deferred (logged, not yet built):**
-- **`/autosplit` group visibility** (4.1) — when a member toggles autosplit, the whole
-  group should see it (transparency about who's splitting). Needs a server→group notify;
-  small enhancement, not yet built.
-- **Incoming-miss visibility in PvP** (8.3) — a defender doesn't see when an attacker
-  *misses* them. Separate PvP-feedback gap, unrelated to loot; logged for a PvP pass.
+**Deferred (logged) — all three shipped 2026-06-16 (see "Round 2 — Deferred" below):**
+- **`/autosplit` group visibility** (4.1) — ✅ server→group `GroupNotice` fan; group-mates
+  now see "X set auto-split on/off". (PD_W0014 wire add + DLL rebuild.)
+- **Incoming-miss visibility in PvP** (8.3) — ✅ defender now logs "X misses you"
+  (client-only; the server already fanned the Miss).
+- **Drop item to ground** (2.3) — ✅ Drop cell + drag-out-to-world gesture; server
+  `DropItem` extended to bag slots. (Client UI + server-only; no wire change.)
 
 **Non-issues (working as intended):**
 - **Re-open looted corpse** (1.5) — Take All empties the bag, which then despawns, so
   there's nothing to re-open. (Take a single item instead and the coin still auto-credits
   on that first loot; the awkward wording was mine.)
-- **Drop item to ground** (2.3) — correctly untestable: no client "drop to ground" UI
-  exists yet. The server already treats dropped bags as public for when it lands.
 - **Plague rat = no coin** (1.4) — correct; rats are wildlife (0 coin by design).
+
+---
+
+## Round 2 — Deferred follow-ups (2026-06-16)
+
+The three Round-2 deferrals, now built. **Build prerequisite:** Task 3 is a PD_W0014 wire
+add — rebuild the gdext DLL (`addons/gdext_net/build.ps1`) **and** the server, or you'll be
+rejected at connect (clean version error). Two clients (A, B), launcher mode, same zone.
+server.log anchors: `"DropItem spawned loot bag"`, `"DropItem rejected"`, `"autosplit toggled"`.
+
+### 1. Drop item to ground (Task 1 — playtest 2.3)
+- [ ] **A drags a stack from a base slot onto the Drop (⬇) cell, confirms** → a loot bag appears at A's feet; the source slot empties (server `InventoryDelta`). notes:
+- [ ] **A drags a base item out of the inventory window onto the 3D world, confirms** → same result (bag at feet, slot empties). notes:
+- [ ] **A drags an item from *inside a bag* onto the Drop cell (or out to world), confirms** → bag spawns, the bag's inner slot empties (server now honors `bag_<i>` drops). notes:
+- [ ] **B walks over the dropped bag and loots it** → B picks it up freely (public bag, no owner). notes:
+- [ ] **A cancels the drop-confirm dialog** → item snaps back to its source slot; nothing dropped. notes:
+- [ ] **A releases a drag over the window's own chrome (header / wallet line), or over another panel (vendor / loot / character window / hotbar)** → snaps back, no drop prompt. notes:
+- [ ] **A tries to drop a bag that still has items inside** → rejected (must empty the bag first); the bag stays in the slot. notes:
+
+### 2. Defender sees incoming misses (Task 2 — playtest 8.3)
+- [ ] **B attacks A (both `/pvp` on) and the swing misses (e.g. B steps out of range)** → A's combat log shows "B misses you." notes:
+- [ ] **An enemy mob misses A** → A's log shows "<Mob> misses you." (incoming PvE miss reads the same). notes:
+- [ ] **A attacks a target and misses** → A's own outgoing miss feedback is unchanged (no regression). notes:
+
+### 3. /autosplit toggle notifies the group (Task 3 — playtest 4.1)
+- [ ] **A and B grouped; A types `/autosplit off`** → B sees "A set auto-split off."; A sees only their local "Auto-split loot: off" echo (no double-log for A). notes:
+- [ ] **A types `/autosplit on`** → B sees "A set auto-split on." notes:
+- [ ] **A re-sends the value it's already set to (no change)** → no group notice fans to B (A still gets the local echo). notes:
+- [ ] **A, ungrouped, toggles `/autosplit`** → only A's local echo; no notice fans anywhere. notes:

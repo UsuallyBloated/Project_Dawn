@@ -34,6 +34,9 @@ func _ready() -> void:
 	# because the action methods route through Net early-return paths.
 	Net.world_group_invited.connect(_on_world_group_invited)
 	Net.world_group_roster.connect(_on_world_group_roster)
+	# PD_W0014 — group-mate toggled /autosplit (or future group notices).
+	# Surface the server's one-line text in the combat log.
+	Net.world_group_notice.connect(_on_world_group_notice)
 	# Round-7 playtest fix — on transport disconnect (relog / zone-out)
 	# the server drops us from any group server-side but never re-fans
 	# our own state on reconnect (the server's GroupRoster fan only
@@ -152,6 +155,12 @@ func kick_member_by_name(target_name: String) -> void:
 func _on_world_group_invited(from_id: int, from_name: String) -> void:
 	pending_invite_from = from_id
 	invite_received.emit(from_id, from_name)
+
+# PD_W0014 — a group-mate's server-side notice (currently /autosplit
+# toggles). The toggler echoes their own change locally (hud.gd), so this
+# only ever fires for the *other* members; just surface the text.
+func _on_world_group_notice(text: String) -> void:
+	CombatLog.add_line(text, CombatLog.MsgType.INFO)
 
 func _on_world_group_roster(_group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray, p_loot_mode: int) -> void:
 	if member_ids.is_empty():

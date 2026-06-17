@@ -161,6 +161,9 @@ signal world_loot_granted(item_path: String, count: int)
 # PD_W0014 — a loot attempt was refused (not the owning group, or not
 # your Round Robin turn). RemoteLootBagManager logs the reason.
 signal world_loot_rejected(reason: String)
+# PD_W0014 — a private one-line group notice (e.g. a group-mate toggled
+# /autosplit). GroupManager logs the text to the combat log.
+signal world_group_notice(text: String)
 # Track 5 sub-task 5 — private kill-credit XP grant. Receive-side
 # handler calls PlayerStats.gain_xp directly (mirror of how
 # RemoteLootBagManager._on_loot_granted invokes Inventory.add_item).
@@ -239,6 +242,7 @@ func _ready() -> void:
 	loot_bag_spawn.connect(_on_loot_bag_spawn)
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
+	group_notice.connect(_on_group_notice)
 	xp_gained.connect(_on_xp_gained)
 	coins_update.connect(_on_coins_update)
 	group_invited.connect(_on_group_invited)
@@ -878,6 +882,9 @@ func _on_loot_granted(item_path: String, count: int) -> void:
 
 func _on_loot_rejected(reason: String) -> void:
 	world_loot_rejected.emit(reason)
+
+func _on_group_notice(text: String) -> void:
+	world_group_notice.emit(text)
 
 func _on_xp_gained(amount: int, current: int, to_next: int) -> void:
 	world_xp_gained.emit(amount, current, to_next)

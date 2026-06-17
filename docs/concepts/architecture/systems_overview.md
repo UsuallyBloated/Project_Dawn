@@ -192,6 +192,15 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   - **Ownership** — a corpse belongs to the kill-creditor (top damager) and, resolved
     live at loot time, their group (`LootBag.owner_killer` + `can_loot`). Strangers are
     refused (`LootRejected` → "That isn't your loot."). Player-dropped bags stay public.
+  - **Drop to ground (client UI, 2026-06-16)** — `inventory_window.gd` invokes the
+    long-existing `Net.broadcast_drop_item` two ways: a ⬇ **Drop cell** beside the Trash
+    cell, and **releasing a drag out onto the 3D world** (detected via
+    `gui_get_hovered_control() == null` — releasing over *any* Control, including this
+    window's chrome or another panel, snaps the item back). Both confirm first and let the
+    server's `InventoryDelta` empty
+    the slot (no optimistic clear). Server `DropItem` spawns a public single-stack `LootBag`
+    at the player's feet and now removes from **base or bag slots** via the shared bag-aware
+    `inventory.destroy_at` (the same primitive behind DestroyItem; `drop_base` was retired).
   - **Loot mode** (per `Group`, leader-set, default Round Robin; `groups::LootMode`)
     governs **item turns only**: **Round Robin** rotates per corpse (lazy first-loot claim
     via `next_loot_turn`, "Not your turn to loot." otherwise); **FFA** lets any member loot
@@ -201,7 +210,10 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
     split evenly among group members within `GROUP_COIN_SHARE_RANGE` (30 m) of the corpse
     (remainder→looter); **off** → looter keeps it (master-looter = FFA + autosplit off).
     Solo/ungrouped never splits. Credit reuses the vendor-payout path (`Coins::add_payout`
-    + `CoinsUpdate`).
+    + `CoinsUpdate`). Toggling `/autosplit` to a new value fans a `GroupNotice` ("X set
+    auto-split on/off.") to the player's **other** online group-mates (2026-06-16) so the
+    group sees who's splitting; the toggler gets only their local `hud.gd` echo (no
+    double-log), and a solo/no-op toggle fans nothing.
   - **Group leadership** is server-authoritative end to end: invite/accept/leave/kick
     **and `PassLeadership`** all resolve in the tick loop and re-fan `GroupRoster` (the
     leadership handoff was added 2026-06-15 — it had been local-only, a latent bug now
@@ -322,6 +334,11 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   spawn and update peer-owned entities from server broadcasts; each exposes a `get_by_id()`
   accessor used by the target-of-target resolver.
 - `NetCombatBroadcaster` — relays local combat events onto the wire.
+- **Incoming-attack combat-log feedback:** `RemotePlayerManager._on_hit` logs "X hits you
+  for N." and `_on_miss` logs "X misses you." (added 2026-06-16) on the local player's
+  combat log, for both enemy and PvP attackers (the server already fans `Hit`/`Miss` to the
+  defender). Attacker naming (`_attacker_display_name`) reads the mob name for enemy ids and
+  the peer name otherwise.
 - **Pet PvP inheritance:** a player-owned pet inherits its owner's `/pvp` flag — it's only
   damageable when the attacker could attack the owner directly (`combat::can_attack(attacker,
   pet.owner)`; you can never damage your own pet). Gated on all three player→pet damage paths

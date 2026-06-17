@@ -373,15 +373,34 @@ func _on_damage_shield_trigger(defender: int, attacker: int, amount: int, shield
 		if att_node3 != null and is_instance_valid(att_node3):
 			DamageNumbers.spawn_damage((att_node3 as Node3D).global_position, amount, false)
 
-func _on_miss(_attacker: int, target: int) -> void:
+func _on_miss(attacker: int, target: int) -> void:
 	if target == Net.get_player_id():
 		var players := get_tree().get_nodes_in_group("player")
 		if not players.is_empty():
 			DamageNumbers.spawn_miss((players[0] as Node3D).global_position)
+		# Incoming miss — log who whiffed so the defender gets the same
+		# situational awareness as an incoming hit ("X hits you"), which
+		# matters most in PvP. Mirrors _on_hit's attacker-name resolution.
+		CombatLog.add_line("%s misses you." % _attacker_display_name(attacker), CombatLog.MsgType.DAMAGE_IN)
 		return
 	var rp = _by_id.get(target)
 	if rp != null and is_instance_valid(rp):
 		DamageNumbers.spawn_miss(rp.global_position)
+
+# Resolve an attacker id to a combat-log name. Mirrors the enemy-vs-peer
+# split in _on_hit: enemy ids (>= ENEMY_ID_BASE) read the mob name, peer
+# ids read the RemotePlayer name; same fallbacks ("Something" / "another
+# player") so incoming-miss lines read like incoming-hit lines.
+func _attacker_display_name(attacker: int) -> String:
+	if attacker >= RemoteEnemyManager.ENEMY_ID_BASE:
+		var en: Node = RemoteEnemyManager.get_enemy(attacker)
+		if en != null and is_instance_valid(en):
+			return en.mob_name
+		return "Something"
+	var rp = _by_id.get(attacker)
+	if rp != null and is_instance_valid(rp):
+		return rp.player_name
+	return "another player"
 
 # Track 4 sub-task 5 — peer died. Routes to RemotePlayer.apply_death which
 # plays the fall-over visual. Respawn is implied by the next ResourceUpdate

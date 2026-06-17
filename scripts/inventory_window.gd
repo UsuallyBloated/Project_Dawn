@@ -18,7 +18,9 @@ var _bag_windows: Array = []  # BASE_SLOT_COUNT BagWindow or null
 var _tooltip: PanelContainer = null
 var _tooltip_label: Label = null
 var _trash_cell: Panel = null
+var _drop_cell: Panel = null
 var _delete_dialog: ConfirmationDialog = null
+var _drop_dialog: ConfirmationDialog = null
 var _wallet_label: Label = null
 
 func _ready() -> void:
@@ -106,8 +108,16 @@ func _build_ui() -> void:
 	_wallet_label.tooltip_text = "Your coins, as carried — stacks are never consolidated automatically. Every coin has weight."
 	vbox.add_child(_wallet_label)
 
+	# Drop (ground) + Trash (destroy) share the bottom row. Drop spawns a
+	# public loot bag at the player's feet; Trash deletes for good.
+	var bottom_row := HBoxContainer.new()
+	bottom_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	bottom_row.add_theme_constant_override("separation", 8)
+	_drop_cell = _make_drop_cell()
+	bottom_row.add_child(_drop_cell)
 	_trash_cell = _make_trash_cell()
-	vbox.add_child(_trash_cell)
+	bottom_row.add_child(_trash_cell)
+	vbox.add_child(bottom_row)
 
 	var tip := make_tooltip()
 	_tooltip = tip[0]
@@ -127,6 +137,28 @@ func _make_trash_cell() -> Panel:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", 24)
 	label.add_theme_color_override("font_color", Color(0.85, 0.45, 0.40))
+	cell.add_child(label)
+
+	return cell
+
+# Drop-to-ground target. Mirrors the trash cell but routes through
+# DropItem (public loot bag at the player's feet) instead of DestroyItem.
+# Dropping is also available by dragging an item out of the window onto
+# the 3D world — see `_input`.
+func _make_drop_cell() -> Panel:
+	var cell := Panel.new()
+	cell.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
+	cell.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_apply_slot_style(cell, Color(0.10, 0.12, 0.06, 1.0), Color(0.45, 0.55, 0.25, 1.0), 1)
+	cell.tooltip_text = "Drag an item here (or out onto the world) to drop it on the ground"
+
+	var label := Label.new()
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label.text = "⬇"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 24)
+	label.add_theme_color_override("font_color", Color(0.70, 0.80, 0.45))
 	cell.add_child(label)
 
 	return cell
@@ -488,7 +520,21 @@ func _input(event: InputEvent) -> void:
 		_show_delete_confirm()
 		get_viewport().set_input_as_handled()
 		return
-	_return_drag_to_source()
+	if _drop_cell != null and _drop_cell.get_global_rect().has_point(mp):
+		_show_drop_confirm()
+		get_viewport().set_input_as_handled()
+		return
+	# Drop only when released over genuinely empty space — i.e. the 3D
+	# world, where no Control sits under the cursor. Any Control there
+	# (this window's own chrome, or another panel like the vendor / loot /
+	# character window or the hotbar) means a mis-drop, so snap the item
+	# back instead of popping a drop prompt. The drag overlay itself is
+	# MOUSE_FILTER_IGNORE, so it never counts as the hovered control.
+	# (Bag/paperdoll windows were already handled by the early returns.)
+	if get_viewport().gui_get_hovered_control() == null:
+		_show_drop_confirm()
+	else:
+		_return_drag_to_source()
 	get_viewport().set_input_as_handled()
 
 func _find_paperdoll_window() -> Control:
@@ -538,6 +584,38 @@ func _confirm_trash_delete() -> void:
 			var src_loc: String = NetProtocol.INV_LOCATION_BASE if drag_source_bi == -1 \
 				else NetProtocol.inv_location_bag(drag_source_bi)
 			Net.broadcast_destroy_item(src_loc, drag_source_si, drag_count)
+		_clear_drag()
+		return
+	end_drag()
+
+# Track 13.2.b — drop the dragged stack to the ground. Reached from the
+# Drop cell or from releasing the drag out onto the 3D world (see `_input`).
+func _show_drop_confirm() -> void:
+	if _drag_icon != null:
+		_drag_icon.visible = false
+	if _drop_dialog == null:
+		_drop_dialog = ConfirmationDialog.new()
+		_drop_dialog.title = "Drop Item"
+		_drop_dialog.confirmed.connect(_confirm_drop_to_ground)
+		_drop_dialog.canceled.connect(_return_drag_to_source)
+		add_child(_drop_dialog)
+	if drag_count > 1:
+		_drop_dialog.dialog_text = "Drop %d × %s on the ground?" % [drag_count, drag_item.item_name]
+	else:
+		_drop_dialog.dialog_text = "Drop %s on the ground?" % drag_item.item_name
+	_drop_dialog.popup_centered()
+
+# In launcher mode the source slot still holds the item server-side (the
+# lift never optimistically cleared it), so DropItem is enough — the server
+# spawns a public loot bag and fans the InventoryDelta that empties the
+# slot client-side. Solo mode keeps the legacy end_drag (the overlay was
+# the only state).
+func _confirm_drop_to_ground() -> void:
+	if Net.is_launcher_mode():
+		if drag_item != null:
+			var src_loc: String = NetProtocol.INV_LOCATION_BASE if drag_source_bi == -1 \
+				else NetProtocol.inv_location_bag(drag_source_bi)
+			Net.broadcast_drop_item(src_loc, drag_source_si, drag_count)
 		_clear_drag()
 		return
 	end_drag()
