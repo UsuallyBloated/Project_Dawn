@@ -1,0 +1,43 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/banker_npc.gd" id="1"]
+
+[sub_resource type="CapsuleShape3D" id="SphereShape3D_1"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="SphereShape3D" id="ProximitySphere"]
+radius = 2.5
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
+radius = 0.3
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="Material_npc"]
+albedo_color = Color(0.25, 0.45, 0.55, 1)
+
+[node name="BankerNPC" type="Area3D"]
+script = ExtResource("1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_1")
+surface_material_override/0 = SubResource("Material_npc")
+
+[node name="NameLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+text = "Banker"
+font_size = 24
+outline_size = 6
+outline_modulate = Color(0, 0, 0, 1)
+billboard = 1
+no_depth_test = false
+
+[node name="ProximitySensor" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ProximitySensor"]
+shape = SubResource("ProximitySphere")

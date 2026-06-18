@@ -1,10 +1,11 @@
-[gd_scene load_steps=18 format=4 uid="uid://h1lkpabnydg3"]
+[gd_scene load_steps=19 format=4 uid="uid://h1lkpabnydg3"]
 
 [ext_resource type="Script" uid="uid://td3xlala4836" path="res://scripts/player.gd" id="1_a202f"]
 [ext_resource type="PackedScene" uid="uid://bm4x7kpqr2n5" path="res://scenes/hud.tscn" id="2_hudsc"]
 [ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="3_enemy"]
 [ext_resource type="PackedScene" path="res://scenes/vendor_npc.tscn" id="10_vendor"]
 [ext_resource type="PackedScene" path="res://scenes/dialogue_npc.tscn" id="13_dialog"]
+[ext_resource type="PackedScene" path="res://scenes/banker_npc.tscn" id="14_banker"]
 [ext_resource type="PackedScene" path="res://scenes/crafting_station.tscn" id="11_craft"]
 [ext_resource type="PackedScene" path="res://scenes/mining_node.tscn" id="12_mine"]
 [ext_resource type="Script" path="res://scripts/zone_manager.gd" id="9_zone"]
@@ -124,6 +125,10 @@ vendor_type = "Provisioner"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 5)
 npc_name = "Aldric the Guard"
 npc_title = "Town Watch"
+
+[node name="ThaliaTheBanker" parent="." instance=ExtResource("14_banker")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 5)
+banker_name = "Thalia Mourne — Banker"
 
 [node name="Forge" parent="." instance=ExtResource("11_craft")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 5)

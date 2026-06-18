@@ -55,7 +55,7 @@ and `tools/currency_smoke.gd` → `CURRENCY_SMOKE_PASS`.
 
 ---
 
-## Recommended slice 1 (MVP) — **coin** banking + tier exchange
+## Slice 1 (MVP — LOCKED 2026-06-17) — **coin** banking + tier exchange
 
 The highest-value, lowest-complexity increment: deposit/withdraw **coins** (the weight
 relief valve) and convert between tiers. **No item storage yet** — items are a bigger UI lift
@@ -149,30 +149,42 @@ relog. Headless boot clean; `CURRENCY_SMOKE_PASS`.
 
 ---
 
-## Decisions to make at session start (don't start without picking)
-1. **Storage schema** — four `bank_*` columns on `characters` (simplest, recommended for the
-   coin-only MVP) vs a dedicated table (needed anyway for slice-2 item storage; you could lay
-   it down now). *Recommend: columns now, table when items land.*
-2. **What slice 1 stores** — **coins only** (recommended — the weight-relief headline, far
-   simpler) vs coins+items. *Recommend: coins only; items are slice 2.*
-3. **Exchange fees** — implement the currency.md bands (2–5% up / 0–1% down) now, or 0% for
-   MVP then tune. *Recommend: implement a flat first cut (e.g. 3% up / 0.5% down) as named
-   constants; it's core to the exchange's purpose.*
-4. **Bank deposit/withdraw fee** — none (recommended, EQ-style) vs flat/scaled. *Recommend:
-   none for MVP; note it in currency.md.*
-5. **Where exchange operates** — on the wallet (convert coins you're carrying) vs on the bank
-   balance vs either. *Recommend: wallet-side for MVP (you go to the bank to lighten your
-   load); simplest single fan (`CoinsUpdate`).*
-6. **Reject feedback** — reuse a `LootRejected`-style private string, or add `BankRejected`.
-   *Recommend: a small `BankRejected { reason }` for clarity.*
-7. **UI** — new `BankWindow` (recommended) vs extend the vendor window with tabs.
+## Decisions (LOCKED 2026-06-17)
+1. **Slice 1 = coins only.** Deposit/withdraw + tier exchange of coins. Item storage (incl.
+   the account-shared slots below) is **slice 2** — do not build it in slice 1.
+2. **Storage schema:** four `bank_*` columns on `characters` (`bank_platinum/gold/silver/
+   copper INTEGER NOT NULL DEFAULT 0`). No new table for the coin MVP.
+3. **Exchange fee: 0% for MVP.** Conversion is 1:1 and free — prove the mechanic first. Build
+   the fee plumbing so a rate is a one-line change later (`net = gross` for now); the
+   currency.md bands (2–5% up / 0–1% down) come in a later pass as named constants.
+4. **Deposit/withdraw fee: none.** Banking is free (EQ-style — the friction is the travel).
+   Note the resolution in currency.md's open question.
+5. **Exchange operates on the carried wallet** — bring coins to the bank to convert and
+   lighten your pack. Single `CoinsUpdate` fan; no bank-side exchange in slice 1.
+6. **Reject feedback:** add a small `BankRejected { reason }` server→client message (append at
+   the **end** of `ServerWorldMsg`).
+7. **UI: a new `BankWindow`** (extend `DraggablePanel`, mirror the vendor window's layout).
+
+Slice 1 is fully specified — build A→E above with these. (§A's `fee = gross - net` is `0` for
+MVP; §A's "within the bank, or on the wallet — decide" resolves to wallet-side per #5.)
 
 ## Slice 2+ (note, don't build in slice 1)
-- **Item storage** — `bank_items` table + a `BankStorage` struct mirroring
-  `PlayerInventory`'s `to_rows`/`from_rows` (`world/inventory.rs` 225–321); dual-pane
-  deposit/withdraw UI mirroring the inventory drag/drop + `MoveItem` wire; new
-  deposit/withdraw item intents (use the `SlotRef` tagged enum like `SellItem`, not a string
-  location). "Effectively unlimited" capacity per the design.
+- **Item storage (per character)** — `bank_items` table (char-keyed) + a `BankStorage` struct
+  mirroring `PlayerInventory`'s `to_rows`/`from_rows` (`world/inventory.rs` 225–321); dual-pane
+  deposit/withdraw UI mirroring the inventory drag/drop + `MoveItem` wire; new deposit/withdraw
+  item intents (use the `SlotRef` tagged enum like `SellItem`, not a string location).
+  **10 personal slots** (locked 2026-06-17 — a concrete count supersedes the design doc's
+  "effectively unlimited" language for the build).
+- **Account-shared bank slots — REQUIREMENT (user-added 2026-06-17).** **2 item slots (on top
+  of the 10 personal above) shared across every character on the player's account** (EQ
+  "shared bank": move twink gear / drops
+  between your own characters). These are **account-keyed, not character-keyed** — a separate
+  `account_bank_items` table keyed on the **account id** (the auth/accounts identity, not
+  `char_id`), so a deposit on one character is visible to another on next load. The
+  `BankWindow` shows these 2 shared slots alongside the personal vault. **Design the slice-2
+  schema with the account-vs-character split from the start** — don't bolt account-shared
+  storage onto the char-keyed `bank_items` table. Open: do the shared slots hold items only,
+  or coin too? (Assume items-only unless decided otherwise.)
 - **Citizen field-exchange** — the player-run exchange (currency.md "Four mechanical
   concerns": capital float, atomic trade window, discovery, rate caps). Blocked on the
   Citizen class; the Banker anchors the rates it competes against.

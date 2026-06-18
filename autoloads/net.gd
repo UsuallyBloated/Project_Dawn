@@ -176,6 +176,10 @@ signal world_xp_gained(amount: int, current: int, to_next: int)
 # fans this. Carries the four-tier wallet; PlayerStats overwrites its
 # stacks and emits its own `coins_changed` so existing UI stays wired.
 signal world_coins_update(platinum: int, gold: int, silver: int, copper: int)
+# PD_W0015 — Banker, slice 1. The player's bank balance (four tiers) and a
+# rejected bank action. BankerManager caches the snapshot; BankWindow logs the reject.
+signal world_bank_snapshot(platinum: int, gold: int, silver: int, copper: int)
+signal world_bank_rejected(reason: String)
 # Track 6 sub-task 5 — group state from the server.
 # group_invited: someone is asking us to join their group.
 # group_roster: the group we belong to has a new membership snapshot
@@ -245,6 +249,8 @@ func _ready() -> void:
 	group_notice.connect(_on_group_notice)
 	xp_gained.connect(_on_xp_gained)
 	coins_update.connect(_on_coins_update)
+	bank_snapshot.connect(_on_bank_snapshot)
+	bank_rejected.connect(_on_bank_rejected)
 	group_invited.connect(_on_group_invited)
 	group_roster.connect(_on_group_roster)
 	damage_shield_trigger.connect(_on_damage_shield_trigger)
@@ -605,6 +611,26 @@ func broadcast_give_coins(platinum: int, gold: int, silver: int, copper: int) ->
 		return
 	send_give_coins(platinum, gold, silver, copper)
 
+# PD_W0015 — Banker, slice 1. Deposit/withdraw move per-tier coin amounts
+# between the carried wallet and the zero-weight bank; exchange converts tiers
+# on the wallet (tiers 0=copper..3=platinum). Server-authoritative: it fans
+# CoinsUpdate (wallet) + BankSnapshot (bank), or BankRejected on failure. No
+# optimistic local mutation — wait for the fans.
+func broadcast_bank_deposit(platinum: int, gold: int, silver: int, copper: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_bank_deposit(platinum, gold, silver, copper)
+
+func broadcast_bank_withdraw(platinum: int, gold: int, silver: int, copper: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_bank_withdraw(platinum, gold, silver, copper)
+
+func broadcast_bank_exchange(from_tier: int, to_tier: int, qty: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_bank_exchange(from_tier, to_tier, qty)
+
 # Track 6 sub-task 5 — group action wrappers. Server processes the
 # corresponding ClientWorldMsg variants, fans GroupInvited /
 # GroupRoster back through the typed signals above.
@@ -897,6 +923,15 @@ func _on_coins_update(platinum: int, gold: int, silver: int, copper: int) -> voi
 	# via the existing coins_changed signal.
 	world_coins_update.emit(platinum, gold, silver, copper)
 	PlayerStats.apply_remote_coins(platinum, gold, silver, copper)
+
+# PD_W0015 — Banker, slice 1. The bank balance is display-only on the client
+# (the wallet is the one PlayerStats tracks), so just relay the snapshot for
+# the BankWindow; no PlayerStats mutation here.
+func _on_bank_snapshot(platinum: int, gold: int, silver: int, copper: int) -> void:
+	world_bank_snapshot.emit(platinum, gold, silver, copper)
+
+func _on_bank_rejected(reason: String) -> void:
+	world_bank_rejected.emit(reason)
 
 func _on_group_invited(from_id: int, from_name: String) -> void:
 	world_group_invited.emit(from_id, from_name)

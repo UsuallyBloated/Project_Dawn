@@ -223,6 +223,30 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
     coin + reject feedback flow through `RemoteLootBagManager`. XP split is unchanged
     (still distance-agnostic — a deliberate asymmetry vs coin's proximity gate).
 
+- **Banker NPC — slice 1 / coins (2026-06-17, server-authoritative, wire PD_W0015):** a town
+  NPC (**Thalia Mourne**) giving **zero-weight coin storage** + **tier exchange** — the relief
+  valve for the four-tier coin-weight system. Design: `docs/concepts/world/currency.md`.
+  - **Bank balance** is a per-character four-tier wallet persisted in `bank_*` columns
+    (`0005_bank.sql`), held on `PerConnection.bank_coins` (dirty-flag persisted via the
+    checkpoint sweep + disconnect flush; seeded to the client by a `BankSnapshot` on
+    enter-world). Zero weight on the player — banked coin doesn't count toward encumbrance.
+  - **Deposit / withdraw** move per-tier amounts between the carried wallet and the bank;
+    **exchange** converts coin between tiers on the carried wallet (value-preserving,
+    **0% fee** for the MVP; up-conversions convert the whole-multiple part and leave any
+    remainder, e.g. 150c → 1s + 50c). All math
+    lives on `protocol::Coins` (`exchange` / `has_at_least` / `add_each` / `sub_each`,
+    saturating) and is server-validated against minting (non-negative, affordable). Wire:
+    `Bank{Deposit,Withdraw}Coins` / `BankExchange` → fan `CoinsUpdate` (wallet) +
+    `BankSnapshot` (bank), or `BankRejected`.
+  - **Client**: `BankerManager` autoload (proximity + open, caches the bank balance);
+    `BankerNPC` in the `banker_npcs` group (targeted via `targeting.gd`, opened via
+    `hud.gd`'s NPC-interact path); a `BankWindow` (`bank_window.gd`) with wallet + bank rows,
+    per-tier deposit/withdraw, and tier-exchange controls — server-authoritative, refreshing
+    off the fans (no optimistic mutation; entry fields clear only on the confirming snapshot).
+  - **Slice 2 (not built):** item storage — a 10-slot per-character vault + 2 **account-shared**
+    slots (account-keyed); exchange fee bands; a Banker-NPC proximity gate on bank actions
+    (slice 1 gates only on `in_world`, matching the vendor pattern — value-preserving).
+
 ---
 
 ## Pets, warders, transforms, mounts

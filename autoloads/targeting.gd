@@ -72,7 +72,7 @@ func click_target(mouse_pos: Vector2) -> void:
 		# resolution. Combat.can_attack still gates whether a pet is a
 		# legal hostile target (it isn't, by default).
 		Combat.set_target(body)
-	elif body.is_in_group("vendor_npcs") or body.is_in_group("dialogue_npcs"):
+	elif body.is_in_group("vendor_npcs") or body.is_in_group("dialogue_npcs") or body.is_in_group("banker_npcs"):
 		Combat.set_target(body)
 	elif body is Area3D:
 		pass  # interactable (e.g. loot bag) — let its own input_event handle it

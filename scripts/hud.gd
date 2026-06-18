@@ -3,6 +3,7 @@ extends CanvasLayer
 const _OptionsScreenScript  := preload("res://scripts/options_screen.gd")
 const _CraftingWindowScript := preload("res://scripts/crafting_window.gd")
 const _VendorWindowScript   := preload("res://scripts/vendor_window.gd")
+const _BankWindowScript     := preload("res://scripts/bank_window.gd")
 const _HudDeathScreen       := preload("res://scripts/hud_death_screen.gd")
 const _HudCastBar           := preload("res://scripts/hud_cast_bar.gd")
 const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
@@ -63,6 +64,7 @@ var _player: Node3D = null
 var _options_screen: Panel = null
 var _crafting_window: Panel = null
 var _vendor_window: Panel = null
+var _bank_window: Panel = null
 
 var _group_panel = null
 var _pet_panel = null
@@ -148,6 +150,7 @@ func _ready() -> void:
 	_build_options_screen()
 	_build_crafting_window()
 	_build_vendor_window()
+	_build_bank_window()
 	_build_components()
 	_connect_player_state()
 
@@ -376,6 +379,18 @@ func _build_vendor_window() -> void:
 	VendorManager.vendor_opened.connect(func(vname: String, vtype: String) -> void:
 		(_vendor_window as Node).call("open_for", vname, vtype))
 
+# Banker slice 1 — same lifecycle as the vendor window; opens on
+# BankerManager.banker_opened (hud NPC-interact path / BankerNPC proximity).
+func _build_bank_window() -> void:
+	_bank_window = _BankWindowScript.new()
+	_bank_window.visible = false
+	_bank_window.z_index = 20
+	add_child(_bank_window)
+	_bank_window.visibility_changed.connect(
+		_on_window_visibility_changed.bind(_bank_window))
+	BankerManager.banker_opened.connect(func(bname: String) -> void:
+		(_bank_window as Node).call("open_for", bname))
+
 # ── Clock ─────────────────────────────────────────────────────────────────────
 
 func _build_clock() -> void:
@@ -529,7 +544,7 @@ func _try_open_targeted_npc() -> bool:
 	var t = Combat.current_target
 	if t == null or not is_instance_valid(t):
 		return false
-	var is_friendly: bool = t.is_in_group("dialogue_npcs") or t.is_in_group("vendor_npcs")
+	var is_friendly: bool = t.is_in_group("dialogue_npcs") or t.is_in_group("vendor_npcs") or t.is_in_group("banker_npcs")
 	if not is_friendly:
 		return false
 	var player := get_tree().get_first_node_in_group("player")
@@ -541,6 +556,8 @@ func _try_open_targeted_npc() -> bool:
 		return true
 	if t.is_in_group("dialogue_npcs"):
 		DialogueManager.open_for(t)
+	elif t.is_in_group("banker_npcs"):
+		BankerManager.open_for(t)
 	else:
 		VendorManager.open_for(t)
 	return true
@@ -759,8 +776,21 @@ func _on_target_changed(enemy) -> void:
 		_refresh_target_buffs_label()
 		return
 	if not enemy.is_in_group("enemies"):
-		var nm: String = enemy.vendor_name if enemy.is_in_group("vendor_npcs") else enemy.npc_name
-		var subtitle: String = enemy.vendor_type if enemy.is_in_group("vendor_npcs") else enemy.npc_title
+		# Friendly NPC target frame. Each NPC type exposes its own name/subtitle
+		# fields (vendor_name/_type, banker_name, npc_name/_title) — resolve by
+		# group rather than assuming one shape, or a wrong .field access throws
+		# and the frame keeps the previous target's name.
+		var nm := ""
+		var subtitle := ""
+		if enemy.is_in_group("vendor_npcs"):
+			nm = enemy.vendor_name
+			subtitle = enemy.vendor_type
+		elif enemy.is_in_group("banker_npcs"):
+			nm = enemy.banker_name
+			subtitle = "Banker"
+		else:
+			nm = enemy.npc_name
+			subtitle = enemy.npc_title
 		target_name_label.text = nm
 		target_level_label.text = subtitle
 		target_hp_bar.visible = false
