@@ -7,6 +7,8 @@ A multiplayer MMORPG inspired by classic EverQuest-era games. **Two repos:** a G
 > starting a session. You're doing great work; thanks for the care.
 
 > Please do the required research and dont fabricate answers.
+
+> Please minimize the amount of em-dashes and also the ←/→ arrows.  People use these very rarely and they look odd to us. 
 ---
 
 ## Commands
