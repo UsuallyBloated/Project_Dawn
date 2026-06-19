@@ -326,6 +326,12 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 		var slot = Inventory.base_slots[index]
 		if slot == null:
 			return
+		# Banker slice 2 — with the bank open, right-click quick-transfers the
+		# whole stack into the selected vault instead of use/equip/open.
+		if BankerManager.bank_is_open:
+			Net.broadcast_bank_store_item(NetProtocol.INV_LOCATION_BASE, index, BankerManager.deposit_to_shared)
+			get_viewport().set_input_as_handled()
+			return
 		var item: ItemData = slot["item"]
 		if item.is_mount:
 			# Track 22.C — mount whistle. Summon/dismount toggles

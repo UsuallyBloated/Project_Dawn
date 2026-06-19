@@ -180,6 +180,10 @@ signal world_coins_update(platinum: int, gold: int, silver: int, copper: int)
 # rejected bank action. BankerManager caches the snapshot; BankWindow logs the reject.
 signal world_bank_snapshot(platinum: int, gold: int, silver: int, copper: int)
 signal world_bank_rejected(reason: String)
+# PD_W0016 — Banker, slice 2. Full contents of one item vault (shared = false is
+# the 10-slot personal vault, true is the 2-slot account-shared vault). Parallel
+# arrays of (slot, item_path, count) for filled slots. BankerManager caches it.
+signal world_bank_item_snapshot(shared: bool, slots: PackedInt32Array, item_paths: PackedStringArray, counts: PackedInt32Array)
 # Track 6 sub-task 5 — group state from the server.
 # group_invited: someone is asking us to join their group.
 # group_roster: the group we belong to has a new membership snapshot
@@ -206,6 +210,11 @@ var _session_token_bytes := PackedByteArray()
 var _char_id: int = -1
 var _client_version := ""
 var _player_id: int = -1
+# Set when the server kicks us with a reason (e.g. duplicate login). The kick is
+# immediately followed by a transport drop, and our own disconnect_now() re-enters
+# _on_transport_disconnected; without this, that generic transport reason would
+# clobber the meaningful kick reason. Cleared when a fresh transport connects.
+var _kick_reason: String = ""
 var _move_sequence: int = 0
 var _heartbeat_timer: Timer = null
 
@@ -251,6 +260,7 @@ func _ready() -> void:
 	coins_update.connect(_on_coins_update)
 	bank_snapshot.connect(_on_bank_snapshot)
 	bank_rejected.connect(_on_bank_rejected)
+	bank_item_snapshot.connect(_on_bank_item_snapshot)
 	group_invited.connect(_on_group_invited)
 	group_roster.connect(_on_group_roster)
 	damage_shield_trigger.connect(_on_damage_shield_trigger)
@@ -631,6 +641,19 @@ func broadcast_bank_exchange(from_tier: int, to_tier: int, qty: int) -> void:
 		return
 	send_bank_exchange(from_tier, to_tier, qty)
 
+# PD_W0016 — Banker, slice 2. Quick-transfer whole item stacks between inventory
+# and a vault. shared = false is the personal vault, true is the account-shared
+# vault. Server-authoritative: it fans an InventoryDelta + a BankItemSnapshot.
+func broadcast_bank_store_item(src_location: String, src_slot: int, shared: bool) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_bank_store_item(src_location, src_slot, shared)
+
+func broadcast_bank_withdraw_item(shared: bool, vault_slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_bank_withdraw_item(shared, vault_slot)
+
 # Track 6 sub-task 5 — group action wrappers. Server processes the
 # corresponding ClientWorldMsg variants, fans GroupInvited /
 # GroupRoster back through the typed signals above.
@@ -755,6 +778,7 @@ func _hex_to_bytes(hex: String) -> PackedByteArray:
 
 func _on_transport_connected() -> void:
 	_state = State.CONNECTED_TRANSPORT
+	_kick_reason = ""
 	# Now safe to send the app-layer Connect.
 	if not send_app_connect(_session_token_bytes, _char_id, _client_version):
 		push_warning("Net: send_app_connect returned false")
@@ -763,6 +787,11 @@ func _on_transport_disconnected(reason: String) -> void:
 	_stop_heartbeat()
 	_state = State.DISCONNECTED
 	_player_id = -1
+	# If the server already told us *why* via a Kick (e.g. duplicate login), keep
+	# that reason. _on_kicked already surfaced it, then called disconnect_now(),
+	# which re-enters here with a generic transport reason that would clobber it.
+	if _kick_reason != "":
+		return
 	app_disconnected.emit(reason)
 
 func _on_connect_ok(
@@ -782,10 +811,14 @@ func _on_connect_ok(
 
 func _on_kicked(reason: String, code: String) -> void:
 	push_warning("Net: kicked code=%s reason=%s" % [code, reason])
+	_kick_reason = reason
 	_stop_heartbeat()
 	_state = State.DISCONNECTED
 	_player_id = -1
-	app_disconnected.emit("kicked: %s" % reason)
+	# Surface the server's reason verbatim (e.g. "You already have a character in
+	# this world."). disconnect_now() below re-enters _on_transport_disconnected,
+	# which defers to _kick_reason so this message isn't overwritten.
+	app_disconnected.emit(reason)
 	disconnect_now()
 
 func _on_position(id: int, pos: Vector3, vel: Vector3, yaw: float, sequence: int) -> void:
@@ -932,6 +965,9 @@ func _on_bank_snapshot(platinum: int, gold: int, silver: int, copper: int) -> vo
 
 func _on_bank_rejected(reason: String) -> void:
 	world_bank_rejected.emit(reason)
+
+func _on_bank_item_snapshot(shared: bool, slots: PackedInt32Array, item_paths: PackedStringArray, counts: PackedInt32Array) -> void:
+	world_bank_item_snapshot.emit(shared, slots, item_paths, counts)
 
 func _on_group_invited(from_id: int, from_name: String) -> void:
 	world_group_invited.emit(from_id, from_name)

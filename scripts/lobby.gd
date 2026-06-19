@@ -142,7 +142,7 @@ func _on_app_connected(_player_id: int) -> void:
 
 func _on_app_disconnected(reason: String) -> void:
 	enter_world_btn.visible = false
-	status_label.text = "Disconnected: %s. You can play offline if you wish." % reason
+	status_label.text = "Disconnected: %s" % reason
 	for control in _local_buttons:
 		control.visible = true
 

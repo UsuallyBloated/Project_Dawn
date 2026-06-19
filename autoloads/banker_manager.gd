@@ -13,6 +13,13 @@ extends Node
 signal banker_opened(banker_name: String)
 signal banker_closed
 signal bank_balance_changed(platinum: int, gold: int, silver: int, copper: int)
+# PD_W0016 — Banker slice 2. One item vault changed (shared selects which); the
+# BankWindow repaints that grid.
+signal vault_changed(shared: bool)
+
+# Item-vault sizes, mirroring the server (world/inventory.rs).
+const BANK_VAULT_SLOTS := 10
+const ACCOUNT_VAULT_SLOTS := 2
 
 # nearby_banker is set by proximity (BankerNPC body_entered/exited); open_for()
 # is preferred when the caller has an explicit reference.
@@ -25,8 +32,21 @@ var bank_gold: int = 0
 var bank_silver: int = 0
 var bank_copper: int = 0
 
+# PD_W0016 — Banker slice 2. Cached item-vault contents (display-only mirror of
+# the server). Each entry is null or {item: ItemData, count: int}.
+var vault_personal: Array = []   # BANK_VAULT_SLOTS entries
+var vault_shared: Array = []     # ACCOUNT_VAULT_SLOTS entries (shared across the account)
+# True while the BankWindow is open. The inventory/bag right-click quick-transfer
+# deposits to the bank only while this is set; the BankWindow keeps it in sync.
+var bank_is_open: bool = false
+# Which vault a quick-transfer deposit targets (set by the BankWindow's toggle).
+var deposit_to_shared: bool = false
+
 func _ready() -> void:
+	vault_personal.resize(BANK_VAULT_SLOTS)
+	vault_shared.resize(ACCOUNT_VAULT_SLOTS)
 	Net.world_bank_snapshot.connect(_on_bank_snapshot)
+	Net.world_bank_item_snapshot.connect(_on_bank_item_snapshot)
 
 func register_nearby(npc: Node) -> void:
 	nearby_banker = npc
@@ -52,3 +72,23 @@ func _on_bank_snapshot(platinum: int, gold: int, silver: int, copper: int) -> vo
 	bank_silver = silver
 	bank_copper = copper
 	bank_balance_changed.emit(platinum, gold, silver, copper)
+
+# PD_W0016 — full contents of one item vault. Rebuild the cached array (resolve
+# each item_path to its ItemData) and notify the BankWindow.
+func _on_bank_item_snapshot(shared: bool, slots: PackedInt32Array, item_paths: PackedStringArray, counts: PackedInt32Array) -> void:
+	var arr: Array = vault_shared if shared else vault_personal
+	for i in arr.size():
+		arr[i] = null
+	for i in slots.size():
+		var s: int = slots[i]
+		if s < 0 or s >= arr.size():
+			continue
+		var item: ItemData = load(item_paths[i]) as ItemData
+		if item == null:
+			push_warning("BankerManager: bank vault item failed to load: %s" % item_paths[i])
+			continue
+		arr[s] = {"item": item, "count": int(counts[i])}
+	vault_changed.emit(shared)
+
+func get_vault(shared: bool) -> Array:
+	return vault_shared if shared else vault_personal

@@ -243,9 +243,24 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
     `hud.gd`'s NPC-interact path); a `BankWindow` (`bank_window.gd`) with wallet + bank rows,
     per-tier deposit/withdraw, and tier-exchange controls — server-authoritative, refreshing
     off the fans (no optimistic mutation; entry fields clear only on the confirming snapshot).
-  - **Slice 2 (not built):** item storage — a 10-slot per-character vault + 2 **account-shared**
-    slots (account-keyed); exchange fee bands; a Banker-NPC proximity gate on bank actions
-    (slice 1 gates only on `in_world`, matching the vendor pattern — value-preserving).
+  - **Slice 2 — item storage (2026-06-19, wire PD_W0016):** a 10-slot per-character item vault
+    (`bank_items`, char-keyed) + a 2-slot **account-shared** vault (`account_bank_items`,
+    account-keyed, EQ shared bank). One reusable `ItemVault` struct backs both (deposit
+    stack-merge + capacity sizing, take/restore). **One character per account is now enforced**
+    in-world (a duplicate login is **refused** — the session already playing is never
+    force-disconnected, avoiding the Lineage II re-login boot exploit), which keeps the shared
+    vault single-owner, persisted by `account_id`. Deposit
+    is the right-click quick-transfer (right-click an inventory/bag item while the bank is open;
+    `docs/design/inventory_interaction_grammar.md` §4); withdraw is right-click a vault slot; both
+    move whole stacks. Server store sizes by vault room then debits inventory by the actual
+    removed count (no dup); withdraw refunds overflow back to the source slot (no loss); bag-typed
+    items rejected. Wire `BankStoreItem`/`BankWithdrawItem` (string location + `shared`, not the
+    SlotRef tagged enum — gdext can't encode those from GDScript) + `BankItemSnapshot` (full vault
+    per op). Client: `BankWindow` Coins/Items tabs; coins also gained per-tier clickable chips for
+    right-click quick-transfer (slice-1 buttons kept). The full cursor grammar (partial grabs,
+    split, drag-and-drop, a server-tracked cursor) is a separate deferred track.
+  - **Still open:** exchange fee bands; a Banker-NPC proximity gate on bank actions (gates only on
+    `in_world` today, matching the vendor pattern — value-preserving); bag storage.
 
 ---
 
