@@ -61,7 +61,13 @@ Saving is automatic. The game saves on:
 
 - **Level up**
 - **Zone change**
-- **Quit** (whether you click the X button, hit Quit Game in Options, or close the launcher)
+- **Quit Game** in Options, or closing the launcher
+
+> Note: the window **X button** is now a hard "crash" for testing the linkdead
+> system. It kills only that game window (no clean save/logout), so the server
+> keeps the character in the world ~30 s before it leaves. To log out cleanly,
+> use **Quit Game** in the Options menu. Closing one client's X does not affect a
+> second client running on the same machine.
 
 Save file lives at `%APPDATA%\Godot\app_userdata\Project_Dawn\character.save`. There's also a `.bak` rotated one alongside it in case the primary corrupts.
 

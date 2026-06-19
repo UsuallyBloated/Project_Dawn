@@ -238,9 +238,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > **Current focus:** client networking + PvP (RemotePlayer/Pet targeting, PvP flagging).
 
 ### Multiplayer / networking
-- [ ] **Camp / linkdead logout** — `/camp` 30s sit-gated countdown (cancel on move/damage) +
-  a ~30s vulnerable linkdead linger after a hard-kill (relogin refused meanwhile, then reaps).
-  Design locked 2026-06-19, not started: `docs/design/camp_and_linkdead.md` (handoff:
+- [ ] **Camp / linkdead logout** — *Slice A (server linkdead linger/reap + client X-button =
+  hard-kill) BUILT + playtest-verified 2026-06-19; see systems_overview "Disconnect lifecycle".*
+  Still open: **Slice B `/camp`** — the voluntary 30s sit-gated countdown (cancel on move/damage)
+  plus its `Camp`/`CancelCamp`/`CampUpdate` wire and client countdown panel. Quit Game is the
+  interim clean-logout path. Spec: `docs/design/camp_and_linkdead.md` (handoff:
   `docs/session_notes/handoff_camp_linkdead.md`). Sits on the one-char-per-account deny-login.
 - [ ] **Incoming `/tell` RPC** — receiving tells from other players (outbound done)
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;

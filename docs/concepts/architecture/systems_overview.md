@@ -363,12 +363,29 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
 
 ## Networking (client)
 
-> The world simulation server is not built yet; the client runs **local-save** until it
-> lands. Read `server/docs/server_design.md` before touching anything here.
+> The world simulation server is authoritative (renet UDP, 20 Hz); a `--local-save` dev path
+> still exists for solo iteration. Read `server/docs/server_design.md` before touching anything
+> here.
 
 - `Network` / `Net` — connection + wire message routing.
-- `SaveManager` — local persistence today; server-authoritative once the world server is
-  online. (Watch the Godot-4 `_notification`-on-close save pitfall noted in past audits.)
+- `SaveManager` — owns window-close. Two distinct exits (see the disconnect-lifecycle entry
+  below): **Quit Game** is a clean save + app-layer `Disconnect`; the **window X button** is a
+  hard self-kill that drives the server's linkdead path. (Watch the Godot-4 `_notification`-on-
+  close save pitfall noted in past audits — close is handled via the root window's
+  `close_requested` signal, not `_notification`.)
+- **Disconnect lifecycle (clean vs linkdead):** how you leave the world decides whether the body
+  reaps now or lingers. **Quit Game** (Options menu) sends an app-layer `Disconnect`, so the
+  server reaps immediately and frees the account. The **window X button** is wired as a hard
+  self-kill (`SaveManager._on_close_requested` → `OS.kill(OS.get_process_id())`, killing only
+  that instance's PID) — it sends nothing, so the server treats it as an unclean drop and the
+  character goes **linkdead**: the body lingers in-world ~30 s (`LINKDEAD_SECS`), still
+  targetable and **killable** by mobs and PvP, frozen in place; a same-account relogin is refused
+  ("You already have a character in this world.", with a `reconnect_after_secs` countdown) until
+  it reaps. This is the EverQuest model and closes the log-off-to-escape / pull-the-plug exploits.
+  Server side lives in `world/tick.rs` (`reap_connection` + the linkdead reaper sweep) and
+  `world/connection.rs` (`linkdead_since` / `clean_disconnect`); detection costs up to the 10 s
+  app-heartbeat or 15 s netcode timeout, so a hard crash is ~40-45 s end to end. The voluntary
+  `/camp` countdown is a separate slice. See `docs/design/camp_and_linkdead.md`.
 - `RemotePlayerManager`, `RemoteEnemyManager`, `RemoteLootBagManager`, `RemotePetManager` —
   spawn and update peer-owned entities from server broadcasts; each exposes a `get_by_id()`
   accessor used by the target-of-target resolver.

@@ -6,9 +6,10 @@ extends Node
 # Equipment. Buffs / cooldowns / pet state are transient and not persisted.
 #
 # Auto-save fires on level-up and zone change. SaveManager owns window-close:
-# its handler flushes a final save, calls Net.leave_session() to flush the
-# app-layer Disconnect, then calls get_tree().quit(). The in-game Quit Game
-# button in the Options screen runs the same sequence directly.
+# the X button is wired as a hard self-kill (OS.kill on our own PID) so it
+# simulates a crash and drives the server's linkdead path, NOT a clean logout.
+# The clean path (save + Net.leave_session app-Disconnect + get_tree().quit) now
+# lives only on the in-game Quit Game button in the Options screen.
 #
 # Atomic writes: data is staged at character.save.tmp, the previous primary is
 # rotated to character.save.bak, then tmp is renamed into place. A crash mid-
@@ -42,14 +43,18 @@ func _ready() -> void:
 	get_tree().root.close_requested.connect(_on_close_requested)
 
 func _on_close_requested() -> void:
-	# Order matches options_screen._on_quit_pressed so all quit paths converge:
-	# save first (local autoloads, untouched by network teardown), then flush
-	# the app-layer Disconnect (~200 ms poll), then quit. Skipping save during
-	# load avoids racing a half-loaded character to disk.
-	if not _is_loading:
-		save()
-	Net.leave_session()
-	get_tree().quit()
+	# The window X button simulates a HARD client crash so we can exercise the
+	# server's linkdead path: the body lingers in-world ~30 s (vulnerable,
+	# killable), a same-account relogin is refused meanwhile, then it reaps. See
+	# docs/design/camp_and_linkdead.md.
+	#
+	# So we deliberately do NOT save or call Net.leave_session() here. Sending the
+	# app-layer Disconnect would make the server reap immediately (a CLEAN logout)
+	# — that is exactly what "Quit Game" in the Options screen is for, and it
+	# stays the way to leave cleanly. Killing our own process is the in-app
+	# equivalent of ending the task in Task Manager, and it kills only THIS
+	# instance's PID, so a second client on the same machine keeps running.
+	OS.kill(OS.get_process_id())
 
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
