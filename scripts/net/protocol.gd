@@ -187,6 +187,9 @@ const W_START_SKINNING      := "StartSkinning"
 const W_CHAT                := "Chat"
 const W_SIT                 := "Sit"
 const W_STAND               := "Stand"
+# PD_W0017 — Camp, slice B. Voluntary sit-gated logout; CancelCamp aborts it.
+const W_CAMP                := "Camp"
+const W_CANCEL_CAMP         := "CancelCamp"
 const W_BIND_AT_LOCATION    := "BindAtCurrentLocation"
 const W_GROUP_INVITE        := "GroupInvite"
 const W_GROUP_ACCEPT_INVITE := "GroupAcceptInvite"
@@ -271,6 +274,9 @@ const SW_TIME_OF_DAY       := "TimeOfDay"
 const SW_CHAT_MESSAGE      := "ChatMessage"
 const SW_ERROR             := "Error"
 const SW_BROADCAST_MESSAGE := "BroadcastMessage"
+# PD_W0017 — Camp, slice B. Server confirm for the /camp countdown (start /
+# cancel). Completion is signalled by the clean disconnect instead.
+const SW_CAMP_UPDATE       := "CampUpdate"
 
 # Track 5 sub-task 2: server-authoritative enemies. SW_ENEMY_SPAWN carries
 # the mob identity + initial state when a server-spawned enemy enters the

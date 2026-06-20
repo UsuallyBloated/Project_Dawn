@@ -94,6 +94,24 @@ Call these out at build time rather than silently choosing:
 
 ## Slice B: `/camp`
 
+> **Built 2026-06-20 (PD_W0017), playtest-verified.** Implemented as specced below, with two
+> deliberate deviations found during the adversarial review:
+> - **Completion is client-driven, not a server kick.** At `CAMP_SECS` the *client* runs the same
+>   clean logout as Quit Game (a clean `Disconnect` that reaps the body + frees the account); the
+>   server just stops tracking. A mid-world server kick would strand the player in a frozen world
+>   scene because there is no in-game return-to-lobby/char-select flow yet, so a finished camp exits
+>   to desktop (the player relaunches to relog). The server still owns the vulnerability window and
+>   the cancel-on-stand/move/damage rules. Revisit if a return-to-char-select flow lands.
+> - **No "block movement during the countdown" (step 4).** That contradicts the locked cancel-on-move
+>   rule, so movement *cancels* the camp (server-authoritative; the client also cancels locally for
+>   responsiveness) rather than being blocked.
+>
+> Cancel-on-damage is implemented as a `last_damaged_at` marker set at the player-damage sites and
+> compared `>= camp_since` in the sweep (catches same-tick damage); a death also clears `camp_since`.
+> The relogin-UX countdown (step 5) is delivered as a server-side "try again in ~Ns" suffix on the
+> deny-login reason string (no gdext signal-widening needed); the structured `reconnect_after_secs`
+> is still sent for a future live-ticking UI.
+
 1. **Protocol:** append `ClientWorldMsg::Camp` and `ClientWorldMsg::CancelCamp` at the end of the
    enum (bincode is positional). A small server-to-client confirm (accepted / cancelled /
    remaining) so the client countdown stays in sync; reuse a lean message if one fits. Bump

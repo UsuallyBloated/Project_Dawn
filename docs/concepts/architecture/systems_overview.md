@@ -384,8 +384,22 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   it reaps. This is the EverQuest model and closes the log-off-to-escape / pull-the-plug exploits.
   Server side lives in `world/tick.rs` (`reap_connection` + the linkdead reaper sweep) and
   `world/connection.rs` (`linkdead_since` / `clean_disconnect`); detection costs up to the 10 s
-  app-heartbeat or 15 s netcode timeout, so a hard crash is ~40-45 s end to end. The voluntary
-  `/camp` countdown is a separate slice. See `docs/design/camp_and_linkdead.md`.
+  app-heartbeat or 15 s netcode timeout, so a hard crash is ~40-45 s end to end. See
+  `docs/design/camp_and_linkdead.md`.
+- **`/camp` (voluntary sit-gated logout, PD_W0017):** the deliberate mirror of linkdead. `/camp`
+  (in `hud.gd::_handle_chat_input`) requires the player to be seated (`Combat.is_player_seated()`,
+  else "You must be sitting to camp."); it sends `ClientWorldMsg::Camp`, the server gates on
+  `is_sitting` and starts a `CAMP_SECS` (30 s) countdown (`camp_since`), confirming with
+  `ServerWorldMsg::CampUpdate{remaining_secs, active}`. An amber "Making camp... N" HUD label counts
+  down. The camp **cancels** if the player stands/moves or takes damage (the server's per-tick camp
+  sweep checks `!is_sitting` or `last_damaged_at >= camp_since`, the latter set at the 5 player-damage
+  sites; death also clears it) — on cancel it fans `CampUpdate{active:false}` and the label hides.
+  **Completion is client-driven:** at 0 the client runs the same clean logout as Quit Game (a clean
+  `Disconnect`; exits to desktop), and the server just stops tracking — there's no in-game
+  return-to-lobby flow yet, so a server kick would strand the player. `/camp cancel` aborts it. The
+  client also cancels its countdown locally on stand for responsiveness and resets the overlay on any
+  disconnect. Server: `world/tick.rs` "5c camp sweep", `world/handlers.rs` (`Camp`/`CancelCamp`,
+  `send_camp_update`), `world/connection.rs` (`camp_since`/`last_damaged_at`).
 - `RemotePlayerManager`, `RemoteEnemyManager`, `RemoteLootBagManager`, `RemotePetManager` —
   spawn and update peer-owned entities from server broadcasts; each exposes a `get_by_id()`
   accessor used by the target-of-target resolver.

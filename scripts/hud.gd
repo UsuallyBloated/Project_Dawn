@@ -36,6 +36,11 @@ const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 var _clock_label: Label = null
 var _state_label: Label = null
 var _encumbrance_label: Label = null
+# Camp slice B — /camp countdown overlay. Driven by Net.world_camp_update; ticks
+# locally in _process while _camp_active. The server owns the real timer + logout.
+var _camp_label: Label = null
+var _camp_active: bool = false
+var _camp_seconds_left: float = 0.0
 var _hp_label: Label = null
 var _mp_label: Label = null
 var _sta_label: Label = null
@@ -146,6 +151,7 @@ func _ready() -> void:
 	_build_clock()
 	_build_state_label()
 	_build_encumbrance_indicator()
+	_build_camp_indicator()
 	_build_command_input()
 	_build_options_screen()
 	_build_crafting_window()
@@ -446,6 +452,61 @@ func _on_encumbrance_changed(weight: float, capacity: float) -> void:
 		UITheme.C_OVERLOADED if overloaded else UITheme.C_ENCUMBERED)
 	_encumbrance_label.visible = true
 
+# Camp slice B — the /camp countdown overlay, just above the sit "state" label.
+# Server-driven: shown/hidden by Net.world_camp_update, ticked locally in
+# _process. Amber to read as "leaving the world", outlined for legibility.
+func _build_camp_indicator() -> void:
+	_camp_label = Label.new()
+	_camp_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_camp_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_camp_label.position = Vector2(-100.0, -190.0)
+	_camp_label.size = Vector2(200.0, 24.0)
+	_camp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_camp_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.5))
+	_camp_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_camp_label.add_theme_constant_override("outline_size", 3)
+	_camp_label.add_theme_font_size_override("font_size", 14)
+	_camp_label.visible = false
+	add_child(_camp_label)
+	Net.world_camp_update.connect(_on_world_camp_update)
+	# Any disconnect (camp completion, a kick, a transport drop / linkdead) must
+	# clear the overlay so a stale "Making camp..." can't linger on a dead
+	# session — the server doesn't send a CampUpdate(false) for those paths.
+	Net.app_disconnected.connect(_on_camp_disconnected)
+
+func _on_world_camp_update(remaining_secs: int, active: bool) -> void:
+	if _camp_label == null:
+		return
+	_camp_active = active
+	if active:
+		_camp_seconds_left = float(remaining_secs)
+		_camp_label.text = _camp_text(_camp_seconds_left)
+		_camp_label.visible = true
+	else:
+		_camp_label.visible = false
+
+func _on_camp_disconnected(_reason: String) -> void:
+	_camp_active = false
+	if _camp_label != null:
+		_camp_label.visible = false
+
+# Camp slice B — the countdown elapsed: log out cleanly, exactly like the Options
+# "Quit Game" button (SaveManager.save -> Net.leave_session -> quit). The server's
+# camp window has elapsed too, so this clean Disconnect reaps the body and frees
+# the account to relog at once. Completion is client-driven because there is no
+# in-game return-to-lobby flow yet; a finished camp exits to desktop, the same end
+# state as Quit Game (the player relaunches to relog).
+func _complete_camp() -> void:
+	_camp_active = false
+	if _camp_label != null:
+		_camp_label.visible = false
+	SaveManager.save()
+	Net.leave_session()
+	get_tree().quit()
+
+func _camp_text(seconds_left: float) -> String:
+	return "Making camp... %d" % int(ceil(seconds_left))
+
 func _build_command_input() -> void:
 	CombatLog.chat_submitted.connect(_handle_chat_input)
 
@@ -462,7 +523,7 @@ func _connect_player_state() -> void:
 
 # ── Process ───────────────────────────────────────────────────────────────────
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _clock_label != null:
 		var t := TimeOfDay.get_time_string()
 		if t != _clock_label.text:
@@ -473,6 +534,20 @@ func _process(_delta: float) -> void:
 	if target_cast_bar.visible and is_instance_valid(_tracked_target):
 		if _tracked_target.has_method("cast_progress_ratio"):
 			target_cast_bar.value = _tracked_target.cast_progress_ratio()
+	# Camp slice B — tick the local /camp countdown. Standing/moving cancels it
+	# immediately client-side for responsiveness (the server independently cancels
+	# on stand/move/damage and fans camp_update(false), handled idempotently);
+	# when the count reaches 0 still seated, the client drives the clean logout
+	# itself (_complete_camp).
+	if _camp_active and _camp_label != null:
+		if not Combat.is_player_seated():
+			_camp_active = false
+			_camp_label.visible = false
+		else:
+			_camp_seconds_left = maxf(_camp_seconds_left - delta, 0.0)
+			_camp_label.text = _camp_text(_camp_seconds_left)
+			if _camp_seconds_left <= 0.0:
+				_complete_camp()
 
 # ── Input ─────────────────────────────────────────────────────────────────────
 
@@ -1174,6 +1249,19 @@ func _handle_chat_input(text: String) -> void:
 	if lower == "/stand":
 		if is_instance_valid(_player):
 			_player.stand()
+		return
+	# Camp slice B — voluntary sit-gated logout. The server is authoritative on
+	# the gate and the countdown; we pre-check sit state locally for a fast
+	# rejection line so a standing player never spams the wire. `/camp cancel`
+	# aborts an in-progress countdown.
+	if lower == "/camp":
+		if Combat.is_player_seated():
+			Net.broadcast_camp()
+		else:
+			CombatLog.add_line("You must be sitting to camp.", CombatLog.MsgType.INFO)
+		return
+	if lower == "/camp cancel":
+		Net.broadcast_cancel_camp()
 		return
 	# Track 22.C — manual dismount. Summon is right-click-the-whistle;
 	# this command lets the player step off without using the whistle

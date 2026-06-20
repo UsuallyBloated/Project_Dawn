@@ -184,6 +184,10 @@ signal world_bank_rejected(reason: String)
 # the 10-slot personal vault, true is the 2-slot account-shared vault). Parallel
 # arrays of (slot, item_path, count) for filled slots. BankerManager caches it.
 signal world_bank_item_snapshot(shared: bool, slots: PackedInt32Array, item_paths: PackedStringArray, counts: PackedInt32Array)
+# PD_W0017 — Camp, slice B. The server's /camp countdown state: active = true with
+# remaining_secs on start, active = false (0) on cancel. The HUD drives a countdown
+# label from this. Completion logs the player out (a disconnect), not an update here.
+signal world_camp_update(remaining_secs: int, active: bool)
 # Track 6 sub-task 5 — group state from the server.
 # group_invited: someone is asking us to join their group.
 # group_roster: the group we belong to has a new membership snapshot
@@ -261,6 +265,7 @@ func _ready() -> void:
 	bank_snapshot.connect(_on_bank_snapshot)
 	bank_rejected.connect(_on_bank_rejected)
 	bank_item_snapshot.connect(_on_bank_item_snapshot)
+	camp_update.connect(_on_camp_update)
 	group_invited.connect(_on_group_invited)
 	group_roster.connect(_on_group_roster)
 	damage_shield_trigger.connect(_on_damage_shield_trigger)
@@ -336,6 +341,18 @@ func broadcast_stand() -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_stand()
+
+# PD_W0017 — Camp, slice B. Begin / abort a voluntary /camp. The server gates on
+# sit state and runs the countdown; the HUD mirrors it via world_camp_update.
+func broadcast_camp() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_camp()
+
+func broadcast_cancel_camp() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_cancel_camp()
 
 # Track 4 sub-task 2: cast broadcast wrappers. Gated like every other send
 # so local-save and lobby phases stay quiet on the wire.
@@ -968,6 +985,11 @@ func _on_bank_rejected(reason: String) -> void:
 
 func _on_bank_item_snapshot(shared: bool, slots: PackedInt32Array, item_paths: PackedStringArray, counts: PackedInt32Array) -> void:
 	world_bank_item_snapshot.emit(shared, slots, item_paths, counts)
+
+# PD_W0017 — Camp, slice B. Relay the server's /camp countdown state to the HUD.
+# Display-only; the server is authoritative on the timer and the logout.
+func _on_camp_update(remaining_secs: int, active: bool) -> void:
+	world_camp_update.emit(remaining_secs, active)
 
 func _on_group_invited(from_id: int, from_name: String) -> void:
 	world_group_invited.emit(from_id, from_name)
