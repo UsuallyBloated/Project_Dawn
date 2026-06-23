@@ -255,12 +255,21 @@ func _apply_spell(spell: SpellData) -> void:
 	if spell.target_type == SpellData.TargetType.PET_HEAL:
 		WarderAI.heal_warder(spell.heal_amount + PlayerStats.wisdom * 0.3)
 
+	# In launcher mode the server applies the self-heal and the hp-cost
+	# authoritatively and fans HealthUpdate; applying them locally too makes the
+	# HP bar jump to a client-predicted value (the local heal adds WIS + alignment
+	# effectiveness the server's flat heal omits) and then snap back down a
+	# HealthUpdate later — the "bouncing" health bar. Skip the local self-HP
+	# writes in launcher mode, matching regen.gd and the HoT tick; Test Room
+	# (no server) keeps the instant local effect.
+	var server_owns_hp := Net.is_launcher_mode()
+
 	if spell.heal_amount > 0.0 and spell.target_type != SpellData.TargetType.PET_HEAL:
-		if not ally_remote:
+		if not ally_remote and not server_owns_hp:
 			var heal := (spell.heal_amount + PlayerStats.wisdom * 0.3) * effectiveness
 			PlayerStats.set_hp(PlayerStats.hp + heal)
 
-	if spell.hp_cost > 0.0:
+	if spell.hp_cost > 0.0 and not server_owns_hp:
 		PlayerStats.set_hp(PlayerStats.hp - spell.hp_cost)
 
 	if spell.dot_dps > 0.0 and spell.dot_duration > 0.0:

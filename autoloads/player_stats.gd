@@ -165,11 +165,12 @@ func gain_xp(amount: int, source: String = "kill") -> void:
 		_level_up()
 	xp_changed.emit(xp, xp_to_next)
 
-func _level_up() -> void:
-	level += 1
-	xp_to_next = int(xp_to_next * 1.5)
+# Apply one level's intrinsic gains to BOTH the public live stats and the
+# gear-free `_base_` snapshot, so equipment deltas layered on top survive.
+# Shared by the local-only `_level_up` and the server-mirror `apply_server_level`.
+# Does NOT touch level / xp / current resources.
+func _apply_level_gain() -> void:
 	var con_before := constitution
-
 	var g: Dictionary = CharacterData.CLASS_LEVEL_GAINS.get(player_class, CharacterData.CLASS_LEVEL_GAINS["_default"])
 	for stat in g["stats"]:
 		var delta: int = g["stats"][stat]
@@ -185,10 +186,71 @@ func _level_up() -> void:
 	max_hp           += con_delta
 	_base_max_hp     += con_delta
 
+# Reverse of `_apply_level_gain` — subtract one level's intrinsic gains. Used
+# when the server reports a de-level (a death penalty can drop a level). The
+# con-based HP bonus is derived from the gain table so it mirrors the gain
+# exactly regardless of the current constitution.
+func _apply_level_loss() -> void:
+	var g: Dictionary = CharacterData.CLASS_LEVEL_GAINS.get(player_class, CharacterData.CLASS_LEVEL_GAINS["_default"])
+	var con_delta := float(g["stats"].get("constitution", 0)) * 5.0
+	max_hp           -= con_delta
+	_base_max_hp     -= con_delta
+	for stat in g["stats"]:
+		var delta: int = g["stats"][stat]
+		self[stat] -= delta
+		set("_base_" + stat, get("_base_" + stat) - delta)
+	max_hp           -= g["max_hp"]
+	max_mp           -= g["max_mp"]
+	max_stamina      -= g["max_stamina"]
+	_base_max_hp     -= g["max_hp"]
+	_base_max_mp     -= g["max_mp"]
+	_base_max_stamina-= g["max_stamina"]
+
+# Local-only level-up (Test Room / no server). In launcher mode the server
+# drives leveling via `apply_server_level`, so this is not called there.
+func _level_up() -> void:
+	level += 1
+	xp_to_next = int(xp_to_next * 1.5)
+	_apply_level_gain()
 	set_hp(max_hp)
 	set_mp(max_mp)
 	set_stamina(max_stamina)
 	level_changed.emit(level)
+
+# Launcher mode (server-authoritative): mirror a level change the server
+# decided (up on xp gain, DOWN on a death penalty). Applies the matching
+# intrinsic stat deltas locally — the client and server level tables are kept
+# in lockstep — and sets the authoritative level + xp. Max pools move with the
+# deltas; the server's HealthUpdate stays the backstop. Does NOT heal: the
+# server owns current hp/mp/stamina (which arrive via the resource updates).
+func apply_server_level(new_level: int, new_xp: int, new_xp_to_next: int) -> void:
+	var steps := new_level - level
+	for _i in absi(steps):
+		if steps > 0:
+			_apply_level_gain()
+		else:
+			_apply_level_loss()
+	level = new_level
+	xp = new_xp
+	xp_to_next = new_xp_to_next
+	# A de-level can drop a max below the current value; re-clamp via the setters.
+	set_hp(hp)
+	set_mp(mp)
+	set_stamina(stamina)
+	level_changed.emit(level)
+	xp_changed.emit(xp, xp_to_next)
+	stats_changed.emit()
+
+# Launcher mode: mirror an authoritative xp update from the server (kill /
+# quest credit, or a death loss with a negative `amount`). Sets the bar to the
+# server's values; a level change itself arrives separately via
+# `apply_server_level`.
+func apply_remote_xp(amount: int, current: int, to_next: int) -> void:
+	xp = current
+	xp_to_next = to_next
+	if amount > 0:
+		xp_gained.emit(amount, "kill")
+	xp_changed.emit(xp, xp_to_next)
 
 func apply_item_bonuses(item: ItemData) -> void:
 	strength     += item.bonus_strength

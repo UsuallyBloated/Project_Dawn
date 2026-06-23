@@ -75,14 +75,14 @@ func _connect_signals() -> void:
 	#   - "kill"  → solo vs party based on GroupManager.in_group
 	# Group state is read at the moment XP lands (server-side split
 	# already happened); this is purely a presentation cue.
-	PlayerStats.xp_gained.connect(func(_amount: int, source: String):
+	PlayerStats.xp_gained.connect(func(amount: int, source: String):
 		var line: String
 		if source == "quest":
-			line = "You received experience."
+			line = "You received %d experience." % amount
 		elif GroupManager.in_group:
-			line = "You gained party experience."
+			line = "You gained %d party experience." % amount
 		else:
-			line = "You gained experience!"
+			line = "You gained %d experience!" % amount
 		add_line(line, MsgType.INFO))
 	Combat.target_changed.connect(func(enemy):
 		if enemy != null and is_instance_valid(enemy):

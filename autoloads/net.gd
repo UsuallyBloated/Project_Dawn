@@ -164,11 +164,10 @@ signal world_loot_rejected(reason: String)
 # PD_W0014 — a private one-line group notice (e.g. a group-mate toggled
 # /autosplit). GroupManager logs the text to the combat log.
 signal world_group_notice(text: String)
-# Track 5 sub-task 5 — private kill-credit XP grant. Receive-side
-# handler calls PlayerStats.gain_xp directly (mirror of how
-# RemoteLootBagManager._on_loot_granted invokes Inventory.add_item).
-# `current` / `to_next` are placeholder zeros from the server in
-# Track 5; PlayerStats.gain_xp computes them internally.
+# PD_W0018 — private xp update (kill / quest credit, or a death loss with a
+# negative amount). The server owns xp + leveling now; the receive-side handler
+# mirrors the authoritative `current` / `to_next` onto PlayerStats and does not
+# level up locally (a level change arrives via the inherited `level_up` signal).
 signal world_xp_gained(amount: int, current: int, to_next: int)
 
 # Track 14 follow-up — server-authoritative coin balance update.
@@ -261,6 +260,7 @@ func _ready() -> void:
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
 	xp_gained.connect(_on_xp_gained)
+	level_up.connect(_on_level_up)
 	coins_update.connect(_on_coins_update)
 	bank_snapshot.connect(_on_bank_snapshot)
 	bank_rejected.connect(_on_bank_rejected)
@@ -446,6 +446,14 @@ func broadcast_death() -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_death_broadcast()
+
+# PD_W0018 — report a completed quest's xp reward to the server (quests are
+# tracked client-side; the server applies the xp authoritatively and replies
+# with XpGained / LevelUp). Returns whether it was sent.
+func grant_quest_xp(amount: int) -> bool:
+	if _state != State.CONNECTED_APP:
+		return false
+	return send_grant_quest_xp(amount)
 
 # Track 6: local death timer elapsed; tell the server we're back. Server
 # resets conn.hp/mp/stamina to max and fans HealthUpdate / ManaUpdate /
@@ -964,7 +972,17 @@ func _on_group_notice(text: String) -> void:
 
 func _on_xp_gained(amount: int, current: int, to_next: int) -> void:
 	world_xp_gained.emit(amount, current, to_next)
-	PlayerStats.gain_xp(amount)
+	# PD_W0018 — the server owns xp/leveling. Mirror the authoritative totals
+	# onto the bar (no local level-up); a level change arrives separately via
+	# the level_up signal. A negative amount is a death penalty.
+	PlayerStats.apply_remote_xp(amount, current, to_next)
+	if amount < 0:
+		CombatLog.add_line("You lost %d experience points." % -amount, CombatLog.MsgType.DAMAGE_IN)
+
+# PD_W0018 — server-authoritative level change (up on xp gain, DOWN on a death
+# penalty). Mirror it onto PlayerStats, which applies the intrinsic stat deltas.
+func _on_level_up(new_level: int, xp_val: int, xp_to_next_val: int) -> void:
+	PlayerStats.apply_server_level(new_level, xp_val, xp_to_next_val)
 
 func _on_coins_update(platinum: int, gold: int, silver: int, copper: int) -> void:
 	# Track 14 follow-up — server is authoritative. Push the wallet

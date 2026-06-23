@@ -253,12 +253,29 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**
 - [ ] **Language system wiring** — `hear_language()` passive gain not yet called from the
   chat-receive path; needs multiplayer chat RPC + trainer NPCs
+- [ ] **Quest progression in launcher mode** — kill-objective quests don't advance online:
+  `QuestManager.notify_kill` only fires from local Test-Room `enemy.gd`, never for server-driven
+  RemoteEnemy kills, so a "kill N X" quest can never complete (no natural turn-in / XP). Needs a
+  killer-private signal (NOT the `EntityDied` broadcast, which would credit every witness). See
+  [[project-launcher-clientonly-gaps]]. (The grant path itself works — Test Panel "Complete Test
+  Quest" verifies it; it's the natural completion that's blocked.)
 
 ### Death / corpses
-- [ ] **Corpse run** — gear stays on corpse; respawn naked and retrieve (optional hardcore)
+- [ ] **Corpse run** — gear stays on corpse; respawn naked and retrieve (optional hardcore).
+  *(Slice 0 — server-authoritative XP/leveling + death penalty — BUILT + playtested 2026-06-22,
+  awaiting commit/Slice 1; see `docs/design/corpse_and_resurrection_plan.md`.)*
 - [ ] **Resurrection (Cleric)** — scaffolded; blocked on the corpse system
 
 ### Combat / weapons
+- [ ] **Bard song rework** — songs are half-built: they auto-pulse client-only (never re-broadcast),
+  so the server applies a song's effect once on cast and nothing sustains it; heal songs do a raw
+  `set_hp` (HP-bar bounce, no buff-window entry). Make them server-authoritative + weaving-aware +
+  buff-window-visible. A real subsystem, not a fix. Design note: `docs/design/bard_song_rework.md`.
+- [ ] **Two-handed damage arc (cleave)** — large 2H weapons (axes/polearms) hit multiple
+  enemies in a frontal cone on auto-attack, giving 2H its own identity vs. dual-wield.
+  Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it
+  doesn't trivialize multi-pulls; needs server-side resolution like spell AOE. Design note:
+  `docs/design/two_handed_cleave.md`.
 - [ ] **Two-handed damage arc (cleave)** — large 2H weapons (axes/polearms) hit multiple
   enemies in a frontal cone on auto-attack, giving 2H its own identity vs. dual-wield.
   Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it

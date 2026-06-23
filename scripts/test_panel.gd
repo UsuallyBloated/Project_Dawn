@@ -214,6 +214,10 @@ func _build_resources_section() -> void:
 	die_btn.pressed.connect(_trigger_death)
 	_sec_resources.add_child(die_btn)
 
+	var xp_btn := _make_btn("Grant 250 XP", Color(0.30, 0.45, 0.60, 1.0))
+	xp_btn.pressed.connect(_grant_test_xp)
+	_sec_resources.add_child(xp_btn)
+
 	var copper_btn := _make_btn("Give 1,000 Copper", Color(0.55, 0.30, 0.15, 1.0))
 	copper_btn.pressed.connect(_give_copper_hoard)
 	_sec_resources.add_child(copper_btn)
@@ -245,6 +249,10 @@ func _build_resources_section() -> void:
 	var quest_btn := _make_btn("Add Test Quest", Color(0.60, 0.45, 0.10, 1.0))
 	quest_btn.pressed.connect(_add_test_quest)
 	_sec_resources.add_child(quest_btn)
+
+	var quest_done_btn := _make_btn("Complete Test Quest", Color(0.50, 0.40, 0.15, 1.0))
+	quest_done_btn.pressed.connect(_complete_test_quest)
+	_sec_resources.add_child(quest_done_btn)
 
 	var craft_btn := _make_btn("Give Crafting Materials", Color(0.20, 0.50, 0.65, 1.0))
 	craft_btn.pressed.connect(_give_crafting_materials)
@@ -599,6 +607,12 @@ func _full_heal() -> void:
 func _trigger_death() -> void:
 	PlayerStats.set_hp(0.0)
 
+# Slice 0 test aid — push xp through the server's authoritative leveling path
+# (the GrantQuestXp intent) so a tester can reach level 5+ quickly to verify the
+# death penalty / de-level without grinding ~80 kills. Server applies + replies.
+func _grant_test_xp() -> void:
+	Net.grant_quest_xp(250)
+
 # Dev coin grants. Launcher: coins are server-authoritative, so route through
 # GiveCoins (PD_DEV_CMDS-gated) and do NOT fill locally — if the server
 # silently ignores the grant, the wallet visibly not moving is the correct
@@ -662,6 +676,12 @@ func _add_test_quest() -> void:
 		CombatLog.add_line("Quest added: Slay the Infected Wolves.", CombatLog.MsgType.INFO)
 	else:
 		CombatLog.add_line("Quest already in journal.", CombatLog.MsgType.INFO)
+
+# The test quest's "report back" objective needs an NPC turn-in that doesn't
+# exist, so it can't finish naturally. Force completion to verify the quest ->
+# server GrantQuestXp -> XpGained grant path (and the xp feedback line).
+func _complete_test_quest() -> void:
+	QuestManager.complete_quest("test_q1")
 
 func _give_crafting_materials() -> void:
 	var mats: Array[Dictionary] = [

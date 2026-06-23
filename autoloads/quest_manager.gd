@@ -103,7 +103,13 @@ func complete_quest(quest_id: String) -> void:
 	q["status"] = Status.COMPLETED
 	var xp: int = q.get("xp_reward", 0)
 	if xp > 0:
-		PlayerStats.gain_xp(xp, "quest")
+		# PD_W0018 — in launcher mode the server owns xp/leveling, so report the
+		# reward and let it apply (the server replies with XpGained / LevelUp).
+		# Test Room / no-server still grants locally.
+		if Net.is_launcher_mode():
+			Net.grant_quest_xp(xp)
+		else:
+			PlayerStats.gain_xp(xp, "quest")
 		CombatLog.add_line("Quest complete: %s!" % q["name"], CombatLog.MsgType.INFO)
 	else:
 		CombatLog.add_line("Quest complete: %s!" % q["name"], CombatLog.MsgType.INFO)

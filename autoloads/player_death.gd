@@ -4,7 +4,6 @@ signal player_died
 signal player_respawned
 
 const RESPAWN_DELAY := 5.0
-const XP_LOSS_PERCENT := 0.05   # lose 5% of current XP on death
 
 var is_dead: bool = false
 var _respawn_position: Vector3 = Vector3.ZERO
@@ -34,10 +33,10 @@ func _die() -> void:
 	# also dismounts, but death from a non-damage path — fall, scripted
 	# event — needs this safety net).
 	MountManager.dismount("died")
-	var xp_loss := int(PlayerStats.xp * XP_LOSS_PERCENT)
-	if xp_loss > 0:
-		PlayerStats.lose_xp(xp_loss)
-		CombatLog.add_line("You lost %d experience points." % xp_loss, CombatLog.MsgType.DAMAGE_IN)
+	# Death XP penalty is server-authoritative now (Slice 0): the server applies
+	# it in world::progression (5% of the level band, cascading de-level, floor
+	# at level 5) and reports it back via XpGained (plus a LevelUp if you
+	# de-leveled), which the client mirrors. No local loss computed here.
 	# Track 4 sub-task 5 / Track 6: notify the server. The server zeroes
 	# its own conn.hp and fans HealthUpdate(0) + EntityDied so peer
 	# RemotePlayer bars drop and the fall-over animation plays. _respawn()
