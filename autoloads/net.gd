@@ -153,6 +153,10 @@ signal world_loot_bag_spawn(
 	coin_gold: int,
 	coin_silver: int,
 	coin_copper: int)
+# PD_W0019 — corpse / resurrection Slice 1. A player corpse spawned in AOI (on
+# death or boot-loaded). RemoteCorpseManager renders a body + nameplate;
+# `owner_id` is the dead player's char_id.
+signal world_corpse_spawn(corpse_id: int, owner_id: int, owner_name: String, pos: Vector3)
 # Track 5 sub-task 4 — private confirmation that the local player's
 # LootItem / LootAll intent landed. Carries one stack the looter just
 # claimed; the GDScript handler loads `item_path` → ItemData and adds
@@ -256,6 +260,7 @@ func _ready() -> void:
 	inventory_snapshot.connect(_on_inventory_snapshot)
 	inventory_delta.connect(_on_inventory_delta)
 	loot_bag_spawn.connect(_on_loot_bag_spawn)
+	corpse_spawn.connect(_on_corpse_spawn)
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
@@ -960,6 +965,9 @@ func _on_loot_bag_spawn(
 		coin_silver: int,
 		coin_copper: int) -> void:
 	world_loot_bag_spawn.emit(bag_id, pos, item_paths, item_counts, coin_platinum, coin_gold, coin_silver, coin_copper)
+
+func _on_corpse_spawn(corpse_id: int, owner_id: int, owner_name: String, pos: Vector3) -> void:
+	world_corpse_spawn.emit(corpse_id, owner_id, owner_name, pos)
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)

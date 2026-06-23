@@ -205,6 +205,15 @@ xp/level survive death + relog correctly; a death de-levels at the right thresho
 
 ## 4. Slice 1: the corpse entity (the corpse run)
 
+> **STATUS: BUILT 2026-06-23, awaiting the user's playtest (not committed).** Wire PD_W0018 to
+> PD_W0019. Server: migration `0007_corpses.sql`, `world/corpses.rs`, `db::{save,load,delete}_corpse`,
+> `inventory::{all_stacks,clear_all}`, the atomic gear move in the `tick.rs` death sweep, corpse decay +
+> boot-load + AOI seeds, `CorpseSpawn` + `fan_out_corpse_spawn`. Client: `scripts/corpse.gd`,
+> `autoloads/remote_corpse_manager.gd`, `net.gd` wiring, death combat-log line. 143 lib tests + the
+> migration integration test green; clean editor boot; DLL rebuilt. See
+> `docs/session_notes/session_2026_06_23.md` and `docs/playtest_notes/corpse_slice1_checklist.md`.
+> Retrieval (looting your own corpse) is Slice 2.
+
 Goal: dying leaves a persisted corpse holding your gear; you respawn naked; the corpse is visible with
 a nameplate and decays (harshly) if unretrieved. (Retrieval is Slice 2.)
 
@@ -252,6 +261,20 @@ Goal: walk back to your corpse and get your gear.
 
 **Stop and report after Slice 2.** Verify: die, run back, loot all, gear is back (no dupe, no loss),
 corpse despawns and its DB rows are gone; a second player cannot loot your corpse.
+
+### Fold in here: monsters leave a corpse too (user direction 2026-06-23)
+
+The golden loot-bag orb is a placeholder; **everything that dies should leave a corpse, not a sack**.
+Slice 2 is the natural place to unify, because corpse-looting makes a corpse a lootable container,
+which is exactly what a monster's `LootBag` already is. One "lootable corpse" path: player corpses
+persist + decay slowly + owner-only; monster corpses stay transient (`LOOT_BAG_LINGER_SECS`) +
+group-loot-rights + loot-rolled. Decisions locked with the user:
+
+- **Monster corpse visual: a generic body now; eventually the same model/scale as the creature that
+  died** (so a dead ogre leaves an ogre-sized body). Generic placeholder first, per-creature later.
+- Likely the cleanest mechanism: render the existing `LootBag` as a body (reuse the corpse mesh) and/or
+  route monster deaths through a transient corpse variant; keep the loot mechanics. Carry the mob name
+  on the spawn so the nameplate can read "a <mob>'s corpse" / "remains".
 
 ---
 

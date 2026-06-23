@@ -84,6 +84,10 @@ func _connect_signals() -> void:
 		else:
 			line = "You gained %d experience!" % amount
 		add_line(line, MsgType.INFO))
+	# Corpse / resurrection Slice 1 — surface death in the log. The corpse
+	# location line ("Your corpse rests where you fell.") is added by
+	# RemoteCorpseManager when the CorpseSpawn for your own body arrives.
+	PlayerDeath.player_died.connect(func(): add_line("You have died.", MsgType.DAMAGE_IN))
 	Combat.target_changed.connect(func(enemy):
 		if enemy != null and is_instance_valid(enemy):
 			add_line("You target %s." % _target_display_name(enemy), MsgType.INFO))
