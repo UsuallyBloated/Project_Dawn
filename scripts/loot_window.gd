@@ -3,10 +3,13 @@ extends DraggablePanel
 
 const C_BG := Color(0.07, 0.06, 0.04, 0.95)
 
-var bag: LootBag
+# Duck-typed: a LootBag OR a Corpse (corpse / resurrection Slice 2). Both expose
+# `items`, `coin_*` + `has_coins()`, `bag_id` (loot-target id), and an
+# `items_changed` signal, so this window drives either without caring which.
+var bag
 var _rows: VBoxContainer
 
-func _init(b: LootBag) -> void:
+func _init(b) -> void:
 	bag = b
 
 func _ready() -> void:

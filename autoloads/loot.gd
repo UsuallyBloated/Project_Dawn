@@ -57,7 +57,7 @@ func _roll(table: LootTable) -> Array:
 			r -= e.weight
 	return result
 
-func show_window(bag: LootBag) -> void:
+func show_window(bag) -> void:  # bag: LootBag or Corpse (Slice 2 corpse loot)
 	for child in _ui_layer.get_children():
 		if child is LootWindow and child.bag == bag:
 			child.visible = true

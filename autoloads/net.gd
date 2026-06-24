@@ -157,6 +157,17 @@ signal world_loot_bag_spawn(
 # death or boot-loaded). RemoteCorpseManager renders a body + nameplate;
 # `owner_id` is the dead player's char_id.
 signal world_corpse_spawn(corpse_id: int, owner_id: int, owner_name: String, pos: Vector3)
+# PD_W0020 — corpse / resurrection Slice 2. The owner-only contents of a corpse
+# (items + coins), so RemoteCorpseManager can drive a loot window. Re-sent in full
+# after each partial loot.
+signal world_corpse_contents(
+	corpse_id: int,
+	item_paths: PackedStringArray,
+	item_counts: PackedInt32Array,
+	coin_platinum: int,
+	coin_gold: int,
+	coin_silver: int,
+	coin_copper: int)
 # Track 5 sub-task 4 — private confirmation that the local player's
 # LootItem / LootAll intent landed. Carries one stack the looter just
 # claimed; the GDScript handler loads `item_path` → ItemData and adds
@@ -261,6 +272,7 @@ func _ready() -> void:
 	inventory_delta.connect(_on_inventory_delta)
 	loot_bag_spawn.connect(_on_loot_bag_spawn)
 	corpse_spawn.connect(_on_corpse_spawn)
+	corpse_contents.connect(_on_corpse_contents)
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
@@ -968,6 +980,16 @@ func _on_loot_bag_spawn(
 
 func _on_corpse_spawn(corpse_id: int, owner_id: int, owner_name: String, pos: Vector3) -> void:
 	world_corpse_spawn.emit(corpse_id, owner_id, owner_name, pos)
+
+func _on_corpse_contents(
+		corpse_id: int,
+		item_paths: PackedStringArray,
+		item_counts: PackedInt32Array,
+		coin_platinum: int,
+		coin_gold: int,
+		coin_silver: int,
+		coin_copper: int) -> void:
+	world_corpse_contents.emit(corpse_id, item_paths, item_counts, coin_platinum, coin_gold, coin_silver, coin_copper)
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)

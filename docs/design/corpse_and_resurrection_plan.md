@@ -247,6 +247,15 @@ gone from the world AND the DB.
 
 ## 5. Slice 2: corpse retrieval (loot your own corpse)
 
+> **STATUS: BUILT 2026-06-23, awaiting the user's playtest (not committed).** Wire PD_W0019 to
+> PD_W0020. Reuses `LootItem`/`LootAll` keyed by corpse id (no new client intent); new owner-only
+> `CorpseContents` message; owner-only loot, gear to bags, coins 100% to owner; atomic
+> `db::apply_corpse_loot` (one tx); **a LOOTED-empty corpse despawns, a naked-death empty corpse
+> lingers** (res anchor). Client: `corpse.gd` is now a clickable `Area3D` driving the shared loot
+> window. 143 lib tests green; clean boot; DLL rebuilt. See `docs/session_notes/session_2026_06_23.md`
+> + `docs/playtest_notes/corpse_slice2_checklist.md`. NOTE: the plan's "despawn when empty" below is
+> superseded for the naked-death case by the res-anchor decision (only a LOOT action despawns).
+
 Goal: walk back to your corpse and get your gear.
 
 1. **Loot rights.** A corpse is owner-only (unlike a group-shared mob bag): `can_loot` returns true
