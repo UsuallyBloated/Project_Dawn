@@ -152,7 +152,8 @@ signal world_loot_bag_spawn(
 	coin_platinum: int,
 	coin_gold: int,
 	coin_silver: int,
-	coin_copper: int)
+	coin_copper: int,
+	creature_name: String)
 # PD_W0019 — corpse / resurrection Slice 1. A player corpse spawned in AOI (on
 # death or boot-loaded). RemoteCorpseManager renders a body + nameplate;
 # `owner_id` is the dead player's char_id.
@@ -975,8 +976,9 @@ func _on_loot_bag_spawn(
 		coin_platinum: int,
 		coin_gold: int,
 		coin_silver: int,
-		coin_copper: int) -> void:
-	world_loot_bag_spawn.emit(bag_id, pos, item_paths, item_counts, coin_platinum, coin_gold, coin_silver, coin_copper)
+		coin_copper: int,
+		creature_name: String) -> void:
+	world_loot_bag_spawn.emit(bag_id, pos, item_paths, item_counts, coin_platinum, coin_gold, coin_silver, coin_copper, creature_name)
 
 func _on_corpse_spawn(corpse_id: int, owner_id: int, owner_name: String, pos: Vector3) -> void:
 	world_corpse_spawn.emit(corpse_id, owner_id, owner_name, pos)

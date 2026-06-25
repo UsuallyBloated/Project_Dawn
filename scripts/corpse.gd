@@ -34,33 +34,9 @@ func _ready() -> void:
 	collision_layer = 4
 	collision_mask = 0
 
-	# Body: a flattened, desaturated capsule lying on the ground — distinct from
-	# the golden loot-bag sphere. Placeholder until a real corpse model.
-	var mesh_inst := MeshInstance3D.new()
-	var body := CapsuleMesh.new()
-	body.radius = 0.3
-	body.height = 1.6
-	mesh_inst.mesh = body
-	mesh_inst.rotation_degrees = Vector3(90.0, 0.0, 0.0)  # lie flat
-	mesh_inst.position.y = 0.25
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.32, 0.30, 0.30)
-	mat.emission_enabled = true
-	mat.emission = Color(0.20, 0.04, 0.06)  # faint dim-red glow, findable from a distance
-	mat.emission_energy_multiplier = 0.35
-	mesh_inst.set_surface_override_material(0, mat)
-	add_child(mesh_inst)
-
-	# Nameplate: "<owner>'s corpse", billboarded like the enemy nameplate.
-	var label := Label3D.new()
-	label.text = "%s's corpse" % owner_name
-	label.font_size = 22
-	label.outline_size = 6
-	label.modulate = Color(0.85, 0.7, 0.7)
-	label.outline_modulate = Color(0.0, 0.0, 0.0, 1.0)
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.position.y = 1.1
-	add_child(label)
+	# Body + white "<owner>'s corpse" nameplate, shared with slain-creature
+	# bodies so the two render paths stay identical (scripts/corpse_body.gd).
+	CorpseBody.build(self, owner_name)
 
 	# Click-to-loot collider (a sphere over the lying body).
 	var col := CollisionShape3D.new()

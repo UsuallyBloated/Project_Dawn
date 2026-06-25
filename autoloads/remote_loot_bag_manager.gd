@@ -60,13 +60,16 @@ func _on_loot_bag_spawn(
 		coin_platinum: int,
 		coin_gold: int,
 		coin_silver: int,
-		coin_copper: int) -> void:
+		coin_copper: int,
+		creature_name: String) -> void:
 	var items := _materialize_items(item_paths, item_counts)
 	var coins := {
 		"platinum": coin_platinum, "gold": coin_gold,
 		"silver": coin_silver, "copper": coin_copper,
 	}
-	_spawn_data[bag_id] = {"pos": pos, "items": items, "coins": coins}
+	# PD_W0021 — creature_name decides body-vs-sack in loot_bag.gd; it never
+	# changes for a given bag, so the re-snapshot path below leaves it alone.
+	_spawn_data[bag_id] = {"pos": pos, "items": items, "coins": coins, "creature_name": creature_name}
 	var scene: Node = get_tree().current_scene
 	if scene == null or not _scene_hosts_local_player(scene):
 		return
@@ -127,6 +130,7 @@ func _instantiate_into(bag_id: int, scene: Node) -> void:
 	var data: Dictionary = _spawn_data[bag_id]
 	var bag = LOOT_BAG_SCENE.new()
 	bag.bag_id = bag_id
+	bag.creature_name = data.get("creature_name", "")  # set before add_child so _ready branches
 	bag.items = data["items"]
 	_apply_coins(bag, data.get("coins", {}))
 	scene.add_child(bag)

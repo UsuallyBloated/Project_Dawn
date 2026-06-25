@@ -28,6 +28,12 @@ func has_coins() -> bool:
 # so _ready can branch on it.
 var bag_id: int = -1
 
+# PD_W0021 — the dead creature's name, set by RemoteLootBagManager before
+# add_child. Non-empty means this drop came from a kill: render a body with a
+# "<creature>'s corpse" nameplate. Empty means a player-dropped public bag (no
+# creature died): keep the legacy golden sack.
+var creature_name: String = ""
+
 # Emitted whenever `items` is reassigned from outside (server re-snap-
 # shot after a LootItem / LootAll). LootWindow subscribes to refresh
 # its row list. Local-mode bags also emit this from the legacy local
@@ -40,6 +46,38 @@ func _ready() -> void:
 	collision_mask = 0
 	add_to_group("loot_bags")
 
+	if creature_name.is_empty():
+		_build_sack()
+	else:
+		_build_body()
+
+	input_event.connect(_on_input_event)
+
+	# Local despawn timer applies only to single-player Test Room bags.
+	# Server-owned bags use EntityDespawn broadcasts after the server-
+	# side LOOT_BAG_LINGER_SECS (matches the local 120s for parity).
+	if bag_id < 0:
+		var despawn_timer := Timer.new()
+		despawn_timer.wait_time = 120.0
+		despawn_timer.one_shot = true
+		despawn_timer.autostart = true
+		despawn_timer.timeout.connect(queue_free)
+		add_child(despawn_timer)
+
+# A slain creature's body — the same gray capsule + white "<creature>'s corpse"
+# nameplate a player corpse uses (scripts/corpse_body.gd), with a body-sized
+# click collider and no bob (a body rests on the ground, it doesn't float).
+func _build_body() -> void:
+	CorpseBody.build(self, creature_name)
+	var col := CollisionShape3D.new()
+	var shape := SphereShape3D.new()
+	shape.radius = 0.7
+	col.shape = shape
+	col.position.y = 0.3
+	add_child(col)
+
+# A player-dropped public bag — the legacy bobbing golden sphere.
+func _build_sack() -> void:
 	var mesh_inst := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
 	sphere.radius = 0.25
@@ -63,19 +101,6 @@ func _ready() -> void:
 	var tween := create_tween().set_loops()
 	tween.tween_property(mesh_inst, "position:y", 0.2, 0.9).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(mesh_inst, "position:y", -0.05, 0.9).set_trans(Tween.TRANS_SINE)
-
-	input_event.connect(_on_input_event)
-
-	# Local despawn timer applies only to single-player Test Room bags.
-	# Server-owned bags use EntityDespawn broadcasts after the server-
-	# side LOOT_BAG_LINGER_SECS (matches the local 120s for parity).
-	if bag_id < 0:
-		var despawn_timer := Timer.new()
-		despawn_timer.wait_time = 120.0
-		despawn_timer.one_shot = true
-		despawn_timer.autostart = true
-		despawn_timer.timeout.connect(queue_free)
-		add_child(despawn_timer)
 
 const LOOT_RANGE := 6.0
 
