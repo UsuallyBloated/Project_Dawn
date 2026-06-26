@@ -169,6 +169,12 @@ signal world_corpse_contents(
 	coin_gold: int,
 	coin_silver: int,
 	coin_copper: int)
+# PD_W0022 — corpse / resurrection Slice 3. A Cleric/Paladin offered to resurrect
+# the local player's corpse; the HUD shows an accept/decline prompt.
+signal world_resurrect_offer(corpse_id: int, caster_name: String, xp_percent: int)
+# PD_W0022 — server-forced reposition (a resurrection summon). Net snaps the local
+# player to `pos` and re-emits for any other listener.
+signal world_teleport(pos: Vector3)
 # Track 5 sub-task 4 — private confirmation that the local player's
 # LootItem / LootAll intent landed. Carries one stack the looter just
 # claimed; the GDScript handler loads `item_path` → ItemData and adds
@@ -274,6 +280,8 @@ func _ready() -> void:
 	loot_bag_spawn.connect(_on_loot_bag_spawn)
 	corpse_spawn.connect(_on_corpse_spawn)
 	corpse_contents.connect(_on_corpse_contents)
+	resurrect_offer.connect(_on_resurrect_offer)
+	teleport.connect(_on_teleport)
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
@@ -992,6 +1000,19 @@ func _on_corpse_contents(
 		coin_silver: int,
 		coin_copper: int) -> void:
 	world_corpse_contents.emit(corpse_id, item_paths, item_counts, coin_platinum, coin_gold, coin_silver, coin_copper)
+
+func _on_resurrect_offer(corpse_id: int, caster_name: String, xp_percent: int) -> void:
+	world_resurrect_offer.emit(corpse_id, caster_name, xp_percent)
+
+# PD_W0022 — the server summons us to our corpse on a resurrection. Snap the local
+# player to pos (the server already moved us authoritatively) and re-emit.
+func _on_teleport(pos: Vector3) -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player != null and is_instance_valid(player):
+		player.global_position = pos
+		if "velocity" in player:
+			player.velocity = Vector3.ZERO
+	world_teleport.emit(pos)
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)

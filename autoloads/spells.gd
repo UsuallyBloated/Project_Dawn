@@ -150,6 +150,13 @@ func cast_spell(spell: SpellData) -> bool:
 			spell_failed.emit("The magic will not anchor here.")
 			return false
 
+	# Slice 3 — a resurrection needs a corpse targeted. Gate before the mana spend
+	# + cast bar (mirrors the ENEMY gate) so a mis-cast doesn't burn a long res cast.
+	if spell.target_type == SpellData.TargetType.CORPSE:
+		if not (Combat.current_target is Corpse):
+			spell_failed.emit("You must target a corpse.")
+			return false
+
 	PlayerStats.set_mp(PlayerStats.mp - spell.mana_cost)
 
 	if spell.cast_time > 0.0:
@@ -392,6 +399,13 @@ func _cast_target_id(spell: SpellData) -> int:
 	var t = Combat.current_target
 	if t == null or not is_instance_valid(t):
 		return 0
+	# Corpse / resurrection Slice 3 — a res spell targets a corpse entity; its id
+	# is the corpse_id (loot-bag id partition). The server validates ownership +
+	# range; id 0 (no corpse selected) is rejected there.
+	if spell.target_type == SpellData.TargetType.CORPSE:
+		if t is Corpse:
+			return (t as Corpse).corpse_id
+		return 0
 	if spell.target_type == SpellData.TargetType.ALLY:
 		if t is RemotePlayer:
 			return (t as RemotePlayer).char_id
@@ -554,4 +568,5 @@ func _parse_target_type(s: String) -> SpellData.TargetType:
 		"PORT":       return SpellData.TargetType.PORT
 		"BIND":       return SpellData.TargetType.BIND
 		"AOE":        return SpellData.TargetType.AOE
+		"CORPSE":     return SpellData.TargetType.CORPSE
 	return SpellData.TargetType.NONE

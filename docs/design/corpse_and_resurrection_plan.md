@@ -289,6 +289,11 @@ group-loot-rights + loot-rolled. Decisions locked with the user:
 
 ## 6. Slice 3: Cleric resurrection
 
+> **A refreshed, build-ready Slice 3 plan now lives in
+> `docs/design/corpse_slice3_resurrection_plan.md`** (2026-06-24) — current state with commit hashes,
+> verified file:line pointers, the locked res flow, the build order, the PD_W0022 wire spec, and the
+> open decisions. Use that for the build; the outline below is the original sketch.
+
 Goal: a Cleric can res a dead player at their corpse, returning XP and saving the run.
 
 1. **Spell.** Reconcile/author the tiered `Resurrection` spells in `data/spell_definitions.gd` AND

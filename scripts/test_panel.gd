@@ -218,6 +218,10 @@ func _build_resources_section() -> void:
 	xp_btn.pressed.connect(_grant_test_xp)
 	_sec_resources.add_child(xp_btn)
 
+	var level_btn := _make_btn("Level Up", Color(0.30, 0.55, 0.45, 1.0))
+	level_btn.pressed.connect(_level_up_test)
+	_sec_resources.add_child(level_btn)
+
 	var copper_btn := _make_btn("Give 1,000 Copper", Color(0.55, 0.30, 0.15, 1.0))
 	copper_btn.pressed.connect(_give_copper_hoard)
 	_sec_resources.add_child(copper_btn)
@@ -612,6 +616,16 @@ func _trigger_death() -> void:
 # death penalty / de-level without grinding ~80 kills. Server applies + replies.
 func _grant_test_xp() -> void:
 	Net.grant_quest_xp(250)
+
+# Grant exactly the xp needed to reach the next level (one level per click), so a
+# tester can climb to a spell's min_level without hundreds of +250s (bands grow
+# 1.5x/level). Routes through the same server-authoritative GrantQuestXp path;
+# the server's award_xp resolves the level-up and fans LevelUp back.
+func _level_up_test() -> void:
+	var needed: int = PlayerStats.xp_to_next - PlayerStats.xp
+	if needed < 1:
+		needed = 1
+	Net.grant_quest_xp(needed)
 
 # Dev coin grants. Launcher: coins are server-authoritative, so route through
 # GiveCoins (PD_DEV_CMDS-gated) and do NOT fill locally — if the server

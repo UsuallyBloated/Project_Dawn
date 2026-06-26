@@ -39,6 +39,11 @@ var _encumbrance_label: Label = null
 # Camp slice B — /camp countdown overlay. Driven by Net.world_camp_update; ticks
 # locally in _process while _camp_active. The server owns the real timer + logout.
 var _camp_label: Label = null
+# Slice 3 — resurrection offer prompt (Accept/Decline). Shown by
+# Net.world_resurrect_offer; the corpse_id is sent back on the response.
+var _res_prompt: Panel = null
+var _res_label: Label = null
+var _res_corpse_id: int = -1
 var _camp_active: bool = false
 var _camp_seconds_left: float = 0.0
 var _hp_label: Label = null
@@ -152,6 +157,7 @@ func _ready() -> void:
 	_build_state_label()
 	_build_encumbrance_indicator()
 	_build_camp_indicator()
+	_build_res_prompt()
 	_build_command_input()
 	_build_options_screen()
 	_build_crafting_window()
@@ -490,6 +496,77 @@ func _on_camp_disconnected(_reason: String) -> void:
 	if _camp_label != null:
 		_camp_label.visible = false
 
+# Slice 3 — resurrection offer prompt. A Cleric/Paladin cast a res on your corpse;
+# Accept to be summoned to it + refunded a % of the experience that death cost.
+func _build_res_prompt() -> void:
+	_res_prompt = Panel.new()
+	_res_prompt.set_anchors_preset(Control.PRESET_CENTER)
+	_res_prompt.custom_minimum_size = Vector2(380.0, 96.0)
+	_res_prompt.position = Vector2(-190.0, -130.0)
+	_res_prompt.visible = false
+	add_child(_res_prompt)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vbox.offset_left = 12
+	vbox.offset_top = 10
+	vbox.offset_right = -12
+	vbox.offset_bottom = -10
+	vbox.add_theme_constant_override("separation", 8)
+	_res_prompt.add_child(vbox)
+
+	_res_label = Label.new()
+	_res_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_res_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_res_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(_res_label)
+
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 24)
+	vbox.add_child(row)
+
+	var accept := Button.new()
+	accept.text = "Accept"
+	accept.pressed.connect(_on_res_accept_pressed)
+	row.add_child(accept)
+
+	var decline := Button.new()
+	decline.text = "Decline"
+	decline.pressed.connect(_on_res_decline_pressed)
+	row.add_child(decline)
+
+	Net.world_resurrect_offer.connect(_on_world_resurrect_offer)
+	# Hide the prompt if its corpse despawns (looted clean or decayed) before we
+	# answer, so a stale Accept can't click into a server-side no-op.
+	Net.world_entity_despawn.connect(_on_res_corpse_despawn)
+
+func _on_res_corpse_despawn(id: int) -> void:
+	if id == _res_corpse_id:
+		_hide_res_prompt()
+
+func _on_world_resurrect_offer(corpse_id: int, caster_name: String, xp_percent: int) -> void:
+	if _res_prompt == null:
+		return
+	_res_corpse_id = corpse_id
+	_res_label.text = "%s offers to resurrect you.\nReturn %d%% of the experience that death cost?" % [caster_name, xp_percent]
+	_res_prompt.visible = true
+
+func _on_res_accept_pressed() -> void:
+	if _res_corpse_id >= 0:
+		Net.send_resurrect_accept(_res_corpse_id, true)
+	_hide_res_prompt()
+
+func _on_res_decline_pressed() -> void:
+	if _res_corpse_id >= 0:
+		Net.send_resurrect_accept(_res_corpse_id, false)
+	_hide_res_prompt()
+
+func _hide_res_prompt() -> void:
+	_res_corpse_id = -1
+	if _res_prompt != null:
+		_res_prompt.visible = false
+
 # Camp slice B — the countdown elapsed: log out cleanly, exactly like the Options
 # "Quit Game" button (SaveManager.save -> Net.leave_session -> quit). The server's
 # camp window has elapsed too, so this clean Disconnect reaps the body and frees
@@ -823,6 +900,18 @@ func _on_target_changed(enemy) -> void:
 			_tot_frame.visible = false
 		return
 	target_frame.visible = true
+	if enemy is Corpse:
+		# Slice 3 — a corpse can be targeted (a Cleric/Paladin resurrects it).
+		# No hp bar; just the "<owner>'s corpse" name (skip the friendly-NPC
+		# branch below, which would throw on the missing npc_name field).
+		target_name_label.text = "%s's corpse" % enemy.owner_name
+		target_level_label.text = ""
+		target_hp_bar.visible = false
+		if _target_hp_label:
+			_target_hp_label.visible = false
+		if _tot_frame != null:
+			_tot_frame.visible = false
+		return
 	if enemy.is_in_group("remote_players"):
 		_setup_peer_target(enemy)
 		return

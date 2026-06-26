@@ -51,9 +51,12 @@ func _ready() -> void:
 func _on_input_event(_camera: Node, event: InputEvent, _pos: Vector3, _normal: Vector3, _idx: int) -> void:
 	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		return
-	# Owner-only: only your own corpse opens a loot window. The server is the
-	# authority and also rejects a non-owner take with "That is not your corpse.";
-	# this is the client pre-gate so non-owners don't open an empty window.
+	# Anyone may TARGET a corpse — a Cleric/Paladin needs it as a cast target to
+	# resurrect it (Slice 3). spells.gd's _cast_target_id reads Combat.current_target
+	# and returns this corpse_id for a CORPSE-target spell.
+	Combat.set_target(self)
+	# The OWNER additionally opens their loot window (the server also rejects a
+	# non-owner take with "That is not your corpse.").
 	if owner_id != Net.get_player_id():
 		return
 	var player := get_tree().get_first_node_in_group("player")

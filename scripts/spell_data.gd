@@ -1,7 +1,7 @@
 class_name SpellData
 extends Resource
 
-enum TargetType { ENEMY, SELF, ALLY, NONE, PET_SUMMON, PET_CHARM, PET_HEAL, PORT, BIND, AOE }
+enum TargetType { ENEMY, SELF, ALLY, NONE, PET_SUMMON, PET_CHARM, PET_HEAL, PORT, BIND, AOE, CORPSE }
 enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, SHADOW, NONE }
 
 @export var spell_name: String = ""

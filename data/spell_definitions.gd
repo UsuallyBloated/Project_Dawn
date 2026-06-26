@@ -44,6 +44,7 @@ const DISCIPLINE: Dictionary = {
 	"Crusader's Mend":   "alteration",
 	"Righteous Fire":    "evocation",
 	"Judgment":          "evocation",
+	"Reclaim Soul":      "alteration",
 	# Shadow Knight
 	"Lifetap":           "alteration",
 	"Siphon":            "evocation",
@@ -119,7 +120,9 @@ const DISCIPLINE: Dictionary = {
 	"Bless":             "alteration",
 	"Valor":             "alteration",
 	"Complete Heal":     "alteration",
-	"Resurrection":      "alteration",
+	"Resurrection (Minor)": "alteration",
+	"Resurrection":         "alteration",
+	"Resurrection II":      "alteration",
 	# Shaman (new)
 	"Spirit of the Bear": "alteration",
 	"Gift of Insight":    "alteration",
@@ -312,7 +315,14 @@ const ALL: Array = [
 
 	# ── Cleric (new) ──────────────────────────────────────────────────────────────
 	{"name": "Complete Heal", "desc": "An 8-second prayer that channels divine power to restore the caster to full health. The cornerstone of serious group healing.", "mana_cost": 150.0, "cast_time": 8.0, "cooldown": 6.0,   "base_damage": 0.0, "damage_type": "HOLY", "target_type": "ALLY", "heal_amount": 9999.0, "min_level": 20, "classes": ["Cleric"]},
-	{"name": "Resurrection",  "desc": "Restores a fallen ally to life with partial experience return. Requires a corpse. (Needs corpse system.)", "mana_cost": 200.0, "cast_time": 10.0, "cooldown": 300.0, "base_damage": 0.0, "damage_type": "HOLY", "target_type": "NONE", "heal_amount": 0.0, "min_level": 20, "classes": ["Cleric"]},
+	# Corpse / resurrection Slice 3 — target a fallen ally's CORPSE: summon them
+	# back to it and refund a % of the XP that death cost (res_xp_percent is the
+	# server-authoritative refund; it lives in spells.toml). Three Cleric tiers
+	# plus one weaker Paladin tier ("Reclaim Soul").
+	{"name": "Resurrection (Minor)", "desc": "Draw a fallen ally's spirit back to their corpse, returning 25% of the experience that death cost.", "mana_cost": 100.0, "cast_time": 6.0,  "cooldown": 60.0,  "base_damage": 0.0, "damage_type": "HOLY", "target_type": "CORPSE", "heal_amount": 0.0, "res_xp_percent": 25.0, "min_level": 20, "classes": ["Cleric"]},
+	{"name": "Resurrection",         "desc": "Draw a fallen ally's spirit back to their corpse, returning 50% of the experience that death cost.", "mana_cost": 200.0, "cast_time": 10.0, "cooldown": 120.0, "base_damage": 0.0, "damage_type": "HOLY", "target_type": "CORPSE", "heal_amount": 0.0, "res_xp_percent": 50.0, "min_level": 30, "classes": ["Cleric"]},
+	{"name": "Resurrection II",      "desc": "An instant prayer that draws a fallen ally's spirit back to their corpse, returning 75% of the experience that death cost.", "mana_cost": 300.0, "cast_time": 0.0, "cooldown": 300.0, "base_damage": 0.0, "damage_type": "HOLY", "target_type": "CORPSE", "heal_amount": 0.0, "res_xp_percent": 75.0, "min_level": 45, "classes": ["Cleric"]},
+	{"name": "Reclaim Soul",         "desc": "A paladin's holy rite that reclaims a fallen ally's soul, drawing them back to their corpse and returning 20% of the experience that death cost.", "mana_cost": 150.0, "cast_time": 12.0, "cooldown": 180.0, "base_damage": 0.0, "damage_type": "HOLY", "target_type": "CORPSE", "heal_amount": 0.0, "res_xp_percent": 20.0, "min_level": 35, "classes": ["Paladin"]},
 
 	# ── Shaman (new) ──────────────────────────────────────────────────────────────
 	{"name": "Torpor", "desc": "Buries the target in a spirit-laden torpor, reducing its attack speed by 70%. The spiritual resonance mends your wounds over time.", "mana_cost": 80.0, "cast_time": 2.5, "cooldown": 60.0, "base_damage": 0.0, "damage_type": "SPIRIT", "target_type": "ENEMY", "heal_amount": 0.0, "hot_hps": 12.0, "hot_duration": 24.0, "attack_slow_amount": 0.7, "attack_slow_duration": 24.0, "min_level": 20, "classes": ["Shaman"]},
