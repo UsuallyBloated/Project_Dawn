@@ -618,9 +618,9 @@ func _grant_test_xp() -> void:
 	Net.grant_quest_xp(250)
 
 # Grant exactly the xp needed to reach the next level (one level per click), so a
-# tester can climb to a spell's min_level without hundreds of +250s (bands grow
-# 1.5x/level). Routes through the same server-authoritative GrantQuestXp path;
-# the server's award_xp resolves the level-up and fans LevelUp back.
+# tester can climb to a spell's min_level without hundreds of +250s. Curve-agnostic
+# (it reads the live xp_to_next), and routes through the same server-authoritative
+# GrantQuestXp path; the server's award_xp resolves the level-up and fans LevelUp back.
 func _level_up_test() -> void:
 	var needed: int = PlayerStats.xp_to_next - PlayerStats.xp
 	if needed < 1:

@@ -28,9 +28,13 @@ var max_mp: float = 100.0
 var stamina: float = 100.0
 var max_stamina: float = 100.0
 
+# Level cap — mirrors the Rust world::skills::MAX_LEVEL. The XP curve (cubic;
+# see _band_for / _hell_mod below) and the server's resolve() both stop here.
+const MAX_LEVEL := 60
+
 var level: int = 1
 var xp: int = 0
-var xp_to_next: int = 100
+var xp_to_next: int = 1000  # band(1) on the cubic curve; overwritten on login
 
 var player_name: String = ""
 var player_class: String = ""
@@ -113,9 +117,7 @@ func apply_character(race_id: String, cls: String, lvl: int) -> void:
 		new_max_st += gains["max_stamina"]
 		new_max_hp += (stats["constitution"] - con_before) * 5.0
 
-	var new_xp_to_next := 100
-	for _i in lvl - 1:
-		new_xp_to_next = int(new_xp_to_next * 1.5)
+	var new_xp_to_next := _band_for(lvl)
 
 	self.race            = race_id
 	self.player_class    = cls
@@ -160,9 +162,13 @@ func apply_character(race_id: String, cls: String, lvl: int) -> void:
 func gain_xp(amount: int, source: String = "kill") -> void:
 	xp += amount
 	xp_gained.emit(amount, source)
-	while xp >= xp_to_next:
+	# Cap at MAX_LEVEL and pin the bar full there, mirroring the server's
+	# resolve(). (Local-only / Test Room path; launcher mode is server-driven.)
+	while xp >= xp_to_next and level < MAX_LEVEL:
 		xp -= xp_to_next
 		_level_up()
+	if level >= MAX_LEVEL and xp > xp_to_next:
+		xp = xp_to_next
 	xp_changed.emit(xp, xp_to_next)
 
 # Apply one level's intrinsic gains to BOTH the public live stats and the
@@ -210,12 +216,46 @@ func _apply_level_loss() -> void:
 # drives leveling via `apply_server_level`, so this is not called there.
 func _level_up() -> void:
 	level += 1
-	xp_to_next = int(xp_to_next * 1.5)
+	xp_to_next = _band_for(level)
 	_apply_level_gain()
 	set_hp(max_hp)
 	set_mp(max_mp)
 	set_stamina(max_stamina)
 	level_changed.emit(level)
+
+# EQ-style cubic XP curve — mirror of the Rust `char_data` curve. Total XP to
+# complete level L = L^3 * 1000 * hell_mod(L); the per-level band is the
+# difference total(L) - total(L-1). The hell_mod spikes make the classic hell
+# levels (30/35/40/45, then every level 51-60). f64 throughout (GDScript float is
+# f64) + round() so the band matches the server byte-for-byte. Change BOTH sides
+# in the same commit; the server's `compute` anchor tests guard the drift.
+func _hell_mod(level_in: int) -> float:
+	if level_in <= 29: return 1.0
+	elif level_in <= 34: return 1.1
+	elif level_in <= 39: return 1.2
+	elif level_in <= 44: return 1.3
+	elif level_in <= 50: return 1.4
+	elif level_in == 51: return 1.5
+	elif level_in == 52: return 1.6
+	elif level_in == 53: return 1.7
+	elif level_in == 54: return 1.9
+	elif level_in == 55: return 2.1
+	elif level_in == 56: return 2.3
+	elif level_in == 57: return 2.5
+	elif level_in == 58: return 2.7
+	elif level_in == 59: return 3.0
+	else: return 3.1
+
+# Cumulative XP to *complete* `level_in` (total(0) == 0).
+func _total_xp(level_in: int) -> float:
+	if level_in < 1: return 0.0
+	return float(level_in) * level_in * level_in * 1000.0 * _hell_mod(level_in)
+
+# The band (xp_to_next) for `level_in`, clamped to the cap so the cubic can never
+# overrun the server's i32 storage.
+func _band_for(level_in: int) -> int:
+	var lvl: int = clampi(level_in, 1, MAX_LEVEL)
+	return int(round(_total_xp(lvl) - _total_xp(lvl - 1)))
 
 # Launcher mode (server-authoritative): mirror a level change the server
 # decided (up on xp gain, DOWN on a death penalty). Applies the matching
@@ -372,7 +412,7 @@ func load_state(d: Dictionary) -> void:
 	player_class   = d.get("player_class", "")
 	level          = int(d.get("level", 1))
 	xp             = int(d.get("xp", 0))
-	xp_to_next     = int(d.get("xp_to_next", 100))
+	xp_to_next     = int(d.get("xp_to_next", 1000))
 	# Four-tier wallet; a pre-currency save's single "coins" count carries
 	# forward into copper (it was a flat count with no tiers).
 	platinum       = int(d.get("platinum", 0))
