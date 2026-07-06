@@ -680,7 +680,7 @@ func _add_test_quest() -> void:
 		"description": "The wolves near the eastern road have grown diseased and aggressive. Thin their numbers before travelers are harmed.",
 		"zone": "Eastern Road",
 		"level_req": 1,
-		"xp_reward": 250,
+		"reward_tier": "standard",
 		"objectives": [
 			{"text": "Slay Infected Wolves", "type": "kill", "target": "Wolf", "count_needed": 5},
 			{"text": "Report back to Captain Aldren"},

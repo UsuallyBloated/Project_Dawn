@@ -15,7 +15,7 @@ enum Status { ACTIVE, COMPLETED, FAILED }
 #     target: String,                        -- mob_name or item_name to match
 #     count_needed: int, count_done: int     -- progress tracking
 #   }],
-#   status: Status, zone: String, level_req: int, xp_reward: int
+#   status: Status, zone: String, level_req: int, reward_tier: String
 var _quests: Dictionary = {}  # id -> quest dict
 
 func add_quest(quest_data: Dictionary) -> bool:
@@ -42,7 +42,7 @@ func add_quest(quest_data: Dictionary) -> bool:
 		"status":       Status.ACTIVE,
 		"zone":         quest_data.get("zone", ""),
 		"level_req":    quest_data.get("level_req", 1),
-		"xp_reward":    quest_data.get("xp_reward", 0),
+		"reward_tier":  quest_data.get("reward_tier", "standard"),
 		"item_rewards": quest_data.get("item_rewards", []),
 	}
 	_quests[id] = q
@@ -101,7 +101,7 @@ func complete_quest(quest_id: String) -> void:
 	if q["status"] == Status.COMPLETED:
 		return
 	q["status"] = Status.COMPLETED
-	var xp: int = q.get("xp_reward", 0)
+	var xp: int = QuestDefinitions.xp_reward_for(q.get("reward_tier", ""), q.get("level_req", 1))
 	if xp > 0:
 		# PD_W0018 — in launcher mode the server owns xp/leveling, so report the
 		# reward and let it apply (the server replies with XpGained / LevelUp).

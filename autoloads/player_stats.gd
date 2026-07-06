@@ -29,7 +29,7 @@ var stamina: float = 100.0
 var max_stamina: float = 100.0
 
 # Level cap — mirrors the Rust world::skills::MAX_LEVEL. The XP curve (cubic;
-# see _band_for / _hell_mod below) and the server's resolve() both stop here.
+# see band_for / _hell_mod below) and the server's resolve() both stop here.
 const MAX_LEVEL := 60
 
 var level: int = 1
@@ -117,7 +117,7 @@ func apply_character(race_id: String, cls: String, lvl: int) -> void:
 		new_max_st += gains["max_stamina"]
 		new_max_hp += (stats["constitution"] - con_before) * 5.0
 
-	var new_xp_to_next := _band_for(lvl)
+	var new_xp_to_next := band_for(lvl)
 
 	self.race            = race_id
 	self.player_class    = cls
@@ -216,7 +216,7 @@ func _apply_level_loss() -> void:
 # drives leveling via `apply_server_level`, so this is not called there.
 func _level_up() -> void:
 	level += 1
-	xp_to_next = _band_for(level)
+	xp_to_next = band_for(level)
 	_apply_level_gain()
 	set_hp(max_hp)
 	set_mp(max_mp)
@@ -253,7 +253,7 @@ func _total_xp(level_in: int) -> float:
 
 # The band (xp_to_next) for `level_in`, clamped to the cap so the cubic can never
 # overrun the server's i32 storage.
-func _band_for(level_in: int) -> int:
+func band_for(level_in: int) -> int:
 	var lvl: int = clampi(level_in, 1, MAX_LEVEL)
 	return int(round(_total_xp(lvl) - _total_xp(lvl - 1)))
 
