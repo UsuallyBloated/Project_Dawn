@@ -177,6 +177,37 @@ Warrior/Rogue/Halfling bonuses lingered far longer (removed 2019 on live EQ).
 
 Confidence: HIGH (3-0).
 
+### Racial trade-offs — what the XP penalty "bought"
+
+*(Added 2026-07-06; sources: P99 "Choosing a Race" + "Troll" pages.)*
+
+The race XP penalties were not free losses — each penalized race got a **racial advantage**
+in exchange, and the penalty size roughly tracked how strong that advantage was:
+
+| Race | XP mod | Racial advantage (the trade-off) |
+|---|---|---|
+| **Troll, Iksar** | -20% | **faster HP regeneration** (the marquee soloist/tank perk) |
+| Ogre | -15% | **frontal stun immunity** (cannot be stunned from the front — big for a tank) |
+| Barbarian | -5% | **Slam** (a bash-like knockback melee proc) |
+| Halfling | +5% *bonus* | small size + the only race with an XP *bonus*, not a penalty |
+
+**The Troll / Iksar regeneration** is the trade-off people remember, and **only those two
+races** have it: a **passive, always-on** HP-regen bonus on the standard ~6-second regen
+tick that **scales with level** — roughly **2 HP/tick sitting (1 standing) at low levels,
+rising to ~18 HP/tick sitting at level 60**. Both P99 sources are explicit that the -20% XP
+is the deliberate *price* for it ("Iksar and Trolls share [the -20%] because of their
+regeneration"). It made them exceptional soloists with minimal between-fight downtime.
+
+**Era note (matters for us):** the Jan 2001 patch removed the XP *penalties* but kept the
+racial *abilities* — so post-2001 a Troll kept its faster regen at no XP cost. The balanced
+"slower XP for a perk" trade only existed in the Classic/Kunark/Velious window this doc
+targets; if Project Dawn wants the trade-off to *mean* something, it has to keep both halves
+coupled (unlike late EQ, which broke the coupling).
+
+Confidence: HIGH on the existence of the Troll/Iksar regen and the -20%-for-regen pairing
+(both sources agree). MEDIUM on the exact per-tick numbers — P99 gives level-scaled figures
+but does not cleanly separate the racial *delta* from base regen.
+
 ---
 
 ## 6. P99 / EQEmu fidelity notes
@@ -190,6 +221,102 @@ Confidence: HIGH (3-0).
   frameworks live in the code and are toggled per server.
 - Even P99 is not a perfect 1999-live mirror: it selectively disables class penalties
   (dated 9/21/15 on Blue) to match its chosen ruleset/timeline.
+
+---
+
+## 7. Quest experience and faction
+
+*(Added 2026-07-06, second research pass; sources at the bottom.)*
+
+A single quest turn-in pays out on **two decoupled tracks**: an XP reward that decays in
+relative value as you level, and a faction reward that does NOT. This is why a low-level
+quest (Crushbone Belts is the stock example) is an appealing XP route only near its
+intended level, yet stays worth doing at high level purely for faction standing. Crushbone
+is just one of hundreds of such quests; each carries its own XP value and its own
+faction-hit vector.
+
+### Quest XP (decays with level)
+
+Two authoritative sources DISAGREE on the mechanism; both are given.
+
+- **Code-grounded model (Treatise / EQEmu):** quest XP is *"merely a constant value per
+  quest (but with a cap)"*, sent directly to the client, NOT derived from any mob level.
+  The cap is a fraction of *your current level's* requirement: **classic / old EQ = 25% of
+  a level**; later reduced to **14.284% (one-seventh)**.
+- **Community "nobody knows" model (TAKP):** *"Quest XP is calculated differently from
+  normal XP and no-one understands the specifics."* Hypothesizes each quest has an assigned
+  level and rewards XP like killing a mob of that level, with a *"sweet spot"* where turning
+  in outside the intended range *"will yield little to no XP at all."*
+
+Both predict the observed decay, but the constant-value model explains it more cleanly: a
+fixed XP chunk is a large slice of a small (low-level) bar and a negligible sliver of a
+large (high-level) bar. The Crushbone anecdotes show a **smooth decay, not a hard
+sweet-spot cliff**: ~5% per belt at L6, ~4% at L7, ~2-3% at L8, ~1-2% at L11.
+
+**Classic-era takeaway:** the per-turn-in cap was **25% of a level in classic EQ** (the
+modern 1/7 = 14.284% came later). One turn-in could never exceed a quarter-level.
+
+**The cap % is CONTESTED** (flag it): reported variously as ~11% per turn-in (a P99
+summary), a "13% per kill" figure that was adversarially *refuted* in this doc's kill-XP
+research, 14.284% (1/7) modern, and 25% classic (Treatise). Solid: "there is a cap,
+expressed as a fraction of your current level." Uncertain: the exact percentage, and
+whether the value is a flat constant vs an assigned-level lookup.
+
+Most quests are XP-negligible (community consensus: "your time is best spent killing
+mobs"); a few are outliers (Hero's Bracers, Elder Gelok supplies, Strength of the Elements)
+worthwhile far up the curve.
+
+### Faction (level-independent)
+
+Faction from a turn-in is a **fixed set of "hits" independent of character level**. One
+turn-in raises some factions and lowers others (dual-impact). Crushbone belts to Canloe
+Nusback (Kaladim Warrior's Guild, South Kaladim): **up** with Storm Guard, Kazon
+Stormhammer, Miners Guild 249, Merchants of Kaladim; **down** with Craknek Warriors (the
+Ogre warriors).
+
+Nine standing tiers, best to worst (P99 point ranges in parentheses):
+
+| Tier | Range |
+|---|---|
+| Ally | 1051 to 2000 |
+| Warmly | 701 to 1050 |
+| Kindly | 451 to 700 |
+| Amiable | 51 to 450 |
+| Indifferent | -49 to 50 |
+| Apprehensive | -50 to -449 |
+| Dubious | -450 to -699 |
+| Threatening | -700 to -1049 |
+| Scowls | -1050 to -2000 |
+
+Tiers gate real things (vendors refuse to trade below Dubious, guards attack on sight,
+NPCs won't talk to you). Caveat: P99 warns the specific per-hit magnitudes on its pages
+"were taken from a non-classic source ... very often incorrect", so treat the exact +N/-N
+numbers as illustrative, not authoritative.
+
+Because the faction hit is the **same at level 8 or level 50** while the XP shrinks toward
+nothing, high-level characters grind belts purely for standing (e.g. to clear KOS status,
+open a city/vendor, or unlock a quest line). That is the asymmetry.
+
+### Design note for Project Dawn
+
+The elegant part worth borrowing: EQ never has to "expire" a low-level quest. Two
+orthogonal reward channels on one turn-in:
+
+- **XP reward** capped at a fraction of the *current* level's requirement (self-scaling;
+  auto-decays in relative value; no per-quest re-tune needed as content ages).
+- **Faction reward** = a fixed vector of `+/- standing` hits across named factions
+  (level-independent; gates *access*, not power).
+
+`data/quest_definitions.gd` already has an `xp_reward` field. Pairing it with a
+`faction_deltas` map, and (for the classic self-scaling feel) treating `xp_reward` as
+*capped by a fraction of the current level's band* rather than as a flat absolute,
+reproduces this two-track behavior. Note the existing open to-do: quest kill-objectives
+don't advance in launcher mode (`QuestManager.notify_kill` only fires for local Test-Room
+enemies), so a faction/XP turn-in loop needs the server-driven kill-credit path first.
+
+Confidence: that quest XP is a capped constant and faction is a level-independent
+dual-impact vector = HIGH; the exact cap % and the constant-vs-assigned-level question =
+uncertain / contested (see above).
 
 ---
 
@@ -231,6 +358,13 @@ Secondary (community wikis / writeups):
 - EQEmulator forum thread — https://www.eqemulator.org/forums/showthread.php?t=44103
 - TAKP Experience Points — https://wiki.takp.info/index.php/Experience_Points
 - TAKP Current ZEMs — https://wiki.takp.info/Current_ZEMs
+
+Quest XP and faction (section 7, added 2026-07-06):
+- P99 Crushbone Belts — https://wiki.project1999.com/Crushbone_Belts
+- P99 Faction — https://wiki.project1999.com/Faction
+- Quarm Treatise (quest XP section) — https://quarm.guide/2024/06/11/Treatise/
+- TAKP Experience Points (quest XP section) — https://wiki.takp.info/index.php?title=Experience_Points
+- EQ Fandom: Crushbone Belts — https://everquest.fandom.com/wiki/Quest:_Crushbone_Belts
 
 ---
 
