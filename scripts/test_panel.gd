@@ -3,10 +3,15 @@ extends CanvasLayer
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 
 const NORMAL_MOBS := [
-	{"name":"Bandit",   "level":3, "max_hp":60.0,  "base_damage":8,  "xp_reward":30, "move_speed":3.0, "aggro_range":8.0},
-	{"name":"Wolf",     "level":2, "max_hp":45.0,  "base_damage":6,  "xp_reward":20, "move_speed":4.0, "aggro_range":10.0},
-	{"name":"Skeleton", "level":4, "max_hp":55.0,  "base_damage":9,  "xp_reward":35, "move_speed":2.8, "aggro_range":7.0},
-	{"name":"Gnoll",    "level":5, "max_hp":80.0,  "base_damage":12, "xp_reward":45, "move_speed":3.2, "aggro_range":9.0},
+	{"name":"Bandit",    "level":3, "max_hp":60.0,  "base_damage":8,  "xp_reward":30, "move_speed":3.0, "aggro_range":8.0},
+	# "Grey Wolf", not "Wolf": the Beast Master warder template is keyed on the
+	# exact name "Wolf" (server pet_templates::is_warder_template), so a spawned
+	# bare "Wolf" that got charmed would arm the free warder-respawn loop for any
+	# class. "Grey Wolf" still ticks "kill Wolf" quests + the wolf loot table via
+	# the bidirectional substring matchers.
+	{"name":"Grey Wolf", "level":2, "max_hp":45.0,  "base_damage":6,  "xp_reward":20, "move_speed":4.0, "aggro_range":10.0},
+	{"name":"Skeleton",  "level":4, "max_hp":55.0,  "base_damage":9,  "xp_reward":35, "move_speed":2.8, "aggro_range":7.0},
+	{"name":"Gnoll",     "level":5, "max_hp":80.0,  "base_damage":12, "xp_reward":45, "move_speed":3.2, "aggro_range":9.0},
 ]
 
 const ZONES := [
@@ -357,6 +362,14 @@ func _get_spawn_pos() -> Vector3:
 
 func _spawn_normal_enemy() -> void:
 	var data: Dictionary = NORMAL_MOBS[_normal_mob_opt.selected]
+	# Launcher mode: ask the SERVER to spawn it (dev-gated, needs PD_DEV_CMDS=1)
+	# so the mob is a real world creature — server combat, XP, loot, corpse,
+	# quest kill credit. A local instantiate would be a puppet the server can't
+	# see, so kills against it would count for nothing online.
+	if Net.is_launcher_mode() and Net.is_app_ready():
+		Net.send_dev_spawn_mob(data["name"], data["level"], data["max_hp"],
+			data["base_damage"], data["move_speed"], data["aggro_range"])
+		return
 	var e = ENEMY_SCENE.instantiate()
 	e.mob_name    = data["name"]
 	e.level       = data["level"]
@@ -372,6 +385,11 @@ func _spawn_named_enemy() -> void:
 	var keys: Array = NamedMobDefinitions.ALL.keys()
 	if keys.is_empty():
 		return
+	# Named mobs are still client-local (enrage + guaranteed-loot logic has no
+	# server side yet), so online they're display dummies: no server XP/loot/
+	# quest credit. Warn the tester rather than silently half-working.
+	if Net.is_launcher_mode() and Net.is_app_ready():
+		CombatLog.add_line("Named mobs are client-side only for now (no server XP/loot/quest credit).", CombatLog.MsgType.INFO)
 	var e = ENEMY_SCENE.instantiate()
 	get_tree().current_scene.add_child(e)
 	e.global_position = _get_spawn_pos()
@@ -611,15 +629,16 @@ func _full_heal() -> void:
 func _trigger_death() -> void:
 	PlayerStats.set_hp(0.0)
 
-# Slice 0 test aid — push xp through the server's authoritative leveling path
-# (the GrantQuestXp intent) so a tester can reach level 5+ quickly to verify the
-# death penalty / de-level without grinding ~80 kills. Server applies + replies.
+# Slice 0 test aid — push xp through the server's leveling path via the raw
+# GrantQuestXp message (DEV-ONLY server-side as of PD_W0023, like Full Heal —
+# needs PD_DEV_CMDS=1 or it's silently ignored) so a tester can reach level 5+
+# quickly to verify the death penalty / de-level without grinding.
 func _grant_test_xp() -> void:
 	Net.grant_quest_xp(250)
 
 # Grant exactly the xp needed to reach the next level (one level per click), so a
 # tester can climb to a spell's min_level without hundreds of +250s. Curve-agnostic
-# (it reads the live xp_to_next), and routes through the same server-authoritative
+# (it reads the live xp_to_next), and routes through the same dev-gated
 # GrantQuestXp path; the server's award_xp resolves the level-up and fans LevelUp back.
 func _level_up_test() -> void:
 	var needed: int = PlayerStats.xp_to_next - PlayerStats.xp
@@ -693,7 +712,8 @@ func _add_test_quest() -> void:
 
 # The test quest's "report back" objective needs an NPC turn-in that doesn't
 # exist, so it can't finish naturally. Force completion to verify the quest ->
-# server GrantQuestXp -> XpGained grant path (and the xp feedback line).
+# server CompleteQuest -> server-computed XpGained path (and the xp feedback
+# line). The server pays test_q1 once per character, ever.
 func _complete_test_quest() -> void:
 	QuestManager.complete_quest("test_q1")
 

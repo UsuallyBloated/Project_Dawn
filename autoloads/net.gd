@@ -286,6 +286,7 @@ func _ready() -> void:
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
 	xp_gained.connect(_on_xp_gained)
+	kill_credit.connect(_on_kill_credit)
 	level_up.connect(_on_level_up)
 	coins_update.connect(_on_coins_update)
 	bank_snapshot.connect(_on_bank_snapshot)
@@ -473,13 +474,22 @@ func broadcast_death() -> void:
 		return
 	send_death_broadcast()
 
-# PD_W0018 — report a completed quest's xp reward to the server (quests are
-# tracked client-side; the server applies the xp authoritatively and replies
-# with XpGained / LevelUp). Returns whether it was sent.
+# PD_W0018 — raw XP grant. DEV-ONLY server-side as of PD_W0023 (needs
+# PD_DEV_CMDS, like Full Heal): kept for the Test Panel leveling buttons.
+# Real quest turn-ins go through complete_quest below.
 func grant_quest_xp(amount: int) -> bool:
 	if _state != State.CONNECTED_APP:
 		return false
 	return send_grant_quest_xp(amount)
+
+# PD_W0023 — quest turn-in by id. The server looks the id up in its own quest
+# table, computes the XP itself (the client can no longer name an amount),
+# records the completion (a quest pays once per character, ever), and replies
+# with XpGained / LevelUp. Returns whether it was sent.
+func complete_quest(quest_id: String) -> bool:
+	if _state != State.CONNECTED_APP:
+		return false
+	return send_complete_quest(quest_id)
 
 # Track 6: local death timer elapsed; tell the server we're back. Server
 # resets conn.hp/mp/stamina to max and fans HealthUpdate / ManaUpdate /
@@ -1031,6 +1041,13 @@ func _on_xp_gained(amount: int, current: int, to_next: int) -> void:
 	PlayerStats.apply_remote_xp(amount, current, to_next)
 	if amount < 0:
 		CombatLog.add_line("You lost %d experience points." % -amount, CombatLog.MsgType.DAMAGE_IN)
+
+# PD_W0023 — private quest kill credit. The server sends this only to whoever
+# earned a kill (solo killer / pet owner / each group member on the XP split), so
+# routing it to QuestManager.notify_kill advances "kill N X" objectives online —
+# the same call the local Test-Room enemy.gd already makes.
+func _on_kill_credit(mob_name: String) -> void:
+	QuestManager.notify_kill(mob_name)
 
 # PD_W0018 — server-authoritative level change (up on xp gain, DOWN on a death
 # penalty). Mirror it onto PlayerStats, which applies the intrinsic stat deltas.

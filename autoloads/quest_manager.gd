@@ -101,24 +101,32 @@ func complete_quest(quest_id: String) -> void:
 	if q["status"] == Status.COMPLETED:
 		return
 	q["status"] = Status.COMPLETED
-	var xp: int = QuestDefinitions.xp_reward_for(q.get("reward_tier", ""), q.get("level_req", 1))
-	if xp > 0:
-		# PD_W0018 — in launcher mode the server owns xp/leveling, so report the
-		# reward and let it apply (the server replies with XpGained / LevelUp).
-		# Test Room / no-server still grants locally.
-		if Net.is_launcher_mode():
-			Net.grant_quest_xp(xp)
-		else:
-			PlayerStats.gain_xp(xp, "quest")
-		CombatLog.add_line("Quest complete: %s!" % q["name"], CombatLog.MsgType.INFO)
+	# PD_W0023 — in launcher mode the server AUTHORS the reward: we report only
+	# the quest id; the server looks it up in its own quest table (the
+	# quests.toml mirror of QuestDefinitions), computes the XP, records the
+	# completion (a quest pays once per character, ever — a repeat turn-in
+	# after a relog grants nothing), and replies with XpGained / LevelUp.
+	# The local tier math survives for the Test Room / no-server path only.
+	if Net.is_launcher_mode():
+		Net.complete_quest(quest_id)
 	else:
-		CombatLog.add_line("Quest complete: %s!" % q["name"], CombatLog.MsgType.INFO)
-	for d: Dictionary in q.get("item_rewards", []):
-		var item := _make_reward_item(d)
-		if not Inventory.add_item(item, 1):
-			CombatLog.add_line("Inventory full — could not receive %s." % item.item_name, CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("You receive: %s." % item.item_name, CombatLog.MsgType.INFO)
+		var xp: int = QuestDefinitions.xp_reward_for(q.get("reward_tier", ""), q.get("level_req", 1))
+		if xp > 0:
+			PlayerStats.gain_xp(xp, "quest")
+	CombatLog.add_line("Quest complete: %s!" % q["name"], CombatLog.MsgType.INFO)
+	# Item rewards are Test Room only for now. In launcher mode inventory is
+	# server-authoritative: a client-side add is a GHOST item the server never
+	# hears about — it vanishes on relog (the snapshot re-seed stomps it) and
+	# desyncs the slot underneath it. Server-granted quest items land with the
+	# quest phase-2 work (server objective tracking; needs the reward items
+	# authored as .tres so the server item registry knows them).
+	if not Net.is_launcher_mode():
+		for d: Dictionary in q.get("item_rewards", []):
+			var item := _make_reward_item(d)
+			if not Inventory.add_item(item, 1):
+				CombatLog.add_line("Inventory full — could not receive %s." % item.item_name, CombatLog.MsgType.INFO)
+			else:
+				CombatLog.add_line("You receive: %s." % item.item_name, CombatLog.MsgType.INFO)
 	quest_completed.emit(quest_id)
 
 func get_quest_status(quest_id: String) -> int:

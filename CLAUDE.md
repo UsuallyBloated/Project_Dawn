@@ -9,6 +9,8 @@ A multiplayer MMORPG inspired by classic EverQuest-era games. **Two repos:** a G
 > Please do the required research and dont fabricate answers.
 
 > Please minimize the amount of em-dashes and also the ←/→ arrows.  People use these very rarely and they look odd to us. 
+
+> I need you to be vigilant of potential exploits that the player could use to break the game.  This is critical as any exploit, no matter how large or small, can be the comple undoing of this project.  Also keep in mind the tools that we are using for development; these might seem like exploits but they are critical tools for saving time while testing.
 ---
 
 ## Commands
@@ -253,12 +255,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**
 - [ ] **Language system wiring** — `hear_language()` passive gain not yet called from the
   chat-receive path; needs multiplayer chat RPC + trainer NPCs
-- [ ] **Quest progression in launcher mode** — kill-objective quests don't advance online:
-  `QuestManager.notify_kill` only fires from local Test-Room `enemy.gd`, never for server-driven
-  RemoteEnemy kills, so a "kill N X" quest can never complete (no natural turn-in / XP). Needs a
-  killer-private signal (NOT the `EntityDied` broadcast, which would credit every witness). See
-  [[project-launcher-clientonly-gaps]]. (The grant path itself works — Test Panel "Complete Test
-  Quest" verifies it; it's the natural completion that's blocked.)
+- [ ] **Quest system phase 2 — server-side objective tracking.** Kill credit + server-authoritative
+  rewards landed 2026-07-08 (PD_W0023: killer-private `KillCredit` on every kill path with the group
+  split, `CompleteQuest` by id with rewards computed from the server's `quests.toml`,
+  once-per-character `completed_quests` persistence, `GrantQuestXp` dev-gated). Still open, all
+  wanting server-tracked objective state: the quest JOURNAL wipes on logout (client-memory only);
+  the completed set isn't synced to the client (a relogged player can redo a quest for zero XP with
+  no explanation); item rewards are Test-Room-only (need authored `.tres` + server granting); kill
+  quests auto-complete in the field instead of requiring the NPC turn-in; abandon-quest button;
+  Brom's quest dialogue unwired (rat/gnoll quests unreachable via NPCs).
 
 ### Death / corpses
 - [ ] **Corpse run** — gear stays on corpse; respawn naked and retrieve (optional hardcore).
