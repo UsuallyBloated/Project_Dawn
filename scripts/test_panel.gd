@@ -693,27 +693,18 @@ func _give_consumables() -> void:
 	CombatLog.add_line("Received 5x Journeybread and 5x Waterskin.", CombatLog.MsgType.INFO)
 
 func _add_test_quest() -> void:
-	var ok := QuestManager.add_quest({
-		"id": "test_q1",
-		"name": "Slay the Infected Wolves",
-		"description": "The wolves near the eastern road have grown diseased and aggressive. Thin their numbers before travelers are harmed.",
-		"zone": "Eastern Road",
-		"level_req": 1,
-		"reward_tier": "standard",
-		"objectives": [
-			{"text": "Slay Infected Wolves", "type": "kill", "target": "Wolf", "count_needed": 5},
-			{"text": "Report back to Captain Aldren"},
-		],
-	})
+	# Definition lives in QuestDefinitions.ALL (PD_W0024) so the server
+	# snapshot can rebuild it after a relog — the panel only invokes it.
+	var ok := QuestManager.add_quest(QuestDefinitions.ALL["test_q1"])
 	if ok:
 		CombatLog.add_line("Quest added: Slay the Infected Wolves.", CombatLog.MsgType.INFO)
 	else:
 		CombatLog.add_line("Quest already in journal.", CombatLog.MsgType.INFO)
 
-# The test quest's "report back" objective needs an NPC turn-in that doesn't
-# exist, so it can't finish naturally. Force completion to verify the quest ->
-# server CompleteQuest -> server-computed XpGained path (and the xp feedback
-# line). The server pays test_q1 once per character, ever.
+# test_q1's turn-in NPC doesn't exist, so this button IS the turn-in. As of
+# PD_W0024 the server counts the five wolf kills itself and REJECTS the
+# turn-in until they're done (a visible combat-log line says why) — kill five
+# dev-spawned Wolves first. Pays once per character, ever.
 func _complete_test_quest() -> void:
 	QuestManager.complete_quest("test_q1")
 

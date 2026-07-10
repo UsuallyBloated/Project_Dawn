@@ -78,7 +78,7 @@ func _connect_signals() -> void:
 	PlayerStats.xp_gained.connect(func(amount: int, source: String):
 		var line: String
 		if source == "quest":
-			line = "You received %d experience." % amount
+			line = "You gained %d quest experience!" % amount
 		elif GroupManager.in_group:
 			line = "You gained %d party experience." % amount
 		else:

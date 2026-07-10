@@ -281,6 +281,16 @@ func apply_server_level(new_level: int, new_xp: int, new_xp_to_next: int) -> voi
 	xp_changed.emit(xp, xp_to_next)
 	stats_changed.emit()
 
+# One-shot source tag for the next server XP gain. Server-driven XP arrives via
+# `apply_remote_xp` with no source on the wire, so a quest turn-in can't be told
+# from a kill by default. `QuestManager.on_server_completed` sets this to
+# "quest" right before the reward XpGained lands (the server sends QuestCompleted
+# first), so the chat line reads "quest experience". Consumed + reset on use.
+var _next_xp_source: String = "kill"
+
+func note_next_xp_source(source: String) -> void:
+	_next_xp_source = source
+
 # Launcher mode: mirror an authoritative xp update from the server (kill /
 # quest credit, or a death loss with a negative `amount`). Sets the bar to the
 # server's values; a level change itself arrives separately via
@@ -289,7 +299,8 @@ func apply_remote_xp(amount: int, current: int, to_next: int) -> void:
 	xp = current
 	xp_to_next = to_next
 	if amount > 0:
-		xp_gained.emit(amount, "kill")
+		xp_gained.emit(amount, _next_xp_source)
+		_next_xp_source = "kill"
 	xp_changed.emit(xp, xp_to_next)
 
 func apply_item_bonuses(item: ItemData) -> void:

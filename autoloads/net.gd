@@ -287,6 +287,10 @@ func _ready() -> void:
 	group_notice.connect(_on_group_notice)
 	xp_gained.connect(_on_xp_gained)
 	kill_credit.connect(_on_kill_credit)
+	quest_snapshot.connect(_on_quest_snapshot)
+	quest_progress.connect(_on_quest_progress)
+	quest_rejected.connect(_on_quest_rejected)
+	quest_completed.connect(_on_quest_completed)
 	level_up.connect(_on_level_up)
 	coins_update.connect(_on_coins_update)
 	bank_snapshot.connect(_on_bank_snapshot)
@@ -485,11 +489,28 @@ func grant_quest_xp(amount: int) -> bool:
 # PD_W0023 — quest turn-in by id. The server looks the id up in its own quest
 # table, computes the XP itself (the client can no longer name an amount),
 # records the completion (a quest pays once per character, ever), and replies
-# with XpGained / LevelUp. Returns whether it was sent.
+# with XpGained / LevelUp. As of PD_W0024 the server also requires every
+# objective it counted to be met, and answers QuestCompleted (success) or
+# QuestRejected (visible reason). Returns whether it was sent.
 func complete_quest(quest_id: String) -> bool:
 	if _state != State.CONNECTED_APP:
 		return false
 	return send_complete_quest(quest_id)
+
+# PD_W0024 — accept a quest so the server starts counting its objectives.
+# Fired alongside the optimistic local QuestManager.add_quest; a
+# quest_rejected reply rolls the add back.
+func accept_quest(quest_id: String) -> bool:
+	if _state != State.CONNECTED_APP:
+		return false
+	return send_accept_quest(quest_id)
+
+# PD_W0024 — drop an active quest server-side (progress is forgotten;
+# re-accepting starts from zero; the pay-once completion record is untouched).
+func abandon_quest(quest_id: String) -> bool:
+	if _state != State.CONNECTED_APP:
+		return false
+	return send_abandon_quest(quest_id)
 
 # Track 6: local death timer elapsed; tell the server we're back. Server
 # resets conn.hp/mp/stamina to max and fans HealthUpdate / ManaUpdate /
@@ -1042,12 +1063,33 @@ func _on_xp_gained(amount: int, current: int, to_next: int) -> void:
 	if amount < 0:
 		CombatLog.add_line("You lost %d experience points." % -amount, CombatLog.MsgType.DAMAGE_IN)
 
-# PD_W0023 — private quest kill credit. The server sends this only to whoever
-# earned a kill (solo killer / pet owner / each group member on the XP split), so
-# routing it to QuestManager.notify_kill advances "kill N X" objectives online —
-# the same call the local Test-Room enemy.gd already makes.
+# PD_W0023 — private quest kill credit. RETIRED as of PD_W0024: the server
+# counts kills itself and drives the journal via quest_progress, and
+# notify_kill ignores launcher mode now. Kept wired in case an old server
+# build is on the other end (it degrades to a no-op).
 func _on_kill_credit(mob_name: String) -> void:
 	QuestManager.notify_kill(mob_name)
+
+# PD_W0024 — journal seed on EnterWorld: rebuild the quest journal from the
+# server's authoritative active + completed sets. This is what makes the
+# journal survive relog and server restart. Quest i's per-objective progress
+# is the next objective_counts[i] values of progress_flat (flattened arrays).
+func _on_quest_snapshot(active_ids: PackedStringArray, objective_counts: PackedInt32Array, progress_flat: PackedInt32Array, completed: PackedStringArray) -> void:
+	QuestManager.apply_server_snapshot(active_ids, objective_counts, progress_flat, completed)
+
+# PD_W0024 — one objective counter moved (the server counts kills now).
+func _on_quest_progress(quest_id: String, objective_index: int, count: int) -> void:
+	QuestManager.apply_server_progress(quest_id, objective_index, count)
+
+# PD_W0024 — a quest accept / abandon / turn-in was refused. QuestManager
+# prints the reason; `rollback` (accept-phase only) undoes the optimistic add.
+func _on_quest_rejected(quest_id: String, reason: String, rollback: bool) -> void:
+	QuestManager.on_server_rejected(quest_id, reason, rollback)
+
+# PD_W0024 — a turn-in succeeded and paid out (the XP arrived via xp_gained).
+# QuestManager flips the journal entry to COMPLETED — never optimistically.
+func _on_quest_completed(quest_id: String) -> void:
+	QuestManager.on_server_completed(quest_id)
 
 # PD_W0018 — server-authoritative level change (up on xp gain, DOWN on a death
 # penalty). Mirror it onto PlayerStats, which applies the intrinsic stat deltas.

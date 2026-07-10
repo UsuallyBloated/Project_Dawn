@@ -145,6 +145,7 @@ func _response_passes_condition(resp: Dictionary) -> bool:
 	match required:
 		"none":      return status == -1
 		"ACTIVE":    return status == QuestManager.Status.ACTIVE
+		"READY":     return status == QuestManager.Status.READY
 		"COMPLETED": return status == QuestManager.Status.COMPLETED
 		_:           return true
 

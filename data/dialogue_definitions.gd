@@ -15,7 +15,8 @@ class_name DialogueDefinitions
 #   quest_condition: Dict  — {id, status} filters response visibility:
 #                            status "none" = quest not yet accepted
 #                            status "ACTIVE" = quest accepted and in progress
-#                            status "COMPLETED" = all objectives done, not yet turned in
+#                            status "READY" = all objectives done, not yet turned in
+#                            status "COMPLETED" = turned in (reward paid)
 
 const ALL: Dictionary = {
 	"Aldric the Guard": {
@@ -39,7 +40,7 @@ const ALL: Dictionary = {
 				{
 					"text": "The wolves are dealt with.",
 					"goto": "wolf_turn_in",
-					"quest_condition": {"id": "wolf_threat", "status": "COMPLETED"}
+					"quest_condition": {"id": "wolf_threat", "status": "READY"}
 				},
 				# Rotfang offer — only after wolf quest done, rotfang not started
 				{
@@ -57,7 +58,7 @@ const ALL: Dictionary = {
 				{
 					"text": "Rotfang is dead.",
 					"goto": "rotfang_turn_in",
-					"quest_condition": {"id": "rotfang_hunt", "status": "COMPLETED"}
+					"quest_condition": {"id": "rotfang_hunt", "status": "READY"}
 				},
 				{"text": "Just passing through.", "goto": "passing"},
 				{"text": "What can you tell me about the area?", "goto": "area"},
@@ -210,7 +211,7 @@ const ALL: Dictionary = {
 				{
 					"text": "The rats are cleared out.",
 					"goto": "rat_turn_in",
-					"quest_condition": {"id": "rat_infestation", "status": "COMPLETED"}
+					"quest_condition": {"id": "rat_infestation", "status": "READY"}
 				},
 				# Gnoll quest offer — available after rat quest done
 				{
@@ -228,7 +229,7 @@ const ALL: Dictionary = {
 				{
 					"text": "The gnoll raiders are dealt with.",
 					"goto": "gnoll_turn_in",
-					"quest_condition": {"id": "gnoll_raiders", "status": "COMPLETED"}
+					"quest_condition": {"id": "gnoll_raiders", "status": "READY"}
 				},
 				{"text": "What's the road east like?", "goto": "east_road"},
 				{"text": "Farewell.", "action": "close"}

@@ -11,8 +11,10 @@ var _completed_btn: Button = null
 var _list_vbox: VBoxContainer = null
 var _title_lbl: Label = null
 var _desc_lbl: Label = null
+var _status_lbl: Label = null
 var _obj_vbox: VBoxContainer = null
 var _empty_lbl: Label = null
+var _abandon_btn: Button = null
 
 func _ready() -> void:
 	_build_ui()
@@ -20,6 +22,7 @@ func _ready() -> void:
 	QuestManager.quest_updated.connect(_on_quests_changed)
 	QuestManager.quest_completed.connect(_on_quests_changed)
 	QuestManager.quest_failed.connect(_on_quests_changed)
+	QuestManager.quest_removed.connect(_on_quests_changed)
 	visibility_changed.connect(_on_visibility_changed)
 
 func _build_ui() -> void:
@@ -146,6 +149,14 @@ func _build_ui() -> void:
 	_desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	right_vbox.add_child(_desc_lbl)
 
+	# "Ready to turn in" callout (PD_W0024: rewards pay at the turn-in NPC).
+	_status_lbl = Label.new()
+	_status_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_status_lbl.add_theme_font_size_override("font_size", 11)
+	_status_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_status_lbl.visible = false
+	right_vbox.add_child(_status_lbl)
+
 	var obj_header := Label.new()
 	obj_header.text = "Objectives"
 	obj_header.add_theme_color_override("font_color", UITheme.C_TITLE)
@@ -155,6 +166,17 @@ func _build_ui() -> void:
 	_obj_vbox = VBoxContainer.new()
 	_obj_vbox.add_theme_constant_override("separation", 4)
 	right_vbox.add_child(_obj_vbox)
+
+	# Abandon (active quests only). Server forgets progress; re-accepting
+	# starts from zero. Confirmed by a combat-log line, not a dialog.
+	_abandon_btn = Button.new()
+	_abandon_btn.text = "Abandon Quest"
+	_abandon_btn.custom_minimum_size = Vector2(120.0, 24.0)
+	_abandon_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_abandon_btn.add_theme_font_size_override("font_size", 11)
+	_abandon_btn.visible = false
+	_abandon_btn.pressed.connect(_on_abandon_pressed)
+	right_vbox.add_child(_abandon_btn)
 
 	_empty_lbl = Label.new()
 	_empty_lbl.text = "No quests."
@@ -200,7 +222,10 @@ func _rebuild_list() -> void:
 
 	for q: Dictionary in quests:
 		var btn := Button.new()
-		btn.text = q["name"]
+		var label: String = q["name"]
+		if q["status"] == QuestManager.Status.READY:
+			label += "  (Ready)"
+		btn.text = label
 		btn.flat = true
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -224,17 +249,32 @@ func _show_details(quest_id: String) -> void:
 	if quest_id == "":
 		_title_lbl.text = ""
 		_desc_lbl.text = "Select a quest to view details."
+		_status_lbl.visible = false
+		_abandon_btn.visible = false
 		return
 
 	var q: Dictionary = QuestManager.get_quest(quest_id)
 	if q.is_empty():
 		_title_lbl.text = ""
 		_desc_lbl.text = ""
+		_status_lbl.visible = false
+		_abandon_btn.visible = false
 		return
 
 	_title_lbl.text = q["name"]
 	var zone_txt: String = ("  —  " + q["zone"]) if q["zone"] != "" else ""
 	_desc_lbl.text = q["description"] + zone_txt
+
+	var status: int = q["status"]
+	if status == QuestManager.Status.READY:
+		var where: String = q.get("turn_in_npc", "")
+		if where == "":
+			where = "the quest giver"
+		_status_lbl.text = "Ready to turn in: return to %s." % where
+		_status_lbl.visible = true
+	else:
+		_status_lbl.visible = false
+	_abandon_btn.visible = _tab_active and (status == QuestManager.Status.ACTIVE or status == QuestManager.Status.READY)
 
 	for obj: Dictionary in q["objectives"]:
 		var row := HBoxContainer.new()
@@ -255,6 +295,12 @@ func _show_details(quest_id: String) -> void:
 		var text_color := Color(0.5, 0.5, 0.5) if obj["done"] else UITheme.C_TEXT
 		obj_lbl.add_theme_color_override("font_color", text_color)
 		row.add_child(obj_lbl)
+
+func _on_abandon_pressed() -> void:
+	if _selected_quest_id == "":
+		return
+	QuestManager.abandon_quest(_selected_quest_id)
+	_selected_quest_id = ""
 
 func _on_quests_changed(_id: String) -> void:
 	_rebuild_list()

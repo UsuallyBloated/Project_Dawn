@@ -115,5 +115,27 @@ const ALL: Dictionary = {
 		],
 		"giver_npc": "Aldric the Guard",
 		"turn_in_npc": "Aldric the Guard"
+	},
+
+	# Test Panel quest — dev/test content, but it must live here (not inline in
+	# test_panel.gd) so the server QuestSnapshot can rebuild it after a relog
+	# and so quests.toml has a client mirror to stay lockstep with. The "report
+	# back" line is flavor (no type): the server counts only the wolf kills,
+	# and the Test Panel's Complete button IS the turn-in (Captain Aldren
+	# doesn't exist as an NPC).
+	"test_q1": {
+		"id": "test_q1",
+		"name": "Slay the Infected Wolves",
+		"description": "The wolves near the eastern road have grown diseased and aggressive. Thin their numbers before travelers are harmed.",
+		"zone": "Eastern Road",
+		"level_req": 1,
+		"reward_tier": "standard",
+		"objectives": [
+			{"text": "Slay Infected Wolves", "type": "kill", "target": "Wolf", "count_needed": 5},
+			{"text": "Report back to Captain Aldren"},
+		],
+		"item_rewards": [],
+		"giver_npc": "Test Panel",
+		"turn_in_npc": "the Test Panel (Complete Test Quest)"
 	}
 }
