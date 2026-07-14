@@ -150,6 +150,18 @@ func apply_character(race_id: String, cls: String, lvl: int) -> void:
 	set_hp(new_max_hp)
 	set_mp(new_max_mp)
 	set_stamina(new_max_st)
+	# Re-layer any gear currently on the paperdoll onto the freshly-reset base.
+	# apply_character does an ABSOLUTE reset to the gear-free base (snapshotted
+	# into `_base_*` above), so on a relog / dev re-apply that runs WHILE gear is
+	# equipped, the public stats would otherwise sit at base while the equipment
+	# snapshot's clear-then-reapply assumes they already include the gear — and
+	# would drift BELOW base. Keeps the invariant: public = base + worn gear
+	# (buffs re-apply separately via BuffManager). A fresh character has an empty
+	# paperdoll, so this is a no-op at creation.
+	for worn_slot in Equipment.SLOTS:
+		var worn_item: ItemData = Equipment.equipped.get(worn_slot)
+		if worn_item != null:
+			apply_item_bonuses(worn_item)
 	level_changed.emit(lvl)
 	xp_changed.emit(0, new_xp_to_next)
 	stats_changed.emit()

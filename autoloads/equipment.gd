@@ -14,27 +14,46 @@ func _ready() -> void:
 
 # Track 13.3 — server-driven apply path. The InventoryDelta /
 # InventorySnapshot for `equip` location routes here so the local
-# paperdoll reflects authoritative state. Skips stat recompute
-# (the server-side item registry isn't online yet — Track 13.3+).
+# paperdoll reflects authoritative state. Mirrors the local `equip`
+# path's stat application (the item registry is online now): the six
+# primary stats have no server->client sync, so the client must apply
+# gear bonuses itself for the character sheet to reflect them; max
+# HP/MP/Stamina still get corrected absolutely by the server's resource
+# fan (remote_player_manager `_on_health_update`). Remove any item
+# already in this slot first (defensive — the server normally sends the
+# unequip delta first, but this keeps the invariant if it doesn't).
 func apply_remote_equip(equip_slot_idx: int, item: ItemData) -> void:
 	if equip_slot_idx < 0 or equip_slot_idx >= SLOTS.size():
 		return
 	var slot_name: String = SLOTS[equip_slot_idx]
+	var old = equipped[slot_name]
+	if old != null:
+		_remove_stat_bonuses(old)
 	equipped[slot_name] = item
+	_apply_stat_bonuses(item)
 	equipment_changed.emit(slot_name, item)
 
 func apply_remote_unequip(equip_slot_idx: int) -> void:
 	if equip_slot_idx < 0 or equip_slot_idx >= SLOTS.size():
 		return
 	var slot_name: String = SLOTS[equip_slot_idx]
+	var old = equipped[slot_name]
+	if old != null:
+		_remove_stat_bonuses(old)
 	equipped[slot_name] = null
 	equipment_changed.emit(slot_name, null)
 
 # Track 13.3 — wipe all paperdoll slots before applying a fresh
-# server snapshot. Avoids stale items lingering across reconnects.
+# server snapshot. Avoids stale items lingering across reconnects, and
+# strips their stat bonuses too (this is also the death path: the server
+# fans an emptied snapshot to drive the naked respawn, so the stripped
+# gear's stats must come off). On a relog this stays balanced because
+# `PlayerStats.apply_character` re-layers the worn gear onto the freshly
+# reset base right before this runs.
 func apply_remote_snapshot_clear() -> void:
 	for s in SLOTS:
 		if equipped[s] != null:
+			_remove_stat_bonuses(equipped[s])
 			equipped[s] = null
 			equipment_changed.emit(s, null)
 
