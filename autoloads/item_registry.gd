@@ -108,3 +108,13 @@ func give_by_name(name: String, count: int = 1) -> bool:
 
 func count() -> int:
 	return _by_name.size()
+
+# Every indexed item template, sorted by display name. For dev/UI tools (the
+# Test Panel item picker). Callers must .duplicate() before mutating.
+func all_items() -> Array[ItemData]:
+	var out: Array[ItemData] = []
+	var keys := _by_name.keys()
+	keys.sort()
+	for k in keys:
+		out.append(_by_name[k])
+	return out

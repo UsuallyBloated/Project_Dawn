@@ -3,6 +3,7 @@ extends CanvasLayer
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 
 const NORMAL_MOBS := [
+	{"name":"Rat",       "level":1, "max_hp":18.0,  "base_damage":3,  "xp_reward":10, "move_speed":3.2, "aggro_range":6.0},
 	{"name":"Bandit",    "level":3, "max_hp":60.0,  "base_damage":8,  "xp_reward":30, "move_speed":3.0, "aggro_range":8.0},
 	# "Grey Wolf", not "Wolf": the Beast Master warder template is keyed on the
 	# exact name "Wolf" (server pet_templates::is_warder_template), so a spawned
@@ -38,11 +39,18 @@ var _collapsed: bool = false
 # Section containers
 var _sec_character: VBoxContainer
 var _sec_resources: VBoxContainer
+var _sec_gear: VBoxContainer
 var _sec_time: VBoxContainer
 var _sec_zone: VBoxContainer
 var _sec_enemy: VBoxContainer
 var _sec_stats: VBoxContainer
 var _sec_combat: VBoxContainer
+
+# Gear section — item picker
+var _item_filter: LineEdit
+var _item_list: ItemList
+var _item_qty: SpinBox
+var _filtered_items: Array[ItemData] = []
 
 # Time section
 var _time_label: Label
@@ -126,6 +134,7 @@ func _build_ui() -> void:
 
 	_sec_character = _make_section("CHARACTER", true)
 	_sec_resources = _make_section("RESOURCES", true)
+	_sec_gear      = _make_section("GEAR")
 	_sec_time      = _make_section("TIME & WORLD")
 	_sec_zone      = _make_section("ZONE TRAVEL")
 	_sec_enemy     = _make_section("ENEMY SPAWN")
@@ -133,6 +142,7 @@ func _build_ui() -> void:
 	_sec_combat    = _make_section("COMBAT FLAGS")
 	_build_character_section()
 	_build_resources_section()
+	_build_gear_section()
 	_build_time_section()
 	_build_zone_section()
 	_build_enemy_section()
@@ -239,22 +249,6 @@ func _build_resources_section() -> void:
 	broke_btn.pressed.connect(_clear_money)
 	_sec_resources.add_child(broke_btn)
 
-	var bags_btn := _make_btn("Give Bags", Color(0.45, 0.35, 0.15, 1.0))
-	bags_btn.pressed.connect(_give_bags)
-	_sec_resources.add_child(bags_btn)
-
-	var food_btn := _make_btn("Give Food & Drink", Color(0.35, 0.60, 0.20, 1.0))
-	food_btn.pressed.connect(_give_consumables)
-	_sec_resources.add_child(food_btn)
-
-	var bow_btn := _make_btn("Give Bow", Color(0.55, 0.35, 0.10, 1.0))
-	bow_btn.pressed.connect(_give_bow)
-	_sec_resources.add_child(bow_btn)
-
-	var proc_btn := _make_btn("Give Proc Weapon", Color(0.65, 0.25, 0.05, 1.0))
-	proc_btn.pressed.connect(_give_proc_weapon)
-	_sec_resources.add_child(proc_btn)
-
 	var quest_btn := _make_btn("Add Test Quest", Color(0.60, 0.45, 0.10, 1.0))
 	quest_btn.pressed.connect(_add_test_quest)
 	_sec_resources.add_child(quest_btn)
@@ -263,9 +257,103 @@ func _build_resources_section() -> void:
 	quest_done_btn.pressed.connect(_complete_test_quest)
 	_sec_resources.add_child(quest_done_btn)
 
+# GEAR — grant items. The item picker (search + qty + Give) grants ANY registry
+# item; the shortcut buttons below are quick loadout bundles. All route through
+# _grant, which in launcher mode goes SERVER-SIDE (dev-gated GmCommand "give
+# <name>") so items are server-recorded, not client-only ghosts.
+func _build_gear_section() -> void:
+	_sec_gear.add_child(_make_label("Search & grant any item"))
+	_item_filter = LineEdit.new()
+	_item_filter.placeholder_text = "type to filter…"
+	_item_filter.text_changed.connect(_on_item_filter_changed)
+	_sec_gear.add_child(_item_filter)
+
+	_item_list = ItemList.new()
+	_item_list.custom_minimum_size = Vector2(0, 150)
+	_item_list.add_theme_font_size_override("font_size", 10)
+	_item_list.item_activated.connect(func(_idx: int) -> void: _on_give_selected_item())
+	_sec_gear.add_child(_item_list)
+
+	var qty_row := HBoxContainer.new()
+	qty_row.add_theme_constant_override("separation", 6)
+	qty_row.add_child(_make_label("Qty"))
+	_item_qty = SpinBox.new()
+	_item_qty.min_value = 1
+	_item_qty.max_value = 999
+	_item_qty.value = 1
+	_item_qty.custom_minimum_size = Vector2(70, 0)
+	qty_row.add_child(_item_qty)
+	_sec_gear.add_child(qty_row)
+
+	var give_sel_btn := _make_btn("Give Selected Item", Color(0.20, 0.55, 0.35, 1.0))
+	give_sel_btn.pressed.connect(_on_give_selected_item)
+	_sec_gear.add_child(give_sel_btn)
+
+	_sec_gear.add_child(_make_label("Loadout shortcuts"))
+	var bow_btn := _make_btn("Give Bow", Color(0.55, 0.35, 0.10, 1.0))
+	bow_btn.pressed.connect(_give_bow)
+	_sec_gear.add_child(bow_btn)
+
+	var proc_btn := _make_btn("Give Proc Weapon", Color(0.65, 0.25, 0.05, 1.0))
+	proc_btn.pressed.connect(_give_proc_weapon)
+	_sec_gear.add_child(proc_btn)
+
+	var bags_btn := _make_btn("Give Bags", Color(0.45, 0.35, 0.15, 1.0))
+	bags_btn.pressed.connect(_give_bags)
+	_sec_gear.add_child(bags_btn)
+
+	var food_btn := _make_btn("Give Food & Drink", Color(0.35, 0.60, 0.20, 1.0))
+	food_btn.pressed.connect(_give_consumables)
+	_sec_gear.add_child(food_btn)
+
 	var craft_btn := _make_btn("Give Crafting Materials", Color(0.20, 0.50, 0.65, 1.0))
 	craft_btn.pressed.connect(_give_crafting_materials)
-	_sec_resources.add_child(craft_btn)
+	_sec_gear.add_child(craft_btn)
+
+	_refresh_item_list("")
+
+func _refresh_item_list(filter: String) -> void:
+	_item_list.clear()
+	_filtered_items.clear()
+	var needle := filter.to_lower().strip_edges()
+	for item: ItemData in ItemRegistry.all_items():
+		if needle == "" or needle in item.item_name.to_lower():
+			_item_list.add_item(item.item_name)
+			_filtered_items.append(item)
+	if _item_list.item_count > 0:
+		_item_list.select(0)
+
+func _on_item_filter_changed(text: String) -> void:
+	_refresh_item_list(text)
+
+func _on_give_selected_item() -> void:
+	var sel := _item_list.get_selected_items()
+	if sel.is_empty():
+		CombatLog.add_line("Select an item first.", CombatLog.MsgType.INFO)
+		return
+	var idx: int = sel[0]
+	if idx < 0 or idx >= _filtered_items.size():
+		return
+	var item: ItemData = _filtered_items[idx]
+	var qty := int(_item_qty.value)
+	_grant(item, qty)
+	CombatLog.add_line("Granted %dx %s." % [qty, item.item_name], CombatLog.MsgType.INFO)
+
+# Grant an item. In launcher mode routes SERVER-SIDE via the dev-gated GmCommand
+# "give <name>" (item is server-recorded, not a client-only ghost). Test Room /
+# no-server adds it locally. The launcher path needs a registry item (a real
+# item_name in items.toml); the shortcut buttons all use registry .tres.
+func _grant(item: ItemData, qty: int = 1) -> void:
+	if item == null or qty <= 0:
+		return
+	if Net.is_launcher_mode() and Net.is_app_ready():
+		Net.broadcast_gm_command("give %s %d" % [item.item_name, qty])
+	else:
+		# Test Room: add a fresh copy so slots don't share the loaded template;
+		# re-attach resource_path so the item still resolves later.
+		var copy: ItemData = item.duplicate()
+		copy.resource_path = item.resource_path
+		Inventory.add_item(copy, qty)
 
 func _build_time_section() -> void:
 	_time_label = _make_label("Current: " + TimeOfDay.get_time_string())
@@ -385,15 +473,25 @@ func _spawn_named_enemy() -> void:
 	var keys: Array = NamedMobDefinitions.ALL.keys()
 	if keys.is_empty():
 		return
-	# Named mobs are still client-local (enrage + guaranteed-loot logic has no
-	# server side yet), so online they're display dummies: no server XP/loot/
-	# quest credit. Warn the tester rather than silently half-working.
+	var key: String = keys[_named_mob_opt.selected]
+	var def: Dictionary = NamedMobDefinitions.ALL[key]
+	# Launcher: spawn a REAL server mob via DevSpawnMob so kills give XP + quest
+	# credit and it drops a server corpse (not a client-local puppet + golden
+	# orb). Named-mob enrage + guaranteed loot have no server side yet, so this
+	# is a generic server creature carrying the named display name + resolved
+	# stats (base enemy max_hp 50 / base_damage 5 times the named multipliers) —
+	# enough for quests like rotfang_hunt (kill credit; the reward is the
+	# server-granted Hunter's Medal, not a mob drop).
 	if Net.is_launcher_mode() and Net.is_app_ready():
-		CombatLog.add_line("Named mobs are client-side only for now (no server XP/loot/quest credit).", CombatLog.MsgType.INFO)
+		var lvl: int = int(def.get("level", 5))
+		var hp: float = 50.0 * float(def.get("hp_mult", 1.0))
+		var dmg: int = int(round(5.0 * float(def.get("damage_mult", 1.0))))
+		Net.send_dev_spawn_mob(String(def.get("display_name", key)), lvl, hp, dmg, 3.0, 9.0)
+		return
 	var e = ENEMY_SCENE.instantiate()
 	get_tree().current_scene.add_child(e)
 	e.global_position = _get_spawn_pos()
-	e.apply_named(keys[_named_mob_opt.selected])
+	e.apply_named(key)
 
 func _despawn_all_enemies() -> void:
 	for enemy in get_tree().get_nodes_in_group("enemies"):
@@ -670,27 +768,16 @@ func _give_coins(p: int, g: int, s: int, c: int) -> void:
 	PlayerStats.add_coin_stacks(p, g, s, c)
 
 func _give_consumables() -> void:
-	var bread := ItemData.new()
-	bread.item_name = "Journeybread"
-	bread.description = "Dense traveler's bread. Restores HP while resting."
-	bread.type = ItemData.Type.CONSUMABLE
-	bread.stack_size = 20
-	bread.is_food = true
-	bread.food_hp_regen = 4.0
-	bread.food_duration = 180.0
-	Inventory.add_item(bread, 5)
-
-	var water := ItemData.new()
-	water.item_name = "Waterskin"
-	water.description = "Fresh water in a skin pouch. Restores MP while resting."
-	water.type = ItemData.Type.CONSUMABLE
-	water.stack_size = 20
-	water.is_drink = true
-	water.food_mp_regen = 5.0
-	water.food_duration = 180.0
-	Inventory.add_item(water, 5)
-
-	CombatLog.add_line("Received 5x Journeybread and 5x Waterskin.", CombatLog.MsgType.INFO)
+	# Registry items (were runtime-built ghosts — the server never knew them, so
+	# they'd desync online). bread_loaf / water_flask are real items.toml entries.
+	var bread: ItemData = load("res://data/loot/items/bread_loaf.tres")
+	var water: ItemData = load("res://data/loot/items/water_flask.tres")
+	if bread == null or water == null:
+		CombatLog.add_line("Failed to load bread/water.", CombatLog.MsgType.INFO)
+		return
+	_grant(bread, 5)
+	_grant(water, 5)
+	CombatLog.add_line("Granted 5x %s and 5x %s." % [bread.item_name, water.item_name], CombatLog.MsgType.INFO)
 
 func _add_test_quest() -> void:
 	# Definition lives in QuestDefinitions.ALL (PD_W0024) so the server
@@ -756,7 +843,6 @@ func _give_crafting_materials() -> void:
 	]
 	var given := 0
 	var load_failed := 0
-	var inv_full := 0
 	for entry: Dictionary in mats:
 		var path: String = entry.get("p", "")
 		var qty: int = int(entry.get("qty", 1))
@@ -765,59 +851,37 @@ func _give_crafting_materials() -> void:
 			DebugLog.warn("[TestPanel] Failed to load %s" % path)
 			load_failed += 1
 			continue
-		if Inventory.add_item(item, qty):
-			given += 1
-		else:
-			inv_full += 1
-	var parts: PackedStringArray = ["%d stacks added" % given]
+		_grant(item, qty)
+		given += 1
+	var parts: PackedStringArray = ["%d stacks granted" % given]
 	if load_failed > 0: parts.append("%d failed to load" % load_failed)
-	if inv_full > 0:    parts.append("%d skipped (no inventory space)" % inv_full)
 	CombatLog.add_line("Crafting materials: " + ", ".join(parts) + ".", CombatLog.MsgType.INFO)
 
 func _give_bow() -> void:
-	# Track 6 sub-task 2 (fix): load from .tres so weapon.resource_path is
-	# populated. The server's Attack handler looks up the path in
-	# items.toml to read damage_min/max + is_ranged; without the path it
-	# falls back to fists + melee range and the bow visually fires but
-	# does no damage. Same applies to Flamebrand below. .duplicate() to
-	# avoid sharing the disk-loaded singleton across inventory slots,
-	# then re-attach resource_path so the server lookup still works.
+	# Registry .tres so the item resolves in items.toml (the server Attack
+	# handler reads damage/is_ranged from the path; _grant sends it by name in
+	# launcher mode so the server grants its own copy).
 	var src: ItemData = load("res://data/loot/items/hunters_shortbow.tres")
 	if src == null:
 		CombatLog.add_line("Failed to load Hunter's Shortbow.", CombatLog.MsgType.INFO)
 		return
-	var bow: ItemData = src.duplicate()
-	bow.resource_path = src.resource_path
-	if not Inventory.add_item(bow):
-		CombatLog.add_line("No bag space for the bow.", CombatLog.MsgType.INFO)
-		return
-	CombatLog.add_line("Hunter's Shortbow added to inventory. Right-click to equip.", CombatLog.MsgType.INFO)
+	_grant(src, 1)
+	CombatLog.add_line("Hunter's Shortbow granted. Right-click to equip.", CombatLog.MsgType.INFO)
 
 func _give_proc_weapon() -> void:
 	var src: ItemData = load("res://data/loot/items/flamebrand.tres")
 	if src == null:
 		CombatLog.add_line("Failed to load Flamebrand.", CombatLog.MsgType.INFO)
 		return
-	var sword: ItemData = src.duplicate()
-	sword.resource_path = src.resource_path
-	if not Inventory.add_item(sword):
-		CombatLog.add_line("No bag space for Flamebrand.", CombatLog.MsgType.INFO)
-		return
-	CombatLog.add_line("Flamebrand added to inventory. Right-click to equip.", CombatLog.MsgType.INFO)
+	_grant(src, 1)
+	CombatLog.add_line("Flamebrand granted. Right-click to equip.", CombatLog.MsgType.INFO)
 
 func _give_bags() -> void:
-	var names := ["Small Pouch", "Worn Satchel"]
-	var sizes := [6, 10]
-	var given := 0
-	for i in names.size():
-		var bag := ItemData.new()
-		bag.item_name = names[i]
-		bag.description = "A %s-slot bag." % sizes[i]
-		bag.type = ItemData.Type.BAG
-		bag.bag_num_slots = sizes[i]
-		if Inventory.add_item(bag):
-			given += 1
-	if given > 0:
-		CombatLog.add_line("Added %d bag(s) to inventory." % given, CombatLog.MsgType.INFO)
-	else:
-		CombatLog.add_line("No inventory space for bags.", CombatLog.MsgType.INFO)
+	# Registry bag (was a runtime-built ghost). small_pouch is a real 6-slot bag
+	# in items.toml; grant two so there's room to organise a loadout.
+	var bag: ItemData = load("res://data/loot/items/small_pouch.tres")
+	if bag == null:
+		CombatLog.add_line("Failed to load a bag.", CombatLog.MsgType.INFO)
+		return
+	_grant(bag, 2)
+	CombatLog.add_line("Granted 2x %s." % bag.item_name, CombatLog.MsgType.INFO)
