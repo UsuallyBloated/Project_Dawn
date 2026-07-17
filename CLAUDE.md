@@ -56,16 +56,25 @@ read `debug.log`, and it keeps working even if file IO is broken (it reads
 - Especially valuable here because it's a client/server game — there's no easy debugger
   across the wire, so logging the live path is often the only window into a bug.
 
+### Cheap subagents (delegate mechanical work)
+
+Two read-only project subagents live in `.claude/agents/`. Prefer them over doing the
+work in the main session, which runs on the expensive model:
+- **log-scanner** (Haiku): grep `server.log` / `debug.log` for a pattern and report hits.
+- **doc-sweeper** (Sonnet): "everywhere we documented X" sweeps of `docs/`.
+Keep the main model for design, code, and any exploit or verification work.
+
 ---
 
 ## Architecture: two repos, one game
 
-- **Client** (this repo): Godot 4.4. Nearly all gameplay lives in ~51 autoload singletons.
+- **Client** (this repo): Godot 4.4. Nearly all gameplay lives in ~53 autoload singletons.
 - **Server** (`F:\Projects\server`): Rust authoritative server. Auth (Register / Login /
   CharList / Char{Create,Delete} / Logout over WebSocket) **plus a live world UDP
   simulation** (renet, 20 Hz): server-authoritative movement, combat, regen, enemy AI,
   pets, inventory/equipment, four-tier currency + coin loot drops, group state + loot
-  rights, passive skills. Wire protocol is **PD_W0014** (`crates/protocol`); the client
+  rights, passive skills, XP/leveling, player corpses + resurrection, quests. Wire
+  protocol is **PD_W0024** (`crates/protocol`); the client
   bridges it via the `gdext_net` GDExtension (source in the server repo, shares the
   `protocol` crate). A `--local-save` dev path still exists for solo iteration without a
   server. (This line was "auth-only, world not built" through ~early 2026 — long stale.)
@@ -80,8 +89,11 @@ read `debug.log`, and it keeps working even if file IO is broken (it reads
 ### Known client↔server drift to watch
 - Spells exist in **both** GDScript (`data/spell_definitions.gd`) and server `spells.toml`
   — adding/editing one without the other causes drift (e.g. a missing Warder's Mend).
-- Leveling and max stats are **client-local** today; a server `HealthUpdate` can roll a
-  fresh level-up back. Treat client leveling as provisional.
+- *(Closed 2026-06-22: leveling used to be client-local and provisional. The corpse epic's
+  Slice 0 moved XP + leveling server-side — `world/progression.rs::award_xp` is the single
+  choke point and the client mirrors `XpGained` / `LevelUp`. The per-level stat tables are
+  kept in **lockstep** on both sides (`char_data::level_gains` vs `CLASS_LEVEL_GAINS`) and
+  anchor-tested, so editing one without the other IS still live drift to watch.)*
 - Time-of-day is per-client; a server broadcast is planned.
 
 ---
@@ -183,7 +195,7 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
 
 ## Architecture reference
 
-### Autoloads (51, grouped — source of truth is the `[autoload]` block in `project.godot`)
+### Autoloads (53, grouped — source of truth is the `[autoload]` block in `project.godot`)
 
 | Domain | Autoloads |
 |---|---|
@@ -265,11 +277,51 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   quests auto-complete in the field instead of requiring the NPC turn-in; abandon-quest button;
   Brom's quest dialogue unwired (rat/gnoll quests unreachable via NPCs).
 
+### Security / exploits
+> Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
+> Finding #1 (ungated `/give`) is **fixed + committed 2026-07-16**: `GmCommand` is now gated on
+> `is_dev`, and the server logs `dev_cmds=true/false` at boot. The rest are still open, worst
+> first. Framing from the audit: the server validates *magnitudes* well (damage, XP, heal
+> amounts) but under-validates *eligibility/timing* (which weapon, which spell/class, is it time
+> to swing, are you dead, did you finish the quest).
+
+- [ ] **Server-side melee swing-rate limit** (High) — no swing timer on the connection, so a
+  client can spam `Attack` for an attack-speed hack. Needs a server-tracked per-connection
+  swing cooldown.
+- [ ] **`Respawn` dead-check** (High) — the `Respawn` handler floors HP to 25% with no check
+  that you actually died, so a living player can top up HP on demand.
+- [ ] **CastSpell class/level gate** (Medium) — casting has no class/level validation except
+  the resurrection arm, so any class can cast any spell it can name.
+- [ ] **Assorted trust gaps** (Medium/Low) — `Attack` trusts the client's `weapon_path`; no
+  login rate limiting; `BuyItem` ignores `vendor_id`; cross-store transfers persist as separate
+  txns (crash-window dupe/loss; the corpse-loot path is the only atomic one); username
+  enumeration on the auth path.
+- [ ] **CompleteQuest doesn't verify objectives** — the server checks id-exists and
+  not-already-done only; objectives are client-tracked. Folds into the quest phase 2 item above.
+
 ### Death / corpses
-- [ ] **Corpse run** — gear stays on corpse; respawn naked and retrieve (optional hardcore).
-  *(Slice 0 — server-authoritative XP/leveling + death penalty — BUILT + playtested 2026-06-22,
-  awaiting commit/Slice 1; see `docs/design/corpse_and_resurrection_plan.md`.)*
-- [ ] **Resurrection (Cleric)** — scaffolded; blocked on the corpse system
+> The corpse epic **SHIPPED** (Slices 0-3 + the monster-orb unification, wire PD_W0018 to
+> PD_W0022, committed 2026-06-22 to 06-26). Server-authoritative XP/leveling + death penalty,
+> the corpse run (gear + coin to a persisted corpse, naked respawn, harsh decay), owner-only
+> corpse retrieval, and Cleric/Paladin resurrection all exist. "What exists" now lives in
+> `systems_overview.md` → "Death, corpses & resurrection"; the design + as-built deviations are
+> in `docs/design/corpse_and_resurrection_plan.md`. Only the follow-ups below are open.
+
+- [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
+  res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
+  of the plan as written.
+- [ ] **Respawn at bind / Soul Binder NPC** — respawn still honors the *client's* bind
+  (`PlayerStats.bind_zone_path`); there is no server-authoritative bind and
+  `ClientWorldMsg::BindAtCurrentLocation` is an inert wire variant with no server handler. Needs
+  an NPC + server bind + a server-driven respawn teleport.
+- [ ] **Corpse auto-re-equip on loot** — looting your own corpse returns gear to your bags; you
+  re-equip by hand. A clean version needs the corpse to remember each item's equip-slot
+  provenance.
+- [ ] **Per-creature corpse models / scale** — corpses (player + mob) share
+  `scripts/corpse_body.gd`'s capsule; needs authored per-creature meshes.
+- [ ] **Tune `corpses::CORPSE_LINGER_SECS` for production** — currently **300 s (5 min)**,
+  deliberately short so a playtester could watch a corpse decay. EQ used tens of minutes to days;
+  raise it before this is playable for real, since decay destroys unretrieved gear.
 
 ### Combat / weapons
 - [ ] **Bard song rework** — songs are half-built: they auto-pulse client-only (never re-broadcast),
@@ -281,11 +333,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it
   doesn't trivialize multi-pulls; needs server-side resolution like spell AOE. Design note:
   `docs/design/two_handed_cleave.md`.
-- [ ] **Two-handed damage arc (cleave)** — large 2H weapons (axes/polearms) hit multiple
-  enemies in a frontal cone on auto-attack, giving 2H its own identity vs. dual-wield.
-  Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it
-  doesn't trivialize multi-pulls; needs server-side resolution like spell AOE. Design note:
-  `docs/design/two_handed_cleave.md`.
+- [ ] **Attack while seated.** A character can auto-attack without standing up (spotted in the
+  2026-07-16 dev-panel playtest). Standing should be required to swing. Worth checking whether
+  the sit regen bonus still applies mid-fight: if it does, this is an exploit (free in-combat
+  regen), not just an animation bug.
 
 ### World systems
 - [ ] **Mount system** — *`MountManager` autoload exists (client-side v1); feature is not

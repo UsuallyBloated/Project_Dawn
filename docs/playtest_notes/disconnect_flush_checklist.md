@@ -49,4 +49,4 @@ changing them. This is the fix for "unequip the ring, relog, and it's equipped a
       then **stop + restart the server** and log in → everything is where you left it. notes:
 
 ## Notes / observations
--
+- Sidenotes: 

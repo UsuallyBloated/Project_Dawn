@@ -29,7 +29,7 @@ Potion, both stack to 10).
 
 ## Setup
 - [x] Rebuild server (PD_DEV_CMDS) AND the gdext DLL from the PD_W0016 commits.
-- [ ] One character (A) logged in. For the shared-vault and enforcement tests, have a SECOND
+- [x] One character (A) logged in. For the shared-vault and enforcement tests, have a SECOND
   character (B) on the SAME account available to log into.
 - [x] Seed some items into A's bags (Test Panel / dev grant), including a stackable.
 
@@ -49,7 +49,7 @@ Potion, both stack to 10).
 > Behavior changed mid-session per playtest feedback: a duplicate login is now REFUSED rather
 > than booting the session already playing (avoids the Lineage II re-login force-off exploit).
 > Retest the new behavior:
-- [ ] **With A logged in, log in B on the same account (do not log A out first)** then B's login is REFUSED with "You already have a character in this world." shown in the lobby, and A keeps playing, undisturbed. notes:
+- [x] **With A logged in, log in B on the same account (do not log A out first)** then B's login is REFUSED with "You already have a character in this world." shown in the lobby, and A keeps playing, undisturbed. notes:
 - [x] **Log A out cleanly, then log in B on the same account** then B connects normally (a clean logout frees the account at once). notes:
 - [x] **Kill A's client (unclean), then immediately try to log back in** then login is refused until A's stale session times out, then succeeds (known deny-on-duplicate tradeoff). notes:  Killed A's client, then immediately logged back in successfully.  
 

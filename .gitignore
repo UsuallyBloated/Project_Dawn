@@ -13,6 +13,12 @@ builds/
 debug.log
 debug_prev.log
 
+# Captured server output from playtests (`cargo run ... | Tee-Object server.log`) and the
+# per-playtest server logs parked next to their checklists. Evidence for triage while a
+# session is live, not project history — no .log has ever been tracked here.
+server.log
+docs/playtest_notes/*.log
+
 # GDExtension build artifacts — rebuilt from F:/Projects/server/crates/gdext-net/
 # via addons/gdext_net/build.ps1. Never commit binary blobs.
 addons/gdext_net/*.dll

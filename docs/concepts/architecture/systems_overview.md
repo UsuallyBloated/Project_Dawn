@@ -120,8 +120,9 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
 
 ## Progression & sustain
 
-- **PlayerStats** owns HP/MP/stamina, STR/AGI/INT/WIS/CON(/CHA), level, XP, race/class,
-  bind point.
+- **PlayerStats** owns HP/MP/stamina, STR/AGI/INT/WIS/CON(/CHA), race/class, bind point.
+  **Level and XP are server-authoritative** as of the corpse epic's Slice 0 (see "Death,
+  corpses & resurrection" below); the client mirrors what the server sends.
 - **Meditation:** sitting applies 5× HP/MP and 3× stamina regen multipliers in `regen.gd`;
   movement or acquiring a target auto-stands (`player.gd`, `Regen._on_target_changed`).
 - **Food & drink:** `ItemData.is_food/is_drink/food_hp_regen/food_mp_regen/food_duration`;
@@ -133,6 +134,65 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   `_respawn_position`). XP loss is logged to the combat log.
 - **Group XP:** `GroupManager.distribute_kill_xp(base_xp)` splits XP with a 20% group bonus;
   `enemy._die()` routes through it; `_rpc_receive_xp` delivers each remote member's share.
+
+---
+
+## Death, corpses & resurrection
+
+The EverQuest corpse-run epic (design + as-built deviations:
+`docs/design/corpse_and_resurrection_plan.md`). Shipped in four slices, wire PD_W0018 to
+PD_W0022. The locked model: gear stays on your corpse, you respawn naked, XP loss can de-level
+you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of the loss.
+
+- **Server-authoritative XP + leveling (Slice 0, PD_W0018).** `world/progression.rs` owns xp and
+  level. `award_xp` is the single choke point that mutates `conn.xp`, resolves a level up *or
+  down*, and fans `XpGained` (private, with authoritative current/to-next) plus `LevelUp`. The
+  client mirrors and applies the same per-level intrinsic stat deltas from a lockstep table
+  (`char_data::level_gains` vs the client's `CLASS_LEVEL_GAINS`, anchor-tested); only the delta is
+  added, never an overwrite, so gear/buff bonuses survive. This closed the old "client leveling is
+  provisional / a HealthUpdate rolls back a level-up" drift.
+- **The XP curve.** Cubic level cost (`char_data::xp_to_next_for`) plus EQ's *quadratic* per-kill
+  award (`kill_xp = mob_level^2 * ZEM * 3.5`, `ZEM_NORMAL = 75`), which keeps kills-per-level
+  roughly constant (~11 on an even con). Replaced the old geometric x1.5 curve that saturated i32
+  around level 43. Per-zone ZEM is a later content pass. See
+  `docs/design/everquest_xp_curve_reference.md`.
+- **Death penalty.** `DEATH_XP_LOSS_FRACTION = 0.05` (5% of the *current level's XP band*), and the
+  loss **cascades past the level boundary with no per-death cap**, so repeated deaths keep
+  de-leveling you. Levels 1 to 4 are exempt and no cascade can drop you below
+  `DEATH_PENALTY_FLOOR_LEVEL = 5` (the grace line and the floor are the same line).
+- **The corpse (Slice 1, PD_W0019).** `world/corpses.rs`: a corpse is a **persisted, owner-only
+  `LootBag`**. On death your gear (equipped + bags) and **carried coin** move onto a corpse at the
+  death spot and you respawn naked (banked items/coin are never touched). It survives a server
+  restart (`db::{save_corpse, load_corpses, delete_corpse}`, migrations `0007_corpses.sql` /
+  `0008_corpse_resurrection.sql`). Ids are minted from the loot-bag partition so despawn/AOI route
+  exactly like a bag; a corpse is told apart on spawn by the dedicated `CorpseSpawn` message. The
+  boot loader advances the shared `NEXT_BAG_ID` past the max loaded corpse id
+  (`loot::reserve_bag_ids_through`) so a fresh bag can't reuse a corpse id.
+- **Harsh decay.** `corpses::CORPSE_LINGER_SECS` (currently **300 s / 5 min**, deliberately short
+  so a playtester can watch it decay — **raise substantially for production**; EQ used tens of
+  minutes to days). On decay the corpse despawns and its row + items are deleted: unretrieved gear
+  is gone for good. Distinct from `mod.rs::CORPSE_LINGER_SECS` (5 s), which is the unrelated
+  hold-at-death-pos for slain *mobs*.
+- **Corpse retrieval (Slice 2, PD_W0020).** Loot your own corpse via the existing `LootItem` /
+  `LootAll` intents keyed by corpse id, plus a private `CorpseContents` snapshot to the owner.
+  Owner-only. The persist is **atomic** (the corpse delete folds into the inventory-write
+  transaction, with an in-memory revert on failure) — a pre-commit review caught a real loss window
+  here. This is the only atomic cross-store transfer in the codebase (the audit flags the others).
+- **Monster orb to corpse (PD_W0021).** Slain creatures leave a body with a "<creature>'s corpse"
+  nameplate instead of a golden orb (`creature_name` appended to `LootBagSpawn`; shared
+  `scripts/corpse_body.gd` builds the capsule + white nameplate for both player corpses and mob
+  bodies). Player-dropped bags keep the golden-sack look.
+- **Resurrection (Slice 3, PD_W0022).** Res spells are `target_type == "CORPSE"` with a
+  `res_xp_percent`: Cleric **Resurrection (Minor) 25%**, **Resurrection 50%**, **Resurrection II
+  75%**; Paladin **Reclaim Soul 20%**. Casting on a corpse sends a private `ResurrectOffer` to the
+  owner (must be online; held as `pending_res_offer`); on `ResurrectAccept` the owner is
+  `Teleport`ed to the corpse and refunded that percentage of **that death's actual lost xp**
+  (captured on `Corpse.lost_xp` — the ACTUAL amount removed, not nominal, which closes a
+  level-5-floor over-refund exploit). One res per corpse (persisted `resurrected` flag).
+- **Not built:** **res-sickness** (specced for Slice 3, dropped from v1), respawn-at-bind /
+  Soul Binder NPC (respawn still honors the *client* bind; `BindAtCurrentLocation` is an inert wire
+  variant with no server handler), corpse auto-re-equip on loot, and per-creature corpse
+  models/scale.
 
 ---
 
