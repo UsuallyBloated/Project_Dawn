@@ -106,13 +106,19 @@ Cheap, and it means the rest of the schedule starts from something true.
 - Update CLAUDE.md: **quest phase 2 is done** (slices A, B, D). `31df439` did not touch this
       entry; `CLAUDE.md:270` still lists all six sub-items as open. Move the "what exists" note
       into `systems_overview.md`, per the session workflow.
-- Annotate two stale playtest checklists so the next reader does not re-open closed work:
-      `corpse_slice3_checklist.md` still reads as failed but was playtested clean and committed
-      2026-06-26; `pet_pvp_inheritance_checklist.md` shows an Inferno failure that the same-day
-      AOE fix almost certainly closed (verify, do not assume).
-- Raise `corpses::CORPSE_LINGER_SECS` off the 300s test value. `31df439` already flagged this
-      in the to-do as needing a production raise; the argument here is only about *when*. It is
-      not a production-launch concern, it is a first-friend concern. See §5.
+- Annotate **three** stale playtest checklists so the next reader does not re-open closed work:
+      `corpse_slice3_checklist.md` reads as failed but was playtested clean and committed
+      2026-06-26 (verified); `quest_phase2_sliceB_checklist.md:35` is a failed row whose specific
+      complaints (no Rotfang kill credit, golden orb) were closed by `5ae6808`, though its actual
+      expectation (the Hunter's Medal item) needs a re-test, not a blind tick;
+      `pet_pvp_inheritance_checklist.md:30-31` shows an Inferno failure that the same-day AOE fix
+      probably closed (verify in source, do not assume: if real it is a live bug, not a stale doc).
+- Raise `corpses::CORPSE_LINGER_SECS` off the 300s test value (`world/corpses.rs:25`).
+      `31df439` already flagged this in the to-do as needing a production raise; the argument here
+      is only about *when*. It is not a production-launch concern, it is a first-friend concern.
+      See §5. **Note the trap:** a second, unrelated `CORPSE_LINGER_SECS` (`world/mod.rs:97`,
+      `5.0`) controls dead-*enemy* despawn. Grepping the name returns both. Changing the wrong one
+      breaks mob despawn and does nothing for corpses.
 - **Fold this schedule's orphans into the To-Do.** Several things below have no To-Do entry at
       all today, so under the one-home rule they have nowhere to be ticked: per-account `is_gm`
       (Phase 1), the whole of hosting/deployment (Phase 2, which has no category in the To-Do at

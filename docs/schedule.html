@@ -844,8 +844,8 @@
         </p>
         <ul class="items">
           <li>Update the to-do list: quest phase 2 is <b>done</b>. Six sub-items are still wrongly listed as open.</li>
-          <li>Annotate two stale playtest checklists so the next reader does not re-open closed work. The corpse resurrection checklist still reads as failed but was playtested clean and committed on June 26.</li>
-          <li class="keystone">Raise the corpse decay timer off its 300 second test value. Already flagged in the to-do as needing a production raise, so the only argument here is about <b>when</b>: this is not a launch concern, it is a first-friend concern.</li>
+          <li>Annotate <b>three</b> stale playtest checklists so the next reader does not re-open closed work. The corpse resurrection checklist reads as failed for work that was playtested clean and committed on June 26; two more carry failures that later work has since closed. One of the three still needs verifying in code rather than annotating on faith.</li>
+          <li class="keystone">Raise the corpse decay timer off its 300 second test value. Already flagged in the to-do as needing a production raise, so the only argument here is about <b>when</b>: this is not a launch concern, it is a first-friend concern. There is a trap waiting: a second, unrelated constant shares the same name and controls how long dead enemies linger, so changing the wrong one does nothing for corpses and quietly breaks mob cleanup.</li>
           <li><b>Give this schedule's orphans a home on the to-do list.</b> Several things below have no entry there at all: the permission flag, the entire hosting phase, and four of the known bugs. Their absence is why the keystone was invisible in the first place.</li>
         </ul>
         <p class="done-means"><b>Done means</b>The to-do list matches reality, and every item this schedule sequences has a row there to be ticked off.</p>
