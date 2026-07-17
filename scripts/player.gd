@@ -125,6 +125,10 @@ func _ready() -> void:
 		set_process_unhandled_input(false)
 		return
 
+	# Swap the capsule for the local player's race model (no-op for races
+	# without a custom model). Remote peers do the same from their own race.
+	RaceModel.apply(visual, PlayerStats.race)
+
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	spring_arm.spring_length = THIRD_PERSON_DISTANCE
 	# Seed pitch/yaw from whatever the scene authored so the first drag doesn't snap.

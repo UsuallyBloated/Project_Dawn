@@ -104,6 +104,9 @@ func _ready() -> void:
 	if name_label:
 		name_label.text = player_name
 	mob_name = player_name
+	# Show this peer with their race model so a gnome reads as a gnome to
+	# everyone, not just to themselves. race is set pre-add by the manager.
+	RaceModel.apply($Visual, race)
 	# Same group enemies use for "the local target can be set to this" —
 	# Targeting.click_target / Combat.set_target branch on the group.
 	add_to_group("remote_players")
