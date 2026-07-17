@@ -102,6 +102,28 @@ section of `race_stats.md`.
 
 ---
 
+## Faction-driven appearance changes (idea, not yet designed)
+
+User idea, captured 2026-07-11: factions whose deep standing physically marks the
+character, so commitment is visible on the character model.
+
+- **Sporeborn faction line.** Players build faction with the mushroom folk and at
+  high standing acquire mushroom-like cosmetic features: mushroom-cap hair, spore
+  freckles, gill patterning. Turns the NPC-only race into something players can
+  aspire toward, and answers the "mushroom folk would be lackluster to play"
+  concern by making their aesthetic a reward instead of a base race.
+- **Generalized to other factions.** Each major faction could grant appearance
+  markers at devotion tiers. Natural fits from this same brainstorm: Sylphari
+  lichen-marking (already canon as cultivated skin ornament, ideal as a faction
+  reward for outsiders), an earned Aerathi feather-crest or talon jewelry, Saurian
+  scale-grafts as a dark-path equivalent.
+- **Open design questions:** cosmetic-only vs minor mechanical hooks; exclusivity
+  (can one character wear two factions' marks?); render layering with equipment
+  and the paperdoll; what happens on faction decay or betrayal (marks fade?
+  forcibly stripped? kept as a scar?).
+
+---
+
 ## Open questions
 
 - **Homelands on the atlas.** Aerathi eyrie: which coast or range? Vesperin canopy
