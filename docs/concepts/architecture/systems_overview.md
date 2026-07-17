@@ -377,10 +377,20 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   goto/close/open_vendor/give_quest/complete_quest actions; `quest_condition` filters
   responses by quest state). `scripts/dialogue_window.gd` renders it. Interact priority:
   DialogueManager > VendorManager > crafting station > skinning/mining.
-- **Quests:** `QuestManager` (ACTIVE/COMPLETED/FAILED, objectives, signals) +
-  `data/quest_definitions.gd`. Kill tracking is automatic via `notify_kill()` in
-  `enemy._die()`. `complete_quest()` delivers XP + item rewards through `Inventory`.
-  Journal: `scripts/quest_journal.gd` (J key; Active/Completed tabs).
+- **Quests:** server-authoritative as of quest phase 2 (PD_W0024, shipped 2026-07-10 to 07-15;
+  phase 1 kill credit landed 2026-07-08, PD_W0023). The server owns objective state: it counts
+  quest kills itself (`active_quests` table + per-kill `QuestProgress`, killer-private with the
+  group split), seeds the client journal from a `QuestSnapshot` on every login (survives relog
+  AND server restart), rejects a turn-in until every objective is met (a forged `CompleteQuest`
+  pays nothing), and grants XP + the authored item reward on turn-in via the same
+  `InventoryDelta` path as loot, gated once-per-character by the `completed_quests` record. Kill
+  quests go "Ready" in the field and pay only at the NPC turn-in (classic EQ), not on the last
+  kill. Client side, `QuestManager` mirrors this state and `scripts/quest_journal.gd` (J key;
+  Active/Completed tabs, Abandon button) renders it; quest data in `data/quest_definitions.gd`
+  (client) / `quests.toml` (server). Dialogue NPCs give/turn-in quests (Aldric: wolf_threat,
+  rotfang_hunt; Brom: rat_infestation, gnoll_raiders, wired 2026-07-15). Open follow-ups live in
+  the `CLAUDE.md` To-Do (a ring-reward stat bug, a Hunter's Medal re-test, the deliberately-cut
+  low-level dialogue-refusal polish).
 - **Vendors:** `VendorManager` + `scenes/vendor_npc.tscn` / `scripts/vendor_npc.gd`
   (proximity register, F to open); types in `data/vendor_definitions.gd`; buy/sell window
   functional.

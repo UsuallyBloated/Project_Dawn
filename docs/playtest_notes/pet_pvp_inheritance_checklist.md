@@ -1,5 +1,14 @@
 # Pet PvP Inheritance Playtest Checklist — 2026-06-11
 
+> **RECONCILED (Phase 0, 2026-07-17) — the Inferno note in section 2 (rows for line 30-31,
+> "melee and frost bolt do damage, but Inferno does not") is STALE, not a live bug.** That run
+> predated the same-day fix. Commit `3d5e05e` (2026-06-11, "Pet PvP inheritance for AOE: include
+> pets in the radius scan + gate by owner flag") added exactly the missing piece: pre-fix, the
+> AOE victim scan skipped every id `>= LOOT_BAG_ID_BASE`, and pet ids sit above that, so an AOE
+> (Inferno) could never hit a pet at all — the precise symptom reported. Verified in source at
+> `world/tick.rs:4337-4370` (pets included, gated by `combat::can_attack` on the owner, same as
+> the melee/single-target paths). No action needed.
+
 A player-owned pet now inherits its owner's `/pvp` flag — it's only damageable when the
 attacker could attack the owner directly, and you can never damage your own pet. Melee +
 single-target spell were already gated; this round closed the **AOE** hole. **Re-export

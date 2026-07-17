@@ -282,7 +282,7 @@ rather than via a chat line after the fact.
 
 | Phase | Window | Status |
 |---|---|---|
-| 0. Reconcile | Jul 16 to Jul 17 | Not started |
+| 0. Reconcile | Jul 16 to Jul 17 | **Done (2026-07-17)** — doc reconciliation complete; `CORPSE_LINGER_SECS` raised to 7 days (user-accepted, pure value change); duplicate-name trap resolved via rename |
 | 1. Exploit gate | Jul 20 to Jul 31 | Not started |
 | 2. Host + first friend | Aug 3 to Aug 7 | Not started |
 | 3. Stop it eating things | Aug 10 to Aug 21 | Not started |

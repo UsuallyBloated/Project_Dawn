@@ -1,5 +1,15 @@
 # Quest Phase 2 Slice B Playtest Checklist — 2026-07-10
 
+> **RECONCILED (Phase 0, 2026-07-17) — partial.** The `[-]` row 35 (rotfang_hunt turn-in) failed
+> on two specific complaints — "killing the dev-panel Rotfang grants no kill credit" and "Rotfang
+> drops the old golden orb". BOTH were closed by the dev-panel pass `5ae6808` (2026-07-16); see
+> `session_2026_07_11_dev_panel.md:65` (rat + Rotfang full quest loops complete). **But the row's
+> actual expectation is that a Hunter's Medal (STR +2, CON +2) LANDS on turn-in, and that item
+> was never re-tested** — only kill credit and XP were evidenced. Left OPEN as a re-test row, not
+> ticked. Also still open (see rows 56-57 + Notes): the **Tarnished Silver Ring equips but its
+> AGI +1 never applies** — a ring-specific item-stat bug (the gnoll boots DO apply their stats,
+> `quest_sliceD_brom_checklist.md:33`). Both tracked in `CLAUDE.md` To-Do.
+
 Server-granted quest ITEM rewards on turn-in. Turning a quest in now grants its authored item
 (server-side, via the same `InventoryDelta` path as loot), gated once-per-character by the same
 completion record as the XP. If your bag is full the WHOLE turn-in is refused with a visible

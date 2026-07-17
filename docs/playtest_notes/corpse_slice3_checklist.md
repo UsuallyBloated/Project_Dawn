@@ -1,5 +1,14 @@
 # Corpse Epic, Slice 3 — Cleric / Paladin Resurrection — Playtest Checklist — 2026-06-25
 
+> **RECONCILED (Phase 0, 2026-07-17) — this checklist is STALE; the work SHIPPED. Do not
+> re-open it.** The `[-]` rows below (Cleric res rejected, no Accept/Decline prompt, higher tiers
+> erroring) are the pre-reset run where the test Cleric was too low-level to afford the res
+> spell's 100-300 mana — the "TEST-SETUP GOTCHA" this file itself warns about — so the cast was
+> rejected server-side *before* the res logic ran. It was not a bug. A thorough two-client run
+> on 2026-06-26 confirmed all FOUR tiers (Cleric 25/50/75% + Paladin Reclaim Soul 20%)
+> end-to-end plus every guard and persistence; see `session_2026_06_25.md:72`
+> ("PLAYTESTED + COMMITTED 2026-06-26"). Committed server `98728ea` / client `a04ed07`.
+
 A Cleric (or Paladin) can resurrect a dead player's corpse: target the corpse, cast a Resurrection tier,
 the dead player gets an **Accept/Decline** prompt, and on accept they're **summoned to their corpse** and
 **refunded a % of the XP that death cost**. No res-sickness in v1. Wire is **PD_W0022**.

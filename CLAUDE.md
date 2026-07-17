@@ -293,15 +293,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**
 - [ ] **Language system wiring** — `hear_language()` passive gain not yet called from the
   chat-receive path; needs multiplayer chat RPC + trainer NPCs
-- [ ] **Quest system phase 2 — server-side objective tracking.** Kill credit + server-authoritative
-  rewards landed 2026-07-08 (PD_W0023: killer-private `KillCredit` on every kill path with the group
-  split, `CompleteQuest` by id with rewards computed from the server's `quests.toml`,
-  once-per-character `completed_quests` persistence, `GrantQuestXp` dev-gated). Still open, all
-  wanting server-tracked objective state: the quest JOURNAL wipes on logout (client-memory only);
-  the completed set isn't synced to the client (a relogged player can redo a quest for zero XP with
-  no explanation); item rewards are Test-Room-only (need authored `.tres` + server granting); kill
-  quests auto-complete in the field instead of requiring the NPC turn-in; abandon-quest button;
-  Brom's quest dialogue unwired (rat/gnoll quests unreachable via NPCs).
+- [ ] **Quest reward item follow-ups** *(surfaced while closing quest phase 2; phase 2 itself
+  shipped — see systems_overview)* — (a) the **Tarnished Silver Ring** (wolf_threat reward)
+  equips but its **AGI +1 never applies** to the character sheet; ring-specific, since the gnoll
+  boots apply their stats fine, so it is likely a bad stat block in the ring `.tres`. (b) The
+  **Hunter's Medal** (rotfang_hunt turn-in, STR +2 / CON +2) was never re-tested landing on
+  turn-in — `5ae6808` closed only the kill-credit + golden-orb complaints on that quest, not the
+  item itself. Fix the ring; re-test the Medal. Evidence: `quest_phase2_sliceB_checklist.md`.
 
 ### Security / exploits
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
@@ -311,6 +309,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > amounts) but under-validates *eligibility/timing* (which weapon, which spell/class, is it time
 > to swing, are you dead, did you finish the quest).
 
+- [ ] **Per-account `is_gm`** *(keystone — gates whether a shared friends server can run at all
+  with your tools intact)*. `is_dev` is process-global (`PD_DEV_CMDS`), so a shared server is
+  all-or-nothing: either every connected player gets `/heal` + dev-spawn + instant levels, or you
+  lose your own tools during the playtest you're hosting. The `accounts.is_gm` column already
+  exists and is returned at login; it is simply never plumbed into `PerConnection`. Thread it from
+  the signed world token into `PerConnection` and gate the dev commands on it instead of
+  `PD_DEV_CMDS`. See the audit's "Intentional dev tooling" caveat. **Critical path for hosting.**
 - [ ] **Server-side melee swing-rate limit** (High) — no swing timer on the connection, so a
   client can spam `Attack` for an attack-speed hack. Needs a server-tracked per-connection
   swing cooldown.
@@ -322,8 +327,27 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   login rate limiting; `BuyItem` ignores `vendor_id`; cross-store transfers persist as separate
   txns (crash-window dupe/loss; the corpse-loot path is the only atomic one); username
   enumeration on the auth path.
-- [ ] **CompleteQuest doesn't verify objectives** — the server checks id-exists and
-  not-already-done only; objectives are client-tracked. Folds into the quest phase 2 item above.
+- [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
+  but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
+  which contradicts the row's stated expectation and the design. This guard is what blocks the
+  Lineage II force-off pattern (a live session should linger vulnerable ~30s after an unclean
+  kill, and a relogin inside that window should be refused). Security-adjacent. Re-test first —
+  it may not reproduce.
+
+> **Closed by quest phase 2** *(no longer open)*: "CompleteQuest doesn't verify objectives".
+> Slice A moved objective state server-side — a forged `CompleteQuest` now pays nothing because
+> the turn-in is rejected until every server-counted objective is met. See systems_overview.
+
+### Hosting / deployment
+> New category. Nothing in the repo's history is a deployment; everything has run on localhost.
+> This is the schedule's highest-risk phase (Phase 2) precisely for that reason. Blocked on the
+> `is_gm` keystone above.
+- [ ] **Stand up a deploy target + host it** — pick a target (VPS, or port-forward from the dev
+  box); netcode private-key handling for a real host (the server refuses to boot without it);
+  production env with `PD_DEV_CMDS` OFF and `is_gm` on your account only; client build pointed at
+  the real host; refresh `README_FOR_TESTERS.md` (it predates ~10 weeks of work); confirm the
+  in-game bug-report button still routes somewhere you read. Done = someone who is not you, from a
+  machine that is not yours, makes an account, makes a character, kills something, logs out clean.
 
 ### Death / corpses
 > The corpse epic **SHIPPED** (Slices 0-3 + the monster-orb unification, wire PD_W0018 to
@@ -345,9 +369,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   provenance.
 - [ ] **Per-creature corpse models / scale** — corpses (player + mob) share
   `scripts/corpse_body.gd`'s capsule; needs authored per-creature meshes.
-- [ ] **Tune `corpses::CORPSE_LINGER_SECS` for production** — currently **300 s (5 min)**,
-  deliberately short so a playtester could watch a corpse decay. EQ used tens of minutes to days;
-  raise it before this is playable for real, since decay destroys unretrieved gear.
+- [ ] **Tune `corpses::CORPSE_LINGER_SECS` for the considered production value** — **raised to 7
+  days (604800 s) in Phase 0 (2026-07-17)** off the 300 s (5 min) test value (user-accepted
+  without a separate playtest: a pure value change, mechanic unchanged), so a friend who dies deep
+  can log off and corpse-run the next evening. What remains open is only Phase 4's *considered*
+  production tuning (EQ used tens of minutes to days); 7 days is a fine friends-build value. The
+  duplicate-name trap was resolved 2026-07-17 (the enemy-despawn constant is now
+  `ENEMY_DESPAWN_LINGER_SECS`).
 
 ### Combat / weapons
 - [ ] **Bard song rework** — songs are half-built: they auto-pulse client-only (never re-broadcast),
@@ -363,6 +391,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   2026-07-16 dev-panel playtest). Standing should be required to swing. Worth checking whether
   the sit regen bonus still applies mid-fight: if it does, this is an exploit (free in-combat
   regen), not just an animation bug.
+- [ ] **Named mobs lost enrage + guaranteed drops.** Both live only in client-side
+  `data/named_mob_definitions.gd` with no server side, so every named mob is currently a generic
+  mob wearing a name (e.g. Rotfang's guaranteed fang did not drop). Needs server-side named-mob
+  stats + guaranteed/rare drop resolution. Flagged in `session_2026_07_11_dev_panel.md:79`.
 
 ### World systems
 - [ ] **Mount system** — *`MountManager` autoload exists (client-side v1); feature is not
@@ -374,6 +406,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 
 ### UI polish
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
+- [ ] **Bank Items-tab does not live-refresh on deposit.** A deposited item visibly *vanishes*
+  from the UI. The server stores it correctly and it returns on relog, so nothing is actually
+  lost, but no tester will believe that — highest *perceived* severity on the friends-build list.
+  Client-side `BankWindow` refresh. Repro in `quest_phase2_sliceA_checklist.md:99`.
+- [ ] **Bags open on left-click instead of right-click.** `banker_slice2_checklist.md:57`.
+  Untriaged; the tester's guess is these are stale pre-grammar bags. Should match the
+  right-click quick-transfer grammar (`docs/design/inventory_interaction_grammar.md`).
 
 ### Tradeskill depth
 - [ ] **Consumables system** (food/drink regen loop, fermentation, ritual components)
