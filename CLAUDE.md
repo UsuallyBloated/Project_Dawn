@@ -310,12 +310,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > to swing, are you dead, did you finish the quest).
 
 - [ ] **Per-account `is_gm`** *(keystone — gates whether a shared friends server can run at all
-  with your tools intact)*. `is_dev` is process-global (`PD_DEV_CMDS`), so a shared server is
-  all-or-nothing: either every connected player gets `/heal` + dev-spawn + instant levels, or you
-  lose your own tools during the playtest you're hosting. The `accounts.is_gm` column already
-  exists and is returned at login; it is simply never plumbed into `PerConnection`. Thread it from
-  the signed world token into `PerConnection` and gate the dev commands on it instead of
-  `PD_DEV_CMDS`. See the audit's "Intentional dev tooling" caveat. **Critical path for hosting.**
+  with your tools intact)*. **BUILT 2026-07-17 (server-only, no client/DLL/wire change); pending a
+  playtest before it ticks.** `accounts.is_gm` now rides the signed connect token (packed at
+  `user_data[8]` by `mint_connect_token`, read into a new `PerConnection.is_gm` at world connect),
+  and every dev command gates on `conn.can_use_dev_cmds()` = `is_dev || is_gm`. So a hosted server
+  runs with `PD_DEV_CMDS` off and grants tools to a GM account only; local solo dev
+  (`PD_DEV_CMDS=1`) is unchanged. Set the flag with the new `grant_gm` bin:
+  `cargo run -p projectdawn-server --bin grant_gm -- <username> on` (takes effect on that account's
+  next world login). **Playtest to tick:** GM account gets `/give` etc. with `PD_DEV_CMDS` off, a
+  plain account is refused.
 - [ ] **Server-side melee swing-rate limit** (High) — no swing timer on the connection, so a
   client can spam `Attack` for an attack-speed hack. Needs a server-tracked per-connection
   swing cooldown.
