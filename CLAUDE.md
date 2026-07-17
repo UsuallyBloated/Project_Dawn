@@ -253,9 +253,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   The schedule holds no boxes: its per-phase bullets are the plan, and its status table is just a
   progress readout of what the To-Do already says. Time-boxed by design — when the target lands,
   fold anything unfinished back into the To-Do and retire this pointer.
-  A rendered copy for non-repo readers is published as an Artifact from `docs/schedule.html`.
-  **The URL and the update rule are at the top of `docs/schedule.md`** — read them before
-  republishing, or the already-shared link goes stale.
+  `docs/schedule.html` is a browser-readable rendering of it for non-repo readers (open it
+  locally); keep it in sync when the plan changes.
 - **What systems exist & how they work** → `docs/concepts/architecture/systems_overview.md`
 - **Server / wire protocol / DB / save migration** → `server/docs/server_design.md`
   (pointer at `docs/concepts/architecture/README.md`)

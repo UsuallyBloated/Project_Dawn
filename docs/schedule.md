@@ -6,23 +6,14 @@ level, die, corpse-run, and quest for an evening without hitting a wall or break
 **Created:** 2026-07-16. **Target date:** 2026-09-14 (roughly 8.5 weeks).
 **Working assumption:** ~30 hrs/week.
 
-### The shareable copy (read this before regenerating anything)
+### The readable copy
 
-There is a rendered version of this schedule published as an Artifact, for reviewers who don't
-read the repo:
+`docs/schedule.html`, right next to this file, is a rendered version for reviewers who'd rather
+not read raw markdown. Open it in any browser (double-click, or "Open with" a browser). It's a
+standalone page with everything inlined, so it works offline and can be emailed as-is.
 
-> **https://claude.ai/code/artifact/58083a82-11ee-4605-a632-fecfd039e378**
-
-- **Source:** `docs/schedule.html`, right next to this file. It is a standalone page (inlined
-  CSS, no external assets — a strict CSP blocks CDN fonts/scripts, so keep it self-contained).
-- **To update it:** edit `docs/schedule.html`, then republish **passing that URL explicitly**.
-  Publishing without the URL from a session that didn't create it mints a **new** link and the
-  one already shared goes stale. Same file path plus same URL keeps it in place.
-- **Keep the two in sync.** This markdown file is canonical; the HTML is a rendering of it. If
-  they disagree, this one wins.
-
-Both live in the repo on purpose. The HTML was originally written to a session-scoped temp
-directory, which would have quietly become unmaintainable the moment that session ended.
+This markdown file is canonical; the HTML is a rendering of it. If they disagree, this one wins,
+so update `schedule.html` in the same pass whenever you change the plan here.
 
 ### How this doc is tracked
 

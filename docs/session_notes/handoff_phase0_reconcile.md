@@ -189,9 +189,9 @@ rate limiting, attack-while-seated). It is its own two-week phase and wants its 
 
 ## If Phase 0 closes
 
-Update §7 Status in `docs/schedule.md` **and** the matching row in `docs/schedule.html`, then
-republish the Artifact **passing the URL recorded at the top of `docs/schedule.md`**. Publishing
-without it mints a new link and the one already shared with a reviewer goes stale.
+Update §7 Status in `docs/schedule.md` **and** the matching row in `docs/schedule.html` (the
+HTML is a hand-maintained rendering of the markdown, kept in sync by editing, not regenerated).
+No publishing step: the schedule is now a local browser file, not an Artifact.
 
 ## Practical
 
