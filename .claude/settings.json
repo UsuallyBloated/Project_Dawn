@@ -67,7 +67,9 @@
       "Bash(git commit *)",
       "Bash(\"F:/GODOT Engine/Godot_v4.4.1-stable_win64.exe/Godot_v4.4.1-stable_win64.exe\" --headless --editor --quit --path \"F:/Projects/Project_Dawn\")",
       "Read(//f/Projects/Project_Dawn/**)",
-      "Bash(iconv -f UTF-16LE -t UTF-8 server.log)"
+      "Bash(iconv -f UTF-16LE -t UTF-8 server.log)",
+      "PowerShell(git -C f:\\\\Projects\\\\Project_Dawn log --since=\"2026-04-01\" --date=short --pretty=format:\"%ad %s\")",
+      "PowerShell(git -C F:\\\\Projects\\\\server log --since=\"2026-04-01\" --date=short --pretty=format:\"%ad %s\")"
     ]
   }
 }
