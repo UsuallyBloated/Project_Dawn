@@ -15,7 +15,8 @@
       "Read(//f/Projects/ProceduralDungeon/**)",
       "Read(//f/Projects/ProceduralDungeon/scripts/**)",
       "Bash(git -C \"f:/Projects/Project_Dawn\" show --stat --format=\"\" 72401a1384ba65d47460a5ff8bcc5a70cd846982)",
-      "Bash(bash /tmp/final_verdict.sh)"
+      "Bash(bash /tmp/final_verdict.sh)",
+      "PowerShell(Get-ChildItem -Path \"$env:USERPROFILE\\\\.cargo\\\\registry\\\\src\" -Directory -Recurse -Depth 1 -Filter \"renet-2.0.0\" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName)"
     ],
     "additionalDirectories": [
       "f:\\Projects\\Project_Dawn",
