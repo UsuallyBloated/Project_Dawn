@@ -1,0 +1,1064 @@
+<title>Project Dawn: Schedule to a Friends Build</title>
+
+<style>
+  :root {
+    --ground:    #EEF0F3;
+    --surface:   #FFFFFF;
+    --surface-2: #F6F7F9;
+    --ink:       #1A1F28;
+    --ink-soft:  #58616F;
+    --ink-faint: #8A93A1;
+    --rule:      #D6DAE1;
+    --rule-soft: #E4E7EC;
+    --accent:    #9A6518;
+    --accent-br: #C8862A;
+    --accent-wash:#F3E7D2;
+    --blue:      #3E5C7E;
+    --blue-wash: #DDE5EE;
+    --good:      #3F6B4C;
+    --risk:      #9C3F2C;
+    --risk-wash: #F5E2DD;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+    --mono: "Cascadia Code", Consolas, ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground:    #12151C;
+      --surface:   #191D26;
+      --surface-2: #1F242F;
+      --ink:       #E4E7EC;
+      --ink-soft:  #9AA3B2;
+      --ink-faint: #6B7484;
+      --rule:      #2A303C;
+      --rule-soft: #222834;
+      --accent:    #D9973C;
+      --accent-br: #E8AC57;
+      --accent-wash:#3A2C15;
+      --blue:      #6B93BF;
+      --blue-wash: #1E2A38;
+      --good:      #6BA37C;
+      --risk:      #D06A52;
+      --risk-wash: #3A1F19;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:    #12151C;
+    --surface:   #191D26;
+    --surface-2: #1F242F;
+    --ink:       #E4E7EC;
+    --ink-soft:  #9AA3B2;
+    --ink-faint: #6B7484;
+    --rule:      #2A303C;
+    --rule-soft: #222834;
+    --accent:    #D9973C;
+    --accent-br: #E8AC57;
+    --accent-wash:#3A2C15;
+    --blue:      #6B93BF;
+    --blue-wash: #1E2A38;
+    --good:      #6BA37C;
+    --risk:      #D06A52;
+    --risk-wash: #3A1F19;
+  }
+
+  :root[data-theme="light"] {
+    --ground:    #EEF0F3;
+    --surface:   #FFFFFF;
+    --surface-2: #F6F7F9;
+    --ink:       #1A1F28;
+    --ink-soft:  #58616F;
+    --ink-faint: #8A93A1;
+    --rule:      #D6DAE1;
+    --rule-soft: #E4E7EC;
+    --accent:    #9A6518;
+    --accent-br: #C8862A;
+    --accent-wash:#F3E7D2;
+    --blue:      #3E5C7E;
+    --blue-wash: #DDE5EE;
+    --good:      #3F6B4C;
+    --risk:      #9C3F2C;
+    --risk-wash: #F5E2DD;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 64px 0 40px;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .eyebrow::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(34px, 5.5vw, 54px);
+    line-height: 1.08;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .thesis {
+    font-family: var(--serif);
+    font-size: clamp(17px, 2vw, 20px);
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-top: 12px;
+  }
+  .stat {
+    background: var(--surface);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stat-k {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .stat-v {
+    font-family: var(--serif);
+    font-size: 24px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-v.hi { color: var(--accent); }
+  .stat-sub { font-size: 15px; color: var(--ink-faint); }
+
+  /* ---------- sections ---------- */
+
+  section { padding-top: 56px; }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: 27px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+
+  .lede {
+    color: var(--ink-soft);
+    max-width: 66ch;
+    margin: 0 0 28px;
+  }
+  .lede:last-child { margin-bottom: 0; }
+
+  p { max-width: 66ch; }
+
+  /* ---------- findings ---------- */
+
+  .findings {
+    display: grid;
+    gap: 16px;
+  }
+  .finding {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .finding h3 {
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 640;
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .finding p { margin: 0; color: var(--ink-soft); font-size: 15px; }
+  .finding .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.87em;
+    background: var(--surface-2);
+    border: 1px solid var(--rule-soft);
+    padding: 1px 5px;
+    color: var(--ink);
+  }
+
+  /* ---------- tables ---------- */
+
+  .scroll { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    min-width: 520px;
+  }
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 400;
+    padding: 0 14px 8px 0;
+    border-bottom: 1px solid var(--ink);
+    white-space: nowrap;
+  }
+  td {
+    padding: 11px 14px 11px 0;
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: middle;
+  }
+  td.num {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+    padding-right: 0;
+  }
+  .dates { color: var(--ink-soft); font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+
+  .meter {
+    display: block;
+    height: 6px;
+    background: var(--accent-br);
+    opacity: 0.75;
+    min-width: 2px;
+  }
+  td.meter-cell { width: 34%; padding-right: 0; }
+
+  /* ---------- gantt ---------- */
+
+  .gantt-frame {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 20px;
+  }
+  .gantt {
+    display: grid;
+    grid-template-columns: 190px repeat(10, minmax(60px, 1fr));
+    min-width: 860px;
+    align-items: center;
+    row-gap: 4px;
+  }
+  .gantt .wk {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+    line-height: 1.4;
+    grid-row: 1;
+  }
+  .gantt .wk b { display: block; color: var(--ink-soft); font-weight: 600; font-size: 11px; }
+  .gantt .corner {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 10px;
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .gantt .rowlabel {
+    grid-column: 1;
+    font-size: 13px;
+    padding: 9px 16px 9px 0;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    line-height: 1.3;
+  }
+  .gantt .rowlabel span {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    flex: none;
+  }
+  .gantt .ghostlabel {
+    padding-left: 26px;
+    font-size: 12px;
+    font-style: italic;
+    color: var(--ink-faint);
+  }
+
+  .bar {
+    height: 26px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    overflow: hidden;
+    background: var(--accent-br);
+    color: #12151C;
+  }
+  .bar.blue { background: var(--blue); color: #fff; }
+  .bar.ghost {
+    background: repeating-linear-gradient(
+      -45deg, var(--blue-wash), var(--blue-wash) 4px, transparent 4px, transparent 8px);
+    border: 1px dashed var(--blue);
+    color: var(--ink-soft);
+  }
+  .bar.open {
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    color: var(--ink-faint);
+  }
+
+  .gantt-key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule-soft);
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .gantt-key div { display: flex; align-items: center; gap: 8px; }
+  .swatch { width: 22px; height: 10px; flex: none; }
+  .swatch.amber { background: var(--accent-br); }
+  .swatch.blue  { background: var(--blue); }
+  .swatch.ghost {
+    background: repeating-linear-gradient(
+      -45deg, var(--blue-wash), var(--blue-wash) 4px, transparent 4px, transparent 8px);
+    border: 1px dashed var(--blue);
+  }
+
+  /* ---------- chain ---------- */
+
+  .chain {
+    display: grid;
+    gap: 10px;
+    counter-reset: link;
+  }
+  .link {
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 16px;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 16px 18px;
+    position: relative;
+  }
+  .link::before {
+    counter-increment: link;
+    content: counter(link);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+  }
+  .link p { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+  .link b { color: var(--ink); font-weight: 620; }
+
+  /* Plain bordered notes. Deliberately not reusing .link: that carries a numbered
+     ::before, which would take the first grid cell and push the text to a new row. */
+  .rules { display: grid; gap: 10px; }
+  .rule-note {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 16px 20px;
+  }
+  .rule-note p { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+  .rule-note b { color: var(--ink); font-weight: 620; }
+
+  /* ---------- phase cards ---------- */
+
+  .phases { display: grid; gap: 20px; }
+
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 26px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .phase-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .phase-no {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+  }
+  .phase-head h3 {
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight: 400;
+    margin: 0;
+    flex: 1;
+    min-width: 220px;
+  }
+  .when {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    white-space: nowrap;
+    border: 1px solid currentColor;
+  }
+  .chip.risk-hi { color: var(--risk); background: var(--risk-wash); }
+  .chip.risk-lo { color: var(--good); }
+  .chip.par     { color: var(--blue); background: var(--blue-wash); }
+  .chip.key     { color: var(--accent); background: var(--accent-wash); }
+
+  ul.items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 9px;
+  }
+  /* Marker is absolutely positioned rather than a grid/flex track: these list items
+     contain inline <b> and <code>, and a grid container would blockify each of those
+     into its own grid item, shattering the sentence across cells. */
+  ul.items li {
+    position: relative;
+    padding-left: 22px;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  ul.items li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--ink-faint);
+  }
+  ul.items li.keystone::before {
+    background: var(--accent-br);
+    border-color: var(--accent-br);
+  }
+  ul.items li b { color: var(--ink); font-weight: 620; }
+
+  .done-means {
+    background: var(--surface-2);
+    border-left: 3px solid var(--good);
+    padding: 12px 16px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    max-width: none;
+    margin: 0;
+  }
+  .done-means b {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--good);
+    display: block;
+    margin-bottom: 3px;
+  }
+  .note-risk {
+    border-left-color: var(--risk);
+  }
+  .note-risk b { color: var(--risk); }
+
+  /* ---------- cut ---------- */
+
+  .cut {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .cut-group {
+    background: var(--surface);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cut-group h4 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0;
+    font-weight: 400;
+  }
+  .cut-group p {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- question ---------- */
+
+  .question {
+    background: var(--accent-wash);
+    border: 1px solid var(--accent);
+    padding: 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .question h3 {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 400;
+    margin: 0;
+    color: var(--ink);
+  }
+  .question p { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+  :root[data-theme="dark"] .question p,
+  :root[data-theme="dark"] .question h3 { color: var(--ink); }
+
+  footer {
+    margin-top: 72px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+  }
+
+  a { color: var(--accent); }
+  a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Project Dawn</div>
+    <h1>Nine weeks to the first evening your friends <em>actually play it</em>.</h1>
+    <p class="thesis">
+      The mechanics are further along than the schedule suggests. What stands between here and
+      four people grouping up on a Saturday is not a feature list. It is one missing permission
+      flag, a server nobody has ever hosted, and a handful of gates that decide whether the door
+      can be opened at all.
+    </p>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-k">Target</div>
+        <div class="stat-v hi">Sep 14</div>
+      </div>
+      <div class="stat">
+        <div class="stat-k">Duration</div>
+        <div class="stat-v">8.5 wks</div>
+      </div>
+      <div class="stat">
+        <div class="stat-k">Capacity</div>
+        <div class="stat-v">30 h/wk</div>
+      </div>
+      <div class="stat">
+        <div class="stat-k">Measured pace</div>
+        <div class="stat-v">7 epics<span class="stat-sub"> / 4.3 wks</span></div>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <h2>Two things to know before the dates</h2>
+    <p class="lede">
+      Both came out of reading the repo rather than the to-do list, and both change the plan.
+    </p>
+    <div class="findings">
+      <div class="finding">
+        <div class="tag">Correction</div>
+        <h3>Two weeks of finished work is sitting in the open column.</h3>
+        <p>
+          The to-do list still shows quest phase 2 as open with six sub-items: the journal wiping
+          on logout, the completed set not syncing, item rewards being test-room-only, kill quests
+          auto-completing, no abandon button, and Brom's dialogue unwired. All six shipped between
+          July 9 and July 15. The session notes say so by name ("closes the last of the plan's 7
+          root problems") and the commits match.
+        </p>
+        <p>
+          A documentation clean-up landed on July 16 that was specifically meant to catch stale
+          claims like this, and it caught several real ones: the wire protocol was recorded ten
+          versions behind reality. It walked straight past this entry.
+        </p>
+      </div>
+      <div class="finding">
+        <div class="tag">Keystone</div>
+        <h3>The most important task for this target is not on the list at all.</h3>
+        <p>
+          Developer commands are gated on <code>PD_DEV_CMDS</code>, which is set per process, not
+          per account. So a shared server is all or nothing: run it with dev commands and every
+          friend gets self-heal, mob spawning, and instant levels. Run it without and you lose your
+          own tools during the playtest you are hosting. A per-account <code>is_gm</code> flag
+          fixes this, and the column already exists on the accounts table. It is just never read
+          into the world connection. Everything else in this plan waits behind it.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where the estimates come from</h2>
+    <p class="lede">
+      These are not guesses. Every epic below is bounded by its own dated commits in both
+      repositories, first commit to last, in the most recent month of work. Each one is a cross-wire
+      feature: server, client, playtest, and a review pass.
+    </p>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Epic shipped, Jun 15 to Jul 15</th>
+            <th>Dates</th>
+            <th class="meter-cell">Calendar span</th>
+            <th class="num">Days</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Quest phase 2, slices A, B and D</td>
+            <td class="dates">Jul 9 to Jul 15</td>
+            <td class="meter-cell"><i class="meter" style="width:100%"></i></td>
+            <td class="num">7</td>
+          </tr>
+          <tr>
+            <td>Corpse epic, slices 0 to 3 plus orbs</td>
+            <td class="dates">Jun 22 to Jun 26</td>
+            <td class="meter-cell"><i class="meter" style="width:71%"></i></td>
+            <td class="num">5</td>
+          </tr>
+          <tr>
+            <td>Group loot rights and coin drops</td>
+            <td class="dates">Jun 15 to Jun 17</td>
+            <td class="meter-cell"><i class="meter" style="width:43%"></i></td>
+            <td class="num">3</td>
+          </tr>
+          <tr>
+            <td>Banker NPC, 2 slices</td>
+            <td class="dates">Jun 17 to Jun 19</td>
+            <td class="meter-cell"><i class="meter" style="width:43%"></i></td>
+            <td class="num">3</td>
+          </tr>
+          <tr>
+            <td>Quest phase 1, kill credit and rewards</td>
+            <td class="dates">Jul 6 to Jul 8</td>
+            <td class="meter-cell"><i class="meter" style="width:43%"></i></td>
+            <td class="num">3</td>
+          </tr>
+          <tr>
+            <td>Camp and linkdead, 2 slices</td>
+            <td class="dates">Jun 19 to Jun 20</td>
+            <td class="meter-cell"><i class="meter" style="width:29%"></i></td>
+            <td class="num">2</td>
+          </tr>
+          <tr>
+            <td>EQ-authentic XP leveling overhaul</td>
+            <td class="dates">Jun 26</td>
+            <td class="meter-cell"><i class="meter" style="width:14%"></i></td>
+            <td class="num">1</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:24px">
+      <b>Seven epics in 4.3 weeks.</b> Typical span is 3 days; the longest was 7. That is the
+      number the phases below are built on, and it is deliberately the recent stretch rather than a
+      ten-week average, because recent work is the better predictor.
+    </p>
+    <p>
+      Two large May efforts are left out on purpose. The network foundation (tracks 1 to 22, May 5
+      to May 28) was the initial build-out and is not representative of steady-state work. The
+      currency and encumbrance work ran from May 21 to Jun 13 but interleaved with other tracks
+      throughout, so it cannot be honestly bounded and would only distort the average.
+    </p>
+    <p>
+      The phases below each bundle roughly one to two epics into a two-week window, which is about
+      <b>double</b> the measured pace. That slack is intentional: the history also contains real
+      gaps of three and ten days, and pretending those will not happen again is how schedules break.
+    </p>
+  </section>
+
+  <section>
+    <h2>The timeline</h2>
+    <p class="lede">
+      Amber is the critical path, where each phase genuinely cannot start until the one before it
+      finishes. Blue is content authoring, the one large block that runs alongside rather than in
+      line, which is why it absorbs slack instead of adding to it.
+    </p>
+    <div class="gantt-frame">
+      <div class="scroll">
+        <div class="gantt">
+          <div class="corner"></div>
+          <div class="wk" style="grid-column: 2"><b>Jul 13</b>wk 1</div>
+          <div class="wk" style="grid-column: 3"><b>Jul 20</b>wk 2</div>
+          <div class="wk" style="grid-column: 4"><b>Jul 27</b>wk 3</div>
+          <div class="wk" style="grid-column: 5"><b>Aug 3</b>wk 4</div>
+          <div class="wk" style="grid-column: 6"><b>Aug 10</b>wk 5</div>
+          <div class="wk" style="grid-column: 7"><b>Aug 17</b>wk 6</div>
+          <div class="wk" style="grid-column: 8"><b>Aug 24</b>wk 7</div>
+          <div class="wk" style="grid-column: 9"><b>Aug 31</b>wk 8</div>
+          <div class="wk" style="grid-column: 10"><b>Sep 7</b>wk 9</div>
+          <div class="wk" style="grid-column: 11"><b>Sep 14</b>wk 10</div>
+
+          <div class="rowlabel" style="grid-row: 2"><span>00</span> Reconcile</div>
+          <div class="bar" style="grid-row: 2; grid-column: 2 / 3">1 day</div>
+
+          <div class="rowlabel" style="grid-row: 3"><span>01</span> Exploit gate</div>
+          <div class="bar" style="grid-row: 3; grid-column: 3 / 5">2 weeks</div>
+
+          <div class="rowlabel" style="grid-row: 4"><span>02</span> Host, first friend</div>
+          <div class="bar" style="grid-row: 4; grid-column: 5 / 6">1 wk</div>
+
+          <div class="rowlabel" style="grid-row: 5"><span>03</span> Stop it eating things</div>
+          <div class="bar" style="grid-row: 5; grid-column: 6 / 8">2 weeks</div>
+
+          <div class="rowlabel" style="grid-row: 6"><span>04</span> An evening's worth</div>
+          <div class="bar blue" style="grid-row: 6; grid-column: 8 / 11">3 weeks</div>
+
+          <div class="rowlabel ghostlabel" style="grid-row: 7">content, earliest start</div>
+          <div class="bar ghost" style="grid-row: 7; grid-column: 6 / 8">could begin here</div>
+
+          <div class="rowlabel" style="grid-row: 8"><span>05</span> Open the door</div>
+          <div class="bar open" style="grid-row: 8; grid-column: 11 / 12">onward</div>
+        </div>
+      </div>
+      <div class="gantt-key">
+        <div><i class="swatch amber"></i> Critical path, strictly sequential</div>
+        <div><i class="swatch blue"></i> Content authoring, parallel-safe</div>
+        <div><i class="swatch ghost"></i> Could start early to buy slack</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The critical path</h2>
+    <p class="lede">
+      Only one chain has to happen in order. Everything else can move.
+    </p>
+    <div class="chain">
+      <div class="link"><p><b>Per-account is_gm</b> decides whether a shared server can run at all with your own tools intact.</p></div>
+      <div class="link"><p><b>Hosting</b> cannot safely happen until that flag exists, because today the alternative is handing every friend the dev commands.</p></div>
+      <div class="link"><p><b>The first outside session</b> cannot happen until there is something to connect to.</p></div>
+      <div class="link"><p><b>The fix list</b> is largely written by whatever that first session surfaces, so it cannot be fully specified in advance.</p></div>
+      <div class="link"><p><b>Opening to the whole group</b> waits on those fixes.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The phases</h2>
+    <div class="phases">
+
+      <article class="phase">
+        <div class="phase-head">
+          <span class="phase-no">00</span>
+          <h3>Reconcile the picture</h3>
+          <span class="chip risk-lo">Low risk</span>
+          <span class="when">Jul 16 to Jul 17</span>
+        </div>
+        <p style="margin:0;font-size:14.5px;color:var(--ink-soft)">
+          Most of this was already done by a documentation pass on July 16. What follows is the
+          remainder that pass did not reach.
+        </p>
+        <ul class="items">
+          <li>Update the to-do list: quest phase 2 is <b>done</b>. Six sub-items are still wrongly listed as open.</li>
+          <li>Annotate two stale playtest checklists so the next reader does not re-open closed work. The corpse resurrection checklist still reads as failed but was playtested clean and committed on June 26.</li>
+          <li class="keystone">Raise the corpse decay timer off its 300 second test value. Already flagged in the to-do as needing a production raise, so the only argument here is about <b>when</b>: this is not a launch concern, it is a first-friend concern.</li>
+          <li><b>Give this schedule's orphans a home on the to-do list.</b> Several things below have no entry there at all: the permission flag, the entire hosting phase, and four of the known bugs. Their absence is why the keystone was invisible in the first place.</li>
+        </ul>
+        <p class="done-means"><b>Done means</b>The to-do list matches reality, and every item this schedule sequences has a row there to be ticked off.</p>
+      </article>
+
+      <article class="phase">
+        <div class="phase-head">
+          <span class="phase-no">01</span>
+          <h3>Close the exploit gate</h3>
+          <span class="chip key">Keystone</span>
+          <span class="chip risk-lo">Low risk</span>
+          <span class="when">Jul 20 to Jul 31</span>
+        </div>
+        <p style="margin:0;font-size:14.5px;color:var(--ink-soft)">
+          The phase that decides whether anyone can be invited. Every item below already has a file
+          and line number named in the July security audit, which is why the risk is low despite the
+          subject matter.
+        </p>
+        <ul class="items">
+          <li class="keystone"><b>Per-account is_gm.</b> Thread the existing accounts column from the signed world token into the connection, and gate dev commands on it instead of the process-wide environment variable. This is what lets you keep your tools on a server your friends are playing on.</li>
+          <li><b>Respawn dead-check.</b> The respawn handler floors health to 25% without checking you actually died, so a living player can top up on demand. Small.</li>
+          <li><b>Melee swing-rate limit.</b> No swing timer exists on the connection, so a modified client can spam attacks. Small to medium.</li>
+          <li><b>Cast class and level gate.</b> Apply the check the resurrection path already does to the other four cast paths. Small.</li>
+          <li><b>Attack weapon trust.</b> Read the server's tracked equipment instead of believing the weapon the client names. Small to medium.</li>
+          <li><b>Login rate limiting.</b> Matters the moment the auth socket faces the internet, which is next phase. Medium.</li>
+          <li><b>Attack while seated.</b> Require standing to swing, and check whether the sitting regen bonus still applies mid-fight. If it does, this is free in-combat healing rather than an animation bug.</li>
+        </ul>
+        <p class="done-means"><b>Done means</b>Audit findings 2 through 6 and 9 are closed, the permission flag is live, and the audit's threat list has been re-run against the changed code.</p>
+      </article>
+
+      <article class="phase">
+        <div class="phase-head">
+          <span class="phase-no">02</span>
+          <h3>Host it, invite one person</h3>
+          <span class="chip risk-hi">Highest schedule risk</span>
+          <span class="when">Aug 3 to Aug 7</span>
+        </div>
+        <ul class="items">
+          <li>Pick and stand up a deploy target, either a rented server or a forwarded port from the development machine.</li>
+          <li>Key handling for a real host. The server deliberately refuses to boot without one.</li>
+          <li>Production environment: dev commands off, the new permission flag on your account only.</li>
+          <li>Client build pointed at the real host, and a refresh of the tester README, which predates roughly ten weeks of work.</li>
+          <li>Confirm the in-game bug report button still routes somewhere you read.</li>
+          <li><b>One friend, one session.</b></li>
+        </ul>
+        <p class="done-means"><b>Done means</b>Somebody who is not you, from a machine that is not yours, made an account, made a character, killed something, and logged out cleanly.</p>
+        <p class="done-means note-risk"><b>Why this is the risky one</b>It is the only phase with no velocity data behind it. Nothing in ten weeks of history is a deployment; everything so far has run on localhost. Deployment surprises are the norm, and if this slips a week the whole chain slips with it. It is also the phase most worth doing early and roughly: a crude hosted server one friend can reach is worth more than a polished one nobody has touched.</p>
+      </article>
+
+      <article class="phase">
+        <div class="phase-head">
+          <span class="phase-no">03</span>
+          <h3>Stop it eating their things</h3>
+          <span class="when">Aug 10 to Aug 21</span>
+        </div>
+        <p style="margin:0;font-size:14.5px;color:var(--ink-soft)">
+          Two categories: bugs that destroy player property, and bugs that only look like they do.
+          The second category costs you testers just as fast as the first.
+        </p>
+        <ul class="items">
+          <li class="keystone"><b>Deposited bank items visibly vanish.</b> The server stores them correctly and they return on relog, so nothing is actually lost. No tester will believe that. Highest perceived severity on the list, and a client-side refresh fix.</li>
+          <li><b>An unclean disconnect did not block relogin.</b> The tester killed their client and logged straight back in, which contradicts the design. Re-test first; it may not reproduce.</li>
+          <li><b>Bank and vendor transfers are not atomic.</b> Two separate writes, so a crash between them dupes or loses. The corpse loot path already solved this and can be copied.</li>
+          <li><b>Bags open on left-click instead of right-click.</b> Untriaged.</li>
+          <li><b>Named mobs lost their enrage and guaranteed drops.</b> Both live only on the client with no server side, so every named mob is currently a generic mob wearing a name.</li>
+          <li>Whatever the first friend session surfaces. <b>Leave room here.</b> It will find things.</li>
+        </ul>
+        <p class="done-means"><b>Done means</b>Nothing loses items, nothing appears to lose items, and a first-time player does not hit an obvious "this is broken" moment in their first hour.</p>
+      </article>
+
+      <article class="phase">
+        <div class="phase-head">
+          <span class="phase-no">04</span>
+          <h3>An evening's worth of game</h3>
+          <span class="chip par">Runs parallel</span>
+          <span class="when">Aug 24 to Sep 11</span>
+        </div>
+        <p style="margin:0;font-size:14.5px;color:var(--ink-soft)">
+          The mechanics are ahead of the content. Four quests and one zone is maybe ninety minutes
+          before a friend runs dry. This is the difference between "I saw your game" and "we played
+          your game on Saturday."
+        </p>
+        <ul class="items">
+          <li class="keystone"><b>Quests and mobs.</b> The quest system is fully server-authoritative now: persistent journals, NPC turn-ins, item rewards, once-per-character dedup. What is missing is authoring capacity, not engineering. The largest and most open-ended item here.</li>
+          <li><b>Respawn at bind, and a Soul Binder NPC.</b> Respawn currently honors the client's bind point and the server has no bind of its own. With corpse runs as the death model, where you wake up matters enormously.</li>
+          <li><b>Set the corpse decay timer properly.</b> Phase 0 is the emergency raise; this is the considered value.</li>
+          <li><b>A minimal sound pass.</b> Not yet committed to. See the open question below.</li>
+        </ul>
+        <p class="done-means"><b>Done means</b>Two friends can group up and play three hours without running out of things to do.</p>
+      </article>
+
+      <article class="phase">
+        <div class="phase-head">
+          <span class="phase-no">05</span>
+          <h3>Open the door</h3>
+          <span class="when">Sep 14 onward</span>
+        </div>
+        <ul class="items">
+          <li>The full friend group.</li>
+          <li>A real feedback loop. The playtest checklist format already in use works well for this, and the per-row notes hooks are what make a "didn't work" report traceable back to the server log.</li>
+        </ul>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>One open question</h2>
+    <div class="question">
+      <h3>Does the friends build ship silent?</h3>
+      <p>
+        There is currently no audio at all: no combat, no spells, no ambience, no music. To someone
+        who has been building this for months, that is invisible. To a friend logging in for the
+        first time, total silence is one of the loudest things about it.
+      </p>
+      <p>
+        But the task as written on the to-do list, covering combat, spell, ambient, and music, is a
+        multi-week subsystem rather than a polish pass. The middle path is a minimal version:
+        a swing, a hit, a spell cast, a death, and one ambient loop. Perhaps three days rather than
+        three weeks. That is what Phase 4 assumes. Ship it silent instead and Phase 4 shortens by
+        about half a week, pulling the target date in.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Risks</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th style="width:26%">Risk</th><th style="width:20%">Impact</th><th>Mitigation</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Hosting has no prior art in this project</b></td>
+            <td>Slips the whole chain</td>
+            <td>Start it early and accept a rough first version. It is the only phase with no velocity data behind the estimate.</td>
+          </tr>
+          <tr>
+            <td><b>Corpse decay is set to 5 minutes</b></td>
+            <td>Loses a tester permanently, on their first death</td>
+            <td>One-line fix, pulled forward into Phase 0. It is a deliberately short test value so a corpse could be watched decaying, and it is already flagged as needing a production raise. The point of moving it earlier is that it is not a production concern: at five minutes, a friend who dies deep in a dungeon and cannot run back in time loses their gear forever, on day one. The original games used tens of minutes to days.</td>
+          </tr>
+          <tr>
+            <td><b>Content is open-ended</b></td>
+            <td>Target date</td>
+            <td>It is the one phase that runs parallel to the critical path, so it absorbs slack from the others rather than adding to it.</td>
+          </tr>
+          <tr>
+            <td><b>Historical gaps of 3 to 10 days</b></td>
+            <td>About a week of drift per six</td>
+            <td>Already priced in. The 1.5 week planning number sits about 35% above measured throughput.</td>
+          </tr>
+          <tr>
+            <td><b>Two integration tests are timing-flaky</b></td>
+            <td>Noise during Phase 1</td>
+            <td>Known and already documented. Re-run them individually before blaming a change.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Explicitly cut from this target</h2>
+    <p class="lede">
+      Naming these is the point of the exercise. All are real work. None of them decide whether four
+      friends can play on a Saturday.
+    </p>
+    <div class="cut">
+      <div class="cut-group">
+        <h4>Systems</h4>
+        <p>Bard song rework, two-handed cleave, mount completion, faction, weather, water and swimming, doors and locks, guilds, looking-for-group, dueling, auction house, player inspect, language wiring, food and water regen gating.</p>
+      </div>
+      <div class="cut-group">
+        <h4>Death and corpse follow-ups</h4>
+        <p>Resurrection sickness, auto re-equip when looting your own corpse, per-creature corpse models.</p>
+      </div>
+      <div class="cut-group">
+        <h4>Tradeskills</h4>
+        <p>Consumables, bookbinding, clockwork engineering prestige.</p>
+      </div>
+      <div class="cut-group">
+        <h4>Content and art</h4>
+        <p>Race expansion, the remaining per-race models, player portrait art, map and minimap, zone transition effects, the UI theming pass.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How this gets kept honest</h2>
+    <p class="lede">
+      This schedule exists because a to-do list drifted out of sync with reality. It would be a
+      poor showing if the schedule did the same thing, so the rule is one home per fact.
+    </p>
+    <div class="rules">
+      <div class="rule-note">
+        <p><b>This document tracks phases. The project's to-do list tracks tasks.</b> The bullets under each phase above are the plan for that phase, not a checklist. Their status lives in one place only, so the two can never disagree.</p>
+      </div>
+      <div class="rule-note">
+        <p><b>Nothing is ticked until it has been playtested.</b> Not when it compiles, not when the tests pass, not when it is committed. A filled checklist showing it working is the evidence. Until then the task is built, not done.</p>
+      </div>
+      <div class="rule-note">
+        <p><b>This document expires.</b> When September 14 arrives, anything unfinished folds back into the to-do list and this gets retired rather than left to rot. That is the failure mode it was written to fix.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Project Dawn</span>
+    <span>Schedule to a playable friends build</span>
+    <span>Drafted 2026-07-16</span>
+    <span>Canonical copy: docs/schedule.md</span>
+  </footer>
+
+</div>

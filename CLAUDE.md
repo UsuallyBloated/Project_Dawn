@@ -183,13 +183,28 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
 ## Session workflow
 
 1. Check `docs/playtest_notes/` for new user-reported bugs before starting.
-2. Pick the next open item from **To-Do** (below) or the user's request.
-3. Implement it; mark `[x]` and move its "what exists" note into
-   `docs/concepts/architecture/systems_overview.md` (not back into this to-do).
+2. Pick the next open item from **To-Do** (below) or the user's request. During the
+   friends-build push, `docs/schedule.md` says which phase we're in and what's in it.
+3. Implement it. **Don't tick anything yet** — built is not done.
 4. Append a summary to `docs/session_notes/session_YYYY_MM_DD.md` and update
    `docs/session_notes/README.md`.
 5. Run a review pass (`/code-review`) if the session touches 5+ files or a core system
    (combat, inventory, spells, PlayerStats, networking).
+6. **Tick only on playtest evidence.** An item earns `[x]` when a filled checklist in
+   `docs/playtest_notes/` shows it passing — not when it compiles, not when `cargo test` is
+   green, not when it's committed. Claude proposes the tick and cites the checklist row; the
+   tester's result is the evidence. No checklist means the item is *built*, not *done*.
+   Then, in one pass: tick it here, move its "what exists" note into
+   `systems_overview.md` (not back into the to-do), and update the phase row in
+   `docs/schedule.md` if it closes one.
+
+> **Why the gate exists.** Step 3 used to read "implement it; mark `[x]`", and two lists went
+> stale in that gap. On 2026-07-16 a docs pass aimed *specifically* at stale claims still left
+> quest phase 2 listed as open with six sub-items that had all shipped the week before. And
+> `corpse_slice3_checklist.md` still reads FAILED for resurrection work that was playtested
+> clean and committed 06-26. Both drifted the same way: "done" got recorded in a session note
+> and never propagated to the list anyone reads. Ticking on playtest evidence, in the same
+> pass, is what keeps them honest — and it means neither of us is marking our own homework.
 
 ---
 
@@ -232,6 +247,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 
 ## Where things are documented
 
+- **Current plan, dates & sequencing** → `docs/schedule.md` — the push to a playable friends
+  build (target 2026-09-14), with the phases, the critical path, and the velocity the estimates
+  are measured against. **There is one checkbox list in this project and it's the To-Do below.**
+  The schedule holds no boxes: its per-phase bullets are the plan, and its status table is just a
+  progress readout of what the To-Do already says. Time-boxed by design — when the target lands,
+  fold anything unfinished back into the To-Do and retire this pointer.
+  A rendered copy for non-repo readers is published as an Artifact from `docs/schedule.html`.
+  **The URL and the update rule are at the top of `docs/schedule.md`** — read them before
+  republishing, or the already-shared link goes stale.
 - **What systems exist & how they work** → `docs/concepts/architecture/systems_overview.md`
 - **Server / wire protocol / DB / save migration** → `server/docs/server_design.md`
   (pointer at `docs/concepts/architecture/README.md`)
@@ -249,7 +273,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 
 > Completed work is no longer tracked here — it's described in
 > `docs/concepts/architecture/systems_overview.md` and dated in `docs/session_notes/`.
-> **Current focus:** client networking + PvP (RemotePlayer/Pet targeting, PvP flagging).
+> **Current focus:** the friends-build push — see `docs/schedule.md` for the phase we're in.
+> That doc sequences a subset of these items into dated phases; it does **not** replace this
+> list. **This is the one checkbox list.** Tick per the gate in **Session workflow** step 6:
+> code written *and* playtest-confirmed, never one without the other.
 
 ### Multiplayer / networking
 - [ ] **Incoming `/tell` RPC** — receiving tells from other players (outbound done)
