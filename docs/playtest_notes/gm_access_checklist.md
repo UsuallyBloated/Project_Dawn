@@ -23,18 +23,25 @@ Server.log anchors: boot `dev_cmds=false`; a GM world login logs `GM account con
 - [ ] **A second, non-GM account is ready** to log in with. notes:
 
 ## 1 — GM account gets the tools
-- [ ] **Log in on the GM account** (a fresh login, after the grant). notes:
-- [ ] **`/give <item name> 1`** in chat → the item appears in your inventory (server granted it). notes:
-- [ ] **Test Panel Full Heal** → HP/MP actually refill and STAY (no snap-back). notes:
-- [ ] **Test Panel Level Up** → you gain a server-authoritative level. notes:
-- [ ] **Dev-spawn a mob** → it appears as a real world mob (killable, drops loot, gives XP). notes:
+- [ ] **Log in on the GM account** (a fresh login, AFTER the grant — the flag is read at login);
+  server.log logs `GM account connected`. notes:
+- [ ] **`/give <item name> 1`** in chat (use a name specific enough to match ONE item; an ambiguous
+  substring just lists candidates and bails) → the item appears in your inventory. notes:
+- [ ] **Test Panel "Give Selected Item"** (pick one from the list) → it lands in your bags. notes:
+- [ ] **Test Panel "Level Up"** (or **"Grant 250 XP"**) → you gain a server-authoritative level / XP. notes:
+- [ ] **Take some damage first** (spawn a mob and let it hit you), then **Test Panel "Full Heal"**
+  → HP/MP refill and STAY (no snap-back). notes:
+- [ ] **Test Panel "Spawn Normal"** → a real world mob appears (killable, drops loot, gives XP). notes:
 
 ## 2 — Plain account is refused (the security check)
-- [ ] **Log in on the NON-GM account.** notes:
-- [ ] **`/give <item name> 1`** → NO item appears (server ignored it). notes:
-- [ ] **Test Panel Full Heal** → the bar may twitch client-side then snaps back (server did nothing). notes:
-- [ ] **Test Panel Level Up** → no level gained. notes:
-- [ ] **server.log** shows no give / heal / level applied for this account. notes:
+- [ ] **Log in on the NON-GM account** → server.log does NOT log `GM account connected` for it. notes:
+- [ ] **`/give <item name> 1`** → the client optimistically prints "Requested … from server", but
+  **NO item actually appears** (the server ignored it — the chat line is not proof it worked). notes:
+- [ ] **Test Panel "Level Up" / "Grant 250 XP"** → no level gained, no XP. notes:
+- [ ] **Take some damage, then "Full Heal"** → the bar may twitch client-side then snaps back
+  (server did nothing). notes:
+- [ ] **Test Panel "Spawn Normal"** → no real (server) mob to fight; server.log shows no dev-spawn. notes:
+- [ ] **server.log** shows no give / level / spawn applied for this account. notes:
 
 ## 3 — Revoke works
 - [ ] **`grant_gm -- <gmuser> off`**, then the GM account **re-logs** → its dev commands no
