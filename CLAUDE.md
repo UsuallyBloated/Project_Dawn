@@ -33,6 +33,16 @@ A multiplayer MMORPG inspired by classic EverQuest-era games. **Two repos:** a G
 - Build: `cargo build --release`
 - DB:    SQLite `world.db`; `sqlx` auto-applies migrations on first boot
 - Dev helper: `scripts/dev-run.sh` (sources `.env` — put `PD_DEV_CMDS=1` there)
+- **Ops bins (read-only DB tools; the crate has 3 binaries, so `--bin` selects — the plain
+  `cargo run -p projectdawn-server` still runs the server via the `default-run` manifest key):**
+  `cargo run -p projectdawn-server --bin admin_report` (accounts + characters incl. soft-deletes
+  and per-char coins/inventory → console + a local `world_report.html`), and
+  `cargo run -p projectdawn-server --bin grant_gm -- <username> on|off` (set per-account GM; no
+  args = list). `grant_gm` writes; `admin_report` is read-only.
+- **GM playtest (dev commands OFF, only `is_gm` accounts get tools):** `PD_DEV_CMDS` enables dev
+  commands *only* when it equals exactly `"1"`, so to run with them off, unset it or set anything
+  else. PowerShell (note: bare `null`/`false` are not literals — use `$null`/`$false` or a string):
+  `Remove-Item Env:\PD_DEV_CMDS -EA Ignore; cargo run -p projectdawn-server`.
 
 > Don't modify anything above `F:\Projects\`.
 
