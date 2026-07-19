@@ -484,6 +484,10 @@
   .chip.risk-lo { color: var(--good); }
   .chip.par     { color: var(--blue); background: var(--blue-wash); }
   .chip.key     { color: var(--accent); background: var(--accent-wash); }
+  /* Progress status — mirrors schedule.md section 7. Keep both in sync. */
+  .chip.done    { color: #fff; background: var(--good); border-color: var(--good); }
+  .chip.active  { color: var(--blue); background: var(--blue-wash); }
+  ul.items li.itemdone { opacity: 0.6; }
 
   ul.items {
     list-style: none;
@@ -835,6 +839,7 @@
         <div class="phase-head">
           <span class="phase-no">00</span>
           <h3>Reconcile the picture</h3>
+          <span class="chip done">Done</span>
           <span class="chip risk-lo">Low risk</span>
           <span class="when">Jul 16 to Jul 17</span>
         </div>
@@ -855,6 +860,7 @@
         <div class="phase-head">
           <span class="phase-no">01</span>
           <h3>Close the exploit gate</h3>
+          <span class="chip active">In progress</span>
           <span class="chip key">Keystone</span>
           <span class="chip risk-lo">Low risk</span>
           <span class="when">Jul 20 to Jul 31</span>
@@ -865,7 +871,7 @@
           subject matter.
         </p>
         <ul class="items">
-          <li class="keystone"><b>Per-account is_gm.</b> Thread the existing accounts column from the signed world token into the connection, and gate dev commands on it instead of the process-wide environment variable. This is what lets you keep your tools on a server your friends are playing on.</li>
+          <li class="keystone itemdone"><b>Per-account is_gm. Done (playtested 2026-07-19).</b> Threads the existing accounts column from the signed world token into the connection, and gates dev commands on it instead of the process-wide environment variable. This is what lets you keep your tools on a server your friends are playing on.</li>
           <li><b>Respawn dead-check.</b> The respawn handler floors health to 25% without checking you actually died, so a living player can top up on demand. Small.</li>
           <li><b>Melee swing-rate limit.</b> No swing timer exists on the connection, so a modified client can spam attacks. Small to medium.</li>
           <li><b>Cast class and level gate.</b> Apply the check the resurrection path already does to the other four cast paths. Small.</li>

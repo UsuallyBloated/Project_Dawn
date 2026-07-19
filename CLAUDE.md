@@ -33,6 +33,11 @@ A multiplayer MMORPG inspired by classic EverQuest-era games. **Two repos:** a G
 - Build: `cargo build --release`
 - DB:    SQLite `world.db`; `sqlx` auto-applies migrations on first boot
 - Dev helper: `scripts/dev-run.sh` (sources `.env` — put `PD_DEV_CMDS=1` there)
+- **Windows run wrapper: `scripts/run-server.ps1`** — `.\scripts\run-server.ps1` (dev commands
+  OFF, the hosted / GM-playtest mode) or `.\scripts\run-server.ps1 -Dev` (`PD_DEV_CMDS=1`, dev for
+  everyone). Streams live to a unique `logs/server_<timestamp>.log` (never overwritten on restart)
+  **and** `server.log`, and regenerates `world_report.html` on exit. Preferred over the raw
+  `cargo run` for playtests, since it stops losing logs across restarts.
 - **Ops bins (read-only DB tools; the crate has 3 binaries, so `--bin` selects — the plain
   `cargo run -p projectdawn-server` still runs the server via the `default-run` manifest key):**
   `cargo run -p projectdawn-server --bin admin_report` (accounts + characters incl. soft-deletes
