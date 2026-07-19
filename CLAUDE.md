@@ -332,8 +332,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Server-side melee swing-rate limit** (High) — no swing timer on the connection, so a
   client can spam `Attack` for an attack-speed hack. Needs a server-tracked per-connection
   swing cooldown.
-- [ ] **`Respawn` dead-check** (High) — the `Respawn` handler floors HP to 25% with no check
-  that you actually died, so a living player can top up HP on demand.
+- [ ] **`Respawn` dead-check** (High) — **BUILT 2026-07-19 (server `0d908d1`); pending a
+  playtest before it ticks.** The `Respawn` handler floored HP to 25% guarded only by
+  `!conn.ready`, so a living player could top up HP on demand. Now gated on
+  `conn.death_processed` (the "awaiting respawn" flag set by the death path alongside `hp = 0`),
+  so a living player's `Respawn` is a no-op; also stops racing the death sweep to skip the
+  penalty. Integration test `respawn_requires_being_dead` green. Playtest to tick: normal
+  death→respawn still works (`respawn_deadcheck_checklist.md`).
 - [ ] **CastSpell class/level gate** (Medium) — casting has no class/level validation except
   the resurrection arm, so any class can cast any spell it can name.
 - [ ] **Assorted trust gaps** (Medium/Low) — `Attack` trusts the client's `weapon_path`; no
