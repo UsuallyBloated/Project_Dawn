@@ -271,6 +271,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `docs/schedule.html` is a browser-readable rendering of it for non-repo readers (open it
   locally); keep it in sync when the plan changes.
 - **What systems exist & how they work** → `docs/concepts/architecture/systems_overview.md`
+- **Commands you type** (CLI/cargo tools, server run wrappers, in-game chat commands, keybinds) →
+  `docs/reference/commands.md`. Keep it current when a command is added or renamed.
 - **Server / wire protocol / DB / save migration** → `server/docs/server_design.md`
   (pointer at `docs/concepts/architecture/README.md`)
 - **Design concepts** (lore, classes, races, tradeskills, alignment) → `docs/concepts/`
