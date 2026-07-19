@@ -489,3 +489,30 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 - **Known gaps** (also in the root to-do): incoming `/tell`, the broader PvP-flagging design
   (when/how PvP is triggered + consequences), `RemotePet` friend/foe visual distinction.
   (ALLY-target buff routing and pet buffs both landed — see Spells & casting + Pets.)
+
+## GM access + dev tooling
+
+Dev/GM commands (`/give`, and the Test Panel's Full Heal / Level Up / Grant XP / Spawn / give-coins)
+are gated **server-side** on `PerConnection::can_use_dev_cmds()` = `is_dev || is_gm`, so an untrusted
+player can never use them (exploit-audit finding #1). Two independent grants:
+- **`is_dev`** is process-wide, from the `PD_DEV_CMDS=1` env var (`connection.rs`
+  `dev_cmds_enabled()`, cached in a `OnceLock`). Turns the WHOLE server into a dev box — for local
+  solo iteration. Logged at boot as `dev_cmds=true/false`.
+- **`is_gm`** is per-account (`accounts.is_gm`). Read at world-token mint (`db::account_is_gm`),
+  packed into the signed connect token's `user_data[8]` (`mint_connect_token`), unpacked into
+  `PerConnection.is_gm` at connect (`tick.rs::parse_is_gm_from_user_data`; logs `GM account
+  connected`). A modified client can't forge it — the token is signed with the netcode key. This is
+  what lets a HOSTED friends server run with `PD_DEV_CMDS` off while the host keeps their tools.
+  Server-only (no client/DLL/wire change); built 2026-07-17, playtested + integration-tested
+  2026-07-19 (`world_two_clients.rs::is_gm_gates_dev_commands`).
+- Set the flag offline with the **`grant_gm`** bin (`cargo run -p projectdawn-server --bin grant_gm
+  -- <username> on|off`; no args lists every account's GM status). Takes effect on that account's
+  next login (the flag is read at token mint, so a live session must re-log).
+- **Caveat — the Test Panel is a CLIENT tool** and mixes server-gated dev commands (above) with
+  client-side helpers and legitimate actions. `_full_heal` fills the bars optimistically client-side
+  even when the server refuses `HealSelf` for a non-GM (self-corrects on the next `HealthUpdate` — a
+  display lie, not an actual heal). `_trigger_death` just sets local HP to 0 (dying is legitimate and
+  never gated). So "Full Heal / Trigger Death work for a non-GM" is expected, not a gate leak.
+- **`admin_report`** bin: read-only `world.db` viewer (accounts + characters incl. soft-deletes,
+  per-char four-tier coins + bank + inventory) → console + a local `world_report.html`. WAL-aware
+  (`?mode=ro`), safe to run while the server is live.

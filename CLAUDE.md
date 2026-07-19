@@ -313,22 +313,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 
 ### Security / exploits
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
-> Finding #1 (ungated `/give`) is **fixed + committed 2026-07-16**: `GmCommand` is now gated on
-> `is_dev`, and the server logs `dev_cmds=true/false` at boot. The rest are still open, worst
-> first. Framing from the audit: the server validates *magnitudes* well (damage, XP, heal
-> amounts) but under-validates *eligibility/timing* (which weapon, which spell/class, is it time
-> to swing, are you dead, did you finish the quest).
+> Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
+> DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
+> `gm_access_checklist.md`): dev commands now gate on `conn.can_use_dev_cmds()` = `is_dev || is_gm`,
+> so a hosted server runs with `PD_DEV_CMDS` off and grants tools to a GM account only (set it with
+> the `grant_gm` bin). See systems_overview → "GM access + dev tooling". The rest below are still
+> open, worst first. Framing from the audit: the server validates *magnitudes* well (damage, XP,
+> heal amounts) but under-validates *eligibility/timing* (which weapon, which spell/class, is it
+> time to swing, are you dead, did you finish the quest).
 
-- [ ] **Per-account `is_gm`** *(keystone — gates whether a shared friends server can run at all
-  with your tools intact)*. **BUILT 2026-07-17 (server-only, no client/DLL/wire change); pending a
-  playtest before it ticks.** `accounts.is_gm` now rides the signed connect token (packed at
-  `user_data[8]` by `mint_connect_token`, read into a new `PerConnection.is_gm` at world connect),
-  and every dev command gates on `conn.can_use_dev_cmds()` = `is_dev || is_gm`. So a hosted server
-  runs with `PD_DEV_CMDS` off and grants tools to a GM account only; local solo dev
-  (`PD_DEV_CMDS=1`) is unchanged. Set the flag with the new `grant_gm` bin:
-  `cargo run -p projectdawn-server --bin grant_gm -- <username> on` (takes effect on that account's
-  next world login). **Playtest to tick:** GM account gets `/give` etc. with `PD_DEV_CMDS` off, a
-  plain account is refused.
 - [ ] **Server-side melee swing-rate limit** (High) — no swing timer on the connection, so a
   client can spam `Attack` for an attack-speed hack. Needs a server-tracked per-connection
   swing cooldown.
