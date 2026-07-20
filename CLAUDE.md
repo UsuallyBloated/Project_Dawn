@@ -403,10 +403,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it
   doesn't trivialize multi-pulls; needs server-side resolution like spell AOE. Design note:
   `docs/design/two_handed_cleave.md`.
-- [ ] **Attack while seated.** A character can auto-attack without standing up (spotted in the
-  2026-07-16 dev-panel playtest). Standing should be required to swing. Worth checking whether
-  the sit regen bonus still applies mid-fight: if it does, this is an exploit (free in-combat
-  regen), not just an animation bug.
+- [ ] **Attack while seated.** **BUILT 2026-07-20 (server `3bb9b6d` + client `9303682`); pending a
+  playtest before it ticks.** A swing now stands a seated attacker: the server auto-stands them in
+  the attack apply (`conn.is_sitting = false` + a new `last_attack_at` stamp) and the client stands
+  the model on a swing (`combat.gd`). The seated regen "meditation" bonus is now gated on being
+  *out of combat* (`regen::sitting_bonus_applies`: no bonus within `COMBAT_REGEN_LOCKOUT = 6s` of
+  dealing or taking damage), closing the free-in-combat-regen exploit — currently latent since base
+  regen is 0 (disabled by playtest request), but guarded for when it's re-enabled. Unit-tested
+  (`sitting_bonus_from`). Playtest: `attack_while_seated_checklist.md`.
 - [ ] **Named mobs lost enrage + guaranteed drops.** Both live only in client-side
   `data/named_mob_definitions.gd` with no server side, so every named mob is currently a generic
   mob wearing a name (e.g. Rotfang's guaranteed fang did not drop). Needs server-side named-mob
