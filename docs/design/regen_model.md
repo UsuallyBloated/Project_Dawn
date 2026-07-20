@@ -5,6 +5,11 @@ bracket + posture (+ race for HP, + Meditate skill for MP)**. Source: EQ health/
 This doc is the spec to implement against **and** the tuning reference. **`regen.rs` (server) and
 `regen.gd` (client) must stay in lockstep** — retune both together.
 
+**Status (2026-07-20):** BUILT. Commit (a) — flat rates + 6s tick — built + playtested (feel
+confirmed by the user); server `fbbfcd3` / client `6bb68e8`. Commit (b) — the Meditate skill —
+built; server `d97031a` / client `8bc805f`. Meditate rides the casting-skill infra. Playtest:
+`regen_model_checklist.md`.
+
 ## Decisions (locked with the user 2026-07-20)
 1. **Scope:** regen RATES only. The pool-size formulas (STA→HP max-HP, the mana-pool equation) are
    OUT of scope here — see "Deferred".
@@ -48,7 +53,9 @@ Flat, by level bracket and posture. Not stat-scaled. Troll gets the fast column.
 Rides the existing skill infra (`character_skills` persist + `SkillProgress` sync + the client
 `CastingSkills` mirror), added as a skill the server owns.
 - **Who has it:** classes with a mana pool. Pure-melee classes never train it.
-- **Cap:** `min(5 × level, 250)` (tunable). At 60 → 250 → up to `+20` MP/tick sitting.
+- **Cap:** 250 at level 60 for mana classes, 0 for pure-melee, scaled by level as `250 × level / 60`
+  (the standard skill-cap convention, so it matches every other skill). At 60 → 250 → up to `+20`
+  MP/tick sitting.
 - **Training:** server-side, in the tick loop. While **sitting with MP < max** (actually meditating),
   each 6 s tick advances Meditate toward its cap (EQ skill-up: `+1` with a diminishing-returns
   chance, or simply `+1` per med-tick until cap — start simple, tune later). Fan a `SkillProgress`
