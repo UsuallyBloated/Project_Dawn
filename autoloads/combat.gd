@@ -207,6 +207,12 @@ func _on_auto_attack() -> void:
 		return
 	if not is_instance_valid(_player):
 		return
+	# Standing is required to swing (EQ-style): a swing stands a seated player.
+	# Mirrors the server-side auto-stand in the attack apply so the visual and the
+	# server's `is_sitting` agree. `stand()` also forwards a Stand to the server
+	# through regen.gd's sit/stand transition watcher.
+	if is_player_seated():
+		_player.stand()
 	var dist: float = _player.global_position.distance_to(current_target.global_position)
 	var weapon: ItemData = Equipment.equipped.get("weapon")
 	var is_ranged_weapon := weapon != null and weapon.is_ranged
