@@ -71,7 +71,9 @@ func _hp_regen_per_tick() -> float:
 	return _hp_table_value(PlayerStats.level, _is_sitting, PlayerStats.race == "Troll")
 
 func _mp_regen_per_tick() -> float:
-	var meditate := 0  # Meditate skill lands next commit; 0 until then (server mirrors).
+	# Meditate is a casting skill; sitting MP scales with it. Server-authoritative
+	# (trained in the tick loop while medding); mirrored here for Test Room.
+	var meditate: int = CastingSkills.get_current("meditate")
 	return _mp_table_value(_is_sitting, meditate)
 
 # HP regen per 6s tick — flat by level bracket + posture + Troll bonus. Mirror of
