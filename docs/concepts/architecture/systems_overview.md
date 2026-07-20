@@ -168,11 +168,17 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   exactly like a bag; a corpse is told apart on spawn by the dedicated `CorpseSpawn` message. The
   boot loader advances the shared `NEXT_BAG_ID` past the max loaded corpse id
   (`loot::reserve_bag_ids_through`) so a fresh bag can't reuse a corpse id.
-- **Harsh decay.** `corpses::CORPSE_LINGER_SECS` (currently **300 s / 5 min**, deliberately short
-  so a playtester can watch it decay — **raise substantially for production**; EQ used tens of
-  minutes to days). On decay the corpse despawns and its row + items are deleted: unretrieved gear
-  is gone for good. Distinct from `mod.rs::CORPSE_LINGER_SECS` (5 s), which is the unrelated
-  hold-at-death-pos for slain *mobs*.
+- **Harsh decay.** `corpses::CORPSE_LINGER_SECS` (**7 days / 604800 s** as of 2026-07-17, off a
+  300 s test value; Phase 4 sets the considered production value). On decay the corpse despawns and
+  its row + items are deleted: unretrieved gear is gone for good. Distinct from
+  `mod.rs::ENEMY_DESPAWN_LINGER_SECS` (5 s), the unrelated hold-at-death-pos for slain *mobs*
+  (renamed off the once-shared `CORPSE_LINGER_SECS` name 2026-07-17).
+- **Respawn (client-driven, gated).** On death you respawn immediately to ~25% HP / 25% MP / 50%
+  stamina, in place (no server-side bind yet; see the To-Do). The client sends `Respawn`, but the
+  server honors it **only when `conn.death_processed` is set** — the death path sets that flag
+  alongside `hp = 0`, and `Respawn` clears it. So a *living* player's `Respawn` is a silent no-op,
+  closing exploit-audit finding 3 (spamming `Respawn` to floor HP at 25% for near-invulnerability).
+  Integration-tested (`respawn_requires_being_dead`); playtested 2026-07-20.
 - **Corpse retrieval (Slice 2, PD_W0020).** Loot your own corpse via the existing `LootItem` /
   `LootAll` intents keyed by corpse id, plus a private `CorpseContents` snapshot to the owner.
   Owner-only. The persist is **atomic** (the corpse delete folds into the inventory-write

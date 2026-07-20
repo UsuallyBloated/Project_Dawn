@@ -324,21 +324,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
 > `gm_access_checklist.md`): dev commands now gate on `conn.can_use_dev_cmds()` = `is_dev || is_gm`,
 > so a hosted server runs with `PD_DEV_CMDS` off and grants tools to a GM account only (set it with
-> the `grant_gm` bin). See systems_overview → "GM access + dev tooling". The rest below are still
-> open, worst first. Framing from the audit: the server validates *magnitudes* well (damage, XP,
+> the `grant_gm` bin). See systems_overview → "GM access + dev tooling". The **`Respawn` dead-check**
+> (finding 3) is **DONE + playtested 2026-07-20** (server `0d908d1`, integration test
+> `respawn_requires_being_dead`): `Respawn` gates on `conn.death_processed`, so a living player's
+> Respawn is a no-op (no HP top-up). The rest below are still open, worst first. Framing from the audit: the server validates *magnitudes* well (damage, XP,
 > heal amounts) but under-validates *eligibility/timing* (which weapon, which spell/class, is it
 > time to swing, are you dead, did you finish the quest).
 
 - [ ] **Server-side melee swing-rate limit** (High) — no swing timer on the connection, so a
   client can spam `Attack` for an attack-speed hack. Needs a server-tracked per-connection
   swing cooldown.
-- [ ] **`Respawn` dead-check** (High) — **BUILT 2026-07-19 (server `0d908d1`); pending a
-  playtest before it ticks.** The `Respawn` handler floored HP to 25% guarded only by
-  `!conn.ready`, so a living player could top up HP on demand. Now gated on
-  `conn.death_processed` (the "awaiting respawn" flag set by the death path alongside `hp = 0`),
-  so a living player's `Respawn` is a no-op; also stops racing the death sweep to skip the
-  penalty. Integration test `respawn_requires_being_dead` green. Playtest to tick: normal
-  death→respawn still works (`respawn_deadcheck_checklist.md`).
 - [ ] **CastSpell class/level gate** (Medium) — casting has no class/level validation except
   the resurrection arm, so any class can cast any spell it can name.
 - [ ] **Assorted trust gaps** (Medium/Low) — `Attack` trusts the client's `weapon_path`; no
@@ -378,10 +373,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
-- [ ] **Respawn at bind / Soul Binder NPC** — respawn still honors the *client's* bind
-  (`PlayerStats.bind_zone_path`); there is no server-authoritative bind and
+- [ ] **Respawn at bind / Soul Binder NPC + a real death state** — respawn still honors the
+  *client's* bind (`PlayerStats.bind_zone_path`); there is no server-authoritative bind and
   `ClientWorldMsg::BindAtCurrentLocation` is an inert wire variant with no server handler. Needs
-  an NPC + server bind + a server-driven respawn teleport.
+  an NPC + server bind + a server-driven respawn teleport. *(Playtest 2026-07-20: with no bind you
+  respawn exactly where you died, and there is no death lock — you can move the character straight
+  through death. The whole death→bind→respawn UX wants a redesign pass; it's its own project. Not
+  a regression from the Respawn dead-check.)*
 - [ ] **Corpse auto-re-equip on loot** — looting your own corpse returns gear to your bags; you
   re-equip by hand. A clean version needs the corpse to remember each item's equip-slot
   provenance.
@@ -421,6 +419,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Faction system** — race/class affects NPC standing; guards attack on sight
 - [ ] **Weather system**; **Water & swimming** (breath/drowning); **Doors & locks** (lockpicking)
 - [ ] **Zone transition effects** — fade/loading screen
+- [ ] **Test Panel "Despawn All Enemies" leaves enemies invisible, not gone** (playtest
+  2026-07-20) — the button appears to drop the client visual while the enemy persists (server
+  entity / `RemoteEnemy` not actually despawned), so "cleared" enemies may still be there. Dev-tool
+  bug (`test_panel.gd::_despawn_all_enemies`); likely needs the despawn to route through the server
+  like `DevSpawnMob` does, not a client-only removal.
 
 ### UI polish
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**

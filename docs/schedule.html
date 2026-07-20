@@ -872,7 +872,7 @@
         </p>
         <ul class="items">
           <li class="keystone itemdone"><b>Per-account is_gm. Done (playtested 2026-07-19).</b> Threads the existing accounts column from the signed world token into the connection, and gates dev commands on it instead of the process-wide environment variable. This is what lets you keep your tools on a server your friends are playing on.</li>
-          <li><b>Respawn dead-check.</b> The respawn handler floors health to 25% without checking you actually died, so a living player can top up on demand. Small.</li>
+          <li class="itemdone"><b>Respawn dead-check. Done (playtested 2026-07-20).</b> The respawn handler floored health to 25% without checking you actually died, so a living player could top up on demand. Now gated on the awaiting-respawn flag.</li>
           <li><b>Melee swing-rate limit.</b> No swing timer exists on the connection, so a modified client can spam attacks. Small to medium.</li>
           <li><b>Cast class and level gate.</b> Apply the check the resurrection path already does to the other four cast paths. Small.</li>
           <li><b>Attack weapon trust.</b> Read the server's tracked equipment instead of believing the weapon the client names. Small to medium.</li>

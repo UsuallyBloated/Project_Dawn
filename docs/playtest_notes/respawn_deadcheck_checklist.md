@@ -14,20 +14,20 @@ death, so this manual pass is the **regression check** that normal death/respawn
 matter here). `server.log` anchors: the death sweep / `DeathBroadcast`, then the respawn.
 
 ## 1 — Normal death and respawn still works (the regression that matters)
-- [ ] **Die** — walk into a mob and let it kill you, or Test Panel **"Trigger Death"**. notes:
-- [ ] After the client respawn timer, you **respawn ALIVE at ~25% HP / 25% MP / 50% stamina**,
-  naked, at your bind. notes:
-- [ ] A **corpse** is left where you died; you can walk back and loot it. notes:
-- [ ] **Repeat once** (die → respawn) to confirm it's reliable across deaths. notes:
+- [x] **Die** — walk into a mob and let it kill you, or Test Panel **"Trigger Death"**. notes:
+- [x] After the client respawn timer, you **respawn ALIVE at ~25% HP / 25% MP / 50% stamina**,
+  naked, at your bind. notes: Right now there is no bind-point and players respawn exactly where they died, which isnt great.  Also the player can still move the character after death.  Let me know what you think of this.  It's probably an entire project in itself.
+- [x] A **corpse** is left where you died; you can walk back and loot it. notes:
+- [x] **Repeat once** (die → respawn) to confirm it's reliable across deaths. notes:
 
 ## 2 — HP / regen behave normally after respawn
-- [ ] After respawning at ~25%, **HP regenerates** back up over time (sit to speed it). notes:
-- [ ] You can **take damage and die again** normally (the death penalty applies each time). notes:
+- [x] After respawning at ~25%, **HP regenerates** back up over time (sit to speed it). notes:  HP and MP regen are still disabled, which is fine.  The way it is now works well with testing.
+- [x] You can **take damage and die again** normally (the death penalty applies each time). notes:
 
 ## 3 — Exploit closed (needs a modified client; otherwise the integration test covers it)
-- [ ] *(Only if you can send a raw `Respawn` while ALIVE)* → nothing happens; HP is **NOT**
+- [-] *(Only if you can send a raw `Respawn` while ALIVE)* → nothing happens; HP is **NOT**
   floored to 25%. Stock clients only send `Respawn` after death, so this side is proven by the
   green integration test `respawn_requires_being_dead`, not reachable from the normal UI. notes:
 
 ## Notes / observations
--
+- "Despawn All Enemies" on the test panel does NOT despawn enemies, instead they are invisible.
