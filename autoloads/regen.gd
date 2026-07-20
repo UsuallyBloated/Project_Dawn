@@ -7,17 +7,16 @@ const TICK_INTERVAL    := 3.0
 const SITTING_HP_MULT  := 5.0
 const SITTING_MP_MULT  := 5.0
 const SITTING_ST_MULT  := 3.0
-# Round-7 playtest request: default regen disabled until target
-# numbers are decided. Mirror of the server's regen.rs constants —
-# Test Room single-player path stays in lockstep so behavior matches
-# launcher mode. Sitting / food / drink / Lich / Clarity buffs still
-# apply (additive on top of the base 0).
-const HP_BASE_REGEN    := 0.0
-const HP_CON_SCALE     := 0.0
-const MP_BASE_REGEN    := 0.0
-const MP_WIS_SCALE     := 0.0
-const ST_BASE_REGEN    := 0.0
-const ST_AGI_SCALE     := 0.0
+# Regen RE-ACTIVATED 2026-07-20 to the pre-disable baseline (these were zeroed
+# for the "Round-7 playtest request" while target numbers were decided). Mirror
+# of the server's regen.rs constants — kept in lockstep so Test Room and launcher
+# match. Final tuned numbers are pending a design pass; retune BOTH files together.
+const HP_BASE_REGEN    := 2.0
+const HP_CON_SCALE     := 0.15
+const MP_BASE_REGEN    := 2.0
+const MP_WIS_SCALE     := 0.20
+const ST_BASE_REGEN    := 3.0
+const ST_AGI_SCALE     := 0.10
 
 var _tick_timer: float = 0.0
 var _in_combat: bool = false
