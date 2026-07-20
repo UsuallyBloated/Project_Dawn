@@ -3,20 +3,12 @@ extends Node
 # Ticks every TICK_INTERVAL seconds.
 # Sitting grants large regen bonuses for all three stats.
 
-const TICK_INTERVAL    := 3.0
-const SITTING_HP_MULT  := 5.0
-const SITTING_MP_MULT  := 5.0
-const SITTING_ST_MULT  := 3.0
-# Regen RE-ACTIVATED 2026-07-20 to the pre-disable baseline (these were zeroed
-# for the "Round-7 playtest request" while target numbers were decided). Mirror
-# of the server's regen.rs constants — kept in lockstep so Test Room and launcher
-# match. Final tuned numbers are pending a design pass; retune BOTH files together.
-const HP_BASE_REGEN    := 2.0
-const HP_CON_SCALE     := 0.15
-const MP_BASE_REGEN    := 2.0
-const MP_WIS_SCALE     := 0.20
-const ST_BASE_REGEN    := 3.0
-const ST_AGI_SCALE     := 0.10
+# EQ-authentic regen (docs/design/regen_model.md, 2026-07-20). Mirror of the
+# server's regen.rs — RETUNE BOTH TOGETHER. Flat per-6s-tick by level bracket +
+# posture (+ Troll bonus for HP, + Meditate for MP); stamina flat. NOT
+# stat-scaled. This client tick only runs in Test Room (launcher = server-owned).
+const TICK_INTERVAL          := 6.0
+const STAMINA_REGEN_PER_TICK := 10.0
 
 var _tick_timer: float = 0.0
 var _in_combat: bool = false
@@ -54,13 +46,6 @@ func _do_regen() -> void:
 	if _in_combat:
 		return
 
-	var hp_mult := SITTING_HP_MULT if _is_sitting else 1.0
-	var mp_mult := SITTING_MP_MULT if _is_sitting else 1.0
-	# Carrying too much weight halves stamina recovery (or stops it entirely
-	# at double capacity) — see autoloads/encumbrance.gd.
-	var st_mult := (SITTING_ST_MULT if _is_sitting else 1.0) \
-			* Encumbrance.get_stamina_regen_mult()
-
 	var food_hp := BuffManager.get_food_hp_regen() + BuffManager.get_drink_hp_regen()
 	var food_mp := BuffManager.get_food_mp_regen() + BuffManager.get_drink_mp_regen()
 
@@ -71,21 +56,45 @@ func _do_regen() -> void:
 	var mp_regen_buff := BuffManager.get_mp_regen_buff()
 	var clarity_mp: float = mp_regen_buff.get("hps", 0.0) * TICK_INTERVAL if not mp_regen_buff.is_empty() else 0.0
 
+	# EQ model: the per-tick functions already return the posture-correct rate
+	# (flat table by level / posture / race). Food / Lich / Clarity are additive
+	# on top. Stamina is flat (encumbrance-vs-stamina interaction dropped for now,
+	# to match the server — it can return on both sides later).
 	if PlayerStats.hp < PlayerStats.max_hp and not BuffManager.is_lich_form():
-		PlayerStats.set_hp(minf(PlayerStats.hp + _hp_regen_per_tick() * hp_mult + food_hp, PlayerStats.max_hp))
+		PlayerStats.set_hp(minf(PlayerStats.hp + _hp_regen_per_tick() + food_hp, PlayerStats.max_hp))
 	if PlayerStats.mp < PlayerStats.max_mp:
-		PlayerStats.set_mp(minf(PlayerStats.mp + _mp_regen_per_tick() * mp_mult + food_mp + clarity_mp + lich_mp, PlayerStats.max_mp))
+		PlayerStats.set_mp(minf(PlayerStats.mp + _mp_regen_per_tick() + food_mp + clarity_mp + lich_mp, PlayerStats.max_mp))
 	if PlayerStats.stamina < PlayerStats.max_stamina:
-		PlayerStats.set_stamina(minf(PlayerStats.stamina + _st_regen_per_tick() * st_mult, PlayerStats.max_stamina))
+		PlayerStats.set_stamina(minf(PlayerStats.stamina + STAMINA_REGEN_PER_TICK, PlayerStats.max_stamina))
 
 func _hp_regen_per_tick() -> float:
-	return HP_BASE_REGEN + PlayerStats.constitution * HP_CON_SCALE
+	return _hp_table_value(PlayerStats.level, _is_sitting, PlayerStats.race == "Troll")
 
 func _mp_regen_per_tick() -> float:
-	return MP_BASE_REGEN + PlayerStats.wisdom * MP_WIS_SCALE
+	var meditate := 0  # Meditate skill lands next commit; 0 until then (server mirrors).
+	return _mp_table_value(_is_sitting, meditate)
 
-func _st_regen_per_tick() -> float:
-	return ST_BASE_REGEN + PlayerStats.agility * ST_AGI_SCALE
+# HP regen per 6s tick — flat by level bracket + posture + Troll bonus. Mirror of
+# regen.rs::hp_regen_per_tick; keep in lockstep (docs/design/regen_model.md).
+func _hp_table_value(level: int, sitting: bool, troll: bool) -> float:
+	# Brackets: 0:≤19  1:20-49  2:50  3:51-55  4:56-59  5:60+
+	var bracket := 0
+	if level <= 19: bracket = 0
+	elif level <= 49: bracket = 1
+	elif level <= 50: bracket = 2
+	elif level <= 55: bracket = 3
+	elif level <= 59: bracket = 4
+	else: bracket = 5
+	var stand_tbl := [2, 2, 2, 6, 10, 12] if troll else [1, 1, 1, 2, 3, 4]
+	var sit_tbl := [4, 6, 8, 12, 16, 18] if troll else [2, 3, 4, 5, 6, 7]
+	return float(sit_tbl[bracket] if sitting else stand_tbl[bracket])
+
+# MP regen per 6s tick: 1 standing, 2 + floor(meditate/12) sitting. Mirror of
+# regen.rs::mp_regen_per_tick.
+func _mp_table_value(sitting: bool, meditate: int) -> float:
+	if sitting:
+		return float(2 + max(meditate, 0) / 12)
+	return 1.0
 
 func _on_player_state_changed(new_state: int) -> void:
 	var was_sitting := _is_sitting
