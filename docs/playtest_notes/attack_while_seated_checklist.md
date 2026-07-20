@@ -12,16 +12,21 @@ seated-regen suppression has no *visible* effect yet — it's unit-tested (`rege
 and guards the exploit for when regen is re-enabled. So this manual pass is really the
 **standing-to-swing behavior**.
 
+> **UPDATE 2026-07-20 (after this checklist was authored):** regen was re-activated to the EQ model,
+> so the seated-regen-in-combat suppression is now LIVE, not dormant. Section 3 is therefore
+> live + unit-tested; the standing-to-swing behavior (sections 1-2, both `[x]`) is the manual
+> evidence for the tick.
+
 ## 1 — A swing stands you
-- [ ] **Sit** (`/sit` or the sit key); confirm the character is visibly seated. notes:
-- [ ] **Target an enemy and turn on auto-attack** (default Q) in range → the character **stands
+- [x] **Sit** (`/sit` or the sit key); confirm the character is visibly seated. notes:
+- [x] **Target an enemy and turn on auto-attack** (default Q) in range → the character **stands
   up** and swings; it does NOT keep attacking while seated. notes:
-- [ ] You deal damage normally once standing. notes:
+- [x] You deal damage normally once standing. notes:
 
 ## 2 — You can't stay seated while fighting
-- [ ] **While auto-attacking, `/sit`** → you may sit for a moment but the next swing stands you
+- [x] **While auto-attacking, `/sit`** → you may sit for a moment but the next swing stands you
   again (auto-attack keeps you standing). notes:
-- [ ] **Turn OFF auto-attack, then `/sit`** → now you stay seated (out of combat). notes:
+- [x] **Turn OFF auto-attack, then `/sit`** → now you stay seated (out of combat). notes:
 
 ## 3 — Regen gate (dormant while base regen = 0)
 - [ ] Not directly observable yet (regen disabled). Recorded for when regen is re-enabled: a
@@ -29,4 +34,5 @@ and guards the exploit for when regen is re-enabled. So this manual pass is real
   boosted seated rate. Covered by the `sitting_bonus_from` unit test. notes:
 
 ## Notes / observations
--
+- Player will eventually take bonus damage from attacks while seated, including a bonus to attacker's critical chance and critical damge.
+- Player will eventually stand when receiving damage.
