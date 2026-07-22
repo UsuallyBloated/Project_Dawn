@@ -343,10 +343,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Server-side melee swing-rate limit** (High) — no swing timer on the connection, so a
   client can spam `Attack` for an attack-speed hack. Needs a server-tracked per-connection
   swing cooldown.
-- [ ] **Assorted trust gaps** (Medium/Low) — `Attack` trusts the client's `weapon_path`; no
-  login rate limiting; `BuyItem` ignores `vendor_id`; cross-store transfers persist as separate
-  txns (crash-window dupe/loss; the corpse-loot path is the only atomic one); username
-  enumeration on the auth path.
+- [ ] **Assorted trust gaps** (Medium/Low) — ~~`Attack` trusts the client's `weapon_path`~~
+  *(built 2026-07-22, server `9089b4b`, pending playtest — the resolver derives the weapon from the
+  server equipment map via `equipped_weapon_path`; `attack_weapon_path_checklist.md`)*; no login
+  rate limiting; `BuyItem` ignores `vendor_id`; cross-store transfers persist as separate txns
+  (crash-window dupe/loss; the corpse-loot path is the only atomic one); username enumeration on the
+  auth path.
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
