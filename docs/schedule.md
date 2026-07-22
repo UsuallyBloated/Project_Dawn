@@ -134,8 +134,9 @@ The phase that decides whether anyone can be invited. Findings numbered per
 - **Respawn dead-check** (finding 3, High). Gate on `conn.hp <= 0.0`. Small.
 - **Melee swing-rate limit** (finding 2, High). Per-connection `next_swing_at` from the
       equipped weapon's delay. Small to medium.
-- **CastSpell class/level gate** (finding 4, Medium). Apply the check the resurrection arm
-      already does to the SELF / ALLY / ENEMY / AOE arms. Small.
+- **CastSpell class/level gate** (finding 4, Medium). ✅ Done + playtested 2026-07-22 (server
+      `a96826d`). The cast resolver applies the resurrection arm's class/level check to every spell,
+      before mana/cooldown/skill side effects. Zero misfires in the playtest log.
 - **`Attack` weapon_path** (finding 5, Medium). Read the server's tracked equipment instead
       of trusting the wire field. Small to medium.
 - **Login rate limiting + auth timing equalization** (findings 6 and 9). Matters the moment
@@ -283,7 +284,7 @@ rather than via a chat line after the fact.
 | Phase | Window | Status |
 |---|---|---|
 | 0. Reconcile | Jul 16 to Jul 17 | **Done (2026-07-17)** — doc reconciliation complete; `CORPSE_LINGER_SECS` raised to 7 days (user-accepted, pure value change); duplicate-name trap resolved via rename |
-| 1. Exploit gate | Jul 20 to Jul 31 | **In progress** — keystone (`is_gm`) + Respawn dead-check + attack-while-seated done & playtested (through 07-20). Remaining: cast class/level gate, weapon_path, swing-rate, login rate-limit |
+| 1. Exploit gate | Jul 20 to Jul 31 | **In progress** — keystone (`is_gm`) + Respawn dead-check + attack-while-seated + cast class/level gate done & playtested (through 07-22). Remaining: `Attack` weapon_path, swing-rate, login rate-limit |
 | 2. Host + first friend | Aug 3 to Aug 7 | Not started |
 | 3. Stop it eating things | Aug 10 to Aug 21 | Not started |
 | 4. An evening's worth | Aug 24 to Sep 11 | Not started |

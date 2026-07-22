@@ -5,10 +5,17 @@ bracket + posture (+ race for HP, + Meditate skill for MP)**. Source: EQ health/
 This doc is the spec to implement against **and** the tuning reference. **`regen.rs` (server) and
 `regen.gd` (client) must stay in lockstep** — retune both together.
 
-**Status (2026-07-20):** BUILT. Commit (a) — flat rates + 6s tick — built + playtested (feel
-confirmed by the user); server `fbbfcd3` / client `6bb68e8`. Commit (b) — the Meditate skill —
-built; server `d97031a` / client `8bc805f`. Meditate rides the casting-skill infra. Playtest:
-`regen_model_checklist.md`.
+**Status (2026-07-22):** BUILT + PLAYTESTED. Commit (a) — flat rates + 6s tick — server `fbbfcd3` /
+client `6bb68e8`; feel confirmed 2026-07-20. Commit (b) — the Meditate skill — server `d97031a` /
+client `8bc805f`; playtested 2026-07-22 (`regen_model_checklist.md`): standing-vs-sitting MP,
+Meditate training + climb in the character window + seated MP scaling, persistence across relog, and
+the Troll HP column all confirmed. Two rows didn't verify, neither a defect: (1) the combat gate
+(seated regen suppressed for 6s after damage) is correct in code — `last_damaged_at` is stamped on
+every player-damage path and unit-tested — but the effect is 1-2 HP/tick, below what the eye reads,
+and taking damage doesn't yet *stand you up* (that's the separate "seated-combat penalties" To-Do);
+(2) stamina regen couldn't be observed because nothing consumes stamina yet (no sprint/endurance
+sink wired). The "grep `meditate` in server.log" row was a bad diagnostic — skill gains are
+`SkillProgressUpdate` wire messages, not logged.
 
 ## Decisions (locked with the user 2026-07-20)
 1. **Scope:** regen RATES only. The pool-size formulas (STA→HP max-HP, the mana-pool equation) are

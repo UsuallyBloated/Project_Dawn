@@ -24,7 +24,7 @@ Diagnostic: `server.log` grep `CastSpell rejected — class/level not eligible` 
 if a forbidden cast is attempted; must NOT appear for any cast below).
 
 ## Setup
-- [ ] Restart server (release build)
+- [x] Restart server (release build)
 - [ ] Log in a caster of a mana class; have MP available (regen is slow — sit/med or use Test Panel)
 
 > **Known gotcha:** a cast can silently fail for unrelated reasons (not enough mana, on cooldown,
@@ -34,29 +34,34 @@ if a forbidden cast is attempted; must NOT appear for any cast below).
 ## 1 — Regression: each casting class casts its own spells (must all succeed)
 Cast at least one spell per class you can roll. None should be rejected; the log must show NO
 `class/level not eligible` line for any of these.
-- [ ] **Magician casts Fireball** → lands (damage applied). notes:
-- [ ] **Cleric casts Healing Light on an ally** → heal lands. notes:
-- [ ] **Wizard (level >= 18) casts Meteor** → lands. notes:
-- [ ] **Druid or Shaman casts Spirit of Wolf** (multi-class spell) → buff lands. notes:
-- [ ] **A multi-word class casts its own spell** (Paladin Lay on Hands / Beast Master Spirit Mend /
-  Shadow Knight / Witch Hunter / Blood Mage) → lands, NOT rejected. notes:
+- [x] **Magician casts Fireball** → lands (damage applied). notes:
+- [x] **Cleric casts Healing Light on an ally** → heal lands. notes:
+- [x] **Wizard (level >= 18) casts Meteor** → lands. notes:
+- [x] **Druid or Shaman casts Spirit of Wolf** (multi-class spell) → buff lands. notes: both appear to work
+- [x] **A multi-word class casts its own spell** (Paladin Lay on Hands / Beast Master Spirit Mend /
+  Shadow Knight / Witch Hunter / Blood Mage) → lands, NOT rejected. notes: tested spellsf or Shadow Knight ahd Blood mage.
 
 ## 2 — Level gate on a real spell (legit path)
-- [ ] **A Wizard below level 18 has no Meteor scribed / can't slot it** → confirms the client keeps
+- [x] **A Wizard below level 18 has no Meteor scribed / can't slot it** → confirms the client keeps
   you off it before the server ever sees the cast (the gate is the backstop, not the front line).
   notes:
-- [ ] **Level a Wizard to 18 and cast Meteor** → now lands. notes:
+- [x] **Level a Wizard to 18 and cast Meteor** → now lands. notes:
 
 ## 3 — Buff / heal / pet spells still route normally (regression)
-- [ ] **Cast a self-buff, an ally-buff, a HoT, and a pet spell you own** → all apply as before (the
+- [x] **Cast a self-buff, an ally-buff, a HoT, and a pet spell you own** → all apply as before (the
   gate sits ahead of the target-type branch; it must not disturb SELF / ALLY / PET / CORPSE). notes:
-- [ ] **A Cleric/Paladin resurrection on a corpse still works** → res offer fires (the CORPSE arm's
-  own class check is now redundant defense-in-depth, not a double-reject). notes:
+- [x] **A Cleric/Paladin resurrection on a corpse still works** → res offer fires (the CORPSE arm's
+  own class check is now redundant defense-in-depth, not a double-reject). notes: Cleric resurrection (Minor), Resurrection, and resurrection II all appear to work correctly.
 
 ## 4 — Rejection path (forged cast — expect [-] on a stock client)
-- [ ] **Attempt to cast a spell your class can't** (needs a modified client / raw wire msg) → server
+- [-] **Attempt to cast a spell your class can't** (needs a modified client / raw wire msg) → server
   drops it, fans "Your class cannot cast that.", no mana spent; `server.log` shows the reject.
-  notes: (expected `[-]` — stock client can't send this; unit-test-covered)
+  notes: (expected `[-]` — stock client can't send this; unit-test-covered) We dont currently have a modified client to execute this. as you expected.
 
 ## Notes / observations
--
+- BLood Mage Life Drain doesnt appear to work.  mana consumed, but no spell appears to be cast. chat shows "You cast Life Drain"
+
+- Shadow Knight Dark Shroud appears to do nothing.
+
+
+

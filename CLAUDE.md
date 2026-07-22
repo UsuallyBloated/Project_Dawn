@@ -103,7 +103,12 @@ Keep the main model for design, code, and any exploit or verification work.
 
 ### Known client↔server drift to watch
 - Spells exist in **both** GDScript (`data/spell_definitions.gd`) and server `spells.toml`
-  — adding/editing one without the other causes drift (e.g. a missing Warder's Mend).
+  — adding/editing one without the other causes drift. Quantified 2026-07-22: the client has
+  156 spells, `spells.toml` has 124, so **~32 are client-only** and get dropped server-side as
+  "unknown spell" (mana spent, no effect). Life Drain + Dark Shroud closed that day; the rest
+  need server support first (9 `PORT` teleport/gate spells, prestige-class tags like
+  `Paladin_Fallen`, `Warder's Mend` PET_HEAL) — see the To-Do "Client-only spell backlog".
+  `tools/export_spells.gd` (Godot editor) is the intended regen path but is stale.
 - *(Closed 2026-06-22: leveling used to be client-local and provisional. The corpse epic's
   Slice 0 moved XP + leveling server-side — `world/progression.rs::award_xp` is the single
   choke point and the client mirrors `XpGained` / `LevelUp`. The per-level stat tables are
@@ -327,15 +332,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > the `grant_gm` bin). See systems_overview → "GM access + dev tooling". The **`Respawn` dead-check**
 > (finding 3) is **DONE + playtested 2026-07-20** (server `0d908d1`, integration test
 > `respawn_requires_being_dead`): `Respawn` gates on `conn.death_processed`, so a living player's
-> Respawn is a no-op (no HP top-up). The rest below are still open, worst first. Framing from the audit: the server validates *magnitudes* well (damage, XP,
+> Respawn is a no-op (no HP top-up). The **CastSpell class/level gate** is **DONE + playtested
+> 2026-07-22** (server `a96826d`, `cast_class_level_gate_checklist.md`): the cast resolver rejects a
+> `CastSpell` unless the caster's class is in the spell's `classes` and their level meets `min_level`,
+> checked before any mana / cooldown / skill side effect; the regression sweep passed with zero gate
+> rejections in `server.log`. The rest below are still open, worst first. Framing from the audit: the server validates *magnitudes* well (damage, XP,
 > heal amounts) but under-validates *eligibility/timing* (which weapon, which spell/class, is it
 > time to swing, are you dead, did you finish the quest).
 
 - [ ] **Server-side melee swing-rate limit** (High) — no swing timer on the connection, so a
   client can spam `Attack` for an attack-speed hack. Needs a server-tracked per-connection
   swing cooldown.
-- [ ] **CastSpell class/level gate** (Medium) — casting has no class/level validation except
-  the resurrection arm, so any class can cast any spell it can name.
 - [ ] **Assorted trust gaps** (Medium/Low) — `Attack` trusts the client's `weapon_path`; no
   login rate limiting; `BuyItem` ignores `vendor_id`; cross-store transfers persist as separate
   txns (crash-window dupe/loss; the corpse-loot path is the only atomic one); username
@@ -413,6 +420,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `data/named_mob_definitions.gd` with no server side, so every named mob is currently a generic
   mob wearing a name (e.g. Rotfang's guaranteed fang did not drop). Needs server-side named-mob
   stats + guaranteed/rare drop resolution. Flagged in `session_2026_07_11_dev_panel.md:79`.
+- [ ] **Client-only spell backlog (~32 spells missing from `spells.toml`)** *(quantified
+  2026-07-22 from a Life Drain / Dark Shroud playtest; those two are now ported)*. The client's
+  `spell_definitions.gd` has 156 spells; the server has 124. A client-only spell is dropped as
+  "unknown spell" (mana spent, no effect). The simple base-class ENEMY/SELF ones can be ported
+  as-is; the rest need server support first: **9 `PORT` teleport/gate/evac spells** (no server
+  target-type handler), **prestige-class tags** (`Paladin_Fallen`, `Shadow Knight_Redeemed` — the
+  cast gate keys on base `conn.class`, so these need the prestige-class model), and **`Warder's
+  Mend` PET_HEAL** (also its own long-standing gap). `tools/export_spells.gd` is the intended regen
+  path but is stale. Audit list: see the "Known drift" note + the 2026-07-22 session note.
 
 ### World systems
 - [ ] **Mount system** — *`MountManager` autoload exists (client-side v1); feature is not

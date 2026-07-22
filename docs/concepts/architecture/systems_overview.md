@@ -179,6 +179,16 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   alongside `hp = 0`, and `Respawn` clears it. So a *living* player's `Respawn` is a silent no-op,
   closing exploit-audit finding 3 (spamming `Respawn` to floor HP at 25% for near-invulnerability).
   Integration-tested (`respawn_requires_being_dead`); playtested 2026-07-20.
+- **CastSpell class/level gate.** The cast resolver (`world/tick.rs`) rejects a `CastSpell` unless
+  the caster's class is in the spell's `classes` AND their level meets `min_level` — checked right
+  after the `spells::lookup` and before any mana / cooldown / skill side effect, so a forged cast
+  costs nothing and leaves no state. Closes the audit's "any class can cast any spell it can name";
+  the resurrection (`CORPSE`) arm keeps its own copy as defense-in-depth. Every `spells.toml` entry
+  is class- and `min_level`-tagged (invariant-tested), and `conn.class` matches the toml class
+  strings (same field `skills::cap_for` keys on). Playtested 2026-07-22
+  (`cast_class_level_gate_checklist.md`): the regression sweep passed with zero gate rejections in
+  `server.log`. *(Note: a client-only spell is dropped earlier as "unknown spell" by `lookup`,
+  before this gate — see the "client-only spell backlog" To-Do.)*
 - **Corpse retrieval (Slice 2, PD_W0020).** Loot your own corpse via the existing `LootItem` /
   `LootAll` intents keyed by corpse id, plus a private `CorpseContents` snapshot to the owner.
   Owner-only. The persist is **atomic** (the corpse delete folds into the inventory-write
