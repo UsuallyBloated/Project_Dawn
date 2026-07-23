@@ -2,6 +2,12 @@ class_name PassiveSkillTracker
 extends Node
 
 signal skill_advanced(skill_name: String, new_value: int, cap: int)
+# Fired once after the enter-world snapshot overwrites the score cache. Distinct
+# from `skill_advanced` on purpose: the character window listens to this to repaint
+# loaded scores on login, but CombatLog does NOT (a per-skill `skill_advanced` here
+# would spam "Your <skill> increased to N" three times on every world entry). See
+# apply_remote_snapshot.
+signal snapshot_applied
 
 const ADVANCE_CHANCE_BASE := 0.2
 
@@ -50,17 +56,19 @@ func apply_remote_score(skill_name: String, new_score: int) -> void:
 # initialize() pass populates the canonical key set first, so the
 # snapshot's keys should match exactly).
 #
-# Note: no broadcast emit. An earlier version fired
-# `skill_advanced.emit("", 0, 0)` as a "snapshot landed" nudge for the
-# character window to re-render — but CombatLog also subscribes to
-# `skill_advanced` and logged "Your  skill has increased to 0
-# (cap: 0)." three times (once per tracker) on every world entry.
-# Character window already calls `_refresh()` in its _ready and is
-# closed by default; opening it after a snapshot reads fresh values.
+# Emits `snapshot_applied` (not `skill_advanced`) once at the end so the
+# character window repaints the loaded scores. The window's own `_ready`
+# `_refresh()` runs at world load, BEFORE this network snapshot arrives, so
+# without this nudge it would show the seeded starting values (e.g. "1 / x")
+# until the next real advance repainted them — a relog looked like it wiped
+# your skills even though the scores were correct underneath (playtest
+# 2026-07-22). `snapshot_applied` is deliberately separate from `skill_advanced`
+# so CombatLog (which only wants real advances) doesn't log a bogus increase.
 func apply_remote_snapshot(entries: Dictionary) -> void:
 	for k in entries:
 		if _skills.has(k):
 			_skills[k] = int(entries[k])
+	snapshot_applied.emit()
 
 func get_current(skill_name: String) -> int:
 	return _skills.get(skill_name, 0)

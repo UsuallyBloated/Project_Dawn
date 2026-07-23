@@ -61,6 +61,14 @@ func _ready() -> void:
 	WeaponSkills.skill_advanced.connect(_on_skill_advanced)
 	ArmorSkills.skill_advanced.connect(_on_armor_skill_advanced)
 	CastingSkills.skill_advanced.connect(_on_casting_skill_advanced)
+	# Repaint when the enter-world snapshot lands. This _ready + _refresh runs at
+	# world load, BEFORE the server's SkillProgressSnapshot arrives, so without
+	# this the labels sit at the seeded starting values ("1 / x") after a relog
+	# until the next advance. The snapshot applies the real scores silently; these
+	# nudges paint them.
+	WeaponSkills.snapshot_applied.connect(_refresh_skills)
+	ArmorSkills.snapshot_applied.connect(_refresh_armor_skills)
+	CastingSkills.snapshot_applied.connect(_refresh_casting_skills)
 
 func _apply_panel_style() -> void:
 	var style := StyleBoxFlat.new()
