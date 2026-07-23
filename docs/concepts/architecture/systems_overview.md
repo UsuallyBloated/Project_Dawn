@@ -189,6 +189,15 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   (`cast_class_level_gate_checklist.md`): the regression sweep passed with zero gate rejections in
   `server.log`. *(Note: a client-only spell is dropped earlier as "unknown spell" by `lookup`,
   before this gate — see the "client-only spell backlog" To-Do.)*
+- **Attack weapon_path derived server-side.** The `Attack` message carries the weapon the client
+  claims to swing, but the resolver ignores it and reads the equipped weapon from the server's
+  equipment map — `PerConnection::equipped_weapon_path(is_offhand)`, main hand = slot 0, off hand =
+  slot 1 (protocol `EquipSlot` order). All five consumers (the `calc_swing` damage roll, PvP +
+  enemy range checks, out-of-range log, weapon-skill advance) use it. Empty slot = unarmed 1-4 fist
+  / `hand_to_hand` swing. Closes audit finding 5 (a modified client claiming a heavier / ranged /
+  wrong-skill weapon). Equipping only routes through the server `EquipItem` intent, so the map is
+  authoritative; new characters start bare (`create_character` seeds no gear). Playtested 2026-07-23
+  (`attack_weapon_path_checklist.md`).
 - **Corpse retrieval (Slice 2, PD_W0020).** Loot your own corpse via the existing `LootItem` /
   `LootAll` intents keyed by corpse id, plus a private `CorpseContents` snapshot to the owner.
   Owner-only. The persist is **atomic** (the corpse delete folds into the inventory-write

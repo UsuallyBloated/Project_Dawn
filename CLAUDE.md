@@ -336,19 +336,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > 2026-07-22** (server `a96826d`, `cast_class_level_gate_checklist.md`): the cast resolver rejects a
 > `CastSpell` unless the caster's class is in the spell's `classes` and their level meets `min_level`,
 > checked before any mana / cooldown / skill side effect; the regression sweep passed with zero gate
-> rejections in `server.log`. The rest below are still open, worst first. Framing from the audit: the server validates *magnitudes* well (damage, XP,
+> rejections in `server.log`. The **`Attack` weapon_path trust gate** (finding 5) is **DONE +
+> playtested 2026-07-23** (server `9089b4b`, `attack_weapon_path_checklist.md`): the resolver derives
+> the swung weapon from the server's equipment map (`PerConnection::equipped_weapon_path`, slot 0
+> main / 1 off) instead of the client's claim, so a modified client can't swing a weapon it hasn't
+> equipped; regression sweep (melee / unarmed / dual-wield / ranged / range) all passed. The rest
+> below are still open, worst first. Framing from the audit: the server validates *magnitudes* well (damage, XP,
 > heal amounts) but under-validates *eligibility/timing* (which weapon, which spell/class, is it
 > time to swing, are you dead, did you finish the quest).
 
 - [ ] **Server-side melee swing-rate limit** (High) — no swing timer on the connection, so a
   client can spam `Attack` for an attack-speed hack. Needs a server-tracked per-connection
   swing cooldown.
-- [ ] **Assorted trust gaps** (Medium/Low) — ~~`Attack` trusts the client's `weapon_path`~~
-  *(built 2026-07-22, server `9089b4b`, pending playtest — the resolver derives the weapon from the
-  server equipment map via `equipped_weapon_path`; `attack_weapon_path_checklist.md`)*; no login
-  rate limiting; `BuyItem` ignores `vendor_id`; cross-store transfers persist as separate txns
-  (crash-window dupe/loss; the corpse-loot path is the only atomic one); username enumeration on the
-  auth path.
+- [ ] **Assorted trust gaps** (Medium/Low) — *(`Attack` weapon_path DONE + playtested 2026-07-23,
+  server `9089b4b` — moved to the blockquote above.)* Still open: no login rate limiting; `BuyItem`
+  ignores `vendor_id`; cross-store transfers persist as separate txns (crash-window dupe/loss; the
+  corpse-loot path is the only atomic one); username enumeration on the auth path.
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
