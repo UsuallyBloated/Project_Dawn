@@ -345,9 +345,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > heal amounts) but under-validates *eligibility/timing* (which weapon, which spell/class, is it
 > time to swing, are you dead, did you finish the quest).
 
-- [ ] **Server-side melee swing-rate limit** (High) — no swing timer on the connection, so a
-  client can spam `Attack` for an attack-speed hack. Needs a server-tracked per-connection
-  swing cooldown.
+- [ ] **Server-side melee swing-rate limit** (High) — *(built 2026-07-29, server `335b5b1`, pending
+  playtest — a per-connection, per-hand minimum swing interval derived from the equipped weapon's
+  `weapon_delay` (assumes max haste; drops "too fast" same-hand swings silently). Adversarially
+  reviewed: also fixed a HIGH bypass — an off-hand Attack with an empty slot 1, a forged free
+  second damage stream, is now rejected. `swing_rate_limit_checklist.md`.)*
 - [ ] **Assorted trust gaps** (Medium/Low) — *(`Attack` weapon_path DONE + playtested 2026-07-23,
   server `9089b4b` — moved to the blockquote above.)* Still open: no login rate limiting; `BuyItem`
   ignores `vendor_id`; cross-store transfers persist as separate txns (crash-window dupe/loss; the
@@ -406,6 +408,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `ENEMY_DESPAWN_LINGER_SECS`).
 
 ### Combat / weapons
+- [ ] **Server-authoritative weapon procs** *(surfaced by the swing-rate limit, 2026-07-29)* — procs
+  are client-driven: the client sends a weapon proc as a **second same-hand `Attack`** in the same
+  frame. Two problems: (a) the server resolved that proc Attack via `calc_swing` as a **full
+  weapon-damage roll**, not the authored `proc_damage` (so procs were double-hitting); (b) the new
+  swing-rate limit now **drops** that second same-hand Attack, so the proc no longer applies
+  server-side (client still shows the number/flash). Fix: the server should roll `proc_chance` on an
+  accepted swing and apply `proc_damage`/`proc_damage_type` itself (all four proc fields already
+  exist in `items.toml` + the server `Item` struct), and the client should stop sending the proc as
+  an `Attack`. Server-authoritative, closes the double-hit + the drop in one pass.
 - [ ] **Bard song rework** — songs are half-built: they auto-pulse client-only (never re-broadcast),
   so the server applies a song's effect once on cast and nothing sustains it; heal songs do a raw
   `set_hp` (HP-bar bounce, no buff-window entry). Make them server-authoritative + weaving-aware +

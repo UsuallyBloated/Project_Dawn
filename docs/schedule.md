@@ -285,7 +285,7 @@ rather than via a chat line after the fact.
 | Phase | Window | Status |
 |---|---|---|
 | 0. Reconcile | Jul 16 to Jul 17 | **Done (2026-07-17)** — doc reconciliation complete; `CORPSE_LINGER_SECS` raised to 7 days (user-accepted, pure value change); duplicate-name trap resolved via rename |
-| 1. Exploit gate | Jul 20 to Jul 31 | **In progress** — keystone (`is_gm`) + Respawn dead-check + attack-while-seated + cast class/level gate + `Attack` weapon_path all done & playtested (through 07-23). Remaining: melee swing-rate limit, login rate-limit + auth timing |
+| 1. Exploit gate | Jul 20 to Jul 31 | **In progress** — keystone (`is_gm`) + Respawn dead-check + attack-while-seated + cast class/level gate + `Attack` weapon_path all done & playtested (through 07-23); melee swing-rate limit built 07-29 (server `335b5b1`, pending playtest). Remaining: login rate-limit + auth timing |
 | 2. Host + first friend | Aug 3 to Aug 7 | Not started |
 | 3. Stop it eating things | Aug 10 to Aug 21 | Not started |
 | 4. An evening's worth | Aug 24 to Sep 11 | Not started |
