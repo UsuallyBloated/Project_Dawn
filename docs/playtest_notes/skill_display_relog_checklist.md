@@ -13,25 +13,25 @@ dedicated `snapshot_applied` signal that repaints the window when the snapshot l
 Diagnostic: open the Character window (skills section shows `current / cap` per skill).
 
 ## Setup
-- [ ] Re-export Project_Dawn
-- [ ] Have a character that has trained at least one weapon/armor/casting skill above its start value
+- [x] Re-export Project_Dawn
+- [x] Have a character that has trained at least one weapon/armor/casting skill above its start value
 
 ## 1 — Trained skills survive a relog (the fix)
-- [ ] **Note a trained skill's value, log out, log back in, open the Character window** → the skill
+- [x] **Note a trained skill's value, log out, log back in, open the Character window** → the skill
   shows its trained value immediately (NOT `1 / x`). notes:
-- [ ] **Do it with the Character window already open across the relog flow** (open it right after
+- [x] **Do it with the Character window already open across the relog flow** (open it right after
   entering world) → values are correct without needing a skill to advance first. notes:
 
 ## 2 — No bogus CombatLog spam (regression)
-- [ ] **Watch the combat log during login** → NO "Your <skill> skill has increased to N" lines fire
+- [x] **Watch the combat log during login** → NO "Your <skill> skill has increased to N" lines fire
   on entering the world (the snapshot repaint must not masquerade as an advance). notes:
 
 ## 3 — Live advance still works (regression)
-- [ ] **After login, train a skill (swing / cast) and watch it tick up** → the number increments live
+- [x] **After login, train a skill (swing / cast) and watch it tick up** → the number increments live
   in the Character window and the combat log shows the real "increased to N" line. notes:
 
 ## 4 — All three skill kinds (regression)
-- [ ] **Confirm weapon, armor, AND casting skills all show correct trained values after relog**
+- [x] **Confirm weapon, armor, AND casting skills all show correct trained values after relog**
   (armor advances by taking hits, casting by casting / medding). notes:
 
 ## Notes / observations
