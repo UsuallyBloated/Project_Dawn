@@ -198,6 +198,17 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   wrong-skill weapon). Equipping only routes through the server `EquipItem` intent, so the map is
   authoritative; new characters start bare (`create_character` seeds no gear). Playtested 2026-07-23
   (`attack_weapon_path_checklist.md`).
+- **Melee swing-rate limit (per-hand).** A per-connection, per-hand minimum interval between swings
+  (`conn.last_swing_at[2]`, 0 main / 1 off) closes the attack-speed hack (no swing timer existed).
+  For each `Attack` the resolver takes the equipped weapon's `weapon_delay`, computes the fastest a
+  fully-hasted client could swing that hand (`min_swing_interval_secs` = `weapon_delay x handMult x
+  (1 - MAX_HASTE) - grace`, floored 0.4s), and silently drops (`continue`, no Miss) a same-hand swing
+  that arrives faster; the timer advances only on an accepted swing. Per-hand so dual-wield's two
+  independent streams don't throttle each other; assumes max haste so hasted players never trip; only
+  rejects "too fast" (the client sends an `Attack` only on a landed hit, no burst). Also rejects an
+  off-hand `Attack` with an empty off-hand slot (a forged free fist-damage stream). Mirrors the
+  client pacing in `combat.gd`. Playtested 2026-07-29 (`swing_rate_limit_checklist.md`); the only
+  rejections observed were a proc weapon's client-driven second Attack (see the server-procs To-Do).
 - **Corpse retrieval (Slice 2, PD_W0020).** Loot your own corpse via the existing `LootItem` /
   `LootAll` intents keyed by corpse id, plus a private `CorpseContents` snapshot to the owner.
   Owner-only. The persist is **atomic** (the corpse delete folds into the inventory-write

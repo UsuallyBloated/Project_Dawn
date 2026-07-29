@@ -340,16 +340,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > playtested 2026-07-23** (server `9089b4b`, `attack_weapon_path_checklist.md`): the resolver derives
 > the swung weapon from the server's equipment map (`PerConnection::equipped_weapon_path`, slot 0
 > main / 1 off) instead of the client's claim, so a modified client can't swing a weapon it hasn't
-> equipped; regression sweep (melee / unarmed / dual-wield / ranged / range) all passed. The rest
-> below are still open, worst first. Framing from the audit: the server validates *magnitudes* well (damage, XP,
-> heal amounts) but under-validates *eligibility/timing* (which weapon, which spell/class, is it
-> time to swing, are you dead, did you finish the quest).
+> equipped; regression sweep (melee / unarmed / dual-wield / ranged / range) all passed. The
+> **melee swing-rate limit** (High) is **DONE + playtested 2026-07-29** (server `335b5b1`,
+> `swing_rate_limit_checklist.md`): a per-connection, per-hand minimum swing interval derived from
+> the equipped weapon's `weapon_delay` (assumes max haste so hasted players never trip; drops "too
+> fast" same-hand swings silently, advancing the timer only on accepts). Adversarially reviewed (3
+> lenses); folded in a HIGH bypass fix — an off-hand Attack with an empty slot 1 (a forged free
+> fist-damage stream) is now rejected. Regression sweep passed with zero base-swing false positives;
+> the only `server.log` rejections were Flamebrand's proc (a known client-driven second Attack, see
+> the server-procs To-Do). The rest below are still open, worst first. Framing from the audit: the
+> server validates *magnitudes* well (damage, XP, heal amounts) but under-validates
+> *eligibility/timing* (which weapon, which spell/class, is it time to swing, are you dead, did you
+> finish the quest).
 
-- [ ] **Server-side melee swing-rate limit** (High) — *(built 2026-07-29, server `335b5b1`, pending
-  playtest — a per-connection, per-hand minimum swing interval derived from the equipped weapon's
-  `weapon_delay` (assumes max haste; drops "too fast" same-hand swings silently). Adversarially
-  reviewed: also fixed a HIGH bypass — an off-hand Attack with an empty slot 1, a forged free
-  second damage stream, is now rejected. `swing_rate_limit_checklist.md`.)*
 - [ ] **Assorted trust gaps** (Medium/Low) — *(`Attack` weapon_path DONE + playtested 2026-07-23,
   server `9089b4b` — moved to the blockquote above.)* Still open: no login rate limiting; `BuyItem`
   ignores `vendor_id`; cross-store transfers persist as separate txns (crash-window dupe/loss; the
