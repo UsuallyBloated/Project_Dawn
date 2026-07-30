@@ -7,28 +7,28 @@ non-existent username can't be told apart from a wrong password by response time
 **Build prereq: rebuild + restart the server (release build). No client/launcher re-export** — the
 wire protocol is unchanged; the launcher just shows the error message the server sends.
 
-> **CRITICAL testing note — loopback is EXEMPT.** The rate limit is deliberately skipped for
-> loopback (127.0.0.1 / ::1) so local dev and the PD_DEV_CMDS relog loop are never throttled. So you
-> **cannot** exercise the rate limit by logging in from the same machine via `localhost`. To test it,
-> point the launcher at the server's **LAN/real IP** (e.g. `192.168.x.x`), or connect from a second
-> machine. The regression rows work from anywhere.
+> **RE-TEST 2026-07-30 (loopback exemption removed, server `6cddff2`).** The first run showed the
+> rate limit "not working" because it was tested from **localhost, which used to be exempt**. That
+> exemption is gone — the limit now applies to every IP, so it's testable from localhost. **Restart
+> the server and re-run sections 2-4 from your normal (localhost) setup.** Dev is unaffected: a
+> successful login clears the IP, so only a burst of BAD logins throttles (which is what you're
+> testing), recovering after ~60s.
 
 Diagnostic: the launcher shows the server's error message on a failed login.
 
 ## Setup
-- [ ] Rebuild + restart the server (release build)
-- [ ] Have a real account (known username + password) to log in with
-- [ ] For the rate-limit rows: launcher pointed at the server's LAN IP (NOT localhost)
+- [ ] Rebuild + restart the server (release build) — REQUIRED for the re-test (exemption removed)
+- [x] Have a real account (known username + password) to log in with
 
 ## 1 — Normal auth still works (regression, from anywhere incl. localhost)
-- [ ] **Register a new account** → succeeds (RegisterOk), character list appears. notes:
-- [ ] **Log in with correct credentials** → succeeds, you reach character select / world. notes:
-- [ ] **Log in with a WRONG password once** → "authentication failed" (or similar), no lockout on the
+- [x] **Register a new account** → succeeds (RegisterOk), character list appears. notes:
+- [x] **Log in with correct credentials** → succeeds, you reach character select / world. notes:
+- [x] **Log in with a WRONG password once** → "authentication failed" (or similar), no lockout on the
   next correct attempt. notes:
-- [ ] **Log out and back in** → works normally (a success clears any prior failed-attempt count).
+- [x] **Log out and back in** → works normally (a success clears any prior failed-attempt count).
   notes:
 
-## 2 — Rate limit triggers (must be from a NON-loopback IP — see note above)
+## 2 — Rate limit triggers (re-test from localhost after the exemption removal)
 - [ ] **Fail login 5 times in under 60s (wrong password), same account** → the 6th attempt is
   rejected with "Too many login attempts. Please wait a minute and try again." (NOT the normal
   "authentication failed"). notes:
@@ -39,7 +39,7 @@ Diagnostic: the launcher shows the server's error message on a failed login.
   so you are NOT near the limit afterward (fail a couple more; you should not be blocked at 5 total
   across the reset). notes:
 
-## 3 — Register is throttled too (non-loopback)
+## 3 — Register is throttled too
 - [ ] **Attempt 5+ registrations in under 60s (any names)** → the 6th is rejected with the
   "too many attempts" message (Register shares the same per-IP budget). notes:
 

@@ -355,8 +355,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 
 - [ ] **Assorted trust gaps** (Medium/Low) — *(`Attack` weapon_path DONE + playtested 2026-07-23,
   server `9089b4b` — moved to the blockquote above. Login rate-limiting + auth-timing username
-  enumeration BUILT 2026-07-29, server `a75d9d0`, pending playtest — per-IP attempt cap on
-  Login+Register (`LoginRateLimiter`, 5/60s, loopback-exempt, success clears) + a dummy Argon2 verify
+  enumeration BUILT 2026-07-29 (server `a75d9d0`; loopback exemption dropped 2026-07-30 `6cddff2`),
+  pending playtest — per-IP attempt cap on Login+Register (`LoginRateLimiter`, 5/60s, applies to all
+  IPs incl. localhost, success clears) + a dummy Argon2 verify
   on the no-user path so timing doesn't leak account existence; adversarially reviewed;
   `login_rate_limit_checklist.md`.)* Still open: `BuyItem` ignores `vendor_id`; cross-store transfers
   persist as separate txns (crash-window dupe/loss; the corpse-loot path is the only atomic one).
