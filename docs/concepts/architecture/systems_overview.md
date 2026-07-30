@@ -208,7 +208,19 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   rejects "too fast" (the client sends an `Attack` only on a landed hit, no burst). Also rejects an
   off-hand `Attack` with an empty off-hand slot (a forged free fist-damage stream). Mirrors the
   client pacing in `combat.gd`. Playtested 2026-07-29 (`swing_rate_limit_checklist.md`); the only
-  rejections observed were a proc weapon's client-driven second Attack (see the server-procs To-Do).
+  rejections observed were a proc weapon's client-driven second Attack (see server-authoritative
+  procs below).
+- **Server-authoritative weapon procs (PD_W0025).** On each accepted, landed melee swing the server
+  rolls the equipped weapon's `proc_chance` (read from the server equipment map, so unspoofable) and
+  folds `proc_damage` into that swing's own HP/aggro/death resolution — a proc killing blow runs the
+  single death cascade once (credit + loot). Gated on the target still alive (no proc-on-corpse);
+  flat 5% proc crit; no elemental resist (the server has no enemy-resist model). A private
+  `ProcTriggered` wire message drives the client's named "<proc> for N (Critical!)" hit + elemental
+  flash (`remote_player_manager._on_proc_triggered`); the mob HP drop is fanned to all via the
+  combined HealthUpdate. Replaces the old client-driven proc (a second Attack that double-hit as a
+  full weapon roll). `proc_damage_type` is authored in the client's SpellData enum space
+  (`proc_damage_type_to_wire` bridges it; Flamebrand corrected ICE->FIRE). Built 2026-07-30;
+  playtest `server_procs_checklist.md`. Deferred: proc resist model, PvP-player procs.
 - **Corpse retrieval (Slice 2, PD_W0020).** Loot your own corpse via the existing `LootItem` /
   `LootAll` intents keyed by corpse id, plus a private `CorpseContents` snapshot to the owner.
   Owner-only. The persist is **atomic** (the corpse delete folds into the inventory-write

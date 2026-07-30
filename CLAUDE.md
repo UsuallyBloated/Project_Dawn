@@ -414,15 +414,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `ENEMY_DESPAWN_LINGER_SECS`).
 
 ### Combat / weapons
-- [ ] **Server-authoritative weapon procs** *(surfaced by the swing-rate limit, 2026-07-29)* — procs
-  are client-driven: the client sends a weapon proc as a **second same-hand `Attack`** in the same
-  frame. Two problems: (a) the server resolved that proc Attack via `calc_swing` as a **full
-  weapon-damage roll**, not the authored `proc_damage` (so procs were double-hitting); (b) the new
-  swing-rate limit now **drops** that second same-hand Attack, so the proc no longer applies
-  server-side (client still shows the number/flash). Fix: the server should roll `proc_chance` on an
-  accepted swing and apply `proc_damage`/`proc_damage_type` itself (all four proc fields already
-  exist in `items.toml` + the server `Item` struct), and the client should stop sending the proc as
-  an `Attack`. Server-authoritative, closes the double-hit + the drop in one pass.
+- [ ] **Server-authoritative weapon procs** — *(BUILT 2026-07-30, server `b0bdbdd` / client `ad145c0`,
+  PD_W0025, pending playtest.)* The server now rolls `proc_chance` on each landed melee swing and
+  folds `proc_damage` into that swing's own HP/aggro/death cascade (a proc killing blow is credited +
+  looted once), sending a private `ProcTriggered` message the client renders as the named
+  "<proc_name> for N" hit; the client-side roll is removed. Reads the server-equipment weapon (can't
+  be spoofed). Fixed a live data bug: Flamebrand was tagged ICE (SpellData enum offset) and now
+  procs FIRE. Adversarially reviewed (correctness + regression clean; one LOW deploy note).
+  **Requires a client re-export (GDExtension rebuilt via `build.ps1` + GDScript).**
+  `server_procs_checklist.md`. Deferred to a follow-up: proc elemental resist + PvP-player procs.
 - [ ] **Bard song rework** — songs are half-built: they auto-pulse client-only (never re-broadcast),
   so the server applies a song's effect once on cast and nothing sustains it; heal songs do a raw
   `set_hp` (HP-bar bounce, no buff-window entry). Make them server-authoritative + weaving-aware +
