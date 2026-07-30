@@ -354,9 +354,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > finish the quest).
 
 - [ ] **Assorted trust gaps** (Medium/Low) — *(`Attack` weapon_path DONE + playtested 2026-07-23,
-  server `9089b4b` — moved to the blockquote above.)* Still open: no login rate limiting; `BuyItem`
-  ignores `vendor_id`; cross-store transfers persist as separate txns (crash-window dupe/loss; the
-  corpse-loot path is the only atomic one); username enumeration on the auth path.
+  server `9089b4b` — moved to the blockquote above. Login rate-limiting + auth-timing username
+  enumeration BUILT 2026-07-29, server `a75d9d0`, pending playtest — per-IP attempt cap on
+  Login+Register (`LoginRateLimiter`, 5/60s, loopback-exempt, success clears) + a dummy Argon2 verify
+  on the no-user path so timing doesn't leak account existence; adversarially reviewed;
+  `login_rate_limit_checklist.md`.)* Still open: `BuyItem` ignores `vendor_id`; cross-store transfers
+  persist as separate txns (crash-window dupe/loss; the corpse-loot path is the only atomic one).
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
