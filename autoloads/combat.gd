@@ -235,7 +235,11 @@ func _on_auto_attack() -> void:
 	deal_damage_to_target(calc_damage())
 	if is_ranged_weapon and is_instance_valid(current_target):
 		_spawn_arrow_fx(current_target.global_position)
-	_try_fire_proc(weapon)
+	# Weapon procs are server-authoritative (PD_W0025): the server rolls
+	# proc_chance on the landed swing, applies proc_damage, and sends
+	# ProcTriggered, which RemotePlayerManager renders. The client no longer
+	# rolls or sends the proc (the old client-sent proc Attack double-hit and is
+	# dropped by the swing-rate limit anyway).
 	_update_attack_interval()
 
 func _get_weapon_delay() -> float:
@@ -273,7 +277,7 @@ func _on_offhand_attack() -> void:
 		_update_offhand_interval()
 		return
 	deal_damage_to_target(calc_offhand_damage(), NetProtocol.DamageType.PHYSICAL, true)
-	_try_fire_proc(oh)
+	# Procs are server-authoritative now (see the main-hand note in _on_auto_attack).
 	_update_offhand_interval()
 
 func calc_offhand_damage() -> int:
@@ -600,31 +604,6 @@ func spawn_impact_light(pos: Vector3, color: Color) -> void:
 	var tw := light.create_tween()
 	tw.tween_property(light, "light_energy", 0.0, 0.35)
 	tw.tween_callback(light.queue_free)
-
-func _try_fire_proc(weapon: ItemData) -> void:
-	if weapon == null or weapon.proc_chance <= 0.0 or weapon.proc_damage <= 0:
-		return
-	if not has_valid_target():
-		return
-	if randf() >= weapon.proc_chance:
-		return
-	var resist: float = current_target.get_spell_resist(weapon.proc_damage_type)
-	var is_crit := randf() < 0.05
-	var amount := int(weapon.proc_damage * randf_range(1.5, 2.0)) if is_crit else weapon.proc_damage
-	amount = max(0, int(amount * (1.0 - resist)))
-	if amount <= 0:
-		return
-	var fx_color := spell_color(weapon.proc_damage_type)
-	var fx_target: Node3D = current_target
-	var hit_pos: Vector3 = fx_target.global_position
-	_apply_damage_to_node(current_target, amount, is_crit, _spell_to_net_damage_type(weapon.proc_damage_type))
-	if is_instance_valid(fx_target):
-		fx_target.flash_spell_hit(fx_color)
-		spawn_impact_light(hit_pos, fx_color)
-	var label := weapon.proc_name if weapon.proc_name != "" else "Weapon Proc"
-	var suffix := " (Critical!)" if is_crit else "."
-	CombatLog.add_line("%s for %d damage%s" % [label, amount, suffix], CombatLog.MsgType.INFO)
-	DamageNumbers.spawn_damage(hit_pos, amount, is_crit)
 
 func _get_weapon_skill_name() -> String:
 	var weapon: ItemData = Equipment.equipped.get("weapon")

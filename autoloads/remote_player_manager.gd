@@ -45,6 +45,7 @@ func _ready() -> void:
 	Net.world_cast_fail.connect(_on_cast_fail)
 	Net.world_buff_snapshot.connect(_on_buff_snapshot)
 	Net.world_hit.connect(_on_hit)
+	Net.world_proc_triggered.connect(_on_proc_triggered)
 	Net.world_miss.connect(_on_miss)
 	Net.world_evade.connect(_on_evade)
 	Net.world_entity_died.connect(_on_entity_died)
@@ -312,6 +313,28 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
 			else:
 				CombatLog.add_line("You miss %s." % ename, CombatLog.MsgType.DAMAGE_OUT)
 			_play_spell_impact_fx(en_node, amount, dmg_type)
+
+# PD_W0025 — render a server-authoritative weapon proc for the attacking player.
+# The server already applied the proc damage (folded into the swing); this only
+# draws the proc's floating number + elemental flash + named combat-log line
+# ("Flaming Strike for 25 damage."). Sent privately to the attacker, but the
+# attacker==me guard is kept as defense. Mirrors _on_hit's target resolution.
+func _on_proc_triggered(attacker: int, target: int, proc_name: String, amount: int, crit: bool, dmg_type: int) -> void:
+	if attacker != Net.get_player_id():
+		return
+	var node: Node = null
+	if target >= RemotePetManager.PET_ID_BASE:
+		node = RemotePetManager.get_pet(target)
+	elif target >= RemoteEnemyManager.ENEMY_ID_BASE:
+		node = RemoteEnemyManager.get_enemy(target)
+	if node == null or not is_instance_valid(node):
+		return
+	if node is Node3D:
+		DamageNumbers.spawn_damage((node as Node3D).global_position, amount, crit)
+	var label := proc_name if proc_name != "" else "Weapon Proc"
+	var suffix := " (Critical!)" if crit else "."
+	CombatLog.add_line("%s for %d damage%s" % [label, amount, suffix], CombatLog.MsgType.INFO)
+	_play_spell_impact_fx(node, amount, dmg_type)
 
 # Elemental flash + impact light on confirmed spell landings. Server-
 # authoritative — only fires when the server's Hit fan-back lands, so

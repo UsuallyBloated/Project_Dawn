@@ -66,6 +66,10 @@ signal world_buff_snapshot(
 # Track 4 sub-task 4 combat events — pure visualization fan-out; the
 # target's HP isn't driven by these (sub-task 6 / Track 6 lifts authority).
 signal world_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
+# PD_W0025 — a server-authoritative weapon proc landed (named "<proc_name> for
+# <amount>"). Damage is already applied server-side; this drives the client's
+# proc number + elemental flash + combat-log line.
+signal world_proc_triggered(attacker: int, target: int, proc_name: String, amount: int, crit: bool, dmg_type: int)
 signal world_miss(attacker: int, target: int)
 signal world_evade(attacker: int, target: int)
 # Track 4 sub-task 5 — peer's HP hit zero. Receiver plays death anim;
@@ -269,6 +273,7 @@ func _ready() -> void:
 	cast_fail.connect(_on_cast_fail)
 	buff_snapshot.connect(_on_buff_snapshot)
 	hit.connect(_on_hit)
+	proc_triggered.connect(_on_proc_triggered)
 	miss.connect(_on_miss)
 	evade.connect(_on_evade)
 	entity_died.connect(_on_entity_died)
@@ -948,6 +953,9 @@ func _on_buff_snapshot(target: int, names: PackedStringArray, durations: PackedF
 
 func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int) -> void:
 	world_hit.emit(attacker, target, amount, crit, dmg_type)
+
+func _on_proc_triggered(attacker: int, target: int, proc_name: String, amount: int, crit: bool, dmg_type: int) -> void:
+	world_proc_triggered.emit(attacker, target, proc_name, amount, crit, dmg_type)
 
 func _on_miss(attacker: int, target: int) -> void:
 	world_miss.emit(attacker, target)
