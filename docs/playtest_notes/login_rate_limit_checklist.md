@@ -43,11 +43,11 @@ Diagnostic: the launcher shows the server's error message on a failed login.
 > First re-test: 8 accounts in 30s, no throttle. Root cause: the launcher auto-logs-in after each
 > Register, and a login SUCCESS cleared the SHARED counter, so Register never accumulated. Fixed —
 > Login and Register now have SEPARATE per-IP budgets. **Restart the server and re-try.**
-- [ ] **Attempt 6+ registrations in under 60s (any names)** → the 6th is rejected with the "too many
+- [x] **Attempt 6+ registrations in under 60s (any names)** → the 6th is rejected with the "too many
   attempts" message (Register has its own budget now, not cleared by the auto-login). notes:
 
 ## 4 — Message renders cleanly (regression on the earlier prefix bug)
-- [-] **When rate-limited, the launcher message reads cleanly** — "Too many login attempts. Please
+- [x] **When rate-limited, the launcher message reads cleanly** — "Too many login attempts. Please
   wait a minute and try again." with NO doubled "invalid input: invalid input:" prefix. notes:
 
 ## 5 — Auth timing (NOT eye-testable — informational)

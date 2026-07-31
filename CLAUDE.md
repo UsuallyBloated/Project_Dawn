@@ -348,19 +348,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > lenses); folded in a HIGH bypass fix — an off-hand Attack with an empty slot 1 (a forged free
 > fist-damage stream) is now rejected. Regression sweep passed with zero base-swing false positives;
 > the only `server.log` rejections were Flamebrand's proc (a known client-driven second Attack, see
-> the server-procs To-Do). The rest below are still open, worst first. Framing from the audit: the
+> the server-procs To-Do). The **login rate-limit + auth-timing gate** is **DONE + playtested
+> 2026-07-31** (server `a75d9d0`, then `6cddff2` / `fcfdf9a` / `339ea97`,
+> `login_rate_limit_checklist.md`): a per-IP attempt cap on Login **and** Register
+> (`LoginRateLimiter`, 5 per 60 s, atomic check-and-reserve, a login success clears only the Login
+> budget) plus a dummy Argon2 verify on the no-user path so response timing can't leak account
+> existence. Two playtest-found bugs were fixed during the run: the original loopback exemption made
+> it untestable *and* unprotected on localhost (dropped), and the launcher's auto-login after a
+> Register cleared the shared counter so Register never throttled (Login/Register now hold separate
+> per-IP budgets). Throttle rejections log at INFO with the client IP for operator visibility.
+> **This was the last Phase 1 exploit gate — the phase is complete.** Framing from the audit: the
 > server validates *magnitudes* well (damage, XP, heal amounts) but under-validates
 > *eligibility/timing* (which weapon, which spell/class, is it time to swing, are you dead, did you
 > finish the quest).
 
-- [ ] **Assorted trust gaps** (Medium/Low) — *(`Attack` weapon_path DONE + playtested 2026-07-23,
-  server `9089b4b` — moved to the blockquote above. Login rate-limiting + auth-timing username
-  enumeration BUILT 2026-07-29 (server `a75d9d0`; loopback exemption dropped 2026-07-30 `6cddff2`),
-  pending playtest — per-IP attempt cap on Login+Register (`LoginRateLimiter`, 5/60s, applies to all
-  IPs incl. localhost, success clears) + a dummy Argon2 verify
-  on the no-user path so timing doesn't leak account existence; adversarially reviewed;
-  `login_rate_limit_checklist.md`.)* Still open: `BuyItem` ignores `vendor_id`; cross-store transfers
-  persist as separate txns (crash-window dupe/loss; the corpse-loot path is the only atomic one).
+- [ ] **Assorted trust gaps** (Medium/Low) — *(`Attack` weapon_path and login rate-limiting +
+  auth-timing are both DONE + playtested — moved to the blockquote above.)* Still open: `BuyItem`
+  ignores `vendor_id`; cross-store transfers persist as separate txns (crash-window dupe/loss; the
+  corpse-loot path is the only atomic one).
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the

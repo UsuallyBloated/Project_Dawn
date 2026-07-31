@@ -140,8 +140,9 @@ The phase that decides whether anyone can be invited. Findings numbered per
 - **`Attack` weapon_path** (finding 5, Medium). ✅ Done + playtested 2026-07-23 (server `9089b4b`).
       The resolver reads the equipped weapon from the server's equipment map
       (`equipped_weapon_path`) instead of the wire field. Regression sweep passed.
-- **Login rate limiting + auth timing equalization** (findings 6 and 9). Matters the moment
-      the auth socket faces the internet. Medium.
+- **Login rate limiting + auth timing equalization** (findings 6 and 9). ✅ Done + playtested
+      2026-07-31 (server `a75d9d0` + follow-up fixes). Per-IP cap on Login **and** Register (5/60 s,
+      separate budgets) + dummy-Argon2 timing equalization; throttles log at INFO.
 - **Attack while seated.** Require standing to swing, and check whether the sit regen bonus
       still applies mid-fight. If it does, this is free in-combat regen, not an animation bug.
 
@@ -285,7 +286,7 @@ rather than via a chat line after the fact.
 | Phase | Window | Status |
 |---|---|---|
 | 0. Reconcile | Jul 16 to Jul 17 | **Done (2026-07-17)** — doc reconciliation complete; `CORPSE_LINGER_SECS` raised to 7 days (user-accepted, pure value change); duplicate-name trap resolved via rename |
-| 1. Exploit gate | Jul 20 to Jul 31 | **All gates BUILT** — keystone (`is_gm`) + Respawn dead-check + attack-while-seated + cast class/level + `Attack` weapon_path + melee swing-rate limit done & playtested; login rate-limit + auth-timing built 07-29 (server `a75d9d0`) pending the final Phase 1 playtest (with the haste spot-check). Phase closes when that passes. |
+| 1. Exploit gate | Jul 20 to Jul 31 | ✅ **COMPLETE (2026-07-31, on schedule)** — all seven gates done & playtested: keystone (`is_gm`), Respawn dead-check, attack-while-seated, cast class/level, `Attack` weapon_path, melee swing-rate limit, login rate-limit + auth-timing. Open caveat (not blocking): the swing-rate haste row is unit/design-covered but never eye-tested. |
 | 2. Host + first friend | Aug 3 to Aug 7 | Not started |
 | 3. Stop it eating things | Aug 10 to Aug 21 | Not started |
 | 4. An evening's worth | Aug 24 to Sep 11 | Not started |

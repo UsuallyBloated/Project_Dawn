@@ -538,6 +538,30 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   (when/how PvP is triggered + consequences), `RemotePet` friend/foe visual distinction.
   (ALLY-target buff routing and pet buffs both landed — see Spells & casting + Pets.)
 
+## Auth hardening (login rate limit + timing)
+
+The auth WebSocket path (`crates/projectdawn-server/src/auth/mod.rs`) carries two brute-force /
+enumeration defenses, both playtested 2026-07-31:
+
+- **Per-IP attempt cap** (`LoginRateLimiter`): 5 attempts per 60 s window, shared across all
+  connection tasks behind a `Mutex`. Keyed by **`(IpAddr, AuthKind)`** so Login and Register hold
+  **separate** budgets — a login success clears only the Login budget, which matters because the
+  launcher auto-logs-in after each Register (a shared counter meant Register never throttled). The
+  slot is consumed **atomically at check time** (one lock), so concurrent same-IP attempts can't
+  burst past the cap. Keyed by IP, never by username, so an attacker can only throttle their own
+  address and can never lock a victim out. Applies to loopback too (testable + protected locally);
+  dev is unaffected because a successful login clears the budget. Rejections log at **INFO** with the
+  client IP so an operator can see brute-force attempts in `server.log`.
+- **Timing equalization**: `db::verify_login` runs a dummy Argon2 verify when the username doesn't
+  exist, so a missing account costs the same wall-clock as a wrong password (the error codes were
+  already uniform — response time was the last enumeration signal). Warmed at startup so the first
+  request never pays the one-time init.
+
+Known residuals, deliberate for the friends build (revisit for a public host): NAT/CGNAT co-tenants
+share one IP budget; the fixed window allows a ~2x burst across its boundary; an attacker rotating
+IPs (e.g. an IPv6 /64) gets a fresh budget per address; and a banned account is distinguishable by
+error code + a faster no-Argon2 path.
+
 ## GM access + dev tooling
 
 Dev/GM commands (`/give`, and the Test Panel's Full Heal / Level Up / Grant XP / Spawn / give-coins)
