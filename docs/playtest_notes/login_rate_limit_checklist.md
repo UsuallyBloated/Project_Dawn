@@ -29,22 +29,25 @@ Diagnostic: the launcher shows the server's error message on a failed login.
   notes:
 
 ## 2 — Rate limit triggers (re-test from localhost after the exemption removal)
-- [ ] **Fail login 5 times in under 60s (wrong password), same account** → the 6th attempt is
+- [x] **Fail login 5 times in under 60s (wrong password), same account** → the 6th attempt is
   rejected with "Too many login attempts. Please wait a minute and try again." (NOT the normal
   "authentication failed"). notes:
-- [ ] **While blocked, a CORRECT password is also rejected** with the same "too many attempts"
+- [x] **While blocked, a CORRECT password is also rejected** with the same "too many attempts"
   message (the gate is before the credential check). notes:
-- [ ] **Wait ~60s, then log in correctly** → succeeds again (window rolled over). notes:
-- [ ] **Recovery via success:** fail 3-4 times, then log in correctly → the failed count is cleared,
+- [x] **Wait ~60s, then log in correctly** → succeeds again (window rolled over). notes:
+- [x] **Recovery via success:** fail 3-4 times, then log in correctly → the failed count is cleared,
   so you are NOT near the limit afterward (fail a couple more; you should not be blocked at 5 total
   across the reset). notes:
 
-## 3 — Register is throttled too
-- [ ] **Attempt 5+ registrations in under 60s (any names)** → the 6th is rejected with the
-  "too many attempts" message (Register shares the same per-IP budget). notes:
+## 3 — Register is throttled too (fixed 2026-07-30, server `fcfdf9a` — re-test)
+> First re-test: 8 accounts in 30s, no throttle. Root cause: the launcher auto-logs-in after each
+> Register, and a login SUCCESS cleared the SHARED counter, so Register never accumulated. Fixed —
+> Login and Register now have SEPARATE per-IP budgets. **Restart the server and re-try.**
+- [ ] **Attempt 6+ registrations in under 60s (any names)** → the 6th is rejected with the "too many
+  attempts" message (Register has its own budget now, not cleared by the auto-login). notes:
 
 ## 4 — Message renders cleanly (regression on the earlier prefix bug)
-- [ ] **When rate-limited, the launcher message reads cleanly** — "Too many login attempts. Please
+- [-] **When rate-limited, the launcher message reads cleanly** — "Too many login attempts. Please
   wait a minute and try again." with NO doubled "invalid input: invalid input:" prefix. notes:
 
 ## 5 — Auth timing (NOT eye-testable — informational)
