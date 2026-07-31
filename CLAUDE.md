@@ -420,15 +420,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `ENEMY_DESPAWN_LINGER_SECS`).
 
 ### Combat / weapons
-- [ ] **Server-authoritative weapon procs** — *(BUILT 2026-07-30, server `b0bdbdd` / client `ad145c0`,
-  PD_W0025, pending playtest.)* The server now rolls `proc_chance` on each landed melee swing and
-  folds `proc_damage` into that swing's own HP/aggro/death cascade (a proc killing blow is credited +
-  looted once), sending a private `ProcTriggered` message the client renders as the named
-  "<proc_name> for N" hit; the client-side roll is removed. Reads the server-equipment weapon (can't
-  be spoofed). Fixed a live data bug: Flamebrand was tagged ICE (SpellData enum offset) and now
-  procs FIRE. Adversarially reviewed (correctness + regression clean; one LOW deploy note).
-  **Requires a client re-export (GDExtension rebuilt via `build.ps1` + GDScript).**
-  `server_procs_checklist.md`. Deferred to a follow-up: proc elemental resist + PvP-player procs.
+- [ ] **Proc follow-ups** *(the server-authoritative proc core shipped + playtested 2026-07-31, PD_W0025
+  — see systems_overview)*: (a) **elemental resist for procs** — the server has no enemy-resist model
+  at all, so proc damage is flat; needs resist fields on `MobTemplate`/`Entity` first. (b) **PvP-player
+  procs** — procs fire on enemies/pets only; the PvP branch has no server death cascade, so it was
+  left out of v1.
 - [ ] **Bard song rework** — songs are half-built: they auto-pulse client-only (never re-broadcast),
   so the server applies a song's effect once on cast and nothing sustains it; heal songs do a raw
   `set_hp` (HP-bar bounce, no buff-window entry). Make them server-authoritative + weaving-aware +

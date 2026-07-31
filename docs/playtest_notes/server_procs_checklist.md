@@ -7,10 +7,10 @@ that. The client no longer rolls or sends procs. Also fixes a live bug: Flamebra
 ICE and now correctly procs FIRE.
 
 **Build prereq (this one is heavier — the GDExtension changed):**
-- [ ] Rebuild the gdext GDExtension: run `addons/gdext_net/build.ps1` (rebuilds `gdext_net.dll` from the
+- [x] Rebuild the gdext GDExtension: run `addons/gdext_net/build.ps1` (rebuilds `gdext_net.dll` from the
   server crate + copies it into the addon). REQUIRED — the new `proc_triggered` signal lives in it.
-- [ ] Re-export Project_Dawn (GDScript changed too).
-- [ ] Rebuild + restart the server (release build).
+- [x] Re-export Project_Dawn (GDScript changed too).
+- [x] Rebuild + restart the server (release build).
 
 > **Only proc weapon today: Flamebrand** (`proc_chance` 0.15, `proc_damage` 25, "Flaming Strike",
 > FIRE). Get it with `/give` (dev) + equip via the paperdoll (server-side equip). Diagnostic:
@@ -18,34 +18,34 @@ ICE and now correctly procs FIRE.
 > message), so the evidence is in-game.
 
 ## Setup
-- [ ] gdext rebuilt, client re-exported, server restarted
-- [ ] `/give` Flamebrand and equip it (main hand); have an enemy to fight
+- [x] gdext rebuilt, client re-exported, server restarted
+- [x] `/give` Flamebrand and equip it (main hand); have an enemy to fight
 
 ## 1 — Proc fires + shows the flavor (the headline)
-- [ ] **Auto-attack an enemy with Flamebrand for ~30-60s** → roughly 1 in 7 swings, a proc fires:
+- [x] **Auto-attack an enemy with Flamebrand for ~30-60s** → roughly 1 in 7 swings, a proc fires:
   a floating proc number + a **FIRE** flash + a combat-log line "Flaming Strike for 25 damage."
   notes:
-- [ ] **Occasionally the line reads "Flaming Strike for N damage (Critical!)"** (flat 5% crit, N ~38-50).
+- [x] **Occasionally the line reads "Flaming Strike for N damage (Critical!)"** (flat 5% crit, N ~38-50).
   notes:
-- [ ] **The flash is FIRE-colored, not ice** (the mis-tag fix). notes:
+- [x] **The flash is FIRE-colored, not ice** (the mis-tag fix). notes:
 
 ## 2 — Damage is real + authoritative
-- [ ] **The mob's HP drops by swing + proc** on a proc'd swing (not just the swing). notes:
-- [ ] **No double number / double proc** — one swing number + (on a proc) one proc number; the proc
-  isn't applied twice. notes:
+- [x] **The mob's HP drops by swing + proc** on a proc'd swing (not just the swing). notes:
+- [x] **No double number / double proc** — one swing number + (on a proc) one proc number; the proc
+  isn't applied twice. notes: It seems like the weapon might be hitting and proc-ing at the same time.  please look into this.
 
 ## 3 — Proc killing blow (the correctness case)
-- [ ] **Let a proc land the killing blow** (whittle a mob low, then a proc finishes it) → the mob
-  dies, you get XP + loot exactly once (no missing loot, no "zombie" mob that won't die). notes:
+- [x] **Let a proc land the killing blow** (whittle a mob low, then a proc finishes it) → the mob
+  dies, you get XP + loot exactly once (no missing loot, no "zombie" mob that won't die). notes: I think this worked correctly.  Please confirm if you can.
 
 ## 4 — Regression: normal weapons + spells unaffected
-- [ ] **Fight with a NON-proc weapon (e.g. iron short sword)** → no procs, normal swings, no change.
+- [x] **Fight with a NON-proc weapon (e.g. iron short sword)** → no procs, normal swings, no change.
   notes:
-- [ ] **Cast a damage spell** → spells still apply damage + kill + loot normally (the proc path
+- [x] **Cast a damage spell** → spells still apply damage + kill + loot normally (the proc path
   didn't disturb the spell path). notes:
 
 ## 5 — Dual-wield (per-hand)
-- [ ] **Dual-wield Flamebrand in one hand + a plain weapon in the other** → the Flamebrand hand
+- [x] **Dual-wield Flamebrand in one hand + a plain weapon in the other** → the Flamebrand hand
   procs, the plain hand doesn't; both swing normally. notes:
 
 ## Notes / observations

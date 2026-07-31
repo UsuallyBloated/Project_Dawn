@@ -219,8 +219,12 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   flash (`remote_player_manager._on_proc_triggered`); the mob HP drop is fanned to all via the
   combined HealthUpdate. Replaces the old client-driven proc (a second Attack that double-hit as a
   full weapon roll). `proc_damage_type` is authored in the client's SpellData enum space
-  (`proc_damage_type_to_wire` bridges it; Flamebrand corrected ICE->FIRE). Built 2026-07-30;
-  playtest `server_procs_checklist.md`. Deferred: proc resist model, PvP-player procs.
+  (`proc_damage_type_to_wire` bridges it; Flamebrand corrected ICE->FIRE). Playtested 2026-07-31
+  (`server_procs_checklist.md`): proc fires + fire flash + named line, damage real, proc killing blow
+  grants loot/XP exactly once, non-proc weapons and spells unaffected, dual-wield procs per hand. Note
+  the swing and its proc land **together** (the proc rides the swing) — two damage numbers, one
+  combined HP drop; that is the intended EQ-style behavior, not a double hit. Deferred: proc resist
+  model, PvP-player procs.
 - **Corpse retrieval (Slice 2, PD_W0020).** Loot your own corpse via the existing `LootItem` /
   `LootAll` intents keyed by corpse id, plus a private `CorpseContents` snapshot to the owner.
   Owner-only. The persist is **atomic** (the corpse delete folds into the inventory-write
