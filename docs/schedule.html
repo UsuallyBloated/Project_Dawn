@@ -530,6 +530,17 @@
     max-width: none;
     margin: 0;
   }
+  /* Marks an authoring-time observation that has since been acted on, so the
+     narrative premise stays readable while the page stays honest about status. */
+  .resolved-note {
+    margin: 14px 0 0;
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border-left: 3px solid var(--good);
+    font-size: 13.5px;
+    color: var(--ink-soft);
+  }
+  .resolved-note b { color: var(--good); }
   .done-means b {
     font-family: var(--mono);
     font-size: 10px;
@@ -644,6 +655,10 @@
         <div class="stat-k">Measured pace</div>
         <div class="stat-v">7 epics<span class="stat-sub"> / 4.3 wks</span></div>
       </div>
+      <div class="stat">
+        <div class="stat-k">Status &middot; Jul 31</div>
+        <div class="stat-v hi">Phase 2<span class="stat-sub"> / 0 and 1 complete, on time</span></div>
+      </div>
     </div>
   </header>
 
@@ -668,6 +683,9 @@
           claims like this, and it caught several real ones: the wire protocol was recorded ten
           versions behind reality. It walked straight past this entry.
         </p>
+        <p class="resolved-note"><b>Resolved 2026-07-17 (phase 0).</b> The list was reconciled
+          against the commits and the ticking rule tightened: an item now earns its tick only from a
+          filled playtest checklist, so nobody marks their own homework.</p>
       </div>
       <div class="finding">
         <div class="tag">Keystone</div>
@@ -680,6 +698,10 @@
           fixes this, and the column already exists on the accounts table. It is just never read
           into the world connection. Everything else in this plan waits behind it.
         </p>
+        <p class="resolved-note"><b>Resolved 2026-07-19 (phase 1 keystone).</b> Dev commands now gate
+          on <code>is_dev || is_gm</code>, with the flag carried in the signed world token, so a
+          hosted server can run with <code>PD_DEV_CMDS</code> off and grant tools to your account
+          alone. Hosting is no longer blocked.</p>
       </div>
     </div>
   </section>
@@ -823,8 +845,8 @@
       Only one chain has to happen in order. Everything else can move.
     </p>
     <div class="chain">
-      <div class="link"><p><b>Per-account is_gm</b> decides whether a shared server can run at all with your own tools intact.</p></div>
-      <div class="link"><p><b>Hosting</b> cannot safely happen until that flag exists, because today the alternative is handing every friend the dev commands.</p></div>
+      <div class="link"><p><b>Per-account is_gm</b> decides whether a shared server can run at all with your own tools intact. <b>Done 2026-07-19.</b></p></div>
+      <div class="link"><p><b>Hosting</b> could not safely happen until that flag existed, because the alternative was handing every friend the dev commands. The flag is live and the exploit gate closed on 2026-07-31, so this is now the next link.</p></div>
       <div class="link"><p><b>The first outside session</b> cannot happen until there is something to connect to.</p></div>
       <div class="link"><p><b>The fix list</b> is largely written by whatever that first session surfaces, so it cannot be fully specified in advance.</p></div>
       <div class="link"><p><b>Opening to the whole group</b> waits on those fixes.</p></div>
@@ -860,32 +882,34 @@
         <div class="phase-head">
           <span class="phase-no">01</span>
           <h3>Close the exploit gate</h3>
-          <span class="chip active">In progress</span>
+          <span class="chip done">Done</span>
           <span class="chip key">Keystone</span>
           <span class="chip risk-lo">Low risk</span>
-          <span class="when">Jul 20 to Jul 31</span>
+          <span class="when">Jul 20 to Jul 31 &middot; finished on time</span>
         </div>
         <p style="margin:0;font-size:14.5px;color:var(--ink-soft)">
-          The phase that decides whether anyone can be invited. Every item below already has a file
-          and line number named in the July security audit, which is why the risk is low despite the
-          subject matter.
+          The phase that decides whether anyone can be invited. Every item below already had a file
+          and line number named in the July security audit, which is why the risk was low despite the
+          subject matter. All seven gates are built and playtested; each was reviewed adversarially
+          before commit, and two of them were fixed again after playtest caught what review could not.
         </p>
         <ul class="items">
           <li class="keystone itemdone"><b>Per-account is_gm. Done (playtested 2026-07-19).</b> Threads the existing accounts column from the signed world token into the connection, and gates dev commands on it instead of the process-wide environment variable. This is what lets you keep your tools on a server your friends are playing on.</li>
           <li class="itemdone"><b>Respawn dead-check. Done (playtested 2026-07-20).</b> The respawn handler floored health to 25% without checking you actually died, so a living player could top up on demand. Now gated on the awaiting-respawn flag.</li>
-          <li><b>Melee swing-rate limit.</b> No swing timer exists on the connection, so a modified client can spam attacks. Small to medium.</li>
-          <li><b>Cast class and level gate.</b> Apply the check the resurrection path already does to the other four cast paths. Small.</li>
-          <li><b>Attack weapon trust.</b> Read the server's tracked equipment instead of believing the weapon the client names. Small to medium.</li>
-          <li><b>Login rate limiting.</b> Matters the moment the auth socket faces the internet, which is next phase. Medium.</li>
           <li class="itemdone"><b>Attack while seated. Done (playtested 2026-07-20).</b> A swing now stands the attacker, and the seated regen bonus is suppressed in combat. Server + client.</li>
+          <li class="itemdone"><b>Cast class and level gate. Done (playtested 2026-07-22).</b> A cast is refused unless the caster's class is in the spell's list and their level meets its minimum, checked before any mana, cooldown or skill side effect. Every spell in the server table is class and level tagged, locked by a test so an untagged spell cannot silently reject everyone.</li>
+          <li class="itemdone"><b>Attack weapon trust. Done (playtested 2026-07-23).</b> The resolver reads the equipped weapon from the server's own equipment map instead of believing the weapon the client names, so a modified client cannot swing something it has not equipped. An empty hand is an unarmed swing, and an off-hand attack with an empty off-hand is refused outright.</li>
+          <li class="itemdone"><b>Melee swing-rate limit. Done (playtested 2026-07-29).</b> A per-hand minimum interval between swings, derived from the equipped weapon's delay and assuming maximum haste so a hasted player is never throttled. Tracked per hand because dual wield sends two independent streams. Adversarial review caught a second free damage stream here: an off-hand attack with nothing in the off hand.</li>
+          <li class="itemdone"><b>Login rate limiting and auth timing. Done (playtested 2026-07-31).</b> A per-address cap on both login and registration, plus a decoy password check so a missing account takes the same time as a wrong password and cannot be told apart. Playtesting found two faults review had missed: the limit exempted the local machine, which made it both untestable and unprotected there, and the launcher's automatic login after registering reset the shared counter so registration never throttled at all.</li>
         </ul>
-        <p class="done-means"><b>Done means</b>Audit findings 2 through 6 and 9 are closed, the permission flag is live, and the audit's threat list has been re-run against the changed code.</p>
+        <p class="done-means"><b>Done means</b>Audit findings 2 through 6 and 9 are closed, the permission flag is live, and the audit's threat list has been re-run against the changed code. <b>All met.</b></p>
       </article>
 
       <article class="phase">
         <div class="phase-head">
           <span class="phase-no">02</span>
           <h3>Host it, invite one person</h3>
+          <span class="chip active">Next up</span>
           <span class="chip risk-hi">Highest schedule risk</span>
           <span class="when">Aug 3 to Aug 7</span>
         </div>

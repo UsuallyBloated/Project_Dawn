@@ -215,8 +215,12 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
    green, not when it's committed. Claude proposes the tick and cites the checklist row; the
    tester's result is the evidence. No checklist means the item is *built*, not *done*.
    Then, in one pass: tick it here, move its "what exists" note into
-   `systems_overview.md` (not back into the to-do), and update the phase row in
-   `docs/schedule.md` if it closes one.
+   `systems_overview.md` (not back into the to-do), and — if it closes a phase item — update
+   **both** `docs/schedule.md` *and* `docs/schedule.html`. They are two hand-maintained copies of
+   the same plan; the `.html` is what a non-repo reader opens, so a stale one is a wrong answer to
+   an outside audience. (This step used to name only the `.md`, and the `.html` silently fell 11
+   days behind through the whole Phase 1 push — it still read "In progress" after the phase had
+   closed. Same drift the gate below exists to prevent, one file over.)
 
 > **Why the gate exists.** Step 3 used to read "implement it; mark `[x]`", and two lists went
 > stale in that gap. On 2026-07-16 a docs pass aimed *specifically* at stale claims still left
