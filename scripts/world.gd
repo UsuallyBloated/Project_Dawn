@@ -12,11 +12,13 @@ func _ready() -> void:
 	ZoneLoader.current_zone_name = zone_name
 	ZoneLoader.current_zone_path = scene_file_path
 
-	# Test panel mounts in two cases: the legacy local Test Room flow (built
-	# for solo dev iteration) and launcher-mode sessions (Track 4+, where we
-	# still want the dev tools available while bringing multiplayer features
-	# online). Strip the second branch when we ship for real players.
-	if Network.is_test_room or Net.is_launcher_mode():
+	# Test panel mounts for the offline Test Room (solo dev iteration) and, in a
+	# hosted session, for GM accounts only. Phase 2: it used to mount for EVERY
+	# launcher session, so an invited friend saw a gold-bordered overlay with
+	# Spawn Mob / Level Up / Trigger Death. The server-routed buttons already
+	# no-op for a non-GM, but the client-side ones (Trigger Death, Despawn All
+	# Enemies) did not, and it is confusing regardless.
+	if Network.is_test_room or (Net.is_launcher_mode() and Net.is_gm()):
 		add_child(TEST_PANEL_GD.new())
 
 	if not Network.is_online:

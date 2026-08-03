@@ -255,6 +255,12 @@ var _own_name := ""
 var _own_race := ""
 var _own_class := ""
 var _own_level: int = 1
+# Phase 2 — GM flag from the auth LoginOk, stashed here (an autoload) so it
+# survives the login -> lobby -> world scene changes. Used ONLY to decide
+# whether to show the dev Test Panel; it is not a permission. The server gates
+# every dev command on the is_gm bit inside the signed world token, so a client
+# that lies to itself here still gets nothing server-side.
+var _is_gm := false
 
 func _ready() -> void:
 	# Hook GDExtension signals — populated from the renet poll loop.
@@ -355,6 +361,13 @@ func get_own_class() -> String:
 
 func get_own_level() -> int:
 	return _own_level
+
+# Set by the login screen from LoginOk. Display-gating only (see `_is_gm`).
+func set_is_gm(v: bool) -> void:
+	_is_gm = v
+
+func is_gm() -> bool:
+	return _is_gm
 
 # Send a Move intent. Server clamps the direction to unit length. Sequence
 # is auto-incremented; out-of-order packets are dropped server-side.
@@ -813,6 +826,29 @@ func _start_from_args(args: Dictionary) -> bool:
 	var token_bytes := _read_and_delete_token_file(token_path)
 	if token_bytes.is_empty():
 		push_warning("Net: world token file unreadable: %s" % token_path)
+		return false
+
+	return start_with_token(token_bytes, auth_token_hex, char_id, endpoint, client_version)
+
+# Phase 2 — in-process world handoff. The login screen (scripts/login.gd) lives
+# in this same executable now, so it hands the renet ConnectToken straight over
+# in memory instead of the old external-launcher dance.
+#
+# This is strictly safer than the CLI path above, which only exists for the
+# legacy standalone launcher: the ConnectToken never touches disk (no tempfile
+# to leak or race the 30 s TTL), and the session token never appears in a
+# command line, which is readable by any process via Task Manager / `ps`.
+func start_with_token(
+		token_bytes: PackedByteArray,
+		auth_token_hex: String,
+		char_id: int,
+		endpoint: String,
+		client_version: String) -> bool:
+	if _state != State.DISCONNECTED:
+		push_warning("Net.start_with_token called in state %d" % _state)
+		return false
+	if token_bytes.is_empty() or endpoint == "" or auth_token_hex == "" or char_id < 0:
+		push_warning("Net: world handoff incomplete")
 		return false
 
 	var session_bytes := _hex_to_bytes(auth_token_hex)

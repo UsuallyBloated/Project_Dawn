@@ -11,12 +11,13 @@ config_version=5
 [application]
 
 config/name="Project_Dawn"
-run/main_scene="res://scenes/lobby.tscn"
+run/main_scene="res://scenes/login.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
+AuthClient="*res://autoloads/auth_client.gd"
 Network="*res://autoloads/network.gd"
 Currency="*res://autoloads/currency.gd"
 PlayerStats="*res://autoloads/player_stats.gd"
