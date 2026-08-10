@@ -488,9 +488,11 @@ func _instantiate_into(id: int, scene: Node) -> void:
 	rp.race = data["race"]
 	rp.player_class = data["class"]
 	rp.level = data["level"]
+	# add_child before positioning: global_position on a node that is not yet
+	# in the tree logs an error and does not take.
+	scene.add_child(rp)
 	rp.global_position = data["pos"]
 	rp.rotation.y = data["yaw"]
-	scene.add_child(rp)
 	_by_id[id] = rp
 	# Apply any cached resource state (from earlier broadcasts that arrived
 	# while we were in the lobby, or the 4a seed at app-connect). add_child

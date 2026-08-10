@@ -858,9 +858,13 @@ func _on_target_changed(enemy) -> void:
 	if is_instance_valid(_tracked_target):
 		if _tracked_target.is_connected("hp_changed", _on_target_hp_changed):
 			_tracked_target.hp_changed.disconnect(_on_target_hp_changed)
-		if _tracked_target.is_connected("mp_changed", _on_target_mp_changed):
+		# mp_changed / stamina_changed exist on RemotePlayer but not on
+		# RemoteEnemy or RemotePet, so these need the same has_signal guard the
+		# lines below use. Without it, switching away from an enemy target logs
+		# "Nonexistent signal" every time.
+		if _tracked_target.has_signal("mp_changed") and _tracked_target.is_connected("mp_changed", _on_target_mp_changed):
 			_tracked_target.mp_changed.disconnect(_on_target_mp_changed)
-		if _tracked_target.is_connected("stamina_changed", _on_target_stamina_changed):
+		if _tracked_target.has_signal("stamina_changed") and _tracked_target.is_connected("stamina_changed", _on_target_stamina_changed):
 			_tracked_target.stamina_changed.disconnect(_on_target_stamina_changed)
 		if _tracked_target.has_signal("cast_started") and _tracked_target.is_connected("cast_started", _on_target_cast_started):
 			_tracked_target.cast_started.disconnect(_on_target_cast_started)

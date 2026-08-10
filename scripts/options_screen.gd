@@ -3,7 +3,7 @@ extends DraggablePanel
 const W := 640.0
 const H := 500.0
 
-const BUG_REPORT_URL := "https://discord.gg/T77GRKNv"
+const BUG_REPORT_URL := "https://discord.gg/xpAv5Ra4aT"
 
 const _AUDIO_CHANNELS := [
 	{id = "master", label = "Master Volume"},

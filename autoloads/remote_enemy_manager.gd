@@ -147,9 +147,11 @@ func _instantiate_into(id: int, scene: Node) -> void:
 	re.level = data["level"]
 	re.max_hp = data["max_hp"]
 	re.hp = data["hp"]
+	# add_child before positioning: global_position on a node that is not yet
+	# in the tree logs an error and does not take.
+	scene.add_child(re)
 	re.global_position = data["pos"]
 	re.rotation.y = data["yaw"]
-	scene.add_child(re)
 	_by_id[id] = re
 	if data.has("target_id"):
 		re.apply_target_change(data["target_id"])

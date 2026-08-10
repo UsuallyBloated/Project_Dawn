@@ -197,9 +197,11 @@ func _instantiate_into(id: int, scene: Node) -> void:
 	rp.level = data["level"]
 	rp.max_hp = data["max_hp"]
 	rp.hp = data["hp"]
+	# add_child before positioning: global_position on a node that is not yet
+	# in the tree logs an error and does not take.
+	scene.add_child(rp)
 	rp.global_position = data["pos"]
 	rp.rotation.y = data["yaw"]
-	scene.add_child(rp)
 	_by_id[id] = rp
 
 func _scene_hosts_local_player(_scene: Node) -> bool:

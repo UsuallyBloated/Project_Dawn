@@ -49,6 +49,65 @@ A multiplayer MMORPG inspired by classic EverQuest-era games. **Two repos:** a G
   else. PowerShell (note: bare `null`/`false` are not literals — use `$null`/`$false` or a string):
   `Remove-Item Env:\PD_DEV_CMDS -EA Ignore; cargo run -p projectdawn-server`.
 
+### Hosted server (the R720) — live since 2026-08-10
+
+There is now a **real hosted server**, not just localhost. A Dell PowerEdge R720 in the
+basement runs Ubuntu Server 26.04 and serves the game over a private **Tailscale** tailnet at
+`100.93.108.112` (auth TCP 8765, world UDP 7777). It runs under systemd as the `projectdawn`
+service account from `/opt/projectdawn`, starts itself after a reboot, and backs up nightly.
+
+**This changes where a playtest can happen.** Local `cargo run` is still the dev loop; the
+R720 is where anything involving another person happens.
+
+| Doc | Covers |
+|---|---|
+| `docs/deployment/server_operations.md` | **Start here.** Running, updating, recovering, triage. |
+| `docs/deployment/inviting_a_player.md` | Onboarding one tester. |
+| `docs/deployment/r720_host_setup.md` | How the machine was built, and why. |
+| `server/docs/deployment_linux.md` | Deploying the app to a fresh Linux box. |
+
+Three things to know before touching it:
+
+- **It runs with `PD_DEV_CMDS` unset.** Dev tools come from per-account `is_gm` instead, which
+  rides the signed connect token. Verify `dev_cmds=false` on the boot log line after **every**
+  start; `true` means every connected player has `/give`, mob spawning and instant levels.
+- **It deploys from GitHub, not from your working tree.** A server change only reaches it
+  after being committed **and pushed**. The host tracks `fix/xp-leveling-overflow`, not the
+  default branch. (A stale deploy on 2026-08-08 was running a six-week-old `main` with none of
+  the Phase 1 exploit gates in it; the only symptom was a missing field in one log line.)
+- **There is no graceful shutdown.** `systemctl restart` discards up to 60 s of position, HP,
+  XP, inventory and coins for everyone online. Get people to log out first.
+
+### Shipping a change to the R720
+
+Client and server changes travel **different paths**. Client-side edits never touch the R720.
+
+**Server change** (`F:\Projects\server`), reaches players after a restart:
+
+```
+git push                                  # from the dev box
+# then on the R720:
+sudo -u projectdawn -H bash
+cd /opt/projectdawn/src && git pull && cargo build --release
+cp target/release/projectdawn-server ~/ && exit
+sudo systemctl restart projectdawn
+journalctl -u projectdawn -n 20 --no-pager   # confirm dev_cmds=false
+```
+
+Forgetting the `cp` is the usual mistake: systemd runs `/opt/projectdawn/projectdawn-server`,
+not the one under `target/release/`.
+
+**Client change** (this repo), reaches players only via a **new build**:
+
+```
+git push
+# re-export from Godot into builds/
+# send the new zip to testers
+```
+
+The R720 needs nothing. Testers keep running whatever executable they last received, so a
+client fix is not live until they have a fresh build.
+
 > Don't modify anything above `F:\Projects\`.
 
 ---
@@ -382,15 +441,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > the turn-in is rejected until every server-counted objective is met. See systems_overview.
 
 ### Hosting / deployment
-> New category. Nothing in the repo's history is a deployment; everything has run on localhost.
-> This is the schedule's highest-risk phase (Phase 2) precisely for that reason. Blocked on the
-> `is_gm` keystone above.
-- [ ] **Stand up a deploy target + host it** — pick a target (VPS, or port-forward from the dev
-  box); netcode private-key handling for a real host (the server refuses to boot without it);
-  production env with `PD_DEV_CMDS` OFF and `is_gm` on your account only; client build pointed at
-  the real host; refresh `README_FOR_TESTERS.md` (it predates ~10 weeks of work); confirm the
-  in-game bug-report button still routes somewhere you read. Done = someone who is not you, from a
-  machine that is not yours, makes an account, makes a character, kills something, logs out clean.
+> **The host is BUILT (2026-08-10) and awaiting its one remaining piece of evidence.** A Dell
+> PowerEdge R720 runs the server on Ubuntu 26.04 over Tailscale; see "Hosted server (the R720)"
+> under **Commands** for how to run and update it. Everything the original item listed is done:
+> netcode key handling, `PD_DEV_CMDS` off with `is_gm` on one account only (verified in
+> production, `GmGive applied` accepted while the boot line read `dev_cmds=false`), a client
+> build against the real host, a rewritten `README_FOR_TESTERS.md`, and a live Discord invite
+> wired to the in-game bug-report button. Backups run nightly to a second array and weekly
+> off-site.
+- [ ] **Stand up a deploy target + host it** — remaining: **someone who is not you, from a
+  machine that is not yours**, makes an account, makes a character, kills something, and logs
+  out clean. The operator has rehearsed that whole path from the dev box; the definition of
+  done requires a second person, so this stays open until a tester does it. Checklist for
+  running that session: `docs/deployment/inviting_a_player.md`.
 
 ### Death / corpses
 > The corpse epic **SHIPPED** (Slices 0-3 + the monster-orb unification, wire PD_W0018 to
@@ -480,6 +543,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Bags open on left-click instead of right-click.** `banker_slice2_checklist.md:57`.
   Untriaged; the tester's guess is these are stale pre-grammar bags. Should match the
   right-click quick-transfer grammar (`docs/design/inventory_interaction_grammar.md`).
+- [ ] **Confirm what can become `hud.gd::_tracked_target`.** Two `is_connected()` calls in
+  `_show_self_target()` (`hud.gd:821`, `:823`) check `hp_changed` and `died` **without** a
+  `has_signal()` guard. That is safe only while `_tracked_target` is restricted to
+  `RemotePlayer` / `RemoteEnemy` / `RemotePet`, all of which declare both. But
+  `scripts/corpse_body.gd` declares **no** signals and `scripts/loot_bag.gd` declares only
+  `items_changed`, so if a corpse or loot bag can reach that variable, targeting one and
+  pressing F1 logs `Nonexistent signal` twice. Surfaced 2026-08-10 while fixing the same class
+  of bug on the `mp_changed` / `stamina_changed` lines a few lines below, which **were**
+  firing (targeting an enemy then switching away). Left unfixed deliberately: adding guards
+  speculatively would be changing working code on a hunch. Check `Targeting` /
+  `Combat.set_target` for whether corpses reach the HUD target frame; guard both lines if they
+  can.
 
 ### Tradeskill depth
 - [ ] **Consumables system** (food/drink regen loop, fermentation, ritual components)
