@@ -154,27 +154,43 @@ already names the file and line for each. `is_gm` is the only one that touches m
 
 ---
 
-### Phase 2: Host it, invite one person (Aug 3 to Aug 7, 1 week)
+### Phase 2: Host it, invite one person — ✅ COMPLETE (2026-08-11, 4 days late)
 
-The riskiest estimate in this document, because it is the only phase with **no velocity data
-behind it**. Nothing in ten weeks of history is a deployment. Everything so far has run on
-localhost.
+The riskiest estimate in this document, because it was the only phase with **no velocity data
+behind it**. Nothing in ten weeks of history had been a deployment.
 
-- Pick and stand up a deploy target (VPS, or port-forward from the dev box).
-- Netcode private key handling for a real host (the server refuses to boot without it).
-- Production env: `PD_DEV_CMDS` off, `is_gm` on your account only.
-- Client build pointed at the real host; refresh `README_FOR_TESTERS.md` (it predates ~10
-      weeks of work).
-- Confirm the in-game bug-report button still routes somewhere you read.
-- **One friend, one session.**
+Planned Aug 3 to Aug 7; landed Aug 11. Four days over on a one-week phase, which is a good
+result for the one estimate that was a guess.
 
-**Done means:** somebody who is not you, from a machine that is not yours, made an account,
-made a character, killed something, and logged out clean.
+All of it done:
 
-**Risk: high on time, low on difficulty.** Deployment surprises are the norm. If this slips a
-week, the whole schedule slips a week. It is also the phase most worth doing *early and badly*:
-a rough hosted server that one friend can reach is worth more than a polished one nobody has
-touched.
+- Deploy target stood up: a physical **Dell PowerEdge R720**, not a VPS. It arrived unable to
+  boot (no RAID virtual disk existed), so the phase included building the machine from bare
+  metal: RAID 10 + RAID 5 + hot spare, Ubuntu Server 26.04, key-only SSH, UFW default-deny,
+  unattended security upgrades.
+- Netcode private key handling: generated per-host, `chmod 600`, gitignored, never committed.
+- Production env: `PD_DEV_CMDS` unset, `is_gm` on one account, **verified in production** with
+  `GmGive applied` accepted while the boot line read `dev_cmds=false`.
+- Client build against the real host; `README_FOR_TESTERS.md` rewritten from scratch (it had
+  still claimed "No multiplayer").
+- Bug-report button confirmed, and its dead Discord invite replaced with a permanent one.
+- **One friend, one session** — done 2026-08-11.
+
+**Access model changed from the plan.** Port forwarding was replaced with **Tailscale**, which
+the server repo's own deployment guide already assumed. Nothing is exposed to the internet and
+the cleartext `ws://` auth socket is encrypted in transit. Cost: every tester installs Tailscale
+and accepts a node share.
+
+**Done, as met:** the tester registered account 2 from her own machine, created a character,
+killed a Plague Rat, grouped with the operator, and logged out clean, with no
+`GM account connected` line against her session.
+
+Beyond scope, because it would have been irresponsible to invite someone without it: nightly
+backups to a second physical array, a weekly off-site copy to cloud storage, and a verified
+restore.
+
+Evidence: `docs/playtest_notes/first_external_tester_2026_08_11.md`. Operator docs:
+`docs/deployment/`.
 
 ---
 
@@ -287,7 +303,7 @@ rather than via a chat line after the fact.
 |---|---|---|
 | 0. Reconcile | Jul 16 to Jul 17 | **Done (2026-07-17)** — doc reconciliation complete; `CORPSE_LINGER_SECS` raised to 7 days (user-accepted, pure value change); duplicate-name trap resolved via rename |
 | 1. Exploit gate | Jul 20 to Jul 31 | ✅ **COMPLETE (2026-07-31, on schedule)** — all seven gates done & playtested: keystone (`is_gm`), Respawn dead-check, attack-while-seated, cast class/level, `Attack` weapon_path, melee swing-rate limit, login rate-limit + auth-timing. Open caveat (not blocking): the swing-rate haste row is unit/design-covered but never eye-tested. |
-| 2. Host + first friend | Aug 3 to Aug 7 | Not started |
+| 2. Host + first friend | Aug 3 to Aug 7 | ✅ **COMPLETE (2026-08-11, 4 days late)** — hosted on a physical R720 over Tailscale (not a VPS, not port-forwarding); phase included building the machine from bare metal because it arrived unbootable. Closed on tester evidence: a second person, on her own machine, registered, made a character, killed something, grouped, and logged out clean. Backups nightly to a second array plus weekly off-site, restore verified. Two findings opened: the respawn death-loop and the login rate limiter forcing a duplicate account. |
 | 3. Stop it eating things | Aug 10 to Aug 21 | Not started |
 | 4. An evening's worth | Aug 24 to Sep 11 | Not started |
 | 5. Open the door | Sep 14 onward | Not started |

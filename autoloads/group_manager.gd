@@ -30,10 +30,21 @@ func _ready() -> void:
 	PlayerStats.stamina_changed.connect(func(_c, _m): _sync_stats())
 	# Track 6 sub-task 5 — wire to server-driven group state in
 	# launcher mode. The legacy enet MultiplayerAPI RPCs below stay
-	# for Test Room single-player; in launcher mode they're dead code
-	# because the action methods route through Net early-return paths.
+	# for Test Room single-player; in launcher mode the action methods
+	# early-return through Net. (`_flush_stats` is signal-driven rather
+	# than an action method, so it needs its own guard — see there.)
 	Net.world_group_invited.connect(_on_world_group_invited)
 	Net.world_group_roster.connect(_on_world_group_roster)
+	# Group-mate bars. The server already fans HealthUpdate / ManaUpdate /
+	# StaminaUpdate to every in-world client, owner included and with no
+	# range culling, so a member's resources are already on this machine —
+	# nothing here needs a new wire message. Its throttle is what makes the
+	# bars usable for a healer: a fan-out fires immediately when a value
+	# swings more than 5% of max, and otherwise on a slow clock, so a big
+	# hit lands at once while idle regen just ticks.
+	Net.world_health_update.connect(_on_peer_health_update)
+	Net.world_mana_update.connect(_on_peer_mana_update)
+	Net.world_stamina_update.connect(_on_peer_stamina_update)
 	# PD_W0014 — group-mate toggled /autosplit (or future group notices).
 	# Surface the server's one-line text in the combat log.
 	Net.world_group_notice.connect(_on_world_group_notice)
@@ -56,6 +67,15 @@ func _sync_stats() -> void:
 func _flush_stats() -> void:
 	_stats_dirty = false
 	if not in_group:
+		return
+	# Launcher mode: the server owns group state and no Godot multiplayer peer
+	# is ever assigned, so the peer-to-peer RPCs below would fire at server
+	# char_ids against an empty ENet peer list ("unknown peer ID"). Refresh our
+	# own row from local PlayerStats — instant, no round trip — and leave every
+	# other member to the server fan-out.
+	if Net.is_launcher_mode():
+		_update_member_entry(_local_stats())
+		group_updated.emit(false)
 		return
 	if _my_peer_id == leader_peer_id:
 		_update_member_entry(_local_stats())
@@ -297,6 +317,34 @@ func _rpc_member_stat_delta(peer_id: int, hp: float, max_hp: float, mp: float, m
 		"mp": mp, "max_mp": max_mp, "sta": sta, "max_sta": max_sta})
 	group_updated.emit(false)
 
+# ─── Server-driven group-mate resources (launcher mode) ──────────────
+# These three signals carry every entity's resources, not just group-mates:
+# enemies and pets ride them too (RemoteEnemyManager / RemotePetManager
+# listen to the same ones). `_apply_peer_stat` returns without emitting
+# when the id is not in `members`, so the non-group traffic costs one short
+# loop and nothing else.
+
+func _on_peer_health_update(id: int, hp: float, max_hp: float) -> void:
+	_apply_peer_stat(id, {"hp": hp, "max_hp": max_hp})
+
+func _on_peer_mana_update(id: int, mp: float, max_mp: float) -> void:
+	_apply_peer_stat(id, {"mp": mp, "max_mp": max_mp})
+
+func _on_peer_stamina_update(id: int, stamina: float, maximum: float) -> void:
+	_apply_peer_stat(id, {"sta": stamina, "max_sta": maximum})
+
+# Merge a partial resource update into the matching member row. Partial by
+# design: each wire message carries one resource, so merging only the keys
+# present leaves the other two intact.
+func _apply_peer_stat(id: int, fields: Dictionary) -> void:
+	if not in_group:
+		return
+	for i in members.size():
+		if members[i].get("peer_id") == id:
+			members[i].merge(fields, true)
+			group_updated.emit(false)
+			return
+
 @rpc("any_peer", "reliable")
 func _rpc_receive_xp(amount: int) -> void:
 	var sender := multiplayer.get_remote_sender_id()
@@ -330,8 +378,14 @@ func is_member(peer_id: int) -> bool:
 	return false
 
 func _local_stats() -> Dictionary:
+	# The roster is keyed on whatever ids populated `members`. In launcher mode
+	# those are server char_ids; `_my_peer_id` is Godot's `get_unique_id()`,
+	# which is 1 on every client because no ENet peer is assigned. Using it
+	# there wrote the local player's stats into whichever member happened to be
+	# char_id 1 — so a non-leader's own HP appeared under the leader's name.
+	var pid: int = Net.get_player_id() if Net.is_launcher_mode() else _my_peer_id
 	return {
-		"peer_id": _my_peer_id,
+		"peer_id": pid,
 		"name": PlayerStats.player_name,
 		"level": PlayerStats.level,
 		"hp": PlayerStats.hp, "max_hp": PlayerStats.max_hp,

@@ -363,6 +363,40 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > code written *and* playtest-confirmed, never one without the other.
 
 ### Multiplayer / networking
+- [ ] **Group-mate HP/MP/stamina never reach the group panel in launcher mode** *(found
+  2026-08-11 by the first two-player group session; log evidence in
+  `first_external_tester_2026_08_11.md`)*. Symptom is a flood of
+  `ERROR: Attempt to call RPC with unknown peer ID: 2` from Godot's **native** multiplayer,
+  which this game does not otherwise use.
+  **Mechanism.** `GroupManager._ready()` wires `_sync_stats` to `PlayerStats.hp_changed` /
+  `mp_changed` / `stamina_changed` with **no `Net.is_launcher_mode()` guard**, unlike the action
+  methods (`invite_player` etc.). The server-driven `_on_world_group_roster` sets `in_group` and
+  fills `members[].peer_id` with **server char_ids**. Combat fires the stat signals constantly,
+  so `_flush_stats` runs and calls `_rpc_member_stat_delta.rpc_id(<char_id>, ...)` on Godot's
+  ENet peer list, which has no such peer. `_my_peer_id` is `multiplayer.get_unique_id()` = 1 with
+  no peer set, and the leader's char_id was also 1, so it coincidentally took the *leader* branch
+  and looped every member.
+  **The real bug underneath.** `members[].hp` is only ever written by `_update_member_entry`,
+  called from the RPC handler and from `_flush_stats` for the local player. **There is no
+  server-driven source for member stats** — `Net` exposes `world_group_roster` (which seeds hp to
+  `0.0`), `world_group_invited` and `world_group_notice`, and nothing else.
+  **Confirmed in the session, and it mislabels rather than blanks.** `_local_stats()` returns
+  `peer_id: _my_peer_id` = `multiplayer.get_unique_id()` = **1 on every client**, and
+  `_update_member_entry` merges into whichever row has `peer_id == 1`. The operator is char_id 1,
+  so on *his* client that lands on his own row (correct by coincidence) while on *hers* her stats
+  were written into **his** row. She saw her own HP under his name; her row stayed at zero.
+  `merge(..., true)` overwrites `name` too. **It only half-works because the leader is char_id 1**
+  — with any other leader both clients take the `else` branch and no row updates at all.
+  **Fix, in parts.** (a) Guard `_sync_stats` / `_flush_stats` on `Net.is_launcher_mode()`,
+  matching the action methods. One line; stops the flood and the mislabelling, leaves every bar
+  blank. (a+) Also key the local player's own row on `Net.get_player_id()` rather than the Godot
+  peer id, so each player at least sees themselves correctly. (b) The actual feature: a
+  server-side group-member stat fan-out (new wire message + `Net` signal + handler, protocol
+  bump).
+  **Why it hid for so long:** it requires two players in a group on the launcher path. The code
+  comment at `group_manager.gd:31-34` asserts these legacy RPCs are "dead code in launcher mode
+  because the action methods route through Net early-return paths" — true of the action methods,
+  but `_flush_stats` is signal-driven and was missed.
 - [ ] **Incoming `/tell` RPC** — receiving tells from other players (outbound done)
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
@@ -429,6 +463,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   auth-timing are both DONE + playtested — moved to the blockquote above.)* Still open: `BuyItem`
   ignores `vendor_id`; cross-store transfers persist as separate txns (crash-window dupe/loss; the
   corpse-loot path is the only atomic one).
+- [ ] **Login rate limit is too tight for real humans** *(found 2026-08-11, first external
+  tester)* — the Phase 1 gate is 5 attempts per 60 s per IP. The tester logged out, tried to log
+  back in, tripped it (`Login rejected — rate limited ... window_secs=60 max_attempts=5`), and
+  **created a second account rather than waiting**. She now has two accounts and two characters,
+  and there is no account-deletion tooling to tidy that up. The gate worked exactly as designed;
+  the problem is the threshold. Note the threat model has also changed: nothing can reach 8765
+  without being on the tailnet, so brute-force risk is currently near zero while the usability
+  cost is demonstrated. Options: raise to ~10 per 60 s, or keep 5 over a 5-minute window. Server
+  change (`LoginRateLimiter`), so it needs a push, a pull on the R720, a rebuild and a restart.
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
@@ -441,19 +484,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > the turn-in is rejected until every server-counted objective is met. See systems_overview.
 
 ### Hosting / deployment
-> **The host is BUILT (2026-08-10) and awaiting its one remaining piece of evidence.** A Dell
-> PowerEdge R720 runs the server on Ubuntu 26.04 over Tailscale; see "Hosted server (the R720)"
-> under **Commands** for how to run and update it. Everything the original item listed is done:
-> netcode key handling, `PD_DEV_CMDS` off with `is_gm` on one account only (verified in
-> production, `GmGive applied` accepted while the boot line read `dev_cmds=false`), a client
-> build against the real host, a rewritten `README_FOR_TESTERS.md`, and a live Discord invite
-> wired to the in-game bug-report button. Backups run nightly to a second array and weekly
-> off-site.
-- [ ] **Stand up a deploy target + host it** — remaining: **someone who is not you, from a
-  machine that is not yours**, makes an account, makes a character, kills something, and logs
-  out clean. The operator has rehearsed that whole path from the dev box; the definition of
-  done requires a second person, so this stays open until a tester does it. Checklist for
-  running that session: `docs/deployment/inviting_a_player.md`.
+> **DONE + playtested 2026-08-11.** The game is hosted on a physical Dell PowerEdge R720 over
+> Tailscale. What exists is in `systems_overview.md` → "Hosted deployment (the R720)"; how to
+> run it is in `docs/deployment/server_operations.md`; the session evidence is
+> `docs/playtest_notes/first_external_tester_2026_08_11.md`.
+- [x] **Stand up a deploy target + host it** — **CLOSED on tester evidence 2026-08-11.** A
+  second person, on a machine that is not the operator's, connected over the tailnet,
+  registered account 2, created a character, killed a Plague Rat (`kill credit granted
+  killer=2`), grouped, and logged out clean (`client requested disconnect char_id=2`) — with no
+  `GM account connected` line, confirming she held no elevated access. That is the definition
+  of done, met by someone other than the author.
+
+> **Two findings came out of that first session** and are open below: the respawn death-loop
+> (Death / corpses) and the login rate limiter forcing a duplicate account (Security).
 
 ### Death / corpses
 > The corpse epic **SHIPPED** (Slices 0-3 + the monster-orb unification, wire PD_W0018 to
@@ -473,6 +516,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   respawn exactly where you died, and there is no death lock — you can move the character straight
   through death. The whole death→bind→respawn UX wants a redesign pass; it's its own project. Not
   a regression from the Respawn dead-check.)*
+  **Escalated 2026-08-11 by the first external tester.** She died, respawned on the spot next to
+  the two mobs that had just killed her, and died again 20 seconds later, leaving two corpses:
+  `server-detected player death char_id=2` at 02:46:06, damage again at 02:46:11, dead again at
+  02:46:26. With no bind, no death lock and no invulnerability window, that is an unwinnable loop,
+  and it lands hardest on brand-new players who have no gear to lose and no idea it is coming.
+  This is now the worst experience available in the game. Evidence:
+  `docs/playtest_notes/first_external_tester_2026_08_11.md`.
 - [ ] **Corpse auto-re-equip on loot** — looting your own corpse returns gear to your bags; you
   re-equip by hand. A clean version needs the corpse to remember each item's equip-slot
   provenance.

@@ -656,8 +656,8 @@
         <div class="stat-v">7 epics<span class="stat-sub"> / 4.3 wks</span></div>
       </div>
       <div class="stat">
-        <div class="stat-k">Status &middot; Jul 31</div>
-        <div class="stat-v hi">Phase 2<span class="stat-sub"> / 0 and 1 complete, on time</span></div>
+        <div class="stat-k">Status &middot; Aug 11</div>
+        <div class="stat-v hi">Phase 3<span class="stat-sub"> / 0, 1 and 2 complete &middot; the game is hosted and a second person has played it</span></div>
       </div>
     </div>
   </header>
@@ -909,20 +909,28 @@
         <div class="phase-head">
           <span class="phase-no">02</span>
           <h3>Host it, invite one person</h3>
-          <span class="chip active">Next up</span>
+          <span class="chip done">Done</span>
           <span class="chip risk-hi">Highest schedule risk</span>
-          <span class="when">Aug 3 to Aug 7</span>
+          <span class="when">Aug 3 to Aug 7 &middot; finished Aug 11, four days late</span>
         </div>
+        <p style="margin:0;font-size:14.5px;color:var(--ink-soft)">
+          The one estimate in this plan that was a guess, because nothing in ten weeks of history had
+          been a deployment. It ran four days over on a one-week phase, which for a guess is a good
+          result. The shape changed twice along the way: the deploy target became a physical server
+          rather than a rented one, and the access model became a private network rather than an open
+          port.
+        </p>
         <ul class="items">
-          <li>Pick and stand up a deploy target, either a rented server or a forwarded port from the development machine.</li>
-          <li>Key handling for a real host. The server deliberately refuses to boot without one.</li>
-          <li>Production environment: dev commands off, the new permission flag on your account only.</li>
-          <li>Client build pointed at the real host, and a refresh of the tester README, which predates roughly ten weeks of work.</li>
-          <li>Confirm the in-game bug report button still routes somewhere you read.</li>
-          <li><b>One friend, one session.</b></li>
+          <li class="itemdone"><b>Deploy target stood up. Done.</b> A physical Dell PowerEdge R720 rather than a rented server. It arrived unable to boot, so the phase quietly included building the machine from bare metal: two RAID volumes with a hot spare, Ubuntu Server, key-only remote access, a default-deny firewall and automatic security updates.</li>
+          <li class="itemdone"><b>Key handling for a real host. Done.</b> Generated per host, permissions locked down, never committed. The server still refuses to boot without it, which it demonstrated more than once.</li>
+          <li class="itemdone"><b>Production environment. Done, and verified in production.</b> Dev commands are off for everyone, and the operator's tools come solely from the per-account permission flag. Confirmed by watching the server accept a GM-only command while its own boot line reported dev commands disabled.</li>
+          <li class="itemdone"><b>Client build and tester README. Done.</b> The README was rewritten rather than refreshed; it had still claimed the game had no multiplayer.</li>
+          <li class="itemdone"><b>Bug report button. Done.</b> Confirmed working, and its Discord invite replaced, because the old one had expired.</li>
+          <li class="itemdone"><b>One friend, one session. Done 2026-08-11.</b> She registered from her own machine, made a character, killed something, grouped with the operator, and logged out cleanly.</li>
+          <li class="itemdone"><b>Backups, beyond the original scope.</b> Nightly snapshots onto a second physical array, a weekly copy to cloud storage outside the building, and a restore actually tested rather than assumed. Inviting someone onto a server with no backups would have been irresponsible.</li>
         </ul>
-        <p class="done-means"><b>Done means</b>Somebody who is not you, from a machine that is not yours, made an account, made a character, killed something, and logged out cleanly.</p>
-        <p class="done-means note-risk"><b>Why this is the risky one</b>It is the only phase with no velocity data behind it. Nothing in ten weeks of history is a deployment; everything so far has run on localhost. Deployment surprises are the norm, and if this slips a week the whole chain slips with it. It is also the phase most worth doing early and roughly: a crude hosted server one friend can reach is worth more than a polished one nobody has touched.</p>
+        <p class="done-means"><b>Done means</b>Somebody who is not you, from a machine that is not yours, made an account, made a character, killed something, and logged out cleanly. <b>All met, on her evidence rather than the author's.</b></p>
+        <p class="done-means"><b>What the first session found</b>Two things, both now open items. She died, respawned on the spot beside the mobs that had just killed her, and died again twenty seconds later, which is an unwinnable loop for a new player. And the login rate limit, built to stop brute-force attacks, locked her out after five attempts and pushed her into creating a second account rather than waiting a minute. The first real user found both within ten minutes.</p>
       </article>
 
       <article class="phase">

@@ -592,3 +592,54 @@ player can never use them (exploit-audit finding #1). Two independent grants:
 - **`admin_report`** bin: read-only `world.db` viewer (accounts + characters incl. soft-deletes,
   per-char four-tier coins + bank + inventory) → console + a local `world_report.html`. WAL-aware
   (`?mode=ro`), safe to run while the server is live.
+
+---
+
+## Hosted deployment (the R720)
+
+**Live since 2026-08-10; first external tester 2026-08-11.** Until then every session in this
+project's history had run on localhost. The game is now hosted on physical hardware that stays
+up when the dev box is off.
+
+**The machine.** A Dell PowerEdge R720 (service tag `6D8LBY1`, dual 8-core Xeons / 32 threads,
+PERC H710P) running Ubuntu Server 26.04 LTS. Storage is two RAID volumes off eight SAS disks:
+VD0, 4x300GB RAID 10 with a global hot spare, carrying the OS and `world.db`; VD1, 3x1.2TB
+RAID 5, mounted at `/data` for backups. The hot spare only covers VD0, because it is smaller
+than the VD1 members.
+
+**How it runs.** systemd unit `projectdawn.service` (from `server/scripts/projectdawn.service`)
+as a dedicated `projectdawn` system account out of `/opt/projectdawn`, `enabled` so it returns
+after a reboot or power cut. Config is `/opt/projectdawn/.env`, loaded by the binary itself and
+resolved **relative to the working directory**, which is why `WorkingDirectory=` in the unit is
+load-bearing. The host tracks the `fix/xp-leveling-overflow` branch and deploys by pulling from
+GitHub, so a server change reaches players only after being pushed.
+
+**How it is reached.** Tailscale, not port forwarding. The server sits at `100.93.108.112`
+(auth TCP 8765, world UDP 7777) and UFW only admits those ports `in on tailscale0`, so they are
+closed to the LAN and to the internet. Testers are given **node shares** rather than tailnet
+membership, which scopes them to the game server rather than to every device the operator owns.
+`PROJECTDAWN_WORLD_ENDPOINT` carries the tailnet address; left at its `127.0.0.1` default every
+remote client is told to connect to itself, and the world join silently fails after a
+successful login.
+
+**Production posture.** `PD_DEV_CMDS` is unset, so `is_dev` is false for everyone and dev tools
+come solely from per-account `is_gm` (see "GM access + dev tooling" above). Verified in
+production rather than by test alone: `GmGive applied` and `dev full restore` were accepted for
+the GM account while the boot line read `dev_cmds=false`. The boot line is the standing check
+after every start.
+
+**Durability.** `world.db` lives on VD0 (RAID 10, hot-spare covered). `scripts/backup.sh` runs
+nightly at 04:00 via `/etc/cron.d/projectdawn-backup`, writing `sqlite3 .backup` snapshots to
+`/data` (VD1, a different physical array), 7 days retained. A weekly Windows scheduled task on
+the dev box pulls those into Google Drive, putting one copy outside the building. Verified by
+restoring a backup and reading a character out of it, not just by the files existing.
+
+**Known operational gaps.** No kick, no ban, no shutdown warning; `accounts.is_banned` is read
+at login but nothing writes it. No SIGTERM handler, so a stop or restart discards up to 60 s of
+position, HP, XP, inventory and coins for everyone online. The database is not in WAL mode
+despite comments claiming otherwise.
+
+**Operator docs.** `docs/deployment/server_operations.md` (run, update, recover, triage),
+`docs/deployment/inviting_a_player.md` (onboarding checklist),
+`docs/deployment/r720_host_setup.md` (how the machine was built),
+`server/docs/deployment_linux.md` (deploying to a fresh Linux box).
