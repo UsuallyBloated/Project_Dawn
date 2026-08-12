@@ -324,5 +324,34 @@ const ALL: Dictionary = {
 				{"text": "I will.", "action": "close"}
 			]
 		}
+	},
+
+	# Soul Binder. Binding sets where you wake up after dying. Before bind points
+	# existed you always respawned exactly where you fell, which beside a live mob
+	# was an unwinnable loop. Stationed by the town spawn so a newly respawned
+	# player can reach her without a corpse run.
+	"Sister Maelis": {
+		"npc_title": "Soul Binder",
+		"root": {
+			"text": "Death comes for everyone in these lands, friend. The question is only where you wake afterward.",
+			"responses": [
+				{"text": "What do you mean, where I wake?", "goto": "explain"},
+				{"text": "Bind my soul to this place.", "action": "bind_soul", "goto": "bound"},
+				{"text": "Not today.", "action": "close"}
+			]
+		},
+		"explain": {
+			"text": "Bind your soul here and this ground will call you back. Fall anywhere in the world and you will rise here instead, whole enough to walk. Leave it unbound and you return to the town gate, as all the unbound do.",
+			"responses": [
+				{"text": "Then bind me here.", "action": "bind_soul", "goto": "bound"},
+				{"text": "I will think on it.", "action": "close"}
+			]
+		},
+		"bound": {
+			"text": "It is done. However far you wander, however badly it ends, this is where you will open your eyes.",
+			"responses": [
+				{"text": "My thanks.", "action": "close"}
+			]
+		}
 	}
 }

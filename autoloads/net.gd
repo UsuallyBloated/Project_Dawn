@@ -538,6 +538,14 @@ func broadcast_respawn() -> void:
 		return
 	send_respawn()
 
+# Bind your soul where you're standing — this becomes your respawn point.
+# Sent by the Soul Binder NPC's dialogue. The server refuses it while dead, so
+# a corpse can't bind where it fell (which would rebuild the death loop).
+func broadcast_bind_at_current_location() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_bind_at_current_location()
+
 # Track 6 sub-task 3: armor sync. Fires on Equipment.equipment_changed
 # so the server's incoming-damage formula applies the same AC reduction
 # the client uses. Cheaty (client picks the number) but matches Track

@@ -159,6 +159,21 @@ func _on_response(resp: Dictionary) -> void:
 		"open_vendor":
 			visible = false
 			VendorManager.open_nearby()
+		"bind_soul":
+			# Soul Binder: your respawn point becomes wherever you're standing.
+			# Server-authoritative — it stores the position and refuses the bind
+			# if you're dead, so we only send the intent and report optimistically.
+			# In offline/Test Room there's no server, so say so rather than
+			# silently doing nothing.
+			if Net.is_launcher_mode():
+				Net.broadcast_bind_at_current_location()
+				CombatLog.add_line(
+					"Your soul is bound to this place.", CombatLog.MsgType.INFO)
+			else:
+				CombatLog.add_line(
+					"Soul binding requires a server connection.", CombatLog.MsgType.INFO)
+			if goto_id != "":
+				_navigate_to(goto_id)
 		"give_quest":
 			if qid != "":
 				var def: Dictionary = QuestDefinitions.ALL.get(qid, {})

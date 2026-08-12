@@ -57,6 +57,18 @@ func _respawn() -> void:
 	# .apply_health_update sees was_dead && new_hp > 0 → _apply_respawn().
 	Net.broadcast_respawn()
 
+	# In launcher mode the SERVER decides where you reappear: it teleports you to
+	# your bind point (or the starter spawn if unbound) and sends a Teleport,
+	# which player.gd applies. Moving the player here as well would be a fight the
+	# client loses anyway — the server owns position, so its next Position
+	# broadcast overrides whatever we set. That fight is exactly what produced the
+	# death loop: the client tried to move you, the server dragged you back to the
+	# corpse, and you died again.
+	if Net.is_launcher_mode():
+		player_respawned.emit()
+		return
+
+	# Offline / Test Room only: no server, so the client still owns respawn.
 	var bind := PlayerStats.bind_zone_path
 	if bind != "" and FileAccess.file_exists(bind):
 		player_respawned.emit()
