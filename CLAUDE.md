@@ -618,3 +618,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   no buff-bar entry
 - [ ] **Weapon item table gaps** — `data/weapon_item_table.gd` maps only a few weapons;
   others fall back to `hand_to_hand` for passive skill tracking
+- [ ] **`world_two_clients.rs`: three genuinely flaky enemy-AI tests** *(the 13 stable failures are
+  FIXED, server `6a1a92e` + `db3df02`, 2026-08-11)*. The suite sat at a stable `29 passed; 13 failed`
+  for three weeks. It was **not** flakiness and **not** a server regression: the file was last edited
+  07-19 and three gates landed after it, so the fixtures asserted pre-gate behavior — the CastSpell
+  class/level gate (11 tests casting spells a **level 1** character can't, three also as the wrong
+  class), the melee swing-rate limit (a test bursting 10 Attacks in one frame, correctly dropped as
+  forgery), and the `meditate` skill (6 casting keys became 7). Fixed the fixtures, not the server.
+  Now **39-42 of 42, with a fully green run reachable**. What remains is the pre-existing
+  load-sensitive flakiness in `aoe_spell_damages_nearby_enemies`, `pet_attacks_owners_target` and
+  `pet_pulls_aggro_via_threat_reaggro` — all pass in isolation, all vary run to run.
+  **Practical rule: a failure OUTSIDE those three is a real regression.** Closing this item means
+  making those three deterministic (the harness waits on enemy AI reaching the player); see
+  `server/docs/flaky_integration_tests.md`.
