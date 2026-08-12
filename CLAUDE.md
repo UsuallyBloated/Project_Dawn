@@ -509,20 +509,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
-- [ ] **Respawn at bind / Soul Binder NPC + a real death state** — respawn still honors the
-  *client's* bind (`PlayerStats.bind_zone_path`); there is no server-authoritative bind and
-  `ClientWorldMsg::BindAtCurrentLocation` is an inert wire variant with no server handler. Needs
-  an NPC + server bind + a server-driven respawn teleport. *(Playtest 2026-07-20: with no bind you
-  respawn exactly where you died, and there is no death lock — you can move the character straight
-  through death. The whole death→bind→respawn UX wants a redesign pass; it's its own project. Not
-  a regression from the Respawn dead-check.)*
-  **Escalated 2026-08-11 by the first external tester.** She died, respawned on the spot next to
-  the two mobs that had just killed her, and died again 20 seconds later, leaving two corpses:
-  `server-detected player death char_id=2` at 02:46:06, damage again at 02:46:11, dead again at
-  02:46:26. With no bind, no death lock and no invulnerability window, that is an unwinnable loop,
-  and it lands hardest on brand-new players who have no gear to lose and no idea it is coming.
-  This is now the worst experience available in the game. Evidence:
-  `docs/playtest_notes/first_external_tester_2026_08_11.md`.
+- [ ] **Respawn at bind / Soul Binder NPC + a real death state** — *(BUILT 2026-08-12, server
+  `9e42a76` + gdext `c576d75` / client `973e846`, pending playtest.)* Respawn is now
+  server-authoritative: it teleports you to your **bind point**, or the **starter spawn** when
+  unbound, never the death site. **Sister Maelis** (Soul Binder, at the town spawn) sets the bind via
+  a new `bind_soul` dialogue action, wiring up `BindAtCurrentLocation` (a dormant wire variant that
+  had no sender AND no handler). Migration `0011` adds `bind_x/y/z`; the pre-existing `bind_zone` is
+  reused and the `bind_entry`/`bind_zone_name` TEXT columns stay dormant (they modelled the old
+  client-local save). A **death lock** refuses `Move` while dead. Binding is refused while dead so a
+  corpse can't bind where it fell.
+  **Root cause was not the missing bind.** `Respawn` restored HP but never touched *position*, and
+  the server owns position — so the client's own respawn move (seeded in `player.gd`) was overridden
+  by the next Position broadcast and you were dragged back to your corpse. `player_death.gd` now
+  defers to the server's Teleport in launcher mode.
+  **Requires a client re-export** (gdext gained the bind send). Playtest:
+  `respawn_bind_checklist.md`. Deliberately NOT included: post-respawn invulnerability (a safe
+  respawn location should make it unnecessary — revisit if the playtest says otherwise).
+  Original evidence: `docs/playtest_notes/first_external_tester_2026_08_11.md`.
 - [ ] **Corpse auto-re-equip on loot** — looting your own corpse returns gear to your bags; you
   re-equip by hand. A clean version needs the corpse to remember each item's equip-slot
   provenance.
