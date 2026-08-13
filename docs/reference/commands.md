@@ -95,6 +95,7 @@ Parsed in `scripts/hud.gd::_handle_chat_input`. Press Enter to open chat, type t
 | Command | Effect |
 |---|---|
 | `/console` | Toggle the in-game debug console (fallback for the backtick keybind). |
+| **[GM]** `/testpanel` (or `/gm`) | Show/hide the dev Test Panel. It only mounts for GM accounts and the offline Test Room, so a normal player gets "not available". Deliberately a command, not a keybind. |
 | `/items <substring>` | List registry items matching a substring (no spawn; pairs with `/give`). |
 | **[GM]** `/give <item name> [count]` | Spawn a registry item into your inventory (server-recorded). Needs a name matching ONE item. |
 | **[GM]** `/heal <amount>` | Dev self-heal via the server `HealSelf` path. |

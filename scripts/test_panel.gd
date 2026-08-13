@@ -65,6 +65,10 @@ var _stat_labels: Array[Label] = []
 
 func _ready() -> void:
 	layer = 10
+	# Grouped so `/testpanel` can find and toggle it without a node-path lookup
+	# (world.gd adds this as a bare child, and it has no class_name). Matches the
+	# project's other group conventions: "player", "vendor_npcs", "banker_npcs".
+	add_to_group("test_panel")
 	_build_ui()
 	_populate_options()
 

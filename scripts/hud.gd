@@ -1559,6 +1559,27 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line("Loot mode set to %s." % ("Free-for-all" if ffa else "Round Robin"), CombatLog.MsgType.INFO)
 			return
 
+	# Show/hide the dev Test Panel. It mounts only for the offline Test Room and
+	# for GM accounts (world.gd), but a GM previously had no way to get it OFF the
+	# screen: it covers a chunk of the viewport and there is no reason to stare at
+	# it while actually playing. A command rather than a keybind, so it costs no
+	# key and is discoverable by typing.
+	if lower == "/testpanel" or lower == "/gm":
+		var panel := get_tree().get_first_node_in_group("test_panel") as CanvasLayer
+		if panel == null:
+			# Not a GM (or not in a session that mounts it). Say so plainly rather
+			# than failing silently — the panel's existence is not a secret, and
+			# the server gates every power it offers on is_gm regardless.
+			CombatLog.add_line(
+				"Test Panel is not available on this character.", CombatLog.MsgType.INFO)
+			return
+		panel.visible = not panel.visible
+		CombatLog.add_line(
+			"Test Panel: %s" % ("shown" if panel.visible else "hidden"),
+			CombatLog.MsgType.INFO,
+		)
+		return
+
 	# Dev-only — backup trigger for the in-game debug console when the
 	# F2 keybind isn't reaching the game window (editor focus, OS
 	# steals, etc.). Round-7B fallback.
