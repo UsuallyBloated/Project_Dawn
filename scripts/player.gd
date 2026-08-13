@@ -343,6 +343,15 @@ func _scan_for_text_window(node: Node) -> bool:
 func _physics_process(delta: float) -> void:
 	var chat_focused := _is_text_input_focused()
 	_update_mouse_camera(chat_focused)
+	# Death lock, client half. The server already refuses Move while you are dead,
+	# but local prediction still ran here: the body lurched on each keypress and
+	# was then yanked back by the server's authoritative position, which read as a
+	# twitching corpse (playtest 2026-08-12). Stop predicting and stop sending;
+	# the camera stays live so you can look around while awaiting respawn.
+	if PlayerDeath.is_dead:
+		velocity = Vector3.ZERO
+		move_and_slide()
+		return
 	# Both buttons held → run forward, steered by the right-button mouselook.
 	var mouse_run := is_camera_active and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 
