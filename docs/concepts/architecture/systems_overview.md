@@ -129,9 +129,10 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   right-click in inventory calls `add_food_buff` / `add_drink_buff`; regen stacks
   additively on top of meditation. (Planned rework: gate base regen instead of stacking —
   see the to-do.)
-- **Bind points:** Bind Affinity stores `bind_zone_path/entry_id/zone_name` on PlayerStats;
-  `player_death._respawn()` routes through `ZoneLoader.travel_to()` when set (falls back to
-  `_respawn_position`). XP loss is logged to the combat log.
+- **Bind points:** server-authoritative since 2026-08-12 — see "Respawn, bind points, and the
+  death lock" below. The client-side `PlayerStats.bind_zone_path` / `ZoneLoader.travel_to()` path
+  described here previously now applies **only offline / in the Test Room**; in launcher mode the
+  server decides where you respawn and teleports you. XP loss is logged to the combat log.
 - **Group XP:** `GroupManager.distribute_kill_xp(base_xp)` splits XP with a 20% group bonus;
   `enemy._die()` routes through it; `_rpc_receive_xp` delivers each remote member's share.
 
@@ -541,6 +542,31 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 - **Known gaps** (also in the root to-do): incoming `/tell`, the broader PvP-flagging design
   (when/how PvP is triggered + consequences), `RemotePet` friend/foe visual distinction.
   (ALLY-target buff routing and pet buffs both landed — see Spells & casting + Pets.)
+
+## Respawn, bind points, and the death lock
+
+Where you wake up after dying is server-authoritative (2026-08-12, playtested 08-13).
+
+- **Bind point.** `characters.bind_x/y/z` (migration 0011) plus the pre-existing `bind_zone`.
+  `Respawn` teleports you to it via the `Teleport` message; with no bind you go to
+  `world::STARTER_SPAWN` (world origin, where new characters start). Never the death site.
+  `PerConnection::respawn_destination()` owns that choice and is unit tested.
+- **Setting a bind.** `ClientWorldMsg::BindAtCurrentLocation` (a variant that sat dormant with no
+  sender AND no handler until now) captures *the player's* current position, not the NPC's. It is
+  refused while dead, so a corpse cannot bind where it fell. Persisted immediately rather than on
+  the 60 s checkpoint, since there is no graceful shutdown to flush it.
+- **Sister Maelis**, Soul Binder, stands at the town spawn. She reuses the dialogue NPC and window
+  via a `bind_soul` response action rather than bespoke UI.
+- **Death lock.** `Move` is refused server-side while `death_processed`, and the client stops
+  predicting/sending in `player.gd::_physics_process`. Both halves are needed: the server alone left
+  the corpse twitching as local prediction was repeatedly overridden.
+- **Aggro breaks on death.** Dead players are excluded from the enemy-AI target list and wiped from
+  every enemy's aggro/threat table, so mobs disengage and leash home instead of beating the corpse.
+
+**Why it was broken:** `Respawn` restored HP but never touched position. Because the server owns
+position, the client's own respawn move was overridden by the next Position broadcast and the player
+was dragged back to their corpse. It presented as "no bind point exists" when the real fault was that
+respawn simply never moved anyone.
 
 ## Auth hardening (login rate limit + timing)
 

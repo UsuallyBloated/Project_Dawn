@@ -21,33 +21,41 @@ your corpse around during the respawn countdown.
 Diagnostics: `journalctl -u projectdawn -f` on the host. Grep `bind point set` for binds.
 
 ## Setup
-- [ ] Server deployed + restarted (boot line still `dev_cmds=false rate_limit=false`)
-- [ ] Client gdext rebuilt, then re-exported; DLL hashes match
-- [ ] Log in with a character that can safely die (low stakes, no gear you mind dropping)
+- [x] Server deployed + restarted (boot line still `dev_cmds=false rate_limit=false`)
+- [x] Client gdext rebuilt, then re-exported; DLL hashes match
+- [x] Log in with a character that can safely die (low stakes, no gear you mind dropping)
 
 ## 1 — The death loop is broken (the headline, works UNBOUND)
 No bind needed for this section; unbound respawn goes to the starter spawn.
-- [ ] **Walk well away from town, let a mob kill you, wait out the respawn** → you reappear at the
-      **town spawn**, NOT beside the mob that killed you. notes:
-- [ ] **You are not immediately re-attacked** on arrival. notes:
+- [x] **Walk well away from town, let a mob kill you, wait out the respawn** → you reappear at the
+      **town spawn**, NOT beside the mob that killed you. notes: confirmed, wakes up at town spawn.
+- [x] **You are not immediately re-attacked** on arrival. notes: BUT found: mobs kept attacking the
+      CORPSE at the death site. Fixed in server 97c7fac (dead players excluded from the enemy-AI
+      target list + aggro/threat wiped on death). Re-tested: mobs break off immediately and return
+      to their spawn points.
 - [ ] **Your corpse is still back where you died** (the corpse run is intact — this fix must not have
       removed the corpse). notes:
 
 ## 2 — Death lock
-- [ ] **While dead (before respawn fires), try to move** → the character does not walk. notes:
-- [ ] **After respawning, movement works normally again.** notes:
+- [x] **While dead (before respawn fires), try to move** → the character does not walk. notes: first
+      pass showed the corpse TWITCHING (client still predicted + sent, server rejected and yanked it
+      back). Fixed in client 80cbf55 (gate _physics_process on PlayerDeath.is_dead). Re-tested: no
+      twitch at all.
+- [x] **After respawning, movement works normally again.** notes:
 
 ## 3 — Binding with Sister Maelis
-- [ ] **Find Sister Maelis at the town spawn and talk to her** → dialogue opens, offering to bind.
+- [x] **Find Sister Maelis at the town spawn and talk to her** → dialogue opens, offering to bind.
       notes:
-- [ ] **Choose "Bind my soul to this place"** → she confirms, and the combat log says "Your soul is
+- [x] **Choose "Bind my soul to this place"** → she confirms, and the combat log says "Your soul is
       bound to this place." `journalctl` shows `bind point set` with your char_id. notes:
-- [ ] **Now go die somewhere far away** → you respawn **at Maelis / the bind point**. notes:
+- [x] **Now go die somewhere far away** → you respawn **at Maelis / the bind point**. notes: see the
+      DB proof below — visually inconclusive on its own.
 
 ## 4 — Bind persists
-- [ ] **Bind, log out, log back in, then die** → you still respawn at the bind point (it survived
-      the relog, i.e. it persisted to the database, not just memory). notes:
-- [ ] **(If convenient) restart the server, then die** → bind still honored. notes:
+- [x] **Bind, log out, log back in, then die** → you still respawn at the bind point (it survived
+      the relog, i.e. it persisted to the database, not just memory). notes: bind survived a relog
+      AND a server restart + binary swap.
+- [x] **(If convenient) restart the server, then die** → bind still honored. notes:
 
 ## 5 — Bind is refused while dead (guard)
 - [ ] **Die, and while dead/awaiting respawn try to bind** (you would have to reach her as a corpse;
@@ -61,6 +69,37 @@ No bind needed for this section; unbound respawn goes to the starter spawn.
       to the corpse rather than the bind point. notes:
 - [ ] **Offline / Test Room death still respawns you locally** (the client keeps its own path when
       there is no server). notes:
+
+## DB proof (sections 3-4 were visually inconclusive)
+
+Sister Maelis stands at `(-2, 0, 5)` and `STARTER_SPAWN` is `(0, 0, 0)` — about 5.4 units apart, so
+"respawned at bind" and "fell back to the starter spawn" look identical in game. The checklist as
+first written could not distinguish them. Resolved with the database instead:
+
+```
+-- after: die, respawn, DO NOT MOVE, log out cleanly (logout flushes position immediately)
+SELECT name, pos_x, pos_z, bind_x, bind_z FROM characters WHERE id=1;
+Pockets|-3.16501545906067|2.23090076446533|-3.16501545906067|2.23090076446533
+```
+
+`pos` equals `bind` to every decimal place. A fallback would have written `0 / 0`. That is
+conclusive: the respawn teleported to the stored bind point.
+
+Note the bind coordinates are the PLAYER's standing position, not Maelis's own `(-2, 0, 5)` — which
+independently confirms `BindAtCurrentLocation` captures where you stand, as intended.
+
+**Design note for later:** with a single Soul Binder standing at the spawn, a bind and the default
+respawn are effectively the same place, so the feature has no *visible* effect yet. That is fine and
+EQ-like (your bind is town until you find another binder), but a second binder elsewhere would make
+it obvious.
+
+## Still untested (2026-08-13)
+Sections 1-4 pass conclusively. These rows were NOT exercised and are the reason this is ticked as
+"core feature proven" rather than "fully swept":
+- §1 row 3 (corpse still present at the death site), §5 (bind refused while dead), and all of §6.
+- **§6 matters most.** This change touched the death path, so **corpse loot** and **resurrection**
+  are the two regressions with a real chance of being affected. Worth five minutes before this is
+  considered closed for good.
 
 ## Notes / observations
 > Design note: no post-respawn invulnerability was added. The reasoning is that a safe respawn

@@ -230,9 +230,12 @@ minutes before a friend runs dry. This phase is the difference between "I saw yo
 - **Content: quests and mobs.** The quest system is fully server-authoritative now (journal
       persistence, NPC turn-in, item rewards, once-per-character dedup). It is authoring capacity
       that is missing, not engineering. This is the largest and most open-ended item here.
-- **Respawn at bind / Soul Binder NPC.** Currently respawn honors the *client's*
-      `PlayerStats.bind_zone_path`, and `BindAtCurrentLocation` is an inert wire variant with no
-      server handler. With corpse runs as the death model, where you respawn matters a lot.
+- **Respawn at bind / Soul Binder NPC.** ✅ Done + playtested 2026-08-13, pulled forward out of
+      this phase because the first external tester hit an unwinnable death loop. Respawn is
+      server-authoritative (bind point, else starter spawn, never the death site), Sister Maelis
+      sets the bind, a death lock stops corpse-walking, and enemies break aggro on death. Root
+      cause was not the missing bind: respawn simply never moved the player, and the server owns
+      position.
 - **Tune `CORPSE_LINGER_SECS` for production** properly (Phase 0 is the emergency raise; this
       is the considered value).
 - **Minimal sound pass.** See the open question in §4. Not yet committed to.

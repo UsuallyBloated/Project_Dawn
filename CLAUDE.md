@@ -509,7 +509,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
-- [ ] **Respawn at bind / Soul Binder NPC + a real death state** — *(BUILT 2026-08-12, server
+- [x] **Respawn at bind / Soul Binder NPC + a real death state** — **DONE + playtested 2026-08-13**
+  (proof: after die/respawn/logout the character's `pos` equals `bind_x/z` to every decimal, where a
+  fallback would have written 0/0). What exists is in systems_overview → "Respawn, bind points, and
+  the death lock". Playtest found and fixed two follow-ons: mobs kept beating the corpse (server
+  `97c7fac`) and the corpse twitched on movement keys (client `80cbf55`). Still unswept: the §5/§6
+  rows of `respawn_bind_checklist.md`, notably corpse loot and resurrection.
+  *(was: BUILT 2026-08-12, server
   `9e42a76` + gdext `c576d75` / client `973e846`, pending playtest.)* Respawn is now
   server-authoritative: it teleports you to your **bind point**, or the **starter spawn** when
   unbound, never the death site. **Sister Maelis** (Soul Binder, at the town spawn) sets the bind via

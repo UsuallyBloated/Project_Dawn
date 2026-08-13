@@ -968,7 +968,7 @@
         </p>
         <ul class="items">
           <li class="keystone"><b>Quests and mobs.</b> The quest system is fully server-authoritative now: persistent journals, NPC turn-ins, item rewards, once-per-character dedup. What is missing is authoring capacity, not engineering. The largest and most open-ended item here.</li>
-          <li><b>Respawn at bind, and a Soul Binder NPC.</b> Respawn currently honors the client's bind point and the server has no bind of its own. With corpse runs as the death model, where you wake up matters enormously.</li>
+          <li class="itemdone"><b>Respawn at bind, and a Soul Binder NPC. Done (playtested 2026-08-13).</b> Pulled forward out of this phase because the first outside tester hit an unwinnable death loop: she died, woke beside the mobs that killed her, and died again. Respawn is now decided by the server (your bind point, otherwise the town spawn, never where you fell), Sister Maelis sets the bind, the dead can no longer walk their own corpse around, and enemies break off the moment you die. The cause was not the missing bind point: respawn simply never moved the player at all, and the server is what owns position.</li>
           <li><b>Set the corpse decay timer properly.</b> Phase 0 is the emergency raise; this is the considered value.</li>
           <li><b>A minimal sound pass.</b> Not yet committed to. See the open question below.</li>
         </ul>
