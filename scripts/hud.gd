@@ -10,6 +10,9 @@ const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
 const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
 const _HudPetPanel          := preload("res://scripts/hud_pet_panel.gd")
 const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
+# Dev Test Panel, mounted on demand by `/testpanel` (world.gd also mounts it at
+# world entry for GMs and the Test Room).
+const TEST_PANEL_GD         := preload("res://scripts/test_panel.gd")
 const _TrackWindowScript    := preload("res://scripts/track_window.gd")
 const _SpellBookScript      := preload("res://scripts/spell_book.gd")
 const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
@@ -1566,16 +1569,34 @@ func _handle_chat_input(text: String) -> void:
 	# key and is discoverable by typing.
 	if lower == "/testpanel" or lower == "/gm":
 		var panel := get_tree().get_first_node_in_group("test_panel") as CanvasLayer
-		if panel == null:
-			# Not a GM (or not in a session that mounts it). Say so plainly rather
-			# than failing silently — the panel's existence is not a secret, and
-			# the server gates every power it offers on is_gm regardless.
+		if panel != null:
+			panel.visible = not panel.visible
 			CombatLog.add_line(
-				"Test Panel is not available on this character.", CombatLog.MsgType.INFO)
+				"Test Panel: %s" % ("shown" if panel.visible else "hidden"),
+				CombatLog.MsgType.INFO,
+			)
 			return
-		panel.visible = not panel.visible
+		# Not mounted. world.gd only mounts it at world-entry, so anything that
+		# left `Net.is_gm()` false at that instant (a GM grant applied mid-session,
+		# a login path that skipped the LoginOk handler) meant no panel for the
+		# rest of the session with no way to recover. Mount it on demand instead,
+		# so the command works whenever the account is entitled to it rather than
+		# depending on the state at one particular moment.
+		if Network.is_test_room or (Net.is_launcher_mode() and Net.is_gm()):
+			var host := get_tree().current_scene
+			if host != null:
+				host.add_child(TEST_PANEL_GD.new())
+				CombatLog.add_line("Test Panel: shown", CombatLog.MsgType.INFO)
+				return
+		# Genuinely not entitled. Report the deciding flags rather than a flat
+		# "not available" — this is a dev tool, and "why not" is the useful answer.
+		# Nothing here is secret: the server gates every power the panel offers on
+		# the is_gm bit in the signed token, independently of this.
 		CombatLog.add_line(
-			"Test Panel: %s" % ("shown" if panel.visible else "hidden"),
+			"Test Panel unavailable (GM: %s, hosted session: %s). GM is per ACCOUNT and is read at login, so if it was granted while you were online, quit to the login screen and sign in again." % [
+				"yes" if Net.is_gm() else "no",
+				"yes" if Net.is_launcher_mode() else "no",
+			],
 			CombatLog.MsgType.INFO,
 		)
 		return
