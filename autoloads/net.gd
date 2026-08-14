@@ -930,12 +930,19 @@ func _on_connect_ok(
 		n: String,
 		race: String,
 		char_class: String,
-		level: int) -> void:
+		level: int,
+		is_gm_flag: bool) -> void:
 	_player_id = player_id
 	_own_name = n
 	_own_race = race
 	_own_class = char_class
 	_own_level = level
+	# PD_W0026 — GM comes from the WORLD handshake, which is authoritative and
+	# fires on every path into the world. It used to be cached from the auth
+	# LoginOk, so anything that reached the world without going through the login
+	# screen left the client thinking it was not a GM while the server knew it
+	# was: the Test Panel never mounted even though /give worked fine.
+	_is_gm = is_gm_flag
 	_state = State.CONNECTED_APP
 	_heartbeat_timer.start()
 	app_connected.emit(player_id)

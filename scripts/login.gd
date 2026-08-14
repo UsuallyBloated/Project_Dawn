@@ -370,9 +370,11 @@ func _on_message(msg: Dictionary) -> void:
 			_session_token = str(msg.get("session_token", ""))
 			_account_id = int(msg.get("account_id", -1))
 			_is_gm = bool(msg.get("is_gm", false))
-			# Stash on Net so the world scene can decide whether to mount the
-			# dev Test Panel. Not a permission — the server gates dev commands
-			# on the token's own is_gm bit.
+			# Seed Net's copy early so the char-select screen could use it. The
+			# AUTHORITATIVE value now arrives on the world handshake (ConnectOk,
+			# PD_W0026), which fires on every path into the world including ones
+			# that skip this screen entirely — this line alone was why a GM who
+			# reached the world another way saw no Test Panel.
 			Net.set_is_gm(_is_gm)
 			_world_endpoint = str(msg.get("world_endpoint", ""))
 			_username = _username_input.text.strip_edges()
