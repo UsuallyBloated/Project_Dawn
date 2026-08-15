@@ -1562,6 +1562,16 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line("Loot mode set to %s." % ("Free-for-all" if ffa else "Round Robin"), CombatLog.MsgType.INFO)
 			return
 
+	# Report which client build this is. The server stamps its own commit onto the
+	# boot line; this is the client half, and it is the quickest way to confirm a
+	# tester actually installed the build we sent them rather than re-running an
+	# older one. Not GM-gated: knowing your own version is not a privilege, and
+	# asking a tester to read it back is the whole point.
+	if lower == "/version" or lower == "/build":
+		for line in BuildInfo.verbose().split("\n"):
+			CombatLog.add_line(line, CombatLog.MsgType.INFO)
+		return
+
 	# Show/hide the dev Test Panel. It mounts only for the offline Test Room and
 	# for GM accounts (world.gd), but a GM previously had no way to get it OFF the
 	# screen: it covers a chunk of the viewport and there is no reason to stare at

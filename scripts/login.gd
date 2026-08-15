@@ -69,6 +69,9 @@ var _create_status: Label
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Before the launcher-mode early return below, so no entry path can produce a
+	# login screen without a visible build identity.
+	_build_build_stamp_footer()
 	# Backward compatibility: the standalone launcher is retired, but if someone
 	# still runs it, it starts a world session from CLI args in Net's _ready
 	# before this scene loads. Showing a login form on top of a live session
@@ -114,6 +117,28 @@ func _make_label(text: String) -> Label:
 	var l := Label.new()
 	l.text = text
 	return l
+
+# The build stamp, pinned bottom-right of the login screen. Added to the scene
+# root rather than to a view, so it survives switching between login, character
+# select and create. This is the surface that makes a tester's screenshot
+# self-identifying: "which build are you on" stops being a question.
+func _build_build_stamp_footer() -> void:
+	var l := Label.new()
+	l.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 12)
+	l.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	l.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	# Purely decorative, so it must never intercept a click meant for the form.
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if BuildInfo.is_trustworthy():
+		l.text = BuildInfo.short()
+		l.modulate = Color(1, 1, 1, 0.45)
+	else:
+		# A build that cannot identify itself is a real problem, not a cosmetic
+		# one: it means the export plugin did not run, and every stamp we would
+		# otherwise trust for triage is absent. Shout rather than show a blank.
+		l.text = "UNSTAMPED BUILD"
+		l.modulate = Color(1, 0.35, 0.35)
+	add_child(l)
 
 func _make_status() -> Label:
 	var l := Label.new()

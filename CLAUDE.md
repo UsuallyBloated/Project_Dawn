@@ -102,11 +102,24 @@ not the one under `target/release/`.
 ```
 git push
 # re-export from Godot into builds/
+#   confirm the export log shows: [BuildStamp] stamped <sha>
 # send the new zip to testers
 ```
 
 The R720 needs nothing. Testers keep running whatever executable they last received, so a
 client fix is not live until they have a fresh build.
+
+**Every export is stamped automatically** by `addons/build_stamp`, which derives the commit from
+git at export time and injects it into the build. Nothing to remember and nothing to bump by hand.
+A tester's build identifies itself three ways: bottom-right on the login screen, in the `debug.log`
+header, and via `/version`. Two things worth knowing:
+- **`UNSTAMPED BUILD` in red on the login screen means the addon is disabled.** Godot silently
+  disables an addon whose script fails to load, and rewrites `project.godot` to match, so the
+  `[editor_plugins]` enable line must stay committed. A build that can't identify itself is a
+  broken build, not a cosmetic problem.
+- **The stamp fingerprints `gdext_net.dll` separately** from the commit sha, because the DLL is
+  gitignored and hand-copied into `builds/`. A client on a clean commit can still carry a stale
+  wire layer, which presents as a server bug.
 
 > Don't modify anything above `F:\Projects\`.
 

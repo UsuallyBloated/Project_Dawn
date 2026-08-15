@@ -34,6 +34,7 @@ func _ready() -> void:
 	# under %APPDATA%\Godot\app_userdata\...).
 	print("DebugLog: writing to ", ProjectSettings.globalize_path(LOG_PATH))
 	_write_raw("=== Session started %s ===" % Time.get_datetime_string_from_system())
+	_write_raw("=== %s ===" % BuildInfo.one_line())
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
@@ -99,3 +100,8 @@ func _rotate() -> void:
 	_line_count = 0
 	if _file != null:
 		_write_raw("=== Log rotated (prev saved to debug_prev.log) ===")
+		# Re-stamp after rotation. The build line is written once at session
+		# start, so without this a session long enough to rotate (2000 lines,
+		# entirely normal in a real playtest) hands us a debug.log with no
+		# indication of which client produced it — exactly when we most need it.
+		_write_raw("=== %s ===" % BuildInfo.one_line())
