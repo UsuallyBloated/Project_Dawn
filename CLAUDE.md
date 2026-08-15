@@ -397,6 +397,25 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   comment at `group_manager.gd:31-34` asserts these legacy RPCs are "dead code in launcher mode
   because the action methods route through Net early-return paths" — true of the action methods,
   but `_flush_stats` is signal-driven and was missed.
+- [ ] **Remote players never show a jump** *(reported 2026-08-14)*. Player 1 jumps; player 2 sees
+  them slide along the ground. Nothing about a jump crosses the wire, and it's dropped in three
+  separate places: (a) **the client never reports it** — `scripts/player.gd:444` is the only caller
+  of `Net.send_movement()` and hardcodes `jumping = false`, even though `net.gd:374` and the gdext
+  `send_move` both carry the flag; (b) **the server discards it** — `world/handlers.rs:487`
+  destructures `jumping: _`; (c) **there's nowhere to put it coming back out** —
+  `ServerWorldMsg::Position` (`protocol/src/world.rs:953`) carries only `pos / vel / yaw /
+  sequence`, and the server zeroes Y on every Move (`handlers.rs:518`, *"server does not simulate
+  gravity or jumping"*), so even the vertical displacement is gone. `RemotePlayer` interpolates
+  pos + yaw only (`remote_player.gd:243`).
+  **Two ways to do it.** Cheap/cosmetic: send the real `jumping` flag, have the server relay it as
+  a one-shot event alongside the jumper's next Position, and let each remote client play its own
+  hop locally. The server stays free of gravity. Expensive: real server-side vertical physics —
+  much larger, and it buys anti-cheat we don't need yet. Prefer the cosmetic version; it's also
+  the first piece of a general **remote animation-state** channel (jump now, swing/cast/sit poses
+  later). Needs a gdext rebuild + client re-export either way.
+  **Exploit note:** cosmetic-only is safe precisely because the server keeps owning XZ — a forged
+  `jumping` flag can then only make you *look* silly, not move you. Don't let the flag become an
+  input to position.
 - [ ] **Incoming `/tell` RPC** — receiving tells from other players (outbound done)
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
@@ -472,6 +491,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   without being on the tailnet, so brute-force risk is currently near zero while the usability
   cost is demonstrated. Options: raise to ~10 per 60 s, or keep 5 over a 5-minute window. Server
   change (`LoginRateLimiter`), so it needs a push, a pull on the R720, a rebuild and a restart.
+- [ ] **No way to reset an account password** *(requested 2026-08-14)*. A tester who forgets their
+  password is locked out permanently, and their only recovery is registering *another* account —
+  which is exactly how the duplicate accounts in the item above happened. Nothing in the server can
+  change a password today: `db/mod.rs` hashes on `create_account` (`:76`) and verifies on login
+  (`:162`), and there is no `ChangePassword` wire message, no `set_password` DB call, and no ops
+  bin for it (the crate's only ops bins are `admin_report` and `grant_gm`).
+  **Scope it as an operator tool first, not a self-serve flow.** `accounts.email` exists
+  (`migrations/0001_init.sql:12`) but is nullable, nothing collects or verifies it, and there is no
+  mail path; the server is also reachable only from inside the tailnet. So an emailed reset link is
+  both unbuildable and unnecessary right now. The friends-build answer is a `reset_password` bin
+  next to `grant_gm`: `cargo run -p projectdawn-server --bin reset_password -- <username>`, argon2
+  the new password, write it, **and delete that account's rows from `sessions`** so a live session
+  can't outlive the reset.
+  **Exploit note:** a later in-game or launcher-facing "change my password" needs three things an
+  operator bin doesn't: the *old* password re-verified, its own rate-limit budget (`LoginRateLimiter`
+  is keyed to Login and Register only, so a change-password endpoint would be an unmetered Argon2
+  oracle), and the same session invalidation. That's the argument for doing the bin first.
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
@@ -513,8 +549,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (proof: after die/respawn/logout the character's `pos` equals `bind_x/z` to every decimal, where a
   fallback would have written 0/0). What exists is in systems_overview → "Respawn, bind points, and
   the death lock". Playtest found and fixed two follow-ons: mobs kept beating the corpse (server
-  `97c7fac`) and the corpse twitched on movement keys (client `80cbf55`). Still unswept: the §5/§6
-  rows of `respawn_bind_checklist.md`, notably corpse loot and resurrection.
+  `97c7fac`) and the corpse twitched on movement keys (client `80cbf55`). **The §6 regression sweep
+  passed 2026-08-14** — the death path was the real risk of this change, and it is intact: the
+  de-level penalty fired (`36` to `35`), the corpse was created with gear (`item_stacks=3`),
+  Reclaim Soul offered/accepted with an XP refund (`45372`), and the corpse looted empty and
+  despawned. Three cosmetic rows remain unexercised (bind-while-dead refusal, offline Test Room
+  respawn, corpse-at-death-site as its own row); see `respawn_bind_checklist.md`.
   *(was: BUILT 2026-08-12, server
   `9e42a76` + gdext `c576d75` / client `973e846`, pending playtest.)* Respawn is now
   server-authoritative: it teleports you to your **bind point**, or the **starter spawn** when
@@ -585,6 +625,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   fully wired* (server speed clamp, Animal Husbandry / Spirit-of-Wolf stacking / Selos'
   Melody interactions still pending)
 - [ ] **Faction system** — race/class affects NPC standing; guards attack on sight
+- [ ] **Time of day is per-client; make it server-driven** *(reported 2026-08-14; this is the
+  "server broadcast is planned" line in "Known client↔server drift" made into a real item)*. No two
+  players share a sky. `autoloads/time_of_day.gd` starts at `START_HOUR = 8.0` and advances purely
+  from `_process(delta)` against a 20-minute `DAY_DURATION`, so the clock restarts at 8 AM every
+  time the **game process** launches (it's an autoload, so it's already ticking at the login screen,
+  not from character login) and then drifts by client uptime. Two friends who launched an hour apart
+  are in different parts of the day.
+  **Half the wire already exists, dormant.** `ServerWorldMsg::TimeOfDay { hour: f32 }` is declared
+  at `protocol/src/world.rs:1074` and `server_design.md:348` documents it as broadcast *"every 1
+  minute"* — but **nothing in the server ever constructs it**, and neither `gdext_net` nor `Net`
+  handles it. Same shape as `BindAtCurrentLocation` before the respawn sprint: a variant with no
+  sender and no receiver.
+  **Work:** a server-side world clock ticked in the world loop and broadcast on a cadence; a gdext
+  decode plus a `Net` signal; and `TimeOfDay` becoming a *follower* — adopt the server hour and keep
+  interpolating locally between broadcasts so the sky doesn't step once a minute. The authoritative
+  day length moves server-side; `DAY_DURATION` stays only as the offline / Test Room fallback. No
+  protocol bump (the variant is already in the shared enum), but it does need a gdext rebuild and a
+  client re-export.
 - [ ] **Weather system**; **Water & swimming** (breath/drowning); **Doors & locks** (lockpicking)
 - [ ] **Zone transition effects** — fade/loading screen
 - [ ] **Test Panel "Despawn All Enemies" leaves enemies invisible, not gone** (playtest
