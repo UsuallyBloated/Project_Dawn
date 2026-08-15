@@ -63,12 +63,19 @@ No bind needed for this section; unbound respawn goes to the starter spawn.
       stops a corpse binding where it fell, which would rebuild the loop. notes:
 
 ## 6 — Regression: nothing else about death changed
-- [ ] **XP/death penalty still applies** on death as before. notes:
-- [ ] **Corpse loot still works** — return to your corpse and retrieve your gear. notes:
-- [ ] **Resurrection still works** (Cleric/Paladin res on a corpse), and accepting still summons you
-      to the corpse rather than the bind point. notes:
+Swept 2026-08-14. The first three are proven by the server log, quoted below.
+- [x] **XP/death penalty still applies** on death as before. notes: `level change char_id=4
+      from=36 to=35` on death — the de-level penalty fired exactly as before.
+- [x] **Corpse loot still works** — return to your corpse and retrieve your gear. notes:
+      `corpse created char_id=4 corpse_id=2000000018 item_stacks=3`, then
+      `corpse looted empty — despawned corpse_id=2000000018`. Gear went to the corpse and came back.
+- [x] **Resurrection still works** (Cleric/Paladin res on a corpse), and accepting still summons you
+      to the corpse rather than the bind point. notes: full chain in the log —
+      `resurrection cast received spell=Reclaim Soul` -> `resurrection offered xp_percent=20` ->
+      `resurrection accepted refund=45372`. The Paladin tier refunded 20% of that death's lost XP.
 - [ ] **Offline / Test Room death still respawns you locally** (the client keeps its own path when
-      there is no server). notes:
+      there is no server). notes: not exercised — offline leaves no server-log trace, so this row
+      needs an in-client check if we want it closed.
 
 ## DB proof (sections 3-4 were visually inconclusive)
 
@@ -93,13 +100,33 @@ respawn are effectively the same place, so the feature has no *visible* effect y
 EQ-like (your bind is town until you find another binder), but a second binder elsewhere would make
 it obvious.
 
-## Still untested (2026-08-13)
-Sections 1-4 pass conclusively. These rows were NOT exercised and are the reason this is ticked as
-"core feature proven" rather than "fully swept":
-- §1 row 3 (corpse still present at the death site), §5 (bind refused while dead), and all of §6.
-- **§6 matters most.** This change touched the death path, so **corpse loot** and **resurrection**
-  are the two regressions with a real chance of being affected. Worth five minutes before this is
-  considered closed for good.
+## §6 regression sweep — PASSED (2026-08-14)
+
+The concern was that the respawn/death-lock/aggro work had disturbed the death path. It had not.
+Server log for the sweep, in order:
+
+```
+19:58:55  level change char_id=4 from=35 to=36        (dev level-up to set up the test)
+20:01:27  bind point set char_id=4 x=-1.696 y=0.0 z=9.208
+20:01:46  level change char_id=4 from=36 to=35        (DIED — de-level penalty applied)
+20:01:47  corpse created char_id=4 corpse_id=2000000018 item_stacks=3
+20:02:38  resurrection cast received caster=4 spell=Reclaim Soul corpse_id=2000000018
+20:02:38  resurrection offered caster=4 corpse_id=2000000018 xp_percent=20
+20:02:40  resurrection accepted char_id=4 corpse_id=2000000018 xp_percent=20 refund=45372
+20:03:23  corpse looted empty — despawned corpse_id=2000000018 char_id=4
+```
+
+Death penalty, corpse creation with gear, resurrection (offer + accept + XP refund), and corpse
+loot-to-despawn all still work. Also note the bind was re-set to a new position that session, so
+`BindAtCurrentLocation` is repeatable rather than one-shot.
+
+## Still open (small)
+- §5 (bind refused while dead) — needs someone to actually attempt a bind as a corpse. The guard is
+  in the handler and unit-reasoned, but not exercised.
+- §6 row 4 (offline / Test Room respawn) — offline leaves no server-log trace, so it needs an
+  in-client check.
+- §1 row 3 (corpse present at the death site) — implicitly covered by the sweep above, which created
+  and looted a corpse, but never checked as its own row.
 
 ## Notes / observations
 > Design note: no post-respawn invulnerability was added. The reasoning is that a safe respawn
