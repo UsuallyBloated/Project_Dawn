@@ -113,7 +113,7 @@ Cheap, and it means the rest of the schedule starts from something true.
 - **Fold this schedule's orphans into the To-Do.** Several things below have no To-Do entry at
       all today, so under the one-home rule they have nowhere to be ticked: per-account `is_gm`
       (Phase 1), the whole of hosting/deployment (Phase 2, which has no category in the To-Do at
-      all), and four playtest bugs (Phase 3: bank Items-tab refresh, unclean-kill relogin, bags
+      all), and four playtest bugs (Phase 3: bank items rendering blank, unclean-kill relogin, bags
       opening on left-click, named-mob enrage and guaranteed drops). Their absence is why the
       keystone was invisible in the first place.
 
@@ -127,13 +127,18 @@ row there to be ticked.
 The phase that decides whether anyone can be invited. Findings numbered per
 `docs/security/exploit_audit_2026-07-08.md`.
 
-- **Per-account `is_gm`** *(keystone, not currently on the to-do list)*. Thread the existing
-      `accounts.is_gm` column from the signed world token into `PerConnection` and gate the dev
-      commands on it instead of the process-wide `PD_DEV_CMDS`. This is what lets you keep
-      `/heal`, spawn-mob, and Level Up on a server your friends are playing on.
-- **Respawn dead-check** (finding 3, High). Gate on `conn.hp <= 0.0`. Small.
-- **Melee swing-rate limit** (finding 2, High). Per-connection `next_swing_at` from the
-      equipped weapon's delay. Small to medium.
+- **Per-account `is_gm`** *(keystone)*. ✅ Done + playtested 2026-07-19 (server `82f55a9`,
+      `gm_access_checklist.md`). `accounts.is_gm` rides the signed world token into `PerConnection`,
+      and dev commands gate on `conn.can_use_dev_cmds()` instead of the process-wide `PD_DEV_CMDS`.
+      This is what lets you keep `/heal`, spawn-mob and Level Up on a server your friends play on.
+- **Respawn dead-check** (finding 3, High). ✅ Done + playtested 2026-07-20 (server `0d908d1`,
+      integration test `respawn_requires_being_dead`). Gated on `conn.death_processed`, so a living
+      player's Respawn is a no-op rather than a free HP top-up.
+- **Melee swing-rate limit** (finding 2, High). ✅ Done + playtested 2026-07-29 (server
+      `335b5b1`, `swing_rate_limit_checklist.md`). Per-connection, per-hand minimum interval derived
+      from the equipped weapon's delay, assuming max haste so hasted players never trip it. An
+      adversarial pass folded in a HIGH bypass fix: an off-hand Attack with an empty slot 1 (a
+      forged free fist-damage stream) is now rejected.
 - **CastSpell class/level gate** (finding 4, Medium). ✅ Done + playtested 2026-07-22 (server
       `a96826d`). The cast resolver applies the resurrection arm's class/level check to every spell,
       before mana/cooldown/skill side effects. Zero misfires in the playtest log.
@@ -143,8 +148,10 @@ The phase that decides whether anyone can be invited. Findings numbered per
 - **Login rate limiting + auth timing equalization** (findings 6 and 9). ✅ Done + playtested
       2026-07-31 (server `a75d9d0` + follow-up fixes). Per-IP cap on Login **and** Register (5/60 s,
       separate budgets) + dummy-Argon2 timing equalization; throttles log at INFO.
-- **Attack while seated.** Require standing to swing, and check whether the sit regen bonus
-      still applies mid-fight. If it does, this is free in-combat regen, not an animation bug.
+- **Attack while seated.** ✅ Done + playtested 2026-07-20 (server `3bb9b6d` / client `9303682`).
+      A swing now stands the attacker, and the seated regen bonus is suppressed in combat — it was
+      indeed free in-combat regen, not an animation bug. (EQ-style seated *penalties*, bonus damage
+      and crit vs a seated target, are follow-ups on the To-Do, not part of this gate.)
 
 **Done means:** findings 2 through 6 and 9 are closed, `is_gm` is live, and the audit's threat
 list has been re-run against the changed code.
@@ -199,10 +206,14 @@ Evidence: `docs/playtest_notes/first_external_tester_2026_08_11.md`. Operator do
 Two categories: bugs that destroy or appear to destroy player property, and bugs that make a
 new player think the game is broken. The first category is what loses you a tester permanently.
 
-- **Bank Items-tab does not live-refresh on deposit.** A deposited item visibly *vanishes*.
-      The server stores it correctly and it returns on relog, so nothing is actually lost, but
-      no tester will believe that. Highest perceived severity on the list. Client-side
-      `BankWindow` refresh.
+- **Deposited bank items render as empty slots.** ✅ Done + playtested 2026-08-17 (client
+      `8ad7f39`, all 11 checklist rows). A deposited item visibly *vanished*; nothing was ever
+      actually lost. **Not a refresh bug**, despite being tracked as one here for weeks: the
+      repaint ran correctly every time and drew nothing, because a vault cell held only an icon
+      and a stack-count label, `ItemData.icon` is null for all 172 items, and the count label is
+      blank for a stack of 1. Fixed with the name-label fallback `inventory_window.gd` already
+      had, which is why bags never showed it. Highest perceived severity on the list, and the
+      whole of it was one absent `Label`.
 - **Unclean-kill relogin was not refused** (`banker_slice2_checklist.md:54`). The tester
       killed their client and logged straight back in. The doc contradicts itself here and never
       reconciles. Security-adjacent: this guard is what blocks the Lineage II force-off pattern.
@@ -307,6 +318,6 @@ rather than via a chat line after the fact.
 | 0. Reconcile | Jul 16 to Jul 17 | **Done (2026-07-17)** — doc reconciliation complete; `CORPSE_LINGER_SECS` raised to 7 days (user-accepted, pure value change); duplicate-name trap resolved via rename |
 | 1. Exploit gate | Jul 20 to Jul 31 | ✅ **COMPLETE (2026-07-31, on schedule)** — all seven gates done & playtested: keystone (`is_gm`), Respawn dead-check, attack-while-seated, cast class/level, `Attack` weapon_path, melee swing-rate limit, login rate-limit + auth-timing. Open caveat (not blocking): the swing-rate haste row is unit/design-covered but never eye-tested. |
 | 2. Host + first friend | Aug 3 to Aug 7 | ✅ **COMPLETE (2026-08-11, 4 days late)** — hosted on a physical R720 over Tailscale (not a VPS, not port-forwarding); phase included building the machine from bare metal because it arrived unbootable. Closed on tester evidence: a second person, on her own machine, registered, made a character, killed something, grouped, and logged out clean. Backups nightly to a second array plus weekly off-site, restore verified. Two findings opened: the respawn death-loop and the login rate limiter forcing a duplicate account. |
-| 3. Stop it eating things | Aug 10 to Aug 21 | Not started |
+| 3. Stop it eating things | Aug 10 to Aug 21 | **In progress** — 1 of 6 done: the bank Items-tab blank-slot bug (playtested 2026-08-17), the highest perceived-severity item on the list. Open: unclean-kill relogin, atomic cross-store transfers, bags opening on left-click, named-mob enrage + guaranteed drops. |
 | 4. An evening's worth | Aug 24 to Sep 11 | Not started |
 | 5. Open the door | Sep 14 onward | Not started |

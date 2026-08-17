@@ -938,13 +938,14 @@
           <span class="phase-no">03</span>
           <h3>Stop it eating their things</h3>
           <span class="when">Aug 10 to Aug 21</span>
+          <span class="chip active">In progress</span>
         </div>
         <p style="margin:0;font-size:14.5px;color:var(--ink-soft)">
           Two categories: bugs that destroy player property, and bugs that only look like they do.
           The second category costs you testers just as fast as the first.
         </p>
         <ul class="items">
-          <li class="keystone"><b>Deposited bank items visibly vanish.</b> The server stores them correctly and they return on relog, so nothing is actually lost. No tester will believe that. Highest perceived severity on the list, and a client-side refresh fix.</li>
+          <li class="itemdone"><b>Deposited bank items render as empty slots. Done (playtested 2026-08-17).</b> A deposited item appeared to vanish, and no tester would have believed it was safe. Nothing was ever lost, and it was not the refresh bug everyone assumed: the window repainted correctly every single time and drew nothing, because a vault slot could only draw an icon and a stack count, no item in the game has an icon yet, and the count is hidden for a single item. A blank texture over a blank label looks exactly like an empty slot. It now falls back to the item&#39;s name, the way the inventory and bags always have, which is why only the bank ever showed this. The highest perceived-severity bug on the list turned out to be one missing label.</li>
           <li><b>An unclean disconnect did not block relogin.</b> The tester killed their client and logged straight back in, which contradicts the design. Re-test first; it may not reproduce.</li>
           <li><b>Bank and vendor transfers are not atomic.</b> Two separate writes, so a crash between them dupes or loses. The corpse loot path already solved this and can be copied.</li>
           <li><b>Bags open on left-click instead of right-click.</b> Untriaged.</li>

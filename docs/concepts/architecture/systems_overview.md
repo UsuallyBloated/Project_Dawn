@@ -372,6 +372,18 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     per op). Client: `BankWindow` Coins/Items tabs; coins also gained per-tier clickable chips for
     right-click quick-transfer (slice-1 buttons kept). The full cursor grammar (partial grabs,
     split, drag-and-drop, a server-tracked cursor) is a separate deferred track.
+  - **Vault cells render a name when the item has no icon (2026-08-17, client-only).** Until this
+    landed, a deposited item looked like it *vanished*: the vault cell held only an icon and a
+    stack-count label, `ItemData.icon` is `null` for **every** item in the game (172 of them; it is
+    the declared default and nothing assigns one), and the count label is deliberately blank for a
+    stack of 1. A null texture over an empty label is pixel-identical to an empty slot, so a stored
+    item rendered as nothing. Nothing was ever lost, and the refresh path was never at fault: the
+    server sends a `BankItemSnapshot` after every store, and `BankWindow._refresh_vault` repainted
+    correctly each time. `_make_vault_cell` now carries a name-label fallback shown when
+    `icon == null`, plus a tooltip, matching `inventory_window.gd` — which is why inventory and bags
+    never exhibited this and the bank did. Playtested clean across 11 rows
+    (`bank_vault_display_checklist.md`), including deposit, withdraw, relog persistence, both
+    vaults, and the full-vault rejection.
   - **Still open:** exchange fee bands; a Banker-NPC proximity gate on bank actions (gates only on
     `in_world` today, matching the vendor pattern — value-preserving); bag storage.
 

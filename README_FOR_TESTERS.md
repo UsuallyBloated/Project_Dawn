@@ -143,8 +143,6 @@ lost if the server is stopped while you are connected. A clean logout flushes im
 Please **do** still report these if you hit them, with any extra detail. Knowing they are
 known just saves you writing them up from scratch.
 
-- **A deposited bank item vanishes from the Items tab.** It is **not lost**. The server has
-  it and it reappears when you log back in. The window just fails to refresh.
 - **Some spells do nothing.** Roughly 32 spells exist in the client but not yet on the
   server. Casting one spends mana and has no effect. Tell us which one.
 - **Bags open on left-click**, where everything else uses right-click. Inconsistent, known.
