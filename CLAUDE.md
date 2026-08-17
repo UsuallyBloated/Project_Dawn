@@ -666,10 +666,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 
 ### UI polish
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
-- [ ] **Bank Items-tab does not live-refresh on deposit.** A deposited item visibly *vanishes*
-  from the UI. The server stores it correctly and it returns on relog, so nothing is actually
-  lost, but no tester will believe that — highest *perceived* severity on the friends-build list.
-  Client-side `BankWindow` refresh. Repro in `quest_phase2_sliceA_checklist.md:99`.
+- [ ] **Bank Items-tab: a deposited item renders as an empty slot** *(BUILT 2026-08-17, pending
+  playtest; client `bank_window.gd`)*. A deposited item visibly *vanishes*. Highest *perceived*
+  severity on the friends-build list. Repro in `quest_phase2_sliceA_checklist.md:99`.
+  **It was never a refresh bug** (the old title here said "does not live-refresh", which pointed the
+  diagnosis the wrong way). The whole chain was already correct, verified end to end: the server
+  stores the item and sends a `BankItemSnapshot` after every store (`tick.rs:6519`), gdext decodes
+  it, `BankerManager._on_bank_item_snapshot` rebuilds the cache and emits `vault_changed`, and
+  `BankWindow._refresh_vault` repaints. The repaint ran every time and drew **nothing**:
+  `_make_vault_cell` held only an icon and a count label, `ItemData.icon` is `null` for **all 172**
+  items (no `.tres` defines one, nothing assigns one at runtime), and the count label is blank for a
+  stack of 1. A null texture over an empty label reads as an empty slot.
+  **Fix:** a name-label fallback shown when `icon == null`, plus a tooltip naming the item. Mirrors
+  `inventory_window.gd:268-271` exactly, which is *why inventory and bags never had this bug* and
+  the bank did. Siblings checked: `bag_window.gd` already has the fallback; vendor / loot / inspect
+  render text lists rather than icon grids, so the bank vault was the only gap.
+  **When this ticks**, the Phase 3 bullet in `docs/schedule.md` (and `.html`) still calls it
+  "Client-side `BankWindow` refresh" and needs the same correction.
 - [ ] **Bags open on left-click instead of right-click.** `banker_slice2_checklist.md:57`.
   Untriaged; the tester's guess is these are stale pre-grammar bags. Should match the
   right-click quick-transfer grammar (`docs/design/inventory_interaction_grammar.md`).

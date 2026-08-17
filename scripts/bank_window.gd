@@ -311,6 +311,24 @@ func _make_vault_cell(shared: bool, slot: int) -> Panel:
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cell.add_child(icon)
 
+	# Name fallback, shown when the item has no icon. Not decoration: no item in
+	# the game defines an icon yet, so without this a deposited stack of one
+	# paints an empty texture over an empty count label and the slot looks
+	# EMPTY — which is what made deposits appear to destroy items. Mirrors the
+	# same fallback in inventory_window.gd, which is why bags never had the bug.
+	var name_lbl := Label.new()
+	name_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_lbl.add_theme_font_size_override("font_size", 9)
+	name_lbl.add_theme_color_override("font_color", Color(0.9, 0.85, 0.7))
+	name_lbl.add_theme_color_override("font_outline_color", Color.BLACK)
+	name_lbl.add_theme_constant_override("outline_size", 2)
+	name_lbl.visible = false
+	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cell.add_child(name_lbl)
+
 	var count := Label.new()
 	count.anchor_right = 1.0
 	count.anchor_bottom = 1.0
@@ -324,6 +342,7 @@ func _make_vault_cell(shared: bool, slot: int) -> Panel:
 	cell.add_child(count)
 
 	cell.set_meta("icon", icon)
+	cell.set_meta("name", name_lbl)
 	cell.set_meta("count", count)
 	cell.gui_input.connect(_on_vault_cell_input.bind(shared, slot))
 	return cell
@@ -339,14 +358,27 @@ func _refresh_vault(shared: bool) -> void:
 	for i in cells.size():
 		var cell: Panel = cells[i]
 		var icon: TextureRect = cell.get_meta("icon")
+		var name_lbl: Label = cell.get_meta("name")
 		var count: Label = cell.get_meta("count")
 		var entry = arr[i] if i < arr.size() else null
 		if entry == null:
 			icon.texture = null
+			name_lbl.visible = false
+			name_lbl.text = ""
 			count.text = ""
+			cell.tooltip_text = ""
 		else:
-			icon.texture = entry["item"].icon
+			var item: ItemData = entry["item"]
+			icon.texture = item.icon
+			# Fall back to the name whenever there is no icon, so a stored item is
+			# always visible as something.
+			name_lbl.visible = item.icon == null
+			name_lbl.text = item.item_name
 			count.text = str(entry["count"]) if entry["count"] > 1 else ""
+			cell.tooltip_text = "%s%s\nRight-click to withdraw." % [
+				item.item_name,
+				" x%d" % int(entry["count"]) if int(entry["count"]) > 1 else "",
+			]
 
 # ── Display refresh ───────────────────────────────────────────────────────────
 
