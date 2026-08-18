@@ -675,9 +675,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   blank for a stack of 1. Fixed with the name-label fallback `inventory_window.gd` already had,
   which is why bags never showed it. Highest *perceived* severity on the friends-build list, and
   the whole of it was one absent `Label`.
-- [ ] **Bags open on left-click instead of right-click.** `banker_slice2_checklist.md:57`.
-  Untriaged; the tester's guess is these are stale pre-grammar bags. Should match the
-  right-click quick-transfer grammar (`docs/design/inventory_interaction_grammar.md`).
+- [ ] **Bags open on left-click instead of right-click** *(BUILT 2026-08-17, pending playtest;
+  client `inventory_window.gd` + `inventory.gd`)*. Repro `banker_slice2_checklist.md:57`.
+  **Not stale pre-grammar bag items**, which was the standing guess — it was a code branch.
+  `_on_cell_input` called `_toggle_bag()` from the **left**-click path as well as the right-click
+  one, so both buttons opened a bag and a bag could never be picked up or rearranged at all.
+  Left-click now begins a drag like any other non-stackable, matching
+  `inventory_interaction_grammar.md` §3 (lines 51 and 55); right-click still opens.
+  **Two consequences of bags becoming movable for the first time**, both handled: (a) the server
+  refuses to move a non-empty bag (`bag_at_base_is_nonempty`, `world/inventory.rs:998`), so the
+  client mirrors that rule up front with a chat line rather than letting the pickup look like it
+  worked and silently snap back; (b) bag windows are keyed by base slot index, so a window could
+  outlive the bag that opened it — orphaned windows are now closed on refresh. Playtest:
+  `bag_click_grammar_checklist.md`.
 - [ ] **Confirm what can become `hud.gd::_tracked_target`.** Two `is_connected()` calls in
   `_show_self_target()` (`hud.gd:821`, `:823`) check `hp_changed` and `died` **without** a
   `has_signal()` guard. That is safe only while `_tracked_target` is restricted to

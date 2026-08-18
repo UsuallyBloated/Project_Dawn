@@ -195,6 +195,21 @@ func get_slot(bag_base_index: int, slot_index: int) -> Variant:
 		return null
 	return bag_contents[bag_base_index][slot_index]
 
+## True when the bag in base slot `bag_base_index` still holds something.
+## Mirrors the server's `bag_at_base_is_nonempty` (world/inventory.rs), which
+## rejects moving or dropping a non-empty bag. The UI checks this so the refusal
+## is immediate and explained rather than a silent server-side rejection.
+func bag_has_contents(bag_base_index: int) -> bool:
+	if bag_base_index < 0 or bag_base_index >= bag_contents.size():
+		return false
+	var arr = bag_contents[bag_base_index]
+	if arr == null:
+		return false
+	for entry in arr:
+		if entry != null:
+			return true
+	return false
+
 func set_slot(bag_base_index: int, slot_index: int, val: Variant) -> void:
 	if bag_contents[bag_base_index] == null:
 		return

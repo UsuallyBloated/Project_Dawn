@@ -240,8 +240,24 @@ func _process(_delta: float) -> void:
 # ── Refresh ───────────────────────────────────────────────────────────────────
 
 func _refresh_all() -> void:
+	_close_orphaned_bag_windows()
 	for i in Inventory.BASE_SLOT_COUNT:
 		_refresh_cell(i)
+
+# Bag windows are keyed by BASE SLOT INDEX, not by the bag item. Now that a bag
+# can actually be picked up and rearranged (it never could before, since
+# left-click opened it instead), a window can outlive the bag that opened it and
+# sit there showing the contents of a slot that no longer holds a bag. Close any
+# window whose slot is no longer a bag.
+func _close_orphaned_bag_windows() -> void:
+	for i in _bag_windows.size():
+		var win = _bag_windows[i]
+		if win == null:
+			continue
+		var slot = Inventory.base_slots[i]
+		if slot == null or slot["item"].type != ItemData.Type.BAG:
+			win.queue_free()
+			_bag_windows[i] = null
 
 func _refresh_cell(index: int) -> void:
 	var cell: Panel = _base_cells[index]
@@ -360,8 +376,17 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 		var slot = Inventory.base_slots[index]
 		if slot == null:
 			return
-		if slot["item"].type == ItemData.Type.BAG:
-			_toggle_bag(index)
+		# A bag is lifted by left-click like any other non-stackable, and OPENED
+		# by right-click (inventory_interaction_grammar.md §3). This used to call
+		# _toggle_bag() here, so both buttons opened the bag and a bag could never
+		# be picked up or rearranged at all.
+		if slot["item"].type == ItemData.Type.BAG and Inventory.bag_has_contents(index):
+			# The server refuses to move a non-empty bag ("bag must be emptied
+			# before moving", world/inventory.rs). Without this check the pickup
+			# looks like it worked, the move is silently rejected, and the bag
+			# snaps back with no explanation — which reads as the game eating it.
+			# Mirror the rule here so the refusal is immediate and explained.
+			CombatLog.add_line("Empty the bag before moving it.", CombatLog.MsgType.INFO)
 			get_viewport().set_input_as_handled()
 			return
 		begin_drag(slot["item"], slot["count"], -1, index)
