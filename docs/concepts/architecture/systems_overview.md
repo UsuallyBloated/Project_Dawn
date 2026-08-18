@@ -314,6 +314,17 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     the slot (no optimistic clear). Server `DropItem` spawns a public single-stack `LootBag`
     at the player's feet and now removes from **base or bag slots** via the shared bag-aware
     `inventory.destroy_at` (the same primitive behind DestroyItem; `drop_base` was retired).
+  - **Bag click grammar (2026-08-18, client-only).** Left-click **lifts** a bag onto the cursor
+    like any other non-stackable; right-click **opens** it
+    (`inventory_interaction_grammar.md` §3). Until this landed, `_on_cell_input` called
+    `_toggle_bag()` from the left-click path *as well as* the right-click one, so both buttons
+    opened a bag and a bag could never be picked up or rearranged at all. Bags becoming movable
+    reached two cases that had been unreachable: a **non-empty bag cannot move** (the server
+    rejects it via `bag_at_base_is_nonempty`, so `Inventory.bag_has_contents()` now mirrors that
+    rule client-side and refuses up front with a chat line, instead of letting the pickup look
+    like it worked and silently snap back); and **bag windows are keyed by base slot index**, so a
+    window could outlive the bag that opened it and show a slot holding no bag, now closed on
+    refresh. Bag cells no longer stamp a static slot-count number; the tooltip reports capacity.
   - **Loot mode** (per `Group`, leader-set, default Round Robin; `groups::LootMode`)
     governs **item turns only**: **Round Robin** rotates per corpse (lazy first-loot claim
     via `next_loot_turn`, "Not your turn to loot." otherwise); **FFA** lets any member loot

@@ -220,8 +220,18 @@ new player think the game is broken. The first category is what loses you a test
       Re-test first, it may not reproduce.
 - **Atomic cross-store transfers** (finding 8, Low). Fold each bank/vendor transfer's two
       writes into one transaction, mirroring `db::apply_corpse_loot`.
-- **Bags open on left-click instead of right-click.** Untriaged. The tester's guess is that
-      these are stale pre-grammar bags.
+- **Bags open on left-click instead of right-click.** ✅ Done + playtested 2026-08-18 (client
+      `c3ef9f4`, all 14 checklist rows). Not stale pre-grammar bags: `_on_cell_input` called
+      `_toggle_bag()` from the left-click path as well as the right-click one, so both buttons
+      opened a bag and a bag could never be picked up at all. Left-click now lifts, right-click
+      opens.
+- **Inventory desyncs from the server and cannot recover until relog.** Found 2026-08-18 while
+      playtesting the bag fix, and it belongs to this phase: items appear to get stuck, or to
+      *vanish*. Nothing is actually lost, and the server stays correct, but it reads exactly like
+      item loss. Two "drop it and hope for a resync" defects compound, both predating the bag work
+      by three months: a rejected `MoveItem` sends the client nothing, and the client silently
+      discards a `bag_<i>` delta it thinks it has no home for. Neither side can correct the other,
+      so a divergence lasts until relog.
 - **Named mobs lost enrage and guaranteed drops.** Both live only in client-side
       `named_mob_definitions.gd` with no server side, so every named mob is currently a generic
       mob wearing a name. Rotfang's guaranteed fang did not drop in the last playtest.
@@ -318,6 +328,6 @@ rather than via a chat line after the fact.
 | 0. Reconcile | Jul 16 to Jul 17 | **Done (2026-07-17)** — doc reconciliation complete; `CORPSE_LINGER_SECS` raised to 7 days (user-accepted, pure value change); duplicate-name trap resolved via rename |
 | 1. Exploit gate | Jul 20 to Jul 31 | ✅ **COMPLETE (2026-07-31, on schedule)** — all seven gates done & playtested: keystone (`is_gm`), Respawn dead-check, attack-while-seated, cast class/level, `Attack` weapon_path, melee swing-rate limit, login rate-limit + auth-timing. Open caveat (not blocking): the swing-rate haste row is unit/design-covered but never eye-tested. |
 | 2. Host + first friend | Aug 3 to Aug 7 | ✅ **COMPLETE (2026-08-11, 4 days late)** — hosted on a physical R720 over Tailscale (not a VPS, not port-forwarding); phase included building the machine from bare metal because it arrived unbootable. Closed on tester evidence: a second person, on her own machine, registered, made a character, killed something, grouped, and logged out clean. Backups nightly to a second array plus weekly off-site, restore verified. Two findings opened: the respawn death-loop and the login rate limiter forcing a duplicate account. |
-| 3. Stop it eating things | Aug 10 to Aug 21 | **In progress** — 1 of 6 done: the bank Items-tab blank-slot bug (playtested 2026-08-17), the highest perceived-severity item on the list. Open: unclean-kill relogin, atomic cross-store transfers, bags opening on left-click, named-mob enrage + guaranteed drops. |
+| 3. Stop it eating things | Aug 10 to Aug 21 | **In progress** — 2 done (bank Items-tab blank slots, 08-17; bag click grammar, 08-18). The bag playtest surfaced a **new** item this phase owns: an inventory/server desync that makes items look stuck or vanished (no actual loss). Open: that desync, unclean-kill relogin, atomic cross-store transfers, named-mob enrage + guaranteed drops. |
 | 4. An evening's worth | Aug 24 to Sep 11 | Not started |
 | 5. Open the door | Sep 14 onward | Not started |

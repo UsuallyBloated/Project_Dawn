@@ -675,19 +675,43 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   blank for a stack of 1. Fixed with the name-label fallback `inventory_window.gd` already had,
   which is why bags never showed it. Highest *perceived* severity on the friends-build list, and
   the whole of it was one absent `Label`.
-- [ ] **Bags open on left-click instead of right-click** *(BUILT 2026-08-17, pending playtest;
-  client `inventory_window.gd` + `inventory.gd`)*. Repro `banker_slice2_checklist.md:57`.
-  **Not stale pre-grammar bag items**, which was the standing guess — it was a code branch.
+- [x] **Bags open on left-click instead of right-click** — **DONE + playtested 2026-08-18**
+  (client `c3ef9f4`, all 14 rows of `bag_click_grammar_checklist.md` pass). What exists is in
+  systems_overview → Inventory. **Not stale pre-grammar bag items**, which was the standing guess:
   `_on_cell_input` called `_toggle_bag()` from the **left**-click path as well as the right-click
-  one, so both buttons opened a bag and a bag could never be picked up or rearranged at all.
-  Left-click now begins a drag like any other non-stackable, matching
-  `inventory_interaction_grammar.md` §3 (lines 51 and 55); right-click still opens.
-  **Two consequences of bags becoming movable for the first time**, both handled: (a) the server
-  refuses to move a non-empty bag (`bag_at_base_is_nonempty`, `world/inventory.rs:998`), so the
-  client mirrors that rule up front with a chat line rather than letting the pickup look like it
-  worked and silently snap back; (b) bag windows are keyed by base slot index, so a window could
-  outlive the bag that opened it — orphaned windows are now closed on refresh. Playtest:
-  `bag_click_grammar_checklist.md`.
+  one, so both buttons opened a bag and a bag could never be picked up at all. Left-click now
+  lifts, per `inventory_interaction_grammar.md` §3. Bags becoming movable reached two previously
+  unreachable cases, both handled: the client mirrors the server's non-empty-bag refusal up front,
+  and orphaned bag windows (keyed by base slot index) are closed on refresh. The playtest also
+  removed the static slot-count badge from bag cells at the user's request.
+- [ ] **Inventory desyncs from the server and cannot recover until relog** *(found 2026-08-18
+  while playtesting the bag fix; evidence in `bag_click_grammar_checklist.md`)*. Presents as items
+  "getting hung up": a stack appears stuck to the cursor, a slot refuses to accept anything, or an
+  item **appears to vanish** and comes back only after something else is dropped on its slot. The
+  server log shows the real shape: dozens of `MoveItem rejected ... error=source slot empty`,
+  repeatedly on the same base slots over 30 minutes. The client believed those slots held items;
+  the server knew they were empty. **No item is ever lost** (the server stayed correct throughout,
+  and a relog resynced), but it reads exactly like item loss, which makes it a Phase 3 item.
+  **Two independent "drop it and hope for a resync" defects compound, and neither side can correct
+  the other.** Both predate the bag work by three months.
+  - **Server, `world/tick.rs:5302-5313` (2026-05-22).** A rejected `MoveItem` logs and `continue`s.
+    It sends the client **no** corrective delta and no rejection message, so the client never
+    learns its view is wrong. `if touched.is_empty() { continue }` just below has the same
+    problem.
+  - **Client, `autoloads/inventory.gd` `bag_` branch (2026-05-19).** A `bag_<i>` delta is
+    **silently discarded** when `bag_contents[i] == null`, with a comment relying on "the next
+    snapshot" to resync. There is no periodic snapshot; the only one is at enter-world. So a
+    dropped delta is permanent.
+  Ruled out: it is not packet loss (`CHANNEL_SYSTEM` is `ReliableOrdered` with a 150 ms resend)
+  and not a timing race (the retries are ~2 s apart, far beyond RTT).
+  **Also worth knowing:** a stuck drag paints its source cell EMPTY (`_refresh_cell`'s
+  `is_drag_source`), which is why a desync looks like an item vanishing rather than like an error;
+  and right-click is deliberately a no-op while a drag is active (`inventory_window.gd:340`),
+  which is why a bag "won't open" in that state.
+  **Fix direction:** make the server answer every rejected/no-op inventory intent with the true
+  state of the affected slots (or a rejection message the client resyncs on), and make the client
+  stop discarding deltas silently. A client-only mitigation is possible (re-request a snapshot on
+  a suspicious rejection) but the server change is the real fix. Needs a push + R720 restart.
 - [ ] **Confirm what can become `hud.gd::_tracked_target`.** Two `is_connected()` calls in
   `_show_self_target()` (`hud.gd:821`, `:823`) check `hp_changed` and `died` **without** a
   `has_signal()` guard. That is safe only while `_tracked_target` is restricted to

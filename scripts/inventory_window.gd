@@ -201,18 +201,6 @@ func _make_slot_cell(index: int) -> Panel:
 	name_label.set_meta("is_name", true)
 	cell.add_child(name_label)
 
-	# Badge on bag items showing slot count
-	var badge := Label.new()
-	badge.anchor_right = 1.0
-	badge.anchor_bottom = 1.0
-	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	badge.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	badge.add_theme_font_size_override("font_size", 9)
-	badge.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-	badge.add_theme_color_override("font_outline_color", Color.BLACK)
-	badge.add_theme_constant_override("outline_size", 2)
-	badge.set_meta("is_badge", true)
-	cell.add_child(badge)
 
 	cell.mouse_entered.connect(_on_cell_hover.bind(index))
 	cell.mouse_exited.connect(func(): _tooltip.visible = false)
@@ -264,14 +252,12 @@ func _refresh_cell(index: int) -> void:
 	var icon_rect: TextureRect = _find_meta_child(cell, "is_icon")
 	var count_label: Label = _find_meta_child(cell, "is_count")
 	var name_label: Label = _find_meta_child(cell, "is_name")
-	var badge: Label = _find_meta_child(cell, "is_badge")
 
 	var slot = Inventory.base_slots[index]
 	if slot == null:
 		icon_rect.texture = null
 		count_label.text = ""
 		if name_label: name_label.visible = false
-		if badge: badge.text = ""
 		_apply_slot_style(cell, UITheme.C_SLOT_BG, UITheme.C_BORDER, 1)
 		return
 
@@ -287,10 +273,9 @@ func _refresh_cell(index: int) -> void:
 		name_label.text = item.item_name
 
 	if item.type == ItemData.Type.BAG:
+		# No slot-count number on the cell. Capacity is static, so stamping it on
+		# every bag is permanent clutter; the tooltip already says "N slot bag".
 		count_label.text = ""
-		if badge:
-			var contents = Inventory.bag_contents[index]
-			badge.text = "%d" % (contents.size() if contents != null else 0)
 		var is_open: bool = _bag_windows[index] != null and _bag_windows[index].visible
 		_apply_slot_style(cell, _rarity_color(item.rarity),
 			Color(0.8, 0.7, 0.3) if is_open else UITheme.C_BORDER,
@@ -299,7 +284,6 @@ func _refresh_cell(index: int) -> void:
 		# Hide the count label during a drag too — the drag overlay is the
 		# one-and-only on-screen copy of the stack (matches bag_window).
 		count_label.text = "" if is_drag_source else (str(slot["count"]) if slot["count"] > 1 else "")
-		if badge: badge.text = ""
 		_apply_slot_style(cell, _rarity_color(item.rarity), UITheme.C_BORDER, 1)
 
 # Mirrors vendor_window._coins_text — actual stacks, never reduced.
