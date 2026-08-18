@@ -684,34 +684,35 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   unreachable cases, both handled: the client mirrors the server's non-empty-bag refusal up front,
   and orphaned bag windows (keyed by base slot index) are closed on refresh. The playtest also
   removed the static slot-count badge from bag cells at the user's request.
-- [ ] **Inventory desyncs from the server and cannot recover until relog** *(found 2026-08-18
-  while playtesting the bag fix; evidence in `bag_click_grammar_checklist.md`)*. Presents as items
-  "getting hung up": a stack appears stuck to the cursor, a slot refuses to accept anything, or an
-  item **appears to vanish** and comes back only after something else is dropped on its slot. The
-  server log shows the real shape: dozens of `MoveItem rejected ... error=source slot empty`,
-  repeatedly on the same base slots over 30 minutes. The client believed those slots held items;
-  the server knew they were empty. **No item is ever lost** (the server stayed correct throughout,
-  and a relog resynced), but it reads exactly like item loss, which makes it a Phase 3 item.
-  **Two independent "drop it and hope for a resync" defects compound, and neither side can correct
-  the other.** Both predate the bag work by three months.
-  - **Server, `world/tick.rs:5302-5313` (2026-05-22).** A rejected `MoveItem` logs and `continue`s.
-    It sends the client **no** corrective delta and no rejection message, so the client never
-    learns its view is wrong. `if touched.is_empty() { continue }` just below has the same
-    problem.
-  - **Client, `autoloads/inventory.gd` `bag_` branch (2026-05-19).** A `bag_<i>` delta is
-    **silently discarded** when `bag_contents[i] == null`, with a comment relying on "the next
-    snapshot" to resync. There is no periodic snapshot; the only one is at enter-world. So a
-    dropped delta is permanent.
-  Ruled out: it is not packet loss (`CHANNEL_SYSTEM` is `ReliableOrdered` with a 150 ms resend)
-  and not a timing race (the retries are ~2 s apart, far beyond RTT).
-  **Also worth knowing:** a stuck drag paints its source cell EMPTY (`_refresh_cell`'s
-  `is_drag_source`), which is why a desync looks like an item vanishing rather than like an error;
-  and right-click is deliberately a no-op while a drag is active (`inventory_window.gd:340`),
-  which is why a bag "won't open" in that state.
-  **Fix direction:** make the server answer every rejected/no-op inventory intent with the true
-  state of the affected slots (or a rejection message the client resyncs on), and make the client
-  stop discarding deltas silently. A client-only mitigation is possible (re-request a snapshot on
-  a suspicious rejection) but the server change is the real fix. Needs a push + R720 restart.
+- [ ] **Inventory desyncs from the server and cannot recover until relog** *(found 2026-08-18;
+  **BUILT 2026-08-18, pending playtest** — server `world/tick.rs` + client `autoloads/inventory.gd`;
+  playtest `inventory_desync_checklist.md`)*. Presented as items "getting hung up": stuck to the
+  cursor, or **appearing to vanish** and returning only when something else was dropped on the
+  slot. The log showed dozens of `MoveItem rejected ... error=source slot empty` on the same base
+  slots over 30 minutes. The client believed those slots held items; the server knew they were
+  empty. **No item was ever lost** (the server stayed correct; the relog resynced), but it read
+  exactly like item loss.
+  **Two "drop it silently" faults compounded so neither side could correct the other**, both
+  predating the bag work by three months. Fixed on both sides:
+  - **Server (`tick.rs`, was 2026-05-22).** A rejected `MoveItem` logged and `continue`d, sending
+    the client nothing, so it never learned its view was wrong. It now answers with the true
+    contents of **both** named slots via a new `correct_client_slots()`. The `touched.is_empty()`
+    no-op path gets the same correction. Deliberately targeted rather than a full snapshot: at
+    most two small messages per bad request, so it cannot be used to amplify traffic, and it
+    converges because every wrong belief is corrected the moment the client acts on it.
+  - **Client (`inventory.gd`, was 2026-05-19).** A `bag_<i>` delta was discarded when the client
+    thought that slot held no bag, *and* separately when the slot index exceeded its array,
+    trusting a "next snapshot" that only ever happens at enter-world. It now allocates or grows
+    and applies the delta, logging a `DebugLog.warn` — needing that at all means the base slots
+    were already stale, so it is worth seeing rather than hiding.
+  The integration test `move_item_empty_source_drops_silently` **asserted the bug as the contract**
+  ("must not fan an InventoryDelta"); rewritten as `move_item_empty_source_corrects_client`, which
+  now proves both slots get corrected. Suite: 41/42, the one failure being the known-flaky
+  `aoe_spell_damages_nearby_enemies`, which passes in isolation.
+  Ruled out: not packet loss (`CHANNEL_SYSTEM` is `ReliableOrdered` + 150 ms resend), not a timing
+  race (retries ~2 s apart). It *looked* like vanishing rather than an error because a stuck drag
+  paints its source cell empty (`is_drag_source`) and right-click is a no-op mid-drag.
+  **Needs a server push + R720 rebuild/restart AND a client re-export.**
 - [ ] **Confirm what can become `hud.gd::_tracked_target`.** Two `is_connected()` calls in
   `_show_self_target()` (`hud.gd:821`, `:823`) check `hp_changed` and `died` **without** a
   `has_signal()` guard. That is safe only while `_tracked_target` is restricted to

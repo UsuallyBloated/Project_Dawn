@@ -143,13 +143,30 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 		var base_idx: int = location.trim_prefix("bag_").to_int()
 		if base_idx < 0 or base_idx >= BASE_SLOT_COUNT:
 			return
+		# The server is authoritative: if it is telling us what is inside a bag,
+		# that bag exists. This used to drop the delta whenever our own view
+		# disagreed, on the stated assumption that "the next snapshot will
+		# resync" — but there is no periodic snapshot, only the one at
+		# enter-world, so the discarded update was gone for good and the client
+		# stayed wrong until relog. A playtest on 2026-08-18 caught exactly that:
+		# items rendered as vanished while the server held them safely.
+		# Make room and apply it instead, and log it, because needing this at all
+		# means our base slots were already out of step.
 		if bag_contents[base_idx] == null:
-			# Parent base slot isn't a bag (yet, or anymore). Drop
-			# silently — the next snapshot will resync if needed.
-			return
+			var host = base_slots[base_idx]
+			var want: int = slot + 1
+			if host != null and host["item"].type == ItemData.Type.BAG:
+				want = maxi(int(host["item"].bag_num_slots), slot + 1)
+			else:
+				DebugLog.warn("Inventory: bag_%d delta arrived but base slot %d holds no bag; client view was stale" % [base_idx, base_idx])
+			_init_bag_contents(base_idx, want)
 		var arr: Array = bag_contents[base_idx]
-		if slot < 0 or slot >= arr.size():
+		if slot < 0:
 			return
+		if slot >= arr.size():
+			# Same reasoning: grow rather than discard the server's truth.
+			DebugLog.warn("Inventory: bag_%d slot %d is beyond the known size %d; growing" % [base_idx, slot, arr.size()])
+			arr.resize(slot + 1)
 		if item_path == "" or count <= 0:
 			arr[slot] = null
 		else:
