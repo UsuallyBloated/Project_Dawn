@@ -493,8 +493,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 
 - [ ] **Assorted trust gaps** (Medium/Low) — *(`Attack` weapon_path and login rate-limiting +
   auth-timing are both DONE + playtested — moved to the blockquote above.)* Still open: `BuyItem`
-  ignores `vendor_id`; cross-store transfers persist as separate txns (crash-window dupe/loss; the
-  corpse-loot path is the only atomic one).
+  ignores `vendor_id`.
+  **Cross-store transfer atomicity (finding 8) is BUILT 2026-08-20, pending playtest**
+  (`atomic_transfers_checklist.md`). An item never simply changes, it *moves*, and every move spans
+  two tables: a bank deposit touches `character_items` + `bank_items`, a vendor sale touches
+  `character_items` + the wallet, and death touches both plus `corpses`. Each store had its own
+  write function opening its own transaction with an `.await` between, so a crash in that gap either
+  **lost** the item or **duplicated** it — and the dupe is the worse half, because losses get
+  reported and dupes get exploited quietly. New `db::save_stores_atomic()` writes every store for a
+  connection in one transaction, used by **both** the periodic checkpoint and the disconnect flush
+  (both had the window). Death was the sharpest case: it wrote the corpse, then stripped the player
+  in two further separate writes whose errors were discarded with `let _ =`, so a crash mid-strip
+  duplicated the player's coin outright. `save_corpse` now takes `strip_owner` and clears the
+  owner's inventory and wallet **inside the corpse transaction**. Regression test:
+  `save_corpse_strips_the_owner_in_the_same_transaction`. Suites: 181 unit green, 41/42 integration
+  (the one failure is the known-flaky `pet_pulls_aggro_via_threat_reaggro`, which passes alone).
 - [ ] **Login rate limit is too tight for real humans** *(found 2026-08-11, first external
   tester)* — the Phase 1 gate is 5 attempts per 60 s per IP. The tester logged out, tried to log
   back in, tripped it (`Login rejected — rate limited ... window_secs=60 max_attempts=5`), and
