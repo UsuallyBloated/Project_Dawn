@@ -732,7 +732,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   rewrote `base_slots` and `bag_contents` **entirely locally** and told the server nothing, so one
   click turned the client's whole inventory into fiction. It also explains the tester's "items
   unstack and move to the main inventory window": redistribution used `_first_free_slot()`, which
-  scans base slots **before** bags. Both Stack All buttons (inventory + bag window) call it.
+  scans base slots **before** bags. It was on *two* buttons (inventory header and every bag
+  window) calling the same inventory-wide function; the bag copy is now **removed** (2026-08-20,
+  user request) since the action never operated on just that bag, so a per-bag button implied a
+  choice that did not exist. Stack All now lives once, in the main inventory window.
   **Fixed client-side**: in launcher mode it now asks the server to perform each merge
   (`_stack_all_via_server()`) and mutates nothing locally; offline keeps the old local path. It is
   also **merge-only** — no relocation between containers, which the button never needed to do.

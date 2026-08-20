@@ -97,6 +97,8 @@ what the button was for.
       cap, so the client only pairs stacks that fit. notes:
 - [ ] **Offline / Test Room: Stack All still works the old way** (there is no server to ask).
       notes:
+- [ ] **Bag windows no longer have a Stack All button** — it lives only in the main inventory
+      window, and pressing it there still consolidates items held inside bags. notes:
 
 ---
 

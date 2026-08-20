@@ -76,13 +76,10 @@ func _build_ui() -> void:
 	bottom_row.alignment = BoxContainer.ALIGNMENT_END
 	vbox.add_child(bottom_row)
 
-	var stack_btn := Button.new()
-	stack_btn.text = "Stack All"
-	stack_btn.add_theme_font_size_override("font_size", 11)
-	stack_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
-	stack_btn.pressed.connect(func(): Inventory.stack_all())
-	bottom_row.add_child(stack_btn)
-
+	# No Stack All here. It lives once, in the main inventory window: the action
+	# is inventory-wide rather than per-bag (it always consolidated across every
+	# bag AND the base slots regardless of which window you clicked it from), so
+	# a copy in each open bag window offered a choice that did not exist.
 	_destroy_btn = Button.new()
 	_destroy_btn.text = "Destroy"
 	_destroy_btn.add_theme_font_size_override("font_size", 11)
