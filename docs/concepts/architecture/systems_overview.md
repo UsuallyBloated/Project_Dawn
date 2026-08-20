@@ -325,6 +325,18 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     like it worked and silently snap back); and **bag windows are keyed by base slot index**, so a
     window could outlive the bag that opened it and show a slot holding no bag, now closed on
     refresh. Bag cells no longer stamp a static slot-count number; the tooltip reports capacity.
+  - **Inventory stays in sync with the server (2026-08-20).** Three faults used to let the client's
+    view drift and never recover, presenting as items sticking to the cursor or *vanishing* (nothing
+    was ever lost; the server stayed correct and a relog resynced). All three are closed:
+    a rejected `MoveItem` now answers with the true contents of both named slots
+    (`correct_client_slots`, server) instead of logging and returning; a `bag_<i>` delta the client
+    thinks it has no home for is applied and warned about rather than silently discarded; and
+    **`Stack All` routes every merge through the server** rather than rewriting `base_slots` and
+    `bag_contents` locally, which was the origin — one click turned the client's whole inventory
+    into fiction. Stack All is also **merge-only** now (it used to relocate via `_first_free_slot()`,
+    which scans base before bags and so emptied bags into the main window) and lives once, in the
+    main inventory window rather than in every bag. It only pairs stacks that fit, because the
+    server's move-merge has no `stack_size` cap (open To-Do).
   - **Loot mode** (per `Group`, leader-set, default Round Robin; `groups::LootMode`)
     governs **item turns only**: **Round Robin** rotates per corpse (lazy first-loot claim
     via `next_loot_turn`, "Not your turn to loot." otherwise); **FFA** lets any member loot

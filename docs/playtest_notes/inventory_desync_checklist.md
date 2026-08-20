@@ -83,29 +83,60 @@ Now, in hosted play, Stack All asks the **server** to do each merge and mutates 
 It is also **merge-only** — it no longer relocates anything between containers, which was never
 what the button was for.
 
-- [ ] **Fill some bags with partial stacks of the same item (bread, water, arrows), then press
+- [x] **Fill some bags with partial stacks of the same item (bread, water, arrows), then press
       Stack All** → partial stacks combine. notes:
-- [ ] **Nothing jumps out of a bag into the main inventory** → items consolidate *where they
+- [x] **Nothing jumps out of a bag into the main inventory** → items consolidate *where they
       already are*. notes:
-- [ ] **The server log shows `MoveItem applied` lines for the merges**, rather than silence →
+- [x] **The server log shows `MoveItem applied` lines for the merges**, rather than silence →
       confirms it went through the server rather than being faked client-side. notes:
-- [ ] **Press Stack All again with nothing left to combine** → "Nothing left to stack." and no
+- [x] **Press Stack All again with nothing left to combine** → "Nothing left to stack." and no
       log activity. notes:
-- [ ] **After Stack All, immediately drag several items around** → no `source slot empty`
+- [x] **After Stack All, immediately drag several items around** → no `source slot empty`
       rejections. This is the row that proves the desync source is closed. notes:
-- [ ] **No stack ends up larger than the item's normal stack size** → the server's merge does not
-      cap, so the client only pairs stacks that fit. notes:
+- [x] **No stack ends up larger than the item's normal stack size** → the server's merge does not
+      cap, so the client only pairs stacks that fit. notes:  Need you to look into this. Not sure what a full stack is.
 - [ ] **Offline / Test Room: Stack All still works the old way** (there is no server to ask).
-      notes:
-- [ ] **Bag windows no longer have a Stack All button** — it lives only in the main inventory
+      notes: Did not check.
+- [x] **Bag windows no longer have a Stack All button** — it lives only in the main inventory
       window, and pressing it there still consolidates items held inside bags. notes:
 
 ---
 
 ## Result
--  I believe the "Stack All" button in the bags might be fucking something up.  Let me know what you find.
 
-- When Stack All is used in a bag items that are stacked in the bag unstack and move to the main inventory window.  Let me know if that makes sense.
+**PASS.** 19 of 20 rows; the only unticked row is offline / Test Room Stack All, which was not
+exercised. Client `2310e8b`, server `4f86796`.
+
+### The log proves both halves
+
+Server-routed Stack All, six merges inside a single millisecond — the burst the old local rewrite
+could never have produced:
+
+```
+19:53:14.457866  MoveItem applied  bag_3/3 -> bag_0/0
+19:53:14.457919  MoveItem applied  bag_3/2 -> bag_0/0
+19:53:14.457944  MoveItem applied  bag_3/1 -> bag_0/0
+19:53:14.457966  MoveItem applied  base/1  -> bag_0/1
+19:53:14.457985  MoveItem applied  bag_0/3 -> bag_0/1
+19:53:14.458005  MoveItem applied  bag_0/2 -> bag_0/1
+```
+
+And from that point to the end of the session, roughly seven minutes of heavy dragging,
+**zero `MoveItem rejected` lines**. Compare the same activity before the fix, where the same slot
+was refused six or more times in a row and only a relog cleared it.
+
+### Follow-up raised here
+
+- **Food and water now stack to 20** (was 10), at the tester's request. Changed on **both** sides,
+  since `stack_size` lives in the client `.tres` *and* the server's `items.toml`: Bread Loaf and
+  Water Flask are the only food/drink items in the game, so this covers the request completely.
+  Needs a server rebuild, because `items.toml` is compiled in via `include_str!`.
+- **The uncapped server merge was observed in the wild** during this run:
+  `19:51:51 DestroyItem applied ... bread_loaf count=41` — a 41-stack, built by hand-merging while
+  the item's limit was 10. That is the separate "server move-merge ignores `stack_size`" To-Do
+  item, and this log is its evidence. Stack All itself never built it; it only pairs stacks that
+  fit.
+
 - Client build (`/version`):
 - Server build (`build=` on the boot line):
 - Overall:

@@ -695,52 +695,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   unreachable cases, both handled: the client mirrors the server's non-empty-bag refusal up front,
   and orphaned bag windows (keyed by base slot index) are closed on refresh. The playtest also
   removed the static slot-count badge from bag cells at the user's request.
-- [ ] **Inventory desyncs from the server and cannot recover until relog** *(found 2026-08-18;
-  **BUILT 2026-08-18, pending playtest** — server `world/tick.rs` + client `autoloads/inventory.gd`;
-  playtest `inventory_desync_checklist.md`)*. Presented as items "getting hung up": stuck to the
-  cursor, or **appearing to vanish** and returning only when something else was dropped on the
-  slot. The log showed dozens of `MoveItem rejected ... error=source slot empty` on the same base
-  slots over 30 minutes. The client believed those slots held items; the server knew they were
-  empty. **No item was ever lost** (the server stayed correct; the relog resynced), but it read
-  exactly like item loss.
-  **Two "drop it silently" faults compounded so neither side could correct the other**, both
-  predating the bag work by three months. Fixed on both sides:
-  - **Server (`tick.rs`, was 2026-05-22).** A rejected `MoveItem` logged and `continue`d, sending
-    the client nothing, so it never learned its view was wrong. It now answers with the true
-    contents of **both** named slots via a new `correct_client_slots()`. The `touched.is_empty()`
-    no-op path gets the same correction. Deliberately targeted rather than a full snapshot: at
-    most two small messages per bad request, so it cannot be used to amplify traffic, and it
-    converges because every wrong belief is corrected the moment the client acts on it.
-  - **Client (`inventory.gd`, was 2026-05-19).** A `bag_<i>` delta was discarded when the client
-    thought that slot held no bag, *and* separately when the slot index exceeded its array,
-    trusting a "next snapshot" that only ever happens at enter-world. It now allocates or grows
-    and applies the delta, logging a `DebugLog.warn` — needing that at all means the base slots
-    were already stale, so it is worth seeing rather than hiding.
-  The integration test `move_item_empty_source_drops_silently` **asserted the bug as the contract**
-  ("must not fan an InventoryDelta"); rewritten as `move_item_empty_source_corrects_client`, which
-  now proves both slots get corrected. Suite: 41/42, the one failure being the known-flaky
-  `aoe_spell_damages_nearby_enemies`, which passes in isolation.
-  Ruled out: not packet loss (`CHANNEL_SYSTEM` is `ReliableOrdered` + 150 ms resend), not a timing
-  race (retries ~2 s apart). It *looked* like vanishing rather than an error because a stuck drag
-  paints its source cell empty (`is_drag_source`) and right-click is a no-op mid-drag.
-  **Needs a server push + R720 rebuild/restart AND a client re-export.**
-  **Second round, 2026-08-20: the ORIGIN found.** The first fix worked — the log shows rejections
-  no longer cascade (08-18 refused the same slot 6+ times in a row; 08-20 shows isolated rejections
-  each followed by successful moves), and the tester's "items stay vanished until another item is
-  placed into that slot" is that reactive correction working. But rejections still *started*,
-  because something was still desyncing the client: **`Stack All`**. `Inventory.stack_all()`
-  rewrote `base_slots` and `bag_contents` **entirely locally** and told the server nothing, so one
-  click turned the client's whole inventory into fiction. It also explains the tester's "items
-  unstack and move to the main inventory window": redistribution used `_first_free_slot()`, which
-  scans base slots **before** bags. It was on *two* buttons (inventory header and every bag
-  window) calling the same inventory-wide function; the bag copy is now **removed** (2026-08-20,
-  user request) since the action never operated on just that bag, so a per-bag button implied a
-  choice that did not exist. Stack All now lives once, in the main inventory window.
-  **Fixed client-side**: in launcher mode it now asks the server to perform each merge
-  (`_stack_all_via_server()`) and mutates nothing locally; offline keeps the old local path. It is
-  also **merge-only** — no relocation between containers, which the button never needed to do.
-  Only merges that stay within `stack_size` are sent, because the server's move-merge is a plain
-  `saturating_add` with **no cap** (see the separate item below).
+- [x] **Inventory desyncs from the server and cannot recover until relog** — **DONE + playtested
+  2026-08-20** (server `4f86796` + client `2310e8b`; 19 of 20 rows of
+  `inventory_desync_checklist.md`, the only gap being offline Test Room Stack All). What exists is
+  in systems_overview → Inventory. Presented as items sticking to the cursor or **appearing to
+  vanish**; no item was ever lost, but it read exactly like loss.
+  **Three faults, found in two rounds.** (1) The server logged a rejected `MoveItem` and sent the
+  client nothing, so a wrong client never learned it was wrong; it now answers with the true
+  contents of both named slots. (2) The client silently discarded `bag_<i>` deltas it thought it
+  had no home for, trusting a "next snapshot" that only happens at enter-world; it now makes room,
+  applies them, and warns. (3) **The origin, found by the tester:** `Stack All` rewrote the whole
+  inventory **locally** and told the server nothing, so one click turned the client's view into
+  fiction. It now asks the server to perform each merge, and is merge-only (it used to relocate via
+  `_first_free_slot()`, which scans base before bags and so emptied bags into the main window).
+  **Proof in the log:** Stack All fires six `MoveItem applied` inside one millisecond, and the
+  following seven minutes of heavy dragging produce **zero** rejections, where the same activity
+  before the fix refused one slot six-plus times in a row until a relog.
+  The test `move_item_empty_source_drops_silently` had **asserted the bug as the contract**;
+  rewritten as `move_item_empty_source_corrects_client`.
 - [ ] **Confirm what can become `hud.gd::_tracked_target`.** Two `is_connected()` calls in
   `_show_self_target()` (`hud.gd:821`, `:823`) check `hp_changed` and `died` **without** a
   `has_signal()` guard. That is safe only while `_tracked_target` is restricted to

@@ -225,13 +225,13 @@ new player think the game is broken. The first category is what loses you a test
       `_toggle_bag()` from the left-click path as well as the right-click one, so both buttons
       opened a bag and a bag could never be picked up at all. Left-click now lifts, right-click
       opens.
-- **Inventory desyncs from the server and cannot recover until relog.** Found 2026-08-18 while
-      playtesting the bag fix, and it belongs to this phase: items appear to get stuck, or to
-      *vanish*. Nothing is actually lost, and the server stays correct, but it reads exactly like
-      item loss. Two "drop it and hope for a resync" defects compound, both predating the bag work
-      by three months: a rejected `MoveItem` sends the client nothing, and the client silently
-      discards a `bag_<i>` delta it thinks it has no home for. Neither side can correct the other,
-      so a divergence lasts until relog.
+- **Inventory desyncs from the server and cannot recover until relog.** ✅ Done + playtested
+      2026-08-20 (server `4f86796` + client `2310e8b`). Items appeared to stick or *vanish*;
+      nothing was ever lost, but it read exactly like item loss. Three faults: the server said
+      nothing when it refused a move, the client silently discarded bag updates it thought it had
+      no home for, and — the origin, spotted by the tester — **Stack All rewrote the whole
+      inventory locally** and told the server nothing. All three closed; the log now shows Stack
+      All merging through the server and zero rejections across seven minutes of heavy dragging.
 - **Named mobs lost enrage and guaranteed drops.** Both live only in client-side
       `named_mob_definitions.gd` with no server side, so every named mob is currently a generic
       mob wearing a name. Rotfang's guaranteed fang did not drop in the last playtest.
@@ -328,6 +328,6 @@ rather than via a chat line after the fact.
 | 0. Reconcile | Jul 16 to Jul 17 | **Done (2026-07-17)** — doc reconciliation complete; `CORPSE_LINGER_SECS` raised to 7 days (user-accepted, pure value change); duplicate-name trap resolved via rename |
 | 1. Exploit gate | Jul 20 to Jul 31 | ✅ **COMPLETE (2026-07-31, on schedule)** — all seven gates done & playtested: keystone (`is_gm`), Respawn dead-check, attack-while-seated, cast class/level, `Attack` weapon_path, melee swing-rate limit, login rate-limit + auth-timing. Open caveat (not blocking): the swing-rate haste row is unit/design-covered but never eye-tested. |
 | 2. Host + first friend | Aug 3 to Aug 7 | ✅ **COMPLETE (2026-08-11, 4 days late)** — hosted on a physical R720 over Tailscale (not a VPS, not port-forwarding); phase included building the machine from bare metal because it arrived unbootable. Closed on tester evidence: a second person, on her own machine, registered, made a character, killed something, grouped, and logged out clean. Backups nightly to a second array plus weekly off-site, restore verified. Two findings opened: the respawn death-loop and the login rate limiter forcing a duplicate account. |
-| 3. Stop it eating things | Aug 10 to Aug 21 | **In progress** — 2 done (bank Items-tab blank slots, 08-17; bag click grammar, 08-18). The bag playtest surfaced a **new** item this phase owns: an inventory/server desync that makes items look stuck or vanished (no actual loss). Open: that desync, unclean-kill relogin, atomic cross-store transfers, named-mob enrage + guaranteed drops. |
+| 3. Stop it eating things | Aug 10 to Aug 21 | **In progress** — 3 done (bank Items-tab blank slots 08-17; bag click grammar 08-18; the inventory/server desync 08-20, whose origin turned out to be `Stack All` rewriting inventory locally). Every one of the three had been recorded under a cause that was wrong. Open: unclean-kill relogin, atomic cross-store transfers, named-mob enrage + guaranteed drops, and a new find — the server's move-merge ignores `stack_size`. |
 | 4. An evening's worth | Aug 24 to Sep 11 | Not started |
 | 5. Open the door | Sep 14 onward | Not started |
