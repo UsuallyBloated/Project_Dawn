@@ -345,7 +345,91 @@ func remove_item(item: ItemData, count: int = 1) -> bool:
 
 # ── stack_all ─────────────────────────────────────────────────────────────────
 
+## Consolidate stackable items into the fewest stacks.
+##
+## Hosted play routes every merge through the server. It used to rewrite
+## base_slots and bag_contents directly and tell the server nothing, which in
+## launcher mode desynced the whole inventory in one click: the client's view
+## became fiction while the server still held the original layout, so every
+## later move from a now-phantom slot was refused. That is the origin of the
+## 2026-08-18 "items get hung up / items vanished" reports.
 func stack_all() -> void:
+	if Net.is_launcher_mode():
+		_stack_all_via_server()
+		return
+	_stack_all_local()
+
+## Hosted path: merge same-item stacks by asking the server to move them, and
+## mutate nothing locally. The server's InventoryDelta fan-out is what updates
+## the UI, exactly like a hand-dragged move.
+##
+## Deliberately MERGE-ONLY, never relocate. The offline path below redistributes
+## through `_first_free_slot()`, which scans base slots before bags and so drags
+## bag contents out into the main window — reported as "items unstack and move to
+## the main inventory window". Consolidating stacks is the job; rehoming them
+## between containers was never asked for.
+##
+## Only merges that stay within `stack_size` are sent: the server's move-merge
+## does a plain `saturating_add` with no cap, so an over-large pairing would
+## produce a stack bigger than the item allows.
+func _stack_all_via_server() -> void:
+	# item_name -> Array of {loc, slot, count, cap}, in scan order.
+	var groups: Dictionary = {}
+	for i in BASE_SLOT_COUNT:
+		var entry = base_slots[i]
+		if entry != null:
+			_collect_stackable(groups, entry, NetProtocol.INV_LOCATION_BASE, i)
+		if bag_contents[i] == null:
+			continue
+		var arr: Array = bag_contents[i]
+		for j in arr.size():
+			if arr[j] != null:
+				_collect_stackable(groups, arr[j], NetProtocol.inv_location_bag(i), j)
+
+	var sent: int = 0
+	for key in groups:
+		var slots: Array = groups[key]
+		# Fill the earliest stacks from the latest ones, so partial stacks
+		# collapse toward the front of the inventory.
+		var head: int = 0
+		var tail: int = slots.size() - 1
+		while head < tail:
+			var dst: Dictionary = slots[head]
+			var src: Dictionary = slots[tail]
+			if dst["count"] >= dst["cap"]:
+				head += 1
+				continue
+			if src["count"] <= 0:
+				tail -= 1
+				continue
+			# The wire move carries the WHOLE source stack, so only pair them
+			# when the total fits.
+			if dst["count"] + src["count"] > dst["cap"]:
+				head += 1
+				continue
+			Net.broadcast_move_item(src["loc"], src["slot"], dst["loc"], dst["slot"])
+			sent += 1
+			dst["count"] += src["count"]
+			src["count"] = 0
+			tail -= 1
+
+	if sent == 0:
+		CombatLog.add_line("Nothing left to stack.", CombatLog.MsgType.INFO)
+
+func _collect_stackable(groups: Dictionary, entry: Dictionary, loc: String, slot: int) -> void:
+	var item: ItemData = entry["item"]
+	if item.stack_size <= 1 or item.type == ItemData.Type.BAG:
+		return
+	if not groups.has(item.item_name):
+		groups[item.item_name] = []
+	groups[item.item_name].append({
+		"loc": loc, "slot": slot,
+		"count": int(entry["count"]), "cap": int(item.stack_size),
+	})
+
+## Offline / Test Room path, unchanged: with no server there is nothing to ask,
+## so the local rewrite is correct here.
+func _stack_all_local() -> void:
 	# Key = item_name so we consolidate across different-reference copies of the same item.
 	var totals: Dictionary = {}  # item_name -> { "item": ItemData, "count": int }
 	for i in BASE_SLOT_COUNT:

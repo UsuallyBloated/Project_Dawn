@@ -521,6 +521,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   operator bin doesn't: the *old* password re-verified, its own rate-limit budget (`LoginRateLimiter`
   is keyed to Login and Register only, so a change-password endpoint would be an unmetered Argon2
   oracle), and the same session invalidation. That's the argument for doing the bin first.
+- [ ] **Server move-merge ignores `stack_size`** *(found 2026-08-20 while fixing Stack All)*.
+  `inventory.rs`'s move paths merge two same-item stacks with a plain
+  `existing.count = existing.count.saturating_add(count)` and **no capacity check**, so dragging a
+  stack onto another can produce a stack larger than the item's `stack_size`. The client's own
+  offline `_stack_all_local()` caps correctly (`mini(remaining, item.stack_size)`), so the two
+  sides disagree about what a legal stack is. Not a dupe (the total is conserved) and not
+  currently exploitable for value, but it lets a player build stacks the item was never meant to
+  allow, which sidesteps the carry-weight pressure four-tier coin + `Encumbrance` exist to create.
+  `Stack All` works around it client-side by only pairing stacks that fit; the real fix is a cap in
+  the server merge, which is a server change (push + R720 restart).
+
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
@@ -713,6 +724,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   race (retries ~2 s apart). It *looked* like vanishing rather than an error because a stuck drag
   paints its source cell empty (`is_drag_source`) and right-click is a no-op mid-drag.
   **Needs a server push + R720 rebuild/restart AND a client re-export.**
+  **Second round, 2026-08-20: the ORIGIN found.** The first fix worked — the log shows rejections
+  no longer cascade (08-18 refused the same slot 6+ times in a row; 08-20 shows isolated rejections
+  each followed by successful moves), and the tester's "items stay vanished until another item is
+  placed into that slot" is that reactive correction working. But rejections still *started*,
+  because something was still desyncing the client: **`Stack All`**. `Inventory.stack_all()`
+  rewrote `base_slots` and `bag_contents` **entirely locally** and told the server nothing, so one
+  click turned the client's whole inventory into fiction. It also explains the tester's "items
+  unstack and move to the main inventory window": redistribution used `_first_free_slot()`, which
+  scans base slots **before** bags. Both Stack All buttons (inventory + bag window) call it.
+  **Fixed client-side**: in launcher mode it now asks the server to perform each merge
+  (`_stack_all_via_server()`) and mutates nothing locally; offline keeps the old local path. It is
+  also **merge-only** — no relocation between containers, which the button never needed to do.
+  Only merges that stay within `stack_size` are sent, because the server's move-merge is a plain
+  `saturating_add` with **no cap** (see the separate item below).
 - [ ] **Confirm what can become `hud.gd::_tracked_target`.** Two `is_connected()` calls in
   `_show_self_target()` (`hud.gd:821`, `:823`) check `hp_changed` and `died` **without** a
   `has_signal()` guard. That is safe only while `_tracked_target` is restricted to
