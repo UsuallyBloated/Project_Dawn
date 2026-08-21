@@ -534,17 +534,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   operator bin doesn't: the *old* password re-verified, its own rate-limit budget (`LoginRateLimiter`
   is keyed to Login and Register only, so a change-password endpoint would be an unmetered Argon2
   oracle), and the same session invalidation. That's the argument for doing the bin first.
-- [ ] **Server move-merge ignores `stack_size`** *(found 2026-08-20 while fixing Stack All)*.
-  `inventory.rs`'s move paths merge two same-item stacks with a plain
-  `existing.count = existing.count.saturating_add(count)` and **no capacity check**, so dragging a
-  stack onto another can produce a stack larger than the item's `stack_size`. The client's own
-  offline `_stack_all_local()` caps correctly (`mini(remaining, item.stack_size)`), so the two
-  sides disagree about what a legal stack is. Not a dupe (the total is conserved) and not
-  currently exploitable for value, but it lets a player build stacks the item was never meant to
-  allow, which sidesteps the carry-weight pressure four-tier coin + `Encumbrance` exist to create.
-  `Stack All` works around it client-side by only pairing stacks that fit; the real fix is a cap in
-  the server merge, which is a server change (push + R720 restart).
-
+- [ ] **Server move-merge ignores `stack_size`** *(found 2026-08-20; **BUILT 2026-08-20, pending
+  playtest** — server `world/inventory.rs`; §5 of `atomic_transfers_checklist.md`)*. Dragging one
+  stack onto another merged with a bare `saturating_add` and never consulted the item's limit, so a
+  playtest built a **41-stack of Bread Loaf** whose cap was 10. Not a dupe (the total is conserved)
+  but it sidesteps the carry-weight pressure four-tier coin and `Encumbrance` exist to create, and
+  the two sides disagreed about what a legal stack is — the client's own consolidation always
+  capped correctly.
+  **The helper already existed and had never been wired in:** `items::max_stack()` had *zero*
+  callers outside the deposit path. New `merge_capped()` now backs all **five** move-merge sites
+  (base↔base, within a bag, base→bag, bag→base, bag↔bag), filling the destination to the cap and
+  leaving the remainder in the source rather than rejecting or destroying it. The **split** path
+  (`split_base`, reachable via the `SplitStack` intent) instead rejects, since a split names an
+  explicit count and silently moving fewer would be the confusing option. Unknown paths still
+  return `u32::MAX`, so runtime-built items keep their old unlimited behaviour.
+  Tests: three new unit tests (cap-and-remainder, under-cap still moves whole, split rejects
+  without mutating either slot). **184 unit + 42/42 integration, fully green.**
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
@@ -643,10 +648,31 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   take **bonus damage** and be a **bonus crit target** (higher crit chance + crit damage against
   them); (b) **taking damage should stand you up** (another stand trigger, alongside movement +
   attacking). Both EQ-authentic; neither is in the shipped fix.
-- [ ] **Named mobs lost enrage + guaranteed drops.** Both live only in client-side
-  `data/named_mob_definitions.gd` with no server side, so every named mob is currently a generic
-  mob wearing a name (e.g. Rotfang's guaranteed fang did not drop). Needs server-side named-mob
-  stats + guaranteed/rare drop resolution. Flagged in `session_2026_07_11_dev_panel.md:79`.
+- [ ] **Named mobs lost enrage + guaranteed drops** *(**BUILT 2026-08-21, pending playtest** —
+  server `world/named.rs` + `data/named_mobs.toml`; playtest `named_mobs_checklist.md`)*.
+  **They were never placed in the world, which the old wording missed.** No client scene and
+  neither programmatic spawner ever set `named_mob_id`, so even offline the only way to meet one
+  was the Test Panel. Online it was worse: `zone_manager.gd` skips local spawners entirely in
+  launcher mode, so the client's working enrage and drop code never ran, and the panel
+  pre-multiplied stats locally and sent a plain `DevSpawnMob`.
+  **Now server-side.** New `named.rs` + `named_mobs.toml` mirror the client definitions (all five
+  mobs, exact values), following the `items.rs` pattern. Three hooks, each the single place that
+  covers every case: stat scaling in `Entity::from_spawn` (the one constructor both spawn paths
+  use); **enrage from the once-per-tick AI sweep** rather than the six separate HP-reduction sites,
+  which have no shared helper; and loot folded into `roll_for_mob`, which all three kill paths
+  already call, so no call site changed. `MobTemplate` gains an optional `named_id` and derives
+  plain `Deserialize`, so existing camps are unaffected.
+  **Trap avoided:** a speed multiplier in `Entity::move_speed()` would have done nothing — that is
+  consulted only by pet AI, while world mobs read `self.mob.speed` raw in chase and leash. All
+  three now read `enraged_speed()`.
+  **`DevSpawnMob` recognises a named mob by the name the client already sends**, so the existing
+  Test Panel button spawns a real one with no wire change or re-export; the client's stat numbers
+  are then ignored in favour of the server's table, which also makes that path less trusting.
+  Tests: 13 new, 197 unit green, integration 40/42 with a differing flaky pair each run.
+  **Two things deliberately left open** (documented in `named_mobs.toml`): nothing places a named
+  mob in the world (a one-line `named_id` tag on a camp, but which camp is content design), and
+  `xp_mult` is parsed but not applied, since the server derives XP from level so the level override
+  already scales the reward steeply — stacking another 4x is a balance call.
 - [ ] **Client-only spell backlog (~32 spells missing from `spells.toml`)** *(quantified
   2026-07-22 from a Life Drain / Dark Shroud playtest; those two are now ported)*. The client's
   `spell_definitions.gd` has 156 spells; the server has 124. A client-only spell is dropped as
