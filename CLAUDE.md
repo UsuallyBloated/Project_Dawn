@@ -553,20 +553,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   be server-only with no protocol bump; a dedicated `VendorRejected` (mirroring `BankRejected` /
   `LootRejected`) would be tidier but needs a bump plus a re-export. Either way the client should
   stop claiming success before confirmation.
-- [ ] **Bank coin deposit will not break a larger coin** *(found 2026-08-21)*. With
+- [ ] **Bank coin deposit will not break a larger coin** *(found 2026-08-21; **BUILT 2026-08-21,
+  pending playtest** — `Coins::take_breaking_higher`, applied to deposit AND withdraw)*. With
   `1p 5g 5s 75c`, depositing `6s` is refused ("You don't have that coin to deposit") rather than
   breaking a gold into silver. The four tiers are **deliberately independent stacks** with flat
   per-coin weight, so auto-breaking would cut against that design. A design call, not a bug: either
   the banker breaks coin as a service (fits the Banker's "relief valve" role), or the refusal
   message should explain the tier rule instead of sounding like a bug.
-- [ ] **Coin normalises through a corpse, which changes its weight** *(found 2026-08-21)*. Died
+- [ ] **Coin normalises through a corpse, which changes its weight** *(found 2026-08-21; **BUILT
+  2026-08-21, pending playtest** — corpse loot now returns coin tier by tier)*. Died
   with `1p 5g 7s 312c`, looted back `1p 5g 10s 12c`. The **value is identical** (312c = 3s 12c) so
   nothing is lost, but the game charges *flat weight per coin*, so 312 coins became 15 and the
   player returned lighter than they died. Dying compresses your coin. Minor, but exploit-shaped:
   a player carrying a large copper float could deliberately die to shed weight. The corpse stores
   a total and reconstitutes it normalised; preserving the original per-tier split would keep the
   four-independent-stacks design honest.
-- [ ] **Stack All scope** *(requested 2026-08-21)*. Ask for it to consolidate only within a
+  **Fixed at `tick.rs`'s corpse-loot block**, which flattened the corpse to `total_copper()` and
+  added it back with `add_payout` (which normalises). It now returns the corpse's coin with
+  `add_each`, tier by tier: what went onto the body is what comes back off it.
+- [ ] **Stack All scope** *(requested 2026-08-21; **BUILT 2026-08-21, pending playtest** — both the
+  hosted and offline paths now consolidate within a container only)*. Ask for it to consolidate only within a
   container rather than across the whole inventory. The tester's note is cut off mid-sentence, so
   **the exact rule wanted needs confirming** before building anything — most likely "merge within a
   bag, and within the base slots, but never move items between the two".

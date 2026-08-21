@@ -373,7 +373,11 @@ func stack_all() -> void:
 ## does a plain `saturating_add` with no cap, so an over-large pairing would
 ## produce a stack bigger than the item allows.
 func _stack_all_via_server() -> void:
-	# item_name -> Array of {loc, slot, count, cap}, in scan order.
+	# "<loc>|<item_name>" -> Array of {loc, slot, count, cap}, in scan order.
+	# Keyed by CONTAINER as well as item, so stacks only merge with others in the
+	# same place: three single Bread Loaves, one in the base slots and one in each
+	# of two pouches, stay as three. Merging across containers would silently
+	# rearrange which bag holds what, which is not what the button is for.
 	var groups: Dictionary = {}
 	for i in BASE_SLOT_COUNT:
 		var entry = base_slots[i]
@@ -420,9 +424,10 @@ func _collect_stackable(groups: Dictionary, entry: Dictionary, loc: String, slot
 	var item: ItemData = entry["item"]
 	if item.stack_size <= 1 or item.type == ItemData.Type.BAG:
 		return
-	if not groups.has(item.item_name):
-		groups[item.item_name] = []
-	groups[item.item_name].append({
+	var key: String = "%s|%s" % [loc, item.item_name]
+	if not groups.has(key):
+		groups[key] = []
+	groups[key].append({
 		"loc": loc, "slot": slot,
 		"count": int(entry["count"]), "cap": int(item.stack_size),
 	})
@@ -430,44 +435,43 @@ func _collect_stackable(groups: Dictionary, entry: Dictionary, loc: String, slot
 ## Offline / Test Room path, unchanged: with no server there is nothing to ask,
 ## so the local rewrite is correct here.
 func _stack_all_local() -> void:
-	# Key = item_name so we consolidate across different-reference copies of the same item.
-	var totals: Dictionary = {}  # item_name -> { "item": ItemData, "count": int }
+	# Consolidate WITHIN each container only: the base slots among themselves,
+	# and each bag among itself. Nothing crosses between them, so three single
+	# Bread Loaves — one in the base slots and one in each of two pouches — stay
+	# as three. This used to pool everything and redistribute through
+	# `_first_free_slot()`, which scans base before bags and so emptied bags into
+	# the main window.
+	_consolidate_container(base_slots)
 	for i in BASE_SLOT_COUNT:
-		if base_slots[i] != null:
-			var item: ItemData = base_slots[i]["item"]
-			if item.stack_size > 1 and item.type != ItemData.Type.BAG:
-				if not totals.has(item.item_name):
-					totals[item.item_name] = {"item": item, "count": 0}
-				totals[item.item_name]["count"] += base_slots[i]["count"]
-				base_slots[i] = null
-		if bag_contents[i] == null:
-			continue
-		var arr: Array = bag_contents[i]
-		for j in arr.size():
-			if arr[j] == null:
-				continue
-			var item: ItemData = arr[j]["item"]
-			if item.stack_size <= 1:
-				continue
-			if not totals.has(item.item_name):
-				totals[item.item_name] = {"item": item, "count": 0}
-			totals[item.item_name]["count"] += arr[j]["count"]
-			arr[j] = null
-	for key in totals:
-		var entry: Dictionary = totals[key]
-		var item: ItemData = entry["item"]
-		var remaining: int = entry["count"]
-		while remaining > 0:
-			var found := _first_free_slot()
-			if found.is_empty():
-				break
-			var batch := mini(remaining, item.stack_size)
-			if found.size() == 1:
-				base_slots[found[0]] = {"item": item, "count": batch}
-			else:
-				bag_contents[found[0]][found[1]] = {"item": item, "count": batch}
-			remaining -= batch
+		if bag_contents[i] != null:
+			_consolidate_container(bag_contents[i])
 	inventory_changed.emit()
+
+## Merge same-item stacks in place within one slot array, respecting stack_size
+## and never moving an item to a different slot than one already holding that
+## item. Bags and non-stackables are left alone.
+func _consolidate_container(slots: Array) -> void:
+	for dst in slots.size():
+		var d = slots[dst]
+		if d == null:
+			continue
+		var item: ItemData = d["item"]
+		if item.stack_size <= 1 or item.type == ItemData.Type.BAG:
+			continue
+		# Pull from later slots holding the same item until this one is full.
+		for src in range(dst + 1, slots.size()):
+			if int(d["count"]) >= item.stack_size:
+				break
+			var sdata = slots[src]
+			if sdata == null or sdata["item"].item_name != item.item_name:
+				continue
+			var room: int = item.stack_size - int(d["count"])
+			var take: int = mini(room, int(sdata["count"]))
+			d["count"] = int(d["count"]) + take
+			sdata["count"] = int(sdata["count"]) - take
+			if int(sdata["count"]) <= 0:
+				slots[src] = null
+
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
