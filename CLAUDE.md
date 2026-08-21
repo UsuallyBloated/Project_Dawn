@@ -494,8 +494,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Assorted trust gaps** (Medium/Low) — *(`Attack` weapon_path and login rate-limiting +
   auth-timing are both DONE + playtested — moved to the blockquote above.)* Still open: `BuyItem`
   ignores `vendor_id`.
-  **Cross-store transfer atomicity (finding 8) is BUILT 2026-08-20, pending playtest**
-  (`atomic_transfers_checklist.md`). An item never simply changes, it *moves*, and every move spans
+  **Cross-store transfer atomicity (finding 8) is DONE + playtested 2026-08-21** (server
+  `393cc64`, `atomic_transfers_checklist.md`: bank, vendor and death paths all clean). An item never simply changes, it *moves*, and every move spans
   two tables: a bank deposit touches `character_items` + `bank_items`, a vendor sale touches
   `character_items` + the wallet, and death touches both plus `corpses`. Each store had its own
   write function opening its own transaction with an `.await` between, so a crash in that gap either
@@ -534,22 +534,43 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   operator bin doesn't: the *old* password re-verified, its own rate-limit budget (`LoginRateLimiter`
   is keyed to Login and Register only, so a change-password endpoint would be an unmetered Argon2
   oracle), and the same session invalidation. That's the argument for doing the bin first.
-- [ ] **Server move-merge ignores `stack_size`** *(found 2026-08-20; **BUILT 2026-08-20, pending
-  playtest** — server `world/inventory.rs`; §5 of `atomic_transfers_checklist.md`)*. Dragging one
-  stack onto another merged with a bare `saturating_add` and never consulted the item's limit, so a
-  playtest built a **41-stack of Bread Loaf** whose cap was 10. Not a dupe (the total is conserved)
-  but it sidesteps the carry-weight pressure four-tier coin and `Encumbrance` exist to create, and
-  the two sides disagreed about what a legal stack is — the client's own consolidation always
-  capped correctly.
-  **The helper already existed and had never been wired in:** `items::max_stack()` had *zero*
-  callers outside the deposit path. New `merge_capped()` now backs all **five** move-merge sites
-  (base↔base, within a bag, base→bag, bag→base, bag↔bag), filling the destination to the cap and
-  leaving the remainder in the source rather than rejecting or destroying it. The **split** path
-  (`split_base`, reachable via the `SplitStack` intent) instead rejects, since a split names an
-  explicit count and silently moving fewer would be the confusing option. Unknown paths still
-  return `u32::MAX`, so runtime-built items keep their old unlimited behaviour.
-  Tests: three new unit tests (cap-and-remainder, under-cap still moves whole, split rejects
-  without mutating either slot). **184 unit + 42/42 integration, fully green.**
+- [x] **Server move-merge ignores `stack_size`** — **DONE + playtested 2026-08-21** (server
+  `393cc64`, §5 of `atomic_transfers_checklist.md`). A playtest had built a **41-stack of Bread
+  Loaf** whose cap was 10, because the move paths merged with a bare `saturating_add`. The helper
+  `items::max_stack()` already existed with **zero callers** outside the deposit path. New
+  `merge_capped()` backs all five move-merge sites, filling the destination and leaving the
+  remainder in the source; the split path rejects instead, since it names an explicit count.
+  Log proof: three consecutive `DestroyItem ... bread_loaf count=20` rather than one 60-stack.
+- [ ] **Buying with a full inventory looks like the item vanished** *(found 2026-08-21,
+  `atomic_transfers_checklist.md`)*. **The server is right; the client lies.** It refuses correctly
+  and charges nothing (`BuyItem rejected — inventory full, no stack placed`, no `coins_after`
+  line), but `vendor_window.gd:366-370` prints *"Ordered X for Y"* the moment it sends the request,
+  before the server has answered. The player is told the purchase happened, then nothing arrives.
+  **Exactly the shape of the `MoveItem` rejection fixed on 08-18**: the server logs a refusal and
+  `continue`s, sending the client nothing, so it can never learn it was wrong. Every `BuyItem`
+  rejection arm has this (unknown item, no vendor_price, can't afford, inventory full).
+  **Fix:** report the refusal. `ChatMessage` already exists and the client renders it, so this can
+  be server-only with no protocol bump; a dedicated `VendorRejected` (mirroring `BankRejected` /
+  `LootRejected`) would be tidier but needs a bump plus a re-export. Either way the client should
+  stop claiming success before confirmation.
+- [ ] **Bank coin deposit will not break a larger coin** *(found 2026-08-21)*. With
+  `1p 5g 5s 75c`, depositing `6s` is refused ("You don't have that coin to deposit") rather than
+  breaking a gold into silver. The four tiers are **deliberately independent stacks** with flat
+  per-coin weight, so auto-breaking would cut against that design. A design call, not a bug: either
+  the banker breaks coin as a service (fits the Banker's "relief valve" role), or the refusal
+  message should explain the tier rule instead of sounding like a bug.
+- [ ] **Coin normalises through a corpse, which changes its weight** *(found 2026-08-21)*. Died
+  with `1p 5g 7s 312c`, looted back `1p 5g 10s 12c`. The **value is identical** (312c = 3s 12c) so
+  nothing is lost, but the game charges *flat weight per coin*, so 312 coins became 15 and the
+  player returned lighter than they died. Dying compresses your coin. Minor, but exploit-shaped:
+  a player carrying a large copper float could deliberately die to shed weight. The corpse stores
+  a total and reconstitutes it normalised; preserving the original per-tier split would keep the
+  four-independent-stacks design honest.
+- [ ] **Stack All scope** *(requested 2026-08-21)*. Ask for it to consolidate only within a
+  container rather than across the whole inventory. The tester's note is cut off mid-sentence, so
+  **the exact rule wanted needs confirming** before building anything — most likely "merge within a
+  bag, and within the base slots, but never move items between the two".
+
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
@@ -648,31 +669,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   take **bonus damage** and be a **bonus crit target** (higher crit chance + crit damage against
   them); (b) **taking damage should stand you up** (another stand trigger, alongside movement +
   attacking). Both EQ-authentic; neither is in the shipped fix.
-- [ ] **Named mobs lost enrage + guaranteed drops** *(**BUILT 2026-08-21, pending playtest** —
-  server `world/named.rs` + `data/named_mobs.toml`; playtest `named_mobs_checklist.md`)*.
-  **They were never placed in the world, which the old wording missed.** No client scene and
-  neither programmatic spawner ever set `named_mob_id`, so even offline the only way to meet one
-  was the Test Panel. Online it was worse: `zone_manager.gd` skips local spawners entirely in
-  launcher mode, so the client's working enrage and drop code never ran, and the panel
-  pre-multiplied stats locally and sent a plain `DevSpawnMob`.
-  **Now server-side.** New `named.rs` + `named_mobs.toml` mirror the client definitions (all five
-  mobs, exact values), following the `items.rs` pattern. Three hooks, each the single place that
-  covers every case: stat scaling in `Entity::from_spawn` (the one constructor both spawn paths
-  use); **enrage from the once-per-tick AI sweep** rather than the six separate HP-reduction sites,
-  which have no shared helper; and loot folded into `roll_for_mob`, which all three kill paths
-  already call, so no call site changed. `MobTemplate` gains an optional `named_id` and derives
-  plain `Deserialize`, so existing camps are unaffected.
-  **Trap avoided:** a speed multiplier in `Entity::move_speed()` would have done nothing — that is
-  consulted only by pet AI, while world mobs read `self.mob.speed` raw in chase and leash. All
-  three now read `enraged_speed()`.
-  **`DevSpawnMob` recognises a named mob by the name the client already sends**, so the existing
-  Test Panel button spawns a real one with no wire change or re-export; the client's stat numbers
-  are then ignored in favour of the server's table, which also makes that path less trusting.
-  Tests: 13 new, 197 unit green, integration 40/42 with a differing flaky pair each run.
-  **Two things deliberately left open** (documented in `named_mobs.toml`): nothing places a named
-  mob in the world (a one-line `named_id` tag on a camp, but which camp is content design), and
-  `xp_mult` is parsed but not applied, since the server derives XP from level so the level override
-  already scales the reward steeply — stacking another 4x is a balance call.
+- [x] **Named mobs lost enrage + guaranteed drops** — **DONE + playtested 2026-08-21**
+  (server `393cc64`, `named_mobs_checklist.md`). What exists is in systems_overview → Combat.
+  **They were never placed in the world**, which the old wording missed: no scene or spawner ever
+  set `named_mob_id`, so even offline the only way to meet one was the Test Panel. Now server-side
+  via `named.rs` + `named_mobs.toml`, with three hooks each chosen as the single place that covers
+  every case: scaling in `Entity::from_spawn`, enrage from the once-per-tick AI sweep (enemy HP is
+  cut in six places with no shared helper), and loot folded into `roll_for_mob`, which all three
+  kill paths already call. `DevSpawnMob` recovers the id from the name the client already sends, so
+  the Test Panel spawns a real one with no wire change.
+  **The log confirms every number:** `max_hp=175.0` (50 x 3.5, scaled once — 612 would be double),
+  `raw_amount=9` calm (5 x 1.8), `named mob enraged` at 27/175 = 15.4%, then `raw_amount=13`
+  (9 x 1.4). Ordinary mobs untouched. Still open by design: nothing places one in the world (a
+  one-line camp tag, but which camp is content), and `xp_mult` is parsed but unapplied.
 - [ ] **Client-only spell backlog (~32 spells missing from `spells.toml`)** *(quantified
   2026-07-22 from a Life Drain / Dark Shroud playtest; those two are now ported)*. The client's
   `spell_definitions.gd` has 156 spells; the server has 124. A client-only spell is dropped as
