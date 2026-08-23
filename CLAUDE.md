@@ -541,18 +541,37 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `merge_capped()` backs all five move-merge sites, filling the destination and leaving the
   remainder in the source; the split path rejects instead, since it names an explicit count.
   Log proof: three consecutive `DestroyItem ... bread_loaf count=20` rather than one 60-stack.
-- [ ] **Buying with a full inventory looks like the item vanished** *(found 2026-08-21,
-  `atomic_transfers_checklist.md`)*. **The server is right; the client lies.** It refuses correctly
-  and charges nothing (`BuyItem rejected — inventory full, no stack placed`, no `coins_after`
-  line), but `vendor_window.gd:366-370` prints *"Ordered X for Y"* the moment it sends the request,
-  before the server has answered. The player is told the purchase happened, then nothing arrives.
-  **Exactly the shape of the `MoveItem` rejection fixed on 08-18**: the server logs a refusal and
-  `continue`s, sending the client nothing, so it can never learn it was wrong. Every `BuyItem`
-  rejection arm has this (unknown item, no vendor_price, can't afford, inventory full).
-  **Fix:** report the refusal. `ChatMessage` already exists and the client renders it, so this can
-  be server-only with no protocol bump; a dedicated `VendorRejected` (mirroring `BankRejected` /
-  `LootRejected`) would be tidier but needs a bump plus a re-export. Either way the client should
-  stop claiming success before confirmation.
+- [ ] **Silent refusals: the server refuses without telling the client** *(found 2026-08-21 as
+  the vendor bug; **audited and BATCH 1 BUILT 2026-08-23**, server-only; playtest
+  `silent_refusals_checklist.md`)*. The server validates well but **reports** poorly: it logs a
+  refusal and moves on, sending nothing. The client then keeps a stale view (the 08-18 inventory
+  desync, which lasted until relog) or announces a success that never happened ("Ordered X" while
+  the server refused for full bags). An audit counted **62 silent rejection arms against 40 that
+  answer**.
+  **The fix costs nothing to ship.** `ChatMessage` on the System channel is already encoded,
+  decoded by gdext, re-emitted by `Net`, and rendered unattributed by `CombatLog` — so
+  `handlers::send_refusal()` needs **no protocol bump, no gdext rebuild and no client re-export**.
+  Do **not** build on `ServerWorldMsg::Error` or `BroadcastMessage`: both have zero senders and are
+  absent from gdext's `Incoming` enum, so they would be silently discarded — the very failure being
+  fixed. Prefer private `send_refusal` over `fan_out_cast_fail`, which broadcasts and would leak a
+  caster's failures to bystanders.
+  **Batch 1 done (16 sites):** all 6 `BuyItem` arms, all 7 `SellItem` arms, and the three worst
+  spell arms. The spell ones matter most because **the client spends mana, starts the cooldown and
+  applies local buffs BEFORE it sends the cast**, so a refusal drained the bar for nothing. The
+  unknown-spell arm (the ~32 client-only spell backlog, so it fires in ordinary play) now **also
+  refunds the mana** with `fan_out_mana_update` — the server never deducted it, so sending its own
+  true value corrects the client's optimistic spend, the same principle as `correct_client_slots`.
+  **Batch 2 still open**, in the audit's priority order: the rest of the inventory family
+  (`EquipItem`, `UnequipItem`, `SplitStack`, `DropItem`, `DestroyItem`, `UseConsumable`), the
+  remaining 8 post-mana-deduct cast arms, the 10 group arms (6 of which have **no server log
+  either**, so a failed `/kick` is invisible on both sides), and `BindAtCurrentLocation`, whose
+  client claims success unconditionally and could quietly rebuild the death loop.
+  **Deliberately left silent** (confirmed correct): anti-cheat gates, dev/GM authorization (a reply
+  is an oracle for whether `PD_DEV_CMDS` is on or an account is GM), transport/lifecycle gates, and
+  rejections only a forged client can reach.
+  **Also found:** 9 declared wire intents have no handler at all (`UseSkill`, `CancelCast`,
+  `StackAll`, `Interact`, `DialogueResponse`, `TurnInQuest`, `StartCombine`, `StartMining`,
+  `StartSkinning`) — they hit `_ => Outcome::Continue` with no log and no reply.
 - [ ] **Bank coin deposit will not break a larger coin** *(found 2026-08-21; **BUILT 2026-08-21,
   pending playtest** — `Coins::take_breaking_higher`, applied to deposit AND withdraw)*. With
   `1p 5g 5s 75c`, depositing `6s` is refused ("You don't have that coin to deposit") rather than
@@ -802,6 +821,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Now **39-42 of 42, with a fully green run reachable**. What remains is the pre-existing
   load-sensitive flakiness in `aoe_spell_damages_nearby_enemies`, `pet_attacks_owners_target` and
   `pet_pulls_aggro_via_threat_reaggro` — all pass in isolation, all vary run to run.
-  **Practical rule: a failure OUTSIDE those three is a real regression.** Closing this item means
-  making those three deterministic (the harness waits on enemy AI reaching the player); see
-  `server/docs/flaky_integration_tests.md`.
+  **The "three" is wrong, and the rule built on it is a triage hazard** *(corrected 2026-08-23)*.
+  On 2026-08-23 **five** distinct tests were observed failing under load in a single sitting, each
+  passing in isolation: the three above plus `charm_converts_enemy_to_pet` and
+  `player_attack_kills_enemy_and_corpse_despawns`. Proven not to be a regression by an A/B — the
+  **clean tree failed too**, with a different subset each run.
+  The old rule read *"a failure outside those three is a real regression"*, which cuts both ways:
+  it sends you chasing a phantom, and it invites waving away a genuine regression as "probably
+  flake". **Better rule: any failure that reproduces IN ISOLATION is real; a failure that passes
+  alone is load-sensitivity, whichever test it is.** Closing this item means making them
+  deterministic (the harness waits on enemy AI reaching the player) rather than maintaining a list;
+  see `server/docs/flaky_integration_tests.md`.
