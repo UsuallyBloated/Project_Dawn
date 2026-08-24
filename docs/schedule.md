@@ -218,8 +218,16 @@ new player think the game is broken. The first category is what loses you a test
       killed their client and logged straight back in. The doc contradicts itself here and never
       reconciles. Security-adjacent: this guard is what blocks the Lineage II force-off pattern.
       Re-test first, it may not reproduce.
-- **Atomic cross-store transfers** (finding 8, Low). Fold each bank/vendor transfer's two
-      writes into one transaction, mirroring `db::apply_corpse_loot`.
+- **Atomic cross-store transfers** (finding 8). ✅ Done + playtested 2026-08-21. An item never
+      simply changes, it *moves*, and every move spans two tables, so a crash between the two
+      writes either lost the item or duplicated it. All five stores now write in one transaction,
+      in both the periodic checkpoint and the disconnect flush. Death was the sharpest case: it
+      wrote the corpse, then stripped the player in two further writes whose errors were
+      discarded, so a crash mid-strip duplicated their coin. The strip now happens inside the
+      corpse transaction.
+- **Stack merges ignored the item's stack size.** ✅ Done + playtested 2026-08-21. Dragging one
+      stack onto another merged with no cap, so a playtest built a 41-stack of bread whose limit
+      was 10. The capacity helper already existed and had never been wired in.
 - **Bags open on left-click instead of right-click.** ✅ Done + playtested 2026-08-18 (client
       `c3ef9f4`, all 14 checklist rows). Not stale pre-grammar bags: `_on_cell_input` called
       `_toggle_bag()` from the left-click path as well as the right-click one, so both buttons
@@ -232,9 +240,17 @@ new player think the game is broken. The first category is what loses you a test
       no home for, and — the origin, spotted by the tester — **Stack All rewrote the whole
       inventory locally** and told the server nothing. All three closed; the log now shows Stack
       All merging through the server and zero rejections across seven minutes of heavy dragging.
-- **Named mobs lost enrage and guaranteed drops.** Both live only in client-side
-      `named_mob_definitions.gd` with no server side, so every named mob is currently a generic
-      mob wearing a name. Rotfang's guaranteed fang did not drop in the last playtest.
+- **Named mobs lost enrage and guaranteed drops.** ✅ Done + playtested 2026-08-21. They turned
+      out never to have been *placed* in the world at all — nothing anywhere tagged a spawn as a
+      named mob, so even offline the only way to meet one was the debug panel. The server now owns
+      their stats, enrage and drops; the log confirms 175 health rather than 50, harder hits below
+      a fifth health, and the fang on every kill.
+- **The server refused actions without telling anyone.** ✅ Done + playtested 2026-08-24. Surfaced
+      by a tester buying with full bags and watching the item "disappear". An audit found 62 silent
+      rejection arms against 40 that answered: the server logged a refusal and moved on, so the
+      client either kept a stale view or announced a success that never happened. 36 sites now
+      report, and a cast rejected after its mana was taken gets the mana back. Anti-cheat and GM
+      gates stay deliberately silent, since a reply there is an oracle.
 - Whatever the Phase 2 session surfaces. **Leave room here.** It will find things.
 
 **Done means:** nothing loses items, nothing appears to lose items, and a first-time player
@@ -328,6 +344,6 @@ rather than via a chat line after the fact.
 | 0. Reconcile | Jul 16 to Jul 17 | **Done (2026-07-17)** — doc reconciliation complete; `CORPSE_LINGER_SECS` raised to 7 days (user-accepted, pure value change); duplicate-name trap resolved via rename |
 | 1. Exploit gate | Jul 20 to Jul 31 | ✅ **COMPLETE (2026-07-31, on schedule)** — all seven gates done & playtested: keystone (`is_gm`), Respawn dead-check, attack-while-seated, cast class/level, `Attack` weapon_path, melee swing-rate limit, login rate-limit + auth-timing. Open caveat (not blocking): the swing-rate haste row is unit/design-covered but never eye-tested. |
 | 2. Host + first friend | Aug 3 to Aug 7 | ✅ **COMPLETE (2026-08-11, 4 days late)** — hosted on a physical R720 over Tailscale (not a VPS, not port-forwarding); phase included building the machine from bare metal because it arrived unbootable. Closed on tester evidence: a second person, on her own machine, registered, made a character, killed something, grouped, and logged out clean. Backups nightly to a second array plus weekly off-site, restore verified. Two findings opened: the respawn death-loop and the login rate limiter forcing a duplicate account. |
-| 3. Stop it eating things | Aug 10 to Aug 21 (**ran long**, decided 2026-08-20) | **In progress** — 6 done: bank Items-tab blank slots (08-17), bag click grammar (08-18), the inventory/server desync (08-20, origin `Stack All`), cross-store transfer atomicity, the `stack_size` merge cap, and server-side named mobs (all 08-21). Every one of the first three had been recorded under a cause that was wrong. Open: unclean-kill relogin (blocked on a re-test), plus four findings from the 08-21 run — vendor buy claiming success before the server answers, bank coin not breaking tiers, coin normalising through a corpse, and a Stack All scope request. |
+| 3. Stop it eating things | Aug 10 to Aug 21 (**ran long**, decided 2026-08-20) | **In progress** — 8 done: bank Items-tab blank slots (08-17), bag click grammar (08-18), the inventory/server desync (08-20, origin `Stack All`), cross-store transfer atomicity, the `stack_size` merge cap and server-side named mobs (all 08-21), and the silent-refusal audit (08-24, 36 sites). **Six of the eight had been recorded under a cause that was wrong**, which is now a standing rule: treat a to-do's stated cause as a hypothesis. Open: unclean-kill relogin (blocked on a re-test), plus findings from the 08-24 run — Gate and the Soul Binder read different bind points, and the vendor panel overclaims. |
 | 4. An evening's worth | Aug 24 to Sep 11 | Not started |
 | 5. Open the door | Sep 14 onward | Not started |
