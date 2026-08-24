@@ -109,10 +109,10 @@ Looted gear returns to your bags, not to your body. You re-equip by hand.
 | **X** | Crouch |
 | **Z** | Sit / Rest (boosts HP/MP regen; suppressed in combat) |
 | **Right-click + drag** | Camera control |
-| **Left-click** | Click-target an enemy or NPC |
+| **Right-click** (tap) | Interact: talk to an NPC, loot a corpse or bag, use a station or ore vein |
+| **Left-click** | Click-target an enemy, NPC or corpse (targeting only — right-click interacts) |
 | **Tab** | Cycle target |
 | **F1** | Target self |
-| **F** | Interact / Talk to targeted NPC |
 | **Enter** | Open chat input |
 | **C / I / P / K / B / J** | Character / Inventory / Paperdoll / Tradeskill / Spellbook / Quest Journal |
 | **Esc** | Options menu |
@@ -143,12 +143,11 @@ lost if the server is stopped while you are connected. A clean logout flushes im
 Please **do** still report these if you hit them, with any extra detail. Knowing they are
 known just saves you writing them up from scratch.
 
-- **Some spells do nothing.** Roughly 32 spells exist in the client but not yet on the
-  server. Casting one spends mana and has no effect. Tell us which one.
-- **Bags open on left-click**, where everything else uses right-click. Inconsistent, known.
+- **Some spells fizzle.** Roughly 32 spells exist in the client but not yet on the server.
+  Casting one says so and refunds the mana. Tell us which one you miss most.
 - **Bard songs are half-built.** They apply once and do not sustain.
-- **Named and boss mobs behave like ordinary mobs.** No enrage, no guaranteed drops yet.
-- **No bind points.** You respawn where you died, and death does not lock your movement.
+- **Tradeskills (mining, crafting, skinning) are not available online yet.** They refuse with a
+  clear message rather than pretending to work.
 - **No sound at all.** Combat, spells, ambience and music are all coming.
 - **No mounts, weather, swimming, faction or PvP** yet.
 - **No player portrait or target-of-target frames.**

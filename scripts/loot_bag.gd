@@ -51,7 +51,6 @@ func _ready() -> void:
 	else:
 		_build_body()
 
-	input_event.connect(_on_input_event)
 
 	# Local despawn timer applies only to single-player Test Room bags.
 	# Server-owned bags use EntityDespawn broadcasts after the server-
@@ -104,9 +103,7 @@ func _build_sack() -> void:
 
 const LOOT_RANGE := 6.0
 
-func _on_input_event(_camera: Node, event: InputEvent, _pos: Vector3, _normal: Vector3, _idx: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var player := get_tree().get_first_node_in_group("player")
-		if player == null or global_position.distance_to(player.global_position) > LOOT_RANGE:
-			return
-		Loot.show_window(self)
+# Looting is right-click, with the rest of the world-interact grammar: the tap
+# resolves centrally in Targeting.interact_at, which range-gates and opens the
+# window. (LOOT_RANGE above is kept as the reference the old F/left-click paths
+# shared; interact_at mirrors it as INTERACT_RANGE_LOOT.)

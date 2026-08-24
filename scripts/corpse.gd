@@ -51,15 +51,8 @@ func _ready() -> void:
 func _on_input_event(_camera: Node, event: InputEvent, _pos: Vector3, _normal: Vector3, _idx: int) -> void:
 	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		return
-	# Anyone may TARGET a corpse — a Cleric/Paladin needs it as a cast target to
-	# resurrect it (Slice 3). spells.gd's _cast_target_id reads Combat.current_target
-	# and returns this corpse_id for a CORPSE-target spell.
+	# Left-click TARGETS only — a Cleric/Paladin needs the corpse as a cast
+	# target to resurrect it (Slice 3). Looting moved to right-click with the
+	# rest of the world-interact grammar (Targeting.interact_at), which targets
+	# AND opens the loot window for the owner, so one button does everything.
 	Combat.set_target(self)
-	# The OWNER additionally opens their loot window (the server also rejects a
-	# non-owner take with "That is not your corpse.").
-	if owner_id != Net.get_player_id():
-		return
-	var player := get_tree().get_first_node_in_group("player")
-	if player == null or global_position.distance_to(player.global_position) > LOOT_RANGE:
-		return
-	Loot.show_window(self)

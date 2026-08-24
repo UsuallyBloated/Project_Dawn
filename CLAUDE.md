@@ -202,7 +202,9 @@ Keep the main model for design, code, and any exploit or verification work.
 - **Stats:** STR / AGI / INT / WIS / CON / CHA (CHA is the confirmed 6th primary).
 
 ### UI conventions
-- Free mouse to click UI (skill/spell buttons); hold **right-click** to engage camera
+- **Right-click is the interact verb everywhere**: use/open in inventory, and (as a tap) talk /
+  loot / mine / bank on world objects; **left-click only targets**. Free mouse to click UI
+  (skill/spell buttons); hold **right-click** (drag) to engage camera
   control. Tab targeting; full HUD overlay; inventory with paperdoll; equipment system.
 
 ---
@@ -635,6 +637,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   branch (a one-line fix). Real server-authoritative active skills are their own build. Also correct
   the **stale comment at `tick.rs:3603`** claiming a client-side movement cast-cancel that does not
   exist, before someone trusts it as a backstop.
+- [ ] **Right-click is the world-interact verb** *(requested 2026-08-24; **BUILT 2026-08-24,
+  pending playtest** — `right_click_interact_checklist.md`, ships with the tradeskill guard
+  re-export)*. One mouse grammar everywhere: right-click (tap) interacts — NPC talk/vendor/bank,
+  corpse + bag loot, mining, stations, skinning — and left-click only targets; a right-*drag* is
+  still the camera, split by the same 6px threshold left-click targeting uses. Corpses: left-click
+  keeps *targeting* (a Cleric needs the corpse as a res cast target); right-click targets AND
+  loots. The proximity-F chain is retired, deliberately: it interacted with anything nearby with
+  no cursor work at all, the easiest thing to bot. Central router `Targeting.interact_at()`;
+  ranges mirror the old F values exactly. Real bot resistance still needs the server-side
+  proximity gate (separate item above) — this raises the client-side cost, that enforces it.
 - [ ] **`CancelCast` is a missing feature, not a broken one** *(found 2026-08-24, low priority)*.
   There is no player-facing way to abort a cast — no keybind, ESC handler, cancel button, or
   movement cancel; `Spells.cancel_cast()`'s only callers are an interrupt path that early-returns in

@@ -95,3 +95,98 @@ func _cycle_target() -> void:
 	else:
 		_tab_index = (enemies.find(Combat.current_target) + 1) % enemies.size()
 	Combat.set_target(enemies[_tab_index])
+
+
+# ── Right-click world interact ────────────────────────────────────────────────
+# Interaction ranges. Mirror the old F-key values from hud.gd exactly, so
+# moving the verb to the mouse changed no distances.
+const INTERACT_RANGE_NPC := 6.0
+const INTERACT_RANGE_LOOT := 6.0
+const INTERACT_RANGE_GATHER := 3.0
+
+## Resolve a right-click TAP into a world interaction. This is the world half
+## of the game's one mouse grammar — right-click = use/interact, left-click =
+## target — matching what the inventory has always done. Deliberately requires
+## the cursor to be ON the object: the old F-key path interacted with anything
+## nearby with no cursor work at all, which made it trivially bottable.
+##
+## Only a tap lands here; a right-DRAG is the camera and is filtered out by the
+## caller (player.gd) before this is reached. Returns true when the click hit
+## something interactable, even if the interaction was refused (too far, not
+## yours) — a refusal is an answer, not a miss.
+func interact_at(mouse_pos: Vector2) -> bool:
+	var camera := _camera
+	if camera == null:
+		return false
+	var space := camera.get_world_3d().direct_space_state
+	var origin := camera.project_ray_origin(mouse_pos)
+	var end := origin + camera.project_ray_normal(mouse_pos) * 100.0
+	var params := PhysicsRayQueryParameters3D.create(origin, end)
+	params.collide_with_areas = true
+	var result := space.intersect_ray(params)
+	if result.is_empty():
+		return false
+	var obj = result["collider"]
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return false
+	var dist: float = obj.global_position.distance_to(player.global_position)
+
+	if obj is MiningNode:
+		if dist > INTERACT_RANGE_GATHER:
+			CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
+			return true
+		CombatLog.add_line(obj.try_mine(), CombatLog.MsgType.INFO)
+		return true
+
+	if obj is Corpse:
+		# Right-click targets AND loots, so a res caster or the owner can do
+		# everything with one button. (Left-click still targets without
+		# looting — a Cleric needs the corpse as a cast target.)
+		Combat.set_target(obj)
+		if obj.owner_id != Net.get_player_id():
+			return true  # targeting a stranger's corpse is fine; looting isn't
+		if dist > INTERACT_RANGE_LOOT:
+			CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
+			return true
+		Loot.show_window(obj)
+		return true
+
+	if obj is LootBag:
+		if dist > INTERACT_RANGE_LOOT:
+			CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
+			return true
+		Loot.show_window(obj)
+		return true
+
+	if obj.is_in_group("dialogue_npcs") or obj.is_in_group("vendor_npcs") or obj.is_in_group("banker_npcs"):
+		Combat.set_target(obj)
+		if dist > INTERACT_RANGE_NPC:
+			CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
+			return true
+		if obj.is_in_group("dialogue_npcs"):
+			DialogueManager.open_for(obj)
+		elif obj.is_in_group("banker_npcs"):
+			BankerManager.open_for(obj)
+		else:
+			VendorManager.open_for(obj)
+		return true
+
+	if obj.is_in_group("crafting_stations"):
+		# The crafting window filters recipes by StationManager's proximity
+		# state, so gate on that rather than a second distance constant —
+		# identical semantics to the old F path.
+		if StationManager.nearby_station == "":
+			CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
+			return true
+		StationManager.request_open()
+		return true
+
+	if obj is Enemy and obj.is_skinnable and obj.state == Enemy.State.DEAD:
+		if dist > INTERACT_RANGE_GATHER:
+			CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
+			return true
+		CombatLog.add_line(obj.try_skin(), CombatLog.MsgType.INFO)
+		return true
+
+	return false

@@ -379,6 +379,11 @@ func _build_crafting_window() -> void:
 	add_child(_crafting_window)
 	_crafting_window.visibility_changed.connect(
 		_on_window_visibility_changed.bind(_crafting_window))
+	# Right-clicking a crafting station requests the window through this signal
+	# (Targeting.interact_at -> StationManager.request_open) — the station can't
+	# reach the HUD's scene tree directly.
+	StationManager.open_requested.connect(func() -> void:
+		_crafting_window.visible = true)
 	Crafting.skill_level_changed.connect(func(skill: String, lvl: int) -> void:
 		CombatLog.add_line(
 			"Your %s skill has increased to %d!" % [skill, lvl],
@@ -685,82 +690,11 @@ func _unhandled_input(event: InputEvent) -> void:
 				_quest_journal.visible = !_quest_journal.visible
 		elif event.is_action("toggle_auto_attack"):
 			Combat.toggle_auto_attack()
-		elif event.is_action("interact"):
-			if _try_open_targeted_npc():
-				pass
-			elif StationManager.nearby_station != "":
-				_crafting_window.visible = true
-			elif _try_loot_nearby():
-				pass
-			elif not _try_mine_nearby():
-				_try_skin_nearby()
-
-func _try_open_targeted_npc() -> bool:
-	var t = Combat.current_target
-	if t == null or not is_instance_valid(t):
-		return false
-	var is_friendly: bool = t.is_in_group("dialogue_npcs") or t.is_in_group("vendor_npcs") or t.is_in_group("banker_npcs")
-	if not is_friendly:
-		return false
-	var player := get_tree().get_first_node_in_group("player")
-	if player == null:
-		return false
-	const NPC_INTERACT_RANGE := 6.0
-	if t.global_position.distance_to(player.global_position) > NPC_INTERACT_RANGE:
-		CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
-		return true
-	if t.is_in_group("dialogue_npcs"):
-		DialogueManager.open_for(t)
-	elif t.is_in_group("banker_npcs"):
-		BankerManager.open_for(t)
-	else:
-		VendorManager.open_for(t)
-	return true
-
-func _try_loot_nearby() -> bool:
-	var player := get_tree().get_first_node_in_group("player")
-	if player == null:
-		return false
-	const LOOT_RANGE := 6.0
-	for node in get_tree().get_nodes_in_group("loot_bags"):
-		var bag := node as LootBag
-		if bag == null or not is_instance_valid(bag):
-			continue
-		if bag.global_position.distance_to(player.global_position) <= LOOT_RANGE:
-			Loot.show_window(bag)
-			return true
-	return false
-
-func _try_mine_nearby() -> bool:
-	var player := get_tree().get_first_node_in_group("player")
-	if player == null:
-		return false
-	const MINE_RANGE := 3.0
-	for node in get_tree().get_nodes_in_group("mining_nodes"):
-		var mn := node as MiningNode
-		if mn == null:
-			continue
-		if mn.global_position.distance_to(player.global_position) > MINE_RANGE:
-			continue
-		var msg := mn.try_mine()
-		CombatLog.add_line(msg, CombatLog.MsgType.INFO)
-		return true
-	return false
-
-func _try_skin_nearby() -> void:
-	var player := get_tree().get_first_node_in_group("player")
-	if player == null:
-		return
-	const SKIN_RANGE := 3.0
-	for node in get_tree().get_nodes_in_group("enemies"):
-		var enemy := node as Enemy
-		if enemy == null or not enemy.is_skinnable:
-			continue
-		if enemy.global_position.distance_to(player.global_position) > SKIN_RANGE:
-			continue
-		var msg := enemy.try_skin()
-		CombatLog.add_line(msg, CombatLog.MsgType.INFO)
-		return
+		# NOTE: the old F/"interact" fallback chain (NPC, station, loot, mine,
+		# skin) is retired. Right-click on the object is the interact verb now
+		# (Targeting.interact_at) — one grammar with the inventory, and every
+		# interaction needs the cursor on the object, which the proximity-F
+		# path never did (walk near, mash F was trivially bottable).
 
 func _on_window_visibility_changed(window: Panel) -> void:
 	if window.visible:

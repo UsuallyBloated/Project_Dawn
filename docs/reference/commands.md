@@ -120,6 +120,8 @@ Fixed keys (in code):
 | `1`–`0` | Hotbar slots 1-10. |
 | `Alt` + `1`–`0` | Spell-bar slots. |
 | `F2` | Target group member 1. |
+| Right-click (tap) | **World interact**: talk / vendor / bank on an NPC, loot a corpse or bag, mine a vein, use a station, skin a dead mob. A right-*drag* is still the camera. The old proximity-F interact is retired — the cursor must be on the object, deliberately (bot resistance). |
+| Left-click | Target only (enemy, NPC, corpse). Never interacts. |
 
 Window toggles (inventory, quest journal `J`, character, spellbook, crafting `K`, etc.) are input
 **actions** and are **rebindable** in Options → Keybinds (`GameSettings.keybinds`,

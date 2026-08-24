@@ -17,7 +17,7 @@ loss into a clear "not built yet."
 
 ## 1 — The guards (online, on the R720)
 
-- [ ] **Walk to an ore vein with a Pickaxe and press F** → "Mining isn't available online yet." No
+- [ ] **Right-click an ore vein (with a Pickaxe)** → "Mining isn't available online yet." No
       ore appears, no Mining skill-up message. notes:
 - [ ] **Open a crafting station, pick any recipe, press Combine** → "Crafting isn't available
       online yet." **Your ingredients are untouched** — check the counts before and after. notes:

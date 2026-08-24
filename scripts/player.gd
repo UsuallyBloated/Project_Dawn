@@ -79,6 +79,15 @@ var _lmb_was_down := false
 var _lmb_tracking := false          # left press began over the 3D world (eligible to click/drag)
 var _lmb_dragged := false           # this hold crossed the drag threshold
 var _lmb_press_screen: Vector2i = Vector2i.ZERO
+# Right-button tap detection, mirroring the left-button set above. A right TAP
+# (released under the drag threshold) is the world-interact verb — mine, loot,
+# talk, bank — while a right DRAG stays the camera. Motion is accumulated from
+# relative mouse events because the cursor is parked while captured, so screen
+# positions can't measure a drag the way the left button's do.
+var _rmb_was_down := false
+var _rmb_tap_candidate := false     # press began over the 3D world, single-button
+var _rmb_motion := 0.0              # relative motion accumulated during the hold
+var _rmb_press_vp: Vector2 = Vector2.ZERO   # viewport pos at press, for the interact ray
 # Camera pitch (both drag modes) and yaw offset behind the body (left-drag
 # only). Held as explicit Euler components so re-centering can't accumulate roll.
 var _cam_pitch: float = 0.0
@@ -192,6 +201,8 @@ func _input(event: InputEvent) -> void:
 	# the camera around a stationary body. Pitch is shared by both.
 	if event is InputEventMouseMotion and (is_camera_active or is_look_active):
 		var rel: Vector2 = event.relative
+		if is_camera_active:
+			_rmb_motion += rel.length()
 		_cam_pitch = clamp(_cam_pitch - rel.y * MOUSE_SENSITIVITY, -PI / 2.0, PI / 2.0)
 		if is_camera_active:
 			rotate_y(-rel.x * MOUSE_SENSITIVITY)   # steer: camera follows, locked behind
@@ -228,6 +239,25 @@ func _update_mouse_camera(chat_focused: bool) -> void:
 		# RMB takes over from any in-progress left orbit.
 		is_look_active = false
 		_lmb_tracking = false
+
+	# Right button edges: a TAP (no drag) is the world-interact verb; a drag is
+	# the camera and is already handled above. The press position is recorded
+	# before the capture block below parks the cursor, so the interact ray fires
+	# from where the player actually clicked.
+	if rmb and not _rmb_was_down:
+		_rmb_press_vp = get_viewport().get_mouse_position()
+		_rmb_motion = 0.0
+		# Eligible only when: single-button (not the both-buttons run), not in
+		# latched mouselook (no meaningful cursor), and not starting over UI.
+		_rmb_tap_candidate = (
+			not _mouselook_toggled and not lmb
+			and get_viewport().gui_get_hovered_control() == null
+		)
+	elif not rmb and _rmb_was_down:
+		if _rmb_tap_candidate and _rmb_motion <= CAMERA_DRAG_THRESHOLD:
+			Targeting.interact_at(_rmb_press_vp)
+		_rmb_tap_candidate = false
+	_rmb_was_down = rmb
 
 	# Left button edges: a click selects a target, a drag orbits the camera.
 	if lmb and not _lmb_was_down:
