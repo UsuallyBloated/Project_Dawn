@@ -610,10 +610,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **And Gate returns you to where you cast it**, because `set_bind_point(zone_path, "default", ...)`
   stores a **zone and entry id, not a position**, so Gate resolves to the zone's default entry. In a
   one-zone game that is roughly where you stand. Succor behaves the same way.
-  **Fix direction:** one bind, server-owned. The server already persists a real position; the client
-  should learn it (there is no bind message going the other way — see the bind confirmation added
-  2026-08-23) and Gate should read that rather than its own legacy field. That folds into the
-  9-PORT-spells gap, since Gate is one of them and needs server-side handling anyway.
+  **Fix direction:** one bind, server-owned, **as its own sprint** (agreed 2026-08-24). The server
+  already persists a real position; the client should learn it (there is no message carrying it —
+  the 2026-08-23 bind confirmation is chat text, not data) and Gate should read that rather than its
+  own legacy field, which is vestigial from the offline era. Deliberately not patched quickly,
+  because this is the bind system that produced the first tester's unwinnable death loop.
+  **Sprint scope, and it is smaller than the To-Do implies.** The "9 PORT spells" line
+  miscategorises the work:
+  | Spell | Actually blocked on |
+  |---|---|
+  | Gate, Succor, Evacuate | **server handling** — implementable now, no new content |
+  | 4x `Teleport:`, 3x `Circle of` | **seven zone scenes that do not exist** (`scenes/zones/` has never existed) — content, not engineering |
+  So the sprint is: server-side `PORT` for the bind-return / same-zone cases (3 spells), server-side
+  `BIND` for Bind Affinity, a wire addition so the client learns its bind position (protocol bump,
+  gdext rebuild, re-export), Gate reading it, and retiring `PlayerStats.bind_zone_path`. Server
+  support for the other seven would be moot — there is nowhere to send anyone.
 - [ ] **The vendor window claims a quantity and price the server never agreed to** *(found
   2026-08-24; **BUILT 2026-08-24, pending playtest** — client `vendor_window.gd`, needs a
   re-export)*. Chat correctly said "Only 7 fit in your bags." while the vendor dialog said
