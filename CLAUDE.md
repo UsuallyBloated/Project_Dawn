@@ -615,14 +615,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   2026-08-23) and Gate should read that rather than its own legacy field. That folds into the
   9-PORT-spells gap, since Gate is one of them and needs server-side handling anyway.
 - [ ] **The vendor window claims a quantity and price the server never agreed to** *(found
-  2026-08-24)*. Chat correctly said "Only 7 fit in your bags." while the vendor dialog said
+  2026-08-24; **BUILT 2026-08-24, pending playtest** — client `vendor_window.gd`, needs a
+  re-export)*. Chat correctly said "Only 7 fit in your bags." while the vendor dialog said
   "Ordered Honey x20 for 1s." `vendor_window.gd:366-370` prints its success line the instant it
   sends, using a quantity and a price it computed **itself**, before the server has answered. The
   server half is fixed (it now reports every refusal); this is the remaining client half.
-  **Fix:** stop claiming success before confirmation. Either say something non-committal
-  ("Requested X from the vendor") or drop the line entirely and let the server's `CoinsUpdate` and
-  `InventoryDelta` speak, which is what actually happened. The sell path does the same thing with a
-  price computed at `vendor_window.gd:394-396`. Client-side, so it needs a re-export.
+  **Fixed by describing the REQUEST, never the outcome:** "Asked the merchant for Honey x20." and
+  "Offered Iron Short Sword to the merchant.", with no price asserted. The outcome is the server's
+  to report — a refusal arrives as a chat line, a success shows up as the items and coin actually
+  changing. The sell path had it worse and got the same treatment: its price was computed locally as
+  `vendor_price / 2` for an intent with **seven** silent refusal paths, so a player could be shown a
+  coin total for a sale that never happened.
+  **Note this is not a shift of authority.** The vendor transaction has been server-authoritative
+  since Track 14 — the server looks up the item, computes the price from `vendor_price`, validates
+  coin and bag space, charges, and fans `CoinsUpdate` + `InventoryDelta`. The client was only
+  narrating an outcome it could not know. The offline paths still transact locally and keep their
+  "Purchased" / "Sold" wording, which is accurate there.
 
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,

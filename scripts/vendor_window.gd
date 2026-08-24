@@ -364,10 +364,19 @@ func _do_buy() -> void:
 			_set_result("You don't have enough coins.", false)
 			return
 		Net.broadcast_buy_item(0, item.item_name, _qty)
-		_set_result("Ordered %s%s for %s." % [
+		# Describe what was REQUESTED, never what happened. This used to print
+		# "Ordered X x20 for 1s" the instant it sent, using a quantity and a
+		# price computed right here — so when the server refused for full bags,
+		# or filled only part of the order, the player had already been told
+		# otherwise. A 2026-08-24 playtest saw "Only 7 fit in your bags." in chat
+		# beside "Ordered Honey x20 for 1s." in this very panel.
+		#
+		# The outcome is the server's to report: a refusal arrives as a chat
+		# line, and a success shows up as the items and the coin actually
+		# changing. Neither needs narrating from here.
+		_set_result("Asked the merchant for %s%s." % [
 			item.item_name,
-			" x%d" % _qty if _qty > 1 else "",
-			_price_text(total)], true)
+			" x%d" % _qty if _qty > 1 else ""], true)
 		_qty = 1
 		_refresh_detail()
 		return
@@ -402,10 +411,14 @@ func _do_sell() -> void:
 		var location: String = slot.get("location", NetProtocol.INV_LOCATION_BASE)
 		var slot_idx: int = slot.get("slot_idx", 0)
 		Net.broadcast_sell_item(location, slot_idx, actual_qty)
-		_set_result("Sold %s%s for %s." % [
+		# Same rule as the buy path above, and this one had it worse: the price
+		# shown was computed here as vendor_price / 2 for an intent with seven
+		# silent refusal paths, so a player could be shown a coin total for a
+		# sale that never happened. The server computes the credit and fans a
+		# CoinsUpdate; let that be the answer.
+		_set_result("Offered %s%s to the merchant." % [
 			item.item_name,
-			" x%d" % actual_qty if actual_qty > 1 else "",
-			_price_text(total)], true)
+			" x%d" % actual_qty if actual_qty > 1 else ""], true)
 		_selected_index = -1
 		_qty = 1
 		return
