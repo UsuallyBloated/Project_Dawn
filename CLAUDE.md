@@ -598,26 +598,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `CompleteQuest` against the quest's turn-in NPC — copying `RES_CAST_RANGE`/`LOOT_PICKUP_RANGE`.
   **Closes the standing "`BuyItem` ignores `vendor_id`" gap and the Banker proximity gate deferred
   from the Banker MVP, in one pass.** Server-only: push + R720 restart, no re-export.
-- [ ] **Tradeskills create phantom items and can cause real item loss** *(found 2026-08-24;
-  **GUARD BUILT 2026-08-24, pending playtest** — client `mining_node.gd` / `crafting.gd` /
-  `enemy.gd`, `tradeskill_guard_checklist.md`, needs a re-export)*.
-  Mining, skinning and crafting all end in a bare local `Inventory.add_item()` (`mining_node.gd:46`,
-  `enemy.gd:171`, `crafting.gd:132`) with **no** `Net` call and **no** `is_launcher_mode()` guard,
-  and the stations + ore veins are instanced in `world.tscn` with a server-backed Pickaxe on sale
-  — so the whole loop is reachable online and *looks* like it works. The created item is a
-  client-only ghost that evaporates on the next `InventorySnapshot` (relog); the same "items get hung
-  up / vanished" signature the Stack All desync already chased down. **The sharp edge, worse than a
-  ghost:** `crafting.gd:126` removes the *real* ingredients from the client mirror only, while the
-  server still holds them, so the client's slot indices drift out of alignment with the server's. The
-  player then right-clicks an item they can **see** and authorises a Sell/Destroy, and the server
-  executes that slot-indexed op **against a different, real item** — legitimate action, real item
-  destroyed. Also: crafting skill levels never persist (`Crafting._skill_levels` resets to 0 each
-  launch), so high-skill veins are permanently unreachable.
-  **Ship first (one line each):** guard `mining_node.gd` `try_mine`, `crafting.gd` `try_combine`, and
-  `enemy.gd` `try_skin` on `Net.is_launcher_mode()` with an honest "not available online yet".
-  Converts silent wrong-item destruction into a clear "not built". Client-only, needs a re-export.
-  Real server-authoritative tradeskills (mirroring the `CompleteQuest` pattern — grant nothing
-  optimistically, wait for the server) are a later, larger build.
+- [x] **Tradeskills create phantom items and can cause real item loss** — **DONE + playtested
+  2026-08-24** (client `a065a19`, `tradeskill_guard_checklist.md`: every online row passes; the
+  three Test Room regression rows were skipped, offline path untouched by inspection). What exists
+  is in systems_overview → Items/economy. Mining, crafting and skinning now refuse honestly in
+  launcher mode ("isn't available online yet") **before touching anything**, closing both the
+  phantom-item ghost and the sharp edge — crafting deleting real ingredients from the client
+  mirror and desyncing slot indices so a legitimate Sell/Destroy hit the wrong real item. Log
+  proof: Pickaxe + ore in hand, zero tradeskill wire traffic, and a post-refusal inventory
+  shuffle with zero `source slot empty` rejections. **Real server-authoritative tradeskills**
+  (the CompleteQuest pattern) remain a later build — tracked under Tradeskill depth.
 - [ ] **Active skills partly do not work online, and three abort with silent runtime errors** *(found
   2026-08-24; content gap, no security surface — the swing-rate limiter blocks skill-spam abuse)*.
   Three failure modes at once: (a) **damage multipliers discarded** — Backstab 3.0x, Harm Touch
@@ -637,16 +627,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   branch (a one-line fix). Real server-authoritative active skills are their own build. Also correct
   the **stale comment at `tick.rs:3603`** claiming a client-side movement cast-cancel that does not
   exist, before someone trusts it as a backstop.
-- [ ] **Right-click is the world-interact verb** *(requested 2026-08-24; **BUILT 2026-08-24,
-  pending playtest** — `right_click_interact_checklist.md`, ships with the tradeskill guard
-  re-export)*. One mouse grammar everywhere: right-click (tap) interacts — NPC talk/vendor/bank,
-  corpse + bag loot, mining, stations, skinning — and left-click only targets; a right-*drag* is
-  still the camera, split by the same 6px threshold left-click targeting uses. Corpses: left-click
-  keeps *targeting* (a Cleric needs the corpse as a res cast target); right-click targets AND
-  loots. The proximity-F chain is retired, deliberately: it interacted with anything nearby with
-  no cursor work at all, the easiest thing to bot. Central router `Targeting.interact_at()`;
-  ranges mirror the old F values exactly. Real bot resistance still needs the server-side
-  proximity gate (separate item above) — this raises the client-side cost, that enforces it.
+- [x] **Right-click is the world-interact verb** — **DONE + playtested 2026-08-24** (client
+  `fa2ff04`, all 13 rows of `right_click_interact_checklist.md`). One mouse grammar everywhere:
+  right-click (tap) interacts — NPC talk/vendor/bank, corpse + bag loot, veins, stations,
+  skinning — left-click only targets, a right-*drag* is still the camera (same 6px threshold as
+  left-click targeting), and the proximity-F chain is retired for bot resistance. Corpses:
+  left-click keeps targeting for res casts; right-click targets AND loots. The camera section
+  playtested clean — drags starting over NPCs/corpses open nothing. Central router
+  `Targeting.interact_at()`; ranges unchanged from the F values. The same session also exercised
+  a full death→res cycle on the 08-23 offer-consumption rewrite (`refund=82156`), verifying the
+  riskiest recent server change incidentally.
 - [ ] **`CancelCast` is a missing feature, not a broken one** *(found 2026-08-24, low priority)*.
   There is no player-facing way to abort a cast — no keybind, ESC handler, cancel button, or
   movement cancel; `Spells.cancel_cast()`'s only callers are an interrupt path that early-returns in
@@ -949,6 +939,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   can.
 
 ### Tradeskill depth
+- [ ] **Server-authoritative tradeskills** — mining/crafting/skinning currently refuse online
+  (guarded 2026-08-24 after the phantom-item finding); building them for real means the
+  CompleteQuest pattern (client sends intent, grants nothing optimistically, server owns the
+  roll/ingredients/skill-ups + persists skill levels, which currently reset every launch) plus
+  server-side node state. Pairs naturally with the NPC proximity-gate table, since nodes need
+  server positions too.
 - [ ] **Consumables system** (food/drink regen loop, fermentation, ritual components)
 - [ ] **Bookbinding / player-authored lore**
 - [ ] **Clockwork Engineering prestige** (Tinkering 150+ for Gnomes/Kobolds)

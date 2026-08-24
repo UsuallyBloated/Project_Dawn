@@ -245,6 +245,11 @@ new player think the game is broken. The first category is what loses you a test
       named mob, so even offline the only way to meet one was the debug panel. The server now owns
       their stats, enrage and drops; the log confirms 175 health rather than 50, harder hits below
       a fifth health, and the fang on every kill.
+- **Tradeskills could destroy real items through slot desync.** ✅ Done + playtested 2026-08-24.
+      Mining, crafting and skinning ran client-local but were reachable online; crafting deleted
+      real ingredients from the client's mirror, so a later legitimate Sell/Destroy executed
+      against a different real item. All three now refuse honestly online. Real server-side
+      tradeskills are a later build.
 - **The server refused actions without telling anyone.** ✅ Done + playtested 2026-08-24. Surfaced
       by a tester buying with full bags and watching the item "disappear". An audit found 62 silent
       rejection arms against 40 that answered: the server logged a refusal and moved on, so the
@@ -344,6 +349,6 @@ rather than via a chat line after the fact.
 | 0. Reconcile | Jul 16 to Jul 17 | **Done (2026-07-17)** — doc reconciliation complete; `CORPSE_LINGER_SECS` raised to 7 days (user-accepted, pure value change); duplicate-name trap resolved via rename |
 | 1. Exploit gate | Jul 20 to Jul 31 | ✅ **COMPLETE (2026-07-31, on schedule)** — all seven gates done & playtested: keystone (`is_gm`), Respawn dead-check, attack-while-seated, cast class/level, `Attack` weapon_path, melee swing-rate limit, login rate-limit + auth-timing. Open caveat (not blocking): the swing-rate haste row is unit/design-covered but never eye-tested. |
 | 2. Host + first friend | Aug 3 to Aug 7 | ✅ **COMPLETE (2026-08-11, 4 days late)** — hosted on a physical R720 over Tailscale (not a VPS, not port-forwarding); phase included building the machine from bare metal because it arrived unbootable. Closed on tester evidence: a second person, on her own machine, registered, made a character, killed something, grouped, and logged out clean. Backups nightly to a second array plus weekly off-site, restore verified. Two findings opened: the respawn death-loop and the login rate limiter forcing a duplicate account. |
-| 3. Stop it eating things | Aug 10 to Aug 21 (**ran long**, decided 2026-08-20) | **In progress** — 8 done: bank Items-tab blank slots (08-17), bag click grammar (08-18), the inventory/server desync (08-20, origin `Stack All`), cross-store transfer atomicity, the `stack_size` merge cap and server-side named mobs (all 08-21), and the silent-refusal audit (08-24, 36 sites). **Six of the eight had been recorded under a cause that was wrong**, which is now a standing rule: treat a to-do's stated cause as a hypothesis. Open: unclean-kill relogin (blocked on a re-test), plus findings from the 08-24 run — Gate and the Soul Binder read different bind points, and the vendor panel overclaims. |
+| 3. Stop it eating things | Aug 10 to Aug 21 (**ran long**, decided 2026-08-20) | **In progress** — 9 done: bank Items-tab blank slots (08-17), bag click grammar (08-18), the inventory/server desync (08-20, origin `Stack All`), cross-store transfer atomicity, the `stack_size` merge cap and server-side named mobs (all 08-21), the silent-refusal audit (08-24, 36 sites + mana refunds), and the tradeskill guard (08-24 — phantom items could get a *real* item destroyed via slot desync; all three tradeskills now refuse honestly online). Also shipped 08-24: right-click is the world-interact verb everywhere (one grammar, F retired, bot resistance). Open: unclean-kill relogin (blocked on a re-test), the NPC proximity-gate exploit, Gate/Soul Binder bind divergence (own sprint), vendor panel narration (built, pending playtest). |
 | 4. An evening's worth | Aug 24 to Sep 11 | Not started |
 | 5. Open the door | Sep 14 onward | Not started |

@@ -337,6 +337,22 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     which scans base before bags and so emptied bags into the main window) and lives once, in the
     main inventory window rather than in every bag. It only pairs stacks that fit, because the
     server's move-merge has no `stack_size` cap (open To-Do).
+  - **Right-click is the world-interact verb (2026-08-24, client-only).** One mouse grammar: a
+    right-click *tap* interacts — NPC dialogue/vendor/bank, corpse and bag looting, ore veins,
+    crafting stations, skinning — while left-click only ever targets, and a right-*drag* remains
+    the camera (split by the same 6px threshold left-click targeting uses, measured as accumulated
+    relative motion because the cursor parks during capture). Corpses: left-click targets (a res
+    caster needs that), right-click targets *and* loots. Routing is central in
+    `Targeting.interact_at()` — per-object `input_event` handlers fire on *press* and cannot tell a
+    tap from the start of a camera drag — and ranges mirror the old F-key values exactly (NPC/loot
+    6 m, gather 3 m). The proximity-F chain is retired deliberately: it interacted with anything
+    nearby with zero cursor work, the easiest possible thing to bot.
+  - **Tradeskills refuse honestly online (2026-08-24, client-only).** Mining, crafting and skinning
+    were client-local (`Inventory.add_item()` with no server call) yet reachable online, creating
+    phantom items — and crafting deleted *real* ingredients from the client mirror, desyncing slot
+    indices so a legitimate Sell/Destroy executed against a different real item. All three entry
+    points now refuse in launcher mode before touching anything. Offline/Test Room unchanged. Real
+    server-authoritative tradeskills are an open item under Tradeskill depth.
   - **Loot mode** (per `Group`, leader-set, default Round Robin; `groups::LootMode`)
     governs **item turns only**: **Round Robin** rotates per corpse (lazy first-loot claim
     via `next_loot_turn`, "Not your turn to loot." otherwise); **FFA** lets any member loot

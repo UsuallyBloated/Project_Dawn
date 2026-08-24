@@ -25,38 +25,38 @@ same 6-pixel threshold left-click already uses to separate targeting from orbiti
 
 ## 1 — The verb works on everything
 
-- [ ] **Right-click Sister Maelis / a vendor / Thalia Mourne** → dialogue / vendor / bank window
+- [x] **Right-click Sister Maelis / a vendor / Thalia Mourne** → dialogue / vendor / bank window
       opens, and the NPC becomes your target. notes:
-- [ ] **Right-click an NPC from across the camp (>6 m)** → "You are too far away." and no window.
+- [x] **Right-click an NPC from across the camp (>6 m)** → "You are too far away." and no window.
       notes:
-- [ ] **Kill a mob, right-click its corpse/bag** → loot window opens. notes:
-- [ ] **Die, right-click your own corpse** → loot window opens (and the corpse is targeted).
+- [x] **Kill a mob, right-click its corpse/bag** → loot window opens. notes:
+- [x] **Die, right-click your own corpse** → loot window opens (and the corpse is targeted).
       notes:
-- [ ] **Right-click a crafting station** → crafting window opens. notes:
-- [ ] **Right-click an ore vein** → the mining refusal ("isn't available online yet") — proving
+- [x] **Right-click a crafting station** → crafting window opens. notes:
+- [x] **Right-click an ore vein** → the mining refusal ("isn't available online yet") — proving
       the click lands and the guard holds. notes:
 
 ## 2 — The camera is unharmed
 
 This is the regression that would actually hurt: every camera drag starts with the same button.
 
-- [ ] **Right-click-drag to steer, starting with the cursor over an NPC or corpse** → the camera
+- [x] **Right-click-drag to steer, starting with the cursor over an NPC or corpse** → the camera
       drags normally and NO window opens. notes:
-- [ ] **Normal camera feel** — spin the camera around for a minute; no accidental dialogues, no
+- [x] **Normal camera feel** — spin the camera around for a minute; no accidental dialogues, no
       loot windows. notes:
-- [ ] **A quick right-tap on empty ground** → nothing happens (no error, no message). notes:
+- [x] **A quick right-tap on empty ground** → nothing happens (no error, no message). notes:
 
 ## 3 — Left-click is target-only
 
-- [ ] **Left-click a corpse** → it becomes your target and NO loot window opens. (A Cleric needs
+- [x] **Left-click a corpse** → it becomes your target and NO loot window opens. (A Cleric needs
       exactly this to cast Reclaim Soul.) notes:
-- [ ] **Cast a res on a left-click-targeted corpse** → still works end to end. notes:
-- [ ] **Left-click an enemy** → targets, as always. notes:
+- [x] **Cast a res on a left-click-targeted corpse** → still works end to end. notes:
+- [x] **Left-click an enemy** → targets, as always. notes:
 
 ## 4 — F is really gone
 
-- [ ] **Stand next to an NPC / vein / station and press F** → nothing happens. notes:
-- [ ] **Right-click something while a UI window is under the cursor** → the UI handles it (e.g.
+- [x] **Stand next to an NPC / vein / station and press F** → nothing happens. notes:
+- [x] **Right-click something while a UI window is under the cursor** → the UI handles it (e.g.
       inventory right-click still equips); the world does NOT also interact through the window.
       notes:
 
@@ -64,5 +64,13 @@ This is the regression that would actually hurt: every camera drag starts with t
 
 ## Result
 
-- Client build (`/version`):
-- Overall:
+- Client build: `fa2ff04-dirty`, exported 2026-08-24T21:56 UTC
+- Overall: **PASS — all 13 rows.** The camera section (the regression that would actually hurt)
+  is clean: drags starting over NPCs and corpses never open windows, and empty-ground taps are
+  silent. The screenshot shows the grammar in action: "You target AldricTheGuard." / "You target
+  SisterMaelis." (left-click targeting) beside "You loot:" lines from right-click corpse looting.
+
+**Bonus verification from the same session:** a complete death -> resurrection cycle ran on the
+2026-08-23 offer-consumption rewrite — corpse `2000000024` created, Reclaim Soul offered,
+accepted with `refund=82156` (the exact number in the tester's screenshot), corpse looted empty
+and despawned. The riskiest recent server change, exercised end to end incidentally.
