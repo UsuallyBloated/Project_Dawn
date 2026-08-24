@@ -596,6 +596,34 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **the exact rule wanted needs confirming** before building anything — most likely "merge within a
   bag, and within the base slots, but never move items between the two".
 
+- [ ] **Gate and the Soul Binder use two different bind points** *(found 2026-08-24 while
+  playtesting the refusals)*. Binding at Sister Maelis then casting Gate says *"You have no bind
+  point. Cast Bind Affinity first."* **There are two unconnected bind concepts:**
+  | | Set by | Read by |
+  |---|---|---|
+  | **Server bind** (`bind_x/y/z`) | the Soul Binder, via `broadcast_bind_at_current_location()` | **Respawn** |
+  | **Client bind** (`PlayerStats.bind_zone_path`) | casting Bind Affinity, `spells.gd:446` | **Gate** (`spells.gd:136`) |
+  The NPC sets the one Gate does not read. Casting Bind Affinity then sets the *client* field
+  locally — while the server refuses the BIND target type, which is now the "That magic has no
+  effect here yet." line — after which Gate starts working. That is the exact sequence the tester
+  hit.
+  **And Gate returns you to where you cast it**, because `set_bind_point(zone_path, "default", ...)`
+  stores a **zone and entry id, not a position**, so Gate resolves to the zone's default entry. In a
+  one-zone game that is roughly where you stand. Succor behaves the same way.
+  **Fix direction:** one bind, server-owned. The server already persists a real position; the client
+  should learn it (there is no bind message going the other way — see the bind confirmation added
+  2026-08-23) and Gate should read that rather than its own legacy field. That folds into the
+  9-PORT-spells gap, since Gate is one of them and needs server-side handling anyway.
+- [ ] **The vendor window claims a quantity and price the server never agreed to** *(found
+  2026-08-24)*. Chat correctly said "Only 7 fit in your bags." while the vendor dialog said
+  "Ordered Honey x20 for 1s." `vendor_window.gd:366-370` prints its success line the instant it
+  sends, using a quantity and a price it computed **itself**, before the server has answered. The
+  server half is fixed (it now reports every refusal); this is the remaining client half.
+  **Fix:** stop claiming success before confirmation. Either say something non-committal
+  ("Requested X from the vendor") or drop the line entirely and let the server's `CoinsUpdate` and
+  `InventoryDelta` speak, which is what actually happened. The sell path does the same thing with a
+  price computed at `vendor_window.gd:394-396`. Client-side, so it needs a re-export.
+
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
