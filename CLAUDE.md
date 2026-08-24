@@ -571,7 +571,76 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   rejections only a forged client can reach.
   **Also found:** 9 declared wire intents have no handler at all (`UseSkill`, `CancelCast`,
   `StackAll`, `Interact`, `DialogueResponse`, `TurnInQuest`, `StartCombine`, `StartMining`,
-  `StartSkinning`) — they hit `_ => Outcome::Continue` with no log and no reply.
+  `StartSkinning`) — they hit `_ => Outcome::Continue` with no log and no reply. **Audited
+  2026-08-24**; the outcome is the three items directly below, plus these dispositions to save a
+  re-audit: `StackAll` and `TurnInQuest` are correctly dead (superseded by `MoveItem` and
+  `CompleteQuest`) and could be deleted from the protocol; `Track` needs no wire message and works;
+  `Interact`/`DialogueResponse` as *conversation* are fine client-local, but the *proximity gate*
+  a real `Interact` would have provided was never built — see the first item below.
+- [ ] **No server-side proximity gate on vendor / bank / quest turn-in** *(found 2026-08-24 by the
+  dead-intents audit; **Medium exploit**)*. Because `Interact` was never built, the server has no NPC
+  position model, so nothing checks *where the player is standing*. Confirmed against `tick.rs`:
+  combat, spell targeting, resurrection (`RES_CAST_RANGE`), corpse loot and loot bags
+  (`LOOT_PICKUP_RANGE`) all range-check; **vendor, bank and quest turn-in do not**. A modified client
+  can therefore: (a) `BankStoreItem` its whole inventory from the bottom of a dungeon one second
+  before dying, so the corpse holds nothing and the **gear-loss half of the death penalty is
+  voided**; (b) buy/sell with no vendor nearby, and buy any `items.toml` entry with `vendor_price>0`
+  regardless of which vendor stocks it (`BuyItem`'s `vendor_id` is explicitly informational); (c)
+  turn in quests, collecting real server-granted rewards + XP, without walking to the NPC. An honest
+  client cannot (a 6 m gate lives at `hud.gd`), which is exactly why the gate must move server-side.
+  **Not a mint** — no items/coins/XP the server did not authorise; coins are spent at registry
+  price and quest objectives are still verified. Medium because it nullifies a *designed consequence*
+  (corpse-run stakes) and vendor access control is currently decorative.
+  **Fix:** a small static NPC-position table (toml alongside `items.toml`), then honour `vendor_id`
+  and range-check `BuyItem`/`SellItem` against that vendor, the four bank ops against the banker, and
+  `CompleteQuest` against the quest's turn-in NPC — copying `RES_CAST_RANGE`/`LOOT_PICKUP_RANGE`.
+  **Closes the standing "`BuyItem` ignores `vendor_id`" gap and the Banker proximity gate deferred
+  from the Banker MVP, in one pass.** Server-only: push + R720 restart, no re-export.
+- [ ] **Tradeskills create phantom items and can cause real item loss** *(found 2026-08-24; not an
+  exploit, but it destroys real items on a reachable path — guard before the next tester build)*.
+  Mining, skinning and crafting all end in a bare local `Inventory.add_item()` (`mining_node.gd:46`,
+  `enemy.gd:171`, `crafting.gd:132`) with **no** `Net` call and **no** `is_launcher_mode()` guard,
+  and the stations + ore veins are instanced in `world.tscn` with a server-backed Pickaxe on sale
+  — so the whole loop is reachable online and *looks* like it works. The created item is a
+  client-only ghost that evaporates on the next `InventorySnapshot` (relog); the same "items get hung
+  up / vanished" signature the Stack All desync already chased down. **The sharp edge, worse than a
+  ghost:** `crafting.gd:126` removes the *real* ingredients from the client mirror only, while the
+  server still holds them, so the client's slot indices drift out of alignment with the server's. The
+  player then right-clicks an item they can **see** and authorises a Sell/Destroy, and the server
+  executes that slot-indexed op **against a different, real item** — legitimate action, real item
+  destroyed. Also: crafting skill levels never persist (`Crafting._skill_levels` resets to 0 each
+  launch), so high-skill veins are permanently unreachable.
+  **Ship first (one line each):** guard `mining_node.gd` `try_mine`, `crafting.gd` `try_combine`, and
+  `enemy.gd` `try_skin` on `Net.is_launcher_mode()` with an honest "not available online yet".
+  Converts silent wrong-item destruction into a clear "not built". Client-only, needs a re-export.
+  Real server-authoritative tradeskills (mirroring the `CompleteQuest` pattern — grant nothing
+  optimistically, wait for the server) are a later, larger build.
+- [ ] **Active skills partly do not work online, and three abort with silent runtime errors** *(found
+  2026-08-24; content gap, no security surface — the swing-rate limiter blocks skill-spam abuse)*.
+  Three failure modes at once: (a) **damage multipliers discarded** — Backstab 3.0x, Harm Touch
+  2.5x, Aimed Shot 3.0x, Flying Kick 2.2x go through `combat.gd:368` as a plain `Attack`, so the
+  server rolls a *normal* swing and the multiplier is worth nothing; worse, that Attack shares the
+  main-hand swing-rate limiter with auto-attack, so a skill fired mid-cycle is dropped for zero after
+  the client already spent stamina + started a 6-20s cooldown. (b) **Three effects throw silent
+  GDScript errors** — Shield Bash (`stun`), Feign Death (`feign_death_deaggro`) and Warder's Fury
+  (`set_attack_target`) call methods that exist only on the *local* `Enemy`/`Pet`, which do not exist
+  in launcher mode; the calls abort mid-function and are invisible (engine errors do not reach
+  `debug.log` or the console). (c) **Evade/Hide/Holy Shield are decoration** — consumed only in
+  `Combat.receive_player_damage`, which is not called for server-dealt damage.
+  **Cheap correctness now:** `has_method()` guards / no-op stubs on `RemoteEnemy`/`RemotePet` for
+  `stun`/`root`/`snare`/`feign_death_deaggro`/`set_attack_target` (matching the existing
+  `get_spell_resist` precedent) so a missing method degrades to nothing-happens instead of aborting;
+  and redirect Warder's Fury to `PetManager.command_attack`, which already has a working launcher
+  branch (a one-line fix). Real server-authoritative active skills are their own build. Also correct
+  the **stale comment at `tick.rs:3603`** claiming a client-side movement cast-cancel that does not
+  exist, before someone trusts it as a backstop.
+- [ ] **`CancelCast` is a missing feature, not a broken one** *(found 2026-08-24, low priority)*.
+  There is no player-facing way to abort a cast — no keybind, ESC handler, cancel button, or
+  movement cancel; `Spells.cancel_cast()`'s only callers are an interrupt path that early-returns in
+  launcher mode and the server's `CastFail` handler. The server's cast state does *not* leak (the
+  client only sends `CastSpell` on completion), so this is purely a UX gap: walk away mid-cast and
+  you eat a "moved during cast" rejection with the mana visually spent and no way to abort on
+  purpose. Ties into the stale `tick.rs:3603` comment above.
 - [ ] **Bank coin deposit will not break a larger coin** *(found 2026-08-21; **BUILT 2026-08-21,
   pending playtest** — `Coins::take_breaking_higher`, applied to deposit AND withdraw)*. With
   `1p 5g 5s 75c`, depositing `6s` is refused ("You don't have that coin to deposit") rather than
