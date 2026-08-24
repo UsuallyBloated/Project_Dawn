@@ -36,9 +36,22 @@ Refusals appear as a plain line in your chat window, with no speaker.
 The client spends mana, starts the cooldown and applies local buffs **before** it sends the cast,
 so a refusal used to drain the bar for nothing.
 
-- [ ] **Cast a spell the server doesn't know** — one of the ~32 client-only spells — → "That spell
-      fizzles — it isn't known here yet." **and your mana comes back.** The bar should visibly
-      refill. notes:
+**Which spell to use.** Diffing `spell_definitions.gd` against the server's `spells.toml` gives
+exactly **32** client-only spells, matching the documented count. Most need a class you are not, or
+a prestige class that does not exist yet. The one your Paladin can actually cast:
+
+| Spell | Class | Min level | Mana |
+|---|---|---|---|
+| **Judgment** | Paladin | 12 | 40 |
+
+Others, if you switch character: `Torpor` (Shaman 20), `Gate` / `Evacuate` / `Succor` and the four
+`Teleport:` spells (Druid/Wizard, all PORT), `Entangle` (Druid 6), `Warder's Mend` (Beast Master,
+PET_HEAL). The `Paladin_Fallen` and `Shadow Knight_Redeemed` ones are unreachable — those prestige
+classes are not implemented.
+
+- [ ] **Cast Judgment** (client-only, so the server has never heard of it) → "That spell fizzles —
+      it isn't known here yet." **and your 40 mana comes back.** The bar should dip and refill.
+      notes:
 - [ ] **Nuke something out of range** → "That target is too far away." notes:
 - [ ] **Cast a PORT / gate / evac spell** → "That magic has no effect here yet." notes:
 - [ ] **Normal spells are completely unaffected** — damage, heals, buffs all as before. notes:
