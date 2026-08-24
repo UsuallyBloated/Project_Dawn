@@ -596,6 +596,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **the exact rule wanted needs confirming** before building anything — most likely "merge within a
   bag, and within the base slots, but never move items between the two".
 
+- [ ] **Audit the schedule and the To-Do for accuracy end to end** *(raised 2026-08-24 by the user:
+  "the schedule seemed a bit fucked... it's just a pile of inaccurate information. Some boxes are
+  checked, and others aren't even though the task is listed as Done. This needs a review or 10.")*.
+  **The concern is well founded**, and there is hard evidence: on 2026-08-24 `schedule.md` and
+  `schedule.html` were found drifted in **opposite** directions (named mobs done in one and open in
+  the other, atomic transfers stale in both, and neither carried the `stack_size` cap or the
+  silent-refusal work). Either file read alone looked plausible, which is the worst kind of wrong.
+  Fixed in `433fc69`, but that was one spot check, not an audit.
+  **Suspected causes, to confirm rather than assume:** (a) the tick gate says update both schedule
+  copies in the same pass, and that has been missed more than once; (b) work that arrives as a
+  *finding* rather than a planned bullet (the whole refusal audit) never gets added to the schedule
+  at all, so the phase looks emptier than it is; (c) the To-Do and the schedule describe the same
+  work in different words, so neither reads as authoritative; (d) **six of the eight closed Phase 3
+  items were originally recorded under a cause that was wrong**, so even accurate checkboxes sit
+  next to inaccurate descriptions.
+  **Scope when picked up:** walk every schedule bullet and every To-Do entry against the session
+  notes and the git history, reconcile the two schedule copies line by line, and decide whether the
+  schedule should keep prose descriptions at all or just point at the To-Do. Worth doing as its own
+  pass with fresh eyes, not squeezed alongside feature work.
+
 - [ ] **Gate and the Soul Binder use two different bind points** *(found 2026-08-24 while
   playtesting the refusals)*. Binding at Sister Maelis then casting Gate says *"You have no bind
   point. Cast Bind Affinity first."* **There are two unconnected bind concepts:**
