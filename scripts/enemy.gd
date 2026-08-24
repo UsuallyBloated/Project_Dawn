@@ -156,6 +156,12 @@ func _build_default_loot_table() -> LootTable:
 	return table
 
 func try_skin() -> String:
+	# Same guard as mining/crafting: the pelt would exist only client-side and
+	# desync the slot indices. (Online this path is doubly unreachable — local
+	# Enemy nodes aren't spawned in launcher mode — but the guard keeps that
+	# truth in one obvious place instead of relying on scene wiring.)
+	if Net.is_launcher_mode():
+		return "Skinning isn't available online yet."
 	if state != State.DEAD:
 		return "That isn't dead yet."
 	if _has_been_skinned:

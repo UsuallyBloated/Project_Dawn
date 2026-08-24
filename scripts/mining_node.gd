@@ -28,6 +28,14 @@ func _ready() -> void:
 		label.text = ore_type
 
 func try_mine() -> String:
+	# Tradeskills are client-local: the ore would be added by a bare local
+	# Inventory.add_item() the server never hears about. Online that makes a
+	# phantom item that vanishes on relog, and worse, shifts the client's slot
+	# indices out of line with the server's so a later right-click can destroy
+	# the WRONG real item. Refuse honestly until tradeskills go through the
+	# server (the CompleteQuest pattern: grant nothing optimistically).
+	if Net.is_launcher_mode():
+		return "Mining isn't available online yet."
 	if _depleted:
 		return "This vein is depleted."
 	var level := Crafting.get_skill_level("Mining")

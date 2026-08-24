@@ -92,6 +92,14 @@ func gain_skill_xp(skill_name: String, amount: int) -> void:
 # Attempts a crafting combine. Returns a human-readable result string.
 # XP is only granted below trivial_at.
 func try_combine(recipe: Dictionary, tradeskill: String) -> String:
+	# Client-local crafting is actively dangerous online, not just cosmetic: it
+	# deletes the REAL ingredients from the client mirror while the server still
+	# holds them, so every slot index below drifts out of alignment and a later
+	# Sell/Destroy the player legitimately clicks executes against a different,
+	# real item. Refuse before touching anything, until crafting goes through
+	# the server.
+	if Net.is_launcher_mode():
+		return "Crafting isn't available online yet."
 	if not can_access_skill(tradeskill):
 		return "You do not have access to %s." % tradeskill
 

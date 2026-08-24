@@ -596,8 +596,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `CompleteQuest` against the quest's turn-in NPC — copying `RES_CAST_RANGE`/`LOOT_PICKUP_RANGE`.
   **Closes the standing "`BuyItem` ignores `vendor_id`" gap and the Banker proximity gate deferred
   from the Banker MVP, in one pass.** Server-only: push + R720 restart, no re-export.
-- [ ] **Tradeskills create phantom items and can cause real item loss** *(found 2026-08-24; not an
-  exploit, but it destroys real items on a reachable path — guard before the next tester build)*.
+- [ ] **Tradeskills create phantom items and can cause real item loss** *(found 2026-08-24;
+  **GUARD BUILT 2026-08-24, pending playtest** — client `mining_node.gd` / `crafting.gd` /
+  `enemy.gd`, `tradeskill_guard_checklist.md`, needs a re-export)*.
   Mining, skinning and crafting all end in a bare local `Inventory.add_item()` (`mining_node.gd:46`,
   `enemy.gd:171`, `crafting.gd:132`) with **no** `Net` call and **no** `is_launcher_mode()` guard,
   and the stations + ore veins are instanced in `world.tscn` with a server-backed Pickaxe on sale
