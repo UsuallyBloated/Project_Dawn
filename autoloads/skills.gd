@@ -34,6 +34,24 @@ func use_skill(skill: SkillData) -> bool:
 	if Combat.is_player_seated():
 		CombatLog.add_line("You cannot use skills while sitting.", CombatLog.MsgType.INFO)
 		return false
+	# Effects the server cannot honor yet refuse honestly ONLINE, before any
+	# stamina or cooldown is paid. Found by the 2026-08-24 dead-intents audit:
+	# STUN and FEIGN_DEATH called methods that exist only on the local Enemy
+	# (which launcher mode never spawns), aborting with a silent runtime error
+	# AFTER the cost was spent; EVADE/ABSORB/STEALTH "worked" but were pure
+	# decoration, consumed only by receive_player_damage, which server-dealt
+	# damage never calls. An honest refusal beats a placebo — the tradeskill
+	# rule. Pure damage skills (Backstab etc.) stay usable: they land as normal
+	# server swings (the discarded multiplier is server work, tracked).
+	if Net.is_launcher_mode():
+		match skill.effect_type:
+			SkillData.EffectType.STUN, SkillData.EffectType.FEIGN_DEATH, 			SkillData.EffectType.EVADE_BOOST, SkillData.EffectType.ABSORB_SHIELD, 			SkillData.EffectType.STEALTH:
+				CombatLog.add_line(
+					"%s isn't available online yet." % skill.skill_name,
+					CombatLog.MsgType.INFO)
+				return false
+			_:
+				pass
 	if _cooldowns.is_active(skill.skill_name) and not no_cooldowns:
 		return false
 	if PlayerStats.stamina < skill.stamina_cost:

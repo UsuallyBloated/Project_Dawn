@@ -150,6 +150,36 @@ func take_damage(_amount: int) -> void:
 func get_spell_resist(_damage_type: int) -> float:
 	return 0.0
 
+# ── CC no-op stubs ────────────────────────────────────────────────────────────
+# The spell paths call these directly on Combat.current_target
+# (spells.gd: root/snare/apply_attack_slow/silence), and skills.gd's STUN arm
+# calls stun() — all defined only on the local Enemy, which launcher mode never
+# spawns. Without these stubs the call aborts the WHOLE surrounding function
+# with a runtime error that never reaches debug.log (engine errors are
+# invisible to DebugLog), so everything after the CC line silently didn't
+# happen. The server has no enemy-CC model yet, so the honest behaviour online
+# is: the call lands, nothing visible happens, and the caller's remaining work
+# (damage text, stealth breaks, cast bookkeeping) completes. Same precedent as
+# get_spell_resist above. When server-side enemy CC lands, these become the
+# application points for replicated CC state.
+func stun(_duration: float) -> void:
+	pass
+
+func root(_duration: float) -> void:
+	pass
+
+func snare(_amount: float, _duration: float) -> void:
+	pass
+
+func apply_attack_slow(_amount: float, _duration: float) -> void:
+	pass
+
+func silence(_duration: float) -> void:
+	pass
+
+func feign_death_deaggro() -> void:
+	pass
+
 func flash_spell_hit(color: Color) -> void:
 	# Pure visual feedback when the local player casts on this mob.
 	# Authoritative outcome arrives separately via fan-out; this is just

@@ -56,8 +56,13 @@ func command_fury() -> void:
 	var target = Combat.current_target
 	if target == null or not is_instance_valid(target):
 		return
-	PetManager.active_pet.set_attack_target(target)
-	PetManager.pet_info.emit("Your warder lunges at the target!")
+	# Route through PetManager.command_attack, which already has the correct
+	# launcher branch (PetCommand::ATTACK over the wire) and the local path.
+	# The old direct set_attack_target() call exists only on the local Pet, so
+	# online it aborted with a silent runtime error and the warder never moved.
+	# command_attack emits its own attack line, so no extra flavor line here —
+	# two lines for one command read as a stutter.
+	PetManager.command_attack(target)
 
 # ── private ───────────────────────────────────────────────────────────────────
 

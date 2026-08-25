@@ -244,3 +244,16 @@ func _physics_process(_delta: float) -> void:
 	var t: float = clampf((target_time - a["time"]) / span, 0.0, 1.0)
 	global_position = (a["pos"] as Vector3).lerp(b["pos"], t)
 	rotation.y = lerp_angle(a["yaw"], b["yaw"], t)
+
+
+# ── No-op stubs (see the matching block in remote_enemy.gd) ───────────────────
+# WarderAI reaches for these on active_pet, and both exist only on the local
+# Pet. set_attack_target is superseded online by PetManager.command_attack
+# (PetCommand over the wire); heal will become real when pet heals replicate
+# (the Warder's Mend server gap, tracked in the To-Do). Until then: no crash,
+# nothing visible, caller completes.
+func set_attack_target(_target) -> void:
+	pass
+
+func heal(_amount: float) -> void:
+	pass

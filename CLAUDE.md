@@ -618,7 +618,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   shuffle with zero `source slot empty` rejections. **Real server-authoritative tradeskills**
   (the CompleteQuest pattern) remain a later build — tracked under Tradeskill depth.
 - [ ] **Active skills partly do not work online, and three abort with silent runtime errors** *(found
-  2026-08-24; content gap, no security surface — the swing-rate limiter blocks skill-spam abuse)*.
+  2026-08-24; **GUARDS BUILT 2026-08-25, pending playtest** — `active_skill_guards_checklist.md`,
+  rides the pending re-export; content gap, no security surface — the swing-rate limiter blocks skill-spam abuse)*.
   Three failure modes at once: (a) **damage multipliers discarded** — Backstab 3.0x, Harm Touch
   2.5x, Aimed Shot 3.0x, Flying Kick 2.2x go through `combat.gd:368` as a plain `Attack`, so the
   server rolls a *normal* swing and the multiplier is worth nothing; worse, that Attack shares the
@@ -636,6 +637,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   branch (a one-line fix). Real server-authoritative active skills are their own build. Also correct
   the **stale comment at `tick.rs:3603`** claiming a client-side movement cast-cancel that does not
   exist, before someone trusts it as a backstop.
+  **Built 2026-08-25:** STUN / FEIGN_DEATH / EVADE / ABSORB / STEALTH skills now refuse honestly
+  online *before* any stamina or cooldown is paid (the tradeskill rule: refusal beats placebo);
+  damage skills stay usable as normal swings. Warder's Fury routes through
+  `PetManager.command_attack`, so the warder actually attacks online. CC no-op stubs added to
+  `RemoteEnemy` (stun/root/snare/attack-slow/silence/feign-deaggro) and `RemotePet`
+  (set_attack_target/heal) — **the audit undersold this**: the spell paths call
+  root/snare/slow/silence directly on the target too, so every CC spell against a server enemy was
+  aborting its own cast function mid-way. The stale `tick.rs` comment is corrected (server
+  `9b320c8`): that movement gate is the ONLY cast-movement defence, not a backstop.
+  **Still open in this item:** the discarded damage multipliers (needs a server skill model), and
+  real server-side enemy CC (stun/root/slow as replicated state) — both server builds.
 - [x] **Right-click is the world-interact verb** — **DONE + playtested 2026-08-24** (client
   `fa2ff04`, all 13 rows of `right_click_interact_checklist.md`). One mouse grammar everywhere:
   right-click (tap) interacts — NPC talk/vendor/bank, corpse + bag loot, veins, stations,
