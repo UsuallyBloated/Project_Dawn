@@ -579,8 +579,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `CompleteQuest`) and could be deleted from the protocol; `Track` needs no wire message and works;
   `Interact`/`DialogueResponse` as *conversation* are fine client-local, but the *proximity gate*
   a real `Interact` would have provided was never built — see the first item below.
-- [ ] **No server-side proximity gate on vendor / bank / quest turn-in** *(found 2026-08-24 by the
-  dead-intents audit; **Medium exploit**)*. Because `Interact` was never built, the server has no NPC
+- [ ] **No server-side proximity gate on vendor / bank / quest turn-in** *(found 2026-08-24;
+  **BUILT 2026-08-25, pending playtest** — server `3b5359e` + a cosmetic client dialogue tweak;
+  `proximity_gate_checklist.md`)*. Because `Interact` was never built, the server has no NPC
   position model, so nothing checks *where the player is standing*. Confirmed against `tick.rs`:
   combat, spell targeting, resurrection (`RES_CAST_RANGE`), corpse loot and loot bags
   (`LOOT_PICKUP_RANGE`) all range-check; **vendor, bank and quest turn-in do not**. A modified client
@@ -597,7 +598,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   and range-check `BuyItem`/`SellItem` against that vendor, the four bank ops against the banker, and
   `CompleteQuest` against the quest's turn-in NPC — copying `RES_CAST_RANGE`/`LOOT_PICKUP_RANGE`.
   **Closes the standing "`BuyItem` ignores `vendor_id`" gap and the Banker proximity gate deferred
-  from the Banker MVP, in one pass.** Server-only: push + R720 restart, no re-export.
+  from the Banker MVP, in one pass.** Server-only: push + R720 restart (the client dialogue tweak
+  — dropping the optimistic bind line — is cosmetic and rides the next export).
+  **Built as:** new `npcs.toml` + `world/npcs.rs` position table (mirror of `world.tscn`, same
+  lockstep as items/quests), `NPC_SERVICE_RANGE = 15 m` (looser than the client's 6 m UI gate — a
+  remote-abuse backstop, never refusing an honest player; a unit test enforces that the starter
+  spawn reaches every town NPC). Gated: BuyItem/SellItem (vendor), all five bank loops (banker —
+  the death-penalty arm), CompleteQuest (new optional `turn_in_npc` in quests.toml; dev quests
+  stay ungated), BindAtCurrentLocation (soul_binder). Two integration tests prove it directly: a
+  buy from 200 m out is refused with no coin change, the same char at spawn buys fine.
 - [x] **Tradeskills create phantom items and can cause real item loss** — **DONE + playtested
   2026-08-24** (client `a065a19`, `tradeskill_guard_checklist.md`: every online row passes; the
   three Test Room regression rows were skipped, offline path untouched by inspection). What exists

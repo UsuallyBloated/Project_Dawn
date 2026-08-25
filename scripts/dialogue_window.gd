@@ -166,9 +166,12 @@ func _on_response(resp: Dictionary) -> void:
 			# In offline/Test Room there's no server, so say so rather than
 			# silently doing nothing.
 			if Net.is_launcher_mode():
+				# Send the intent and say nothing: the server answers both ways
+				# now ("Your soul is bound to this place." on success, a refusal
+				# when dead or out of range). This line used to claim success
+				# unconditionally, which meant a refused bind read as a granted
+				# one — the death loop's favourite disguise.
 				Net.broadcast_bind_at_current_location()
-				CombatLog.add_line(
-					"Your soul is bound to this place.", CombatLog.MsgType.INFO)
 			else:
 				CombatLog.add_line(
 					"Soul binding requires a server connection.", CombatLog.MsgType.INFO)
