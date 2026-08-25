@@ -385,6 +385,21 @@ func _physics_process(delta: float) -> void:
 	# Both buttons held → run forward, steered by the right-button mouselook.
 	var mouse_run := is_camera_active and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 
+	# EQ rule: moving cancels your cast, client-side and immediately. Until now
+	# NO deliberate cancel existed at all — the server's movement-during-cast
+	# gate (>5 m) was the only thing that stopped a walking caster, and it
+	# refuses the cast AFTER the mana was optimistically spent. Cancelling here
+	# refunds instantly (Spells.cancel_cast) and matches what the corrected
+	# server comment says the ideal client does.
+	if Spells.is_casting() and not chat_focused and (mouse_run or _autorun or
+			Input.is_action_pressed("move_forward") or
+			Input.is_action_pressed("move_left") or
+			Input.is_action_pressed("move_backward") or
+			Input.is_action_pressed("move_right") or
+			Input.is_action_pressed("jump")):
+		Spells.cancel_cast()
+		CombatLog.add_line("You stop casting.", CombatLog.MsgType.INFO)
+
 	if state == PlayerState.SITTING:
 		var moving := mouse_run or _autorun or (not chat_focused and (
 			Input.is_action_pressed("move_forward") or

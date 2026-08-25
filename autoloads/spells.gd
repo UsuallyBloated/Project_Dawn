@@ -173,9 +173,21 @@ func cast_by_index(index: int) -> bool:
 		return false
 	return cast_spell(available[index])
 
+func is_casting() -> bool:
+	return _casting != null
+
 func cancel_cast() -> void:
 	if _casting == null:
 		return
+	# Refund the mana. It was spent at cast START (before the bar), but the
+	# server only deducts when CastSpell arrives at completion — which a
+	# cancelled cast never sends — so the client's optimistic spend is the only
+	# record and would linger until the next server ManaUpdate overwrote it.
+	# Same principle as the server's unknown-spell refund: hand back what was
+	# never really taken. Applies to every cancel path (deliberate stop,
+	# server CastFail) and offline alike — in no cancel case was mana truly
+	# consumed anywhere.
+	PlayerStats.set_mp(minf(PlayerStats.mp + _casting.mana_cost, PlayerStats.max_mp))
 	_casting = null
 	_cast_timer = 0.0
 	_hit_during_cast = false

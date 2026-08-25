@@ -658,13 +658,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `Targeting.interact_at()`; ranges unchanged from the F values. The same session also exercised
   a full death→res cycle on the 08-23 offer-consumption rewrite (`refund=82156`), verifying the
   riskiest recent server change incidentally.
-- [ ] **`CancelCast` is a missing feature, not a broken one** *(found 2026-08-24, low priority)*.
-  There is no player-facing way to abort a cast — no keybind, ESC handler, cancel button, or
-  movement cancel; `Spells.cancel_cast()`'s only callers are an interrupt path that early-returns in
-  launcher mode and the server's `CastFail` handler. The server's cast state does *not* leak (the
-  client only sends `CastSpell` on completion), so this is purely a UX gap: walk away mid-cast and
-  you eat a "moved during cast" rejection with the mana visually spent and no way to abort on
-  purpose. Ties into the stale `tick.rs:3603` comment above.
+- [ ] **`CancelCast` is a missing feature, not a broken one** *(found 2026-08-24; **BUILT
+  2026-08-25, pending playtest** — `cancel_cast_checklist.md`, rides the pending re-export)*.
+  Movement (WASD/jump/autorun) and ESC now abort a live cast — ESC cancels the cast *before*
+  touching windows — with "You stop casting." and an immediate **mana refund**. The refund is the
+  substance: mana is spent optimistically at cast start, but the server only deducts when the
+  completed cast arrives, so on every cancel path (deliberate, and server interrupts too, which
+  share `cancel_cast`) nothing was ever truly taken and the client now says so instantly. This
+  also makes the corrected `tick.rs` movement-gate comment's ideal true: the client genuinely
+  cancels on movement now, with the server gate as the forged-client backstop it was meant to be.
+  **No wire change**: the dead `CancelCast` intent stays unsent — a dangling server-side CastStart
+  cache is overwritten by the next cast's own CastStart, so client-only cancel is clean. That
+  intent is now confirmed deletable alongside `StackAll`/`TurnInQuest`.
+  **Deliberate call, flagged not decided:** an interrupted cast also refunds (consistency with
+  server truth). Classic-EQ interrupts *eat* the mana; wanting that is a server design change —
+  deduct at CastStart — not a client tweak. One cosmetic gap: peers' view of a cancelled cast bar
+  runs out on its own (telling them needs the wire intent + a gdext rebuild; not worth it yet).
 - [ ] **Bank coin deposit will not break a larger coin** *(found 2026-08-21; **BUILT 2026-08-21,
   pending playtest** — `Coins::take_breaking_higher`, applied to deposit AND withdraw)*. With
   `1p 5g 5s 75c`, depositing `6s` is refused ("You don't have that coin to deposit") rather than
