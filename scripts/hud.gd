@@ -647,10 +647,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		if event.keycode == KEY_ESCAPE:
-			# A live cast is the most immediate thing on screen, so ESC aborts
-			# it before touching windows. Refund + bar clear live in
-			# Spells.cancel_cast.
-			if Spells.is_casting():
+			# ESC unwinds the most recent gesture first: a carried skill, then
+			# a live cast, then windows.
+			if SocialHotkeys.carried_skill != null:
+				SocialHotkeys.clear_skill_carry()
+				get_viewport().set_input_as_handled()
+			elif Spells.is_casting():
 				Spells.cancel_cast()
 				CombatLog.add_line("You stop casting.", CombatLog.MsgType.INFO)
 				get_viewport().set_input_as_handled()

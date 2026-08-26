@@ -29,6 +29,49 @@ var _save_timer: Timer = null
 signal bank_changed(bank_idx: int)
 signal slot_changed(bank_idx: int, slot_idx: int)
 signal library_changed
+# Skill pickup-and-place (2026-08-26, replaces the "Assign Skill..." context
+# menu, which did not work from the tester's seat). The spell book's Skills
+# tab starts a carry; the hotbar places it on an empty slot. Same grammar the
+# inventory cursor taught: click to pick up, click to place.
+signal skill_carry_changed(skill)
+
+var carried_skill: SkillData = null
+var _carry_ghost: Label = null
+var _carry_layer: CanvasLayer = null
+
+func begin_skill_carry(skill: SkillData) -> void:
+	carried_skill = skill
+	_ensure_carry_ghost()
+	_carry_ghost.text = skill.skill_name
+	_carry_layer.visible = true
+	skill_carry_changed.emit(skill)
+
+func clear_skill_carry() -> void:
+	if carried_skill == null:
+		return
+	carried_skill = null
+	if _carry_layer != null:
+		_carry_layer.visible = false
+	skill_carry_changed.emit(null)
+
+func _ensure_carry_ghost() -> void:
+	if _carry_layer != null:
+		return
+	_carry_layer = CanvasLayer.new()
+	_carry_layer.layer = 100
+	_carry_layer.visible = false
+	add_child(_carry_layer)
+	_carry_ghost = Label.new()
+	_carry_ghost.add_theme_font_size_override("font_size", 12)
+	_carry_ghost.add_theme_color_override("font_color", Color(1.0, 0.9, 0.55))
+	_carry_ghost.add_theme_color_override("font_outline_color", Color.BLACK)
+	_carry_ghost.add_theme_constant_override("outline_size", 3)
+	_carry_ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_carry_layer.add_child(_carry_ghost)
+
+func _process(_delta: float) -> void:
+	if carried_skill != null and _carry_ghost != null:
+		_carry_ghost.position = get_viewport().get_mouse_position() + Vector2(14.0, -6.0)
 
 func _ready() -> void:
 	_save_timer = Timer.new()

@@ -111,7 +111,7 @@ func _build() -> void:
 	_tabs.add_child(skills_tab)
 
 	var skill_hint := Label.new()
-	skill_hint.text = "Right-click an empty hotbar slot, then Assign Skill, to put one on your bar."
+	skill_hint.text = "Click a skill to pick it up, then click an empty hotbar slot to place it. ESC cancels."
 	skill_hint.add_theme_font_size_override("font_size", 10)
 	skill_hint.add_theme_color_override("font_color", UITheme.C_TEXT)
 	skill_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -252,6 +252,16 @@ Stamina: %d  CD: %s%s" % [
 		bg.add_theme_stylebox_override("panel", hover_style))
 	bg.mouse_exited.connect(func() -> void:
 		bg.add_theme_stylebox_override("panel", normal_style))
+	# Pickup-and-place: click attaches the skill to the cursor
+	# (SocialHotkeys carry ghost); a click on an empty hotbar slot places
+	# it. Clicking the carried skill again puts it back down.
+	bg.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			if SocialHotkeys.carried_skill == skill:
+				SocialHotkeys.clear_skill_carry()
+			else:
+				SocialHotkeys.begin_skill_carry(skill)
+			bg.accept_event())
 	return bg
 
 func _make_row(spell: SpellData) -> Panel:

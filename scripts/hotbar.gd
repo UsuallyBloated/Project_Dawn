@@ -29,7 +29,6 @@ var _tooltip_label: Label         = null
 
 var _ctx_menu: PopupMenu          = null
 var _spell_menu: PopupMenu        = null
-var _skill_menu: PopupMenu        = null
 var _ctx_slot: int                = -1
 
 var _social_win: Window           = null
@@ -347,7 +346,9 @@ func _build_spell_bar(bar_h: float) -> DraggablePanel:
 func _build_context_menu() -> void:
 	_ctx_menu = PopupMenu.new()
 	_ctx_menu.add_item("Assign Spell...",  0)
-	_ctx_menu.add_item("Assign Skill...",  1)
+	# "Assign Skill..." is gone (2026-08-26): it did not work from the
+	# tester's seat, and skills now assign by pickup-and-place from the
+	# book's Skills tab — click the skill, click an empty slot.
 	# Track 16.2 — Assign Social opens the library in pick mode (the
 	# clicked slot becomes the target). Manage Socials opens the same
 	# library in edit mode for create / edit / delete.
@@ -362,15 +363,21 @@ func _build_context_menu() -> void:
 	_spell_menu.id_pressed.connect(_on_spell_assign)
 	add_child(_spell_menu)
 
-	_skill_menu = PopupMenu.new()
-	_skill_menu.id_pressed.connect(_on_skill_assign)
-	add_child(_skill_menu)
 
 func _on_hotkey_input(event: InputEvent, slot: int) -> void:
 	if not (event is InputEventMouseButton and event.pressed):
 		return
 	var mb := event as InputEventMouseButton
 	if mb.button_index == MOUSE_BUTTON_LEFT:
+		# A carried skill (picked up from the book's Skills tab) places on an
+		# empty slot and does nothing on an occupied one — and never executes
+		# the slot mid-carry, or placing would fire abilities by accident.
+		if SocialHotkeys.carried_skill != null:
+			var sd_carry: Dictionary = SocialHotkeys.get_slot(slot)
+			if sd_carry.get("type", SocialHotkeys.TYPE_EMPTY) == SocialHotkeys.TYPE_EMPTY:
+				SocialHotkeys.set_slot_skill(slot, SocialHotkeys.carried_skill)
+				SocialHotkeys.clear_skill_carry()
+			return
 		# Track 17.1 — memorize gestures only resolve through the spell
 		# bar (where the cost + cast bar are enforced). Clicking the
 		# hotkey bar with a candidate held just executes the slot — the
@@ -393,7 +400,6 @@ func _on_hotkey_input(event: InputEvent, slot: int) -> void:
 func _on_ctx_menu_id(id: int) -> void:
 	match id:
 		0: _open_spell_assign_menu()
-		1: _open_skill_assign_menu()
 		2: _open_social_library(true)
 		3: SocialHotkeys.clear_slot(_ctx_slot)
 		4: _open_social_library(false)
@@ -402,11 +408,6 @@ func _open_spell_assign_menu() -> void:
 	var names: Array = []
 	for sp in Spells.available: names.append(sp.spell_name)
 	_open_assign_menu(_spell_menu, names, 0)
-
-func _open_skill_assign_menu() -> void:
-	var names: Array = []
-	for sk in Skills.available: names.append(sk.skill_name)
-	_open_assign_menu(_skill_menu, names, 1)
 
 func _open_assign_menu(menu: PopupMenu, names: Array, ctx_item_idx: int) -> void:
 	menu.clear()
@@ -421,11 +422,6 @@ func _on_spell_assign(id: int) -> void:
 	if id < 0 or id >= Spells.available.size():
 		return
 	SocialHotkeys.set_slot_spell(_ctx_slot, Spells.available[id])
-
-func _on_skill_assign(id: int) -> void:
-	if id < 0 or id >= Skills.available.size():
-		return
-	SocialHotkeys.set_slot_skill(_ctx_slot, Skills.available[id])
 
 # Track 16.2 — Social/Macro library browser. One window, two panes:
 #   left  — list of library entries + "New" / "Delete" + status text

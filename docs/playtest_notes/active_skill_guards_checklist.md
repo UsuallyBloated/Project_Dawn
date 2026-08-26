@@ -25,13 +25,16 @@ closed the long-standing "no active skills viewer" gap)*. Pure melee classes see
 pure casters only Spells, hybrids (Paladin, Ranger, Shadow Knight...) both. Each row shows
 stamina cost and cooldown; the tooltip carries the description and damage multiplier.
 
-The tab is a viewer — to USE a skill it still goes on the hotbar:
+Assigning is **pickup-and-place** *(2026-08-26; the old "Assign Skill..." context-menu route is
+removed — it did not work from the tester's seat)*:
 
-1. **Right-click an EMPTY hotbar slot** → context menu → **"Assign Skill..."**
-2. Pick the skill; press that slot's number key to use it.
+1. **Left-click a skill in the Skills tab** — its name attaches to your cursor.
+2. **Left-click an empty hotbar slot** — the skill lands there. Press the slot's number key to
+   use it.
+3. ESC (or clicking the skill again) puts it back down. Clicking an occupied slot does nothing
+   while carrying — placing never fires abilities.
 
-(Right-clicking a slot that already holds something *clears* it — the menu only opens on empty
-slots.)
+(Right-clicking an occupied hotbar slot still clears it, as before.)
 
 **Diagnostic note:** the tab displays the same `Skills.available` list the assign menu reads. If
 the Skills tab is missing or empty on a class that should have skills, that's the population bug
