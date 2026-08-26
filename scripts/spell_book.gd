@@ -14,13 +14,22 @@ var _vbox: VBoxContainer = null
 var _rows: Array = []
 # row data: {bg, normal_style, hover_style, memorize_style, spell, hovered}
 var _row_data: Array = []
+# Skills tab (2026-08-26): the book shows BOTH halves of a class's abilities.
+# Pure casters see only Spells, pure melee only Skills, hybrids (Paladin,
+# Ranger, Shadow Knight...) both — a Warrior looking for Shield Bash in a
+# spells-only book was the report that motivated this.
+var _tabs: TabContainer = null
+var _skills_vbox: VBoxContainer = null
+var _skill_rows: Array = []
 
 func _ready() -> void:
 	_build()
 	Spells.spells_changed.connect(_rebuild)
+	Skills.skills_changed.connect(_rebuild_skills)
 	Memorize.candidate_changed.connect(_on_candidate_changed)
 	visibility_changed.connect(_on_visibility_changed)
 	_rebuild()
+	_rebuild_skills()
 
 func _build() -> void:
 	custom_minimum_size = Vector2(300, 320)
@@ -59,6 +68,16 @@ func _build() -> void:
 
 	outer.add_child(HSeparator.new())
 
+	_tabs = TabContainer.new()
+	_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	outer.add_child(_tabs)
+
+	# ── Spells tab ────────────────────────────────────────────────────────────
+	var spells_tab := VBoxContainer.new()
+	spells_tab.name = "Spells"
+	spells_tab.add_theme_constant_override("separation", 4)
+	_tabs.add_child(spells_tab)
+
 	# Track 16.1 — short usage hint so a player who hasn't read the
 	# release notes still discovers the sit+click+slot flow.
 	var hint := Label.new()
@@ -66,11 +85,11 @@ func _build() -> void:
 	hint.add_theme_font_size_override("font_size", 10)
 	hint.add_theme_color_override("font_color", UITheme.C_TEXT)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	outer.add_child(hint)
+	spells_tab.add_child(hint)
 
 	var col_row := HBoxContainer.new()
 	col_row.add_theme_constant_override("separation", 4)
-	outer.add_child(col_row)
+	spells_tab.add_child(col_row)
 	_add_col_hdr(col_row, "Spell", 0, true)
 	_add_col_hdr(col_row, "MP",   36, false)
 	_add_col_hdr(col_row, "CD",   44, false)
@@ -78,12 +97,42 @@ func _build() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	outer.add_child(scroll)
+	spells_tab.add_child(scroll)
 
 	_vbox = VBoxContainer.new()
 	_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_vbox.add_theme_constant_override("separation", 2)
 	scroll.add_child(_vbox)
+
+	# ── Skills tab ────────────────────────────────────────────────────────────
+	var skills_tab := VBoxContainer.new()
+	skills_tab.name = "Skills"
+	skills_tab.add_theme_constant_override("separation", 4)
+	_tabs.add_child(skills_tab)
+
+	var skill_hint := Label.new()
+	skill_hint.text = "Right-click an empty hotbar slot, then Assign Skill, to put one on your bar."
+	skill_hint.add_theme_font_size_override("font_size", 10)
+	skill_hint.add_theme_color_override("font_color", UITheme.C_TEXT)
+	skill_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	skills_tab.add_child(skill_hint)
+
+	var skill_cols := HBoxContainer.new()
+	skill_cols.add_theme_constant_override("separation", 4)
+	skills_tab.add_child(skill_cols)
+	_add_col_hdr(skill_cols, "Skill", 0, true)
+	_add_col_hdr(skill_cols, "ST",   36, false)
+	_add_col_hdr(skill_cols, "CD",   44, false)
+
+	var skill_scroll := ScrollContainer.new()
+	skill_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	skill_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	skills_tab.add_child(skill_scroll)
+
+	_skills_vbox = VBoxContainer.new()
+	_skills_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_skills_vbox.add_theme_constant_override("separation", 2)
+	skill_scroll.add_child(_skills_vbox)
 
 func _add_col_hdr(parent: HBoxContainer, text: String, min_w: float, expand: bool) -> void:
 	var lbl := Label.new()
@@ -119,6 +168,91 @@ func _rebuild() -> void:
 			Memorize.clear()
 	# Re-apply the highlight after rebuild.
 	_repaint_all()
+	_update_tab_visibility()
+
+func _rebuild_skills() -> void:
+	for row in _skill_rows:
+		row.queue_free()
+	_skill_rows.clear()
+	for skill in Skills.available:
+		var row := _make_skill_row(skill)
+		_skills_vbox.add_child(row)
+		_skill_rows.append(row)
+	_update_tab_visibility()
+
+## Pure casters see only the Spells tab, pure melee only Skills, hybrids both.
+## Driven by list emptiness rather than a class table, so it stays correct as
+## definitions change. Both-empty keeps Spells visible (an empty book beats a
+## tabless one).
+func _update_tab_visibility() -> void:
+	if _tabs == null:
+		return
+	var has_spells := Spells.available.size() > 0
+	var has_skills := Skills.available.size() > 0
+	_tabs.set_tab_hidden(0, not has_spells and has_skills)
+	_tabs.set_tab_hidden(1, not has_skills)
+	if not has_spells and has_skills:
+		_tabs.current_tab = 1
+
+func _make_skill_row(skill: SkillData) -> Panel:
+	var normal_style := StyleBoxFlat.new()
+	normal_style.bg_color = C_ROW
+	normal_style.set_corner_radius_all(2)
+	var hover_style := StyleBoxFlat.new()
+	hover_style.bg_color = C_HOVER
+	hover_style.set_corner_radius_all(2)
+
+	var bg := Panel.new()
+	bg.custom_minimum_size.y = ROW_H
+	bg.add_theme_stylebox_override("panel", normal_style)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	var extra := ""
+	if skill.damage_multiplier > 0.0:
+		extra = "  Damage: %.1fx" % skill.damage_multiplier
+	bg.tooltip_text = "%s
+%s
+Stamina: %d  CD: %s%s" % [
+		skill.skill_name, skill.description, int(skill.stamina_cost),
+		("%.0fs" % skill.cooldown) if skill.cooldown > 0.0 else "—",
+		extra,
+	]
+
+	var row := HBoxContainer.new()
+	row.set_anchors_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 4; row.offset_top = 2
+	row.offset_right = -4; row.offset_bottom = -2
+	row.add_theme_constant_override("separation", 4)
+	bg.add_child(row)
+
+	var name_lbl := Label.new()
+	name_lbl.text = skill.skill_name
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_lbl.add_theme_font_size_override("font_size", 12)
+	name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
+	name_lbl.clip_text = true
+	row.add_child(name_lbl)
+
+	var st_lbl := Label.new()
+	st_lbl.text = "%d" % int(skill.stamina_cost)
+	st_lbl.custom_minimum_size.x = 36
+	st_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	st_lbl.add_theme_font_size_override("font_size", 11)
+	st_lbl.add_theme_color_override("font_color", Color(0.55, 0.85, 0.45))
+	row.add_child(st_lbl)
+
+	var cd_lbl := Label.new()
+	cd_lbl.text = ("%.0fs" % skill.cooldown) if skill.cooldown > 0.0 else "—"
+	cd_lbl.custom_minimum_size.x = 44
+	cd_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	cd_lbl.add_theme_font_size_override("font_size", 11)
+	cd_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
+	row.add_child(cd_lbl)
+
+	bg.mouse_entered.connect(func() -> void:
+		bg.add_theme_stylebox_override("panel", hover_style))
+	bg.mouse_exited.connect(func() -> void:
+		bg.add_theme_stylebox_override("panel", normal_style))
+	return bg
 
 func _make_row(spell: SpellData) -> Panel:
 	var normal_style := StyleBoxFlat.new()

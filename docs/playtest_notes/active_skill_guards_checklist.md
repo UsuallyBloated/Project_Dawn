@@ -18,17 +18,25 @@ Offline / Test Room: everything behaves exactly as before — the gates only bit
 
 ---
 
-## Where skills live (you're not missing a window)
+## Where skills live
 
-**Active skills do not appear in the spell book** — that window is spells only — **and there is no
-skills window at all.** That's a known UI gap (tracked as "no active skills viewer"), not a
-permissions problem. The only way to reach a skill:
+**The book window (B) now has a Skills tab** *(added 2026-08-26 at the tester's request — this
+closed the long-standing "no active skills viewer" gap)*. Pure melee classes see only Skills,
+pure casters only Spells, hybrids (Paladin, Ranger, Shadow Knight...) both. Each row shows
+stamina cost and cooldown; the tooltip carries the description and damage multiplier.
+
+The tab is a viewer — to USE a skill it still goes on the hotbar:
 
 1. **Right-click an EMPTY hotbar slot** → context menu → **"Assign Skill..."**
-2. The list shows every skill your class has. Pick one; press that slot's number key to use it.
+2. Pick the skill; press that slot's number key to use it.
 
 (Right-clicking a slot that already holds something *clears* it — the menu only opens on empty
-slots. Classic-MMO muscle memory, but worth knowing before you wonder where your spell went.)
+slots.)
+
+**Diagnostic note:** the tab displays the same `Skills.available` list the assign menu reads. If
+the Skills tab is missing or empty on a class that should have skills, that's the population bug
+the `6d2e9a4` console diagnostics exist to catch — check the debug console (backtick) for the
+`Skills: N available for class '...'` line and any red `apply_character` error.
 
 **Levels: every skill is available from level 1.** Skills have no level requirement at all —
 class is the only filter (`skill_definitions.gd` has no `min_level` field). A freshly created
