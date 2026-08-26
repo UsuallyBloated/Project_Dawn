@@ -18,6 +18,22 @@ Offline / Test Room: everything behaves exactly as before — the gates only bit
 
 ---
 
+## Where skills live (you're not missing a window)
+
+**Active skills do not appear in the spell book** — that window is spells only — **and there is no
+skills window at all.** That's a known UI gap (tracked as "no active skills viewer"), not a
+permissions problem. The only way to reach a skill:
+
+1. **Right-click an EMPTY hotbar slot** → context menu → **"Assign Skill..."**
+2. The list shows every skill your class has. Pick one; press that slot's number key to use it.
+
+(Right-clicking a slot that already holds something *clears* it — the menu only opens on empty
+slots. Classic-MMO muscle memory, but worth knowing before you wonder where your spell went.)
+
+**Levels: every skill is available from level 1.** Skills have no level requirement at all —
+class is the only filter (`skill_definitions.gd` has no `min_level` field). A freshly created
+Warrior has Shield Bash immediately, so test characters need zero leveling.
+
 ## Who can test what
 
 Every gated skill, with its class (from `data/skill_definitions.gd`). Your existing characters
