@@ -28,6 +28,12 @@ func setup_for_class(_player_class: String) -> void:
 		if skill.allowed_classes.is_empty() or effective in skill.allowed_classes:
 			available.append(skill)
 	available.sort_custom(func(a, b): return a.skill_name < b.skill_name)
+	# Diagnostic (2026-08-26): a live session reported the Assign Skill menu
+	# empty while the same build populates correctly headless. This line makes
+	# the population visible in the debug console so the next report carries
+	# the class string and count instead of a mystery.
+	DebugLog.info("Skills: %d available for class '%s' (effective '%s')" % [
+		available.size(), _player_class, effective])
 	skills_changed.emit()
 
 func use_skill(skill: SkillData) -> bool:

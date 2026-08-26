@@ -91,6 +91,15 @@ func set_bind_point(zone_path: String, entry_id: String, zone_name: String) -> v
 	bind_zone_name = zone_name
 
 func apply_character(race_id: String, cls: String, lvl: int) -> void:
+	# Guard the dictionary lookups. An unknown race or class string used to
+	# crash this function partway with an INVISIBLE engine error (they never
+	# reach debug.log), leaving the character half-initialized: no class set,
+	# so no spells and no skills, with nothing anywhere saying why. Verified
+	# reproducible headlessly — apply_character("human", ...) (lowercase)
+	# aborts exactly that way. Refuse loudly instead.
+	if not CharacterData.RACE_DATA.has(race_id) or not CharacterData.CLASS_DATA.has(cls):
+		DebugLog.error("apply_character: unknown race '%s' or class '%s' — character NOT initialized (spells/skills will be empty)" % [race_id, cls])
+		return
 	lvl = clampi(lvl, 1, 99)
 
 	var stats: Dictionary = {}
