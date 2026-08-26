@@ -17,30 +17,40 @@ here would be a server design change — deduct at CastStart — noted in the To
 
 ## 1 — The cancel works
 
-- [ ] **Start a long cast (Regrowth), press ESC mid-bar** → "You stop casting.", the bar clears,
-      **and the mana returns**. notes:
-- [ ] **Start a cast, walk forward mid-bar** → same: cancelled + refunded. notes:
-- [ ] **Start a cast, jump** → same. notes:
-- [ ] **Let a cast complete normally** → mana stays spent, spell lands. The refund must only
+- [x] **Start a long cast (Regrowth), press ESC mid-bar** → "You stop casting.", the bar clears,
+      **and the mana returns**. notes:  It appears as though when the player cancels the spell,  the mana is refunded, then it immediately consumed the mana again
+      [Triage 2026-08-26: the chat log shows the cancel was followed by a *completed* Regrowth
+      ("You feel the effects" + "You cast" + an Alteration skill-up — lines only a finished cast
+      produces), so the second dip was the immediate re-cast's own spend at bar-start, which is
+      correct. The refund itself worked. One 15-second re-check next session: cancel and touch
+      NOTHING — the bar must stay refunded.]
+- [x] **Start a cast, walk forward mid-bar** → same: cancelled + refunded. notes:
+- [x] **Start a cast, jump** → same. notes:
+- [x] **Let a cast complete normally** → mana stays spent, spell lands. The refund must only
       happen on a cancel. notes:
 
 ## 2 — ESC ordering
 
-- [ ] **With a window open AND a cast running, press ESC** → the cast cancels first; the window
+- [x] **With a window open AND a cast running, press ESC** → the cast cancels first; the window
       stays open. Second ESC closes the window. notes:
-- [ ] **With no cast running** → ESC closes windows / opens options exactly as before. notes:
+- [x] **With no cast running** → ESC closes windows / opens options exactly as before. notes:
 
 ## 3 — Interrupts and edge cases
 
-- [ ] **Get hit while casting (server interrupt)** → cast fails as before, and the mana bar
-      recovers rather than staying down. notes:
-- [ ] **Cancel, then immediately re-cast the same spell** → works; no stuck cooldown (the
+- [-] **Get hit while casting (server interrupt)** → cast fails as before, and the mana bar
+      recovers rather than staying down. notes:  Please look at the logs for this.  I'm not sure if I was getting hit while casting.
+      [Checked 2026-08-26: zero `interrupted (hit during cast)` lines anywhere in the server log,
+      so no interrupt ever fired — either never hit mid-bar or the Channeling roll survived every
+      hit. Row unexercised, carries to the next combat-heavy session.]
+- [x] **Cancel, then immediately re-cast the same spell** → works; no stuck cooldown (the
       cooldown only starts on completion). notes:
-- [ ] **Instant-cast spells are unaffected** (no bar, nothing to cancel). notes:
+- [x] **Instant-cast spells are unaffected** (no bar, nothing to cancel). notes:
 
 ---
 
 ## Result
 
-- Client build (`/version`):
-- Overall:
+- Client build (`/version`): c697cde-dirty, exported 2026-08-26T21:50 UTC, gdext 5918f106
+- Overall: PASS with two carries — the hit-interrupt row was never exercised (no interrupt in
+  the log), and the §1.1 mana observation triaged as the re-cast's own spend (see note). One
+  cancel-and-wait re-check stands between this and the tick.

@@ -22,14 +22,14 @@ Diagnostics: `journalctl -u projectdawn -f`; the anchors are `no vendor within r
 
 ## 1 — Honest play is completely unaffected (the row that matters most)
 
-- [ ] **At the town NPCs, buy and sell from Brom** → works exactly as before, no "no merchant"
+- [x] **At the town NPCs, buy and sell from Brom** → works exactly as before, no "no merchant"
       message. notes:
-- [ ] **Bank deposit / withdraw / exchange at Thalia** → all work as before. notes:
-- [ ] **Turn in a quest at its NPC** (Aldric for wolf_threat/rotfang, Brom for
+- [x] **Bank deposit / withdraw / exchange at Thalia** → all work as before. notes:
+- [x] **Turn in a quest at its NPC** (Aldric for wolf_threat/rotfang, Brom for
       rat_infestation/gnoll) → completes normally. notes:
-- [ ] **Bind at Sister Maelis** → "Your soul is bound to this place." (now sent by the server, not
+- [x] **Bind at Sister Maelis** → "Your soul is bound to this place." (now sent by the server, not
       claimed by the client). notes:
-- [ ] **Walk to the far edge of the plaza and try each again** → still works within ~15 m. The
+- [x] **Walk to the far edge of the plaza and try each again** → still works within ~15 m. The
       gate must not clip normal movement around the town. notes:
 
 ## 2 — The gate bites at range (needs GM tooling or a walk)
@@ -38,21 +38,24 @@ The honest client won't *let* you interact from far away, so to see the refusal 
 well out of town and watch the log, or use the Test Panel to reach across the map. Any of these
 that you can trigger:
 
-- [ ] **From well outside town, if you can force a bank/vendor/turn-in**, the log shows the
+- [x] **From well outside town, if you can force a bank/vendor/turn-in**, the log shows the
       matching `no ... within range` line and nothing changes (no coin, no item). notes:
-- [ ] **The refusal message appears in chat** ("There is no merchant/banker near you.", or
+- [x] **The refusal message appears in chat** ("There is no merchant/banker near you.", or
       "You must return to <NPC>."). notes:
 
 ## 3 — Regression
 
-- [ ] **A full quest arc** — accept, kill, turn in at the right NPC — start to finish. notes:
+- [x] **A full quest arc** — accept, kill, turn in at the right NPC — start to finish. notes:
 - [ ] **Die, corpse-run, loot your corpse** → the death/corpse path is untouched by this change.
       notes:
-- [ ] **No `no ... within range` lines appear during ordinary town play** in the log. notes:
+- [x] **No `no ... within range` lines appear during ordinary town play** in the log. notes:
 
 ---
 
 ## Result
 
-- Server build (`build=` on the boot line):
-- Overall:
+- Server build (`build=` on the boot line): 9b320c8, dev_cmds=false
+- Overall: PASS. Honest town play produced zero range refusals; the gate proven at ~190 m out —
+  four `bank op rejected — no banker within range` lines at pos (-71, 173) with the chat refusal
+  shown. Only the die/corpse-run regression row went unexercised (that path has its own
+  pre-existing range check and this change does not touch it). Item ticked 2026-08-26.

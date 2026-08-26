@@ -18,28 +18,17 @@ Offline / Test Room: everything behaves exactly as before — the gates only bit
 
 ---
 
-## Where skills live
+## Where skills live (you're not missing a window)
 
-**The book window (B) now has a Skills tab** *(added 2026-08-26 at the tester's request — this
-closed the long-standing "no active skills viewer" gap)*. Pure melee classes see only Skills,
-pure casters only Spells, hybrids (Paladin, Ranger, Shadow Knight...) both. Each row shows
-stamina cost and cooldown; the tooltip carries the description and damage multiplier.
+**Active skills do not appear in the spell book** — that window is spells only — **and there is no
+skills window at all.** That's a known UI gap (tracked as "no active skills viewer"), not a
+permissions problem. The only way to reach a skill:
 
-Assigning is **pickup-and-place** *(2026-08-26; the old "Assign Skill..." context-menu route is
-removed — it did not work from the tester's seat)*:
+1. **Right-click an EMPTY hotbar slot** → context menu → **"Assign Skill..."**
+2. The list shows every skill your class has. Pick one; press that slot's number key to use it.
 
-1. **Left-click a skill in the Skills tab** — its name attaches to your cursor.
-2. **Left-click an empty hotbar slot** — the skill lands there. Press the slot's number key to
-   use it.
-3. ESC (or clicking the skill again) puts it back down. Clicking an occupied slot does nothing
-   while carrying — placing never fires abilities.
-
-(Right-clicking an occupied hotbar slot still clears it, as before.)
-
-**Diagnostic note:** the tab displays the same `Skills.available` list the assign menu reads. If
-the Skills tab is missing or empty on a class that should have skills, that's the population bug
-the `6d2e9a4` console diagnostics exist to catch — check the debug console (backtick) for the
-`Skills: N available for class '...'` line and any red `apply_character` error.
+(Right-clicking a slot that already holds something *clears* it — the menu only opens on empty
+slots. Classic-MMO muscle memory, but worth knowing before you wonder where your spell went.)
 
 **Levels: every skill is available from level 1.** Skills have no level requirement at all —
 class is the only filter (`skill_definitions.gd` has no `min_level` field). A freshly created
@@ -74,35 +63,45 @@ The minimum coverage run: **plump** (Holy Shield refusal + Divine Blow swing), *
 
 ## 1 — Honest refusals (online)
 
-- [ ] **Use Shield Bash on a server enemy** (Warrior) → "Shield Bash isn't available online yet."
+- [x] **Use Shield Bash on a server enemy** (Warrior) → "Shield Bash isn't available online yet."
       and your stamina bar does NOT dip. notes:
-- [ ] **Use Feign Death** (Monk) → same refusal, no stamina cost, no cooldown started. notes:
-- [ ] **Use Hide or Evade** (Rogue) **or Holy Shield** (Paladin — plump) → same refusal. notes:
-- [ ] **Use a damage skill** — Divine Blow (plump), or Backstab / Flying Kick / Aimed Shot →
+- [x] **Use Feign Death** (Monk) → same refusal, no stamina cost, no cooldown started. notes:
+- [x] **Use Hide or Evade** (Rogue) **or Holy Shield** (Paladin — plump) → same refusal. notes:
+- [x] **Use a damage skill** — Divine Blow (plump), or Backstab / Flying Kick / Aimed Shot →
       still swings and lands server damage as before. notes:
 
 ## 2 — Warder's Fury actually works now (Beast Master)
 
-- [ ] **Summon the warder, target an enemy, use Warder's Fury** → the warder runs in and attacks,
-      with the pet-attack chat line. (Before: nothing at all happened.) notes:
+- [x] **Summon the warder, target an enemy, use Warder's Fury** → the warder runs in and attacks,
+      with the pet-attack chat line. (Before: nothing at all happened.) notes:  "Warden's Fury" only works if the Wolf is already next to the enemy.
 
 ## 3 — CC spells no longer crash their own cast
 
-- [ ] **Cast Ensnaring Roots (Chumby the Druid) / Slow (Shaman) / Immobilize (Enchanter) on a
+- [x] **Cast Ensnaring Roots (Chumby the Druid) / Slow (Shaman) / Immobilize (Enchanter) on a
       server enemy** → the cast completes: mana spent once, damage (if any) lands, combat text
       appears. The root/slow itself does nothing visible — that's the known server gap, not a bug
       in this change. notes:
-- [ ] **The enemy keeps behaving normally afterwards** (no client-side freeze or desync). notes:
+- [x] **The enemy keeps behaving normally afterwards** (no client-side freeze or desync). notes:
 
 ## 4 — Offline regression (Test Room)
-
-- [ ] **Shield Bash stuns a local enemy** as always. notes:
-- [ ] **Feign Death de-aggros local enemies** as always. notes:
-- [ ] **Sneak/Hide applies its buff** as always. notes:
+      Pretty please with sugar on top.  Please listen to me.  There will not be any offline version of this game.  Please make note of this.
+- [-] **Shield Bash stuns a local enemy** as always. notes:
+- [-] **Feign Death de-aggros local enemies** as always. notes:
+- [-] **Sneak/Hide applies its buff** as always. notes:
 
 ---
 
 ## Result
 
-- Client build (`/version`):
-- Overall:
+- Client build (`/version`): c697cde-dirty, exported 2026-08-26T21:50 UTC, gdext 5918f106
+- Overall: PASS on §1-3. §4 retired permanently — there is no offline version of this game and
+  offline regression sections will not be authored again. Two findings from the bottom notes,
+  both now in the To-Do: hotbar/socials bleed between characters (global
+  `user://social_hotkeys.json`, not keyed by character), and pet level not scaling with owner
+  (level 22 Beast Master, level 5 warder). §2's Warder's Fury caveat (only engages when already
+  adjacent) is folded into the open server half of the active-skills item.
+
+
+- When i logged off of the warrior and logged on the Monk, the skills that i had placed in the warrior's hotbar were in the monk's hot bar.  Is this something that is bleeding between characters?
+
+- level 22 Beast Master has a lvl 5 wolf as a pet.  This is odd.  Pet levels need to be adjusted.  We can discuss this later.

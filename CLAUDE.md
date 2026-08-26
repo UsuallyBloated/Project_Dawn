@@ -441,6 +441,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Thorns reflect) as of 2026-06-10 (`Entity` has `PrimaryStats` + `active_buffs`; see
   systems_overview). Still open: AGI/INT/WIS are stored + buffable but have no pet
   dodge / spell-power model yet, so they're display-only.
+- [ ] **Pet level does not scale with owner level** *(found 2026-08-26: a level 22 Beast Master's
+  warder is level 5)*. User call: pet levels need adjusting; the rule is TBD — discuss before
+  building (likely the warder tracks owner level, EQ-style). Server-side (pet spawn stats).
 - [ ] **Player inspect** — right-click a player to see their equipment *(in progress:
   `scripts/inspect_window.gd`)*
 - [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**
@@ -493,9 +496,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > *eligibility/timing* (which weapon, which spell/class, is it time to swing, are you dead, did you
 > finish the quest).
 
-- [ ] **Assorted trust gaps** (Medium/Low) — *(`Attack` weapon_path and login rate-limiting +
-  auth-timing are both DONE + playtested — moved to the blockquote above.)* Still open: `BuyItem`
-  ignores `vendor_id`.
+- [x] **Assorted trust gaps** (Medium/Low) — *(`Attack` weapon_path and login rate-limiting +
+  auth-timing are both DONE + playtested — moved to the blockquote above.)* The last gap —
+  `BuyItem` ignoring `vendor_id` — **closed 2026-08-26 by the NPC proximity gate** (vendor_id is
+  now honoured and range-checked; evidence in `proximity_gate_checklist.md`).
   **Cross-store transfer atomicity (finding 8) is DONE + playtested 2026-08-21** (server
   `393cc64`, `atomic_transfers_checklist.md`: bank, vendor and death paths all clean). An item never simply changes, it *moves*, and every move spans
   two tables: a bank deposit touches `character_items` + `bank_items`, a vendor sale touches
@@ -579,9 +583,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `CompleteQuest`) and could be deleted from the protocol; `Track` needs no wire message and works;
   `Interact`/`DialogueResponse` as *conversation* are fine client-local, but the *proximity gate*
   a real `Interact` would have provided was never built — see the first item below.
-- [ ] **No server-side proximity gate on vendor / bank / quest turn-in** *(found 2026-08-24;
-  **BUILT 2026-08-25, pending playtest** — server `3b5359e` + a cosmetic client dialogue tweak;
-  `proximity_gate_checklist.md`)*. Because `Interact` was never built, the server has no NPC
+- [x] **No server-side proximity gate on vendor / bank / quest turn-in** — **DONE + playtested
+  2026-08-26** *(found 2026-08-24; built 2026-08-25, server `3b5359e`;
+  `proximity_gate_checklist.md`: honest town play completely unaffected — zero range refusals
+  during ordinary play — and the gate proven at ~190 m out: four
+  `bank op rejected — no banker within range` log lines with the chat refusal shown. The only
+  unexercised row is the die/corpse-run regression, whose path this change does not touch —
+  corpse loot has its own pre-existing range check. What exists is in systems_overview →
+  NPCs/vendors.)*. Because `Interact` was never built, the server has no NPC
   position model, so nothing checks *where the player is standing*. Confirmed against `tick.rs`:
   combat, spell targeting, resurrection (`RES_CAST_RANGE`), corpse loot and loot bags
   (`LOOT_PICKUP_RANGE`) all range-check; **vendor, bank and quest turn-in do not**. A modified client
@@ -648,6 +657,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `9b320c8`): that movement gate is the ONLY cast-movement defence, not a backstop.
   **Still open in this item:** the discarded damage multipliers (needs a server skill model), and
   real server-side enemy CC (stun/root/slow as replicated state) — both server builds.
+  **Guards playtested 2026-08-26** (`active_skill_guards_checklist.md` §1-3 all pass: refusals
+  cost nothing, damage skills still swing, CC casts complete cleanly; the offline §4 rows are
+  retired permanently — there is no offline version of this game). One new finding folded in:
+  **Warder's Fury only engages when the warder is already beside the target** — the command lands
+  but the pet does not path to the enemy first; server pet-AI follow-up for the server build.
+  The playtest also surfaced how skills reach the player at all: the book window (B) now has a
+  **Skills tab** with pickup-and-place hotbar assignment (client `274f015` + `c697cde`; the old
+  "Assign Skill..." context menu is removed at user direction — it never worked from the
+  tester's seat).
 - [x] **Right-click is the world-interact verb** — **DONE + playtested 2026-08-24** (client
   `fa2ff04`, all 13 rows of `right_click_interact_checklist.md`). One mouse grammar everywhere:
   right-click (tap) interacts — NPC talk/vendor/bank, corpse + bag loot, veins, stations,
@@ -674,6 +692,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   server truth). Classic-EQ interrupts *eat* the mana; wanting that is a server design change —
   deduct at CastStart — not a client tweak. One cosmetic gap: peers' view of a cancelled cast bar
   runs out on its own (telling them needs the wire intent + a gdext rebuild; not worth it yet).
+  **Playtested 2026-08-26** (`cancel_cast_checklist.md`): every row passes except
+  hit-while-casting, which never fired (zero `interrupted (hit during cast)` lines in the log —
+  unexercised, not failed; the server's Track 19A channeling roll is real). The tester's "mana
+  refunded then immediately consumed again" observation was **triaged as the immediate re-cast's
+  own optimistic spend, not a refund failure**: the chat log shows a *completed* Regrowth right
+  after the cancel (feel-effects + "You cast" + Alteration skill-up — lines only a finished cast
+  produces), and client regen is launcher-gated so no drift alternative exists. Tick waits on one
+  15-second re-check: cancel and touch nothing; the bar must stay refunded.
 - [ ] **Bank coin deposit will not break a larger coin** *(found 2026-08-21; **BUILT 2026-08-21,
   pending playtest** — `Coins::take_breaking_higher`, applied to deposit AND withdraw)*. With
   `1p 5g 5s 75c`, depositing `6s` is refused ("You don't have that coin to deposit") rather than
@@ -919,6 +945,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 
 ### UI polish
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
+- [ ] **Hotbar + socials bleed between characters** *(found 2026-08-26 during the active-skill
+  playtest: skills placed on the Warrior's hotbar appeared on the Monk's)*. `SocialHotkeys`
+  persists every bank, slot and the macro library to a single global
+  `user://social_hotkeys.json` (`social_hotkeys.gd:334`), loaded once at `_ready` (process
+  start) — so every character on a machine shares one hotbar state. The Track 16.2 file header
+  even says "per-character library"; the save path never was. Fix: key the store by character
+  (server char_id in launcher mode), (re)load on character login rather than process start, and
+  seed a character's first login from the legacy global file so nobody's existing bars vanish.
+  Client-only; needs a re-export. Check `Memorize`/`SpellBar` persistence for the same disease
+  while in there.
 - [x] **Bank Items-tab: a deposited item renders as an empty slot** — **DONE + playtested
   2026-08-17** (client `8ad7f39`, all 11 rows of `bank_vault_display_checklist.md` pass, including
   the relog row that proves nothing was ever lost). What exists is in systems_overview → Banker

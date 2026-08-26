@@ -496,8 +496,19 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   the `CLAUDE.md` To-Do (a ring-reward stat bug, a Hunter's Medal re-test, the deliberately-cut
   low-level dialogue-refusal polish).
 - **Vendors:** `VendorManager` + `scenes/vendor_npc.tscn` / `scripts/vendor_npc.gd`
-  (proximity register, F to open); types in `data/vendor_definitions.gd`; buy/sell window
-  functional.
+  (proximity register, right-click to open since the 2026-08-24 interact grammar); types in
+  `data/vendor_definitions.gd`; buy/sell window functional. The transaction is fully
+  server-authoritative, and the window narrates only the *request* ("Asked the merchant for
+  Honey x20.") — outcomes are the server's to report.
+- **NPC proximity gate (server, playtested 2026-08-26):** the server holds a static NPC
+  position table (`data/npcs.toml` + `world/npcs.rs`, kept in lockstep with `world.tscn` the
+  same way items/quests are) and refuses vendor buy/sell, all five bank ops, quest turn-in
+  (optional `turn_in_npc` per quest in `quests.toml`; dev quests stay ungated) and soul-binding
+  unless the player is within `NPC_SERVICE_RANGE` (15 m — deliberately looser than the client's
+  6 m UI gate, a remote-abuse backstop that never refuses an honest player; a unit test pins the
+  starter spawn reaching every town NPC). Closes the dungeon-bank death-penalty void, remote
+  vendor/quest abuse, and the old "`BuyItem` ignores `vendor_id`" gap. Refusals answer in chat
+  via `send_refusal` and log as `no <kind> within range`.
 
 ---
 
