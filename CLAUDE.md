@@ -89,13 +89,17 @@ git push                                  # from the dev box
 # then on the R720:
 sudo -u projectdawn -H bash
 cd /opt/projectdawn/src && git pull && cargo build --release
-cp target/release/projectdawn-server ~/ && exit
-sudo systemctl restart projectdawn
-journalctl -u projectdawn -n 20 --no-pager   # confirm dev_cmds=false
+exit
+sudo systemctl stop projectdawn           # BEFORE the cp — see below
+sudo -u projectdawn cp /opt/projectdawn/src/target/release/projectdawn-server /opt/projectdawn/projectdawn-server
+sudo systemctl start projectdawn
+journalctl -u projectdawn -n 20 --no-pager   # confirm dev_cmds=false + the new build= sha
 ```
 
-Forgetting the `cp` is the usual mistake: systemd runs `/opt/projectdawn/projectdawn-server`,
-not the one under `target/release/`.
+Two traps, both hit in real deploys: forgetting the `cp` entirely (systemd runs
+`/opt/projectdawn/projectdawn-server`, not the one under `target/release/`), and running the
+`cp` while the service is up — Linux refuses to overwrite a running executable
+("Text file busy", hit 2026-08-27), which is why the stop comes BEFORE the copy.
 
 **Client change** (this repo), reaches players only via a **new build**:
 
