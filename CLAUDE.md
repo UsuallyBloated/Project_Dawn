@@ -430,6 +430,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   playtest)*. `/r` replies to the most recent tell sender; pressing TAB cycles through everyone
   who has sent you a tell this session. Client-only chat UX (command parsing + a small
   tell-sender history in `ChatWindowManager` or `CombatLog`).
+- [ ] **Left-click picks up a ground item to the cursor** *(requested 2026-08-27, completing a
+  truncated checklist note)*. The user's rule: corpses (yours and monsters') stay right-click
+  to loot, but a lone item sitting on the ground should be grabbed by LEFT-click, attaching to
+  the cursor like an inventory lift. A deliberate carve-out from "left-click only targets" —
+  user aware of the tension and open to discussion. Design wrinkle before building: the server
+  has no cursor slot, so a true attach-to-cursor needs either (a) v1: left-click auto-loots the
+  single-stack bag straight to bags (same LootAll intent, no loot window — the feel without new
+  server state), or (b) a real EQ-style server cursor slot (bigger; would also serve the
+  corpse-auto-re-equip item someday). Loot-rights note: ground bags from kills carry round-robin
+  ownership — the left-click path must go through the same server checks as the loot window,
+  never around them.
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
@@ -679,7 +690,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `Targeting.interact_at()`; ranges unchanged from the F values. The same session also exercised
   a full death→res cycle on the 08-23 offer-consumption rewrite (`refund=82156`), verifying the
   riskiest recent server change incidentally.
-- [ ] **`CancelCast` is a missing feature, not a broken one** *(found 2026-08-24; **BUILT
+- [x] **`CancelCast` is a missing feature, not a broken one** *(found 2026-08-24; **BUILT
   2026-08-25, pending playtest** — `cancel_cast_checklist.md`, rides the pending re-export)*.
   Movement (WASD/jump/autorun) and ESC now abort a live cast — ESC cancels the cast *before*
   touching windows — with "You stop casting." and an immediate **mana refund**. The refund is the
@@ -702,8 +713,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   own optimistic spend, not a refund failure**: the chat log shows a *completed* Regrowth right
   after the cancel (feel-effects + "You cast" + Alteration skill-up — lines only a finished cast
   produces), and client regen is launcher-gated so no drift alternative exists. Tick waits on one
-  15-second re-check: cancel and touch nothing; the bar must stay refunded. **Still outstanding
-  as of 2026-08-27** — the day's three checklists did not cover it.
+  15-second re-check: cancel and touch nothing; the bar must stay refunded. **CLOSED 2026-08-27,
+  item DONE + playtested**: the deliberate cancel-and-wait ran clean (plump, Reclaim Soul on
+  FIGHTME's corpse, ESC mid-bar, 20 seconds untouched, mana never re-consumed on either group
+  display), and the hit-while-casting row exercised itself in the same session (`cast
+  interrupted by incoming damage caster=4 spell=Reclaim Soul`, 21:37:03) with a clean re-cast
+  and res offer/accept after. Every row of `cancel_cast_checklist.md` now passes.
 - [x] **Bank coin deposit will not break a larger coin** *(found 2026-08-21; **BUILT 2026-08-21,
   pending playtest** — `Coins::take_breaking_higher`, applied to deposit AND withdraw)*. With
   `1p 5g 5s 75c`, depositing `6s` is refused ("You don't have that coin to deposit") rather than
@@ -855,6 +870,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > `systems_overview.md` → "Death, corpses & resurrection"; the design + as-built deviations are
 > in `docs/design/corpse_and_resurrection_plan.md`. Only the follow-ups below are open.
 
+- [ ] **Dead group members still receive XP shares** *(observed 2026-08-27 in the log: char 13
+  died 21:34:01, then took a full `per_member=1417` share and leveled 2 to 3 at 21:35:30 while
+  still dead, before accepting the res at 21:37:33)*. The group split counts every member with
+  no alive-check. Classic EQ pays a corpse nothing. Small server change (an alive filter in
+  the kill-credit split), but it is a design call — discuss before building. Not
+  exploit-shaped: being dead is strictly worse than being alive for farming.
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
