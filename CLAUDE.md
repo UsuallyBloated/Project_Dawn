@@ -870,12 +870,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > `systems_overview.md` → "Death, corpses & resurrection"; the design + as-built deviations are
 > in `docs/design/corpse_and_resurrection_plan.md`. Only the follow-ups below are open.
 
-- [ ] **Dead group members still receive XP shares** *(observed 2026-08-27 in the log: char 13
-  died 21:34:01, then took a full `per_member=1417` share and leveled 2 to 3 at 21:35:30 while
-  still dead, before accepting the res at 21:37:33)*. The group split counts every member with
-  no alive-check. Classic EQ pays a corpse nothing. Small server change (an alive filter in
-  the kill-credit split), but it is a design call — discuss before building. Not
-  exploit-shaped: being dead is strictly worse than being alive for farming.
+- [ ] **Dead group members would receive XP shares (code-confirmed, never seen in play)**
+  *(raised 2026-08-27; the original log observation was MISREAD — the tester corrected it:
+  FIGHTME had respawned at bind and was alive and in range when the 21:35:30 share landed,
+  then took the res teleport later, which the log alone could not show)*. What survives is the
+  code fact, verified after the correction: the kill-credit split's member filter is
+  online-only (`tick.rs` ~504, `connections.contains_key(m)`) with no dead-check, and a dead
+  player stays connected under the death lock — so a member lying dead awaiting a res would
+  collect full shares. Classic EQ pays a corpse nothing. A one-line alive filter, but a design
+  call — discuss before building. Not exploit-shaped: dead is strictly worse for farming.
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
