@@ -378,40 +378,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > code written *and* playtest-confirmed, never one without the other.
 
 ### Multiplayer / networking
-- [ ] **Group-mate HP/MP/stamina never reach the group panel in launcher mode** *(found
-  2026-08-11 by the first two-player group session; log evidence in
-  `first_external_tester_2026_08_11.md`)*. Symptom is a flood of
-  `ERROR: Attempt to call RPC with unknown peer ID: 2` from Godot's **native** multiplayer,
-  which this game does not otherwise use.
-  **Mechanism.** `GroupManager._ready()` wires `_sync_stats` to `PlayerStats.hp_changed` /
-  `mp_changed` / `stamina_changed` with **no `Net.is_launcher_mode()` guard**, unlike the action
-  methods (`invite_player` etc.). The server-driven `_on_world_group_roster` sets `in_group` and
-  fills `members[].peer_id` with **server char_ids**. Combat fires the stat signals constantly,
-  so `_flush_stats` runs and calls `_rpc_member_stat_delta.rpc_id(<char_id>, ...)` on Godot's
-  ENet peer list, which has no such peer. `_my_peer_id` is `multiplayer.get_unique_id()` = 1 with
-  no peer set, and the leader's char_id was also 1, so it coincidentally took the *leader* branch
-  and looped every member.
-  **The real bug underneath.** `members[].hp` is only ever written by `_update_member_entry`,
-  called from the RPC handler and from `_flush_stats` for the local player. **There is no
-  server-driven source for member stats** — `Net` exposes `world_group_roster` (which seeds hp to
-  `0.0`), `world_group_invited` and `world_group_notice`, and nothing else.
-  **Confirmed in the session, and it mislabels rather than blanks.** `_local_stats()` returns
-  `peer_id: _my_peer_id` = `multiplayer.get_unique_id()` = **1 on every client**, and
-  `_update_member_entry` merges into whichever row has `peer_id == 1`. The operator is char_id 1,
-  so on *his* client that lands on his own row (correct by coincidence) while on *hers* her stats
-  were written into **his** row. She saw her own HP under his name; her row stayed at zero.
-  `merge(..., true)` overwrites `name` too. **It only half-works because the leader is char_id 1**
-  — with any other leader both clients take the `else` branch and no row updates at all.
-  **Fix, in parts.** (a) Guard `_sync_stats` / `_flush_stats` on `Net.is_launcher_mode()`,
-  matching the action methods. One line; stops the flood and the mislabelling, leaves every bar
-  blank. (a+) Also key the local player's own row on `Net.get_player_id()` rather than the Godot
-  peer id, so each player at least sees themselves correctly. (b) The actual feature: a
-  server-side group-member stat fan-out (new wire message + `Net` signal + handler, protocol
-  bump).
-  **Why it hid for so long:** it requires two players in a group on the launcher path. The code
-  comment at `group_manager.gd:31-34` asserts these legacy RPCs are "dead code in launcher mode
-  because the action methods route through Net early-return paths" — true of the action methods,
-  but `_flush_stats` is signal-driven and was missed.
+- [ ] **Group-mate HP/MP/stamina never reach the group panel in launcher mode** — **STALE
+  ENTRY, CORRECTED 2026-08-26: the fix was BUILT 2026-08-11** (client `5bde067`, the same day
+  the bug was found); only the two-player playtest never happened, and this entry kept
+  describing the bug as fully open for two weeks (evidence for the standing audit item).
+  **What actually exists** (verified against code + git, not the old description): (a)
+  `_flush_stats` has the launcher guard — launcher mode refreshes only the local row and never
+  fires the legacy ENet RPCs, so the "unknown peer ID" flood is dead; (a+) the local row is
+  keyed by `Net.get_player_id()` (server char_id), not Godot's `get_unique_id()`, so the
+  mislabeling is dead too; (b) member bars are server-driven WITHOUT the new wire message this
+  entry used to call for — the server already fans every player's HealthUpdate / ManaUpdate /
+  StaminaUpdate to all in-world clients with no range culling, `GroupManager._apply_peer_stat`
+  merges them into member rows, and `regen.rs` carries the broadcast policy (a swing >5% of max
+  fans immediately; `MAX_BROADCAST_GAP` 500 ms keeps idle regen ticking). Cheaper than the
+  design proposed here, and already in place. **Needs only a two-player playtest** —
+  `group_stats_and_tells_checklist.md` (two accounts; one-char-per-account permits two-boxing).
 - [ ] **Remote players never show a jump** *(reported 2026-08-14)*. Player 1 jumps; player 2 sees
   them slide along the ground. Nothing about a jump crosses the wire, and it's dropped in three
   separate places: (a) **the client never reports it** — `scripts/player.gd:444` is the only caller
@@ -431,7 +412,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Exploit note:** cosmetic-only is safe precisely because the server keeps owning XZ — a forged
   `jumping` flag can then only make you *look* silly, not move you. Don't let the flag become an
   input to position.
-- [ ] **Incoming `/tell` RPC** — receiving tells from other players (outbound done)
+- [ ] **Incoming `/tell` RPC** — **STALE ENTRY, CORRECTED 2026-08-26: built 2026-05-28**
+  (`195891d`, "Chat wire-up: /say /shout /ooc /tell over the network"). The server fans
+  `ChatMessage` to the single Tell target and `combat_log.gd:150` renders "%s tells you" into
+  the Tells (In) channel — the full loop has existed for three months and was simply never
+  exercised by two players. Rides the same two-player playtest as the group panel
+  (`group_stats_and_tells_checklist.md`).
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
@@ -445,7 +431,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   warder is level 5)*. User call: pet levels need adjusting; the rule is TBD — discuss before
   building (likely the warder tracks owner level, EQ-style). Server-side (pet spawn stats).
 - [ ] **Player inspect** — right-click a player to see their equipment *(in progress:
-  `scripts/inspect_window.gd`)*
+  `scripts/inspect_window.gd`; noted 2026-08-26: the wire round-trip already exists —
+  `broadcast_inspect_player` / `world_inspect_result` — so this may be further along than "in
+  progress"; settle it in the audit pass)*
 - [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**
 - [ ] **Language system wiring** — `hear_language()` passive gain not yet called from the
   chat-receive path; needs multiplayer chat RPC + trainer NPCs
