@@ -5,12 +5,16 @@ extends Node
 # spell name and the player explicitly assigns / clears them via the
 # memorize workflow (sit + spell-book click + spell-bar slot click).
 #
-# Storage is per-character (single set of slots, no banks). Slot value
-# is the spell name as it appears in `Spells.available[i].spell_name`;
-# empty string means the slot is empty.
+# Storage is per-character (actually per-character since the 2026-08-26
+# keyed-save split — before that one global file shared the memorized bar
+# across every character on the machine, the same bleed the hotbar had).
+# Each character owns user://spell_bar_c<char_id>.json, reloaded on the
+# world handshake; the old global file stays as a first-login seed and as
+# the Test Room's store. Slot value is the spell name as it appears in
+# `Spells.available[i].spell_name`; empty string means the slot is empty.
 
 const SLOT_COUNT := 10
-const SAVE_PATH := "user://spell_bar.json"
+const LEGACY_SAVE_PATH := "user://spell_bar.json"
 
 # Track 17.1 — slots unlock with level. Below MIN_SLOTS even L1 casters
 # get a workable bar; the cap climbs one slot per 5 levels until L35
@@ -24,6 +28,12 @@ signal cap_changed(new_cap: int)
 
 var slots: Array = []
 var _save_timer: Timer = null
+var _char_key: String = ""  # "" until the world handshake names the character
+
+func _save_path() -> String:
+	if _char_key == "":
+		return LEGACY_SAVE_PATH
+	return "user://spell_bar_c%s.json" % _char_key
 
 func _ready() -> void:
 	_save_timer = Timer.new()
@@ -32,9 +42,36 @@ func _ready() -> void:
 	_save_timer.timeout.connect(_save)
 	add_child(_save_timer)
 	_init_slots()
-	_load()
+	_load_from(_save_path())
 	Spells.spells_changed.connect(_on_spells_changed)
 	PlayerStats.level_changed.connect(_on_level_changed)
+	Net.app_connected.connect(_on_app_connected)
+
+# A character logged into the world: swap to that character's memorized
+# bar. Flush any pending save first so the debounce timer can't write the
+# previous character's slots into this one's file. Ordering note: this
+# handler connects at process start, so within the app_connected emission
+# it runs BEFORE the lobby's handler that drives PlayerStats.apply_character
+# — the reload lands first, and the setup_for_class → spells_changed chain
+# that follows prunes any seeded spell this class can't use.
+func _on_app_connected(player_id: int) -> void:
+	var key := str(player_id)
+	if key == _char_key:
+		return
+	if _save_timer.time_left > 0.0:
+		_save_timer.stop()
+		_save()
+	_char_key = key
+	_init_slots()
+	if not FileAccess.file_exists(_save_path()) and FileAccess.file_exists(LEGACY_SAVE_PATH):
+		# First login since the split: seed from the old global file so the
+		# existing bar survives, persisted under this character's own key.
+		_load_from(LEGACY_SAVE_PATH)
+		_save_timer.start()
+	else:
+		_load_from(_save_path())
+	for i in SLOT_COUNT:
+		slot_changed.emit(i)
 
 func max_slots_for_level(level: int = -1) -> int:
 	var lvl: int = PlayerStats.level if level < 0 else level
@@ -113,13 +150,13 @@ func _on_spells_changed() -> void:
 		_save_timer.start()
 
 func _save() -> void:
-	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var f := FileAccess.open(_save_path(), FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(slots, "\t"))
 		f.close()
 
-func _load() -> void:
-	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+func _load_from(path: String) -> void:
+	var f := FileAccess.open(path, FileAccess.READ)
 	if not f:
 		return
 	var text := f.get_as_text()

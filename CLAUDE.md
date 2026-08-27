@@ -946,15 +946,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 ### UI polish
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
 - [ ] **Hotbar + socials bleed between characters** *(found 2026-08-26 during the active-skill
-  playtest: skills placed on the Warrior's hotbar appeared on the Monk's)*. `SocialHotkeys`
-  persists every bank, slot and the macro library to a single global
-  `user://social_hotkeys.json` (`social_hotkeys.gd:334`), loaded once at `_ready` (process
-  start) — so every character on a machine shares one hotbar state. The Track 16.2 file header
-  even says "per-character library"; the save path never was. Fix: key the store by character
-  (server char_id in launcher mode), (re)load on character login rather than process start, and
-  seed a character's first login from the legacy global file so nobody's existing bars vanish.
-  Client-only; needs a re-export. Check `Memorize`/`SpellBar` persistence for the same disease
-  while in there.
+  playtest: skills placed on the Warrior's hotbar appeared on the Monk's; **BUILT 2026-08-26,
+  pending playtest** — `hotbar_per_character_checklist.md`, needs a re-export)*. `SocialHotkeys`
+  persisted every bank, slot and the macro library to a single global
+  `user://social_hotkeys.json`, loaded once at process start — every character on a machine
+  shared one hotbar state, though the Track 16.2 header claimed "per-character". The audit
+  found **`SpellBar` had the same disease** (`user://spell_bar.json`), so the memorized spell
+  bar bled too; `Memorize` itself persists nothing (its state lives in SpellBar).
+  **Built as:** both stores keyed by server char_id (`social_hotkeys_c<id>.json` /
+  `spell_bar_c<id>.json`), reloaded on `Net.app_connected` (fires on every path into the
+  world), with the previous character's pending debounced save flushed BEFORE the swap so the
+  timer can't write one character's bars into another's file. Each character's first login
+  seeds from the legacy global file so nobody's existing bars vanish (one visible echo of the
+  old shared layout per character, then permanent divergence); the legacy file is never
+  written again in launcher mode and remains the Test Room's store. SpellBar's reload runs
+  before the lobby's `apply_character` handler in the same emission, so the existing
+  `spells_changed` prune clears any seeded spell the class can't use. Headless proof ran green:
+  two simulated characters, isolation + persistence + legacy files untouched.
 - [x] **Bank Items-tab: a deposited item renders as an empty slot** — **DONE + playtested
   2026-08-17** (client `8ad7f39`, all 11 rows of `bank_vault_display_checklist.md` pass, including
   the relog row that proves nothing was ever lost). What exists is in systems_overview → Banker

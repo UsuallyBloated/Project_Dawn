@@ -17,7 +17,9 @@ var current_bank: int = 0
 # entry for tooltip / hotbar render without an extra lookup.
 var banks: Array = []
 
-# Track 16.2 — social/macro library tier. Per-character library that
+# Track 16.2 — social/macro library tier. Per-character library (actually
+# per-character since the 2026-08-26 keyed-save split; before that, one
+# global file quietly shared it across every character on the machine) that
 # outlives any one slot or bank; slot assignment is "pick from library".
 # Editing a library entry instantly updates every slot referencing it.
 # library entry: { id: String, label: String, lines: Array[String] }
@@ -80,7 +82,36 @@ func _ready() -> void:
 	_save_timer.timeout.connect(_save)
 	add_child(_save_timer)
 	_init_banks()
-	_load()
+	_load_from(_save_path())
+	Net.app_connected.connect(_on_app_connected)
+
+# A character logged into the world: swap the store to that character's own
+# file (2026-08-26 — the single global file put the Warrior's skills on the
+# Monk's hotbar). Flush any pending save FIRST: the debounce timer must not
+# fire after the swap and write the previous character's bars into this
+# one's file, which would be the very bleed this exists to fix.
+func _on_app_connected(player_id: int) -> void:
+	var key := str(player_id)
+	if key == _char_key:
+		return
+	if _save_timer.time_left > 0.0:
+		_save_timer.stop()
+		_save()
+	_char_key = key
+	library.clear()
+	_next_lib_seq = 1
+	_init_banks()
+	current_bank = 0
+	if not FileAccess.file_exists(_save_path()) and FileAccess.file_exists(LEGACY_SAVE_PATH):
+		# First login since the per-character split: seed from the old global
+		# file so nobody's existing bars vanish, then persist the seed under
+		# this character's own key. Later characters diverge from here.
+		_load_from(LEGACY_SAVE_PATH)
+		_schedule_save()
+	else:
+		_load_from(_save_path())
+	bank_changed.emit(current_bank)
+	library_changed.emit()
 
 func _init_banks() -> void:
 	banks.clear()
@@ -307,6 +338,20 @@ func _lang_tag() -> String:
 	return "" if lang == "Common" else " (%s)" % lang
 
 # ── Persistence ───────────────────────────────────────────────────────
+# 2026-08-26 — keyed per character. One global file used to hold every
+# character's banks, slots and macro library, so hotbars bled between
+# characters (playtest finding). Each character now owns
+# user://social_hotkeys_c<char_id>.json, reloaded on the world handshake.
+# The old global file stays untouched as a first-login seed; the Test Room
+# (no handshake) still reads and writes it directly.
+
+const LEGACY_SAVE_PATH := "user://social_hotkeys.json"
+var _char_key: String = ""  # "" until the world handshake names the character
+
+func _save_path() -> String:
+	if _char_key == "":
+		return LEGACY_SAVE_PATH
+	return "user://social_hotkeys_c%s.json" % _char_key
 
 func _save() -> void:
 	var data := {
@@ -331,13 +376,13 @@ func _save() -> void:
 			"label": entry["label"],
 			"lines": entry["lines"].duplicate(),
 		})
-	var f := FileAccess.open("user://social_hotkeys.json", FileAccess.WRITE)
+	var f := FileAccess.open(_save_path(), FileAccess.WRITE)
 	if f:
 		f.store_string(JSON.stringify(data, "\t"))
 		f.close()
 
-func _load() -> void:
-	var f := FileAccess.open("user://social_hotkeys.json", FileAccess.READ)
+func _load_from(path: String) -> void:
+	var f := FileAccess.open(path, FileAccess.READ)
 	if not f:
 		return
 	var text := f.get_as_text()
