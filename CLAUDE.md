@@ -378,7 +378,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > code written *and* playtest-confirmed, never one without the other.
 
 ### Multiplayer / networking
-- [ ] **Group-mate HP/MP/stamina never reach the group panel in launcher mode** — **STALE
+- [x] **Group-mate HP/MP/stamina never reach the group panel in launcher mode** — **STALE
   ENTRY, CORRECTED 2026-08-26: the fix was BUILT 2026-08-11** (client `5bde067`, the same day
   the bug was found); only the two-player playtest never happened, and this entry kept
   describing the bug as fully open for two weeks (evidence for the standing audit item).
@@ -393,6 +393,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   fans immediately; `MAX_BROADCAST_GAP` 500 ms keeps idle regen ticking). Cheaper than the
   design proposed here, and already in place. **Needs only a two-player playtest** —
   `group_stats_and_tells_checklist.md` (two accounts; one-char-per-account permits two-boxing).
+  **PLAYTESTED 2026-08-27, PASS** (`group_stats_and_tells_checklist.md`, a real two-account
+  session: account 4's char joined account 1's, gid=1): bars live and correctly labeled in both
+  directions, XP split logged (`pool=315 per_member=157 members=2`), round-robin loot enforced,
+  clean logout, zero RPC-flood lines. Two follow-on findings, tracked separately: member rows
+  are BLANK until the first resource update (own item below), and a skill's stamina cost is
+  invisible to the partner (client-local spend — folded into the active-skills item).
 - [ ] **Remote players never show a jump** *(reported 2026-08-14)*. Player 1 jumps; player 2 sees
   them slide along the ground. Nothing about a jump crosses the wire, and it's dropped in three
   separate places: (a) **the client never reports it** — `scripts/player.gd:444` is the only caller
@@ -412,12 +418,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Exploit note:** cosmetic-only is safe precisely because the server keeps owning XZ — a forged
   `jumping` flag can then only make you *look* silly, not move you. Don't let the flag become an
   input to position.
-- [ ] **Incoming `/tell` RPC** — **STALE ENTRY, CORRECTED 2026-08-26: built 2026-05-28**
+- [x] **Incoming `/tell` RPC** — **STALE ENTRY, CORRECTED 2026-08-26: built 2026-05-28**
   (`195891d`, "Chat wire-up: /say /shout /ooc /tell over the network"). The server fans
   `ChatMessage` to the single Tell target and `combat_log.gd:150` renders "%s tells you" into
   the Tells (In) channel — the full loop has existed for three months and was simply never
   exercised by two players. Rides the same two-player playtest as the group panel
-  (`group_stats_and_tells_checklist.md`).
+  (`group_stats_and_tells_checklist.md`). **Playtested 2026-08-27, PASS both directions** —
+  "X tells you" renders in Tells (In), sender echo correct. Follow-up request recorded as its
+  own item: EQ-style `/r` reply + TAB tell-cycling.
+- [ ] **EQ-style `/r` reply + TAB tell-cycling** *(requested 2026-08-27 during the tells
+  playtest)*. `/r` replies to the most recent tell sender; pressing TAB cycles through everyone
+  who has sent you a tell this session. Client-only chat UX (command parsing + a small
+  tell-sender history in `ChatWindowManager` or `CombatLog`).
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
@@ -654,6 +666,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Skills tab** with pickup-and-place hotbar assignment (client `274f015` + `c697cde`; the old
   "Assign Skill..." context menu is removed at user direction — it never worked from the
   tester's seat).
+  **2026-08-27:** the group playtest showed a skill's stamina cost is invisible to group-mates —
+  the spend is client-local (`skills.gd`), the server's stamina never moves, so nothing fans.
+  Another face of the missing server skill model tracked here.
 - [x] **Right-click is the world-interact verb** — **DONE + playtested 2026-08-24** (client
   `fa2ff04`, all 13 rows of `right_click_interact_checklist.md`). One mouse grammar everywhere:
   right-click (tap) interacts — NPC talk/vendor/bank, corpse + bag loot, veins, stations,
@@ -687,15 +702,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   own optimistic spend, not a refund failure**: the chat log shows a *completed* Regrowth right
   after the cancel (feel-effects + "You cast" + Alteration skill-up — lines only a finished cast
   produces), and client regen is launcher-gated so no drift alternative exists. Tick waits on one
-  15-second re-check: cancel and touch nothing; the bar must stay refunded.
-- [ ] **Bank coin deposit will not break a larger coin** *(found 2026-08-21; **BUILT 2026-08-21,
+  15-second re-check: cancel and touch nothing; the bar must stay refunded. **Still outstanding
+  as of 2026-08-27** — the day's three checklists did not cover it.
+- [x] **Bank coin deposit will not break a larger coin** *(found 2026-08-21; **BUILT 2026-08-21,
   pending playtest** — `Coins::take_breaking_higher`, applied to deposit AND withdraw)*. With
   `1p 5g 5s 75c`, depositing `6s` is refused ("You don't have that coin to deposit") rather than
   breaking a gold into silver. The four tiers are **deliberately independent stacks** with flat
   per-coin weight, so auto-breaking would cut against that design. A design call, not a bug: either
   the banker breaks coin as a service (fits the Banker's "relief valve" role), or the refusal
-  message should explain the tier rule instead of sounding like a bug.
-- [ ] **Coin normalises through a corpse, which changes its weight** *(found 2026-08-21; **BUILT
+  message should explain the tier rule instead of sounding like a bug. **DONE + playtested
+  2026-08-27** (§1 of `coin_and_stack_checklist.md`: deposit and withdraw both break a higher
+  tier; asking for more value than held is still refused, with the refusal line).
+- [x] **Coin normalises through a corpse, which changes its weight** *(found 2026-08-21; **BUILT
   2026-08-21, pending playtest** — corpse loot now returns coin tier by tier)*. Died
   with `1p 5g 7s 312c`, looted back `1p 5g 10s 12c`. The **value is identical** (312c = 3s 12c) so
   nothing is lost, but the game charges *flat weight per coin*, so 312 coins became 15 and the
@@ -705,12 +723,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   four-independent-stacks design honest.
   **Fixed at `tick.rs`'s corpse-loot block**, which flattened the corpse to `total_copper()` and
   added it back with `add_payout` (which normalises). It now returns the corpse's coin with
-  `add_each`, tier by tier: what went onto the body is what comes back off it.
-- [ ] **Stack All scope** *(requested 2026-08-21; **BUILT 2026-08-21, pending playtest** — both the
+  `add_each`, tier by tier: what went onto the body is what comes back off it. **DONE + playtested 2026-08-27**
+  (§2: per-tier counts return exactly; encumbrance identical before the death and after the
+  corpse run).
+- [x] **Stack All scope** *(requested 2026-08-21; **BUILT 2026-08-21, pending playtest** — both the
   hosted and offline paths now consolidate within a container only)*. Ask for it to consolidate only within a
   container rather than across the whole inventory. The tester's note is cut off mid-sentence, so
   **the exact rule wanted needs confirming** before building anything — most likely "merge within a
-  bag, and within the base slots, but never move items between the two".
+  bag, and within the base slots, but never move items between the two". **DONE +
+  playtested 2026-08-27** (§3: merges stay within each container; post-merge dragging produced
+  zero `source slot empty` rejections — the desync canary stayed quiet).
 
 - [ ] **Audit the schedule and the To-Do for accuracy end to end** *(raised 2026-08-24 by the user:
   "the schedule seemed a bit fucked... it's just a pile of inaccurate information. Some boxes are
@@ -761,7 +783,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `BIND` for Bind Affinity, a wire addition so the client learns its bind position (protocol bump,
   gdext rebuild, re-export), Gate reading it, and retiring `PlayerStats.bind_zone_path`. Server
   support for the other seven would be moot — there is nowhere to send anyone.
-- [ ] **The vendor window claims a quantity and price the server never agreed to** *(found
+- [x] **The vendor window claims a quantity and price the server never agreed to** *(found
   2026-08-24; **BUILT 2026-08-24, pending playtest** — client `vendor_window.gd`, needs a
   re-export)*. Chat correctly said "Only 7 fit in your bags." while the vendor dialog said
   "Ordered Honey x20 for 1s." `vendor_window.gd:366-370` prints its success line the instant it
@@ -777,7 +799,27 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   since Track 14 — the server looks up the item, computes the price from `vendor_price`, validates
   coin and bag space, charges, and fans `CoinsUpdate` + `InventoryDelta`. The client was only
   narrating an outcome it could not know. The offline paths still transact locally and keep their
-  "Purchased" / "Sold" wording, which is accurate there.
+  "Purchased" / "Sold" wording, which is accurate there. **DONE + playtested 2026-08-27** (§4:
+  request wording shown, server refusal arrives in chat, no coin charged on refusal, sell price
+  is the server's number). The full-bags row surfaced the separate bag-space finding directly
+  below.
+- [ ] **Buying and granting ignore bag space** *(found 2026-08-27 during the vendor-narration
+  playtest: "Your bags are full" with empty slots in two carried pouches)*. Server-side:
+  `inventory.rs::add_item_locating` places into the `BASE_SLOT_COUNT` base slots only — the
+  `bags` map is never considered — so `BuyItem` and `GmGive` (they share the refusal string)
+  refuse a purchase the player has room for. Log: three consecutive
+  `BuyItem rejected — inventory full, no stack placed` with both pouches empty. Scope when
+  fixing: every `add_item`/`add_item_locating` caller (loot and quest rewards likely share the
+  placer — confirm), a pass-3 bag scan, and nothing new on the wire (`InventoryDelta` already
+  speaks `bag_<i>`). Decide deliberately whether any path should stay base-only by design; the
+  tester's expectation is that bags fill.
+- [ ] **Group panel bars are blank until the first resource update** *(found 2026-08-27, group
+  playtest)*. `_on_world_group_roster` builds member rows zeroed, and the server only fans
+  resources on change (>5% swing, or the 500 ms clock while regen is moving), so a full-HP idle
+  group-mate shows empty bars until something changes. Fix options, verify first: seed rows at
+  roster build from `RemotePlayerManager`'s cached values (check whether `world_entity_spawn`
+  carries hp/mp — if yes this is client-only), else have the server fan a one-shot resource
+  snapshot to group members on roster change.
 
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
@@ -933,7 +975,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 
 ### UI polish
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
-- [ ] **Hotbar + socials bleed between characters** *(found 2026-08-26 during the active-skill
+- [x] **Hotbar + socials bleed between characters** *(found 2026-08-26 during the active-skill
   playtest: skills placed on the Warrior's hotbar appeared on the Monk's; **BUILT 2026-08-26,
   pending playtest** — `hotbar_per_character_checklist.md`, needs a re-export)*. `SocialHotkeys`
   persisted every bank, slot and the macro library to a single global
@@ -951,6 +993,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   before the lobby's `apply_character` handler in the same emission, so the existing
   `spells_changed` prune clears any seeded spell the class can't use. Headless proof ran green:
   two simulated characters, isolation + persistence + legacy files untouched.
+  **DONE + playtested 2026-08-27** (all rows pass: isolation both directions across
+  Warrior/Monk, memorized bar per-character on Chumby, macro library isolated Funk to Zoltan,
+  pickup-and-place + bank switching intact). The "PATK" macro that appeared on every character
+  was legacy user data riding the seed, not a code default — removed from the legacy file and
+  all seven per-character files at user request, same day.
 - [x] **Bank Items-tab: a deposited item renders as an empty slot** — **DONE + playtested
   2026-08-17** (client `8ad7f39`, all 11 rows of `bank_vault_display_checklist.md` pass, including
   the relog row that proves nothing was ever lost). What exists is in systems_overview → Banker
