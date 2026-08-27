@@ -430,17 +430,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   playtest)*. `/r` replies to the most recent tell sender; pressing TAB cycles through everyone
   who has sent you a tell this session. Client-only chat UX (command parsing + a small
   tell-sender history in `ChatWindowManager` or `CombatLog`).
-- [ ] **Left-click picks up a ground item to the cursor** *(requested 2026-08-27, completing a
-  truncated checklist note)*. The user's rule: corpses (yours and monsters') stay right-click
-  to loot, but a lone item sitting on the ground should be grabbed by LEFT-click, attaching to
-  the cursor like an inventory lift. A deliberate carve-out from "left-click only targets" —
-  user aware of the tension and open to discussion. Design wrinkle before building: the server
-  has no cursor slot, so a true attach-to-cursor needs either (a) v1: left-click auto-loots the
-  single-stack bag straight to bags (same LootAll intent, no loot window — the feel without new
-  server state), or (b) a real EQ-style server cursor slot (bigger; would also serve the
-  corpse-auto-re-equip item someday). Loot-rights note: ground bags from kills carry round-robin
-  ownership — the left-click path must go through the same server checks as the loot window,
-  never around them.
+- [ ] **The cursor-slot epic: left-click ground pickup + corpse auto-re-equip** *(left-click
+  requested 2026-08-27; the user chose the full server-side cursor slot — "Option B for sure.
+  this sounds amazing and we need the corpse auto-re-equip feature" — over a client-only
+  auto-loot shortcut)*. Design: `docs/design/cursor_slot_and_reequip.md`. Two slices:
+  **Slice 1 (PD_W0027)** — a real `Inventory.cursor` slot server-side ("cursor" as a location
+  string, which MoveItem / InventoryDelta / the DB column all carry with zero encoding
+  changes), a `LootToCursor` intent gated exactly like the loot window (range, loot rights,
+  single-stack + zero-coin bags only), death strip + encumbrance + persistence coverage, and
+  the client mouse-attach render. **Slice 2** — corpse item rows gain equip-slot provenance
+  (a real migration) and self-corpse loot restores gear to its slots, bags second, cursor as
+  overflow. Corpses stay right-click loot throughout; left-click grabs only lone ground
+  items. One protocol bump, one gdext rebuild, one re-export for slice 1.
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
@@ -911,7 +912,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Original evidence: `docs/playtest_notes/first_external_tester_2026_08_11.md`.
 - [ ] **Corpse auto-re-equip on loot** — looting your own corpse returns gear to your bags; you
   re-equip by hand. A clean version needs the corpse to remember each item's equip-slot
-  provenance.
+  provenance. **Now slice 2 of the cursor-slot epic** (user-committed 2026-08-27; design:
+  `docs/design/cursor_slot_and_reequip.md`) — the cursor slot is the overflow home that makes
+  an honest version possible.
 - [ ] **Per-creature corpse models / scale** — corpses (player + mob) share
   `scripts/corpse_body.gd`'s capsule; needs authored per-creature meshes.
 - [ ] **Tune `corpses::CORPSE_LINGER_SECS` for the considered production value** — **raised to 7
