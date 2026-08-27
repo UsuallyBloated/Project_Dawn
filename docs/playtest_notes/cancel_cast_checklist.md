@@ -24,6 +24,9 @@ here would be a server design change — deduct at CastStart — noted in the To
       produces), so the second dip was the immediate re-cast's own spend at bar-start, which is
       correct. The refund itself worked. One 15-second re-check next session: cancel and touch
       NOTHING — the bar must stay refunded.]
+      [Re-check DONE 2026-08-27: plump cast Reclaim Soul on FIGHTME's corpse, ESC mid-bar,
+      "You stop casting.", 20 seconds untouched — mana never re-consumed, watched on BOTH
+      group displays. The refund holds. Closed.]
 - [x] **Start a cast, walk forward mid-bar** → same: cancelled + refunded. notes:
 - [x] **Start a cast, jump** → same. notes:
 - [x] **Let a cast complete normally** → mana stays spent, spell lands. The refund must only
@@ -37,11 +40,16 @@ here would be a server design change — deduct at CastStart — noted in the To
 
 ## 3 — Interrupts and edge cases
 
-- [-] **Get hit while casting (server interrupt)** → cast fails as before, and the mana bar
+- [x] **Get hit while casting (server interrupt)** → cast fails as before, and the mana bar
       recovers rather than staying down. notes:  Please look at the logs for this.  I'm not sure if I was getting hit while casting.
       [Checked 2026-08-26: zero `interrupted (hit during cast)` lines anywhere in the server log,
       so no interrupt ever fired — either never hit mid-bar or the Channeling roll survived every
-      hit. Row unexercised, carries to the next combat-heavy session.]
+      hit. Row unexercised, carried.]
+      [EXERCISED 2026-08-27 21:37:03: `cast interrupted by incoming damage caster=4
+      spell=Reclaim Soul` — the Track 19A on-hit roll fired for real during the res attempt.
+      The re-cast 28 seconds later completed and the offer/accept flow ran clean; the tester
+      was actively watching plump's mana on both group displays through this session and
+      reported no wrong consumption.]
 - [x] **Cancel, then immediately re-cast the same spell** → works; no stuck cooldown (the
       cooldown only starts on completion). notes:
 - [x] **Instant-cast spells are unaffected** (no bar, nothing to cancel). notes:
@@ -54,3 +62,6 @@ here would be a server design change — deduct at CastStart — noted in the To
 - Overall: PASS with two carries — the hit-interrupt row was never exercised (no interrupt in
   the log), and the §1.1 mana observation triaged as the re-cast's own spend (see note). One
   cancel-and-wait re-check stands between this and the tick.
+  **2026-08-27: both carries closed** — the deliberate cancel-and-wait ran clean (20 s, no
+  re-consume, both group displays), and the server interrupt fired in the wild at 21:37:03.
+  Full PASS; item ticked.
