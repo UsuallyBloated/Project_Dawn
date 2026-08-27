@@ -442,6 +442,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (a real migration) and self-corpse loot restores gear to its slots, bags second, cursor as
   overflow. Corpses stay right-click loot throughout; left-click grabs only lone ground
   items. One protocol bump, one gdext rebuild, one re-export for slice 1.
+  **Slice 1 BUILT 2026-08-27, pending playtest** (server `73074a8`, 210/210 unit tests incl. 8
+  new cursor tests; client + refreshed gdext DLL in this commit; `cursor_slot_checklist.md`).
+  What fell out nearly free: equip-from-hand (paperdoll click while holding, old piece pops to
+  cursor), drop-from-hand and trash-from-hand via the existing Drop/Trash cells, eat-from-hand
+  server-side. **Deploy note: BOTH sides move together** — an old client cannot connect once
+  the R720 runs PD_W0027, so restart + new export are one step.
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and

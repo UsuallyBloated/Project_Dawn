@@ -101,6 +101,10 @@ func _inventory_weight() -> float:
 			for inner in bag:
 				if inner != null:
 					w += inner["item"].weight * inner["count"]
+	# PD_W0027 — a held stack weighs what it weighs. Carrying an item on
+	# the cursor must never be a way to dodge encumbrance.
+	if Inventory.cursor_slot != null:
+		w += Inventory.cursor_slot["item"].weight * Inventory.cursor_slot["count"]
 	return w
 
 

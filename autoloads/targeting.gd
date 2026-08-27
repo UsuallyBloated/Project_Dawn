@@ -74,8 +74,13 @@ func click_target(mouse_pos: Vector2) -> void:
 		Combat.set_target(body)
 	elif body.is_in_group("vendor_npcs") or body.is_in_group("dialogue_npcs") or body.is_in_group("banker_npcs"):
 		Combat.set_target(body)
+	elif body is LootBag:
+		# PD_W0027 — the user's grammar: corpses stay right-click to loot,
+		# but a lone item sitting on the ground is grabbed by LEFT-click and
+		# rides the cursor until placed.
+		_try_ground_pickup(body)
 	elif body is Area3D:
-		pass  # interactable (e.g. loot bag) — let its own input_event handle it
+		pass  # other interactables — let their own input_event handle it
 	else:
 		Combat.set_target(null)
 
@@ -103,6 +108,27 @@ func _cycle_target() -> void:
 const INTERACT_RANGE_NPC := 6.0
 const INTERACT_RANGE_LOOT := 6.0
 const INTERACT_RANGE_GATHER := 3.0
+
+# PD_W0027 — left-click ground pickup. The client pre-gates only what it can
+# see honestly (range, its own held state, the obvious multi-stack case) so
+# the common refusals answer instantly; the server re-checks everything —
+# rights, the round-robin turn, coin, the real cursor state.
+func _try_ground_pickup(bag: LootBag) -> void:
+	if not Net.is_launcher_mode() or bag.bag_id < 0:
+		return  # Test Room bags keep the right-click loot window only
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return
+	if bag.global_position.distance_to(player.global_position) > INTERACT_RANGE_LOOT:
+		CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
+		return
+	if Inventory.cursor_slot != null:
+		CombatLog.add_line("You're already holding something.", CombatLog.MsgType.INFO)
+		return
+	if bag.items.size() != 1 or bag.has_coins():
+		CombatLog.add_line("There's more than one thing there. Right-click to loot.", CombatLog.MsgType.INFO)
+		return
+	Net.broadcast_loot_to_cursor(bag.bag_id)
 
 ## Resolve a right-click TAP into a world interaction. This is the world half
 ## of the game's one mouse grammar — right-click = use/interact, left-click =

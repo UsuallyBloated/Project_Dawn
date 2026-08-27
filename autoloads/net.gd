@@ -635,6 +635,15 @@ func broadcast_move_item(src_location: String, src_slot: int, dst_location: Stri
 		return
 	send_move_item(src_location, src_slot, dst_location, dst_slot)
 
+# PD_W0027 — ground pickup: ask the server to move a loot bag's ONLY item
+# stack onto the cursor slot. The server runs the full loot-window gate set
+# plus the cursor rules (single stack, zero coin, empty hand); refusals
+# arrive as System chat, success as an InventoryDelta at location "cursor".
+func broadcast_loot_to_cursor(bag_id: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_loot_to_cursor(bag_id)
+
 # Track 13.2.b — split `count` items off the src stack into dst. Dst
 # must be empty or hold the same item_path; the server rejects
 # different-item dst (use broadcast_move_item for swaps).

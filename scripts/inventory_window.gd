@@ -321,7 +321,7 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 		return
 
 	if event.button_index == MOUSE_BUTTON_RIGHT:
-		if drag_item != null:
+		if drag_item != null or Inventory.cursor_slot != null:
 			return
 		var slot = Inventory.base_slots[index]
 		if slot == null:
@@ -354,6 +354,15 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 		return
 
 	if event.button_index != MOUSE_BUTTON_LEFT:
+		return
+
+	# PD_W0027 — an item held on the SERVER cursor places first, before any
+	# local drag logic: one MoveItem, and the deltas repaint both ends
+	# (empty → move, same item → capped merge, different item → swap onto
+	# the cursor). cursor_slot only fills in launcher mode.
+	if Inventory.cursor_slot != null and drag_item == null:
+		Net.broadcast_move_item(NetProtocol.INV_LOCATION_CURSOR, 0, NetProtocol.INV_LOCATION_BASE, index)
+		get_viewport().set_input_as_handled()
 		return
 
 	if drag_item == null:
@@ -513,7 +522,9 @@ func _gui_input(event: InputEvent) -> void:
 
 func _input(event: InputEvent) -> void:
 	super._input(event)
-	if not visible or drag_item == null:
+	# PD_W0027 — a held server-cursor item can reach the Trash / Drop cells
+	# too (the full-bags escape hatch), so the gate admits either hold kind.
+	if not visible or (drag_item == null and Inventory.cursor_slot == null):
 		return
 	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		return
@@ -538,6 +549,11 @@ func _input(event: InputEvent) -> void:
 	if _drop_cell != null and _drop_cell.get_global_rect().has_point(mp):
 		_show_drop_confirm()
 		get_viewport().set_input_as_handled()
+		return
+	# PD_W0027 — a held server-cursor item is dropped via the Drop cell
+	# only. A world click while holding is targeting / ground pickup, so it
+	# must fall through untouched.
+	if drag_item == null:
 		return
 	# Drop only when released over genuinely empty space — i.e. the 3D
 	# world, where no Control sits under the cursor. Any Control there
@@ -582,10 +598,12 @@ func _show_delete_confirm() -> void:
 		_delete_dialog.confirmed.connect(_confirm_trash_delete)
 		_delete_dialog.canceled.connect(_return_drag_to_source)
 		add_child(_delete_dialog)
-	if drag_count > 1:
-		_delete_dialog.dialog_text = "Delete %d × %s?" % [drag_count, drag_item.item_name]
+	var del_item: ItemData = drag_item if drag_item != null else Inventory.cursor_slot["item"]
+	var del_count: int = drag_count if drag_item != null else Inventory.cursor_slot["count"]
+	if del_count > 1:
+		_delete_dialog.dialog_text = "Delete %d × %s?" % [del_count, del_item.item_name]
 	else:
-		_delete_dialog.dialog_text = "Delete %s?" % drag_item.item_name
+		_delete_dialog.dialog_text = "Delete %s?" % del_item.item_name
 	_delete_dialog.popup_centered()
 
 # Track 15.1 — trash cell confirm. In launcher mode the source slot
@@ -599,6 +617,9 @@ func _confirm_trash_delete() -> void:
 			var src_loc: String = NetProtocol.INV_LOCATION_BASE if drag_source_bi == -1 \
 				else NetProtocol.inv_location_bag(drag_source_bi)
 			Net.broadcast_destroy_item(src_loc, drag_source_si, drag_count)
+		elif Inventory.cursor_slot != null:
+			# PD_W0027 — destroy the held stack; the cursor delta clears it.
+			Net.broadcast_destroy_item(NetProtocol.INV_LOCATION_CURSOR, 0, Inventory.cursor_slot["count"])
 		_clear_drag()
 		return
 	end_drag()
@@ -614,10 +635,12 @@ func _show_drop_confirm() -> void:
 		_drop_dialog.confirmed.connect(_confirm_drop_to_ground)
 		_drop_dialog.canceled.connect(_return_drag_to_source)
 		add_child(_drop_dialog)
-	if drag_count > 1:
-		_drop_dialog.dialog_text = "Drop %d × %s on the ground?" % [drag_count, drag_item.item_name]
+	var drop_item: ItemData = drag_item if drag_item != null else Inventory.cursor_slot["item"]
+	var drop_count: int = drag_count if drag_item != null else Inventory.cursor_slot["count"]
+	if drop_count > 1:
+		_drop_dialog.dialog_text = "Drop %d × %s on the ground?" % [drop_count, drop_item.item_name]
 	else:
-		_drop_dialog.dialog_text = "Drop %s on the ground?" % drag_item.item_name
+		_drop_dialog.dialog_text = "Drop %s on the ground?" % drop_item.item_name
 	_drop_dialog.popup_centered()
 
 # In launcher mode the source slot still holds the item server-side (the
@@ -631,6 +654,10 @@ func _confirm_drop_to_ground() -> void:
 			var src_loc: String = NetProtocol.INV_LOCATION_BASE if drag_source_bi == -1 \
 				else NetProtocol.inv_location_bag(drag_source_bi)
 			Net.broadcast_drop_item(src_loc, drag_source_si, drag_count)
+		elif Inventory.cursor_slot != null:
+			# PD_W0027 — put the held stack down; the server spawns the
+			# ground bag and the cursor delta empties the hand.
+			Net.broadcast_drop_item(NetProtocol.INV_LOCATION_CURSOR, 0, Inventory.cursor_slot["count"])
 		_clear_drag()
 		return
 	end_drag()

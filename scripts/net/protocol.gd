@@ -313,6 +313,9 @@ const SW_INVENTORY_SNAPSHOT := "InventorySnapshot"
 const SW_INVENTORY_DELTA    := "InventoryDelta"
 const INV_LOCATION_BASE     := "base"
 const INV_LOCATION_EQUIP    := "equip"
+# PD_W0027 — the server-side cursor slot: one held stack riding the mouse.
+# A real location on the wire; the slot index is always 0 and ignored.
+const INV_LOCATION_CURSOR   := "cursor"
 
 static func inv_location_bag(base_idx: int) -> String:
 	return "bag_%d" % base_idx

@@ -244,7 +244,7 @@ func _on_slot_input(event: InputEvent, index: int) -> void:
 		return
 
 	if event.button_index == MOUSE_BUTTON_RIGHT:
-		if inv_win.drag_item != null:
+		if inv_win.drag_item != null or Inventory.cursor_slot != null:
 			return
 		var slot = Inventory.get_slot(bag_index, index)
 		if slot == null:
@@ -275,6 +275,13 @@ func _on_slot_input(event: InputEvent, index: int) -> void:
 		return
 
 	if event.button_index != MOUSE_BUTTON_LEFT:
+		return
+
+	# PD_W0027 — a server-cursor item places into the clicked inner slot
+	# before any local drag logic (same law as the base cells).
+	if Inventory.cursor_slot != null and inv_win.drag_item == null:
+		Net.broadcast_move_item(NetProtocol.INV_LOCATION_CURSOR, 0, NetProtocol.inv_location_bag(bag_index), index)
+		get_viewport().set_input_as_handled()
 		return
 
 	if inv_win.drag_item == null:

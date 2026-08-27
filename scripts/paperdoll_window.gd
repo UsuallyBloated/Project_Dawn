@@ -200,6 +200,15 @@ func _on_slot_input(event: InputEvent, slot_name: String) -> void:
 		_tooltip_panel.visible = false
 		return
 	if mb.button_index == MOUSE_BUTTON_LEFT:
+		# PD_W0027 — equip straight from the hand: clicking a paperdoll slot
+		# with a server-cursor item routes EquipItem from "cursor". A
+		# previously-worn item pops back onto the cursor (the server's swap),
+		# which is exactly EQ's click-the-doll-while-holding.
+		if Inventory.cursor_slot != null:
+			Equipment.request_equip_from(NetProtocol.INV_LOCATION_CURSOR, 0, Inventory.cursor_slot["item"], slot_name)
+			_tooltip_panel.visible = false
+			get_viewport().set_input_as_handled()
+			return
 		# Drop-equip: if the user has an inventory drag in flight and
 		# clicks a paperdoll slot, route the held item through
 		# Equipment.request_equip_from with the clicked slot as the

@@ -3,6 +3,8 @@ extends Node
 signal inventory_changed
 signal item_added(item: ItemData)
 signal item_removed(item: ItemData)
+# PD_W0027 — the server cursor slot changed (picked up, placed, swapped).
+signal cursor_changed
 
 const BASE_SLOT_COUNT := 8
 
@@ -14,6 +16,16 @@ var base_slots: Array = []
 # When base_slots[i] holds a BAG, bag_contents[i] is Array[bag.bag_num_slots].
 # Otherwise bag_contents[i] is null.
 var bag_contents: Array = []
+
+# PD_W0027 — the SERVER-side cursor slot: null | { "item": ItemData,
+# "count": int }. Distinct from the inventory windows' local visual drag
+# (which never leaves its server slot until the drop lands): this is a real
+# held stack — it persists across logout, weighs, and dies with you. Filled
+# by ground pickup and by place-swaps; rendered attached to the mouse below.
+var cursor_slot: Variant = null
+
+var _cursor_ghost: Label = null
+var _cursor_layer: CanvasLayer = null
 
 func _ready() -> void:
 	base_slots.resize(BASE_SLOT_COUNT)
@@ -43,6 +55,7 @@ func _on_inventory_snapshot(
 		counts: PackedInt32Array) -> void:
 	base_slots.fill(null)
 	bag_contents.fill(null)
+	cursor_slot = null
 	# Track 13.3 — clear the paperdoll before re-applying. Server
 	# is authoritative here too; any stale Equipment state from a
 	# prior session is wiped.
@@ -70,6 +83,9 @@ func _on_inventory_snapshot(
 				_init_bag_contents(slot_idx, item.bag_num_slots)
 		elif loc == NetProtocol.INV_LOCATION_EQUIP:
 			Equipment.apply_remote_equip(slot_idx, item)
+		elif loc == NetProtocol.INV_LOCATION_CURSOR:
+			# PD_W0027 — an item held at logout comes back in hand.
+			cursor_slot = {"item": item, "count": count}
 	# Pass 2 — bag_<i> entries. Skip rows whose parent base slot
 	# turned out not to hold a bag.
 	for i in n:
@@ -94,6 +110,8 @@ func _on_inventory_snapshot(
 			push_warning("Inventory snapshot: unknown bag-inner ItemData path '%s'" % path)
 			continue
 		arr[slot_idx] = {"item": item, "count": count}
+	_update_cursor_ghost()
+	cursor_changed.emit()
 	inventory_changed.emit()
 
 # Track 13.2 / 14.3 — apply a single-slot mutation. Empty
@@ -137,6 +155,22 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 				push_warning("Inventory delta: unknown ItemData path '%s'" % item_path)
 				return
 			Equipment.apply_remote_equip(slot, item)
+		return
+	# PD_W0027 — the cursor slot. The server is the only writer; a delta
+	# here means a pickup landed, a place emptied the hand, or a swap put
+	# something new in it.
+	if location == NetProtocol.INV_LOCATION_CURSOR:
+		if item_path == "" or count <= 0:
+			cursor_slot = null
+		else:
+			var item := load(item_path) as ItemData
+			if item == null:
+				push_warning("Inventory delta: unknown ItemData path '%s'" % item_path)
+				return
+			cursor_slot = {"item": item, "count": count}
+		_update_cursor_ghost()
+		cursor_changed.emit()
+		inventory_changed.emit()
 		return
 	# Track 14.3 — bag_<i> delta.
 	if location.begins_with("bag_"):
@@ -561,3 +595,39 @@ func _slot_from_dict(raw: Variant) -> Variant:
 	if item == null:
 		return null
 	return {"item": item, "count": int(d.get("count", 1))}
+
+# ── PD_W0027: the held-item render ───────────────────────────────────────────
+# The server-cursor stack rides the mouse as a name label (items have no
+# icons yet; the name-label fallback is the project's precedent). Same
+# pattern as SocialHotkeys' skill-carry ghost: a top CanvasLayer + a
+# MOUSE_FILTER_IGNORE label following the cursor in _process.
+
+func _ensure_cursor_ghost() -> void:
+	if _cursor_layer != null:
+		return
+	_cursor_layer = CanvasLayer.new()
+	_cursor_layer.layer = 100
+	_cursor_layer.visible = false
+	add_child(_cursor_layer)
+	_cursor_ghost = Label.new()
+	_cursor_ghost.add_theme_font_size_override("font_size", 12)
+	_cursor_ghost.add_theme_color_override("font_color", Color(0.95, 0.95, 0.85))
+	_cursor_ghost.add_theme_color_override("font_outline_color", Color.BLACK)
+	_cursor_ghost.add_theme_constant_override("outline_size", 3)
+	_cursor_ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cursor_layer.add_child(_cursor_ghost)
+
+func _update_cursor_ghost() -> void:
+	if cursor_slot == null:
+		if _cursor_layer != null:
+			_cursor_layer.visible = false
+		return
+	_ensure_cursor_ghost()
+	var n: int = cursor_slot["count"]
+	_cursor_ghost.text = cursor_slot["item"].item_name if n <= 1 \
+		else "%s x%d" % [cursor_slot["item"].item_name, n]
+	_cursor_layer.visible = true
+
+func _process(_delta: float) -> void:
+	if cursor_slot != null and _cursor_ghost != null:
+		_cursor_ghost.position = get_viewport().get_mouse_position() + Vector2(14.0, 10.0)
