@@ -18,7 +18,6 @@ var _bag_windows: Array = []  # BASE_SLOT_COUNT BagWindow or null
 var _tooltip: PanelContainer = null
 var _tooltip_label: Label = null
 var _trash_cell: Panel = null
-var _drop_cell: Panel = null
 var _delete_dialog: ConfirmationDialog = null
 var _drop_dialog: ConfirmationDialog = null
 var _wallet_label: Label = null
@@ -108,13 +107,12 @@ func _build_ui() -> void:
 	_wallet_label.tooltip_text = "Your coins, as carried — stacks are never consolidated automatically. Every coin has weight."
 	vbox.add_child(_wallet_label)
 
-	# Drop (ground) + Trash (destroy) share the bottom row. Drop spawns a
-	# public loot bag at the player's feet; Trash deletes for good.
+	# Trash (destroy) sits on the bottom row. The Drop cell that used to sit
+	# beside it is gone (2026-08-28): dropping is clicking the world while
+	# holding, which is where a player reaches for it anyway.
 	var bottom_row := HBoxContainer.new()
 	bottom_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	bottom_row.add_theme_constant_override("separation", 8)
-	_drop_cell = _make_drop_cell()
-	bottom_row.add_child(_drop_cell)
 	_trash_cell = _make_trash_cell()
 	bottom_row.add_child(_trash_cell)
 	vbox.add_child(bottom_row)
@@ -137,28 +135,6 @@ func _make_trash_cell() -> Panel:
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", 24)
 	label.add_theme_color_override("font_color", Color(0.85, 0.45, 0.40))
-	cell.add_child(label)
-
-	return cell
-
-# Drop-to-ground target. Mirrors the trash cell but routes through
-# DropItem (public loot bag at the player's feet) instead of DestroyItem.
-# Dropping is also available by dragging an item out of the window onto
-# the 3D world — see `_input`.
-func _make_drop_cell() -> Panel:
-	var cell := Panel.new()
-	cell.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
-	cell.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	_apply_slot_style(cell, Color(0.10, 0.12, 0.06, 1.0), Color(0.45, 0.55, 0.25, 1.0), 1)
-	cell.tooltip_text = "Drag an item here (or out onto the world) to drop it on the ground"
-
-	var label := Label.new()
-	label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	label.text = "⬇"
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 24)
-	label.add_theme_color_override("font_color", Color(0.70, 0.80, 0.45))
 	cell.add_child(label)
 
 	return cell
@@ -382,6 +358,14 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 			CombatLog.add_line("Empty the bag before moving it.", CombatLog.MsgType.INFO)
 			get_viewport().set_input_as_handled()
 			return
+		# PD_W0027 slice 1.5 — online, every lift goes through the real cursor:
+		# one MoveItem into the hand, and the server's delta puts the item on
+		# the mouse. The local visual drag below is the Test Room's path only.
+		if Net.is_launcher_mode():
+			Net.broadcast_move_item(NetProtocol.INV_LOCATION_BASE, index, NetProtocol.INV_LOCATION_CURSOR, 0)
+			_tooltip.visible = false
+			get_viewport().set_input_as_handled()
+			return
 		begin_drag(slot["item"], slot["count"], -1, index)
 		# Track 14 follow-up — in launcher mode the server is
 		# authoritative; the source slot stays filled visually until
@@ -544,10 +528,6 @@ func _input(event: InputEvent) -> void:
 		return
 	if _trash_cell != null and _trash_cell.get_global_rect().has_point(mp):
 		_show_delete_confirm()
-		get_viewport().set_input_as_handled()
-		return
-	if _drop_cell != null and _drop_cell.get_global_rect().has_point(mp):
-		_show_drop_confirm()
 		get_viewport().set_input_as_handled()
 		return
 	# PD_W0027 — a held server-cursor item is dropped via the Drop cell

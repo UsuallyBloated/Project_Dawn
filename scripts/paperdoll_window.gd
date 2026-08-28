@@ -209,6 +209,12 @@ func _on_slot_input(event: InputEvent, slot_name: String) -> void:
 			_tooltip_panel.visible = false
 			get_viewport().set_input_as_handled()
 			return
+		# PD_W0027 slice 1.5 — empty hand: lift the worn item onto the cursor.
+		if Net.is_launcher_mode() and Equipment.equipped.get(slot_name) != null:
+			Equipment.request_unequip_to_cursor(slot_name)
+			_tooltip_panel.visible = false
+			get_viewport().set_input_as_handled()
+			return
 		# Drop-equip: if the user has an inventory drag in flight and
 		# clicks a paperdoll slot, route the held item through
 		# Equipment.request_equip_from with the clicked slot as the

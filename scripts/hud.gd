@@ -764,9 +764,9 @@ func _on_stat_panel_input(event: InputEvent) -> void:
 func _show_self_target() -> void:
 	_self_targeted = true
 	if is_instance_valid(_tracked_target):
-		if _tracked_target.is_connected("hp_changed", _on_target_hp_changed):
+		if _tracked_target.has_signal("hp_changed") and _tracked_target.is_connected("hp_changed", _on_target_hp_changed):
 			_tracked_target.hp_changed.disconnect(_on_target_hp_changed)
-		if _tracked_target.is_connected("died", _on_target_enemy_died):
+		if _tracked_target.has_signal("died") and _tracked_target.is_connected("died", _on_target_enemy_died):
 			_tracked_target.died.disconnect(_on_target_enemy_died)
 	_tracked_target = null
 	var pname := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
@@ -802,7 +802,7 @@ func _on_target_changed(enemy) -> void:
 	if _self_targeted:
 		_clear_self_target()
 	if is_instance_valid(_tracked_target):
-		if _tracked_target.is_connected("hp_changed", _on_target_hp_changed):
+		if _tracked_target.has_signal("hp_changed") and _tracked_target.is_connected("hp_changed", _on_target_hp_changed):
 			_tracked_target.hp_changed.disconnect(_on_target_hp_changed)
 		# mp_changed / stamina_changed exist on RemotePlayer but not on
 		# RemoteEnemy or RemotePet, so these need the same has_signal guard the
@@ -855,6 +855,19 @@ func _on_target_changed(enemy) -> void:
 		# No hp bar; just the "<owner>'s corpse" name (skip the friendly-NPC
 		# branch below, which would throw on the missing npc_name field).
 		target_name_label.text = "%s's corpse" % enemy.owner_name
+		target_level_label.text = ""
+		target_hp_bar.visible = false
+		if _target_hp_label:
+			_target_hp_label.visible = false
+		if _tot_frame != null:
+			_tot_frame.visible = false
+		return
+	if enemy is LootBag:
+		# PD_W0027 slice 1.5 — a kill-loot corpse (or a multi-item bag) is a
+		# TARGET on left-click, the same way a player corpse is: name only, no
+		# hp bar. Left-click = target, everywhere.
+		var bag_name: String = "%s's corpse" % enemy.creature_name if enemy.creature_name != "" else "Dropped items"
+		target_name_label.text = bag_name
 		target_level_label.text = ""
 		target_hp_bar.visible = false
 		if _target_hp_label:

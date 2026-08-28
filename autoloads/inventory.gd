@@ -631,3 +631,27 @@ func _update_cursor_ghost() -> void:
 func _process(_delta: float) -> void:
 	if cursor_slot != null and _cursor_ghost != null:
 		_cursor_ghost.position = get_viewport().get_mouse_position() + Vector2(14.0, 10.0)
+
+# ── PD_W0027 slice 1.5: drop the held item by clicking the world ──────────────
+# The inventory's Drop cell is gone; clicking terrain or sky while holding is
+# the drop, behind the same confirm the old cell used. Lives here rather than
+# in the inventory window so it works with every window closed.
+var _drop_dialog: ConfirmationDialog = null
+
+func request_ground_drop() -> void:
+	if cursor_slot == null:
+		return
+	if _drop_dialog == null:
+		_drop_dialog = ConfirmationDialog.new()
+		_drop_dialog.title = "Drop Item"
+		_drop_dialog.confirmed.connect(_confirm_ground_drop)
+		add_child(_drop_dialog)
+	var n: int = cursor_slot["count"]
+	var nm: String = cursor_slot["item"].item_name
+	_drop_dialog.dialog_text = ("Drop %d x %s on the ground?" % [n, nm]) if n > 1 else ("Drop %s on the ground?" % nm)
+	_drop_dialog.popup_centered()
+
+func _confirm_ground_drop() -> void:
+	if cursor_slot == null:
+		return
+	Net.broadcast_drop_item(NetProtocol.INV_LOCATION_CURSOR, 0, cursor_slot["count"])

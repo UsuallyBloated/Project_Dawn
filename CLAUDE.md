@@ -467,6 +467,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   source** — retire the local invisible-drag in launcher mode and route all lifts through the
   real cursor (the old drag ghost rendered `item.icon`, null for all 172 items, so lifts
   showed NOTHING on the mouse; the server cursor shows the name — unify on it).
+  **Slice 1.5 BUILT 2026-08-28, pending playtest** (`cursor_slice15_checklist.md`; server
+  `22837b9` unequip-to-cursor + the client batch; no protocol bump). All four asks plus the
+  standing `hud.gd::_tracked_target` guards (loot bags are targets now, so the `has_signal`
+  guards went in). One ask deferred as its own epic: **clicking an entity while holding should
+  also open a TRADE window** (EQ give/trade) — recorded below; entity clicks target-only until
+  then.
+- [ ] **Trade window** *(requested 2026-08-28 with the cursor work: "a click that lands on an
+  entity (enemy, NPC, player) still targets but ALSO opens a trade window. EQ works like
+  this")*. A real subsystem: a server-held trade session (offer slots + coin from both sides,
+  accept/accept, the swap committed in one transaction — the store-atomicity lessons apply),
+  the NPC give variant (quest hand-ins), a wire message set, and the window. Trigger: clicking
+  a player/NPC while holding an item. Until built, entity clicks while holding target only.
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
@@ -1097,7 +1109,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   firing (targeting an enemy then switching away). Left unfixed deliberately: adding guards
   speculatively would be changing working code on a hunch. Check `Targeting` /
   `Combat.set_target` for whether corpses reach the HUD target frame; guard both lines if they
-  can.
+  can. **Resolved in code 2026-08-28:** slice 1.5 made loot bags real targets (left-click a
+  kill corpse), so the precondition flipped and the `has_signal` guards went in on all three
+  unguarded lines. Tick on `cursor_slice15_checklist.md` §4's F1-retarget row.
 
 ### Tradeskill depth
 - [ ] **Server-authoritative tradeskills** — mining/crafting/skinning currently refuse online

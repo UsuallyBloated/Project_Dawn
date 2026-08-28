@@ -59,6 +59,10 @@ func click_target(mouse_pos: Vector2) -> void:
 	params.collide_with_areas = true
 	var result := space.intersect_ray(params)
 	if result.is_empty():
+		# PD_W0027 slice 1.5 — clicking the sky while holding puts the item down.
+		if Inventory.cursor_slot != null:
+			Inventory.request_ground_drop()
+			return
 		Combat.set_target(null)
 		return
 	var body = result["collider"]
@@ -75,13 +79,18 @@ func click_target(mouse_pos: Vector2) -> void:
 	elif body.is_in_group("vendor_npcs") or body.is_in_group("dialogue_npcs") or body.is_in_group("banker_npcs"):
 		Combat.set_target(body)
 	elif body is LootBag:
-		# PD_W0027 — the user's grammar: corpses stay right-click to loot,
-		# but a lone item sitting on the ground is grabbed by LEFT-click and
-		# rides the cursor until placed.
-		_try_ground_pickup(body)
+		# PD_W0027 — a lone dropped sack is grabbed by LEFT-click and rides the
+		# cursor; a creature's corpse or a fuller bag is a TARGET (slice 1.5).
+		_on_loot_bag_clicked(body)
 	elif body is Area3D:
 		pass  # other interactables — let their own input_event handle it
 	else:
+		# PD_W0027 slice 1.5 — clicking terrain while holding puts the item
+		# down; entity clicks above still target (a trade window on entity
+		# click is its own future system).
+		if Inventory.cursor_slot != null:
+			Inventory.request_ground_drop()
+			return
 		Combat.set_target(null)
 
 func _cycle_target() -> void:
@@ -109,24 +118,22 @@ const INTERACT_RANGE_NPC := 6.0
 const INTERACT_RANGE_LOOT := 6.0
 const INTERACT_RANGE_GATHER := 3.0
 
-# PD_W0027 — left-click ground pickup. The client pre-gates only what it can
-# see honestly (range, its own held state, the obvious multi-stack case) so
-# the common refusals answer instantly; the server re-checks everything —
+# PD_W0027 — left-click on a loot bag. A lone dropped sack (one stack, no
+# coin, no creature) is the pickup; a creature's corpse, a coined bag, or a
+# fuller bag is a TARGET, and so is any bag clicked while already holding —
+# left-click = target, everywhere (slice 1.5). The client pre-gates only
+# what it can see honestly; the server re-checks everything on a pickup —
 # rights, the round-robin turn, coin, the real cursor state.
-func _try_ground_pickup(bag: LootBag) -> void:
-	if not Net.is_launcher_mode() or bag.bag_id < 0:
-		return  # Test Room bags keep the right-click loot window only
+func _on_loot_bag_clicked(bag: LootBag) -> void:
+	var is_lone_sack: bool = bag.items.size() == 1 and not bag.has_coins() and bag.creature_name == ""
+	if not is_lone_sack or Inventory.cursor_slot != null or not Net.is_launcher_mode() or bag.bag_id < 0:
+		Combat.set_target(bag)
+		return
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null:
 		return
 	if bag.global_position.distance_to(player.global_position) > INTERACT_RANGE_LOOT:
 		CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
-		return
-	if Inventory.cursor_slot != null:
-		CombatLog.add_line("You're already holding something.", CombatLog.MsgType.INFO)
-		return
-	if bag.items.size() != 1 or bag.has_coins():
-		CombatLog.add_line("There's more than one thing there. Right-click to loot.", CombatLog.MsgType.INFO)
 		return
 	Net.broadcast_loot_to_cursor(bag.bag_id)
 

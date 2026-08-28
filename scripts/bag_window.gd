@@ -288,6 +288,12 @@ func _on_slot_input(event: InputEvent, index: int) -> void:
 		var slot = Inventory.get_slot(bag_index, index)
 		if slot == null:
 			return
+		# PD_W0027 slice 1.5 — online, every lift goes through the real cursor.
+		if Net.is_launcher_mode():
+			Net.broadcast_move_item(NetProtocol.inv_location_bag(bag_index), index, NetProtocol.INV_LOCATION_CURSOR, 0)
+			_tooltip.visible = false
+			get_viewport().set_input_as_handled()
+			return
 		inv_win.begin_drag(slot["item"], slot["count"], bag_index, index)
 		# Track 14 follow-up — in launcher mode keep the source
 		# slot visually populated until the server confirms the

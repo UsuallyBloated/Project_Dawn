@@ -161,6 +161,17 @@ func request_unequip(slot_name: String) -> bool:
 	unequip(slot_name)
 	return true
 
+# PD_W0027 slice 1.5 — lift a worn item straight onto the cursor (EQ's
+# click-the-doll-with-an-empty-hand). The server refuses if the hand is full.
+func request_unequip_to_cursor(slot_name: String) -> bool:
+	if equipped.get(slot_name) == null or not Net.is_launcher_mode():
+		return false
+	var equip_slot_idx: int = SLOTS.find(slot_name)
+	if equip_slot_idx < 0:
+		return false
+	Net.broadcast_unequip_item(equip_slot_idx, NetProtocol.INV_LOCATION_CURSOR, 0)
+	return true
+
 func _resolve_slot(item: ItemData) -> String:
 	var slot := _pick_slot(item)
 	# Legacy path: the caller already removed the item from inventory,
