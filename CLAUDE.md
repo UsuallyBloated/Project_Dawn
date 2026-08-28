@@ -452,6 +452,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   cursor), drop-from-hand and trash-from-hand via the existing Drop/Trash cells, eat-from-hand
   server-side. **Deploy note: BOTH sides move together** — an old client cannot connect once
   the R720 runs PD_W0027, so restart + new export are one step.
+  **Playtested 2026-08-28: 13 of 14 rows PASS** (`cursor_slot_checklist.md` — the moves law,
+  persistence across logout, weight, round-robin refusal all clean). **One CRITICAL find,
+  fixed same morning: the death dupe** (server `f8c609b`) — `clear_all()` predated the cursor
+  and left the hand full after the corpse had taken the copy; one line + a regression test on
+  the exact death sequence. Retest §4 after the redeploy. **Slice 1.5 queued from the
+  feedback**: (a) left-click on a kill-loot corpse/bag TARGETS it (consistent with left-click
+  = target; also makes the standing `hud.gd::_tracked_target` guard item live — loot bags
+  will need the `has_signal` guards or the signals); (b) left-click a WORN paperdoll item
+  with an empty hand lifts it to the cursor (UnequipItem to "cursor"; small server support);
+  (c) clicking the WORLD (terrain/sky) while holding = drop confirm, and the inventory's Drop
+  cell is removed outright (user: clicking the environment is the intuitive drop; drag-drops
+  already use the world-click path); (d) **every pickup attaches to the cursor regardless of
+  source** — retire the local invisible-drag in launcher mode and route all lifts through the
+  real cursor (the old drag ghost rendered `item.icon`, null for all 172 items, so lifts
+  showed NOTHING on the mouse; the server cursor shows the name — unify on it).
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
