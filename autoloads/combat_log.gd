@@ -175,6 +175,13 @@ func _on_player_hp_changed(current: float, _max: float) -> void:
 func _target_display_name(target) -> String:
 	if target == null:
 		return ""
+	# Corpses and loot bags are targets (player corpses for res casts; kill
+	# corpses since slice 1.5). Name them the way the target frame does, or the
+	# fall-through below prints the node name ("You target @Area3D@1582.").
+	if target is Corpse:
+		return "%s's corpse" % target.owner_name
+	if target is LootBag:
+		return "%s's corpse" % target.creature_name if target.creature_name != "" else "Dropped items"
 	if "mob_name" in target:
 		var mn = target.get("mob_name")
 		if mn != null and String(mn) != "":
