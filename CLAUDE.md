@@ -936,6 +936,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   player stays connected under the death lock — so a member lying dead awaiting a res would
   collect full shares. Classic EQ pays a corpse nothing. A one-line alive filter, but a design
   call — discuss before building. Not exploit-shaped: dead is strictly worse for farming.
+  **Brainstorm 2026-09-09 (user, from the phone — recorded, not yet decided):** gate XP shares
+  by PROXIMITY to the dying enemy, mirroring the coin split's `GROUP_COIN_SHARE_RANGE` (30 m) —
+  verified: the XP split has no range gate today while coin does. That also mostly answers the
+  dead-member case (a bind-respawned player is far away), though a corpse lying beside the mob
+  would still collect under pure proximity, so it likely pairs with the alive filter. The
+  user's companion wish — remove a dead player from NPC aggro lists — is ALREADY BUILT and
+  verified (`tick.rs` ~8990: the death sweep wipes aggro + threat and clears the mob's target
+  so it leashes; shipped with the 08-13 corpse-beating fix).
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
