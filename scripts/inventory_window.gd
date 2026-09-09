@@ -577,6 +577,9 @@ func _show_delete_confirm() -> void:
 		# happened at pickup time).
 		_delete_dialog.confirmed.connect(_confirm_trash_delete)
 		_delete_dialog.canceled.connect(_return_drag_to_source)
+		_delete_dialog.visibility_changed.connect(func():
+			if not _delete_dialog.visible:
+				Inventory.note_modal_closed())
 		add_child(_delete_dialog)
 	var del_item: ItemData = drag_item if drag_item != null else Inventory.cursor_slot["item"]
 	var del_count: int = drag_count if drag_item != null else Inventory.cursor_slot["count"]
@@ -614,6 +617,9 @@ func _show_drop_confirm() -> void:
 		_drop_dialog.title = "Drop Item"
 		_drop_dialog.confirmed.connect(_confirm_drop_to_ground)
 		_drop_dialog.canceled.connect(_return_drag_to_source)
+		_drop_dialog.visibility_changed.connect(func():
+			if not _drop_dialog.visible:
+				Inventory.note_modal_closed())
 		add_child(_drop_dialog)
 	var drop_item: ItemData = drag_item if drag_item != null else Inventory.cursor_slot["item"]
 	var drop_count: int = drag_count if drag_item != null else Inventory.cursor_slot["count"]

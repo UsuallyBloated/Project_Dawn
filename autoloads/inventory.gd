@@ -638,13 +638,33 @@ func _process(_delta: float) -> void:
 # in the inventory window so it works with every window closed.
 var _drop_dialog: ConfirmationDialog = null
 
+# The confirm dialogs are native popup Windows, so a click on one is invisible
+# to the main viewport's hovered-control check, and player.gd's hardware
+# button poll still reads it as a world tap. Without a guard, the very click
+# that answers a dialog immediately re-opens the drop prompt (playtest
+# 2026-09-09: "clicks pass through the window"). Any interested dialog calls
+# note_modal_closed() when it hides; request_ground_drop ignores taps that
+# land inside the echo window.
+const MODAL_ECHO_MS := 400
+var _last_modal_closed_ms: int = -100000
+
+func note_modal_closed() -> void:
+	_last_modal_closed_ms = Time.get_ticks_msec()
+
 func request_ground_drop() -> void:
 	if cursor_slot == null:
+		return
+	if _drop_dialog != null and _drop_dialog.visible:
+		return
+	if Time.get_ticks_msec() - _last_modal_closed_ms < MODAL_ECHO_MS:
 		return
 	if _drop_dialog == null:
 		_drop_dialog = ConfirmationDialog.new()
 		_drop_dialog.title = "Drop Item"
 		_drop_dialog.confirmed.connect(_confirm_ground_drop)
+		_drop_dialog.visibility_changed.connect(func():
+			if not _drop_dialog.visible:
+				note_modal_closed())
 		add_child(_drop_dialog)
 	var n: int = cursor_slot["count"]
 	var nm: String = cursor_slot["item"].item_name

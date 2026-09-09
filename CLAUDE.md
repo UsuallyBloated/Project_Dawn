@@ -473,6 +473,25 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   guards went in). One ask deferred as its own epic: **clicking an entity while holding should
   also open a TRADE window** (EQ give/trade) — recorded below; entity clicks target-only until
   then.
+  **Slice 1.5 playtested — PASS, all 14 rows** (marks recovered 2026-09-09 after an unsaved-tab
+  delay; the 08-28 log corroborates independently, and §1 confirms the death dupe is dead on
+  the fixed build). **Two bugs from the notes, both diagnosed + FIXED 2026-09-09, retest
+  pending:** (1) equip-from-hand SWAP blanked the held item — the EquipItem delta fan was
+  cursor-blind and sent an empty cursor delta while the server still held the swapped-out
+  piece; all five hand-rolled delta readers now go through `peek_at` (three were latent
+  same-bug: partial drop/destroy from the hand, and eat-from-hand which the peek refused).
+  Server-only. (2) Drop-confirm clicks passed through to the world and instantly re-prompted —
+  the dialogs are native popup Windows invisible to the hovered-control check while player.gd
+  polls hardware buttons; the dialogs now report closes and `request_ground_drop` ignores taps
+  in a 400 ms echo window. Client-only. Also from the notes: the movable-full-bags design item
+  directly below.
+- [ ] **Full bags should move with their contents** *(asked 2026-09-09 on the slice 1.5
+  checklist: "We plan on changing this, correct?")*. Today a non-empty bag refuses to lift or
+  move ("Empty the bag before moving it.") because the server keys a bag's contents to the
+  base slot holding it — moving the bag would orphan them. EQ moves full bags freely, so the
+  ask is legitimate; the build is a server change (re-key the `bags` map entry when its parent
+  base slot moves, and decide whether the CURSOR may hold a non-empty bag — probably yes, with
+  the bag-in-bag ban unchanged). Client mirrors the same re-key. Discuss scope, then build.
 - [ ] **Trade window** *(requested 2026-08-28 with the cursor work: "a click that lands on an
   entity (enemy, NPC, player) still targets but ALSO opens a trade window. EQ works like
   this")*. A real subsystem: a server-held trade session (offer slots + coin from both sides,
@@ -1098,7 +1117,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   before the fix refused one slot six-plus times in a row until a relog.
   The test `move_item_empty_source_drops_silently` had **asserted the bug as the contract**;
   rewritten as `move_item_empty_source_corrects_client`.
-- [ ] **Confirm what can become `hud.gd::_tracked_target`.** Two `is_connected()` calls in
+- [x] **Confirm what can become `hud.gd::_tracked_target`.** Two `is_connected()` calls in
   `_show_self_target()` (`hud.gd:821`, `:823`) check `hp_changed` and `died` **without** a
   `has_signal()` guard. That is safe only while `_tracked_target` is restricted to
   `RemotePlayer` / `RemoteEnemy` / `RemotePet`, all of which declare both. But
@@ -1111,7 +1130,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `Combat.set_target` for whether corpses reach the HUD target frame; guard both lines if they
   can. **Resolved in code 2026-08-28:** slice 1.5 made loot bags real targets (left-click a
   kill corpse), so the precondition flipped and the `has_signal` guards went in on all three
-  unguarded lines. Tick on `cursor_slice15_checklist.md` §4's F1-retarget row.
+  unguarded lines. **Ticked 2026-09-09 on `cursor_slice15_checklist.md` §4's F1-retarget row:
+  corpse targeted, F1 self-target, retarget — console clean.**
 
 ### Tradeskill depth
 - [ ] **Server-authoritative tradeskills** — mining/crafting/skinning currently refuse online
