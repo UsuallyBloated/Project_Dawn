@@ -3,7 +3,10 @@
 **Target:** a small group of trusted friends can log in from their own homes, group up,
 level, die, corpse-run, and quest for an evening without hitting a wall or breaking the game.
 
-**Created:** 2026-07-16. **Target date:** 2026-09-14 (roughly 8.5 weeks).
+**Created:** 2026-07-16. **Target date: 2026-10-05** — slipped from 2026-09-14 on
+2026-09-09 (user call: "slip the target"). Phase 4 was unstarted at the original window's end,
+so the new date is the mechanical re-base: the full three-week content window now runs
+Sep 10 to Oct 1, keeping the plan's shape and slack.
 **Working assumption:** ~30 hrs/week.
 
 ### The readable copy
@@ -25,7 +28,7 @@ can't drift against each other — which is the exact failure Phase 0 exists to 
 - **§7 Status is the tick target.** A phase closes when its To-Do items are ticked.
 - Nothing gets ticked in either place until a filled checklist in `docs/playtest_notes/` shows
   it passing. See the gate in `CLAUDE.md` → **Session workflow** step 6. Built is not done.
-- Time-boxed to the 2026-09-14 target. When it lands, fold anything unfinished back into the
+- Time-boxed to the 2026-10-05 target (originally 09-14). When it lands, fold anything unfinished back into the
   To-Do and retire this doc rather than letting it rot.
 
 Completed detail moves to `session_notes/`, the same as everything else.
@@ -286,7 +289,7 @@ minutes before a friend runs dry. This phase is the difference between "I saw yo
 
 ---
 
-### Phase 5: Open the door (Sep 14 onward)
+### Phase 5: Open the door (Oct 5 onward; originally Sep 14)
 
 - Full friend group.
 - A real feedback loop: the playtest checklist format in `docs/playtest_notes/` already works
@@ -350,5 +353,5 @@ rather than via a chat line after the fact.
 | 1. Exploit gate | Jul 20 to Jul 31 | ✅ **COMPLETE (2026-07-31, on schedule)** — all seven gates done & playtested: keystone (`is_gm`), Respawn dead-check, attack-while-seated, cast class/level, `Attack` weapon_path, melee swing-rate limit, login rate-limit + auth-timing. Open caveat (not blocking): the swing-rate haste row is unit/design-covered but never eye-tested. |
 | 2. Host + first friend | Aug 3 to Aug 7 | ✅ **COMPLETE (2026-08-11, 4 days late)** — hosted on a physical R720 over Tailscale (not a VPS, not port-forwarding); phase included building the machine from bare metal because it arrived unbootable. Closed on tester evidence: a second person, on her own machine, registered, made a character, killed something, grouped, and logged out clean. Backups nightly to a second array plus weekly off-site, restore verified. Two findings opened: the respawn death-loop and the login rate limiter forcing a duplicate account. |
 | 3. Stop it eating things | Aug 10 to Aug 21 (**ran long**, decided 2026-08-20) | **In progress** — 10 done: bank Items-tab blank slots (08-17), bag click grammar (08-18), the inventory/server desync (08-20, origin `Stack All`), cross-store transfer atomicity, the `stack_size` merge cap and server-side named mobs (all 08-21), the silent-refusal audit (08-24, 36 sites + mana refunds), the tradeskill guard (08-24), and the NPC proximity gate (08-26 — vendor/bank/quest turn-in/bind range-checked server-side; closes the dungeon-bank death-penalty void and `BuyItem`'s ignored `vendor_id`). Also shipped: right-click as the world-interact verb (08-24); cast cancel + active-skill guards + the book's Skills tab with pickup-and-place assignment (playtested 08-26 — cancel-cast tick waits on one 15-second re-check). Then playtested 08-27 in one sitting: bank coin breaking, corpse coin tiers, Stack All container scope, vendor narration, per-character hotbars/spell bar (the 08-26 bleed find, fixed and confirmed), plus the two-account group session confirming group-panel stats and tells. Open: unclean-kill relogin (blocked on a re-test), Gate/Soul Binder bind divergence (own sprint), purchases ignoring bag space + group bars blank until first update (both found 08-27). Cast cancel fully closed 08-27 (the 15-second re-check ran clean and the on-hit interrupt fired in the wild). Aug 28 to Sep 9, user-directed: the cursor-slot epic — slice 1 (PD_W0027, a real held-item slot) and slice 1.5 (every pickup rides the cursor, click-the-world to drop) both shipped AND playtested; its checklist caught a live die-while-holding item DUPE, fixed the same morning, plus two follow-up bugs fixed 09-09 (retest pending). |
-| 4. An evening's worth | Aug 24 to Sep 11 | **Not started — and as of Sep 9 the Sep 14 target cannot meet this phase's three-hour content bar.** The group session can still run on existing content (~90 min). Decision pending: slip the target, or keep the date and lower the bar. |
-| 5. Open the door | Sep 14 onward | Not started |
+| 4. An evening's worth | **Sep 10 to Oct 1** (re-based 09-09; originally Aug 24 to Sep 11) | **Starting** — the target slipped rather than the content bar dropping (user call 2026-09-09). The three-hour bar stands; the window is the plan's original three weeks, started late. |
+| 5. Open the door | Oct 5 onward (originally Sep 14) | Not started |

@@ -350,7 +350,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 ## Where things are documented
 
 - **Current plan, dates & sequencing** → `docs/schedule.md` — the push to a playable friends
-  build (target 2026-09-14), with the phases, the critical path, and the velocity the estimates
+  build (target **2026-10-05**, slipped from 09-14 on 09-09), with the phases, the critical path, and the velocity the estimates
   are measured against. **There is one checkbox list in this project and it's the To-Do below.**
   The schedule holds no boxes: its per-phase bullets are the plan, and its status table is just a
   progress readout of what the To-Do already says. Time-boxed by design — when the target lands,
@@ -853,9 +853,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   freeze each phase's bullets as "the plan as drafted", keep one-line status-table entries, and
   let this To-Do be the only live list. That is the html's own "one home per fact" rule, which
   both copies violate; three hand-synced tellings of phase 3 is the root cause of every
-  recurrence. **Decision 2 (the date):** Phase 4 is unstarted and its window ends Sep 11 —
-  Sep 14 cannot meet the "three hours of content" bar. The session can still run on existing
-  content (~90 minutes). Slip the target, or keep the date and lower the bar.
+  recurrence. **Decision 2 (the date): DECIDED 2026-09-09 — slipped.** New
+  target **2026-10-05**, the mechanical re-base (phase 4's full three weeks now Sep 10 to
+  Oct 1, plus the original slack); the three-hour content bar stands. Applied to both schedule
+  copies same pass. Decision 1 (structural) remains open; this item closes when it lands.
 
 - [ ] **Gate and the Soul Binder use two different bind points** *(found 2026-08-24 while
   playtesting the refusals)*. Binding at Sister Maelis then casting Gate says *"You have no bind
