@@ -292,13 +292,11 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
    `docs/playtest_notes/` shows it passing — not when it compiles, not when `cargo test` is
    green, not when it's committed. Claude proposes the tick and cites the checklist row; the
    tester's result is the evidence. No checklist means the item is *built*, not *done*.
-   Then, in one pass: tick it here, move its "what exists" note into
-   `systems_overview.md` (not back into the to-do), and — if it closes a phase item — update
-   **both** `docs/schedule.md` *and* `docs/schedule.html`. They are two hand-maintained copies of
-   the same plan; the `.html` is what a non-repo reader opens, so a stale one is a wrong answer to
-   an outside audience. (This step used to name only the `.md`, and the `.html` silently fell 11
-   days behind through the whole Phase 1 push — it still read "In progress" after the phase had
-   closed. Same drift the gate below exists to prevent, one file over.)
+   Then, in one pass: tick it here and move its "what exists" note into
+   `systems_overview.md` (not back into the to-do). **The schedule copies hold no per-item
+   status** (restructured 2026-09-09: their item lists are frozen snapshots and this To-Do is
+   the only live list), so a tick touches them only when it **closes a phase** — then update
+   the one-line §7 row in **both** `docs/schedule.md` *and* `docs/schedule.html`.
 
 > **Why the gate exists.** Step 3 used to read "implement it; mark `[x]`", and two lists went
 > stale in that gap. On 2026-07-16 a docs pass aimed *specifically* at stale claims still left
@@ -353,7 +351,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   build (target **2026-10-05**, slipped from 09-14 on 09-09), with the phases, the critical path, and the velocity the estimates
   are measured against. **There is one checkbox list in this project and it's the To-Do below.**
   The schedule holds no boxes: its per-phase bullets are the plan, and its status table is just a
-  progress readout of what the To-Do already says. Time-boxed by design — when the target lands,
+  progress readout of what the To-Do already says. (Restructured 2026-09-09: the schedule's
+  item lists are frozen snapshots; only its one-line status table is live.) Time-boxed by design — when the target lands,
   fold anything unfinished back into the To-Do and retire this pointer.
   `docs/schedule.html` is a browser-readable rendering of it for non-repo readers (open it
   locally); keep it in sync when the plan changes.
@@ -819,7 +818,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   playtested 2026-08-27** (§3: merges stay within each container; post-merge dragging produced
   zero `source slot empty` rejections — the desync canary stayed quiet).
 
-- [ ] **Audit the schedule and the To-Do for accuracy end to end** *(raised 2026-08-24 by the user:
+- [x] **Audit the schedule and the To-Do for accuracy end to end** *(raised 2026-08-24 by the user:
   "the schedule seemed a bit fucked... it's just a pile of inaccurate information. Some boxes are
   checked, and others aren't even though the task is listed as Done. This needs a review or 10.")*.
   **The concern is well founded**, and there is hard evidence: on 2026-08-24 `schedule.md` and
@@ -849,14 +848,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   bullet list lacks; md's row carried three sittings the html lacked), both risk tables still
   taught the retired "flaky trio" rule, and neither copy mentioned the Aug 28 to Sep 9
   cursor-slot epic at all — confirming suspected cause (b): finding-shaped work never reaches
-  the schedule. **Decision 1 (structural):** stop carrying per-item status in the schedule —
+  the schedule. **Decision 1 (structural): DECIDED 2026-09-09 — yes.** Stop carrying per-item status in the schedule —
   freeze each phase's bullets as "the plan as drafted", keep one-line status-table entries, and
   let this To-Do be the only live list. That is the html's own "one home per fact" rule, which
   both copies violate; three hand-synced tellings of phase 3 is the root cause of every
   recurrence. **Decision 2 (the date): DECIDED 2026-09-09 — slipped.** New
   target **2026-10-05**, the mechanical re-base (phase 4's full three weeks now Sep 10 to
   Oct 1, plus the original slack); the three-hour content bar stands. Applied to both schedule
-  copies same pass. Decision 1 (structural) remains open; this item closes when it lands.
+  copies same pass. Decision 1 landed the same day: both copies' item lists frozen as dated snapshots, the
+  one-line §7 status table is the schedule's only live part, and Session workflow step 6 now
+  reflects it. **Item CLOSED 2026-09-09** — both decisions applied.
 
 - [ ] **Gate and the Soul Binder use two different bind points** *(found 2026-08-24 while
   playtesting the refusals)*. Binding at Sister Maelis then casting Gate says *"You have no bind

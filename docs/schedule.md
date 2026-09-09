@@ -18,16 +18,20 @@ standalone page with everything inlined, so it works offline and can be emailed 
 This markdown file is canonical; the HTML is a rendering of it. If they disagree, this one wins,
 so update `schedule.html` in the same pass whenever you change the plan here.
 
-### How this doc is tracked
+### How this doc is tracked (restructured 2026-09-09)
 
-**This doc tracks phases. `CLAUDE.md`'s To-Do tracks items.** One home per fact, so the two
-can't drift against each other — which is the exact failure Phase 0 exists to clean up.
+**This doc tracks phases. `CLAUDE.md`'s To-Do tracks items — and it is the ONLY live list.**
+The 09-09 accuracy audit found the same facts living in three hand-synced homes (the To-Do,
+this file's bullets, and the html's item lists), drifting every time despite the rules. The
+fix is structural, not more discipline:
 
-- The bullets under each phase are the **plan** for that phase, not a checklist. Their `[ ]`
-  status lives in the `CLAUDE.md` To-Do.
-- **§7 Status is the tick target.** A phase closes when its To-Do items are ticked.
-- Nothing gets ticked in either place until a filled checklist in `docs/playtest_notes/` shows
-  it passing. See the gate in `CLAUDE.md` → **Session workflow** step 6. Built is not done.
+- **The per-phase bullet lists below are FROZEN as of 2026-09-09** — the plan as drafted and
+  amended to that date, ✅ marks included as a historical snapshot. They are never edited
+  again; per-item status after the freeze lives only in the To-Do.
+- **§7 Status is the only live part of this doc**, one line per phase, no item enumeration.
+  A row changes only when its phase's state changes.
+- Nothing gets ticked (in the To-Do) until a filled checklist in `docs/playtest_notes/` shows
+  it passing. Built is not done.
 - Time-boxed to the 2026-10-05 target (originally 09-14). When it lands, fold anything unfinished back into the
   To-Do and retire this doc rather than letting it rot.
 
@@ -87,6 +91,10 @@ authoring, not engineering, and it does not depend on the server being exposed.
 ---
 
 ## 3. Phases
+
+> **FROZEN 2026-09-09.** These sections are the plan as drafted and amended through that date;
+> the ✅ marks are historical as of the freeze and nothing here updates again. Live per-item
+> status: the `CLAUDE.md` To-Do. Live phase status: §7.
 
 ### Phase 0: Reconcile the picture (Jul 16 to Jul 17, ~1 day)
 
@@ -352,6 +360,6 @@ rather than via a chat line after the fact.
 | 0. Reconcile | Jul 16 to Jul 17 | **Done (2026-07-17)** — doc reconciliation complete; `CORPSE_LINGER_SECS` raised to 7 days (user-accepted, pure value change); duplicate-name trap resolved via rename |
 | 1. Exploit gate | Jul 20 to Jul 31 | ✅ **COMPLETE (2026-07-31, on schedule)** — all seven gates done & playtested: keystone (`is_gm`), Respawn dead-check, attack-while-seated, cast class/level, `Attack` weapon_path, melee swing-rate limit, login rate-limit + auth-timing. Open caveat (not blocking): the swing-rate haste row is unit/design-covered but never eye-tested. |
 | 2. Host + first friend | Aug 3 to Aug 7 | ✅ **COMPLETE (2026-08-11, 4 days late)** — hosted on a physical R720 over Tailscale (not a VPS, not port-forwarding); phase included building the machine from bare metal because it arrived unbootable. Closed on tester evidence: a second person, on her own machine, registered, made a character, killed something, grouped, and logged out clean. Backups nightly to a second array plus weekly off-site, restore verified. Two findings opened: the respawn death-loop and the login rate limiter forcing a duplicate account. |
-| 3. Stop it eating things | Aug 10 to Aug 21 (**ran long**, decided 2026-08-20) | **In progress** — 10 done: bank Items-tab blank slots (08-17), bag click grammar (08-18), the inventory/server desync (08-20, origin `Stack All`), cross-store transfer atomicity, the `stack_size` merge cap and server-side named mobs (all 08-21), the silent-refusal audit (08-24, 36 sites + mana refunds), the tradeskill guard (08-24), and the NPC proximity gate (08-26 — vendor/bank/quest turn-in/bind range-checked server-side; closes the dungeon-bank death-penalty void and `BuyItem`'s ignored `vendor_id`). Also shipped: right-click as the world-interact verb (08-24); cast cancel + active-skill guards + the book's Skills tab with pickup-and-place assignment (playtested 08-26 — cancel-cast tick waits on one 15-second re-check). Then playtested 08-27 in one sitting: bank coin breaking, corpse coin tiers, Stack All container scope, vendor narration, per-character hotbars/spell bar (the 08-26 bleed find, fixed and confirmed), plus the two-account group session confirming group-panel stats and tells. Open: unclean-kill relogin (blocked on a re-test), Gate/Soul Binder bind divergence (own sprint), purchases ignoring bag space + group bars blank until first update (both found 08-27). Cast cancel fully closed 08-27 (the 15-second re-check ran clean and the on-hit interrupt fired in the wild). Aug 28 to Sep 9, user-directed: the cursor-slot epic — slice 1 (PD_W0027, a real held-item slot) and slice 1.5 (every pickup rides the cursor, click-the-world to drop) both shipped AND playtested; its checklist caught a live die-while-holding item DUPE, fixed the same morning, plus two follow-up bugs fixed 09-09 (retest pending). |
+| 3. Stop it eating things | Aug 10 to Aug 21, ran long | **In progress, wrapping up** — a handful of small items open; per-item detail lives in the To-Do. (Aug 28 to Sep 9 also absorbed the user-directed cursor-slot epic, slices 1 + 1.5, shipped and playtested.) |
 | 4. An evening's worth | **Sep 10 to Oct 1** (re-based 09-09; originally Aug 24 to Sep 11) | **Starting** — the target slipped rather than the content bar dropping (user call 2026-09-09). The three-hour bar stands; the window is the plan's original three weeks, started late. |
 | 5. Open the door | Oct 5 onward (originally Sep 14) | Not started |
