@@ -656,8 +656,8 @@
         <div class="stat-v">7 epics<span class="stat-sub"> / 4.3 wks</span></div>
       </div>
       <div class="stat">
-        <div class="stat-k">Status &middot; Aug 11</div>
-        <div class="stat-v hi">Phase 3<span class="stat-sub"> / 0, 1 and 2 complete &middot; the game is hosted and a second person has played it</span></div>
+        <div class="stat-k">Status &middot; Sep 9</div>
+        <div class="stat-v hi">Phase 3<span class="stat-sub"> / wrapping up &middot; phase 4 unstarted &middot; the Sep 14 content bar needs a decision</span></div>
       </div>
     </div>
   </header>
@@ -958,6 +958,7 @@
           <li class="itemdone"><b>The server never checked where you were standing. Done (playtested 2026-08-26).</b> Combat and looting always measured distance, but shops, the bank and quest hand-ins did not, so a modified client could bank its whole inventory from the bottom of a dungeon one second before dying and void the death penalty, or buy, sell and turn in quests from anywhere on the map. The server now knows where every service NPC stands and refuses anything asked from more than fifteen meters away. An honest player can never hit the limit, and a real walk-out showed the refusals landing exactly as designed.</li>
           <li class="itemdone"><b>Coin, stacking, and the vendor window telling the truth. Done (playtested 2026-08-27).</b> The banker now makes change instead of refusing a deposit it could obviously cover; coin comes back off your corpse in the same denominations it went on with, so dying no longer compresses your purse; Stack All tidies within each bag instead of dumping your bags into your backpack; and the vendor window now describes what you asked for rather than announcing purchases the server never agreed to. Found in the same pass: buying only checks your backpack and never the empty pouches you are carrying, which is now its own open item.</li>
           <li class="itemdone"><b>Your hotbar belongs to your character now. Done (playtested 2026-08-27).</b> Every character on a machine was quietly sharing one hotbar, one memorized-spell bar, and one macro list through a single save file, so skills placed on one character appeared on all of them. Each character now keeps their own, seeded once from the old shared layout so nothing anyone had set up was lost.</li>
+          <li class="itemdone"><b>The cursor-slot epic (user-directed, Aug 28 to Sep 9). Slices 1 and 1.5 done, playtested.</b> Items now genuinely ride the mouse: pick up off the ground, lift from any slot or the paperdoll, place, merge, swap, equip from the hand, click the world to drop. Its own checklist caught a live item-duplication on death-while-holding, fixed the same morning it was reported — exactly the class of bug this phase exists to kill.</li>
           <li>Whatever the first friend session surfaces. <b>Leave room here.</b> It will find things.</li>
         </ul>
         <p class="done-means"><b>Done means</b>Nothing loses items, nothing appears to lose items, and a first-time player does not hit an obvious "this is broken" moment in their first hour.</p>
@@ -968,7 +969,7 @@
           <span class="phase-no">04</span>
           <h3>An evening's worth of game</h3>
           <span class="chip par">Runs parallel</span>
-          <span class="when">Aug 24 to Sep 11</span>
+          <span class="when">Aug 24 to Sep 11 &middot; not started as of Sep 9</span>
         </div>
         <p style="margin:0;font-size:14.5px;color:var(--ink-soft)">
           The mechanics are ahead of the content. Four quests and one zone is maybe ninety minutes
@@ -1047,9 +1048,9 @@
             <td>Already priced in. The 1.5 week planning number sits about 35% above measured throughput.</td>
           </tr>
           <tr>
-            <td><b>Two integration tests are timing-flaky</b></td>
-            <td>Noise during Phase 1</td>
-            <td>Known and already documented. Re-run them individually before blaming a change.</td>
+            <td><b>Some integration tests are load-sensitive</b></td>
+            <td>Noise in any server change</td>
+            <td>Known and documented. The corrected rule: a failure that reproduces in isolation is real; one that passes alone is load-sensitivity, and the clean-tree A/B run is the final arbiter.</td>
           </tr>
         </tbody>
       </table>

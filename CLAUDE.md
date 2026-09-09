@@ -405,10 +405,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   invisible to the partner (client-local spend — folded into the active-skills item).
 - [ ] **Remote players never show a jump** *(reported 2026-08-14)*. Player 1 jumps; player 2 sees
   them slide along the ground. Nothing about a jump crosses the wire, and it's dropped in three
-  separate places: (a) **the client never reports it** — `scripts/player.gd:444` is the only caller
+  separate places: (a) **the client never reports it** — `scripts/player.gd:489` (was :444) is the only caller
   of `Net.send_movement()` and hardcodes `jumping = false`, even though `net.gd:374` and the gdext
-  `send_move` both carry the flag; (b) **the server discards it** — `world/handlers.rs:487`
-  destructures `jumping: _`; (c) **there's nowhere to put it coming back out** —
+  `send_move` both carry the flag; (b) **the server discards it** — `world/handlers.rs:494`
+  (was :487) destructures `jumping: _`; (c) **there's nowhere to put it coming back out** —
   `ServerWorldMsg::Position` (`protocol/src/world.rs:953`) carries only `pos / vel / yaw /
   sequence`, and the server zeroes Y on every Move (`handlers.rs:518`, *"server does not simulate
   gravity or jumping"*), so even the vertical displacement is gone. `RemotePlayer` interpolates
@@ -510,17 +510,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Pet level does not scale with owner level** *(found 2026-08-26: a level 22 Beast Master's
   warder is level 5)*. User call: pet levels need adjusting; the rule is TBD — discuss before
   building (likely the warder tracks owner level, EQ-style). Server-side (pet spawn stats).
-- [ ] **Player inspect** — right-click a player to see their equipment *(in progress:
-  `scripts/inspect_window.gd`; noted 2026-08-26: the wire round-trip already exists —
-  `broadcast_inspect_player` / `world_inspect_result` — so this may be further along than "in
-  progress"; settle it in the audit pass)*
+- [ ] **Player inspect** — right-click a player to see their equipment *(audit 09-09 settled
+  the 08-26 flag: this is BUILT, not "in progress" — the window is mounted by the HUD and
+  opened by a chat command (`hud.gd` ~1399: `open_for` + `broadcast_inspect_player`) over the
+  existing wire round-trip. Remaining: the right-click-a-player trigger this entry names, and a
+  playtest — no checklist has ever exercised it)*
 - [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**
 - [ ] **Language system wiring** — `hear_language()` passive gain not yet called from the
   chat-receive path; needs multiplayer chat RPC + trainer NPCs
 - [ ] **Quest reward item follow-ups** *(surfaced while closing quest phase 2; phase 2 itself
   shipped — see systems_overview)* — (a) the **Tarnished Silver Ring** (wolf_threat reward)
-  equips but its **AGI +1 never applies** to the character sheet; ring-specific, since the gnoll
-  boots apply their stats fine, so it is likely a bad stat block in the ring `.tres`. (b) The
+  equips but its **AGI +1 never applies** to the character sheet. **The recorded "bad stat
+  block" hypothesis is DISPROVEN (audit 09-09): the `.tres` carries `bonus_agility = 1` AND
+  `items.toml` carries `agi_bonus = 1` — both data sources are correct**, so the fault is in an
+  apply or display path (candidates: the server's equip-bonus recompute not mapping AGI for
+  ring-type items, or the sheet not re-reading it; the gnoll boots applying fine means the path
+  works for some slot/stat pairs — diff those two). (b) The
   **Hunter's Medal** (rotfang_hunt turn-in, STR +2 / CON +2) was never re-tested landing on
   turn-in — `5ae6808` closed only the kill-credit + golden-orb complaints on that quest, not the
   item itself. Fix the ring; re-test the Medal. Evidence: `quest_phase2_sliceB_checklist.md`.
@@ -591,6 +596,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   without being on the tailnet, so brute-force risk is currently near zero while the usability
   cost is demonstrated. Options: raise to ~10 per 60 s, or keep 5 over a 5-minute window. Server
   change (`LoginRateLimiter`), so it needs a push, a pull on the R720, a rebuild and a restart.
+  **Operational fact this entry was missing (audit 09-09):** a `PD_NO_RATE_LIMIT=1` kill-switch
+  exists (`auth/mod.rs:56`) and is ACTIVE on the R720 — the limiter is disabled outright on the
+  tailnet, with a loud boot-line WARN. So the work here is choosing the threshold to RE-ENABLE
+  with, not retuning a live gate.
 - [ ] **No way to reset an account password** *(requested 2026-08-14)*. A tester who forgets their
   password is locked out permanently, and their only recovery is registering *another* account —
   which is exactly how the duplicate accounts in the item above happened. Nothing in the server can
@@ -635,11 +644,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   unknown-spell arm (the ~32 client-only spell backlog, so it fires in ordinary play) now **also
   refunds the mana** with `fan_out_mana_update` — the server never deducted it, so sending its own
   true value corrects the client's optimistic spend, the same principle as `correct_client_slots`.
-  **Batch 2 still open**, in the audit's priority order: the rest of the inventory family
-  (`EquipItem`, `UnequipItem`, `SplitStack`, `DropItem`, `DestroyItem`, `UseConsumable`), the
-  remaining 8 post-mana-deduct cast arms, the 10 group arms (6 of which have **no server log
-  either**, so a failed `/kick` is invisible on both sides), and `BindAtCurrentLocation`, whose
-  client claims success unconditionally and could quietly rebuild the death loop.
+  **Batch 2 SHIPPED 2026-08-23 — this entry sat stale for 17 days** *(caught by the 09-09
+  audit)*: `f1aaf79` ("Report refusals, batch 2: inventory, group, and bind") covered the
+  inventory family, the group arms, and `BindAtCurrentLocation`, and the 08-24
+  `silent_refusals_checklist.md` playtest exercised the surface; later handler reads confirm
+  EquipItem / UnequipItem / SplitStack / DropItem / DestroyItem / UseConsumable all answer
+  today. **What actually remains open:** the post-mana-deduct cast arms — the out-of-range and
+  catch-all arms refund + report since `da36216` (08-24), but the "8 arms" figure predates
+  those fixes and was never recounted. Close this item by recounting the cast resolver's
+  silent arms and answering any that remain.
   **Deliberately left silent** (confirmed correct): anti-cheat gates, dev/GM authorization (a reply
   is an oracle for whether `PD_DEV_CMDS` is on or an account is GM), transport/lifecycle gates, and
   rejections only a forged client can reach.
@@ -825,6 +838,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   notes and the git history, reconcile the two schedule copies line by line, and decide whether the
   schedule should keep prose descriptions at all or just point at the To-Do. Worth doing as its own
   pass with fresh eyes, not squeezed alongside feature work.
+  **Audit RUN 2026-09-09** (full read of both schedule copies + code-verified walk of the open
+  To-Do entries; closes when the two decisions below land). Stale entries found and corrected in
+  the same pass: silent-refusals batch 2 (shipped 08-23, listed open for 17 days), player
+  inspect ("in progress" but built + command-triggered), the ring-reward hypothesis (disproven
+  on BOTH data sources), the rate-limit entry (missing the active kill-switch), the group-bars
+  verify step (settled: server-side fan), stale line refs on the jump entry. Schedule drift
+  found and synced: the html header chip still read "Status · Aug 11", the md status row and
+  html item lists had again drifted opposite ways (html carried four phase-3 entries the md
+  bullet list lacks; md's row carried three sittings the html lacked), both risk tables still
+  taught the retired "flaky trio" rule, and neither copy mentioned the Aug 28 to Sep 9
+  cursor-slot epic at all — confirming suspected cause (b): finding-shaped work never reaches
+  the schedule. **Decision 1 (structural):** stop carrying per-item status in the schedule —
+  freeze each phase's bullets as "the plan as drafted", keep one-line status-table entries, and
+  let this To-Do be the only live list. That is the html's own "one home per fact" rule, which
+  both copies violate; three hand-synced tellings of phase 3 is the root cause of every
+  recurrence. **Decision 2 (the date):** Phase 4 is unstarted and its window ends Sep 11 —
+  Sep 14 cannot meet the "three hours of content" bar. The session can still run on existing
+  content (~90 minutes). Slip the target, or keep the date and lower the bar.
 
 - [ ] **Gate and the Soul Binder use two different bind points** *(found 2026-08-24 while
   playtesting the refusals)*. Binding at Sister Maelis then casting Gate says *"You have no bind
@@ -888,10 +919,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Group panel bars are blank until the first resource update** *(found 2026-08-27, group
   playtest)*. `_on_world_group_roster` builds member rows zeroed, and the server only fans
   resources on change (>5% swing, or the 500 ms clock while regen is moving), so a full-HP idle
-  group-mate shows empty bars until something changes. Fix options, verify first: seed rows at
-  roster build from `RemotePlayerManager`'s cached values (check whether `world_entity_spawn`
-  carries hp/mp — if yes this is client-only), else have the server fan a one-shot resource
-  snapshot to group members on roster change.
+  group-mate shows empty bars until something changes. Verify step SETTLED (audit 09-09): `EntitySpawn`
+  carries no resources (id/name/race/class/level/pos/yaw only), so the client cache has nothing
+  to seed rows from. The fix is the server one: on every roster change, fan a one-shot
+  Health/Mana/StaminaUpdate for each member to the group — existing message types, no protocol
+  bump.
 
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
