@@ -1,6 +1,9 @@
 # Phase 4 Content Plan: an Evening's Worth of Content
 
-**Drafted 2026-09-10** (phase 4 window: Sep 10 to Oct 1, target 2026-10-05).
+**Drafted 2026-09-10, revised same day** after the user's call: the current camp
+layout is disposable ("We are not at all connected to this layout"), so section 4
+proposes a **replacement spawn table** designed around the quests and the level
+curve, rather than patches to the old rings.
 Status: DRAFT, awaiting the user's calls on the decision list in section 7.
 
 The bar, from `docs/schedule.md`: **two friends can play for three hours without
@@ -14,6 +17,8 @@ gap, and prices the work to close it.
 
 ### 1.1 Camps (server `zone_camps.toml`: 9 camps, 27 spawn points)
 
+Recorded here as the baseline being replaced; the proposed new table is section 4.1.
+
 | Ring | Camp | Mob | Lvl | Spawns | Respawn |
 |---|---|---|---|---|---|
 | 1 | Bonepile | Decrepit Skeleton | 1 | 4 | 35 s |
@@ -26,8 +31,8 @@ gap, and prices the work to close it.
 | 5 W | Ossuary | Bone Colossus | 14 | 2 | 90 s |
 | 5 E | Wraith Gate | Ancient Wraith | 16 | 2 | 90 s |
 
-Level coverage: 1, 2, 3, 5, 6, 9, 10, 14, 16. **The gaps that matter are 4, 7, and 8**
-(see the math in section 2).
+Level coverage: 1, 2, 3, 5, 6, 9, 10, 14, 16, with holes at 4, 7, and 8, no camp
+matching three of the four quests, and four of the nine mobs matching no loot table.
 
 ### 1.2 Quests (4 real + 1 dev)
 
@@ -49,8 +54,8 @@ Kill objectives use bidirectional substring matching (`quests.rs::kill_matches`:
 ### 1.3 Named mobs (5 authored, 0 placed)
 
 All five exist in `named_mobs.toml` with stat multipliers, enrage behaviour, and
-guaranteed + rare loot **already authored**. Nothing spawns any of them. Placement is
-one `named_id` tag on a camp mob in `zone_camps.toml` (the file documents this
+guaranteed + rare loot **already authored**. Nothing spawns any of them. Placement
+is one `named_id` tag on a camp mob in `zone_camps.toml` (the file documents this
 itself), so every row below is minutes of work, not a build.
 
 | Named | Lvl | Guaranteed drop | Rare drop |
@@ -83,11 +88,10 @@ But almost none of it is obtainable:
 - So the only gear a player can acquire is the three quest rewards, plus whatever
   they rolled at character creation.
 
-Loot-table coverage has a second hole: tables are matched by mob-name substring, and
-Plagued Ghoul, Undead Champion, Bone Colossus, and Ancient Wraith **match no table**,
-so the entire leveling path from 6 up drops coin only (and there is nothing to spend
-coin on but food). Meanwhile seven authored tables (Wolf, Boar, Snake, Bear, Spider,
-Bat, Zombie) have no camp that uses them.
+Loot tables are matched by mob-name substring. Seven authored tables (Wolf, Boar,
+Snake, Bear, Spider, Bat, Zombie) are unused by the old layout, while its four
+high-end mobs match no table at all. The replacement layout in 4.1 chooses mob
+names so a table backs every camp below level 14.
 
 ---
 
@@ -95,7 +99,9 @@ Bat, Zombie) have no camp that uses them.
 
 Constants from `progression.rs` and `char_data`:
 
-- Even-con kill: `mob_level² × 262.5` XP (ZEM 75 × 3.5 scale).
+- Even-con kill: `mob_level² × 262.5` XP (ZEM 75 × 3.5 scale). Kill XP derives
+  from the mob's **level**; the `xp` field in `zone_camps.toml` is legacy and
+  unused for awards.
 - Band to go from L to L+1: `(L³ − (L−1)³) × 1000`.
 - A group splits the kill pool per member (playtest-verified: `pool=315
   per_member=157`), so a duo needs about twice the kill *events*, offset by killing
@@ -116,26 +122,21 @@ Time model, stated as assumptions to calibrate in the first phase 4 playtest: a 
 pull cycle (approach, fight, loot, recover) averaging 45 to 60 seconds at levels 1
 to 3 and 60 to 120 seconds at 5+. That puts a fresh duo at **roughly level 6 to 8
 after three hours**, most of it in the second half. That is the right shape for the
-bar. Two problems, though:
+bar. The old layout undermined it twice: a **7-to-8 wall** (nothing between the L6
+camp and the L9 crypt, so the session slowed to green-mob grinding exactly when it
+should peak) and a milder level 4 sag. The replacement layout closes both by
+construction with camps at 4 and 7.
 
-1. **The 7-to-8 wall.** After the level 6 ghouls, the next camp is level 9. A level
-   7 duo grinding green level 6 mobs needs ~27 kill events per level and slows to a
-   crawl exactly when the session should be peaking. One level 7-8 camp fixes the
-   single worst pacing hole in the zone.
-2. **Level 4 sag.** Between the level 3 graves and level 5 bandits there is nothing
-   even-con. Softer than the 7-8 wall (level 3 mobs stay yellow-ish through 4), so
-   fix only if cheap.
-
-Quest XP is seasoning, not the meal: the entire quest book pays about 55,000 XP,
-and 48,800 of that is Rotfang's. That is fine. Quests exist to direct players at
-camps and hand out gear; camps carry the leveling.
+Quest XP is seasoning, not the meal: the entire current quest book pays about
+55,000 XP, and 48,800 of that is Rotfang's. That is fine. Quests exist to direct
+players at camps and hand out gear; camps carry the leveling.
 
 ---
 
 ## 3. Broken content found during this survey
 
-These are world-data mismatches, invisible to `cargo test`, and they gate everything
-else. The first quest a new player receives cannot be completed.
+These are world-data mismatches, invisible to `cargo test`. Items 1 to 3 are
+solved by the replacement layout (4.1) rather than patched.
 
 1. **No wolves exist.** `wolf_threat` targets "Wolf"; no camp mob's name contains
    it. The first quest Aldric offers is uncompletable in the live world. (The wolf
@@ -143,51 +144,68 @@ else. The first quest a new player receives cannot be completed.
 2. **Rotfang is never spawned**, so `rotfang_hunt` (the 48,800 XP finale) is also
    uncompletable.
 3. **`gnoll_raiders` is a level 3 quest whose only matching mob is the level 10
-   Gnoll Brute** in Ring 4. Technically completable, practically a death sentence at
-   the level Brom offers it.
-4. `rat_infestation` works (Plague Rat matches), but Brom's dialogue sends you to a
-   cellar and the rats live in an outdoor camp to the southwest. Flavor mismatch,
-   harmless, fix whenever the dialogue file is next open.
+   Gnoll Brute.** Technically completable, practically a death sentence at the
+   level Brom offers it.
+4. `rat_infestation` works (Plague Rat matches), but Brom's dialogue sends you to
+   a cellar and the rats live in a distant outdoor camp. The new layout puts the
+   rat camp behind Brom's shop where his dialogue points.
 5. **Elara's dialogue tree is unreachable.** She is placed as a plain vendor node,
    so right-click opens the shop directly; her written dialogue, including the
    Greywood foreshadowing that seeds future content, never plays. She is also
    absent from `npcs.toml` and her shop works only because she stands inside the
-   15 m radius of Brom's vendor entry.
+   15 m radius of Brom's vendor entry. Not layout-related; small client fix,
+   tracked in section 4.4.
 
 ---
 
 ## 4. The plan
 
 Effort codes: **S** = data-only, minutes; **M** = an hour or two; **L** = a real
-build. Items 4.1 and 4.2 are pure `zone_camps.toml` edits: the client renders any
-mob name through the shared `remote_enemy.tscn`, so new mobs and camps need no
-client change, no protocol bump, and no re-export. One server deploy carries all of
-it.
+build.
 
-### 4.1 Repair the quest loop (S) — do first
+### 4.1 Replace the camp layout (S/M, one server deploy)
 
-- **Grey Wolf camp**, level 1-2, 4 spawns, south of the eastern road (matching
-  Aldric's "the pack hunts south of the road"). Loot table already exists.
-- **Gnoll Raider camp**, level 3, 3 spawns, east (matching Brom's "rocky flats
-  about a mile east"). "Gnoll" substring keeps quest credit; the existing gnoll
-  loot table applies; also gives level 3-4 duos a second even-con option (softens
-  the level 4 sag).
-- **Rotfang's den**, single spawn south, `named_id = "rotfang"` on a wolf-based
-  template, long respawn (~300 s, matching the client's old named respawn intent).
+The whole table below is `zone_camps.toml` data. The client renders any mob name
+through the shared `remote_enemy.tscn`, so nothing here needs a client change, a
+protocol bump, or a re-export. Mob names are chosen so an existing loot table backs
+every camp below 14, and each named mob gets its own single-spawn den entry with a
+long respawn. New mobs' hp/dmg/speed get interpolated from the existing per-level
+curve when the toml is written.
 
-### 4.2 Place the remaining named mobs (S)
+| Ring (dist) | Camp | Mob | Lvl | Spawns | Loot table | Notes |
+|---|---|---|---|---|---|---|
+| 1 (18-25) | Bonepile | Decrepit Skeleton | 1 | 4 | Skeleton | kept from old layout |
+| 1 | Wolf Run (S of the east road) | Grey Wolf | 1 | 4 | Wolf | **wolf_threat**, per Aldric's directions |
+| 1 | Rat Warrens (behind Brom's) | Plague Rat | 2 | 4 | Rat | **rat_infestation**, matches the cellar dialogue |
+| 2 (35-50) | Shallow Graves (NE) | Rotting Skeleton | 3 | 3 | Skeleton | kept |
+| 2 | Gnoll Raider Camp (E, rocky flats) | Gnoll Raider | 3 | 4 | Gnoll | **gnoll_raiders**, per Brom's directions |
+| 2 | Boar Thicket (SW) | Wild Boar | 4 | 3 | Boar | fills the level 4 sag; hides for the leather line |
+| 2 | Bat Hollow (N, Greywood edge) | Cave Bat | 4 | 3 | Bat | Elara's foreshadowing gets a place |
+| 2 | + Sable's roost | (bat template) | named 5 | 1 | | `named_id = "sable"`, 300 s respawn |
+| 3 (60-80) | Bandit Outpost (NW) | Bandit Scout | 5 | 3 | Bandit | kept; the coin camp |
+| 3 | Rotfang's Den (S, old rocks) | Dire Wolf | 5 | 2 | Wolf | per Aldric's den directions |
+| 3 | + Rotfang | (wolf template) | named 6 | 1 | | `named_id = "rotfang"`, 300 s — **rotfang_hunt** |
+| 3 | Festering Mound (SE) | Plagued Zombie | 6 | 3 | Zombie | renamed from Ghoul so the table matches |
+| 4 (100-125) | Spider Copse | Giant Spider | 7 | 3 | Spider | **the 7-to-8 wall fix** |
+| 4 | + the Crawler's burrow | (spider template) | named 8 | 1 | | `named_id = "ancient_crawler"`, 300 s |
+| 4 | The Broken Crypt (N) | Skeleton Champion | 9 | 3 | Skeleton | renamed from Undead Champion so the table matches |
+| 5 (140-160) | Gnoll War Camp (S) | Gnoll Brute | 10 | 3 | Gnoll | kept, moved out |
+| 5 | + Greth's tent | (brute template) | named 10 | 1 | | `named_id = "greth"`, 600 s |
+| 5 | The Sunken Barrow | Barrow Zombie | 12 | 3 | Zombie | stretch camp |
+| 5 | + The Undying | (zombie template) | named 12 | 1 | | `named_id = "the_undying"`, 600 s |
+| 6 (170-185) | Ossuary (W) | Bone Colossus | 14 | 2 | none (coin) | kept, aspirational |
+| 6 | Wraith Gate (E) | Ancient Wraith | 16 | 2 | none (coin) | kept, aspirational |
 
-- **Ancient Crawler (L8)** anchors a **new spider camp, level 7-8, 3 spawns**,
-  placed between Ring 3 and Ring 4. This is the 7-to-8 wall fix and the spider
-  loot table (silk, venom sacs) finally enters play.
-- **Greth Bonecrusher (L10)**: `named_id` on one Gnoll War Camp spawn. The war
-  camp gets a boss and the War Axe becomes real.
-- **Sable the Dark (L5)**: a small bat camp (level 4-5, 2-3 spawns) somewhere dark,
-  north toward the Greywood edge fits Elara's foreshadowing. Bat loot table exists.
-- **The Undying (L12)**: single spawn near the Broken Crypt as a stretch boss
-  between Rings 4 and 5, long respawn. Source of the Cursed Femur.
+16 ordinary camps (49 spawns) + 5 named singles = 54 spawn points, double the old
+27; spawn points are cheap server-side. Level ladder: 1, 1, 2, 3, 3, 4, 4, 5, 5,
+6, 7, 9, 10, 12, 14, 16 with nameds at 5, 6, 8, 10, 12 — continuous even-con
+coverage through 7, and the level 7 spiders plus the Crawler hold 8 until the L9
+crypt turns yellow.
 
-### 4.3 Second quest tier (M: ~30-45 min per quest, three data files, no code)
+Cost note: `zones.rs` pins "9 camps / 27 spawn positions" in a test; the layout
+change updates that test in the same commit.
+
+### 4.2 Second quest tier (M: ~30-45 min per quest, three data files, no code)
 
 Proposal, five quests hooked to existing NPCs and the camps above, forming two
 chains plus one standalone:
@@ -197,7 +215,7 @@ chains plus one standalone:
 | Restless Bones | Aldric | 2 | standard | 8 Skeleton | small XP + coin-priced item |
 | Road Toll | Brom | 5 | standard | 6 Bandit | a copper chain piece |
 | The Silk Harvest | Brom | 7 | hard | 10 Spider | leather piece + Crawler leads in dialogue |
-| Champion's Crypt | Aldric | 9 | hard | 6 Undead Champion | iron chain piece |
+| Champion's Crypt | Aldric | 9 | hard | 6 Skeleton Champion | iron chain piece |
 | The Undying | Aldric | 12 | named | The Undying | a unique (finale, gray after) |
 
 Turn-in XP at those tiers: ~5,600 / ~18,300 / ~63,500 / ~84,500 / ~140,600. The two
@@ -209,7 +227,7 @@ Authoring checklist per quest (the lockstep rule): `quests.toml` (with
 `turn_in_npc` set so the proximity gate applies), `quest_definitions.gd`,
 `dialogue_definitions.gd`.
 
-### 4.4 Itemization beats (M)
+### 4.3 Itemization beats (M)
 
 The three-hour session currently awards 3 gear items and unspendable coin. Two
 cheap moves and one deferred:
@@ -220,11 +238,17 @@ cheap moves and one deferred:
   Caveat to accept: per-vendor stocking is client-side only (the server sells
   anything with a `vendor_price` to anyone in range of any vendor); fine at
   friends scale, already tracked server-side as deferred.
-- **Named drops** (4.2) supply the chase items and the quest rewards (4.3) fill
+- **Named drops** (4.1) supply the chase items and the quest rewards (4.2) fill
   slots along the way.
-- **Deferred**: gear in loot tables (`loot.rs` is code, not data) and loot tables
-  for the ghoul/champion/colossus/wraith line. Coin-only from those camps is
-  acceptable once coin has a sink.
+- **Deferred**: gear in loot tables (`loot.rs` is code, not data) and tables for
+  the Colossus/Wraith line. Coin-only from the two far camps is acceptable once
+  coin has a sink.
+
+### 4.4 Small repairs riding along
+
+- Elara becomes a DialogueNPC (her tree already has an `open_vendor` response), and
+  gets an `npcs.toml` row. Client change, rides the next export.
+- Brom's rat dialogue already matches the new rat camp placement; no edit needed.
 
 ### 4.5 Explicitly out of scope for Oct 5
 
@@ -240,13 +264,14 @@ cheap moves and one deferred:
 
 ## 5. Three hours, replayed with this plan in place
 
-Arrive in Valdis; Brom's rats and Aldric's wolves (level 1-3, both completable);
-skeleton quest at the Bonepile and graves (3-4); gnoll raiders east (4-5); bandits
-plus the Road Toll and maybe Sable (5-6); Rotfang's den for the finale of the
-starter book (6); ghouls and the new spider camp with the Silk Harvest (6-8); and
-if they are still going, the Broken Crypt quest at 9 with Greth and The Undying
-visible on the horizon as the reason to come back tomorrow. Two named windows, two
-rare weapons, a blacksmith to spend bandit coin at, and no dead air until 8+.
+Arrive in Valdis; Brom's rats out back and Aldric's wolves down the road (level
+1-3, both completable); Restless Bones at the graves (3-4); gnoll raiders east
+(4-5), boars and bats filling the gaps; bandits plus the Road Toll and Sable (5-6);
+Rotfang's den for the finale of the starter book (6); the Spider Copse and Silk
+Harvest with the Crawler window (6-8); and if they are still going, Champion's
+Crypt at 9 with Greth and The Undying on the horizon as the reason to come back
+tomorrow. Two named windows, two rare weapons, a blacksmith to spend bandit coin
+at, and no dead air until 8+.
 
 ---
 
@@ -254,25 +279,27 @@ rare weapons, a blacksmith to spend bandit coin at, and no dead air until 8+.
 
 | Step | What | Effort | Deploy |
 |---|---|---|---|
-| 1 | 4.1 quest-loop repairs | S | server only |
-| 2 | 4.2 named placements + spider/bat camps | S | rides step 1 |
-| 3 | 4.4 Blacksmith vendor | S/M | client re-export + npcs.toml |
-| 4 | 4.3 five quests | M each | server + client together (lockstep files) |
-| 5 | Playtest: calibrate the section 2 time model | | checklist |
+| 1 | 4.1 replacement `zone_camps.toml` + the pinned-count test | S/M | server only |
+| 2 | 4.3 Blacksmith vendor + 4.4 Elara fix | S/M | client re-export + npcs.toml |
+| 3 | 4.2 five quests | M each | server + client together (lockstep files) |
+| 4 | Playtest: calibrate the section 2 time model | | checklist |
 
-Steps 1 and 2 are one sitting and one deploy. Step 4 is the bulk of the authoring
-and can land quest by quest.
+Step 1 is one sitting and one deploy, and on its own it already makes every
+existing quest completable and every named mob real. Step 3 is the bulk of the
+authoring and can land quest by quest.
 
 ---
 
 ## 7. Decisions for you (phone-answerable)
 
-1. **Build 4.1 now?** The three repairs are toml edits; I can have them committed
-   and ready for your next R720 deploy today.
-2. **The spider camp at 7-8 with Ancient Crawler**: yes/no?
-3. **Named homes in 4.2**: agree with the four placements, or move any?
-4. **Quest count and shape in 4.3**: five as proposed? Any veto on the chains
+1. **The replacement layout in 4.1**: approve as drafted, or mark up rows (moves,
+   renames, counts). The two renames worth noticing: Plagued Ghoul becomes Plagued
+   Zombie and Undead Champion becomes Skeleton Champion, purely so loot tables
+   match. On approval I can write the toml and the test the same day; it goes live
+   at your next R720 deploy.
+2. **Quest count and shape in 4.2**: five as proposed? Any veto on the chains
    going through Aldric/Brom only, or do you want a third quest giver (a hunter
    type for the Sable/Crawler side) placed as new content?
-5. **Blacksmith vendor in town**: yes/no?
-6. **Procedural dungeon deferred past Oct 5**: confirm?
+3. **Blacksmith vendor in town**: yes/no?
+4. **Elara upgraded to a dialogue NPC**: yes/no?
+5. **Procedural dungeon deferred past Oct 5**: confirm?
