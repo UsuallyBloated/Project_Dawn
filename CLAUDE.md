@@ -918,6 +918,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   placer — confirm), a pass-3 bag scan, and nothing new on the wire (`InventoryDelta` already
   speaks `bag_<i>`). Decide deliberately whether any path should stay base-only by design; the
   tester's expectation is that bags fill.
+  **BUILT 2026-09-09, pending playtest** (server `393e0eb`; `bagspace_groupbars_checklist.md`;
+  no client change, no protocol bump). The placer runs its two passes over bag inners too —
+  base top-ups, bag top-ups, base empties, bag empties, deterministic bag order — with the
+  bag-in-bag ban intact, and all six call-site delta fans (BuyItem, GmGive, bank withdraw,
+  quest rewards, corpse loot, loot bags) went location-aware through `peek_at`. Per the user's
+  call ("have them both use the same system"), `can_accept` — the quest turn-in pre-flight —
+  now clones the inventory and probes the REAL placer instead of hand-simulating base-only
+  placement, so capacity answers and actual placement can never disagree. 217/217 tests, four
+  new.
 - [ ] **Group panel bars are blank until the first resource update** *(found 2026-08-27, group
   playtest)*. `_on_world_group_roster` builds member rows zeroed, and the server only fans
   resources on change (>5% swing, or the 500 ms clock while regen is moving), so a full-HP idle
@@ -926,6 +935,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   to seed rows from. The fix is the server one: on every roster change, fan a one-shot
   Health/Mana/StaminaUpdate for each member to the group — existing message types, no protocol
   bump.
+  **BUILT 2026-09-09, pending the two-player playtest** (server `01dd8fa`;
+  `bagspace_groupbars_checklist.md` §2). Every non-empty roster fan — the shared intent-path
+  closure and the disconnect-survivor re-fan — is followed by one shot of the ordinary
+  resource updates per member, sent to the group, so rows fill the moment the roster lands.
+  (No wire-level group flow exists in the integration harness, so the checklist row is the
+  proof.) Bonus find while in there: the proximity gate's two integration tests had been
+  sitting UNCOMMITTED in the working tree since 08-25 — verified passing and committed
+  (`1766f02`).
 
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
