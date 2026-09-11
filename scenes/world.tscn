@@ -111,8 +111,10 @@ script = ExtResource("5_hotbar")
 [node name="LevelUpPopup" type="CanvasLayer" parent="."]
 script = ExtResource("6_levelup")
 
-[node name="GeneralMerchant" parent="." instance=ExtResource("10_vendor")]
+[node name="GeneralMerchant" parent="." instance=ExtResource("13_dialog")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 5)
+npc_name = "Elara"
+npc_title = "General Merchant"
 vendor_name = "Elara — General Merchant"
 vendor_type = "General Merchant"
 
@@ -136,6 +138,11 @@ npc_title = "Soul Binder"
 [node name="ThaliaTheBanker" parent="." instance=ExtResource("14_banker")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 5)
 banker_name = "Thalia Mourne — Banker"
+
+[node name="Blacksmith" parent="." instance=ExtResource("10_vendor")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 5)
+vendor_name = "Hadrik — Blacksmith"
+vendor_type = "Blacksmith"
 
 [node name="Forge" parent="." instance=ExtResource("11_craft")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, 5)
