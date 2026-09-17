@@ -117,6 +117,134 @@ const ALL: Dictionary = {
 		"turn_in_npc": "Aldric the Guard"
 	},
 
+	# ── Phase 4 second tier (2026-09-10, docs/design/phase4_content_plan.md) ──
+	# Two chains through the existing givers: Aldric carries the undead line
+	# (restless_bones → champions_crypt → the_undying), Brom the road line
+	# (road_toll → silk_harvest). Server mirror: quests.toml, same commit.
+	# Reward items are existing items.toml entries; the inline dicts below
+	# mirror their real stats for the offline path and the journal.
+
+	"restless_bones": {
+		"id": "restless_bones",
+		"name": "Restless Bones",
+		"description": "The dead around Valdis will not stay buried. Aldric wants the walking bones broken before some traveler's night goes badly wrong.",
+		"zone": "Valdis Wilds",
+		"level_req": 2,
+		"reward_tier": "standard",
+		"objectives": [
+			{"text": "Destroy skeletons around Valdis", "type": "kill", "target": "Skeleton", "count_needed": 8}
+		],
+		"item_rewards": [
+			{
+				"name": "Leather Cap",
+				"desc": "Plain protective headgear from the garrison's stores.",
+				"type": "HEAD",
+				"rarity": "COMMON",
+				"vendor_price": 35,
+				"bonus_armor": 4
+			}
+		],
+		"giver_npc": "Aldric the Guard",
+		"turn_in_npc": "Aldric the Guard"
+	},
+
+	"road_toll": {
+		"id": "road_toll",
+		"name": "Road Toll",
+		"description": "Bandits in the northwest hills have started taxing everything that moves. Brom wants the road toll collected back, in kind.",
+		"zone": "Valdis Wilds",
+		"level_req": 5,
+		"reward_tier": "standard",
+		"objectives": [
+			{"text": "Kill bandits in the northwest hills", "type": "kill", "target": "Bandit", "count_needed": 6}
+		],
+		"item_rewards": [
+			{
+				"name": "Copper Chain Coif",
+				"desc": "Sturdy chain headgear. Traded to Brom by a caravan guard who owed him.",
+				"type": "HEAD",
+				"rarity": "COMMON",
+				"vendor_price": 40,
+				"bonus_armor": 5,
+				"bonus_constitution": 1
+			}
+		],
+		"giver_npc": "Brom",
+		"turn_in_npc": "Brom"
+	},
+
+	"silk_harvest": {
+		"id": "silk_harvest",
+		"name": "The Silk Harvest",
+		"description": "Giant spiders have webbed through the eastern trees, and their silk is worth more than the risk — to someone else. Brom pays for dead spiders.",
+		"zone": "Valdis Wilds",
+		"level_req": 7,
+		"reward_tier": "hard",
+		"objectives": [
+			{"text": "Kill giant spiders in the eastern copse", "type": "kill", "target": "Spider", "count_needed": 10}
+		],
+		"item_rewards": [
+			{
+				"name": "Leather Vest",
+				"desc": "Supple leather armor, well cured. Brom's thanks for dangerous work.",
+				"type": "CHEST",
+				"rarity": "COMMON",
+				"vendor_price": 70,
+				"bonus_armor": 8,
+				"bonus_agility": 1
+			}
+		],
+		"giver_npc": "Brom",
+		"turn_in_npc": "Brom"
+	},
+
+	"champions_crypt": {
+		"id": "champions_crypt",
+		"name": "Champion's Crypt",
+		"description": "Armoured dead patrol the broken crypt north of town — soldiers of some war nobody remembers. Aldric wants to know they can be put down.",
+		"zone": "The Broken Crypt",
+		"level_req": 9,
+		"reward_tier": "hard",
+		"objectives": [
+			{"text": "Destroy skeleton champions in the crypt", "type": "kill", "target": "Skeleton Champion", "count_needed": 6}
+		],
+		"item_rewards": [
+			{
+				"name": "Iron Chain Leggings",
+				"desc": "Heavy iron chain, garrison issue. Earned, not bought.",
+				"type": "LEGS",
+				"rarity": "UNCOMMON",
+				"vendor_price": 110,
+				"bonus_armor": 13,
+				"bonus_constitution": 1
+			}
+		],
+		"giver_npc": "Aldric the Guard",
+		"turn_in_npc": "Aldric the Guard"
+	},
+
+	"the_undying": {
+		"id": "the_undying",
+		"name": "The Undying",
+		"description": "The barrow in the western hills was dug to hold something that does not die. It is awake. Aldric will give you the garrison's best for ending it.",
+		"zone": "The Sunken Barrow",
+		"level_req": 12,
+		"reward_tier": "named",
+		"objectives": [
+			{"text": "Destroy The Undying", "type": "kill", "target": "The Undying", "count_needed": 1}
+		],
+		"item_rewards": [
+			{
+				"name": "Flamebrand",
+				"desc": "A blade that remembers fire. The garrison's finest weapon, promised to whoever ends the barrow's tenant.",
+				"type": "WEAPON",
+				"rarity": "RARE"
+			}
+		],
+		"giver_npc": "Aldric the Guard",
+		"turn_in_npc": "Aldric the Guard"
+	},
+
 	# Test Panel quest — dev/test content, but it must live here (not inline in
 	# test_panel.gd) so the server QuestSnapshot can rebuild it after a relog
 	# and so quests.toml has a client mirror to stay lockstep with. The "report

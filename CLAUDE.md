@@ -433,6 +433,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   playtest)*. `/r` replies to the most recent tell sender; pressing TAB cycles through everyone
   who has sent you a tell this session. Client-only chat UX (command parsing + a small
   tell-sender history in `ChatWindowManager` or `CombatLog`).
+- [ ] **Idle enemies rebroadcast unchanged positions at 20 Hz** *(found 2026-09-15 while
+  triaging the phase 4 test breakage; user flagged the lag angle)*. `tick.rs` step 6b fans
+  every living enemy's Position to all AOI-visible players every tick, and idle mobs in this
+  game never move (`tick_idle` only watches for targets), so the phase 4 population doubling
+  doubled a stream that is almost entirely redundant — a stalled or slow client drops packets
+  sooner than it used to. Fix shape: fan only when the enemy moved since its last broadcast,
+  with a slow keepalive — the exact pattern `regen.rs` already uses for resources (>5% swing
+  or 500 ms gap). Server-only, but measure before/after (a bandwidth counter in the log)
+  rather than eyeballing; needs its own small pass.
 - [ ] **The cursor-slot epic: left-click ground pickup + corpse auto-re-equip** *(left-click
   requested 2026-08-27; the user chose the full server-side cursor slot — "Option B for sure.
   this sounds amazing and we need the corpse auto-re-equip feature" — over a client-only
@@ -1085,6 +1094,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   path but is stale. Audit list: see the "Known drift" note + the 2026-07-22 session note.
 
 ### World systems
+- [ ] **Phase 4 content: the replacement world** *(plan `docs/design/phase4_content_plan.md`,
+  all five decisions user-approved 2026-09-14; BUILT 2026-09-14 to 09-16, pending playtest —
+  `phase4_content_checklist.md`)*. Server: replacement `zone_camps.toml` (21 camps / 54
+  spawns / 16 mob names; every quest target where its dialogue says; all five named mobs
+  placed as long-respawn dens; ladder continuous through 7; Ghoul and Undead Champion
+  renamed so loot tables match), five second-tier quests in `quests.toml`
+  (restless_bones L2 / road_toll L5 / silk_harvest L7 / champions_crypt L9 / the_undying
+  L12, Flamebrand finale), npcs.toml rows for Elara + Hadrik. Client: Hadrik placed,
+  Elara upgraded to a dialogue NPC (shop kept), both quest data files mirrored with full
+  dialogue arcs (headless lockstep probe green). **Deploy: both sides together** — server
+  redeploy + new export in one step (no protocol bump; an old client just can't see the
+  new content). The redeploy also carries the pending bag-space + group-bars builds.
+  Fixed along the way, server-side: a boot-time spawner bug (a camp's FIRST spawn waited
+  its full respawn timer when the server started within `respawn_secs` of machine boot —
+  every R720 systemd start; the two 600 s named dens made it visible).
 - [ ] **Mount system** — *`MountManager` autoload exists (client-side v1); feature is not
   fully wired* (server speed clamp, Animal Husbandry / Spirit-of-Wolf stacking / Selos'
   Melody interactions still pending)
@@ -1210,7 +1234,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   no buff-bar entry
 - [ ] **Weapon item table gaps** — `data/weapon_item_table.gd` maps only a few weapons;
   others fall back to `hand_to_hand` for passive skill tracking
-- [ ] **`world_two_clients.rs`: three genuinely flaky enemy-AI tests** *(the 13 stable failures are
+- [x] **`world_two_clients.rs`: three genuinely flaky enemy-AI tests** — **CLOSED 2026-09-16:
+  the suite ran fully green (44/44) three consecutive times, the first in its history**
+  (server `ebb161f` + `96c6036`; this item's definition of done was "make them
+  deterministic", and a test suite is its own checklist, so this tick rests on the runs,
+  not a playtest). The "load sensitivity" theory was wrong — three real mechanisms:
+  (a) every camp-walking test shared one hardcoded walk into the old camp 0, so any layout
+  or AI drift moved all of them at once (they now aim at a designated isolated single-pull
+  spawn the camp data guarantees); (b) **casting while a mob melees you rolls a real ~70%
+  interrupt per hit at channeling 0** — the pet tests summoned under fire and the AOE test
+  cast under fire, so they were coin flips by construction (summon-first reorders + the AOE
+  test dev-spawns its victim after the cast bar, via a new harness `send_dev_spawn` +
+  `is_gm` grant); (c) a bare multi-second tokio sleep leaves the harness socket unserviced
+  while the world's 20 Hz enemy-position fan fills it, dropping datagrams (including
+  reliable slices) faster than the 150 ms resend lands — all cast-bar sleeps now pump the
+  transport, and `wait_for` reports a mid-wait renet disconnect instead of reading as a
+  silent timeout. `server/docs/flaky_integration_tests.md` should be updated to match when
+  next touched. *(Original history below for the record.)* — *(the 13 stable failures are
   FIXED, server `6a1a92e` + `db3df02`, 2026-08-11)*. The suite sat at a stable `29 passed; 13 failed`
   for three weeks. It was **not** flakiness and **not** a server regression: the file was last edited
   07-19 and three gates landed after it, so the fixtures asserted pre-gate behavior — the CastSpell

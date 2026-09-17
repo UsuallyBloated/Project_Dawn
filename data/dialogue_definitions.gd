@@ -60,6 +60,54 @@ const ALL: Dictionary = {
 					"goto": "rotfang_turn_in",
 					"quest_condition": {"id": "rotfang_hunt", "status": "READY"}
 				},
+				# Restless Bones (phase 4) — offer / active / turn-in
+				{
+					"text": "The graves outside town look disturbed.",
+					"goto": "bones_offer",
+					"quest_condition": {"id": "restless_bones", "status": "none"}
+				},
+				{
+					"text": "Still breaking bones.",
+					"goto": "bones_active",
+					"quest_condition": {"id": "restless_bones", "status": "ACTIVE"}
+				},
+				{
+					"text": "The skeletons are settled.",
+					"goto": "bones_turn_in",
+					"quest_condition": {"id": "restless_bones", "status": "READY"}
+				},
+				# Champion's Crypt (phase 4)
+				{
+					"text": "What is the broken crypt north of town?",
+					"goto": "crypt_offer",
+					"quest_condition": {"id": "champions_crypt", "status": "none"}
+				},
+				{
+					"text": "The crypt work continues.",
+					"goto": "crypt_active",
+					"quest_condition": {"id": "champions_crypt", "status": "ACTIVE"}
+				},
+				{
+					"text": "Six of the crypt's champions are down.",
+					"goto": "crypt_turn_in",
+					"quest_condition": {"id": "champions_crypt", "status": "READY"}
+				},
+				# The Undying (phase 4 finale)
+				{
+					"text": "Something is wrong in the western barrow.",
+					"goto": "undying_offer",
+					"quest_condition": {"id": "the_undying", "status": "none"}
+				},
+				{
+					"text": "The thing in the barrow still moves.",
+					"goto": "undying_active",
+					"quest_condition": {"id": "the_undying", "status": "ACTIVE"}
+				},
+				{
+					"text": "The Undying is ended.",
+					"goto": "undying_turn_in",
+					"quest_condition": {"id": "the_undying", "status": "READY"}
+				},
 				{"text": "Just passing through.", "goto": "passing"},
 				{"text": "What can you tell me about the area?", "goto": "area"},
 				{"text": "Farewell.", "action": "close"}
@@ -159,6 +207,129 @@ const ALL: Dictionary = {
 			"responses": [
 				{"text": "Until next time.", "action": "close"}
 			]
+		},
+		"bones_offer": {
+			"text": "You noticed that too. The dead have been clawing out of the ground west of the walls — slow, stupid things, but a farmer with a hoe is no match for even one. Break eight of them and the garrison will owe you. There's a leather cap in the stores with your name on it.",
+			"responses": [
+				{
+					"text": "I'll see them buried properly.",
+					"action": "give_quest",
+					"quest_id": "restless_bones",
+					"goto": "bones_accepted"
+				},
+				{"text": "Grave-digging isn't my trade.", "goto": "root"}
+			]
+		},
+		"bones_accepted": {
+			"text": "The Bonepile is west of town, past the old markers. The rotting ones by the eastern graves count the same — a broken bone is a broken bone.",
+			"responses": [
+				{"text": "Understood.", "action": "close"}
+			]
+		},
+		"bones_active": {
+			"text": "Still at it? Good. Every skull you crack is one that doesn't crack a farmer's.",
+			"responses": [
+				{"text": "Back to work.", "action": "close"}
+			]
+		},
+		"bones_turn_in": {
+			"text": "Eight fewer dead things walking my frontier. Take the cap — garrison issue, better than nothing, and you earned it.",
+			"responses": [
+				{
+					"text": "Thank you.",
+					"action": "complete_quest",
+					"quest_id": "restless_bones",
+					"goto": "bones_rewarded"
+				}
+			]
+		},
+		"bones_rewarded": {
+			"text": "The graves are quieter already. There will be more work when you're ready for it.",
+			"responses": [
+				{"text": "I'll be back.", "action": "close"}
+			]
+		},
+		"crypt_offer": {
+			"text": "The Broken Crypt. Old — older than Valdis, older than the road. The dead inside wear armour and keep discipline, which frightens me more than the shambling kind. Put six of its champions down so I know it can be done. The garrison will pay in iron.",
+			"responses": [
+				{
+					"text": "The crypt gets its reckoning.",
+					"action": "give_quest",
+					"quest_id": "champions_crypt",
+					"goto": "crypt_accepted"
+				},
+				{"text": "Not yet. That place feels wrong.", "goto": "root"}
+			]
+		},
+		"crypt_accepted": {
+			"text": "Due north, past the far graves — you'll know it by the fallen stones. Take a friend. I mean that.",
+			"responses": [
+				{"text": "I will.", "action": "close"}
+			]
+		},
+		"crypt_active": {
+			"text": "The champions still hold the crypt. Careful — discipline means they don't break and run like the rest.",
+			"responses": [
+				{"text": "Neither do I.", "action": "close"}
+			]
+		},
+		"crypt_turn_in": {
+			"text": "Six armoured dead, unmade. You're not the same fighter who first walked through my gate. The leggings are yours — the garrison's best iron.",
+			"responses": [
+				{
+					"text": "They fought like soldiers.",
+					"action": "complete_quest",
+					"quest_id": "champions_crypt",
+					"goto": "crypt_rewarded"
+				}
+			]
+		},
+		"crypt_rewarded": {
+			"text": "If the crypt can bleed, whatever commands it can too. We'll speak again.",
+			"responses": [
+				{"text": "Count on it.", "action": "close"}
+			]
+		},
+		"undying_offer": {
+			"text": "I'll speak plainly. The Sunken Barrow in the western hills wasn't dug to bury something — it was dug to HOLD something. The wards are failing, and the thing inside, the old records only call it the Undying, is awake. The garrison's finest blade goes to whoever ends it. I don't expect volunteers.",
+			"responses": [
+				{
+					"text": "Then it dies by my hand.",
+					"action": "give_quest",
+					"quest_id": "the_undying",
+					"goto": "undying_accepted"
+				},
+				{"text": "There are limits to my courage.", "goto": "root"}
+			]
+		},
+		"undying_accepted": {
+			"text": "The barrow mouth is beyond the western hills, past the bone fields. The records say fire is how they held it the first time. Flamebrand waits for your return.",
+			"responses": [
+				{"text": "Keep it ready.", "action": "close"}
+			]
+		},
+		"undying_active": {
+			"text": "Still standing? Then there's still hope. The barrow won't empty itself.",
+			"responses": [
+				{"text": "Soon.", "action": "close"}
+			]
+		},
+		"undying_turn_in": {
+			"text": "By the Architects — it's done. Whatever the Undying was, you've ended a fear older than this town. Flamebrand is yours. Carry it well.",
+			"responses": [
+				{
+					"text": "It earned its grave.",
+					"action": "complete_quest",
+					"quest_id": "the_undying",
+					"goto": "undying_rewarded"
+				}
+			]
+		},
+		"undying_rewarded": {
+			"text": "The frontier owes you more than it knows. So do I.",
+			"responses": [
+				{"text": "Until the next fight.", "action": "close"}
+			]
 		}
 	},
 
@@ -230,6 +401,38 @@ const ALL: Dictionary = {
 					"text": "The gnoll raiders are dealt with.",
 					"goto": "gnoll_turn_in",
 					"quest_condition": {"id": "gnoll_raiders", "status": "READY"}
+				},
+				# Road Toll (phase 4) — offer / active / turn-in
+				{
+					"text": "Heard about trouble on the northwest road?",
+					"goto": "toll_offer",
+					"quest_condition": {"id": "road_toll", "status": "none"}
+				},
+				{
+					"text": "Still collecting the road toll.",
+					"goto": "toll_active",
+					"quest_condition": {"id": "road_toll", "status": "ACTIVE"}
+				},
+				{
+					"text": "The bandits have paid up.",
+					"goto": "toll_turn_in",
+					"quest_condition": {"id": "road_toll", "status": "READY"}
+				},
+				# The Silk Harvest (phase 4)
+				{
+					"text": "Work for someone who isn't afraid of the eastern trees?",
+					"goto": "silk_offer",
+					"quest_condition": {"id": "silk_harvest", "status": "none"}
+				},
+				{
+					"text": "Still clearing the silk paths.",
+					"goto": "silk_active",
+					"quest_condition": {"id": "silk_harvest", "status": "ACTIVE"}
+				},
+				{
+					"text": "Ten spiders cleared, as asked.",
+					"goto": "silk_turn_in",
+					"quest_condition": {"id": "silk_harvest", "status": "READY"}
 				},
 				{"text": "What's the road east like?", "goto": "east_road"},
 				{"text": "Farewell.", "action": "close"}
@@ -322,6 +525,88 @@ const ALL: Dictionary = {
 			"text": "Good boots last a lifetime if you take care of them. Stay safe out there.",
 			"responses": [
 				{"text": "I will.", "action": "close"}
+			]
+		},
+		"toll_offer": {
+			"text": "Bandits have set up in the northwest hills — calling it a 'road toll', taking a cut of every caravan through. My suppliers pay it, which means I pay it. Kill six of them and I'll pay YOU instead. Good chain coif in it for you, caravan-guard quality.",
+			"responses": [
+				{
+					"text": "Consider the toll cancelled.",
+					"action": "give_quest",
+					"quest_id": "road_toll",
+					"goto": "toll_accepted"
+				},
+				{"text": "Not my fight yet.", "goto": "root"}
+			]
+		},
+		"toll_accepted": {
+			"text": "Their outpost is up in the northwest hills, past the graves. They're trained — not like the rats. They watch each other's backs, so watch yours.",
+			"responses": [
+				{"text": "I'll be careful.", "action": "close"}
+			]
+		},
+		"toll_active": {
+			"text": "Every bandit down is coin back in honest pockets. Keep at it.",
+			"responses": [
+				{"text": "I will.", "action": "close"}
+			]
+		},
+		"toll_turn_in": {
+			"text": "Six of them! The caravans will breathe easier, and so will my ledger. Here — the coif, as promised. Wear it in good health.",
+			"responses": [
+				{
+					"text": "The road's yours again.",
+					"action": "complete_quest",
+					"quest_id": "road_toll",
+					"goto": "toll_rewarded"
+				}
+			]
+		},
+		"toll_rewarded": {
+			"text": "Trade flows again, thanks to you. Whatever you need from my shelves, you'll get my best price.",
+			"responses": [
+				{"text": "Appreciated.", "action": "close"}
+			]
+		},
+		"silk_offer": {
+			"text": "The trees east of the far graves are webbed roof to root — giant spiders, big as hounds. That silk is worth more than anything in this shop, but no harvester will go near it. Kill ten and clear the paths. I'll pay in good leather.",
+			"responses": [
+				{
+					"text": "The spiders die today.",
+					"action": "give_quest",
+					"quest_id": "silk_harvest",
+					"goto": "silk_accepted"
+				},
+				{"text": "I've seen those webs. No.", "goto": "root"}
+			]
+		},
+		"silk_accepted": {
+			"text": "The copse is east, past the festering mound. If the webbing gets thick overhead, that's when they drop on you. Don't stop moving.",
+			"responses": [
+				{"text": "Noted.", "action": "close"}
+			]
+		},
+		"silk_active": {
+			"text": "The webs still stand. Ten spiders, then the harvest crews go in.",
+			"responses": [
+				{"text": "Working on it.", "action": "close"}
+			]
+		},
+		"silk_turn_in": {
+			"text": "Ten! The silk crews are already packing their shears. This vest is cured from the best hide I had — you've more than earned it.",
+			"responses": [
+				{
+					"text": "Mind the little ones I missed.",
+					"action": "complete_quest",
+					"quest_id": "silk_harvest",
+					"goto": "silk_rewarded"
+				}
+			]
+		},
+		"silk_rewarded": {
+			"text": "First profit from the silk is yours in spirit. Safe roads, friend.",
+			"responses": [
+				{"text": "Safe roads, Brom.", "action": "close"}
 			]
 		}
 	},
