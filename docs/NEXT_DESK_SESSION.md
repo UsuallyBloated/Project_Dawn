@@ -8,8 +8,8 @@ Rewrite or delete freely; the To-Do in CLAUDE.md stays the real feature list.
 1. **R720: deploy phase 4 + wipe the world in one downtime window.** The exact
    command block is in `docs/deployment/server_operations.md`, section "Fresh
    world reset" (snapshot, pull + build, stop, cp, retire `world.db`, start).
-   Boot line must show `dev_cmds=false`, `build=96c6036`, and the migrations
-   applying.
+   Boot line must show `dev_cmds=false`, `build=e8aa8ba` (docs-only commit on
+   top of the phase 4 code, same binary behavior), and the migrations applying.
 2. **Re-provision yourself**: register your account fresh in the launcher, then
    re-grant GM with the full `grant_gm` invocation from the ops doc (the wipe
    removed every `is_gm` flag).
