@@ -69,7 +69,23 @@
       "Read(//f/Projects/Project_Dawn/**)",
       "Bash(iconv -f UTF-16LE -t UTF-8 server.log)",
       "PowerShell(git -C f:\\\\Projects\\\\Project_Dawn log --since=\"2026-04-01\" --date=short --pretty=format:\"%ad %s\")",
-      "PowerShell(git -C F:\\\\Projects\\\\server log --since=\"2026-04-01\" --date=short --pretty=format:\"%ad %s\")"
+      "PowerShell(git -C F:\\\\Projects\\\\server log --since=\"2026-04-01\" --date=short --pretty=format:\"%ad %s\")",
+      "Bash(RUSTFLAGS=\"-C target-feature=+crt-static\" cargo build -p gdext-net --release)",
+      "Bash(cargo test *)",
+      "Bash(python -)",
+      "Bash(grep -rn \"public_addresses\\\\|addresses\\\\|fn generate\\\\|server_addresses\" \"C:/Users/tyler/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/renetcode2-\"*/src/*.rs 2>/dev/null | head -40; echo \"---dirs---\"; find \"C:/Users/tyler/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f\" -maxdepth 1 -type d -name \"renet*\" )",
+      "Read(//c/Users/tyler/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/**)",
+      "Bash(awk 'NR>1380 && NR<1440' crates/protocol/src/world.rs)",
+      "Bash(bash \"C:/Users/tyler/AppData/Local/Temp/claude/f--Projects-Project-Dawn/b0617d89-5e2c-40c0-a0bb-f1030f9968fa/scratchpad/probe.sh\" 3bb9b6d)",
+      "Bash(bash \"C:/Users/tyler/AppData/Local/Temp/claude/f--Projects-Project-Dawn/b0617d89-5e2c-40c0-a0bb-f1030f9968fa/scratchpad/probe.sh\" 032d375)",
+      "Bash(bash \"C:/Users/tyler/AppData/Local/Temp/claude/f--Projects-Project-Dawn/b0617d89-5e2c-40c0-a0bb-f1030f9968fa/scratchpad/probe.sh\" 0d908d1)",
+      "Bash(echo \"=== transcript dir exists? ===\")",
+      "Bash(ls -la C:/Users/tyler/.claude/projects/f--Projects-Project-Dawn/b0617d89-5e2c-40c0-a0bb-f1030f9968fa/subagents/workflows/wf_e21c720b-e61)",
+      "Bash(cd /f/Projects/server *)",
+      "Bash(echo \"exit=$?\")"
+    ],
+    "additionalDirectories": [
+      "F:\\Projects\\server\\crates\\projectdawn-server\\src\\db"
     ]
   }
 }

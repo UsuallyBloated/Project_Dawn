@@ -48,7 +48,7 @@ legacy seed files never written). This playtest is the eyes-on confirmation.
 ## 4 — Regression
 
 - [x] **Pickup-and-place still works** — book Skills tab, click skill, click empty slot, ESC
-      cancels. notes: When a player drops an item on the ground
+      cancels. notes: 
 - [x] **Hotbar bank switching** still works and each character keeps their own bank contents.
       notes:
 
