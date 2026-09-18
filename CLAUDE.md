@@ -498,8 +498,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   move ("Empty the bag before moving it.") because the server keys a bag's contents to the
   base slot holding it — moving the bag would orphan them. EQ moves full bags freely, so the
   ask is legitimate; the build is a server change (re-key the `bags` map entry when its parent
-  base slot moves, and decide whether the CURSOR may hold a non-empty bag — probably yes, with
-  the bag-in-bag ban unchanged). Client mirrors the same re-key. Discuss scope, then build.
+  base slot moves) with the client mirroring the same re-key.
+  **Scope SETTLED 2026-09-17 (user): the cursor may hold a non-empty bag**, with the
+  bag-in-bag ban unchanged. Build-ready; queued behind the phase 4 deploy + playtest so it
+  does not stack onto an untested deploy. Death-path note for the build: a cursor holding a
+  non-empty bag must strip bag AND contents to the corpse (extend the `clear_all` cursor
+  coverage and its regression test).
 - [ ] **Trade window** *(requested 2026-08-28 with the cursor work: "a click that lands on an
   entity (enemy, NPC, player) still targets but ALSO opens a trade window. EQ works like
   this")*. A real subsystem: a server-held trade session (offer slots + coin from both sides,
@@ -516,8 +520,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   systems_overview). Still open: AGI/INT/WIS are stored + buffable but have no pet
   dodge / spell-power model yet, so they're display-only.
 - [ ] **Pet level does not scale with owner level** *(found 2026-08-26: a level 22 Beast Master's
-  warder is level 5)*. User call: pet levels need adjusting; the rule is TBD — discuss before
-  building (likely the warder tracks owner level, EQ-style). Server-side (pet spawn stats).
+  warder is level 5)*. **Research DONE 2026-09-17 (user-commissioned): `docs/design/pet_levels.md`**
+  — EQ classic (spell-owned pets, level rolled per summon, the max-pet ritual), EQ Legends'
+  modern 1:1 simplification, WoW's owner-tracking shape, and SWG's taming + pet-maturity system
+  (per the user's standing "more SWG influence" note). Three options in the doc: A =
+  owner-derived levels now (warder = owner-1; Summon Skeleton capped ~10; optional variance
+  roll), B = the EQ pet spell line with the content pass, C = SWG-style Beast Master taming as
+  its own later epic. Recommendation A now, C as the class's long-term identity. **Awaiting the
+  user's option pick**; A is server-only and rides any post-phase-4 batch.
 - [ ] **Player inspect** — right-click a player to see their equipment *(audit 09-09 settled
   the 08-26 flag: this is BUILT, not "in progress" — the window is mounted by the HUD and
   opened by a chat command (`hud.gd` ~1399: `open_for` + `broadcast_inspect_player`) over the
@@ -595,19 +605,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   owner's inventory and wallet **inside the corpse transaction**. Regression test:
   `save_corpse_strips_the_owner_in_the_same_transaction`. Suites: 181 unit green, 41/42 integration
   (the one failure is the known-flaky `pet_pulls_aggro_via_threat_reaggro`, which passes alone).
-- [ ] **Login rate limit is too tight for real humans** *(found 2026-08-11, first external
-  tester)* — the Phase 1 gate is 5 attempts per 60 s per IP. The tester logged out, tried to log
-  back in, tripped it (`Login rejected — rate limited ... window_secs=60 max_attempts=5`), and
-  **created a second account rather than waiting**. She now has two accounts and two characters,
-  and there is no account-deletion tooling to tidy that up. The gate worked exactly as designed;
-  the problem is the threshold. Note the threat model has also changed: nothing can reach 8765
-  without being on the tailnet, so brute-force risk is currently near zero while the usability
-  cost is demonstrated. Options: raise to ~10 per 60 s, or keep 5 over a 5-minute window. Server
-  change (`LoginRateLimiter`), so it needs a push, a pull on the R720, a rebuild and a restart.
-  **Operational fact this entry was missing (audit 09-09):** a `PD_NO_RATE_LIMIT=1` kill-switch
-  exists (`auth/mod.rs:56`) and is ACTIVE on the R720 — the limiter is disabled outright on the
-  tailnet, with a loud boot-line WARN. So the work here is choosing the threshold to RE-ENABLE
-  with, not retuning a live gate.
+- [x] **Login rate limit is too tight for real humans** — **CLOSED 2026-09-17 by user
+  decision: "We don't need the login rate-limit."** The `PD_NO_RATE_LIMIT=1` kill-switch stays
+  active on the R720 indefinitely; no threshold retune happens. Nothing is deleted — the
+  limiter, the dummy-Argon2 timing defence, and the kill-switch all remain in the code, so
+  re-enabling is removing one env var. **Standing security caveat (the reason this is safe):**
+  the server is reachable only over the private tailnet, so brute-force exposure is near zero.
+  **If the server is ever exposed beyond Tailscale, re-enabling the limiter is mandatory
+  before the port opens** — that caveat is the surviving obligation of this item. (History:
+  found 2026-08-11 when the 5-per-60s gate pushed the first tester into creating a duplicate
+  account; the 2026-09-17 fresh-world wipe retired those duplicates.)
 - [ ] **No way to reset an account password** *(requested 2026-08-14)*. A tester who forgets their
   password is locked out permanently, and their only recovery is registering *another* account —
   which is exactly how the duplicate accounts in the item above happened. Nothing in the server can
