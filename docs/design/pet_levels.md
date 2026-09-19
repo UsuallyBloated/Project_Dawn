@@ -82,9 +82,14 @@ conjure, Beast Masters RAISE.
 ## 5. DECIDED 2026-09-19
 
 **Option C is committed as the Beast Master's destination** (user: "Taming is
-needed. That sounds really cool and gives variation to pet classes"). The class
-split becomes doctrine: summoners CONJURE (spell-driven, options A then B),
-Beast Masters RAISE (taming + maturity, its own post-friends-build epic).
+needed. That sounds really cool and gives variation to pet classes"), and the
+split is doctrine for the WHOLE pet-class roster (user: "Mixture of summons and
+taming between the pet classes"): every pet class is deliberately assigned one
+of the two acquisition mechanics, so the roster carries a mixture. Current
+assignments: Necromancer and Magician CONJURE (spell-driven, options A then B);
+the Beast Master RAISES (taming + maturity, its own post-friends-build epic).
+Future pet classes (Warlock, the Citizen's bodyguard) get assigned at design
+time, keeping the mixture balanced rather than defaulting everyone to summons.
 
 **Option A proceeds as the interim**, in the post-deploy server batch, with two
 refinements from the discussion:
