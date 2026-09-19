@@ -506,10 +506,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   coverage and its regression test).
 - [ ] **Trade window** *(requested 2026-08-28 with the cursor work: "a click that lands on an
   entity (enemy, NPC, player) still targets but ALSO opens a trade window. EQ works like
-  this")*. A real subsystem: a server-held trade session (offer slots + coin from both sides,
-  accept/accept, the swap committed in one transaction — the store-atomicity lessons apply),
-  the NPC give variant (quest hand-ins), a wire message set, and the window. Trigger: clicking
-  a player/NPC while holding an item. Until built, entity clicks while holding target only.
+  this")*. **DESIGNED 2026-09-19: `docs/design/trade_window.md`** — escrow by locking (offered
+  items never leave the owner's inventory until a single-transaction commit, so a crash loses
+  nothing), every offer edit clears both accepts, receiver placement through the real placer
+  (`can_accept` both ways + `merge_capped`), a ten-point exploit ledger that doubles as the
+  test list, and a PD_W0028 wire sketch (protocol bump, gdext rebuild, both-sides deploy).
+  Four open calls in the doc §6 (slots per side, instant-open vs prompt, trade range, NPC-give
+  slice timing). Build queued behind the phase 4 deploy/playtest and the bags + dead-XP batch.
+  Until built, entity clicks while holding target only.
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
