@@ -532,8 +532,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (per the user's standing "more SWG influence" note). Three options in the doc: A =
   owner-derived levels now (warder = owner-1; Summon Skeleton capped ~10; optional variance
   roll), B = the EQ pet spell line with the content pass, C = SWG-style Beast Master taming as
-  its own later epic. Recommendation A now, C as the class's long-term identity. **Awaiting the
-  user's option pick**; A is server-only and rides any post-phase-4 batch.
+  its own later epic. **DECIDED 2026-09-19 (user): C is the Beast Master's destination**
+  ("Taming is needed... gives variation to pet classes") — summoners conjure, Beast Masters
+  raise. **A proceeds as the interim** in the post-deploy server batch, with the discussion's
+  two refinements: the variance roll on MANUAL summons only (warder deterministic owner-1),
+  and pets at ~70% of the mob stat curve so a pet class is not a duo by itself (scalar is a
+  playtest tuning knob). Accepted cost: A's free warder scaling is replaced by earned maturity
+  when C lands — tell whoever mains Beast Master. B stays folded into the spell-backlog pass.
 - [ ] **Player inspect** — right-click a player to see their equipment *(audit 09-09 settled
   the 08-26 flag: this is BUILT, not "in progress" — the window is mounted by the HUD and
   opened by a chat command (`hud.gd` ~1399: `open_for` + `broadcast_inspect_player`) over the

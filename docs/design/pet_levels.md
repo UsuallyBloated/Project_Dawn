@@ -79,8 +79,29 @@ crafting philosophy (a future Bio-Engineer-shaped tradeskill could craft pets).
 Necro/mage stay spell-summoned, which keeps the lore split clean: summoners
 conjure, Beast Masters RAISE.
 
-Recommendation: **A now**, B with the spell-backlog pass, C recorded as the
-Beast Master's long-term identity per the SWG note.
+## 5. DECIDED 2026-09-19
+
+**Option C is committed as the Beast Master's destination** (user: "Taming is
+needed. That sounds really cool and gives variation to pet classes"). The class
+split becomes doctrine: summoners CONJURE (spell-driven, options A then B),
+Beast Masters RAISE (taming + maturity, its own post-friends-build epic).
+
+**Option A proceeds as the interim**, in the post-deploy server batch, with two
+refinements from the discussion:
+- The variance roll applies to MANUAL summons only (the necro pays mana, so the
+  roll is a real gamble with the classic re-summon ritual); the auto-resummoning
+  warder is deterministic owner-minus-1 (a roll on a free 15 s auto-summon is
+  invisible noise).
+- Pets scale at roughly 70% of the mob stat curve, not 100% (today's templates
+  sit ON the curve, so an owner-1 warder would equal an even-con mob and make a
+  pet class a duo by itself). The exact scalar is a playtest tuning knob.
+
+**Known cost, accepted:** A gives the warder free owner-tracking that C later
+replaces with earned maturity. Anyone maining Beast Master through the friends
+build should hear that the warder rule changes when taming lands.
+
+Option B stays folded into the client-only spell-backlog pass (that is where
+magician pets arrive).
 
 ## Sources
 
