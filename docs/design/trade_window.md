@@ -85,7 +85,7 @@ Client intents:
 
 Server messages:
 - `TradeOpened { partner_id, partner_name }`
-- `TradeOfferUpdate { side, slots: [(path, count); N], coins }` (full-state per
+- `TradeOfferUpdate { side, slots: [(path, count); 8], coins }` (full-state per
   update, not deltas — tiny payload, no desync class)
 - `TradeAcceptState { you: bool, them: bool }`
 - `TradeClosed { reason }` (committed / cancelled / out-of-range / timeout)
@@ -125,16 +125,17 @@ Deliberately mirrored from existing rules: dev/GM gates do not bypass any of
 this (a GM trades like a player); no-drop item flags do not exist yet, so no
 rule for them until itemization grows one.
 
-## 6. Open calls for the user
+## 6. The calls — DECIDED 2026-09-19 (user, from the phone)
 
-1. **Window slots per side**: 4 (classic) or 8. Proposal: 4.
-2. **Open behavior**: does B's window open on A's request (EQ-style, instant)
-   or does B get an accept prompt first (modern, anti-grief)? Proposal:
-   EQ-style instant open, since the tailnet population is friends; revisit if
-   griefing ever matters.
-3. **Trade range**: proposal 10 m, checked continuously.
-4. **NPC give (slice 2) timing**: after item-objective quests exist, since
-   nothing consumes handed-in items yet.
+1. **Window slots per side: 8.**
+2. **Open behavior: instant open**, EQ-style, no accept prompt.
+3. **Trade range: 10 m for now.** The user's instinct is that 10 m is far for a
+   trade; it stands until the first playtest, then it is a tuning candidate
+   (probably downward toward the 6 m UI-interact feel).
+4. **NPC give stays slice 2**, with a standing instruction: *"Keep this in mind
+   while you're working. If there's an opportunity to take care of this
+   sooner."* If slice 1's session/locking work leaves the one-sided variant
+   nearly free, or an item-objective quest arrives first, pull it forward.
 
 ## 7. Slices and cost
 

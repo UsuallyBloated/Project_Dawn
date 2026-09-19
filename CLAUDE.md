@@ -511,9 +511,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   nothing), every offer edit clears both accepts, receiver placement through the real placer
   (`can_accept` both ways + `merge_capped`), a ten-point exploit ledger that doubles as the
   test list, and a PD_W0028 wire sketch (protocol bump, gdext rebuild, both-sides deploy).
-  Four open calls in the doc §6 (slots per side, instant-open vs prompt, trade range, NPC-give
-  slice timing). Build queued behind the phase 4 deploy/playtest and the bags + dead-XP batch.
-  Until built, entity clicks while holding target only.
+  All four §6 calls DECIDED 2026-09-19 (user): 8 slots per side, instant open, 10 m range for
+  now (user flags it as far; tuning candidate after the first playtest), NPC give stays slice 2
+  WITH a standing instruction to pull it forward if slice 1 leaves it nearly free. Build-ready;
+  queued behind the phase 4 deploy/playtest and the bags + dead-XP batch. Until built, entity
+  clicks while holding target only.
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
