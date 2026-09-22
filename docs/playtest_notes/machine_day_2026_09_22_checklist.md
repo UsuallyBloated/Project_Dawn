@@ -8,16 +8,28 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 
 ## 1 — Deploy + fresh world (on the R720)
 
-- [ ] **Run the pre-wipe snapshot** (backup.sh line from the ops doc) → a new
+- [x] **Run the pre-wipe snapshot** (backup.sh line from the ops doc) → a new
       `world-<timestamp>.db` appears in `/data/projectdawn-backups/`. notes:
-- [ ] **Pull + build** (`git pull && cargo build --release` as projectdawn) → pull
-      ends at `a34af47`, build completes with no errors. notes:
-- [ ] **Stop, cp, retire the db, start** (stop BEFORE cp; `mv world.db
+      `world-20260922-153451.db` landed (15:34). One cosmetic warning (find
+      could not restore cwd because it ran from /home/wrightt); the copy was
+      unaffected. Nightlies verified healthy all week.
+- [x] **Pull + build** (`git pull && cargo build --release` as projectdawn) → pull
+      ends at `a34af47`, build completes with no errors. notes: fast-forward
+      22837b9 to a34af47 (confirming the bag-space/group-bars builds ship for
+      the FIRST time today); release build 1m54s, only the five known
+      dead-code warnings.
+- [x] **Stop, cp, retire the db, start** (stop BEFORE cp; `mv world.db
       world.db.retired-2026-09-22`; `rm -f` the -wal/-shm) → service starts. notes:
-- [ ] **journalctl tail shows the three proofs** → `dev_cmds=false`,
+      clean sequence, no Text-file-busy; stopped 15:44:52, started 15:48:38.
+- [x] **journalctl tail shows the three proofs** → `dev_cmds=false`,
       `build=a34af47`, and migration lines from the fresh database. notes:
-- [ ] **Old world retired, not gone** → `world.db.retired-2026-09-22` exists next
-      to the new `world.db`. notes:
+      dev_cmds=false and build="a34af47" on the boot line; sqlx migrations do
+      not log via tracing, so the fresh-db proof was taken directly:
+      `SELECT COUNT(*) FROM accounts` = 0 on the new world.db. The
+      rate_limit=false WARN fired as designed (permanent, by decision).
+- [x] **Old world retired, not gone** → `world.db.retired-2026-09-22` exists next
+      to the new `world.db`. notes: retired file 184 KB (last written Sep 6,
+      the last play session) beside the new 151 KB world.db born 15:48.
 
 ## 2 — Re-provision yourself
 
@@ -61,6 +73,7 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 
 ## Result
 
-- Server boot line (paste):
+- Server boot line (paste): `starting projectdawn-server build="a34af47" ...
+  dev_cmds=false rate_limit=false` (2026-09-22T15:48:38Z)
 - Client build (`/version`):
 - Overall:
