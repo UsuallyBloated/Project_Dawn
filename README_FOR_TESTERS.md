@@ -8,6 +8,14 @@ rough edges are real and the point of this build is to find them.
 
 **Your character can be wiped at any time.** Treat anything you build as throwaway.
 
+> **September 2026 build: the world is NEW and so is everyone.** The map has been
+> rebuilt (new camps, new quests, new NPCs) and every account and character was
+> erased with it. **Register a fresh account on first login** — your old name and
+> password no longer exist, and that is expected, not a bug. Recommended first:
+> delete the old bar layouts so your new character starts clean — close the game,
+> then remove `social_hotkeys*.json` and `spell_bar*.json` from
+> `%APPDATA%\Godot\app_userdata\Project_Dawn\`.
+
 ---
 
 ## Step 0: Tailscale (you cannot connect without this)
