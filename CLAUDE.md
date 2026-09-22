@@ -1242,6 +1242,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   roll/ingredients/skill-ups + persists skill levels, which currently reset every launch) plus
   server-side node state. Pairs naturally with the NPC proximity-gate table, since nodes need
   server positions too.
+  **2026-09-22 (user, first lap of the new world): the five crafting stations and three ore
+  veins are REMOVED from `world.tscn` "for the time being"** — the Forge sat one meter from
+  Hadrik and blocked him, and all eight have been dead furniture since the online guards.
+  Git holds them (commit removing: see session 09-22); re-place them WITH npcs.toml-style
+  server positions when this item is built.
 - [ ] **Consumables system** (food/drink regen loop, fermentation, ritual components)
 - [ ] **Bookbinding / player-authored lore**
 - [ ] **Clockwork Engineering prestige** (Tinkering 150+ for Gnomes/Kobolds)
