@@ -66,12 +66,18 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
       world.tscn (dead furniture since the online guards; To-Do notes their
       return with server positions). New export `8eb56e7`, zip repacked.
       Elara works as intended, shop behind "Let me see your wares.".
-- [ ] **Run `phase4_content_checklist.md` §1** (the repaired starter book: rats
+- [x] **Run `phase4_content_checklist.md` §1** (the repaired starter book: rats
       behind Brom's, wolves south of the east road, level 3 gnolls east, Rotfang's
-      den) → all four quests offerable AND completable. notes: 3 of 4 PASS
-      (user: rat, wolf, and gnoll quests all "appear to work as intended" —
-      the three that were broken or mislocated in the old world). Rotfang's
-      den still to run; row stays open for it.
+      den) → all four quests offerable AND completable. notes: 4 of 4 PASS.
+      Rat/wolf/gnoll per the user's lap; Rotfang proven in the server log
+      2026-09-22 23:05-23:15: accept REFUSED at level 4 (server-side level_req
+      gate, previously undocumented), accepted at 5, den respawned on its
+      300 s timer, named enrage fired both fights (308 hp = 3.5x, damage
+      18 to 25 raw = 1.4x), turn-in REFUSED with full bags (the new
+      can_accept pre-flight) then paid reward=48800 + the 5-to-6 ding after
+      making room. Kill-before-accept correctly paid no credit. Also
+      exercised: GM connect line, Maelis bind, swing-rate limiter dropping
+      the known client double-Attacks.
 - [ ] **Nothing aggros town** → stand at the bank and the plaza a minute; no camp
       reaches you. notes:
 
