@@ -41,12 +41,12 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 - [ ] **Re-grant GM** (full `grant_gm` invocation from the ops doc, with the
       `PROJECTDAWN_DATABASE_URL` env — the defaults trap) → next login shows the
       GM tools working (`/give` or a dev spawn lands). notes:
-- [ ] **`/version` on your fresh login** → client `c3e215a`, and no UNSTAMPED
+- [ ] **`/version` on your fresh login** → client `ae30557` (fresh export this morning superseded the c3e215a one), and no UNSTAMPED
       BUILD banner. notes:
 
 ## 3 — Ship it
 
-- [ ] **Send `builds/ProjectDawn-alpha.zip` (rebuilt 09-22, 36 MB) to testers**
+- [ ] **Send `builds/ProjectDawn-alpha.zip` (rebuilt 09-22 from the ae30557 export) to testers**
       → with the word: the world is new, EVERYONE re-registers, and the README's
       fresh-world callout covers the bar-file cleanup. notes:
 
