@@ -36,13 +36,19 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 - [x] **Stale local bars cleared** → all 22 `social_hotkeys*` / `spell_bar*` files
       moved to `stale_bars_backup_2026-09-22` in app_userdata. notes: done by
       Claude before the deploy; recoverable from the backup folder.
-- [ ] **Register a fresh account in the launcher** → account creates, character
-      creates, you land at the town spawn in the NEW world. notes:
-- [ ] **Re-grant GM** (full `grant_gm` invocation from the ops doc, with the
+- [x] **Register a fresh account in the launcher** → account creates, character
+      creates, you land at the town spawn in the NEW world. notes: account
+      tyler_mkee (id 1), character Splenda — the first citizens of the new
+      world.
+- [x] **Re-grant GM** (full `grant_gm` invocation from the ops doc, with the
       `PROJECTDAWN_DATABASE_URL` env — the defaults trap) → next login shows the
-      GM tools working (`/give` or a dev spawn lands). notes:
-- [ ] **`/version` on your fresh login** → client `ae30557` (fresh export this morning superseded the c3e215a one), and no UNSTAMPED
-      BUILD banner. notes:
+      GM tools working (`/give` or a dev spawn lands). notes: bin reported
+      "Set GM for tyler_mkee (id 1): was false, now true"; after the relog the
+      Test Panel is available on Splenda — the whole flag/token/gate chain
+      proven.
+- [x] **`/version` on your fresh login** → client `ae30557` (fresh export this morning superseded the c3e215a one), and no UNSTAMPED
+      BUILD banner. notes: login screen screenshot shows
+      `ae30557` bottom-right, no banner.
 
 ## 3 — Ship it
 
@@ -75,5 +81,5 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 
 - Server boot line (paste): `starting projectdawn-server build="a34af47" ...
   dev_cmds=false rate_limit=false` (2026-09-22T15:48:38Z)
-- Client build (`/version`):
+- Client build (`/version`): `ae30557` (login-screen stamp, screenshot)
 - Overall:
