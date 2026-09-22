@@ -58,12 +58,20 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 
 ## 4 — First lap (GM, before inviting the second seat)
 
-- [ ] **Walk the town row** → Hadrik (blacksmith shop opens, sells iron chain +
+- [x] **Walk the town row** → Hadrik (blacksmith shop opens, sells iron chain +
       weapons), Elara now TALKS (dialogue first, shop via "Let me see your
-      wares"), Aldric / Brom / Maelis / Thalia unchanged. notes:
+      wares"), Aldric / Brom / Maelis / Thalia unchanged. notes: ONE FIND —
+      Hadrik was unreachable, the Forge stood 1 m from him. Fixed same
+      sitting at the user's call: all 5 stations + 3 ore veins removed from
+      world.tscn (dead furniture since the online guards; To-Do notes their
+      return with server positions). New export `8eb56e7`, zip repacked.
+      Elara works as intended, shop behind "Let me see your wares.".
 - [ ] **Run `phase4_content_checklist.md` §1** (the repaired starter book: rats
       behind Brom's, wolves south of the east road, level 3 gnolls east, Rotfang's
-      den) → all four quests offerable AND completable. notes:
+      den) → all four quests offerable AND completable. notes: 3 of 4 PASS
+      (user: rat, wolf, and gnoll quests all "appear to work as intended" —
+      the three that were broken or mislocated in the old world). Rotfang's
+      den still to run; row stays open for it.
 - [ ] **Nothing aggros town** → stand at the bank and the plaza a minute; no camp
       reaches you. notes:
 
@@ -81,5 +89,5 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 
 - Server boot line (paste): `starting projectdawn-server build="a34af47" ...
   dev_cmds=false rate_limit=false` (2026-09-22T15:48:38Z)
-- Client build (`/version`): `ae30557` (login-screen stamp, screenshot)
+- Client build (`/version`): `ae30557` at first login (screenshot); superseded same day by `8eb56e7` (town declutter export)
 - Overall:
