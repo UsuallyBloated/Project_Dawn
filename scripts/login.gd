@@ -38,7 +38,7 @@ const STARTUP_WINDOW_SIZE := Vector2i(1280, 720)
 # inherits it). Deliberately SEPARATE from the in-game scale: hud.gd resets
 # the window's content_scale_factor to its own GAME_UI_SCALE when the world
 # loads (user call, 2026-09-23). Turn this dial without touching the HUD.
-const LOGIN_UI_SCALE := 2.0
+const LOGIN_UI_SCALE := 1.8
 
 # Width of the centered login/char-select/char-create panel. Proportioned
 # from the Monsters & Memories launcher reference (2026-09-23): a generous
