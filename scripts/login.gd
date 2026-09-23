@@ -34,6 +34,11 @@ const LOBBY_SCENE := "res://scenes/lobby.tscn"
 # The canvas_items stretch keeps the UI rendering at the design resolution.
 const STARTUP_WINDOW_SIZE := Vector2i(1280, 720)
 
+# Width of the centered login/char-select/char-create panel. Proportioned
+# from the Monsters & Memories launcher reference (2026-09-23): a generous
+# panel in a compact window, not a page-wide sprawl and not a narrow card.
+const VIEW_PANEL_WIDTH := 640.0
+
 # Session state
 var _session_token := ""
 var _account_id := -1
@@ -112,13 +117,27 @@ func _save_config() -> void:
 # ─── View construction ───────────────────────────────────────────────
 
 func _make_view() -> Control:
+	# A compact centered panel instead of a form stretched across the whole
+	# window (2026-09-23, Monsters-and-Memories-style reference): the outer
+	# CenterContainer fills the window, the panel hugs its content at a fixed
+	# width, and callers keep adding their VBox to the returned
+	# MarginContainer exactly as before. The margin container stays the
+	# view handle the _show_* functions toggle, so its visibility is
+	# mirrored up to the whole chain (otherwise three empty panels would
+	# stay painted behind the active view).
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(VIEW_PANEL_WIDTH, 0)
+	center.add_child(panel)
 	var m := MarginContainer.new()
-	m.set_anchors_preset(Control.PRESET_FULL_RECT)
-	m.add_theme_constant_override("margin_left", 32)
-	m.add_theme_constant_override("margin_right", 32)
-	m.add_theme_constant_override("margin_top", 32)
-	m.add_theme_constant_override("margin_bottom", 32)
-	add_child(m)
+	m.add_theme_constant_override("margin_left", 24)
+	m.add_theme_constant_override("margin_right", 24)
+	m.add_theme_constant_override("margin_top", 24)
+	m.add_theme_constant_override("margin_bottom", 24)
+	panel.add_child(m)
+	m.visibility_changed.connect(func() -> void: center.visible = m.visible)
 	return m
 
 func _make_label(text: String) -> Label:
@@ -169,22 +188,25 @@ func _build_login_view() -> void:
 
 	var title := Label.new()
 	title.text = "Project Dawn"
-	title.add_theme_font_size_override("font_size", 32)
+	title.add_theme_font_size_override("font_size", 48)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	v.add_child(title)
-	v.add_child(_make_spacer(16))
+	v.add_child(_make_spacer(24))
 
 	v.add_child(_make_label("Server"))
 	_server_input = LineEdit.new()
+	_server_input.custom_minimum_size = Vector2(0, 36)
 	_server_input.placeholder_text = "host:port"
 	v.add_child(_server_input)
 
 	v.add_child(_make_label("Username"))
 	_username_input = LineEdit.new()
+	_username_input.custom_minimum_size = Vector2(0, 36)
 	v.add_child(_username_input)
 
 	v.add_child(_make_label("Password"))
 	_password_input = LineEdit.new()
+	_password_input.custom_minimum_size = Vector2(0, 36)
 	_password_input.secret = true
 	_password_input.text_submitted.connect(_on_password_submitted)
 	v.add_child(_password_input)
@@ -195,10 +217,12 @@ func _build_login_view() -> void:
 	hb.add_theme_constant_override("separation", 8)
 	v.add_child(hb)
 	var login_btn := Button.new()
+	login_btn.custom_minimum_size = Vector2(120, 40)
 	login_btn.text = "Log In"
 	login_btn.pressed.connect(_on_login_pressed)
 	hb.add_child(login_btn)
 	var register_btn := Button.new()
+	register_btn.custom_minimum_size = Vector2(120, 40)
 	register_btn.text = "Register"
 	register_btn.pressed.connect(_on_register_pressed)
 	hb.add_child(register_btn)
