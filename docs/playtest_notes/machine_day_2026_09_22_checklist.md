@@ -91,9 +91,14 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 
 ## 6 — Same-day finds, fixed this sitting (verify on the next build/deploy)
 
-- [ ] **Startup window** → opens at 1280x720, centered, instead of a
+- [x] **Startup window** → opens at 1280x720, centered, instead of a
       display-scaled 1920x1080 (login.gd sets it in code; the project's
-      window override was being ignored in exports). notes:
+      window override was being ignored in exports). notes: PASS 09-23, and
+      the follow-up content pass landed the same sitting: the form became a
+      640-wide centered panel (M&M launcher reference) and the launcher flow
+      got its own scale dial (LOGIN_UI_SCALE, user-tuned 1.15 to 1.4 to 2.0
+      to 1.8 to settle at 1.6, "This looks good"), deliberately separate
+      from the HUD's GAME_UI_SCALE (1.0). Ship build + zip: `45356f2`.
 - [ ] **Chat seeds as "Chat 1"** → your stale layout was cleared surgically
       from settings.cfg (backup beside the bars backup), so next launch
       seeds one window named Chat 1; keybinds/audio settings untouched. notes:
