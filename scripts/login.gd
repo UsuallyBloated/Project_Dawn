@@ -34,6 +34,12 @@ const LOBBY_SCENE := "res://scenes/lobby.tscn"
 # The canvas_items stretch keeps the UI rendering at the design resolution.
 const STARTUP_WINDOW_SIZE := Vector2i(1280, 720)
 
+# Launcher-flow UI scale (login, char select/create, and the lobby, which
+# inherits it). Deliberately SEPARATE from the in-game scale: hud.gd resets
+# the window's content_scale_factor to its own GAME_UI_SCALE when the world
+# loads (user call, 2026-09-23). Turn this dial without touching the HUD.
+const LOGIN_UI_SCALE := 1.15
+
 # Width of the centered login/char-select/char-create panel. Proportioned
 # from the Monsters & Memories launcher reference (2026-09-23): a generous
 # panel in a compact window, not a page-wide sprawl and not a narrow card.
@@ -585,6 +591,7 @@ func _apply_startup_window_size() -> void:
 	var win := get_window()
 	if win == null:
 		return
+	win.content_scale_factor = LOGIN_UI_SCALE
 	if win.mode != Window.MODE_WINDOWED:
 		return
 	win.size = STARTUP_WINDOW_SIZE
