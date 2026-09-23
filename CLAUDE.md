@@ -1159,6 +1159,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   like `DevSpawnMob` does, not a client-only removal.
 
 ### UI polish
+- [ ] **In-game UI layout is "pretty busted"** *(user, machine day 2026-09-22, on the fresh
+  1280x720 startup window)*. No specifics captured yet — needs a screenshot pass naming which
+  windows/anchors misbehave at which sizes. Belongs to the deferred cohesive UI theming/polish
+  pass (direction TBD, do not start a redesign unprompted; central lever is
+  `scripts/ui_theme.gd`); likely interacts with the canvas_items/expand stretch at non-16:9
+  window sizes. Same-day context: the startup window shrink to 1280x720 (login.gd) may have
+  surfaced layout sins the old full-screen window hid.
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
 - [x] **Hotbar + socials bleed between characters** *(found 2026-08-26 during the active-skill
   playtest: skills placed on the Warrior's hotbar appeared on the Monk's; **BUILT 2026-08-26,

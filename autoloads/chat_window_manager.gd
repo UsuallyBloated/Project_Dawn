@@ -590,7 +590,10 @@ func _on_window_text_submitted(_id: int, text: String) -> void:
 func _restore_or_seed_windows() -> void:
 	var layouts: Array = GameSettings.chat_windows
 	if layouts.is_empty():
-		new_window("Chat")
+		# "Chat 1", not "Chat": the seed window should look like the start of
+		# the numbered series the auto-namer continues (playtest 2026-09-22 —
+		# a veteran settings file greeted the fresh world as "Chat 21").
+		new_window("Chat 1")
 		return
 	# Clamp restored positions / sizes so windows can't load off-screen or
 	# below the minimum. Without this a corrupted settings.cfg or a window

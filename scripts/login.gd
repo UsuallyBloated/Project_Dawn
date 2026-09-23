@@ -27,6 +27,13 @@ const CONFIG_PATH := "user://login.cfg"
 const DEFAULT_AUTH_HOST := "127.0.0.1:8765"
 const LOBBY_SCENE := "res://scenes/lobby.tscn"
 
+# Startup window size (playtest 2026-09-22: the game opened at the full
+# 1920x1080 design viewport times the OS display scale — the project's
+# window_width/height_override settings are ignored in the exported build,
+# a Godot quirk — so the size is applied in code where it cannot be ignored).
+# The canvas_items stretch keeps the UI rendering at the design resolution.
+const STARTUP_WINDOW_SIZE := Vector2i(1280, 720)
+
 # Session state
 var _session_token := ""
 var _account_id := -1
@@ -69,6 +76,7 @@ var _create_status: Label
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	_apply_startup_window_size()
 	# Before the launcher-mode early return below, so no entry path can produce a
 	# login screen without a visible build identity.
 	_build_build_stamp_footer()
@@ -544,3 +552,17 @@ func _handle_world_connect_token(msg: Dictionary) -> void:
 		return
 
 	get_tree().change_scene_to_file(LOBBY_SCENE)
+
+
+# Shrink and center the OS window once, at boot (the login screen is the
+# first scene). Skipped when already fullscreen/maximized so a player's own
+# window choice on later scene changes is never fought.
+func _apply_startup_window_size() -> void:
+	var win := get_window()
+	if win == null:
+		return
+	if win.mode != Window.MODE_WINDOWED:
+		return
+	win.size = STARTUP_WINDOW_SIZE
+	var screen_rect := DisplayServer.screen_get_usable_rect(win.current_screen)
+	win.position = screen_rect.position + (screen_rect.size - win.size) / 2

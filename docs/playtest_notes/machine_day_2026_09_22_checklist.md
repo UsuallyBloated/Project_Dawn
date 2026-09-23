@@ -89,6 +89,24 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 - [ ] **`cursor_slice15_checklist.md` retest rows** → equip-from-hand swap no
       longer blanks the held item; drop-confirm dialog no longer re-prompts. notes:
 
+## 6 — Same-day finds, fixed this sitting (verify on the next build/deploy)
+
+- [ ] **Startup window** → opens at 1280x720, centered, instead of a
+      display-scaled 1920x1080 (login.gd sets it in code; the project's
+      window override was being ignored in exports). notes:
+- [ ] **Chat seeds as "Chat 1"** → your stale layout was cleared surgically
+      from settings.cfg (backup beside the bars backup), so next launch
+      seeds one window named Chat 1; keybinds/audio settings untouched. notes:
+- [ ] **Shooting an idle mob provokes it** (needs the `3e98553` redeploy) →
+      attack any camp mob from beyond its aggro circle; it comes for you.
+      A target beyond leash range still stands (by design, no state flap). notes:
+- [x] **Quest XP flow question answered, no change** → quest XP already pays
+      only at NPC turn-in (log: reward=48800 at Aldric); the XP at the kill
+      was ordinary kill XP, a separate system. notes: user to confirm this
+      reading matches what they meant.
+- [ ] **UI layout "pretty busted"** → FILED, not fixed: needs a screenshot
+      pass, belongs to the deferred theming/layout pass (To-Do, UI polish). notes:
+
 ---
 
 ## Result
