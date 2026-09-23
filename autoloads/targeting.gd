@@ -148,6 +148,11 @@ func _on_loot_bag_clicked(bag: LootBag) -> void:
 ## something interactable, even if the interaction was refused (too far, not
 ## yours) — a refusal is an answer, not a miss.
 func interact_at(mouse_pos: Vector2) -> bool:
+	# Dead players interact with nothing (2026-09-23: a corpse could loot
+	# itself during the respawn window; the server now refuses, this stops
+	# the honest client from asking at all).
+	if PlayerDeath.is_dead:
+		return false
 	var camera := _camera
 	if camera == null:
 		return false

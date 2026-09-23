@@ -116,6 +116,14 @@ var _move_send_accum: float = 0.0
 
 signal state_changed(new_state: int)
 
+# EQ death view (2026-09-23): no menu, no prompt — the camera pulls back
+# and tilts down so you watch your own body while the respawn timer runs.
+# Look-around stays live (the existing death lock keeps movement dead).
+const DEATH_CAM_DISTANCE := 9.0
+const DEATH_CAM_PITCH := -1.05
+const DEATH_CAM_TWEEN_SECS := 1.6
+var _pre_death_zoom: float = 0.0
+
 @onready var camera_pivot: Node3D = $CameraPivot
 @onready var spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
 @onready var camera: Camera3D = $CameraPivot/SpringArm3D/Camera3D
@@ -149,6 +157,8 @@ func _ready() -> void:
 	ChatWindowManager.visible = true
 	PlayerDeath.set_respawn_point(global_position)
 	PlayerDeath.register_player(self)
+	PlayerDeath.player_died.connect(_on_death_camera)
+	PlayerDeath.player_respawned.connect(_on_respawn_camera)
 	Targeting.register_camera(camera)
 	Targeting.register_player(self)
 	Combat.register_player(self)
@@ -539,3 +549,23 @@ func _on_land() -> void:
 		"You hit the ground hard for %d damage." % dmg,
 		CombatLog.MsgType.DAMAGE_IN)
 	DamageNumbers.spawn_incoming(global_position, dmg)
+
+
+# The soul drifts up: ease the spring arm out and the pitch down over the
+# body. The player can still orbit (EQ let you look around while dead).
+func _on_death_camera() -> void:
+	_pre_death_zoom = spring_arm.spring_length
+	_cam_pitch = DEATH_CAM_PITCH
+	var tw := create_tween()
+	tw.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(spring_arm, "spring_length", DEATH_CAM_DISTANCE, DEATH_CAM_TWEEN_SECS)
+	tw.parallel().tween_property(camera_pivot, "rotation:x", DEATH_CAM_PITCH, DEATH_CAM_TWEEN_SECS)
+
+
+func _on_respawn_camera() -> void:
+	var back := _pre_death_zoom if _pre_death_zoom > 0.0 else THIRD_PERSON_DISTANCE
+	_cam_pitch = 0.0
+	var tw := create_tween()
+	tw.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(spring_arm, "spring_length", back, 0.6)
+	tw.parallel().tween_property(camera_pivot, "rotation:x", 0.0, 0.6)
