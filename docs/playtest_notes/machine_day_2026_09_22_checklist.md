@@ -99,18 +99,33 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
       got its own scale dial (LOGIN_UI_SCALE, user-tuned 1.15 to 1.4 to 2.0
       to 1.8 to settle at 1.6, "This looks good"), deliberately separate
       from the HUD's GAME_UI_SCALE (1.0). Ship build + zip: `45356f2`.
-- [ ] **Chat seeds as "Chat 1"** → your stale layout was cleared surgically
+- [x] **Chat seeds as "Chat 1"** → your stale layout was cleared surgically
       from settings.cfg (backup beside the bars backup), so next launch
       seeds one window named Chat 1; keybinds/audio settings untouched. notes:
-- [ ] **Shooting an idle mob provokes it** (needs the `3e98553` redeploy) →
+      PASS 09-23 ("looks good").
+- [x] **Shooting an idle mob provokes it** (needs the `3e98553` redeploy) →
       attack any camp mob from beyond its aggro circle; it comes for you.
       A target beyond leash range still stands (by design, no state flap). notes:
+      PASS 09-23 ("appears to work as intended").
 - [x] **Quest XP flow question answered, no change** → quest XP already pays
       only at NPC turn-in (log: reward=48800 at Aldric); the XP at the kill
       was ordinary kill XP, a separate system. notes: user to confirm this
       reading matches what they meant.
 - [ ] **UI layout "pretty busted"** → FILED, not fixed: needs a screenshot
       pass, belongs to the deferred theming/layout pass (To-Do, UI polish). notes:
+
+## 7 — The death find (09-23, fixed both sides, verify after redeploy + relaunch)
+
+- [ ] **A corpse cannot loot itself** (server `59f2fa1`, needs redeploy) → die,
+      then try to loot your corpse or move items during the respawn window:
+      "You cannot do that while dead." for everything but chat, respawn, res
+      accept, and group management. Integration test pins the exact exploit
+      sequence. notes:
+- [ ] **The EQ death** (client `6156d05` export) → on death: no menu, camera
+      eases out and tilts down over your body (look-around still works),
+      "You have died. Returning to bind point." lands in chat instantly,
+      auto-respawn after 5 s, camera eases back. Dead right-clicks interact
+      with nothing. notes:
 
 ---
 
