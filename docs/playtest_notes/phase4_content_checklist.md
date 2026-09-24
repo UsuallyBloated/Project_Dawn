@@ -47,13 +47,14 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       skeleton-table loot. notes: PASS 09-24: farmed through the ding to 10;
       bags carry stacks and the bone fragments destroyed after prove the
       skeleton table matches the new name.
-- [ ] **Ring 5: Gnoll War Camp (10), Sunken Barrow (12); Ring 6 unchanged** → all
-      populated where the plan's map says. notes: NEARLY DONE 09-24 — Barrow
+- [x] **Ring 5: Gnoll War Camp (10), Sunken Barrow (12); Ring 6 unchanged** → all
+      populated where the plan's map says. notes: PASS 09-24 — Barrow
       Zombie at exact L12 XP, Gnoll Brutes at exact L10 (war camp live, its
       50 s respawns visibly backfilling during the Greth fight), and an
       Ancient Wraith at exact L16 XP proves the Wraith Gate, and a Bone
       Colossus at exact L14 XP closes the Ossuary — all 21 camps and every
-      ring now verified in play.
+      ring verified in play. The evening barrow session (20:37-20:40) added
+      three more Barrow Zombies at 37800 each, all exact.
 
 ## 3 — The five named mobs (first ever placed)
 
@@ -78,8 +79,15 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       (20:19): 1325 hp = 5.0x exact, enrage at 39.0% (threshold 40), damage
       57 to 91 raw = 1.6x (the game's hardest hitter), 536 coin. Killed, not
       died to.
-- [ ] **Kill a named, wait out its long respawn (5-10 min)** → it returns; the
-      ordinary camps around it kept their short timers. notes:
+- [x] **Kill a named, wait out its long respawn (5-10 min)** → it returns; the
+      ordinary camps around it kept their short timers. notes: PASS 09-24,
+      proven TWICE in one evening: Rotfang (killed earlier in the day) stood
+      at his den again and was re-killed 20:32:30 (enrage at 45/308 fired
+      again, so it is the real named, not a stray wolf), and The Undying
+      (killed 20:19) was back and re-killed 20:40:32 for the quest (enrage at
+      525/1325 = 39.6%, second fight's own roll). The ordinary camps kept
+      their short timers throughout: three separate Barrow Zombie kills
+      inside the same 20:37-20:40 window while the named timers idled.
 
 ## 4 — The second quest tier
 
@@ -103,8 +111,16 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       at exact L9 XP, full-bags turn-in REFUSED then completed reward=108500 —
       the correct 0.5 x band(9), which also exposed a wrong estimate in the
       plan doc (fixed). Item equipped straight from the cursor after.
-- [ ] **Aldric offers The Undying (L12)** → kill it, turn-in pays big XP + FLAMEBRAND
+- [x] **Aldric offers The Undying (L12)** → kill it, turn-in pays big XP + FLAMEBRAND
       (the proc sword — swing it after and watch for Flaming Strike procs). notes:
+      PASS 09-24 (server log): accepted 20:31:47, the barrow fought through
+      (kill credit 20:40:32 at exact L12 XP), bags pruned first (the learned
+      can_accept dance: bone fragments + cloth scraps destroyed 20:41:50-53),
+      completed 20:41:54 reward=317600 — exactly 0.8 x band(12) = 0.8 x
+      397000, the last of the five tier payouts to land to the digit — with
+      the ding 12 to 13 on the turn-in. An equip-from-cursor followed at
+      20:42:01; Flaming Strike procs not yet observed in a log — watch on the
+      next melee session.
 - [ ] **Try a turn-in from far outside town** → refused by the proximity gate with a
       chat line; walking back to the giver completes it. notes:
 - [ ] **Journal + relog** → new quests persist across a relog with counts intact
