@@ -51,13 +51,16 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       populated where the plan's map says. notes: NEARLY DONE 09-24 — Barrow
       Zombie at exact L12 XP, Gnoll Brutes at exact L10 (war camp live, its
       50 s respawns visibly backfilling during the Greth fight), and an
-      Ancient Wraith at exact L16 XP proves the Wraith Gate. The Ossuary is
-      the sole camp not yet eyeballed; row closes on one glance west.
+      Ancient Wraith at exact L16 XP proves the Wraith Gate, and a Bone
+      Colossus at exact L14 XP closes the Ossuary — all 21 camps and every
+      ring now verified in play.
 
 ## 3 — The five named mobs (first ever placed)
 
-- [ ] **Sable the Dark at the bat hollow's roost (north)** → visibly tougher than the
-      bats, no enrage (by design), drops Sable Wing Membrane. notes:
+- [x] **Sable the Dark at the bat hollow's roost (north)** → visibly tougher than the
+      bats, no enrage (by design), drops Sable Wing Membrane. notes: PASS
+      09-24 (20:15): killed at the roost, zero enrage lines in the whole
+      fight (threshold 0, as designed), loot bag with a stack.
 - [x] **Ancient Crawler at the burrow by the Spider Copse** → enrages, drops Pristine
       Venom Sac. notes: PASS 09-24 (server log 17:54): 420 hp = 3.0x exact,
       enrage at 28.6% (threshold 30), damage 24 to 31 raw = 1.3x, kill paid
@@ -70,8 +73,11 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       (threshold 25), damage 44 to 66 raw = 1.5x, exact L10 XP, ding 10 to 11
       on the blow, 585 coin + an item stack refunded to the bag for space
       (user to check which drop that was).
-- [ ] **The Undying at the barrow** → the hardest fight in the game (enrage at 40%);
-      dying to it is a pass for this row too, note which. notes:
+- [x] **The Undying at the barrow** → the hardest fight in the game (enrage at 40%);
+      dying to it is a pass for this row too, note which. notes: PASS 09-24
+      (20:19): 1325 hp = 5.0x exact, enrage at 39.0% (threshold 40), damage
+      57 to 91 raw = 1.6x (the game's hardest hitter), 536 coin. Killed, not
+      died to.
 - [ ] **Kill a named, wait out its long respawn (5-10 min)** → it returns; the
       ordinary camps around it kept their short timers. notes:
 
