@@ -93,7 +93,11 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       plaza/bank row, the starter book flows rat → wolf → skeleton naturally. notes:
 - [ ] **Group up for one camp** → XP splits, loot rights, group bars all behave (also
       exercises the pending group-bars build if this is its first two-seat session). notes:
-- [ ] **Die somewhere honest, corpse-run** → death path unchanged by the layout work. notes:
+- [x] **Die somewhere honest, corpse-run** → death path unchanged by the layout work. notes:
+      PASS 09-24 (two deaths at the spider copse area): penalty exact, corpse
+      with 11 stacks, run back, loot + re-equip clean, empty corpse despawned,
+      second corpse spawned empty as the res anchor — all under the new
+      dead-state gate and death camera.
 
 ---
 

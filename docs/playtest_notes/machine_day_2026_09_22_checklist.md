@@ -116,16 +116,20 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 
 ## 7 — The death find (09-23, fixed both sides, verify after redeploy + relaunch)
 
-- [ ] **A corpse cannot loot itself** (server `59f2fa1`, needs redeploy) → die,
+- [x] **A corpse cannot loot itself** (server `59f2fa1`, needs redeploy) → die,
       then try to loot your corpse or move items during the respawn window:
       "You cannot do that while dead." for everything but chat, respawn, res
       accept, and group management. Integration test pins the exact exploit
-      sequence. notes:
-- [ ] **The EQ death** (client `6156d05` export) → on death: no menu, camera
+      sequence. notes: PASS 09-24, TWO deaths, the gate hammered ~10 times
+      each and held (chat screenshot); corpse looted honestly after respawn,
+      re-equip clean, empty corpse despawned. Bonus math check: the 8450 XP
+      loss is exactly 5% of the level 7 band.
+- [x] **The EQ death** (client `6156d05` export) → on death: no menu, camera
       eases out and tilts down over your body (look-around still works),
       "You have died. Returning to bind point." lands in chat instantly,
       auto-respawn after 5 s, camera eases back. Dead right-clicks interact
-      with nothing. notes:
+      with nothing. notes: PASS 09-24 ("death sequence appears to work as
+      intended"); the exact chat copy visible in the screenshot, twice.
 
 ---
 
