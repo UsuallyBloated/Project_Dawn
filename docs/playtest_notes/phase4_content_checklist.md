@@ -43,10 +43,14 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       09-24: a dozen-plus Giant Spider kills at exact L7 XP, spiderling silk
       and venom sacs confirmed in inventory, and the user rode this camp from
       6 to 9 in one sitting — the old wall is gone.
-- [ ] **The Broken Crypt (9)** → mobs are now "Skeleton Champion" (renamed) and drop
-      skeleton-table loot. notes:
+- [x] **The Broken Crypt (9)** → mobs are now "Skeleton Champion" (renamed) and drop
+      skeleton-table loot. notes: PASS 09-24: farmed through the ding to 10;
+      bags carry stacks and the bone fragments destroyed after prove the
+      skeleton table matches the new name.
 - [ ] **Ring 5: Gnoll War Camp (10), Sunken Barrow (12); Ring 6 unchanged** → all
-      populated where the plan's map says. notes:
+      populated where the plan's map says. notes: PARTIAL 09-24 — a Barrow
+      Zombie fell at exact L12 XP (pot 246 coin), so the Sunken Barrow is
+      live; the war camp and Ring 6 still want eyes.
 
 ## 3 — The five named mobs (first ever placed)
 
@@ -78,8 +82,12 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       proven in inventory after).
 - [ ] **Brom offers The Silk Harvest (L7)** → 10 Giant Spiders (the Crawler does NOT
       count — intended), Leather Vest on turn-in. notes:
-- [ ] **Aldric offers Champion's Crypt (L9)** → 6 Skeleton Champions, Iron Chain
-      Leggings on turn-in. notes:
+- [x] **Aldric offers Champion's Crypt (L9)** → 6 Skeleton Champions, Iron Chain
+      Leggings on turn-in. notes: PASS 09-24 (server log): accepted the minute
+      level 9 landed (refused at 8 twice before, gate airtight), nine champions
+      at exact L9 XP, full-bags turn-in REFUSED then completed reward=108500 —
+      the correct 0.5 x band(9), which also exposed a wrong estimate in the
+      plan doc (fixed). Item equipped straight from the cursor after.
 - [ ] **Aldric offers The Undying (L12)** → kill it, turn-in pays big XP + FLAMEBRAND
       (the proc sword — swing it after and watch for Flaming Strike procs). notes:
 - [ ] **Try a turn-in from far outside town** → refused by the proximity gate with a

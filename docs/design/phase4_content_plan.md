@@ -218,7 +218,10 @@ chains plus one standalone:
 | Champion's Crypt | Aldric | 9 | hard | 6 Skeleton Champion | iron chain piece |
 | The Undying | Aldric | 12 | named | The Undying | a unique (finale, gray after) |
 
-Turn-in XP at those tiers: ~5,600 / ~18,300 / ~63,500 / ~84,500 / ~140,600. The two
+Turn-in XP at those tiers: 2,100 / 18,300 / 63,500 / 108,500 / 317,600
+*(corrected 2026-09-24 against the live server: the original estimates here
+miscomputed three of the five bands; these are the exact tier% x band(level_req)
+values the server pays, two verified in play to the digit)*. The two
 hard quests are each worth roughly half a level at-level, which makes walking back
 to town worth it, and the finale gives the duo a reason to push past the three-hour
 bar. Names, dialogue, and rewards are mine to draft, yours to veto.
