@@ -48,9 +48,11 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       bags carry stacks and the bone fragments destroyed after prove the
       skeleton table matches the new name.
 - [ ] **Ring 5: Gnoll War Camp (10), Sunken Barrow (12); Ring 6 unchanged** → all
-      populated where the plan's map says. notes: PARTIAL 09-24 — a Barrow
-      Zombie fell at exact L12 XP (pot 246 coin), so the Sunken Barrow is
-      live; the war camp and Ring 6 still want eyes.
+      populated where the plan's map says. notes: NEARLY DONE 09-24 — Barrow
+      Zombie at exact L12 XP, Gnoll Brutes at exact L10 (war camp live, its
+      50 s respawns visibly backfilling during the Greth fight), and an
+      Ancient Wraith at exact L16 XP proves the Wraith Gate. The Ossuary is
+      the sole camp not yet eyeballed; row closes on one glance west.
 
 ## 3 — The five named mobs (first ever placed)
 
@@ -62,8 +64,12 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       16800 = kill_xp(8), ding 8 to 9 on the blow. Loot bag stacks=2 — the
       guaranteed sac plus a second stack (possibly a first-kill Chitinous
       Ring; user to confirm from the bag).
-- [ ] **Greth Bonecrusher at the war camp's tent** → boss-sized fight, drops the
+- [x] **Greth Bonecrusher at the war camp's tent** → boss-sized fight, drops the
       Gnoll Chief's Seal (25% War Axe — do not expect it first kill). notes:
+      PASS 09-24 (server log 20:08): 860 hp = 4.0x exact, enrage at 24.2%
+      (threshold 25), damage 44 to 66 raw = 1.5x, exact L10 XP, ding 10 to 11
+      on the blow, 585 coin + an item stack refunded to the bag for space
+      (user to check which drop that was).
 - [ ] **The Undying at the barrow** → the hardest fight in the game (enrage at 40%);
       dying to it is a pass for this row too, note which. notes:
 - [ ] **Kill a named, wait out its long respawn (5-10 min)** → it returns; the
@@ -80,8 +86,11 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       Coif. notes: PASS 09-24 (server log: accepted 15:34, six scouts felled
       15:47-15:49, completed 16:01 reward=18300 — exact tier math; coif grant
       proven in inventory after).
-- [ ] **Brom offers The Silk Harvest (L7)** → 10 Giant Spiders (the Crawler does NOT
-      count — intended), Leather Vest on turn-in. notes:
+- [x] **Brom offers The Silk Harvest (L7)** → 10 Giant Spiders (the Crawler does NOT
+      count — intended), Leather Vest on turn-in. notes: PASS 09-24: refused
+      at 6, accepted at 7, a dozen-plus spiders in the logs, and the Leather
+      Vest confirmed in possession (looted off a corpse mid-day, later
+      dropped) — only the turn-in grants it.
 - [x] **Aldric offers Champion's Crypt (L9)** → 6 Skeleton Champions, Iron Chain
       Leggings on turn-in. notes: PASS 09-24 (server log): accepted the minute
       level 9 landed (refused at 8 twice before, gate airtight), nine champions
