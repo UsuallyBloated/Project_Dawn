@@ -33,10 +33,16 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
 - [ ] **Sweep outward: Bonepile (1), Wolf Run (1), Rats (2), Graves (3), Gnoll
       Raiders (3), Boars (4), Bats (4)** → every camp populated, levels con as
       listed, no camp aggros anyone standing in town or at the bank. notes:
-- [ ] **Ring 3: Bandits (5), Dire Wolves (5), Festering Mound** → the Mound mobs are
+- [x] **Ring 3: Bandits (5), Dire Wolves (5), Festering Mound** → the Mound mobs are
       now "Plagued Zombie" (renamed from Ghoul) and drop zombie-table loot. notes:
-- [ ] **Ring 4: Spider Copse (7)** → the new camp exists, spiders drop silk/venom;
-      the 7-to-8 leveling wall this camp closes feels closed. notes:
+      PASS 09-24 across the day's logs: Bandit Scouts and Dire Wolves both
+      farmed at exact L5 XP; Plagued Zombies pay exact L6 XP and their bags
+      carry item stacks, proving the renamed name matches the zombie table.
+- [x] **Ring 4: Spider Copse (7)** → the new camp exists, spiders drop silk/venom;
+      the 7-to-8 leveling wall this camp closes feels closed. notes: PASS
+      09-24: a dozen-plus Giant Spider kills at exact L7 XP, spiderling silk
+      and venom sacs confirmed in inventory, and the user rode this camp from
+      6 to 9 in one sitting — the old wall is gone.
 - [ ] **The Broken Crypt (9)** → mobs are now "Skeleton Champion" (renamed) and drop
       skeleton-table loot. notes:
 - [ ] **Ring 5: Gnoll War Camp (10), Sunken Barrow (12); Ring 6 unchanged** → all
@@ -46,8 +52,12 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
 
 - [ ] **Sable the Dark at the bat hollow's roost (north)** → visibly tougher than the
       bats, no enrage (by design), drops Sable Wing Membrane. notes:
-- [ ] **Ancient Crawler at the burrow by the Spider Copse** → enrages, drops Pristine
-      Venom Sac. notes:
+- [x] **Ancient Crawler at the burrow by the Spider Copse** → enrages, drops Pristine
+      Venom Sac. notes: PASS 09-24 (server log 17:54): 420 hp = 3.0x exact,
+      enrage at 28.6% (threshold 30), damage 24 to 31 raw = 1.3x, kill paid
+      16800 = kill_xp(8), ding 8 to 9 on the blow. Loot bag stacks=2 — the
+      guaranteed sac plus a second stack (possibly a first-kill Chitinous
+      Ring; user to confirm from the bag).
 - [ ] **Greth Bonecrusher at the war camp's tent** → boss-sized fight, drops the
       Gnoll Chief's Seal (25% War Axe — do not expect it first kill). notes:
 - [ ] **The Undying at the barrow** → the hardest fight in the game (enrage at 40%);
