@@ -57,10 +57,15 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
 
 ## 4 — The second quest tier
 
-- [ ] **Aldric offers Restless Bones (L2)** → accept, any 8 skeletons count (Bonepile
-      + Graves both), turn-in pays XP + the Leather Cap. notes:
-- [ ] **Brom offers Road Toll (L5)** → 6 Bandit Scouts, turn-in pays the Copper Chain
-      Coif. notes:
+- [x] **Aldric offers Restless Bones (L2)** → accept, any 8 skeletons count (Bonepile
+      + Graves both), turn-in pays XP + the Leather Cap. notes: PASS 09-24
+      (server log: accepted 15:42, completed 16:02 reward=2100 — exact tier
+      math; the Leather Cap grant proven by its later appearance in
+      inventory).
+- [x] **Brom offers Road Toll (L5)** → 6 Bandit Scouts, turn-in pays the Copper Chain
+      Coif. notes: PASS 09-24 (server log: accepted 15:34, six scouts felled
+      15:47-15:49, completed 16:01 reward=18300 — exact tier math; coif grant
+      proven in inventory after).
 - [ ] **Brom offers The Silk Harvest (L7)** → 10 Giant Spiders (the Crawler does NOT
       count — intended), Leather Vest on turn-in. notes:
 - [ ] **Aldric offers Champion's Crypt (L9)** → 6 Skeleton Champions, Iron Chain
