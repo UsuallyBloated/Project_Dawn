@@ -71,7 +71,7 @@ func new_window(window_name: String = "") -> ChatWindow:
 	var w := _ChatWindowScript.new()
 	w.window_id = id
 	w.group_id = gid
-	var name_to_use := window_name if window_name != "" else "Chat %d" % id
+	var name_to_use := window_name if window_name != "" else _next_default_name()
 	var pos := DEFAULT_POS + NEW_WINDOW_CASCADE * (_windows.size())
 	w.setup(pos, DEFAULT_SIZE, MIN_SIZE)
 	w.set_window_name(name_to_use)
@@ -85,6 +85,20 @@ func new_window(window_name: String = "") -> ChatWindow:
 		_set_active(id)
 	_save_layout()
 	return w
+
+# The lowest unused "Chat N" (playtest 2026-09-23): close Chat 2 and the next
+# new window is Chat 2 again, instead of the number marching upward forever.
+# Deliberately based on the NAMES of live windows, not window ids — ids stay
+# monotonic (they key saved layouts and groups and must never be recycled),
+# and a user-renamed window frees its number.
+func _next_default_name() -> String:
+	var taken := {}
+	for w in _windows:
+		taken[w.window_name] = true
+	var n := 1
+	while taken.has("Chat %d" % n):
+		n += 1
+	return "Chat %d" % n
 
 func _allocate_group_id() -> int:
 	var gid := _next_group_seq
