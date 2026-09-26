@@ -18,15 +18,31 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
 
 ## 1 — The repaired starter book (the old quests, now completable)
 
-- [ ] **Take The Wolf Threat from Aldric, walk south of the eastern road** → Grey
+- [x] **Take The Wolf Threat from Aldric, walk south of the eastern road** → Grey
       Wolves exist and kill-credit ticks the journal (was: no wolves in the world). notes:
-- [ ] **Take Rat Infestation from Brom** → Plague Rats are right out the back of his
-      shop, per his cellar dialogue, and credit ticks. notes:
-- [ ] **Take Drive Back the Raiders at level ~3, go east** → level 3 Gnoll Raiders in
-      the rocky flats (was: only the level 10 Brute matched, in Ring 4). notes:
-- [ ] **Take Hunt the Beast, go south past the dire wolves** → Rotfang the Feared
+      PASS. User's lap 09-22, then hard log proof 09-25 on a fresh character:
+      accepted 17:56:18, eight-plus Grey Wolf credits at exact L1 XP (263).
+- [x] **Take Rat Infestation from Brom** → Plague Rats are right out the back of his
+      shop, per his cellar dialogue, and credit ticks. notes: PASS. The 09-25
+      fresh character ran the whole loop: accepted 17:17:36 at level 1,
+      fifteen-plus rat credits at exact L2 XP (1050), completed 17:55:07
+      reward=150 — exactly 0.15 x band(1), the trivial tier to the digit.
+- [x] **Take Drive Back the Raiders at level ~3, go east** → level 3 Gnoll Raiders in
+      the rocky flats (was: only the level 10 Brute matched, in Ring 4). notes: PASS.
+      09-25 fresh character: accepted 17:55:13 the moment level 3 landed,
+      Gnoll Raider credits at exact L3 XP (2363) through the evening.
+- [x] **Take Hunt the Beast, go south past the dire wolves** → Rotfang the Feared
       spawns at his den, hits harder than the wolves, enrages low, drops the Fang. notes:
-- [ ] **Rotfang turn-in at Aldric** → the big XP payout + Hunter's Medal land. notes:
+      PASS 09-22 (machine-day §4 log 23:05-23:15): accept refused at 4,
+      accepted at 5, den respawned on its timer, enrage fired both fights
+      (308 hp = 3.5x, damage 1.4x). The level gate re-proven 09-25 (refused
+      at 3) and the den re-proven 09-24 (re-kill after the long respawn).
+- [x] **Rotfang turn-in at Aldric** → the big XP payout + Hunter's Medal land. notes:
+      PASS 09-22: turn-in refused with full bags (can_accept pre-flight),
+      then paid reward=48800 + the 5-to-6 ding after making room — the
+      refusal itself proves the Medal grant was attempted and it landed on
+      the retry. Whether the Medal's STR/CON bonuses APPLY is the separate
+      standing To-Do item (quest reward follow-ups), not this row.
 
 ## 2 — The new rings and the ladder
 
@@ -140,6 +156,14 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
 
 - [ ] **A fresh character's first minutes** → town is safe, nothing aggros the
       plaza/bank row, the starter book flows rat → wolf → skeleton naturally. notes:
+      MOSTLY PROVEN 09-25 (fresh char 2, level 1 to 4+ in one evening): the
+      book flowed rat then wolf then gnoll with the level gates steering
+      correctly (road_toll and rotfang_hunt both refused at 3), one honest
+      death at level 2 with a clean corpse cycle and no de-level (the
+      under-5 grace), and every town visit (turn-in, accepts, GmGive) shows
+      zero damage lines around it. Still wanted before ticking: the
+      deliberate stand-at-the-bank minute (machine-day §4's aggro row) and
+      restless_bones in the flow (the skeleton step was not in this log).
 - [ ] **Group up for one camp** → XP splits, loot rights, group bars all behave (also
       exercises the pending group-bars build if this is its first two-seat session). notes:
 - [x] **Die somewhere honest, corpse-run** → death path unchanged by the layout work. notes:
@@ -152,6 +176,6 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
 
 ## Result
 
-- Server build (boot line):
-- Client build (`/version`):
+- Server build (boot line): `59f2fa1` (boot 2026-09-25 00:42, dev_cmds=false)
+- Client build (`/version`): `6156d05` (the EQ-death export)
 - Overall:
