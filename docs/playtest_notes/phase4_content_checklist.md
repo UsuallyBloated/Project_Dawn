@@ -157,10 +157,13 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
 
 - [x] **Hadrik stands west of Sister Maelis; right-click** → Blacksmith shop opens:
       copper/iron weapons + the iron chain set; buying works and charges. notes:
-      user-confirmed 09-26 (shop walk was 09-22, post-declutter). No Hadrik
-      BuyItem in the pasted log spans — if a weapon/armor purchase from him
-      has not actually happened yet, one buy on the next login makes this
-      airtight (his npcs.toml row is what the range gate checks).
+      PASS 09-27 (server log 02:57-02:58): three purchases from his stock
+      applied and charged (Iron Dagger 55, Copper Chain Vest 90, Iron Chain
+      Vest 130), each equipped after with the stat deltas fanning
+      (armor 11 to 25 to 29, max_hp 88 to 108 to 113), AND a sell-back —
+      the Copper Chain Vest returned for credit=45, the server's own
+      half-price number. Zero merchant-range refusals; his npcs.toml row is
+      live for both directions of the trade.
 - [x] **Right-click Elara** → her DIALOGUE opens now (General Merchant title);
       "Let me see your wares." opens the shop she always had; the town/news lore
       lines read well. notes: user-confirmed 09-26; the dialogue-then-shop
