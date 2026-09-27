@@ -78,8 +78,10 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
       making room. Kill-before-accept correctly paid no credit. Also
       exercised: GM connect line, Maelis bind, swing-rate limiter dropping
       the known client double-Attacks.
-- [ ] **Nothing aggros town** → stand at the bank and the plaza a minute; no camp
-      reaches you. notes:
+- [x] **Nothing aggros town** → stand at the bank and the plaza a minute; no camp
+      reaches you. notes: PASS 09-27, far past the bar: the character stood
+      AFK at the bank for HOURS and was never attacked (any aggro would
+      have killed an AFK character and left a corpse; none exists).
 
 ## 5 — The playtest queue (evenings, in order)
 

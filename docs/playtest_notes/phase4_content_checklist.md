@@ -46,9 +46,15 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
 
 ## 2 — The new rings and the ladder
 
-- [ ] **Sweep outward: Bonepile (1), Wolf Run (1), Rats (2), Graves (3), Gnoll
+- [x] **Sweep outward: Bonepile (1), Wolf Run (1), Rats (2), Graves (3), Gnoll
       Raiders (3), Boars (4), Bats (4)** → every camp populated, levels con as
       listed, no camp aggros anyone standing in town or at the bank. notes:
+      PASS. The camps were proven across 09-24/25/26 at exact per-level XP
+      (Decrepit Skeleton 263, Grey Wolf 263, Plague Rat 1050, Rotting
+      Skeleton 2363, Gnoll Raider 2363; the bat_wing in inventory proves
+      the hollow; the Ring 5 row's note covers the full 21-camp sweep).
+      The town clause closed 09-27: the character stood AFK at the bank for
+      HOURS and was never attacked (an aggro would have left a corpse).
 - [x] **Ring 3: Bandits (5), Dire Wolves (5), Festering Mound** → the Mound mobs are
       now "Plagued Zombie" (renamed from Ghoul) and drop zombie-table loot. notes:
       PASS 09-24 across the day's logs: Bandit Scouts and Dire Wolves both
@@ -176,20 +182,31 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
 
 ## 6 — Regression sweep
 
-- [ ] **A fresh character's first minutes** → town is safe, nothing aggros the
+- [x] **A fresh character's first minutes** → town is safe, nothing aggros the
       plaza/bank row, the starter book flows rat → wolf → skeleton naturally. notes:
-      MOSTLY PROVEN 09-25 (fresh char 2, level 1 to 4+ in one evening): the
+      PASS. Proven 09-25 (fresh char 2, level 1 to 4+ in one evening): the
       book flowed rat then wolf then gnoll with the level gates steering
       correctly (road_toll and rotfang_hunt both refused at 3), one honest
       death at level 2 with a clean corpse cycle and no de-level (the
       under-5 grace), and every town visit (turn-in, accepts, GmGive) shows
       zero damage lines around it. 09-26 closed the skeleton gap: char 2
       ran restless_bones (8 Decrepit Skeletons at exact L1 XP, turn-in
-      paid), so the full rat/wolf/skeleton book has now flowed on a fresh
-      character. The ONLY remainder is the deliberate stand-at-the-bank
-      minute (machine-day §4's aggro row) — say the word and both tick.
+      paid), so the full rat/wolf/skeleton book has flowed on a fresh
+      character. 09-27 closed town safety: hours AFK at the bank, never
+      attacked.
 - [ ] **Group up for one camp** → XP splits, loot rights, group bars all behave (also
       exercises the pending group-bars build if this is its first two-seat session). notes:
+      LOG SIDE ALL PASS 09-27 (two-boxed: account 2 char 3 + account 1
+      char 4, gid=1, Wolf Run): XP split exact on every kill (base 263,
+      pool=315 = the 1.2x group bonus, per_member=157, a dozen kills),
+      round-robin loot enforced THREE times in both directions (looter=4
+      refused on 3's bag and looter=3 refused on 4's), a cross-member heal
+      landed (Healing Light 60 from 4 onto 3), and both members dinged
+      1 to 2 on the same kill credit. Clean disconnects. STILL OPEN, the
+      one thing the log cannot show: did both group panels show FULL bars
+      the moment the group formed (the 01dd8fa roster fan, its first
+      two-seat exercise)? User's word ticks this row and
+      bagspace_groupbars §2 together.
 - [x] **Die somewhere honest, corpse-run** → death path unchanged by the layout work. notes:
       PASS 09-24 (two deaths at the spider copse area): penalty exact, corpse
       with 11 stacks, run back, loot + re-equip clean, empty corpse despawned,
