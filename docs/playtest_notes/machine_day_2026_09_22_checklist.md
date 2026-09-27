@@ -85,8 +85,9 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 
 ## 5 — The playtest queue (evenings, in order)
 
-- [ ] **`phase4_content_checklist.md`** in full (six sections; §3 named mobs and
-      the high rings want GM leveling). notes:
+- [x] **`phase4_content_checklist.md`** in full (six sections; §3 named mobs and
+      the high rings want GM leveling). notes: COMPLETE 09-27, all 28 rows
+      PASS across five sittings — see that checklist's Result block.
 - [ ] **`bagspace_groupbars_checklist.md`** (§2 needs the second seat). notes:
 - [ ] **`cursor_slice15_checklist.md` retest rows** → equip-from-hand swap no
       longer blanks the held item; drop-confirm dialog no longer re-prompts. notes:

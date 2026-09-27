@@ -953,24 +953,32 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   call ("have them both use the same system"), `can_accept` — the quest turn-in pre-flight —
   now clones the inventory and probes the REAL placer instead of hand-simulating base-only
   placement, so capacity answers and actual placement can never disagree. 217/217 tests, four
-  new.
-- [ ] **Group panel bars are blank until the first resource update** *(found 2026-08-27, group
-  playtest)*. `_on_world_group_roster` builds member rows zeroed, and the server only fans
-  resources on change (>5% swing, or the 500 ms clock while regen is moving), so a full-HP idle
-  group-mate shows empty bars until something changes. Verify step SETTLED (audit 09-09): `EntitySpawn`
-  carries no resources (id/name/race/class/level/pos/yaw only), so the client cache has nothing
-  to seed rows from. The fix is the server one: on every roster change, fan a one-shot
-  Health/Mana/StaminaUpdate for each member to the group — existing message types, no protocol
-  bump.
-  **BUILT 2026-09-09, pending the two-player playtest** (server `01dd8fa`;
-  `bagspace_groupbars_checklist.md` §2). Every non-empty roster fan — the shared intent-path
-  closure and the disconnect-survivor re-fan — is followed by one shot of the ordinary
-  resource updates per member, sent to the group, so rows fill the moment the roster lands.
-  (No wire-level group flow exists in the integration harness, so the checklist row is the
-  proof.) Bonus find while in there: the proximity gate's two integration tests had been
-  sitting UNCOMMITTED in the working tree since 08-25 — verified passing and committed
-  (`1766f02`).
+  new. **Field evidence so far (09-25 to 09-27):** the loot refund path ("partially placed;
+  remainder refunded", seven-plus firings), the GmGive full-bags refusal, and the can_accept
+  turn-in pre-flight all behaved correctly in real play — but the pouch-interior placement
+  rows (`bagspace_groupbars_checklist.md` §1) remain unexercised because no tester has
+  carried a pouch on the fresh world yet. Ticks when §1 runs.
+- [x] **Group panel bars are blank until the first resource update** — **DONE + playtested
+  2026-09-27** (server `01dd8fa`; `bagspace_groupbars_checklist.md` §2 +
+  `phase4_content_checklist.md` §6: the first two-seat session on the build, and both
+  members' panels showed full HP/MP/stamina the moment the group formed). What exists is in
+  systems_overview → Networking ("Group panel seeding"). One row rides the next two-seat
+  session: a member leaving while the survivor watches their panel (unobserved — both seats
+  disconnected 2 s apart).
 
+- [ ] **NaN Move direction poisons position and bypasses range gates** *(found 2026-09-25
+  during the zone-size research; verified in source, not yet exploited in play)*. A forged
+  Move whose `direction` carries NaN/Infinity slips through `clamp_length`
+  (`connection.rs:43` tests `len > max`, false for NaN) and the tick makes `conn.pos`
+  permanently NaN. Every rejection gate shaped `if dist > RANGE { refuse }` then passes
+  (comparisons with NaN are false): corpse loot `tick.rs:7898`, loot bags `:8123`/`:8406`,
+  res `:3817`, attack and spell range. A modified client could loot any corpse/bag and act
+  from anywhere; NaN also spreads into mob positions via chase AI, and SQLite persists NaN
+  as NULL (reloads 0.0). An honest client can never send one. **Fix is a few lines:**
+  reject non-finite direction components in the Move handler, mirroring the `is_finite`
+  guard `DevSpawnMob` already has (`handlers.rs:793`). Server-only. Fits the audit frame:
+  magnitudes validated, eligibility inputs less so. Details in
+  `docs/design/zone_size_limits.md` §5.
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
@@ -1113,21 +1121,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   path but is stale. Audit list: see the "Known drift" note + the 2026-07-22 session note.
 
 ### World systems
-- [ ] **Phase 4 content: the replacement world** *(plan `docs/design/phase4_content_plan.md`,
-  all five decisions user-approved 2026-09-14; BUILT 2026-09-14 to 09-16, pending playtest —
-  `phase4_content_checklist.md`)*. Server: replacement `zone_camps.toml` (21 camps / 54
-  spawns / 16 mob names; every quest target where its dialogue says; all five named mobs
-  placed as long-respawn dens; ladder continuous through 7; Ghoul and Undead Champion
-  renamed so loot tables match), five second-tier quests in `quests.toml`
-  (restless_bones L2 / road_toll L5 / silk_harvest L7 / champions_crypt L9 / the_undying
-  L12, Flamebrand finale), npcs.toml rows for Elara + Hadrik. Client: Hadrik placed,
-  Elara upgraded to a dialogue NPC (shop kept), both quest data files mirrored with full
-  dialogue arcs (headless lockstep probe green). **Deploy: both sides together** — server
-  redeploy + new export in one step (no protocol bump; an old client just can't see the
-  new content). The redeploy also carries the pending bag-space + group-bars builds.
-  Fixed along the way, server-side: a boot-time spawner bug (a camp's FIRST spawn waited
-  its full respawn timer when the server started within `respawn_secs` of machine boot —
-  every R720 systemd start; the two 600 s named dens made it visible).
+- [x] **Phase 4 content: the replacement world** — **DONE + playtested 2026-09-27**
+  (`phase4_content_checklist.md`, all 28 rows PASS across the 09-22 to 09-27 sittings;
+  plan + verified reward actuals in `docs/design/phase4_content_plan.md`). What exists is
+  in systems_overview → World & environment ("The phase 4 world") and NPCs/quests (the
+  second quest tier, Hadrik, Elara). Every tier payout, named-mob multiplier and per-level
+  XP value landed to the digit in play, and the gates (level_req, proximity, bag-space
+  pre-flight, round-robin, dead-state) all refused correctly under real use. Standing
+  watch item: Flamebrand's Flaming Strike procs have not yet been observed in a server
+  log — check on the next melee session with it equipped. `xp_mult` on named mobs remains
+  parsed-but-unapplied (pre-existing, tracked under the named-mobs entry).
 - [ ] **Mount system** — *`MountManager` autoload exists (client-side v1); feature is not
   fully wired* (server speed clamp, Animal Husbandry / Spirit-of-Wolf stacking / Selos'
   Melody interactions still pending)
@@ -1167,6 +1170,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   window sizes. Same-day context: the startup window shrink to 1280x720 (login.gd) may have
   surfaced layout sins the old full-screen window hid.
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
+- [ ] **`/loc` command** *(designed 2026-09-25, `docs/design/location_command.md`; queued in
+  the phase 5 draft's big-world track)*. EQ-style chat command printing the player's own
+  position (x, y, z to one decimal, matching the toml authoring order) + facing via the
+  existing `SenseHeading` compass math, to the System channel through the existing chat-command
+  router. Client-only, no wire traffic, zero exploit surface (own position, already known to
+  the client). Load-bearing for content authoring, playtest triage, and the height-model
+  playtests. Three open calls in the design note (facing for everyone vs trained; GM drift
+  extra in v1; and **which way is north** — `sense_heading.gd` says -Z while `zone_data.gd`'s
+  camp labels say +Z, and the facing suffix makes the answer player-visible, so building this
+  settles the compass; recommendation -Z, then audit camp comments + compass-direction quest
+  dialogue). Update `docs/reference/commands.md` when built.
 - [x] **Hotbar + socials bleed between characters** *(found 2026-08-26 during the active-skill
   playtest: skills placed on the Warrior's hotbar appeared on the Monk's; **BUILT 2026-08-26,
   pending playtest** — `hotbar_per_character_checklist.md`, needs a re-export)*. `SocialHotkeys`

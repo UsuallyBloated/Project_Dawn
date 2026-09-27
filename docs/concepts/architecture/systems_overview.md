@@ -463,6 +463,16 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   ultravision (Dark Elf, Ogre, Troll, Kel\`varath), infravision (Elf, Wood Elf, Half-Elf,
   Dwarf, Gnome, Halfling, Fae, Felhari, Kobold), normal (Human, Minotaur, Half-Ogre).
 - **Spawns:** spawn points with respawn timers keep the world populated.
+- **The phase 4 world (server camps, playtested complete 2026-09-27):** the replacement
+  layout in `zone_camps.toml` — 21 camps / 54 spawns / 16 mob names in six difficulty rings
+  around town, a continuous leveling ladder through 7 (the old 7-to-8 wall is closed by the
+  Spider Copse), every quest target placed where its dialogue says, and all five named mobs
+  placed as long-respawn dens (Rotfang, Sable, Ancient Crawler, Greth Bonecrusher, The
+  Undying — HP/damage multipliers, enrage thresholds and payouts all verified to the digit
+  in play). Ghoul and Undead Champion were renamed (Plagued Zombie, Skeleton Champion) so
+  loot tables match. A boot-time spawner bug was fixed with it: first spawns no longer wait
+  a full respawn timer when the server starts near machine boot. Plan + verified reward
+  actuals: `docs/design/phase4_content_plan.md`; evidence: `phase4_content_checklist.md`.
 - **Named/boss mobs:** `data/named_mob_definitions.gd` (Rotfang, Greth Bonecrusher, Ancient
   Crawler, Sable, The Undying). `EnemySpawner.named_mob_id` + `named_respawn_time`;
   `enemy.apply_named()` sets a gold nameplate, scales HP/XP/damage, arms `_named_drops`
@@ -492,7 +502,12 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   kill. Client side, `QuestManager` mirrors this state and `scripts/quest_journal.gd` (J key;
   Active/Completed tabs, Abandon button) renders it; quest data in `data/quest_definitions.gd`
   (client) / `quests.toml` (server). Dialogue NPCs give/turn-in quests (Aldric: wolf_threat,
-  rotfang_hunt; Brom: rat_infestation, gnoll_raiders, wired 2026-07-15). Open follow-ups live in
+  rotfang_hunt; Brom: rat_infestation, gnoll_raiders, wired 2026-07-15). **The second quest
+  tier shipped with phase 4** (playtested complete 2026-09-27): restless_bones L2 / road_toll
+  L5 / silk_harvest L7 / champions_crypt L9 / the_undying L12 (Flamebrand finale), every tier
+  payout exact (0.15/0.30/0.50/0.80 x the cubic band at level_req), plus two new town NPCs —
+  Hadrik the Blacksmith (weapons + the iron chain set) and Elara upgraded to a dialogue NPC
+  with her shop behind "Let me see your wares." Open follow-ups live in
   the `CLAUDE.md` To-Do (a ring-reward stat bug, a Hunter's Medal re-test, the deliberately-cut
   low-level dialogue-refusal polish).
 - **Vendors:** `VendorManager` + `scenes/vendor_npc.tscn` / `scripts/vendor_npc.gd`
@@ -589,6 +604,12 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   spawn and update peer-owned entities from server broadcasts; each exposes a `get_by_id()`
   accessor used by the target-of-target resolver.
 - `NetCombatBroadcaster` — relays local combat events onto the wire.
+- **Group panel seeding (server `01dd8fa`, playtested 2026-09-27):** every non-empty group
+  roster fan — the shared intent-path closure and the disconnect-survivor re-fan — is
+  followed by a one-shot Health/Mana/StaminaUpdate per member sent to the group, so panels
+  show true bars the moment a roster lands instead of sitting blank until someone takes a
+  hit (the server otherwise fans resources only on a >5% swing or the 500 ms regen clock).
+  First two-seat session confirmed both panels full immediately on group form.
 - **Incoming-attack combat-log feedback:** `RemotePlayerManager._on_hit` logs "X hits you
   for N." and `_on_miss` logs "X misses you." (added 2026-06-16) on the local player's
   combat log, for both enemy and PvP attackers (the server already fans `Hit`/`Miss` to the

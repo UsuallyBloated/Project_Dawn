@@ -23,10 +23,16 @@ existing export works.
 
 ## 2 — Group bars fill on sight (needs the second seat)
 
-- [ ] **Form a group while both players are idle at full HP** → both panels show full
+- [x] **Form a group while both players are idle at full HP** → both panels show full
       HP/MP/STA bars IMMEDIATELY — no waiting for someone to take a hit. notes:
+      PASS 09-27 (two-boxed session, gid=1, both fresh characters idle at
+      full): user confirms both members' panels showed full HP/MP/stamina
+      the moment the group formed. First two-seat exercise of the 01dd8fa
+      roster fan; evidence cross-recorded on phase4_content_checklist §6.
 - [ ] **A member leaves or is kicked** → the survivors' panels stay correct (rows refill on
-      the roster change). notes:
+      the roster change). notes: unobserved 09-27 — both seats disconnected
+      2 s apart, so no survivor moment existed. Ten-second check next time
+      two seats are up: one leaves, the other watches their panel.
 
 ---
 

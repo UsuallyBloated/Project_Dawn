@@ -194,19 +194,21 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       paid), so the full rat/wolf/skeleton book has flowed on a fresh
       character. 09-27 closed town safety: hours AFK at the bank, never
       attacked.
-- [ ] **Group up for one camp** → XP splits, loot rights, group bars all behave (also
+- [x] **Group up for one camp** → XP splits, loot rights, group bars all behave (also
       exercises the pending group-bars build if this is its first two-seat session). notes:
-      LOG SIDE ALL PASS 09-27 (two-boxed: account 2 char 3 + account 1
+      PASS 09-27. Bars: user confirms BOTH members' group panels showed
+      full HP/MP/stamina immediately on group form — the 01dd8fa roster
+      fan working on its first two-seat exercise. Log side ALL PASS same
+      session (two-boxed: account 2 char 3 + account 1
       char 4, gid=1, Wolf Run): XP split exact on every kill (base 263,
       pool=315 = the 1.2x group bonus, per_member=157, a dozen kills),
       round-robin loot enforced THREE times in both directions (looter=4
       refused on 3's bag and looter=3 refused on 4's), a cross-member heal
       landed (Healing Light 60 from 4 onto 3), and both members dinged
       1 to 2 on the same kill credit. Clean disconnects. STILL OPEN, the
-      one thing the log cannot show: did both group panels show FULL bars
-      the moment the group formed (the 01dd8fa roster fan, its first
-      two-seat exercise)? User's word ticks this row and
-      bagspace_groupbars §2 together.
+      (see above). This tick also closes bagspace_groupbars §2's
+      form-a-group row; its member-leaves row went unobserved (both seats
+      disconnected 2 s apart) and stays open there.
 - [x] **Die somewhere honest, corpse-run** → death path unchanged by the layout work. notes:
       PASS 09-24 (two deaths at the spider copse area): penalty exact, corpse
       with 11 stacks, run back, loot + re-equip clean, empty corpse despawned,
@@ -219,4 +221,8 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
 
 - Server build (boot line): `59f2fa1` (boot 2026-09-25 00:42, dev_cmds=false)
 - Client build (`/version`): `6156d05` (the EQ-death export)
-- Overall:
+- Overall: **COMPLETE 2026-09-27 — all 28 rows PASS** across the 09-22 to 09-27
+  sittings. Every tier payout, named-mob multiplier, and XP number in the
+  design landed to the digit; the gates (level_req, proximity, bag-space
+  pre-flight, round-robin, dead-state) all refused correctly under real
+  play. Standing watch item: Flamebrand procs not yet seen in a log.
