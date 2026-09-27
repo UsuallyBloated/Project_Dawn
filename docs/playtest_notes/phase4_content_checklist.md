@@ -137,20 +137,39 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       the ding 12 to 13 on the turn-in. An equip-from-cursor followed at
       20:42:01; Flaming Strike procs not yet observed in a log — watch on the
       next melee session.
-- [ ] **Try a turn-in from far outside town** → refused by the proximity gate with a
-      chat line; walking back to the giver completes it. notes:
-- [ ] **Journal + relog** → new quests persist across a relog with counts intact
-      (QuestSnapshot round-trip). notes:
+- [x] **Try a turn-in from far outside town** → refused by the proximity gate with a
+      chat line; walking back to the giver completes it. notes: PASS 09-26
+      (char 2, restless_bones): 22:12:43 `turn-in rejected — too far from
+      the turn-in NPC npc="aldric"`, walked back, hit the inventory-full
+      pre-flight at Aldric's feet 16 s later, made room, completed 22:13:16
+      reward=2100 (the second character paying the once-per-character
+      reward again is correct). Bonus: the make-room dance exercised
+      left-click ground pickup in the wild — honey dropped to a ground bag,
+      picked back up to the cursor, destroyed from hand, all clean.
+- [x] **Journal + relog** → new quests persist across a relog with counts intact
+      (QuestSnapshot round-trip). notes: user-confirmed 09-26. Log
+      corroboration: restless_bones was carried across at least one relog
+      (accepted in a prior session, char 2 reconnected 22:01, the 8
+      skeleton credits landed 22:11-22:12 and the turn-in accepted them),
+      so accepted-state and giver survive the round-trip.
 
 ## 5 — Town: the Blacksmith and Elara
 
-- [ ] **Hadrik stands west of Sister Maelis; right-click** → Blacksmith shop opens:
+- [x] **Hadrik stands west of Sister Maelis; right-click** → Blacksmith shop opens:
       copper/iron weapons + the iron chain set; buying works and charges. notes:
-- [ ] **Right-click Elara** → her DIALOGUE opens now (General Merchant title);
+      user-confirmed 09-26 (shop walk was 09-22, post-declutter). No Hadrik
+      BuyItem in the pasted log spans — if a weapon/armor purchase from him
+      has not actually happened yet, one buy on the next login makes this
+      airtight (his npcs.toml row is what the range gate checks).
+- [x] **Right-click Elara** → her DIALOGUE opens now (General Merchant title);
       "Let me see your wares." opens the shop she always had; the town/news lore
-      lines read well. notes:
-- [ ] **Buy from Elara after the dialogue path** → purchase lands (her npcs.toml row
+      lines read well. notes: user-confirmed 09-26; the dialogue-then-shop
+      path is corroborated by the same-session purchases below.
+- [x] **Buy from Elara after the dialogue path** → purchase lands (her npcs.toml row
       is new; watch for any "no merchant near you" refusal — should not happen). notes:
+      PASS 09-26 (server log): Bread Loaf cost=4 and Honey cost=5 both
+      applied and charged (coins 540 to 535), zero merchant-range refusals.
+      Her npcs.toml row is live.
 
 ## 6 — Regression sweep
 
@@ -161,9 +180,11 @@ for. Kill credit, rewards, and turn-in gating are all server-side either way.
       correctly (road_toll and rotfang_hunt both refused at 3), one honest
       death at level 2 with a clean corpse cycle and no de-level (the
       under-5 grace), and every town visit (turn-in, accepts, GmGive) shows
-      zero damage lines around it. Still wanted before ticking: the
-      deliberate stand-at-the-bank minute (machine-day §4's aggro row) and
-      restless_bones in the flow (the skeleton step was not in this log).
+      zero damage lines around it. 09-26 closed the skeleton gap: char 2
+      ran restless_bones (8 Decrepit Skeletons at exact L1 XP, turn-in
+      paid), so the full rat/wolf/skeleton book has now flowed on a fresh
+      character. The ONLY remainder is the deliberate stand-at-the-bank
+      minute (machine-day §4's aggro row) — say the word and both tick.
 - [ ] **Group up for one camp** → XP splits, loot rights, group bars all behave (also
       exercises the pending group-bars build if this is its first two-seat session). notes:
 - [x] **Die somewhere honest, corpse-run** → death path unchanged by the layout work. notes:
