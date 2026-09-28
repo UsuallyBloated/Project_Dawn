@@ -602,6 +602,13 @@ func _confirm_trash_delete() -> void:
 				else NetProtocol.inv_location_bag(drag_source_bi)
 			Net.broadcast_destroy_item(src_loc, drag_source_si, drag_count)
 		elif Inventory.cursor_slot != null:
+			# Full-bags-move: the server refuses destroying a held bag
+			# with contents (they would orphan); mirror the refusal
+			# instead of letting the confirm be a no-op.
+			if Inventory.cursor_holds_full_bag():
+				CombatLog.add_line("Empty the bag before destroying it.", CombatLog.MsgType.INFO)
+				_clear_drag()
+				return
 			# PD_W0027 — destroy the held stack; the cursor delta clears it.
 			Net.broadcast_destroy_item(NetProtocol.INV_LOCATION_CURSOR, 0, Inventory.cursor_slot["count"])
 		_clear_drag()

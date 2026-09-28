@@ -1425,6 +1425,10 @@ func _handle_chat_input(text: String) -> void:
 					p.x, p.y, p.z, SenseHeading.exact_facing(_player.rotation.y),
 				],
 				CombatLog.MsgType.INFO)
+		else:
+			# A triage tool must never be silent — say why there is no
+			# answer instead of swallowing the command.
+			CombatLog.add_line("You have no location right now.", CombatLog.MsgType.INFO)
 		return
 
 	if lower == "/track":

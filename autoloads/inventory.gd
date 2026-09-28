@@ -96,9 +96,7 @@ func _on_inventory_snapshot(
 			# PD_W0027 — an item held at logout comes back in hand. A held
 			# BAG brings its contents store so pass 2's bag_255 rows land.
 			cursor_slot = {"item": item, "count": count}
-			if item.type == ItemData.Type.BAG:
-				cursor_bag_contents = []
-				cursor_bag_contents.resize(item.bag_num_slots)
+			_reset_cursor_bag(item)
 	# Pass 2 — bag_<i> entries. Skip rows whose parent base slot
 	# turned out not to hold a bag. bag_255 rows are the HELD bag's
 	# contents (full-bags-move) and route to cursor_bag_contents.
@@ -114,10 +112,12 @@ func _on_inventory_snapshot(
 			continue
 		var arr: Array
 		if base_idx == CURSOR_BAG_KEY:
-			if slot_idx < 0:
+			# Only meaningful when pass 1 saw a bag in hand; a bag_255 row
+			# with no held bag (or beyond the bag's real slots) is stale
+			# data and would become invisible phantom weight — drop it.
+			if slot_idx < 0 or slot_idx >= cursor_bag_contents.size():
+				push_warning("Inventory snapshot: bag_255 row outside the held bag (slot %d); dropped" % slot_idx)
 				continue
-			if slot_idx >= cursor_bag_contents.size():
-				cursor_bag_contents.resize(slot_idx + 1)
 			arr = cursor_bag_contents
 		else:
 			if base_idx < 0 or base_idx >= BASE_SLOT_COUNT:
@@ -146,9 +146,10 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 			return
 		if item_path == "" or count <= 0:
 			# Track 14.3 — clearing a base slot also drops any bag
-			# contents Vec attached to it. The server side ensures a
-			# non-empty bag can't reach this delta (move/drop rules
-			# reject), so dropping the Vec here can't orphan items.
+			# contents Vec attached to it. Since full-bags-move this
+			# happens on every online lift of a full bag: the contents
+			# are not orphaned, they re-key to bag_255 (the cursor-bag
+			# store) via the deltas that follow this host clear.
 			base_slots[slot] = null
 			bag_contents[slot] = null
 		else:
@@ -204,12 +205,8 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 			var same_bag: bool = cursor_slot != null \
 				and cursor_slot["item"].resource_path == item.resource_path
 			cursor_slot = {"item": item, "count": count}
-			if item.type == ItemData.Type.BAG:
-				if not same_bag:
-					cursor_bag_contents = []
-					cursor_bag_contents.resize(item.bag_num_slots)
-			else:
-				cursor_bag_contents = []
+			if not (item.type == ItemData.Type.BAG and same_bag):
+				_reset_cursor_bag(item)
 		_update_cursor_ghost()
 		cursor_changed.emit()
 		inventory_changed.emit()
@@ -217,22 +214,28 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 	# Track 14.3 — bag_<i> delta.
 	if location.begins_with("bag_"):
 		var base_idx: int = location.trim_prefix("bag_").to_int()
-		# Full-bags-move: bag_255 is the held bag's contents. Clears on an
-		# empty store are redundant re-key echoes — ignore them silently.
+		# Full-bags-move: bag_255 is the held bag's contents. Clears that
+		# change nothing are redundant re-key echoes and repaint nothing.
 		if base_idx == CURSOR_BAG_KEY:
 			if item_path == "" or count <= 0:
-				if slot >= 0 and slot < cursor_bag_contents.size():
+				if slot >= 0 and slot < cursor_bag_contents.size() \
+						and cursor_bag_contents[slot] != null:
 					cursor_bag_contents[slot] = null
-				inventory_changed.emit()
+					inventory_changed.emit()
+				return
+			# Fills require an actual bag in hand and a slot inside its
+			# real size — anything else is stale or forged and would
+			# become invisible phantom weight.
+			if cursor_slot == null or cursor_slot["item"].type != ItemData.Type.BAG:
+				DebugLog.warn("Inventory: bag_255 fill arrived with no bag in hand; dropped")
+				return
+			if slot < 0 or slot >= cursor_bag_contents.size():
+				DebugLog.warn("Inventory: bag_255 slot %d outside the held bag's %d slots; dropped" % [slot, cursor_bag_contents.size()])
 				return
 			var held_item := load(item_path) as ItemData
 			if held_item == null:
 				push_warning("Inventory delta: unknown bag-inner ItemData path '%s'" % item_path)
 				return
-			if slot < 0:
-				return
-			if slot >= cursor_bag_contents.size():
-				cursor_bag_contents.resize(slot + 1)
 			cursor_bag_contents[slot] = {"item": held_item, "count": count}
 			inventory_changed.emit()
 			return
@@ -314,9 +317,10 @@ func get_slot(bag_base_index: int, slot_index: int) -> Variant:
 	return bag_contents[bag_base_index][slot_index]
 
 ## True when the bag in base slot `bag_base_index` still holds something.
-## Mirrors the server's `bag_at_base_is_nonempty` (world/inventory.rs), which
-## rejects moving or dropping a non-empty bag. The UI checks this so the refusal
-## is immediate and explained rather than a silent server-side rejection.
+## Since full-bags-move (2026-09-27) the server MOVES non-empty bags freely
+## (contents re-key along); what still requires an empty bag is selling it,
+## destroying it, and dropping it, plus the Test Room's local drag, which has
+## no re-key. Those are this check's remaining callers.
 func bag_has_contents(bag_base_index: int) -> bool:
 	if bag_base_index < 0 or bag_base_index >= bag_contents.size():
 		return false
@@ -596,6 +600,14 @@ func _init_bag_contents(base_index: int, num_slots: int) -> void:
 	arr.fill(null)
 	bag_contents[base_index] = arr
 
+# Full-bags-move: (re)size the held-bag contents store for the bag now in
+# hand, or clear it when the hand holds no bag. One place, so the snapshot
+# and delta paths cannot drift apart on how the store is sized.
+func _reset_cursor_bag(item: Variant) -> void:
+	cursor_bag_contents = []
+	if item != null and item.type == ItemData.Type.BAG:
+		cursor_bag_contents.resize(item.bag_num_slots)
+
 # Flat list of all non-null item entries, for crafting / count_item iteration.
 func all_slots() -> Array:
 	var result: Array = []
@@ -718,8 +730,23 @@ var _last_modal_closed_ms: int = -100000
 func note_modal_closed() -> void:
 	_last_modal_closed_ms = Time.get_ticks_msec()
 
+# Full-bags-move: a held bag with contents can be PLACED but not dropped
+# or trashed (the server refuses both — contents would strand). True when
+# the hand holds a non-empty bag; callers mirror the refusal up front
+# instead of letting the player confirm a no-op.
+func cursor_holds_full_bag() -> bool:
+	if cursor_slot == null or cursor_slot["item"].type != ItemData.Type.BAG:
+		return false
+	for inner in cursor_bag_contents:
+		if inner != null:
+			return true
+	return false
+
 func request_ground_drop() -> void:
 	if cursor_slot == null:
+		return
+	if cursor_holds_full_bag():
+		CombatLog.add_line("Empty the bag before dropping it.", CombatLog.MsgType.INFO)
 		return
 	if _drop_dialog != null and _drop_dialog.visible:
 		return

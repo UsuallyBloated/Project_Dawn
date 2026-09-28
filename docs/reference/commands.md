@@ -71,7 +71,7 @@ Parsed in `scripts/hud.gd::_handle_chat_input`. Press Enter to open chat, type t
 | Command | Effect |
 |---|---|
 | `/inspect` | Inspect your current player target's equipment. |
-| `/sense`, `/sense heading` | Sense heading (direction readout — fuzzy below max skill). |
+| `/sense`, `/sense heading` | Sense heading (direction readout, fuzzy below max skill). |
 | `/loc` (or `/location`) | Your position as `x, y, z` to one decimal (paste-ready for `zone_camps.toml` / `npcs.toml`) plus an exact facing. Free for everyone, works while dead. Compass: +Z is north, +X is east. |
 | `/track` | Tracking (ranger-style). |
 | `/languages` | List languages you know. |
