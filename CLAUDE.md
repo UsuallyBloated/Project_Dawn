@@ -539,6 +539,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   and pets at ~70% of the mob stat curve so a pet class is not a duo by itself (scalar is a
   playtest tuning knob). Accepted cost: A's free warder scaling is replaced by earned maturity
   when C lands — tell whoever mains Beast Master. B stays folded into the spell-backlog pass.
+  **Interim A BUILT 2026-09-27, pending playtest** (server `1f73459` + `5cf7508`;
+  `xp_eligibility_and_pet_levels_checklist.md` §2). Warder = owner-1 deterministic on both
+  the auto-summon and the retreat-respawn; manual summons roll the EQ 0..=2 gamble; Summon
+  Skeleton caps at 10; stats interpolate the hand-authored camp ladder at
+  `PET_STAT_SCALAR = 0.70` (the tuning knob, `pet_templates.rs`), with an anchor test that
+  fails if `zone_camps.toml` moves without the curve. All three summon paths route through
+  one `summon_scaled_pet` helper. Integration test pins the original bug: a level 22 Beast
+  Master now gets a level 21 warder.
 - [ ] **Player inspect** — right-click a player to see their equipment *(audit 09-09 settled
   the 08-26 flag: this is BUILT, not "in progress" — the window is mounted by the HUD and
   opened by a chat command (`hud.gd` ~1399: `open_for` + `broadcast_inspect_player`) over the
@@ -979,6 +987,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   guard `DevSpawnMob` already has (`handlers.rs:793`). Server-only. Fits the audit frame:
   magnitudes validated, eligibility inputs less so. Details in
   `docs/design/zone_size_limits.md` §5.
+  **BUILT 2026-09-27** (server `4a55be7`): the guard drops the packet before any state
+  including sequence bookkeeping; integration test `nan_move_direction_is_dropped` pins the
+  exploit end to end (only a forged client can send one, so the test is the exploit-side
+  evidence, the respawn-dead-check precedent). Ticks after the redeploy's ordinary-movement
+  regression row (`xp_eligibility_and_pet_levels_checklist.md` §3).
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
@@ -1026,11 +1039,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   from the 09-09 brainstorm: gate XP shares by proximity to the dying enemy at 30 m (mirroring
   the coin split's `GROUP_COIN_SHARE_RANGE` — verified: the XP split has no range gate today
   while coin does) AND filter out dead members, since a corpse lying beside the mob would
-  still collect under pure proximity. Build-ready, server-only; queued in the post-deploy
-  batch (bags-on-cursor, this, pet interim A, trade slice 1). The user's companion wish —
+  still collect under pure proximity. The user's companion wish —
   remove a dead player from NPC aggro lists — is ALREADY BUILT and verified (`tick.rs` ~8990:
   the death sweep wipes aggro + threat and clears the mob's target so it leashes; shipped with
   the 08-13 corpse-beating fix).
+  **BUILT 2026-09-27, pending playtest** (server `ba2af81` + review fixes `5cf7508`;
+  `xp_eligibility_and_pet_levels_checklist.md` §1). As decided: XP shares require online AND
+  alive AND within 30 m of the dying enemy (creditor exempt from the range half only — a pet
+  owner may direct a kill from afar); alive means `!death_processed && hp > 0.0` so a member
+  dropped in the same tick as the kill is already a corpse. The pool divides among eligible
+  members only. Integration test pins the exact scenario (dead member beside the mob: no
+  share, no dilution — the killer collects 263, not a 157 split). **One deliberate scope
+  call, flagged for the user:** quest kill-credit takes the alive filter but NOT the range
+  gate — the decision covered XP shares, and range-gating journal ticks would silently change
+  quest play; say the word if journal ticks should be range-gated too.
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
