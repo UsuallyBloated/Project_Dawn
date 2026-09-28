@@ -349,12 +349,13 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 		# by right-click (inventory_interaction_grammar.md §3). This used to call
 		# _toggle_bag() here, so both buttons opened the bag and a bag could never
 		# be picked up or rearranged at all.
-		if slot["item"].type == ItemData.Type.BAG and Inventory.bag_has_contents(index):
-			# The server refuses to move a non-empty bag ("bag must be emptied
-			# before moving", world/inventory.rs). Without this check the pickup
-			# looks like it worked, the move is silently rejected, and the bag
-			# snaps back with no explanation — which reads as the game eating it.
-			# Mirror the rule here so the refusal is immediate and explained.
+		# Full-bags-move (2026-09-27): online, a non-empty bag lifts WITH its
+		# contents — the server re-keys them onto the cursor. The old
+		# empty-first refusal survives only in the Test Room, whose local
+		# drag has no re-key.
+		if slot["item"].type == ItemData.Type.BAG \
+				and Inventory.bag_has_contents(index) \
+				and not Net.is_launcher_mode():
 			CombatLog.add_line("Empty the bag before moving it.", CombatLog.MsgType.INFO)
 			get_viewport().set_input_as_handled()
 			return

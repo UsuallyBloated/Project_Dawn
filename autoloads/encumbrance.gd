@@ -105,6 +105,10 @@ func _inventory_weight() -> float:
 	# the cursor must never be a way to dodge encumbrance.
 	if Inventory.cursor_slot != null:
 		w += Inventory.cursor_slot["item"].weight * Inventory.cursor_slot["count"]
+	# Full-bags-move: a bag riding the cursor keeps weighing its contents.
+	for inner in Inventory.cursor_bag_contents:
+		if inner != null:
+			w += inner["item"].weight * inner["count"]
 	return w
 
 

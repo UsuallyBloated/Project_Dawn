@@ -24,6 +24,14 @@ var bag_contents: Array = []
 # by ground pickup and by place-swaps; rendered attached to the mouse below.
 var cursor_slot: Variant = null
 
+# Full-bags-move (2026-09-27): the server keys a HELD bag's contents under
+# bag_255 (its CURSOR_BAG_KEY sentinel). They are never rendered — no window
+# opens on a bag riding the mouse — but they weigh, so this mirror keeps
+# them for Encumbrance and re-learns the real bag_<i> rows when the bag is
+# placed back down.
+const CURSOR_BAG_KEY := 255
+var cursor_bag_contents: Array = []
+
 var _cursor_ghost: Label = null
 var _cursor_layer: CanvasLayer = null
 
@@ -56,6 +64,7 @@ func _on_inventory_snapshot(
 	base_slots.fill(null)
 	bag_contents.fill(null)
 	cursor_slot = null
+	cursor_bag_contents = []
 	# Track 13.3 — clear the paperdoll before re-applying. Server
 	# is authoritative here too; any stale Equipment state from a
 	# prior session is wiped.
@@ -84,27 +93,40 @@ func _on_inventory_snapshot(
 		elif loc == NetProtocol.INV_LOCATION_EQUIP:
 			Equipment.apply_remote_equip(slot_idx, item)
 		elif loc == NetProtocol.INV_LOCATION_CURSOR:
-			# PD_W0027 — an item held at logout comes back in hand.
+			# PD_W0027 — an item held at logout comes back in hand. A held
+			# BAG brings its contents store so pass 2's bag_255 rows land.
 			cursor_slot = {"item": item, "count": count}
+			if item.type == ItemData.Type.BAG:
+				cursor_bag_contents = []
+				cursor_bag_contents.resize(item.bag_num_slots)
 	# Pass 2 — bag_<i> entries. Skip rows whose parent base slot
-	# turned out not to hold a bag.
+	# turned out not to hold a bag. bag_255 rows are the HELD bag's
+	# contents (full-bags-move) and route to cursor_bag_contents.
 	for i in n:
 		var loc: String = locations[i]
 		if not loc.begins_with("bag_"):
 			continue
 		var base_idx: int = loc.trim_prefix("bag_").to_int()
-		if base_idx < 0 or base_idx >= BASE_SLOT_COUNT:
-			continue
-		if bag_contents[base_idx] == null:
-			continue  # parent base slot wasn't a bag this snapshot.
-		var arr: Array = bag_contents[base_idx]
 		var slot_idx: int = slots[i]
 		var path: String = item_paths[i]
 		var count: int = counts[i]
 		if path == "" or count <= 0:
 			continue
-		if slot_idx < 0 or slot_idx >= arr.size():
-			continue
+		var arr: Array
+		if base_idx == CURSOR_BAG_KEY:
+			if slot_idx < 0:
+				continue
+			if slot_idx >= cursor_bag_contents.size():
+				cursor_bag_contents.resize(slot_idx + 1)
+			arr = cursor_bag_contents
+		else:
+			if base_idx < 0 or base_idx >= BASE_SLOT_COUNT:
+				continue
+			if bag_contents[base_idx] == null:
+				continue  # parent base slot wasn't a bag this snapshot.
+			arr = bag_contents[base_idx]
+			if slot_idx < 0 or slot_idx >= arr.size():
+				continue
 		var item := load(path) as ItemData
 		if item == null:
 			push_warning("Inventory snapshot: unknown bag-inner ItemData path '%s'" % path)
@@ -134,13 +156,21 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 			if item == null:
 				push_warning("Inventory delta: unknown ItemData path '%s'" % item_path)
 				return
+			# Full-bags-move: a DIFFERENT bag arriving in this slot (a
+			# swap of two bags) must not inherit the old bag's rendered
+			# contents — re-init and let the trailing bag_<i> deltas
+			# repaint the truth. A delta re-stating the SAME bag keeps
+			# its known contents (e.g. a correction fan).
+			var prev: Variant = base_slots[slot]
+			var same_bag: bool = prev != null \
+				and prev["item"].resource_path == item.resource_path
 			base_slots[slot] = {"item": item, "count": count}
 			# Track 14.3 — a bag landing in this slot needs its
 			# inner Vec allocated so subsequent bag_<i> deltas have
 			# somewhere to write. Non-bag items get their Vec
 			# cleared.
 			if item.type == ItemData.Type.BAG:
-				if bag_contents[slot] == null:
+				if bag_contents[slot] == null or not same_bag:
 					_init_bag_contents(slot, item.bag_num_slots)
 			else:
 				bag_contents[slot] = null
@@ -162,12 +192,24 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 	if location == NetProtocol.INV_LOCATION_CURSOR:
 		if item_path == "" or count <= 0:
 			cursor_slot = null
+			cursor_bag_contents = []
 		else:
 			var item := load(item_path) as ItemData
 			if item == null:
 				push_warning("Inventory delta: unknown ItemData path '%s'" % item_path)
 				return
+			# Full-bags-move: the held-bag contents store follows the
+			# hand. Same-bag re-statements keep it (trailing bag_255
+			# deltas correct any drift); anything else resets it.
+			var same_bag: bool = cursor_slot != null \
+				and cursor_slot["item"].resource_path == item.resource_path
 			cursor_slot = {"item": item, "count": count}
+			if item.type == ItemData.Type.BAG:
+				if not same_bag:
+					cursor_bag_contents = []
+					cursor_bag_contents.resize(item.bag_num_slots)
+			else:
+				cursor_bag_contents = []
 		_update_cursor_ghost()
 		cursor_changed.emit()
 		inventory_changed.emit()
@@ -175,6 +217,25 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 	# Track 14.3 — bag_<i> delta.
 	if location.begins_with("bag_"):
 		var base_idx: int = location.trim_prefix("bag_").to_int()
+		# Full-bags-move: bag_255 is the held bag's contents. Clears on an
+		# empty store are redundant re-key echoes — ignore them silently.
+		if base_idx == CURSOR_BAG_KEY:
+			if item_path == "" or count <= 0:
+				if slot >= 0 and slot < cursor_bag_contents.size():
+					cursor_bag_contents[slot] = null
+				inventory_changed.emit()
+				return
+			var held_item := load(item_path) as ItemData
+			if held_item == null:
+				push_warning("Inventory delta: unknown bag-inner ItemData path '%s'" % item_path)
+				return
+			if slot < 0:
+				return
+			if slot >= cursor_bag_contents.size():
+				cursor_bag_contents.resize(slot + 1)
+			cursor_bag_contents[slot] = {"item": held_item, "count": count}
+			inventory_changed.emit()
+			return
 		if base_idx < 0 or base_idx >= BASE_SLOT_COUNT:
 			return
 		# The server is authoritative: if it is telling us what is inside a bag,
@@ -187,6 +248,12 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 		# Make room and apply it instead, and log it, because needing this at all
 		# means our base slots were already out of step.
 		if bag_contents[base_idx] == null:
+			# A CLEAR against a slot we already know is bagless is a
+			# redundant re-key echo (full-bags-move fans the union of a
+			# moved bag's old and new inners) — nothing to clear, drop it
+			# silently rather than conjuring a vec on a bagless slot.
+			if item_path == "" or count <= 0:
+				return
 			var host = base_slots[base_idx]
 			var want: int = slot + 1
 			if host != null and host["item"].type == ItemData.Type.BAG:
