@@ -500,10 +500,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   ask is legitimate; the build is a server change (re-key the `bags` map entry when its parent
   base slot moves) with the client mirroring the same re-key.
   **Scope SETTLED 2026-09-17 (user): the cursor may hold a non-empty bag**, with the
-  bag-in-bag ban unchanged. Build-ready; queued behind the phase 4 deploy + playtest so it
-  does not stack onto an untested deploy. Death-path note for the build: a cursor holding a
+  bag-in-bag ban unchanged. Death-path note for the build: a cursor holding a
   non-empty bag must strip bag AND contents to the corpse (extend the `clear_all` cursor
   coverage and its regression test).
+  **BUILT 2026-09-27, pending playtest** (server `fd39b99` + client `8f27abb`;
+  `full_bags_move_checklist.md`; no protocol bump, both sides ride the next
+  redeploy + export together). The bags map entry follows its bag on every move: base moves
+  and swaps re-key to the destination, lifts re-key under `CURSOR_BAG_KEY` (255), places
+  re-key back; bags never merge, so same-path pairs swap. The sentinel key makes
+  persistence, weight, snapshots and the death strip cover a held bag's contents for free
+  (regression test `death_strips_a_held_bag_and_its_contents`). Held-bag inners are
+  unaddressable from the wire, the placer never fills a held bag, and destroying/dropping
+  a held full bag refuses rather than orphaning contents. Client mirrors bag_255 into a
+  cursor-bag store that Encumbrance weighs.
 - [ ] **Trade window** *(requested 2026-08-28 with the cursor work: "a click that lands on an
   entity (enemy, NPC, player) still targets but ALSO opens a trade window. EQ works like
   this")*. **DESIGNED 2026-09-19: `docs/design/trade_window.md`** — escrow by locking (offered
@@ -1192,17 +1201,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   window sizes. Same-day context: the startup window shrink to 1280x720 (login.gd) may have
   surfaced layout sins the old full-screen window hid.
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
-- [ ] **`/loc` command** *(designed 2026-09-25, `docs/design/location_command.md`; queued in
-  the phase 5 draft's big-world track)*. EQ-style chat command printing the player's own
-  position (x, y, z to one decimal, matching the toml authoring order) + facing via the
-  existing `SenseHeading` compass math, to the System channel through the existing chat-command
-  router. Client-only, no wire traffic, zero exploit surface (own position, already known to
-  the client). Load-bearing for content authoring, playtest triage, and the height-model
-  playtests. Three open calls in the design note (facing for everyone vs trained; GM drift
-  extra in v1; and **which way is north** — `sense_heading.gd` says -Z while `zone_data.gd`'s
-  camp labels say +Z, and the facing suffix makes the answer player-visible, so building this
-  settles the compass; recommendation -Z, then audit camp comments + compass-direction quest
-  dialogue). Update `docs/reference/commands.md` when built.
+- [ ] **`/loc` command** *(designed 2026-09-25, `docs/design/location_command.md`)*.
+  **BUILT 2026-09-27, pending playtest** (client-only, rides the next export;
+  `loc_command_checklist.md`). Prints `x, y, z` to one decimal (paste-ready for the toml
+  authoring files) plus an exact facing, free for everyone, working while dead; `/sense`
+  keeps the skill's fuzzy roll. **The compass is SETTLED (user, 2026-09-27): +Z is north,
+  +X is east** — the camp labels and quest dialogue stand, and `sense_heading.gd`'s ring
+  flipped to match (the audit found the content already consistent; sense_heading was the
+  only -Z-north code). GM drift extra deliberately not in v1. `commands.md` updated.
 - [x] **Hotbar + socials bleed between characters** *(found 2026-08-26 during the active-skill
   playtest: skills placed on the Warrior's hotbar appeared on the Monk's; **BUILT 2026-08-26,
   pending playtest** — `hotbar_per_character_checklist.md`, needs a re-export)*. `SocialHotkeys`

@@ -1412,6 +1412,21 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line(SenseHeading.query(_player.rotation.y), CombatLog.MsgType.INFO)
 		return
 
+	if lower == "/loc" or lower == "/location":
+		# EQ-style position print (docs/design/location_command.md). Printed
+		# x, y, z — NOT EQ's Y-first — so the line pastes straight into
+		# zone_camps.toml / npcs.toml. Facing is exact and free for everyone;
+		# the Sense Heading SKILL keeps its fuzzy roll on /sense. Works while
+		# dead on purpose: a corpse run is exactly when you want it.
+		if is_instance_valid(_player):
+			var p: Vector3 = _player.global_position
+			CombatLog.add_line(
+				"Your location is %.1f, %.1f, %.1f (x, y, z). Facing %s." % [
+					p.x, p.y, p.z, SenseHeading.exact_facing(_player.rotation.y),
+				],
+				CombatLog.MsgType.INFO)
+		return
+
 	if lower == "/track":
 		if _track_window != null:
 			_track_window.toggle()

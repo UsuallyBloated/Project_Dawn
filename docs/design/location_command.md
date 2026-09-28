@@ -67,7 +67,25 @@ files speak `[x, y, z]` and paste-ability is the whole point. Sources:
 - Clicking the printed line to copy coordinates, if the chat window supports meta text
   cheaply; otherwise skip.
 
-## Open calls for the user
+## Calls, as built (2026-09-27)
+
+Built client-only per this note (`sense_heading.gd` + the `hud.gd` router;
+`commands.md` updated). The three calls landed as:
+
+1. **Facing: free for everyone, and exact.** /loc exists for triage and
+   authoring; a garbled position report defeats the point. The Sense Heading
+   SKILL keeps its fuzzy roll on `/sense` (new `SenseHeading.exact_facing`).
+2. **GM drift extra: not in v1** — add when someone actually wants it.
+3. **North is +Z (USER DECIDED 2026-09-27), east stays +X.** The camp labels
+   and quest dialogue stand; `sense_heading.gd`'s ring flipped to match
+   (rotation.y = 0 now reads South). Audit result: the content was already
+   consistent with +Z north / +X east (gnolls "east" at +X, wolves "south"
+   at -Z, Ring 4 N at +Z); the only -Z-north code was sense_heading itself.
+   Note the chirality: facing north, east is on your LEFT here — a mirrored
+   compass, invisible in game, deliberately not "fixed" because all content
+   is authored against it.
+
+## Open calls for the user (superseded — kept for the record)
 
 1. Facing suffix: for everyone, or only with Sense Heading trained (EQ made /loc free
    and heading a skill; splitting hairs may not be worth it)?

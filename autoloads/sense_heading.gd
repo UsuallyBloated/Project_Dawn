@@ -5,6 +5,16 @@ signal skill_advanced(new_value: int, cap: int)
 var _skill: int = 0
 var _level: int = 1
 
+# The world compass (settled 2026-09-27, user call): +Z is NORTH and +X is
+# EAST, matching the camp/authoring labels in zone_camps.toml and the quest
+# dialogue ("gnolls east of town" sit at +X, "wolves south" at -Z). Note the
+# chirality is mirrored versus a real-world compass (facing north, east is on
+# your LEFT here) — invisible in game, but don't "fix" it: the content is
+# authored against this compass. Ring order matches _rotation_to_idx, which
+# steps 45 degrees per index as rotation.y increases (rotation.y = 0 faces
+# Godot's -Z = SOUTH).
+const DIRS := ["South", "Southwest", "West", "Northwest", "North", "Northeast", "East", "Southeast"]
+
 func _ready() -> void:
 	PlayerStats.level_changed.connect(_on_level_changed)
 
@@ -49,7 +59,6 @@ func query(rotation_y: float) -> String:
 		err_range = 0
 
 	var idx := (exact_idx + randi_range(-err_range, err_range) + 8) % 8
-	const DIRS := ["North", "Northwest", "West", "Southwest", "South", "Southeast", "East", "Northeast"]
 
 	if ratio < 0.25:
 		return "You think you might be facing %s, but you're not sure." % DIRS[idx]
@@ -58,8 +67,16 @@ func query(rotation_y: float) -> String:
 	else:
 		return "You are facing %s." % DIRS[idx]
 
-# Godot rotation.y is counter-clockwise from above; 0 = facing -Z (North).
-# Returns an index 0-7: N, NW, W, SW, S, SE, E, NE.
+# Exact facing label, no skill roll — /loc's suffix. Free for everyone by
+# design: /loc exists for triage and content authoring, and a garbled
+# position report defeats the point. The Sense Heading SKILL keeps its
+# fuzzy roll in query() above.
+func exact_facing(rotation_y: float) -> String:
+	return DIRS[_rotation_to_idx(rotation_y)]
+
+# Godot rotation.y is counter-clockwise from above; 0 faces -Z, which is
+# SOUTH under the settled compass (see DIRS above). Returns an index 0-7
+# into DIRS, 45 degrees per step.
 func _rotation_to_idx(rotation_y: float) -> int:
 	var deg := fmod(rotation_y * 180.0 / PI + 360.0, 360.0)
 	return int((deg + 22.5) / 45.0) % 8
