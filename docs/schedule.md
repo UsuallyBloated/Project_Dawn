@@ -3,10 +3,13 @@
 **Target:** a small group of trusted friends can log in from their own homes, group up,
 level, die, corpse-run, and quest for an evening without hitting a wall or breaking the game.
 
-**Created:** 2026-07-16. **Target date: 2026-10-05** — slipped from 2026-09-14 on
-2026-09-09 (user call: "slip the target"). Phase 4 was unstarted at the original window's end,
-so the new date is the mechanical re-base: the full three-week content window now runs
-Sep 10 to Oct 1, keeping the plan's shape and slack.
+**Created:** 2026-07-16. **Target date: 2026-11-08** — slipped from 2026-10-05 on
+2026-09-27 (user call: a week away from the desk). This second slip is pure calendar, not
+scope: phase 4's content landed COMPLETE and fully playtested four days inside its window,
+the three-hour bar stands, and the gap is the window for the decided build queue
+(bags-on-cursor, dead-XP filter, pet interim A, trade slice 1, the NaN Move guard) plus
+the small deferred playtest checks. *(First slip: 2026-09-14 to 10-05 on 2026-09-09,
+the mechanical re-base of the then-unstarted content window to Sep 10 through Oct 1.)*
 **Working assumption:** ~30 hrs/week.
 
 ### The readable copy
@@ -32,7 +35,7 @@ fix is structural, not more discipline:
   A row changes only when its phase's state changes.
 - Nothing gets ticked (in the To-Do) until a filled checklist in `docs/playtest_notes/` shows
   it passing. Built is not done.
-- Time-boxed to the 2026-10-05 target (originally 09-14). When it lands, fold anything unfinished back into the
+- Time-boxed to the 2026-11-08 target (originally 09-14, then 10-05). When it lands, fold anything unfinished back into the
   To-Do and retire this doc rather than letting it rot.
 
 Completed detail moves to `session_notes/`, the same as everything else.
@@ -297,7 +300,7 @@ minutes before a friend runs dry. This phase is the difference between "I saw yo
 
 ---
 
-### Phase 5: Open the door (Oct 5 onward; originally Sep 14)
+### Phase 5: Open the door (Nov 8 onward; originally Sep 14, then Oct 5)
 
 - Full friend group.
 - A real feedback loop: the playtest checklist format in `docs/playtest_notes/` already works
@@ -362,4 +365,4 @@ rather than via a chat line after the fact.
 | 2. Host + first friend | Aug 3 to Aug 7 | ✅ **COMPLETE (2026-08-11, 4 days late)** — hosted on a physical R720 over Tailscale (not a VPS, not port-forwarding); phase included building the machine from bare metal because it arrived unbootable. Closed on tester evidence: a second person, on her own machine, registered, made a character, killed something, grouped, and logged out clean. Backups nightly to a second array plus weekly off-site, restore verified. Two findings opened: the respawn death-loop and the login rate limiter forcing a duplicate account. |
 | 3. Stop it eating things | Aug 10 to Aug 21, ran long | **In progress, wrapping up** — a handful of small items open; per-item detail lives in the To-Do. (Aug 28 to Sep 9 also absorbed the user-directed cursor-slot epic, slices 1 + 1.5, shipped and playtested.) |
 | 4. An evening's worth | **Sep 10 to Oct 1** (re-based 09-09; originally Aug 24 to Sep 11) | ✅ **CONTENT COMPLETE (2026-09-27, 4 days inside the window)** — built 09-14 to 09-16, deployed with a fresh-world wipe 09-22, playtested end to end across five sittings: all 28 rows of `phase4_content_checklist.md` PASS, every design number verified to the digit in play. What remains of the phase is the acceptance measure itself — the two-friends/three-hours session — which is also Phase 5's opening act. |
-| 5. Open the door | Oct 5 onward (originally Sep 14) | Not started |
+| 5. Open the door | Nov 8 onward (slipped 09-27; originally Sep 14, then Oct 5) | Not started — the interim is the build-queue window (bags-on-cursor, dead-XP filter, pet interim A, trade slice 1, NaN Move guard, plus the small deferred playtest checks) |
