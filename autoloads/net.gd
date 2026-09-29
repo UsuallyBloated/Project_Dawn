@@ -70,6 +70,13 @@ signal world_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: 
 # <amount>"). Damage is already applied server-side; this drives the client's
 # proc number + elemental flash + combat-log line.
 signal world_proc_triggered(attacker: int, target: int, proc_name: String, amount: int, crit: bool, dmg_type: int)
+# PD_W0028 — the trade window (docs/design/trade_window.md). Re-emitted from
+# the gdext signals for TradeWindow to render. `slots`/`counts` are parallel
+# arrays, TRADE_SLOTS long; an empty path is an empty window slot.
+signal world_trade_opened(partner_id: int, partner_name: String)
+signal world_trade_offer_update(mine: bool, item_paths: PackedStringArray, counts: PackedInt32Array, platinum: int, gold: int, silver: int, copper: int)
+signal world_trade_accept_state(you: bool, them: bool)
+signal world_trade_closed(committed: bool, reason: String)
 signal world_miss(attacker: int, target: int)
 signal world_evade(attacker: int, target: int)
 # Track 4 sub-task 5 — peer's HP hit zero. Receiver plays death anim;
@@ -280,6 +287,10 @@ func _ready() -> void:
 	buff_snapshot.connect(_on_buff_snapshot)
 	hit.connect(_on_hit)
 	proc_triggered.connect(_on_proc_triggered)
+	trade_opened.connect(_on_trade_opened)
+	trade_offer_update.connect(_on_trade_offer_update)
+	trade_accept_state.connect(_on_trade_accept_state)
+	trade_closed.connect(_on_trade_closed)
 	miss.connect(_on_miss)
 	evade.connect(_on_evade)
 	entity_died.connect(_on_entity_died)
@@ -643,6 +654,37 @@ func broadcast_loot_to_cursor(bag_id: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_loot_to_cursor(bag_id)
+
+# ── PD_W0028 — the trade window (docs/design/trade_window.md). ──
+func broadcast_trade_request(target_id: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_request(target_id)
+
+func broadcast_trade_offer_item(window_slot: int, from_location: String, from_slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_offer_item(window_slot, from_location, from_slot)
+
+func broadcast_trade_retrieve_item(window_slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_retrieve_item(window_slot)
+
+func broadcast_trade_offer_coins(platinum: int, gold: int, silver: int, copper: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_offer_coins(platinum, gold, silver, copper)
+
+func broadcast_trade_accept() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_accept()
+
+func broadcast_trade_cancel() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_cancel()
 
 # Track 13.2.b — split `count` items off the src stack into dst. Dst
 # must be empty or hold the same item_path; the server rejects
@@ -1016,6 +1058,18 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
 
 func _on_proc_triggered(attacker: int, target: int, proc_name: String, amount: int, crit: bool, dmg_type: int) -> void:
 	world_proc_triggered.emit(attacker, target, proc_name, amount, crit, dmg_type)
+
+func _on_trade_opened(partner_id: int, partner_name: String) -> void:
+	world_trade_opened.emit(partner_id, partner_name)
+
+func _on_trade_offer_update(mine: bool, item_paths: PackedStringArray, counts: PackedInt32Array, platinum: int, gold: int, silver: int, copper: int) -> void:
+	world_trade_offer_update.emit(mine, item_paths, counts, platinum, gold, silver, copper)
+
+func _on_trade_accept_state(you: bool, them: bool) -> void:
+	world_trade_accept_state.emit(you, them)
+
+func _on_trade_closed(committed: bool, reason: String) -> void:
+	world_trade_closed.emit(committed, reason)
 
 func _on_miss(attacker: int, target: int) -> void:
 	world_miss.emit(attacker, target)

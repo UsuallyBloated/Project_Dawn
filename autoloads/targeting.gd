@@ -70,6 +70,13 @@ func click_target(mouse_pos: Vector2) -> void:
 		Combat.set_target(body)
 	elif body.is_in_group("remote_players") and not body.is_dead:
 		Combat.set_target(body)
+		# PD_W0028 — a click that lands on a player while HOLDING an item
+		# targets (above) AND asks to trade. Empty-handed clicks target only.
+		# The server does every real check (range, liveness, one session);
+		# a refusal comes back as a chat line.
+		if Inventory.cursor_slot != null and Net.is_launcher_mode() \
+				and "char_id" in body and body.char_id >= 0:
+			Net.broadcast_trade_request(body.char_id)
 	elif body.is_in_group("pets") or body.is_in_group("remote_pets"):
 		# Targeting own/remote pets is allowed — useful for inspecting
 		# pet HP on the target frame and as a base for buff/heal target

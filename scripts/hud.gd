@@ -18,6 +18,7 @@ const _SpellBookScript      := preload("res://scripts/spell_book.gd")
 const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
 const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
 const _InspectWindowScript  := preload("res://scripts/inspect_window.gd")
+const _TradeWindowScript    := preload("res://scripts/trade_window.gd")
 const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 
 @onready var health_bar: ProgressBar = $Panel/VBoxContainer/HPRow/HealthBar
@@ -86,6 +87,7 @@ var _spell_book: Panel = null
 var _quest_journal: Panel = null
 var _dialogue_window: Panel = null
 var _inspect_window: InspectWindow = null
+var _trade_window: TradeWindow = null
 var _debug_console: DebugConsole = null
 var _target_hp_label: Label = null
 var _target_mp_label: Label = null
@@ -216,6 +218,13 @@ func _build_components() -> void:
 	_inspect_window.visible = false
 	add_child(_inspect_window)
 	_inspect_window.visibility_changed.connect(_on_window_visibility_changed.bind(_inspect_window))
+
+	# PD_W0028 — the trade window opens itself on `world_trade_opened` (a
+	# holding-click on a player) and closes on `world_trade_closed`. Mounted
+	# here so it survives with the HUD; it drives its own visibility.
+	_trade_window = _TradeWindowScript.new()
+	add_child(_trade_window)
+	_trade_window.visibility_changed.connect(_on_window_visibility_changed.bind(_trade_window))
 
 	# In-game DebugLog tail. Independent of the user-data debug.log
 	# file (which gets corrupted when two clients share the same

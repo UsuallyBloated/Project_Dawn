@@ -522,9 +522,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   test list, and a PD_W0028 wire sketch (protocol bump, gdext rebuild, both-sides deploy).
   All four §6 calls DECIDED 2026-09-19 (user): 8 slots per side, instant open, 10 m range for
   now (user flags it as far; tuning candidate after the first playtest), NPC give stays slice 2
-  WITH a standing instruction to pull it forward if slice 1 leaves it nearly free. Build-ready;
-  queued behind the phase 4 deploy/playtest and the bags + dead-XP batch. Until built, entity
-  clicks while holding target only.
+  WITH a standing instruction to pull it forward if slice 1 leaves it nearly free.
+  **Slice 1 BUILT 2026-09-29 on the `feat/trade-window` side branch, pending playtest**
+  (server `a67839a` + gdext/client; `trade_window_checklist.md`; protocol bumped PD_W0028, both
+  sides deploy TOGETHER). Escrow by locking: `world/trade.rs` holds the session (one per player,
+  offer references not copies, every-edit-clears-both-accepts); the tick apply block does the
+  commit (re-validate liveness/range/coin-coverage/offered-count/both-receiver-capacity, then
+  the in-memory swap, `db::commit_trade` one transaction across both characters, revert on
+  failure, deltas deferred until commit); locked slots refuse Move/Split/Drop/Destroy/Equip/
+  Unequip/Sell/BankStore with a chat line. The exploit ledger shipped as integration tests
+  (atomic commit, bait-and-switch, escrow lock, self-trade, overdraft). Client: `trade_window.gd`
+  (server-driven, holds no state), the holding-click-a-player trigger in `targeting.gd`, Net
+  signal wiring. Kept on the side branch until a desk day merges it with a fresh export, so a
+  casual R720 pull never bricks the testers' client. **Still slice 2:** NPC give (one-sided).
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
