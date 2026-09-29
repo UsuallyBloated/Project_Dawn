@@ -26,18 +26,36 @@ var _accept_button: Button = null
 var _coin_fields: Dictionary = {}  # tier name -> SpinBox
 var _their_coins_label: Label = null
 var _title: Label = null
+# The last coin offer the SERVER confirmed for my side. Pushes only fire when
+# a field differs from this, so re-committing an unchanged value (or a
+# refused overdraft the server never applied) cannot fire a no-op edit that
+# clears both accepts.
+var _my_coins_confirmed: Array[int] = [0, 0, 0, 0]
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(560, 360)
-	# Centered on screen; the mouse frees for clicking (a trade is UI, not
-	# camera). Anchored center via position set on open.
+	# Centered on screen: with center anchors the position is the offset
+	# from the midpoint, so back it up by half the size (same as the HUD's
+	# other centered panels).
 	set_anchors_preset(Control.PRESET_CENTER)
+	position = -custom_minimum_size / 2.0
 	_build()
 	visible = false
 	Net.world_trade_opened.connect(_on_trade_opened)
 	Net.world_trade_offer_update.connect(_on_offer_update)
 	Net.world_trade_accept_state.connect(_on_accept_state)
 	Net.world_trade_closed.connect(_on_trade_closed)
+	# The HUD's ESC stack hides the top window by flipping `visible`. A hide
+	# while a session is live must CANCEL it server-side, or the offered items
+	# stay escrowed with no window to reach Cancel from. `_on_trade_closed`
+	# clears `_partner_id` before hiding, so a server-driven close does not
+	# double-cancel.
+	visibility_changed.connect(_on_visibility_changed)
+
+func _on_visibility_changed() -> void:
+	if not visible and _partner_id >= 0:
+		_partner_id = -1
+		Net.broadcast_trade_cancel()
 
 func _build() -> void:
 	var root := VBoxContainer.new()
@@ -137,11 +155,16 @@ func _on_my_slot_pressed(window_slot: int) -> void:
 	Net.broadcast_trade_offer_item(window_slot, NetProtocol.INV_LOCATION_CURSOR, 0)
 
 func _push_coins() -> void:
-	Net.broadcast_trade_offer_coins(
+	var wanted: Array[int] = [
 		int(_coin_fields["platinum"].value),
 		int(_coin_fields["gold"].value),
 		int(_coin_fields["silver"].value),
-		int(_coin_fields["copper"].value))
+		int(_coin_fields["copper"].value),
+	]
+	# No-op edits never reach the server (an edit clears both accepts).
+	if wanted == _my_coins_confirmed:
+		return
+	Net.broadcast_trade_offer_coins(wanted[0], wanted[1], wanted[2], wanted[3])
 
 func _on_trade_opened(partner_id: int, partner_name: String) -> void:
 	_partner_id = partner_id
@@ -157,13 +180,14 @@ func _reset_view() -> void:
 			s.set_meta("path", "")
 	for tier in _coin_fields:
 		_coin_fields[tier].set_value_no_signal(0)
+	_my_coins_confirmed = [0, 0, 0, 0]
 	if _their_coins_label != null:
 		_their_coins_label.text = "Coin: 0"
 	_set_lights(false, false)
 
 func _on_offer_update(mine: bool, item_paths: PackedStringArray, counts: PackedInt32Array, platinum: int, gold: int, silver: int, copper: int) -> void:
-	if not visible:
-		return
+	# Always applied, visible or not: the server is the only source of truth
+	# and a dropped update would leave the next open showing stale offers.
 	var arr := _my_slots if mine else _their_slots
 	for i in TRADE_SLOTS:
 		var path: String = item_paths[i] if i < item_paths.size() else ""
@@ -173,7 +197,15 @@ func _on_offer_update(mine: bool, item_paths: PackedStringArray, counts: PackedI
 			arr[i].text = ""
 		else:
 			arr[i].text = _label_for(path, count)
-	if not mine and _their_coins_label != null:
+	if mine:
+		# The fields show what the server APPLIED, never what was typed: a
+		# refused overdraft snaps back instead of lying about the offer.
+		_my_coins_confirmed = [platinum, gold, silver, copper]
+		var tiers := ["platinum", "gold", "silver", "copper"]
+		for t in tiers.size():
+			if _coin_fields.has(tiers[t]):
+				_coin_fields[tiers[t]].set_value_no_signal(_my_coins_confirmed[t])
+	elif _their_coins_label != null:
 		_their_coins_label.text = "Coin: %s" % _coin_text(platinum, gold, silver, copper)
 
 func _label_for(path: String, count: int) -> String:
