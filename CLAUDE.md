@@ -433,6 +433,40 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   playtest)*. `/r` replies to the most recent tell sender; pressing TAB cycles through everyone
   who has sent you a tell this session. Client-only chat UX (command parsing + a small
   tell-sender history in `ChatWindowManager` or `CombatLog`).
+- [ ] **Camp / kick return-to-lobby flow + live relogin countdown** *(deferred 2026-06-19 in the
+  camp/linkdead session's "Not done"; recovered by the 2026-09-29 crack audit)*. `/camp`
+  completion and a server kick both exit to the desktop because there is no in-game
+  return-to-character-select flow; a kick strands the player. Also the lobby shows the
+  server's one-shot "try again in ~Ns" string instead of a live-ticking countdown from
+  `reconnect_after_secs`. Client-only (the wire already carries the seconds).
+- [ ] **Reconnect grace on a brief network blip (session resurrection)** *(server_design.md
+  "deferred enhancement"; audit 2026-09-29)*. Today a drop is linkdead: the body lingers ~30 s
+  and a relogin is refused until it reaps. Seamless resume (the old 60 s frozen-and-untargetable
+  model) would need session resurrection, AOI re-attach, and connect-token juggling. A design
+  call before any build; not a friends-build need.
+- [ ] **Target-of-target heal routing** *(memory note, "future feature"; audit 2026-09-29)*. An
+  ALLY heal cast with an enemy targeted should route to the enemy's target (the EQ assist-heal
+  pattern) instead of failing on the target type. Server cast resolver change plus the client's
+  target-of-target frame as the visible hint.
+- [ ] **Held-item bank and vendor interactions** *(cursor design's carried open question,
+  `cursor_slot_and_reequip.md` §Open questions; audit 2026-09-29)*. Deposit-from-cursor and
+  sell-from-cursor were deferred ("place it first"). `SlotRef` has no cursor variant, so both
+  are small wire additions plus the `destroy_at`-style guard for a held full bag.
+- [ ] **No-drop / no-trade item flag** *(flagged in `inventory_interaction_grammar.md` §8 and by
+  the trade design's ledger, which explicitly has no rule "until itemization grows one"; audit
+  2026-09-29)*. `ItemData` carries no binding flag; the two account-shared bank slots and the
+  trade window both traditionally reject bound items. One flag on `ItemData` + `items.toml`,
+  refusals in the bank quick-transfer and `TradeOfferItem`, with a chat line.
+- [ ] **Pet persistence across logout: a design call** *(server_design.md open question 2;
+  audit 2026-09-29)*. Today the warder auto-summons on every EnterWorld and conjured pets
+  simply vanish, which is a de-facto answer nobody made on purpose. Confirm or change it when
+  the taming epic (pet option C) is designed, since maturity makes persistence matter.
+- [ ] **Loot rights odds and ends** *(group_loot_and_coin.md "known v1 limitations" + the
+  06-16 Round 2 checklist rows that were built but never ticked; audit 2026-09-29)*. (a) An RR
+  corpse claimed by a member who never loots it expires with its items lost (use-it-or-lose-it;
+  a fallback rotation was "revisit if playtest dislikes it"). (b) The `/autosplit` group-notice
+  rows (`group_loot_coin_checklist.md` Round 2 §3) never got a two-seat tick: one toggle while
+  grouped is the whole check. Rides the next two-seat session with the member-leaves refill.
 - [ ] **Idle enemies rebroadcast unchanged positions at 20 Hz** *(found 2026-09-15 while
   triaging the phase 4 test breakage; user flagged the lag angle)*. `tick.rs` step 6b fans
   every living enemy's Position to all AOI-visible players every tick, and idle mobs in this
@@ -561,7 +595,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   opened by a chat command (`hud.gd` ~1399: `open_for` + `broadcast_inspect_player`) over the
   existing wire round-trip. Remaining: the right-click-a-player trigger this entry names, and a
   playtest — no checklist has ever exercised it)*
-- [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**
+- [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**, and the later social
+  layer recorded elsewhere and pulled in by the 2026-09-29 audit: **player-owned towns + guild
+  taxes** (user idea 2026-06-18, "revisit later", sparked by the Banker fee mechanic) and a
+  **mail system** (server_design.md open question 6, "defer until requested").
 - [ ] **Language system wiring** — `hear_language()` passive gain not yet called from the
   chat-receive path; needs multiplayer chat RPC + trainer NPCs
 - [ ] **Quest reward item follow-ups** *(surfaced while closing quest phase 2; phase 2 itself
@@ -1001,6 +1038,37 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   exploit end to end (only a forged client can send one, so the test is the exploit-side
   evidence, the respawn-dead-check precedent). Ticks after the redeploy's ordinary-movement
   regression row (`xp_eligibility_and_pet_levels_checklist.md` §3).
+- [ ] **Public-host hardening checklist (mandatory before any exposure beyond Tailscale)**
+  *(the residuals from the 2026-07-29 rate-limit build and systems_overview's "known
+  residuals", plus server_design.md's "add later" list; gathered by the 2026-09-29 audit so
+  they stop living in three places)*. The friends build deliberately accepts all of these on a
+  private tailnet. (1) Re-enable `LoginRateLimiter` (remove `PD_NO_RATE_LIMIT`; the standing
+  caveat on the closed rate-limit item). (2) A banned account is distinguishable by error code
+  and a faster no-Argon2 path (needs a ban-UX decision). (3) The fixed window allows a ~2x
+  burst across its boundary; an attacker rotating IPs (an IPv6 /64) gets a fresh budget per
+  address; NAT/CGNAT co-tenants share one budget (no global cap). (4) From server_design: a
+  per-account login budget, action rate limits (e.g. 30 inventory ops/s), position-anomaly
+  logging, a nightly dupe-detection query, an optional client integrity hash, input replays.
+  (5) TLS for the auth WebSocket. None of it is a friends-build blocker; all of it gates a
+  public port.
+- [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
+  §Finding 10; the only audit finding with open parts, never given a To-Do home until
+  2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
+  readable from anywhere; minor disclosure, and the NPC proximity idiom makes it a five-line
+  fix). (b) Movement has a speed cap but no server-side collision, so a modified client clips
+  through walls at legal speed (the height model work is the natural home). (c)
+  Hit/Miss/Evade and the cast broadcasts are cosmetic fan-outs a client can forge onto peers'
+  screens (no state change; worth a rate cap when public). `EquipItem` item-vs-slot, the
+  fourth part, is DONE (Track 14.1).
+- [ ] **GM action audit log** *(deferred "to a fast follow" when `is_gm` shipped 2026-07-17;
+  server_design's day-one rule "all GM actions audited"; the `gm_actions` table has existed
+  since the auth schema; audit 2026-09-29)*. Write one row per dev/GM command (`/give`, coin
+  grants, dev spawns, Full Heal, Level Up) with account, char, payload, timestamp. Read-only
+  value today (one operator), load-bearing the day a second GM exists.
+- [ ] **Account admin tooling: ban/unban and delete/purge bins** *(`handoff_account_admin.md`
+  2026-07-31; audit 2026-09-29)*. `is_banned` is enforced at login but nothing can set it, and
+  there is no account delete or purge. Same shape as `grant_gm` and the scoped
+  `reset_password` bin above: operator-only, session rows cleared on ban.
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
@@ -1141,6 +1209,38 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `raw_amount=9` calm (5 x 1.8), `named mob enraged` at 27/175 = 15.4%, then `raw_amount=13`
   (9 x 1.4). Ordinary mobs untouched. Still open by design: nothing places one in the world (a
   one-line camp tag, but which camp is content), and `xp_mult` is parsed but unapplied.
+- [ ] **Heal magnitude client/server drift** *(deferred 2026-06-22 when the heal-bar bounce was
+  fixed; still the case per the launcher-gaps memory; audit 2026-09-29)*. The server applies a
+  flat `heal_amount` while the client's spell data adds `WIS*0.3 * effectiveness`, and at least
+  one spell disagrees by rank (server "Mending Rk. II" 38 vs client "Mending" 25). Displayed
+  heals are the server's number now, so nothing is wrong on screen, but the formulas need one
+  owner: port the WIS term server-side or delete it client-side, and make `spells.toml` and
+  `spell_definitions.gd` agree per rank. Also gate consumable-heal prediction the same way the
+  self-heal gate works (masked today only because food heals are 0).
+- [ ] **Regen model and race trade-off follow-ups** *(`regen_model.md` §Deferred + §Open tuning,
+  `race_xp_regen_tradeoffs_plan.md` slices 1 and 3; audit 2026-09-29 confirmed no race XP
+  multiplier exists in `progression.rs`)*. Open: the pool-size formulas (STA to max HP, the
+  `((80 x level)/425) x WIS/INT` mana equation) as their own task; Feign Death posture regen
+  (needs an FD state); more fast-regen races beyond Troll; the Meditate cap formula and
+  training rate; whether stamina gets a sitting bonus; low-level HP regen feel (1-2 per 6 s).
+  Race plan slice 1 (per-race XP rate multiplier applied before the group split, shown in
+  character creation) and slice 3 (the other perks, e.g. Ogre stun immunity once CC exists)
+  were never built; only slice 2 (Troll regen) shipped.
+- [ ] **Dual wield as an unlockable passive** *(user ask 2026-05-02: "unlocked by those who can
+  use it at somewhere between 13 and 20"; today `dual_wield` is an ordinary weapon skill with
+  a per-class cap and no level gate; audit 2026-09-29)*. Design call on the level, then a
+  server-side gate on the off-hand swing plus a client "you cannot dual wield yet" refusal.
+- [ ] **Facing and view angle** *(user 2026-05-05: "currently doesn't seem like any PC or NPC has
+  a view angle. Everything has to face the direction of their combat target"; audit
+  2026-09-29)*. No facing model exists: mobs snap to their target and remote players show
+  yaw only. Scope with the remote animation-state channel (the jump relay is its first piece).
+- [ ] **Two small verifies the closed gates left behind** *(audit 2026-09-29)*: (a) the
+  swing-rate limiter's **haste spot-check** (assumes max haste; the schedule's own caveat says
+  it is "unit/design-covered but never eye-tested"): cast Haste, swing a fast weapon, confirm
+  zero `too fast` rejections in the log; (b) the passive-skill **"L1 cap = starting score"**
+  quirk (handoff_track_22 Option F, "deferred for next playtest's verdict", never revisited):
+  a level 1 character cannot advance any weapon or armor skill because the cap equals the
+  start; decide whether that is EQ-authentic enough to keep.
 - [ ] **Client-only spell backlog (~32 spells missing from `spells.toml`)** *(quantified
   2026-07-22 from a Life Drain / Dark Shroud playtest; those two are now ported)*. The client's
   `spell_definitions.gd` has 156 spells; the server has 124. A client-only spell is dropped as
@@ -1162,10 +1262,49 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   watch item: Flamebrand's Flaming Strike procs have not yet been observed in a server
   log — check on the next melee session with it equipped. `xp_mult` on named mobs remains
   parsed-but-unapplied (pre-existing, tracked under the named-mobs entry).
+- [ ] **Enemy AOI cell-crossing spawn/despawn gap** *(found 2026-09-25 in the zone-size research,
+  recorded only in that session note until the 2026-09-29 audit)*. When an enemy crosses an
+  AOI cell boundary (a mob chasing into a player's view), the server never fans an
+  `EnemySpawn` / `EntityDespawn` for it: the client receives Position updates for an id it
+  was never given a spawn for, so the mob is invisible until a re-enter. Server-only; a
+  scale-readiness prerequisite next to the idle-enemy rebroadcast fix.
+- [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
+  plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
+  The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
+  zones need server zone keying, zone lines and a transition wire message, the AOI split, and
+  corpse/bind zone handling (the 06-23 "cross-zone bind corpse rendering" caveat). The
+  procedural dungeon (`F:\Projects\ProceduralDungeon`, seed-deterministic BSP) is its first
+  customer. Caves and stacked floors additionally need real Y (the height model), not a sample.
+- [ ] **Quest and loot content plumbing deferred by phase 4** *(`phase4_content_plan.md`
+  §4.3/§4.5; audit 2026-09-29)*. (a) Quest objective types beyond kills: fetch, delivery,
+  dialogue (the server counts kills only). (b) Loot tables as data: `loot.rs` is code, so
+  gear drops and tables for the Ossuary/Wraith Gate line wait on a data-driven table format.
+  (c) Per-vendor server-side stocking: the server sells anything with a `vendor_price` to
+  anyone in range of any vendor; stock lists are client-only. Fine at friends scale, a
+  correctness gap for a public host.
+- [ ] **Character creation follow-ups** *(scattered: race expansion memory 2026-06, the CHA
+  memory, `item_weight_proposal.md` §Findings, `classes.md`; audit 2026-09-29)*. (a) The three
+  drafted races (Aerathi, Vesperin, Sylphari) exist as docs only (`race_expansion_brainstorm.md`
+  + race files), no code. (b) CHA's distribution by race is still open (CHA itself is the
+  confirmed sixth primary). (c) There is no creation-stat floor, so a Fae caster's STR can go
+  negative and its carry capacity (5.0) falls under the 5.5 cloth kit; pairs with the Fae gear
+  line under Items. (d) Race/class restrictions are "design targets, not fully implemented"
+  (`LOCKED_COMBOS` partial vs `race_class_restrictions.md`). (e) The Citizen class concept
+  (non-combat: mobile merchant + field money-changer + bodyguard pet; field-exchange role
+  committed 2026-06-16) and the planned Assassin/Warlock need class-kit design before code.
+- [ ] **Fall damage follow-ups** *(the `TODO` in `player.gd::_on_land` since 2026-05-01 and the
+  pet-collision memory; audit 2026-09-29)*. (a) Skip fall damage under Levitate / Feather
+  Fall once those buffs are checked. (b) A player caught between their own pet and an enemy
+  takes repeated fall-damage ticks from physics knock-around (a client `_on_land` threshold or
+  collision-layer fix).
 - [ ] **Mount system** — *`MountManager` autoload exists (client-side v1); feature is not
   fully wired* (server speed clamp, Animal Husbandry / Spirit-of-Wolf stacking / Selos'
   Melody interactions still pending)
-- [ ] **Faction system** — race/class affects NPC standing; guards attack on sight
+- [ ] **Faction system** — race/class affects NPC standing; guards attack on sight. Also the
+  user's 2026-05-05 framing, recovered by the 2026-09-29 audit: players should be able to
+  attack NPCs and suffer the consequences (evil races farming reputation by killing good
+  merchants/guards/villagers, good races by killing bad guards); ask the user for the
+  reputation rules before designing.
 - [ ] **Time of day is per-client; make it server-driven** *(reported 2026-08-14; this is the
   "server broadcast is planned" line in "Known client↔server drift" made into a real item)*. No two
   players share a sky. `autoloads/time_of_day.gd` starts at `START_HOUR = 8.0` and advances purely
@@ -1200,6 +1339,27 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `scripts/ui_theme.gd`); likely interacts with the canvas_items/expand stretch at non-16:9
   window sizes. Same-day context: the startup window shrink to 1280x720 (login.gd) may have
   surfaced layout sins the old full-screen window hid.
+- [ ] **Combine character, equipment, and inventory into one window** *(user ask, twice:
+  2026-05-02 "paperdoll, character, inventory combined to one window?" and 2026-05-05
+  "Character, Equipment and Inventory to be combined to a single window"; never filed until the
+  2026-09-29 audit)*. Belongs to the theming/layout pass; a design call on the layout first.
+- [ ] **ESC-menu UI scale slider** *(user 2026-05-05; audit 2026-09-29)*. The two code-level
+  dials now exist (`LOGIN_UI_SCALE` in login.gd, `GAME_UI_SCALE` in hud.gd); expose the game
+  one as a slider persisted in `GameSettings`. Also from the same notes: window backgrounds
+  should scale with the display, and "be critical" about HUD scaling at every resolution.
+- [ ] **Nameplate and targeting polish** *(user 2026-05-01/05; audit 2026-09-29)*. (a) NPC and
+  enemy name labels are visible through walls ("not good"; the dungeon checklist called it
+  intentional-for-now, fix before ship). (b) Merchant/guard NPC names do not flash when
+  targeted. (c) The target-of-target frame was called "huge, taking up too much space"; make
+  it adjustable/movable with the other HUD pieces.
+- [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
+  F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
+- [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
+  ~5 minutes", 2026-05-26; audit 2026-09-29)*. Rides with the `/r` + TAB item.
+- [ ] **Art asset pipeline** *(pointer; audit 2026-09-29)*. The art work is tracked in its own
+  checkbox list, `docs/design/art_assets_checklist.md` (the one deliberate exception to
+  "one checkbox list", since it is an asset manifest, not a task queue); "future zone themes"
+  are deferred there per the atlas. Nothing in it is on any schedule.
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
 - [ ] **`/loc` command** *(designed 2026-09-25, `docs/design/location_command.md`)*.
   **BUILT 2026-09-27, pending playtest** (client-only, rides the next export;
@@ -1284,7 +1444,36 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   unguarded lines. **Ticked 2026-09-09 on `cursor_slice15_checklist.md` §4's F1-retarget row:
   corpse targeted, F1 self-target, retarget — console clean.**
 
+### Items / economy
+> New section 2026-09-29 (the crack audit): economy and itemization items used to sit in
+> memory notes and design docs with no To-Do home. Runtime inventory mechanics stay under
+> Multiplayer / networking; what an item IS lives here.
+- [ ] **Banker exchange fee bands** *(systems_overview "Still open: exchange fee bands";
+  `handoff_banker_npc.md`: the plumbing is in place so a rate is a one-line change, currency.md's
+  bands (2-5% up, 0-1% down) come "in a later pass as named constants"; audit 2026-09-29)*.
+  The MVP exchanges at 0%. A design call on the bands, then the constants; the Citizen class's
+  field exchange is the intended premium alternative.
+- [ ] **Fae gear line** *(user direction 2026-06-12: Fae get their own clothing/gear category,
+  far smaller and lighter than even gnomes; the item-weight proposal's "Findings out of scope";
+  audit 2026-09-29)*. Design work, not a patch: its own weights and stock, and it is what makes
+  the Fae carry-capacity problem (Character creation follow-ups, above) go away.
+- [ ] **Gem sockets / augments** *(Track 13 deferred 2026-05-19; `ItemData.gem_slots` exists and
+  is unused; audit 2026-09-29)*. Needs an item-identity decision first (server_design open
+  question 1: unique runtime items as UUID rows vs JSON snapshots), since a socketed item is
+  no longer its registry entry.
+- [ ] **Itemization oddities from the weight pass** *(`item_weight_proposal.md` §Findings;
+  audit 2026-09-29)*: Damaged Wolf Pelt stacks to 20 (12.0 weight) while Fresh/Pristine stack
+  to 5, so the junk pelt is the heaviest to hoard; Adamantite Ore's full stack (120.0) exceeds
+  every carry cap (harmless fiction, the carry limit binds first); the Brown Steed Whistle's
+  0.5 weight wants one description clause. Content-pass fodder, not bugs.
+
 ### Tradeskill depth
+- [ ] **Tradeskill content gaps** *(`docs/concepts/items/equipment.md`, `items/README.md`, and
+  `docs/concepts/tradeskills/todo_list.md`, the tradeskill sub-list that lives outside this
+  To-Do; audit 2026-09-29)*. Plate armor, bow/crossbow, and necklace recipes are not in
+  `recipe_definitions.gd`; several raw materials are blocked on mobs (spiders and bats now
+  exist in phase 4, so spider venom/silk and bat blood can unblock), on elementals (not
+  designed), and on Farming (not implemented). Content, sequenced behind the server build below.
 - [ ] **Server-authoritative tradeskills** — mining/crafting/skinning currently refuse online
   (guarded 2026-08-24 after the phantom-item finding); building them for real means the
   CompleteQuest pattern (client sends intent, grants nothing optimistically, server owns the
@@ -1305,6 +1494,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **EQ-style food/water gating** — food/water should gate base HP/MP regen (no food =
   no regen) instead of stacking as additive buffs; passive consumption from inventory,
   no buff-bar entry
+- [ ] **Exporter drift** *(the "Known drift" note names `tools/export_spells.gd` as stale; the
+  2026-07-10 session flagged the `items.toml` exporter emitting `weapon_delay` /
+  `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both
+  generators are the intended lockstep tools for the two client/server data pairs and neither
+  is trusted; one regen-and-diff pass each, then keep them honest.
+- [ ] **Docs debt** *(audit 2026-09-29)*: `server/README.md` is "badly stale" (still claims the
+  world sim is unbuilt, per `deployment_linux.md`); `server/docs/flaky_integration_tests.md`
+  still describes the flaky trio the 09-16 fix retired; `docs/concepts/passive_skills/*` says
+  casting passives are "not yet implemented" while `CastingSkills` has shipped for months;
+  `docs/deployment/` remains untracked by decision and CLAUDE.md links it as canonical (decide
+  one way). Small, but each is a trap for the next reader.
+- [ ] **Localization scaffold** *(server_design.md open question 8: "wrap UI text in `tr()`
+  calls preemptively so the i18n migration is just a translation file later"; audit
+  2026-09-29)*. Nothing is wrapped. Cheapest done early, expensive done late.
+- [ ] **Factor-later cleanups from 2026-06-16** *(deliberate, not bugs; audit 2026-09-29)*:
+  `_on_hit` resolves attacker names inline instead of via `_attacker_display_name`; the
+  base/bag post-state read is duplicated across ~6 apply blocks in `tick.rs`; the trash and
+  drop confirm dialogs are parallel copies. Adjacent-touch material, never a standalone refactor.
 - [ ] **Weapon item table gaps** — `data/weapon_item_table.gd` maps only a few weapons;
   others fall back to `hand_to_hand` for passive skill tracking
 - [x] **`world_two_clients.rs`: three genuinely flaky enemy-AI tests** — **CLOSED 2026-09-16:
