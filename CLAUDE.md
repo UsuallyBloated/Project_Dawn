@@ -680,7 +680,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   before the port opens** — that caveat is the surviving obligation of this item. (History:
   found 2026-08-11 when the 5-per-60s gate pushed the first tester into creating a duplicate
   account; the 2026-09-17 fresh-world wipe retired those duplicates.)
-- [ ] **No way to reset an account password** *(requested 2026-08-14)*. A tester who forgets their
+- [x] **No way to reset an account password** — **BUILT 2026-09-30** (server `1c1f523`;
+  `cargo run -p projectdawn-server --bin reset_password -- <username>` generates and prints a
+  password once, or `-- <username> --stdin` reads one; the password is never an argv word,
+  since argv lands in shell history and other users' `ps`). `db::reset_password` writes the
+  Argon2 hash AND purges every session row for the account in ONE transaction, so a live
+  session cannot outlive the reset; the bin is a thin front end so there is one
+  implementation. Unit-tested: new password works, old one stops, a pre-reset session token
+  stops being redeemable, a short password is refused leaving the old intact, unknown account
+  errors. Exercised against a COPY of the dev `world.db`. **This is a tool, not a feature —
+  ticked on the tests plus the dry run, since there is no in-game surface to playtest.** The
+  self-serve change-password flow stays open below. *(Original entry, for the record:)*
+  A tester who forgets their
   password is locked out permanently, and their only recovery is registering *another* account —
   which is exactly how the duplicate accounts in the item above happened. Nothing in the server can
   change a password today: `db/mod.rs` hashes on `create_account` (`:76`) and verifies on login
@@ -697,6 +708,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   operator bin doesn't: the *old* password re-verified, its own rate-limit budget (`LoginRateLimiter`
   is keyed to Login and Register only, so a change-password endpoint would be an unmetered Argon2
   oracle), and the same session invalidation. That's the argument for doing the bin first.
+- [ ] **Self-serve change-password flow** *(the surviving half of the item above, 2026-09-30)*. The
+  operator bin covers the lockout case; a player changing their own password needs the three
+  things named directly above (old password re-verified, its own rate-limit budget, session
+  invalidation), plus a launcher or in-game surface. Not a friends-build need.
 - [x] **Server move-merge ignores `stack_size`** — **DONE + playtested 2026-08-21** (server
   `393cc64`, §5 of `atomic_transfers_checklist.md`). A playtest had built a **41-stack of Bread
   Loaf** whose cap was 10, because the move paths merged with a bare `saturating_add`. The helper

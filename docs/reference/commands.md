@@ -19,13 +19,15 @@ in-game chat commands, and keybinds. **Keep this current** as commands are added
 | `scripts/dev-run.sh` | Bash run helper: sources `.env`, sets `RUST_LOG`. |
 | `cargo run -p projectdawn-server --bin admin_report` | **Read-only** `world.db` viewer → console summary + local `world_report.html`. Accounts + characters (incl. soft-deleted), per-char four-tier coins + bank + inventory. WAL-aware, safe while the server runs. Optional args: `[db_path] [output_html]`. |
 | `cargo run -p projectdawn-server --bin grant_gm -- <username> on\|off` | Set a per-account GM flag (**writes** `accounts.is_gm`). No args = list every account's GM status. Takes effect on that account's **next login**. |
-| `cargo test` | Run the test suite (~30s incl. build). Integration tests in `tests/world_two_clients.rs` are timing-flaky; re-run a failure individually. |
+| `cargo run -p projectdawn-server --bin reset_password -- <username>` | Reset a locked-out tester's password (**writes** the Argon2 hash **and purges every session** for that account in one transaction, so a live session can't outlive the reset). Generates a password and prints it **once**; add `--stdin` to supply one instead (`echo newpass \| cargo run ...`). The password is never an argv word: argv lands in shell history and other users' `ps`. |
+| `cargo test` | Run the test suite (~30s incl. build). The `world_two_clients.rs` flake was root-caused 2026-09-16 and the suite runs green; if one fails, re-run it **alone** — a failure that reproduces in isolation is real, one that passes alone is load-sensitivity. |
 | `cargo build --release` | Release build. |
 | `scripts/backup.sh` | Deploy-host nightly `world.db` backup (cron/systemd; `sqlite3 .backup`, 7-day retention). Not a local-dev tool. |
 
-**The crate has 3 binaries** (`projectdawn-server`, `admin_report`, `grant_gm`), so a bare
-`cargo run -p projectdawn-server` resolves to the server via the `default-run` manifest key; `--bin`
-selects the tools.
+**The crate has 4 binaries** (`projectdawn-server`, `admin_report`, `grant_gm`,
+`reset_password`), so a bare `cargo run -p projectdawn-server` resolves to the server via the
+`default-run` manifest key; `--bin` selects the tools. `admin_report` is read-only; `grant_gm`
+and `reset_password` write.
 
 **`PD_DEV_CMDS`** enables dev commands only when it equals exactly `"1"`. To run with them off, unset
 it (`Remove-Item Env:\PD_DEV_CMDS`) or set anything else. In PowerShell, bare `null`/`false` are not
