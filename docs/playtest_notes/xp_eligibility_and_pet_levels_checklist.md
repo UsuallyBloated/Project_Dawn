@@ -36,7 +36,25 @@ protocol bump — the current export works.
       one-on-one (it runs at ~70% of the mob curve, so a pet class is not a duo
       by itself). This row is the tuning read on PET_STAT_SCALAR — note the feel. notes:
 
-## 3 — NaN Move guard (regression only)
+## 3 — Refused casts keep their mana (silent-refusals closeout, 2026-09-30)
+
+Every one of these should print a System chat line AND leave the mana bar
+where it was. Before this build they were silent and charged full price.
+
+- [ ] **Cast an attack spell with NOTHING targeted** → "You need a target for
+      that spell." and no mana spent. notes:
+- [ ] **Target yourself, cast an attack spell** → "You cannot cast that on
+      yourself.", mana intact. notes:
+- [ ] **Heal a group-mate at the instant they die** (or right after they zone) →
+      "That target is no longer here.", mana intact. notes:
+- [ ] **Cast a client-only pet spell** (one the server has no pet_type for) →
+      "That magic has no effect here yet.", mana intact. notes:
+- [ ] **Charm with nothing targeted, and charm a non-enemy** → the matching
+      refusal, mana intact both times. notes:
+- [ ] **Regression: an ordinary successful cast** still spends mana normally
+      and lands its effect. notes:
+
+## 4 — NaN Move guard (regression only)
 
 - [ ] **Ordinary play after the redeploy** → walking, running, and jumping feel
       unchanged; zero movement weirdness. The exploit half needs a forged client

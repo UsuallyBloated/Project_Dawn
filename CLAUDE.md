@@ -729,10 +729,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   inventory family, the group arms, and `BindAtCurrentLocation`, and the 08-24
   `silent_refusals_checklist.md` playtest exercised the surface; later handler reads confirm
   EquipItem / UnequipItem / SplitStack / DropItem / DestroyItem / UseConsumable all answer
-  today. **What actually remains open:** the post-mana-deduct cast arms — the out-of-range and
-  catch-all arms refund + report since `da36216` (08-24), but the "8 arms" figure predates
-  those fixes and was never recounted. Close this item by recounting the cast resolver's
-  silent arms and answering any that remain.
+  today. **RECOUNTED + CLOSED OUT 2026-09-30** (server `2e59690` on the deploy branch,
+  cherry-picked from the trade branch; pending playtest). The recount found **11 silent arms,
+  8 player-reachable**, each charging full mana for nothing; all 8 now refund and report via
+  the out-of-range arm's pattern: ALLY heal on someone who just died or zoned, an ENEMY nuke
+  with NO target selected (the user reported exactly this on 2026-05-05 and the server half
+  was that it ate the mana), an ENEMY spell on yourself, a PvP target dead or gone (liveness
+  hoisted above the mutable borrow so the refusal can refund), AOE with no radius, PET_SUMMON
+  with an empty or unknown pet_type (the client-only spell backlog reaches this in ordinary
+  play), and all three PET_CHARM arms. Only PET_SUMMON's vanished-caster arm stays silent —
+  nobody left to tell. Several arms went debug to info so player-visible failures show at the
+  default log level. **Checked, no change needed:** `fan_out_cast_fail`'s broadcast is not a
+  leak, because the client filters CastFail by caster id (`remote_player_manager.gd:216`) and
+  bystanders only use it to cancel the caster's bar. Integration test
+  `enemy_spell_without_a_target_refunds_and_reports` pins the headline case (line AND refund).
+  Ticks when a playtest sees a refused cast keep its mana.
   **Deliberately left silent** (confirmed correct): anti-cheat gates, dev/GM authorization (a reply
   is an oracle for whether `PD_DEV_CMDS` is on or an account is GM), transport/lifecycle gates, and
   rejections only a forged client can reach.
