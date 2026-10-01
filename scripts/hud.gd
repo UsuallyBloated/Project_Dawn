@@ -109,6 +109,11 @@ var _self_targeted: bool = false
 # (which instances this HUD) is on screen. Turn this dial for the HUD only.
 const GAME_UI_SCALE := 1.0
 
+# How far away /inspect works, in metres. Tighter than the server's own
+# INSPECT_RANGE (30 m) on purpose: the server gate is the backstop against a
+# modified client, and this one is what an honest player actually meets.
+const INSPECT_RANGE := 20.0
+
 func _ready() -> void:
 	get_window().content_scale_factor = GAME_UI_SCALE
 	_style_panel()
@@ -1401,6 +1406,13 @@ func _handle_chat_input(text: String) -> void:
 		var rp: RemotePlayer = target
 		if rp.char_id < 0:
 			CombatLog.add_line("Target has no character id.", CombatLog.MsgType.INFO)
+			return
+		# The server refuses an inspect beyond its own (looser) range; checking
+		# here first gives a clean line instead of an empty window.
+		if is_instance_valid(_player) \
+				and _player.global_position.distance_to(rp.global_position) > INSPECT_RANGE:
+			CombatLog.add_line(
+				"You are too far away to inspect %s." % rp.player_name, CombatLog.MsgType.INFO)
 			return
 		if _inspect_window != null:
 			_inspect_window.open_for(rp.char_id, rp.player_name)
