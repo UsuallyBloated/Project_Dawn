@@ -439,6 +439,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   return-to-character-select flow; a kick strands the player. Also the lobby shows the
   server's one-shot "try again in ~Ns" string instead of a live-ticking countdown from
   `reconnect_after_secs`. Client-only (the wire already carries the seconds).
+- [x] **Tell testers about the ~45 s worst-case relogin after a crash** — **DONE 2026-09-30
+  (a doc line with no playtest surface, ticked on the edit like the reset_password bin)**.
+  `camp_and_linkdead.md` §Risks called the number out ("a hard crash can take up to the 15 s
+  netcode timeout to detect, then about 30 s of linger, so up to ~45 s before relogin.
+  Acceptable; document it.") and `systems_overview.md` carries it for developers, but
+  `README_FOR_TESTERS.md`'s X-button paragraph said "about 30 seconds" and nothing about
+  detection time, so a tester refused at 40 s had no reference saying that was expected. One
+  bullet added there. Surfaced by the 2026-09-30 belt-and-braces sweep, one of the two
+  findings the hand audit missed.
 - [ ] **Reconnect grace on a brief network blip (session resurrection)** *(server_design.md
   "deferred enhancement"; audit 2026-09-29)*. Today a drop is linkdead: the body lingers ~30 s
   and a relogin is refused until it reaps. Seamless resume (the old 60 s frozen-and-untargetable
@@ -476,6 +485,33 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   with a slow keepalive — the exact pattern `regen.rs` already uses for resources (>5% swing
   or 500 ms gap). Server-only, but measure before/after (a bandwidth counter in the log)
   rather than eyeballing; needs its own small pass.
+  **BUILT 2026-09-30, pending playtest** (server `ac38cc2`; `scale_readiness_checklist.md`
+  §1-2; server-only, no client change). Exactly the regen pattern: `Entity` keeps the
+  pos / yaw / time of its last send and fans only on a move past 0.005 m, a turn past
+  0.001 rad, or the 500 ms `ENEMY_POSITION_KEEPALIVE`; the sequence advances only on a real
+  send. **Measured:** the new integration test counts one idle mob's Position messages to one
+  player over 2 s, 32 before and 4 after. A new `enemy position fan` log line (sends, window,
+  alive enemies, players in world) reports the live stream once a minute while anyone is
+  online, so the R720 shows the same before/after from one deploy (the old stream is
+  `enemies_alive x players x 20 x window`). `AiEvents.moved`, whose comment claimed to gate
+  this and which nothing ever read, is deleted. Ticks on the §1 log-line row.
+  Review pass (`818a902`): step 6b now tests the audience first (allocation-free
+  `aoi.can_see` per connection) and only marks and encodes when someone can see the mob, so a
+  camp with no player near it costs nothing per keepalive. **Known cosmetic, recorded not
+  built:** a mob starting to move from idle eases into motion over up to 500 ms, because the
+  client lerps from the last keepalive snapshot (one tick's displacement spread over the
+  gap); the fix is a client-side cap on the interpolation span in `remote_enemy.gd` /
+  `remote_pet.gd`, which rides a later export. §2 of the checklist has a row for whether it
+  reads as lag.
+- [ ] **An owner's own pet "despawns" on the HUD when it is merely out of view** *(review
+  finding on the cell-crossing fan, 2026-09-30; recorded, not built)*. The AOI despawn means
+  "out of your neighbourhood", but `remote_pet_manager.gd::_on_entity_despawn` treats an
+  own-pet despawn as "gone" and calls `PetManager.dismiss_remote_pet()`, clearing the pet
+  panel and `/pet` commands while the server pet is alive. Reachable only when owner and pet
+  are two cells apart (120 m plus): pre-existing via the owner walking away (step 5b's lost
+  arm), and now also via the pet crossing away. The pet AI keeps pets within tens of metres,
+  so it is theoretical today; the right fix is client-side (treat an own-pet despawn as
+  hidden, not dismissed, and re-attach on the next PetSpawn) and rides an export.
 - [ ] **The cursor-slot epic: left-click ground pickup + corpse auto-re-equip** *(left-click
   requested 2026-08-27; the user chose the full server-side cursor slot — "Option B for sure.
   this sounds amazing and we need the corpse auto-re-equip feature" — over a client-only
@@ -1294,6 +1330,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `EnemySpawn` / `EntityDespawn` for it: the client receives Position updates for an id it
   was never given a spawn for, so the mob is invisible until a re-enter. Server-only; a
   scale-readiness prerequisite next to the idle-enemy rebroadcast fix.
+  **BUILT 2026-09-30, pending playtest** (server `c121341`; `scale_readiness_checklist.md`
+  §3; server-only). The crossing loop now uses the `(gained, lost)` cells `aoi.update`
+  already returned and discarded: players in the gained cells get the entity's EnemySpawn
+  or PetSpawn, players in the lost cells an EntityDespawn, a mirror of the step 5b player
+  handler. **A third gap found while verifying, never recorded until now: pets were
+  invisible to a player walking INTO view of them**, because the player crossing handler
+  tested ids against `LOOT_BAG_ID_BASE` first and the partitions stack (player < enemy <
+  bag < pet), so a pet matched the bag arm, found neither a bag nor a corpse, and was
+  skipped; it gains a pet arm ahead of the bag arm. Three integration tests seed the second
+  client two cells from spawn through the characters table (no 240 m walk) and all three
+  fail on the previous tick.rs with their asserted messages. Ticks on the §3 two-seat rows
+  (the mob-into-view row may stay `[-]`; the test is its evidence).
+  Review pass (`818a902`) folded in three more of the same class: the EnterWorld pet seed
+  keyed visibility on the OWNER's cell while every other pet path keys on the pet's own (a
+  ghost pet with no Positions, or Positions with no spawn, depending on which was near); the
+  EnterWorld ENEMY seed iterated the whole `enemies` map with no pet skip, and the client's
+  enemy manager has no partition guard, so a late joiner got a second, enemy-flavoured node
+  for every visible pet riding the pet's Positions; and the spawn-by-kind choice now lives in
+  one `fan_out_entity_spawn` used by both the player crossing and the entity crossing, so no
+  partition-test ordering can swallow a kind again.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
@@ -1531,6 +1587,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   casting passives are "not yet implemented" while `CastingSkills` has shipped for months;
   `docs/deployment/` remains untracked by decision and CLAUDE.md links it as canonical (decide
   one way). Small, but each is a trap for the next reader.
+- [ ] **Procedural dungeon: pick the canonical copy** *(surfaced by the 2026-09-30
+  belt-and-braces sweep, the other of its two findings)*. The generator exists twice:
+  `addons/procedural_dungeon/` in this repo (12 scripts dated 2026-05-01 to 05-05, the plugin
+  enabled in `project.godot` while its `plugin.gd` is an empty `_enter_tree` / `_exit_tree`
+  shell that registers nothing) and the standalone project `F:\Projects\ProceduralDungeon\`
+  (`dungeon_gen/`, its own README, todo list and session notes). No decision was ever
+  recorded about which is the source of truth, there is no sync script, and the two are in
+  step by luck. Decide when the multi-zone epic (the dungeon's first customer) is scheduled;
+  until then either disable the empty plugin or write down why it stays enabled.
 - [ ] **Localization scaffold** *(server_design.md open question 8: "wrap UI text in `tr()`
   calls preemptively so the i18n migration is just a translation file later"; audit
   2026-09-29)*. Nothing is wrapped. Cheapest done early, expensive done late.
