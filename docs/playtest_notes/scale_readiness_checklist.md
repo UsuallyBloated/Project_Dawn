@@ -34,7 +34,7 @@ new; these fixes are invisible when they work, which is the point of §1 and §3
 - [ ] **Let it catch you and stand still** → it stops where it caught you and faces you; no sliding, no drifting back. notes:
 - [ ] **Kill it** → the body drops where it died, as before. notes:
 - [ ] **Stand next to an idle camp for a minute** → the mobs stay exactly where they are (no twitch every half second). notes:
-- [ ] **Watch a resting mob START to move (aggro one from range, or watch one leash home)** → it may ease into motion over the first half second instead of snapping to speed; say whether that reads as lag or as natural. (Known: the client lerps from the last keepalive snapshot; a client-side fix is recorded.) notes:
+- [ ] **Watch a resting mob START to move (aggro one from range, or watch one leash home)** → it starts moving cleanly, with no slow wind-up and no visible jump. (Corrected 2026-10-02: an earlier version of this row predicted a half-second ease-in. Reading the client's interpolation showed the real effect is a one-off nudge of about one tick's travel, 10 to 25 cm depending on the mob, as it sets off, which should not be visible. Say so if it is.) notes:
 
 ## 3 — Things that walk into view appear (two seats)
 - [ ] **Partner with a pet (a Beast Master warder or a Necromancer skeleton) logs in far from you, beyond ~360 m, and walks toward you** → the moment they appear, their pet appears WITH them; not later, not never. notes:

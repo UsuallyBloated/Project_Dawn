@@ -26,9 +26,23 @@ var _last_hp: float = 0.0
 # is the initial apply_character seed (not a real level-up); skip it.
 var _last_logged_level: int = -1
 
+# Everyone who has sent this character a tell since it entered the world,
+# most recent first. `/r` replies to the front of the list and TAB in the
+# chat line walks it (EQ's reply targets). Session-only by design.
+const TELL_SENDER_HISTORY := 10
+const TELL_PREFIXES: Array[String] = ["/tell ", "/t "]
+const REPLY_PREFIXES: Array[String] = ["/reply ", "/r "]
+var _tell_senders: Array[String] = []
+
 func _ready() -> void:
 	_connect_signals()
 	_last_hp = PlayerStats.hp
+	Net.app_connected.connect(_on_app_connected)
+
+# Entering the world, possibly as a different character, which must not
+# inherit the last one's reply targets.
+func _on_app_connected(_player_id: int) -> void:
+	_tell_senders.clear()
 
 func add_line(text: String, type: int = MsgType.INFO) -> void:
 	line_added.emit(text, type)
@@ -49,6 +63,61 @@ func show_chat_input() -> void:
 
 func is_chat_input_focused() -> bool:
 	return ChatWindowManager.is_chat_input_focused()
+
+# ── Tell reply targets ───────────────────────────────────────────────────────
+
+## The most recent player to send us a tell, or "" when nobody has.
+func last_tell_sender() -> String:
+	return _tell_senders[0] if not _tell_senders.is_empty() else ""
+
+func _note_tell_sender(sender: String) -> void:
+	if sender == "":
+		return
+	for i in range(_tell_senders.size()):
+		if _tell_senders[i].to_lower() == sender.to_lower():
+			_tell_senders.remove_at(i)
+			break
+	_tell_senders.push_front(sender)
+	if _tell_senders.size() > TELL_SENDER_HISTORY:
+		_tell_senders.resize(TELL_SENDER_HISTORY)
+
+## What TAB turns the chat line into. An empty line (or a bare `/r`) becomes a
+## tell to the most recent sender; a tell already being written moves to the
+## next sender and keeps whatever message was typed. Anything else comes back
+## unchanged, so TAB never eats a half-written /say, and never re-addresses a
+## message written to someone outside the list.
+func cycle_tell_text(text: String) -> String:
+	if _tell_senders.is_empty():
+		return text
+	var trimmed := text.strip_edges(true, false)
+	var lower := trimmed.to_lower()
+	var bare := lower.strip_edges()
+	if bare == "" or bare == "/r" or bare == "/reply":
+		return "/tell %s " % _tell_senders[0]
+	for prefix in REPLY_PREFIXES:
+		if lower.begins_with(prefix):
+			return "/tell %s %s" % [_tell_senders[0], trimmed.substr(prefix.length())]
+	for prefix in TELL_PREFIXES:
+		if not lower.begins_with(prefix):
+			continue
+		var rest := trimmed.substr(prefix.length())
+		var space_idx := rest.find(" ")
+		var current := rest if space_idx < 0 else rest.substr(0, space_idx)
+		var message := "" if space_idx < 0 else rest.substr(space_idx + 1)
+		var next_idx := -1
+		for i in range(_tell_senders.size()):
+			if _tell_senders[i].to_lower() == current.to_lower():
+				next_idx = (i + 1) % _tell_senders.size()
+				break
+		if next_idx < 0:
+			# A name that never sent us a tell. With a message already typed,
+			# leave it: swapping the name would send those words to someone
+			# they were not written for. A bare or half-typed name is safe.
+			if message.strip_edges() != "":
+				return text
+			next_idx = 0
+		return "/tell %s %s" % [_tell_senders[next_idx], message]
+	return text
 
 # ── Gameplay signal → chat line wiring ───────────────────────────────────────
 
@@ -147,6 +216,7 @@ func _on_remote_chat_message(speaker: String, channel: int, text: String, _lang:
 		Net.CHAT_CHANNEL_OOC:
 			add_line("[OOC] %s: %s" % [speaker, text], MsgType.OOC)
 		Net.CHAT_CHANNEL_TELL:
+			_note_tell_sender(speaker)
 			add_line("%s tells you, '%s'" % [speaker, text], MsgType.TELL_IN)
 		Net.CHAT_CHANNEL_GROUP:
 			add_line("[Group] %s: %s" % [speaker, text], MsgType.GROUP_CHAT)

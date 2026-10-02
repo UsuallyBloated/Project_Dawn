@@ -1,5 +1,12 @@
 extends Node
 
+# World targeting and the right-click interact router: tab cycling, group-slot
+# keys, left-click = target, right-click (tap) = interact.
+
+# A right-click landed on another player. The HUD owns the inspect window, so
+# it does the range check and the request.
+signal inspect_requested(player: RemotePlayer)
+
 var _tab_index := 0
 var _camera: Camera3D = null
 var _player: Node3D = null
@@ -208,6 +215,13 @@ func interact_at(mouse_pos: Vector2) -> bool:
 			BankerManager.open_for(obj)
 		else:
 			VendorManager.open_for(obj)
+		return true
+
+	if obj is RemotePlayer and not obj.is_dead:
+		# Right-click a player = target and inspect (EQ). The HUD refuses past
+		# its own range and the server gates it again.
+		Combat.set_target(obj)
+		inspect_requested.emit(obj)
 		return true
 
 	if obj.is_in_group("crafting_stations"):

@@ -306,6 +306,9 @@ func _on_tab_activated(target_id: int) -> void:
 	# `_active_window_id` drives `show_chat_input` and friends; keep it
 	# in sync with the visible tab so Enter focuses the right LineEdit.
 	_set_active(target_id)
+	# The restore path has always read `is_active_tab`; without a save here
+	# the visible tab only persisted if something else happened to save.
+	_save_layout()
 
 func _on_tab_dragged_out(member_id: int, drop_pos: Vector2) -> void:
 	undock(member_id, drop_pos)
@@ -581,11 +584,11 @@ func _on_display_confirmed() -> void:
 # input. Submit fans back through CombatLog.chat_submitted so existing
 # hud.gd command handlers see the same call shape as before.
 
-func show_chat_input() -> void:
+func show_chat_input(prefill: String = "") -> void:
 	var w := get_active_window()
 	if w == null:
 		return
-	w.show_input()
+	w.show_input(prefill)
 
 func is_chat_input_focused() -> bool:
 	for w in _windows:

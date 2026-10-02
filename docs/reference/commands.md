@@ -76,12 +76,13 @@ Parsed in `scripts/hud.gd::_handle_chat_input`. Press Enter to open chat, type t
 | `/shout <msg>` (`/sh`) | Shout. |
 | `/ooc <msg>` | Out-of-character channel. |
 | `/tell <name> <msg>` (`/t`) | Private tell. The recipient sees it in their Tells (In) channel. |
+| `/r <msg>` (`/reply`) | Reply to whoever last sent you a tell. `/r` alone reopens the chat line holding `/tell <name> `. Reply targets last for the session and reset when you enter the world. |
 | `/group <msg>` (`/g`) | Group chat. |
 
 ### Social / info
 | Command | Effect |
 |---|---|
-| `/inspect` | Inspect your current player target's equipment. Works within 20 m; further away you get "You are too far away to inspect X." (the server has its own 30 m backstop). |
+| `/inspect` | Inspect your current player target's equipment (a right-click on the player does the same). Works within 20 m; further away you get "You are too far away to inspect X." (the server has its own 30 m backstop). |
 | `/sense`, `/sense heading` | Sense heading (direction readout, fuzzy below max skill). |
 | `/loc` (or `/location`) | Your position as `x, y, z` to one decimal (paste-ready for `zone_camps.toml` / `npcs.toml`) plus an exact facing. Free for everyone, works while dead. Compass: +Z is north, +X is east. |
 | `/track` | Tracking (ranger-style). |
@@ -134,10 +135,11 @@ Fixed keys (in code):
 |---|---|
 | `` ` `` (backtick) | Toggle the debug console (`ESC` closes; `/console` is the fallback). |
 | `Enter` | Open / send chat. |
+| `Tab` (chat line open) | Cycle tell reply targets: an empty line becomes `/tell <newest sender> `, and on a tell it moves to the next older sender, keeping the message. With the chat line closed, Tab is still Cycle Target (rebindable). |
 | `1`–`0` | Hotbar slots 1-10. |
 | `Alt` + `1`–`0` | Spell-bar slots. |
 | `F2` | Target group member 1. |
-| Right-click (tap) | **World interact**: talk / vendor / bank on an NPC, loot a corpse or bag, mine a vein, use a station, skin a dead mob. A right-*drag* is still the camera. The old proximity-F interact is retired — the cursor must be on the object, deliberately (bot resistance). |
+| Right-click (tap) | **World interact**: talk / vendor / bank on an NPC, loot a corpse or bag, inspect another player, mine a vein, use a station, skin a dead mob. A right-*drag* is still the camera. The old proximity-F interact is retired — the cursor must be on the object, deliberately (bot resistance). |
 | Left-click | Target only (enemy, NPC, corpse). Never interacts. |
 
 Window toggles (inventory, quest journal `J`, character, spellbook, crafting `K`, etc.) are input

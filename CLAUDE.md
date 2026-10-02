@@ -437,6 +437,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   playtest)*. `/r` replies to the most recent tell sender; pressing TAB cycles through everyone
   who has sent you a tell this session. Client-only chat UX (command parsing + a small
   tell-sender history in `ChatWindowManager` or `CombatLog`).
+  **BUILT 2026-10-02, pending playtest** (client-only, rides the next export;
+  `tell_reply_and_inspect_click_checklist.md` §1-2). `CombatLog` keeps the last ten tell
+  senders, newest first, cleared on entering the world. `/r <msg>` (or `/reply`) answers the
+  newest; a bare `/r` reopens the chat line holding `/tell <name> `. TAB in the chat line
+  turns an empty line into a tell to the newest sender and, on a tell, steps to the next older
+  one keeping the typed message; a `/say`, plain text, or a message addressed to someone who
+  never sent a tell is left alone (TAB must not re-address words written for someone else). TAB no longer walks
+  keyboard focus out of the chat line (which used to hide it mid-sentence). Headless probes
+  cover the history and the TAB handler; the live key path and the reopen are the playtest.
 - [ ] **Camp / kick return-to-lobby flow + live relogin countdown** *(deferred 2026-06-19 in the
   camp/linkdead session's "Not done"; recovered by the 2026-09-29 crack audit)*. `/camp`
   completion and a server kick both exit to the desktop because there is no in-game
@@ -501,12 +510,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   this and which nothing ever read, is deleted. Ticks on the §1 log-line row.
   Review pass (`818a902`): step 6b now tests the audience first (allocation-free
   `aoi.can_see` per connection) and only marks and encodes when someone can see the mob, so a
-  camp with no player near it costs nothing per keepalive. **Known cosmetic, recorded not
-  built:** a mob starting to move from idle eases into motion over up to 500 ms, because the
-  client lerps from the last keepalive snapshot (one tick's displacement spread over the
-  gap); the fix is a client-side cap on the interpolation span in `remote_enemy.gd` /
-  `remote_pet.gd`, which rides a later export. §2 of the checklist has a row for whether it
-  reads as lag.
+  camp with no player near it costs nothing per keepalive. **The "known cosmetic" recorded here was overstated, corrected
+  2026-10-02 after reading `remote_enemy.gd`'s interpolation:** the review predicted a mob
+  easing into motion over up to 500 ms. The client renders 100 ms behind, so of the span
+  between the last keepalive and the first moving snapshot only the final 100 ms is ever
+  drawn: the mob is nudged forward by at most about one tick of travel (10 to 25 cm at the speeds in `zone_camps.toml`) as it
+  sets off, then moves at full speed. No fix is planned; §2 of the checklist keeps a row in
+  case it is visible after all.
 - [ ] **An owner's own pet "despawns" on the HUD when it is merely out of view** *(review
   finding on the cell-crossing fan, 2026-09-30; recorded, not built)*. The AOI despawn means
   "out of your neighbourhood", but `remote_pet_manager.gd::_on_entity_despawn` treats an
@@ -516,6 +526,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   arm), and now also via the pet crossing away. The pet AI keeps pets within tens of metres,
   so it is theoretical today; the right fix is client-side (treat an own-pet despawn as
   hidden, not dismissed, and re-attach on the next PetSpawn) and rides an export.
+  **Re-read 2026-10-02: it is not theoretical.** `/pet guard` and `/pet sit` pin the pet
+  (`entity.rs::tick_pet_ai` returns before the follow step for both stances), so an owner who
+  walks two cells away loses the panel and every `/pet` command (all gated on
+  `PetManager.has_pet()`, a live node), and cannot call the pet back until they walk into
+  view of it again. The client-only fix is also weaker than it looked: one `EntityDespawn`
+  means both "left your view" and "is gone" (a charm ending, a replacement summon), and the
+  client can only guess which from distance. Deaths and HP are not the problem; the server
+  fans those to everyone in the world, not by view.
+  **Needs a design call (user)**, each a small server change, none built: (1) the owner
+  always sees their own pet (never send the owner a view-loss despawn for it, and always
+  include the owner in its position fan), which keeps guard-and-walk-away working as in EQ;
+  (2) a leash: a pet further than some distance from its owner drops its stance and returns
+  or warps to the owner; (3) WoW's answer, the pet is dismissed past a distance with a line
+  saying so.
 - [ ] **The cursor-slot epic: left-click ground pickup + corpse auto-re-equip** *(left-click
   requested 2026-08-27; the user chose the full server-side cursor slot — "Option B for sure.
   this sounds amazing and we need the corpse auto-re-equip feature" — over a client-only
@@ -635,6 +659,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   opened by a chat command (`hud.gd` ~1399: `open_for` + `broadcast_inspect_player`) over the
   existing wire round-trip. Remaining: the right-click-a-player trigger this entry names, and a
   playtest — no checklist has ever exercised it)*
+  **Right-click trigger BUILT 2026-10-02, pending playtest** (client-only, next export;
+  `tell_reply_and_inspect_click_checklist.md` §3). A right-click tap on a living player targets
+  them and opens inspect through the same path as `/inspect` (20 m client range, the server's
+  30 m gate behind it); a right-drag is still the camera. The range gate itself has rows in
+  `inspect_range_gm_audit_ban_checklist.md` §1.
 - [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**, and the later social
   layer recorded elsewhere and pulled in by the 2026-09-29 audit: **player-owned towns + guild
   taxes** (user idea 2026-06-18, "revisit later", sparked by the Banker fee mechanic) and a
@@ -1541,6 +1570,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
   ~5 minutes", 2026-05-26; audit 2026-09-29)*. Rides with the `/r` + TAB item.
+  **Mostly existed already; the gap is closed 2026-10-02, pending playtest**
+  (`tell_reply_and_inspect_click_checklist.md` §4). The layout has carried `is_active_tab`
+  and the restore has read it for months, and a clean quit saved it; what was missing was a
+  save when the tab is clicked, so the window X (a hard kill) lost the choice. One line.
 - [ ] **Art asset pipeline** *(pointer; audit 2026-09-29)*. The art work is tracked in its own
   checkbox list, `docs/design/art_assets_checklist.md` (the one deliberate exception to
   "one checkbox list", since it is an asset manifest, not a task queue); "future zone themes"

@@ -221,6 +221,7 @@ func _build_components() -> void:
 	_inspect_window.visible = false
 	add_child(_inspect_window)
 	_inspect_window.visibility_changed.connect(_on_window_visibility_changed.bind(_inspect_window))
+	Targeting.inspect_requested.connect(_inspect_player)
 
 	# In-game DebugLog tail. Independent of the user-data debug.log
 	# file (which gets corrupted when two clients share the same
@@ -1297,6 +1298,29 @@ func _on_player_state_changed(new_state: int) -> void:
 
 # ── Command input ─────────────────────────────────────────────────────────────
 
+# One tell on the wire plus the sender's own echo line (the server does not
+# echo a tell back to its sender). Shared by /tell and /r.
+func _send_tell(target_name: String, msg: String) -> void:
+	CombatLog.add_line("You -> %s: %s" % [target_name, msg], CombatLog.MsgType.TELL_OUT)
+	Net.broadcast_chat(Net.CHAT_CHANNEL_TELL, msg, target_name)
+
+# Open the inspect window on another player. Shared by /inspect and a
+# right-click on the player (Targeting.inspect_requested).
+func _inspect_player(rp: RemotePlayer) -> void:
+	if rp.char_id < 0:
+		CombatLog.add_line("Target has no character id.", CombatLog.MsgType.INFO)
+		return
+	# The server refuses an inspect beyond its own (looser) range; checking
+	# here first gives a clean line instead of an empty window.
+	if is_instance_valid(_player) \
+			and _player.global_position.distance_to(rp.global_position) > INSPECT_RANGE:
+		CombatLog.add_line(
+			"You are too far away to inspect %s." % rp.player_name, CombatLog.MsgType.INFO)
+		return
+	if _inspect_window != null:
+		_inspect_window.open_for(rp.char_id, rp.player_name)
+	Net.broadcast_inspect_player(rp.char_id)
+
 func _handle_chat_input(text: String) -> void:
 	var my_name := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
 
@@ -1374,18 +1398,34 @@ func _handle_chat_input(text: String) -> void:
 		Net.broadcast_chat(Net.CHAT_CHANNEL_OOC, msg)
 		return
 
-	for prefix in ["/tell ", "/t "]:
+	for prefix in CombatLog.TELL_PREFIXES:
 		if lower.begins_with(prefix):
 			var rest := text.substr(prefix.length())
 			var space_idx := rest.find(" ")
 			if space_idx > 0:
-				var target_name := rest.substr(0, space_idx)
-				var msg := rest.substr(space_idx + 1)
-				CombatLog.add_line("You -> %s: %s" % [target_name, msg], CombatLog.MsgType.TELL_OUT)
-				Net.broadcast_chat(Net.CHAT_CHANNEL_TELL, msg, target_name)
+				_send_tell(rest.substr(0, space_idx), rest.substr(space_idx + 1))
 			else:
 				CombatLog.add_line("Usage: /tell <name> <message>", CombatLog.MsgType.INFO)
 			return
+
+	# EQ-style reply. `/r <message>` answers whoever last sent us a tell; a
+	# bare `/r` reopens the chat line already addressed to them. TAB in the
+	# chat line walks the older senders (CombatLog.cycle_tell_text).
+	if lower == "/r" or lower == "/reply" \
+			or lower.begins_with("/r ") or lower.begins_with("/reply "):
+		var reply_to := CombatLog.last_tell_sender()
+		if reply_to == "":
+			CombatLog.add_line("No one has sent you a tell yet.", CombatLog.MsgType.INFO)
+			return
+		var space_idx := text.find(" ")
+		var msg := "" if space_idx < 0 else text.substr(space_idx + 1).strip_edges()
+		if msg == "":
+			# Deferred: this runs inside the chat line's own submit, which
+			# hides the line again as soon as we return.
+			ChatWindowManager.show_chat_input.call_deferred("/tell %s " % reply_to)
+		else:
+			_send_tell(reply_to, msg)
+		return
 
 	for prefix in ["/g ", "/group "]:
 		if lower.begins_with(prefix):
@@ -1403,20 +1443,7 @@ func _handle_chat_input(text: String) -> void:
 		if not is_instance_valid(target) or not (target is RemotePlayer):
 			CombatLog.add_line("Target a player to inspect.", CombatLog.MsgType.INFO)
 			return
-		var rp: RemotePlayer = target
-		if rp.char_id < 0:
-			CombatLog.add_line("Target has no character id.", CombatLog.MsgType.INFO)
-			return
-		# The server refuses an inspect beyond its own (looser) range; checking
-		# here first gives a clean line instead of an empty window.
-		if is_instance_valid(_player) \
-				and _player.global_position.distance_to(rp.global_position) > INSPECT_RANGE:
-			CombatLog.add_line(
-				"You are too far away to inspect %s." % rp.player_name, CombatLog.MsgType.INFO)
-			return
-		if _inspect_window != null:
-			_inspect_window.open_for(rp.char_id, rp.player_name)
-		Net.broadcast_inspect_player(rp.char_id)
+		_inspect_player(target)
 		return
 
 	if lower == "/sense" or lower == "/sense heading":
