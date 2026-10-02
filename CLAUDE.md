@@ -641,17 +641,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **mail system** (server_design.md open question 6, "defer until requested").
 - [ ] **Language system wiring** — `hear_language()` passive gain not yet called from the
   chat-receive path; needs multiplayer chat RPC + trainer NPCs
-- [ ] **Quest reward item follow-ups** *(surfaced while closing quest phase 2; phase 2 itself
-  shipped — see systems_overview)* — (a) the **Tarnished Silver Ring** (wolf_threat reward)
-  equips but its **AGI +1 never applies** to the character sheet. **The recorded "bad stat
-  block" hypothesis is DISPROVEN (audit 09-09): the `.tres` carries `bonus_agility = 1` AND
-  `items.toml` carries `agi_bonus = 1` — both data sources are correct**, so the fault is in an
-  apply or display path (candidates: the server's equip-bonus recompute not mapping AGI for
-  ring-type items, or the sheet not re-reading it; the gnoll boots applying fine means the path
-  works for some slot/stat pairs — diff those two). (b) The
-  **Hunter's Medal** (rotfang_hunt turn-in, STR +2 / CON +2) was never re-tested landing on
-  turn-in — `5ae6808` closed only the kill-credit + golden-orb complaints on that quest, not the
-  item itself. Fix the ring; re-test the Medal. Evidence: `quest_phase2_sliceB_checklist.md`.
+- [x] **Quest reward item follow-ups** — **STALE ENTRY, CORRECTED + TICKED 2026-10-02: both
+  halves were done and playtested, and this entry never caught up.** (a) The **Tarnished
+  Silver Ring's AGI +1 not applying** was fixed on 2026-07-14 (client `b1df906`, "Gear stat
+  bonuses display in launcher mode": the six primary stats have no server-to-client sync, so
+  the client's server-driven equip path now applies gear bonuses itself) and playtested with
+  the ring as the test item: `gear_stat_display_checklist.md` §1-4, every row passing (equip
+  toggles AGI, relog keeps it, death strips it, STR and CON items move too). The one note from
+  that sitting ("unequip, relog, it is equipped again") was the disconnect-flush bug, fixed and
+  passed in `disconnect_flush_checklist.md` §1. The 09-09 audit looked at this entry, disproved
+  its hypothesis, and proposed a diff against the gnoll boots, without finding that the fix
+  had shipped eight weeks earlier; a 2026-10-02 read of both sides of the equip path found
+  nothing wrong because there is nothing wrong. (b) The **Hunter's Medal landing on turn-in**
+  passed 2026-09-22 (`phase4_content_checklist.md`, the Rotfang turn-in row: refused on full
+  bags, paid on the retry). One eyeball is left and has a row, not an entry: the Medal is a
+  NECK item, the one slot nobody looked at for STR/CON on the sheet
+  (`inspect_range_gm_audit_ban_checklist.md` §6).
 
 ### Security / exploits
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
@@ -799,6 +804,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   bystanders only use it to cancel the caster's bar. Integration test
   `enemy_spell_without_a_target_refunds_and_reports` pins the headline case (line AND refund).
   Ticks when a playtest sees a refused cast keep its mana.
+  **Superseded in shape 2026-10-02:** the cast refusals no longer refund, because they no
+  longer take anything; a pre-flight refuses before the mana comes off (see "Spells had no
+  reach" above), and the refusal arrives as "Cast failed: <reason>". The playtest row is the
+  same: a refused cast keeps its mana.
   **Deliberately left silent** (confirmed correct): anti-cheat gates, dev/GM authorization (a reply
   is an oracle for whether `PD_DEV_CMDS` is on or an account is GM), transport/lifecycle gates, and
   rejections only a forged client can reach.
@@ -1179,6 +1188,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   connection whose account is in the set with `KickCode::BannedNow`. One small query a minute.
   Decide deliberately whether the kicked character reaps at once or lingers linkdead like any
   other unclean exit (lingering is the anti-force-off default and is probably right).
+  **Ban half BUILT 2026-10-02, pending playtest** (server `9b0bf87` + `8e662d6`;
+  `inspect_range_gm_audit_ban_checklist.md` §3). The world loop runs a ban sweep every
+  `BAN_SWEEP_INTERVAL` (10 s, tighter than the checkpoint this entry proposed, since the query
+  runs on its own task and never blocks the loop): any connection whose account is banned is
+  sent `KickCode::BannedNow`, its messages are ignored from that moment, and the server drops
+  the transport `KICK_FLUSH_GRACE` (1 s) later so the kick arrives first. The character then
+  leaves by the ordinary unclean-exit path (the linger was kept, as proposed). **Still open:
+  the password-reset half.** Nothing in the database says "end sessions that began before
+  now", and adding a column for it means a migration, after which an older binary refuses to
+  boot on that database (no rollback). `reset_password` names the lever instead: ban, wait
+  for the `banned account kicked from the world` log line, unban.
 - [ ] **PET_CHARM had no range check** *(found 2026-10-01 while reading the charm arm for a test
   fix; **BUILT same day, pending playtest**, server `30f0474`;
   `inspect_range_gm_audit_ban_checklist.md` §4)*. The charm arm checked that the target id was a
@@ -1188,8 +1208,32 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   target is too far away." Integration test `charm_refuses_a_target_out_of_range` runs the
   exploit as a client would: the caster names the id of a mob two cells away that it was never
   even told exists. Same audit frame as always: the server validated what the spell does and
-  not whether the caster was entitled to cast it there. Worth a sweep of the other target-type
-  arms for the same gap (ALLY heals, AOE centre, PET_SUMMON are the candidates).
+  not whether the caster was entitled to cast it there. The sweep of the other target-type
+  arms ran 2026-10-02 and found two more; see the entry directly below.
+- [ ] **Spells had no reach on heals, buffs or PvP nukes, and a refused cast was a free
+  skill-up** *(found by the 2026-10-02 sweep; **BUILT same day, pending playtest**: server
+  `fe0e789` + `8e662d6`, client `228db25`; `inspect_range_gm_audit_ban_checklist.md` §4)*.
+  **ALLY spells** (heals and buffs, on a player or a pet) and **ENEMY spells against a player**
+  had no range check at all: a modified client could keep a friend alive in a dungeon from
+  town, or nuke a PvP-flagged player from across the world, by naming an id. Separately, the
+  09-30 refund work handed mana back AFTER the handler had stamped the cooldown and rolled
+  the casting skill, so a cast the server was always going to refuse was a free skill-up
+  attempt and still burned its cooldown; Bind Affinity (no server arm, on ten classes' bars
+  at level 1) made that reachable from an HONEST hotbar every three seconds.
+  **Built as** `cast_target_refusal`, one pre-flight that runs before the mana comes off and
+  covers every target type: presence, liveness, reach (`RANGED_ATTACK_RANGE`, 25 m, written
+  keep-only-when-in-reach) and the PvP gates for ENEMY / ALLY / PET_CHARM; CORPSE; an AOE with
+  no radius; a summon with no known pet; any type with no arm. A refused cast costs nothing
+  at all. Also: **one CastSpell per caster per tick** (one cast bar used to authorise any
+  number in a single datagram); refusals are a **private CastFail** (the client's signal to
+  drop the cooldown it started; current builds print "Cast failed: <reason>"); and **no
+  refusal names a player** (far, offline and never-existed targets share one line; "Unable to
+  attack <name>" used to answer for any connected char id from anywhere). Client half, next
+  export: a 24 m range check before the cast bar, and the cooldown handed back on a refused
+  cast. Tests run the exploits as a client would and fail on the previous code.
+  **Design note, flagged not decided:** heals now share the nuke's 25 m reach because spells
+  have no range field; say so if heals should reach further (a per-spell range is the real
+  answer, with the content pass).
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
@@ -1646,6 +1690,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   casting passives are "not yet implemented" while `CastingSkills` has shipped for months;
   `docs/deployment/` remains untracked by decision and CLAUDE.md links it as canonical (decide
   one way). Small, but each is a trap for the next reader.
+- [ ] **The cast arms duplicate the pre-flight** *(review finding, 2026-10-02; recorded, not
+  built)*. `cast_target_refusal` decides target presence, reach, liveness and the PvP gates
+  before any side effect, and the per-target-type arms in `tick.rs` still carry their own
+  copies of the same checks (now unreachable, with slightly different lines and the old
+  refund-after-stamp order). Two homes for one rule: the next change to one (a per-spell
+  range, a new target kind) silently reopens the free-roll or the disclosure if the other is
+  missed. The right shape is for the pre-flight to return the RESOLVED target and for the arms
+  to consume it, deleting their refusal branches. A refactor of the cast handler, so its own
+  task, never under cover of a feature.
 - [ ] **Procedural dungeon: pick the canonical copy** *(surfaced by the 2026-09-30
   belt-and-braces sweep, the other of its two findings)*. The generator exists twice:
   `addons/procedural_dungeon/` in this repo (12 scripts dated 2026-05-01 to 05-05, the plugin

@@ -508,9 +508,11 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   L5 / silk_harvest L7 / champions_crypt L9 / the_undying L12 (Flamebrand finale), every tier
   payout exact (0.15/0.30/0.50/0.80 x the cubic band at level_req), plus two new town NPCs —
   Hadrik the Blacksmith (weapons + the iron chain set) and Elara upgraded to a dialogue NPC
-  with her shop behind "Let me see your wares." Open follow-ups live in
-  the `CLAUDE.md` To-Do (a ring-reward stat bug, a Hunter's Medal re-test, the deliberately-cut
-  low-level dialogue-refusal polish).
+  with her shop behind "Let me see your wares." The quest reward
+  items are confirmed in play: the ring's stat bonus (fixed 2026-07-14, `b1df906`,
+  `gear_stat_display_checklist.md`) and the Hunter's Medal landing on turn-in (2026-09-22,
+  `phase4_content_checklist.md`). The deliberately-cut low-level dialogue-refusal polish is
+  the one follow-up left.
 - **Vendors:** `VendorManager` + `scenes/vendor_npc.tscn` / `scripts/vendor_npc.gd`
   (proximity register, right-click to open since the 2026-08-24 interact grammar); types in
   `data/vendor_definitions.gd`; buy/sell window functional. The transaction is fully
