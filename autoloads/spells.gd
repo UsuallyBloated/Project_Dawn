@@ -16,6 +16,19 @@ var _cast_timer: float = 0.0
 var _hit_during_cast: bool = false
 var no_cooldowns: bool = false
 
+# How far a targeted spell reaches, in metres. One metre inside the server's
+# RANGED_ATTACK_RANGE (25 m), which is the authority: this check only spares an
+# honest player a wasted cast bar, and the margin keeps position interpolation
+# from turning a cast the client allowed into a server refusal.
+const SPELL_RANGE := 24.0
+
+# The spell most recently sent to the server, and when. A server refusal
+# (CastFail) arriving within REFUSAL_WINDOW_MSEC of it means that cast never
+# happened, so the cooldown started for it here is dropped again.
+const REFUSAL_WINDOW_MSEC := 1500
+var _sent_spell_name: String = ""
+var _sent_at_msec: int = 0
+
 func _ready() -> void:
 	SpellDefinitions.validate()
 	_cooldowns = CooldownTracker.new()
@@ -128,6 +141,12 @@ func cast_spell(spell: SpellData) -> bool:
 		if not Combat.has_valid_target():
 			spell_failed.emit("No valid target to charm.")
 			return false
+
+	# Reach. The server refuses a targeted cast beyond its range (and charges
+	# nothing for it), but checking here first means the cast bar never runs.
+	if Net.is_launcher_mode() and _target_out_of_reach(spell):
+		spell_failed.emit("Your target is too far away.")
+		return false
 
 	if spell.target_type == SpellData.TargetType.PORT:
 		var is_gate        := spell.port_zone_path.is_empty() and spell.port_entry_id.is_empty()
@@ -244,6 +263,8 @@ func _apply_spell(spell: SpellData) -> void:
 	# effects land. target_id = 0 encodes "no target" for SELF.
 	if Net.is_launcher_mode() and Net.is_app_ready():
 		Net.broadcast_cast_spell(spell.spell_name, _cast_target_id(spell))
+		_sent_spell_name = spell.spell_name
+		_sent_at_msec = Time.get_ticks_msec()
 
 	_cooldowns.start(spell.spell_name, spell.cooldown)
 	var effectiveness := _get_alignment_effectiveness(PlayerStats.player_class)
@@ -431,6 +452,38 @@ func _cast_target_id(spell: SpellData) -> int:
 	if t is RemotePet:
 		return (t as RemotePet).pet_id
 	return 0
+
+# True when `spell` needs a target within SPELL_RANGE and the current target
+# is further than that. Only the cases the server range-checks: an ENEMY or
+# PET_CHARM spell on its target, and an ALLY spell aimed at another player or a
+# pet (an ALLY spell with anything else targeted falls back to the caster, so
+# it has no reach to check).
+func _target_out_of_reach(spell: SpellData) -> bool:
+	var ranged := spell.target_type == SpellData.TargetType.ENEMY \
+			or spell.target_type == SpellData.TargetType.PET_CHARM \
+			or _ally_target_is_remote(spell)
+	if not ranged:
+		return false
+	var t = Combat.current_target
+	if t == null or not is_instance_valid(t) or not (t is Node3D):
+		return false
+	var me := get_tree().get_first_node_in_group("player") as Node3D
+	if me == null:
+		return false
+	return me.global_position.distance_to((t as Node3D).global_position) > SPELL_RANGE
+
+# Launcher mode: the server refused a cast that had ALREADY completed here
+# (target out of reach or gone, a spell the server has no effect for). It took
+# no mana and stamped no cooldown, so the cooldown this client started when it
+# sent the cast is dropped; the server's ManaUpdate corrects the mana. Does
+# nothing while a cast bar is running (that CastFail is an interrupt, which
+# cancel_cast handles) or when no cast was sent recently.
+func on_server_cast_refused() -> void:
+	if _casting != null or _sent_spell_name == "":
+		return
+	if Time.get_ticks_msec() - _sent_at_msec <= REFUSAL_WINDOW_MSEC:
+		_cooldowns.clear(_sent_spell_name)
+	_sent_spell_name = ""
 
 # True when an ALLY-target spell is being cast on a remote recipient (peer
 # or pet) the server — not the client — applies it to. The caster skips its

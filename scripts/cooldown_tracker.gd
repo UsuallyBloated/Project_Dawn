@@ -23,6 +23,16 @@ func tick(delta: float) -> void:
 		_remaining.erase(name)
 		_totals.erase(name)
 
+# Drop a cooldown before it runs out (a cast the server refused never
+# happened). Emits a final zero so anything drawing the cooldown clears.
+func clear(name: String) -> void:
+	if not _remaining.has(name):
+		return
+	var total: float = _totals.get(name, 1.0)
+	_remaining.erase(name)
+	_totals.erase(name)
+	cooldown_updated.emit(name, 0.0, total)
+
 func is_active(name: String) -> bool:
 	return _remaining.has(name)
 
