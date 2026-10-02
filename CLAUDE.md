@@ -38,12 +38,16 @@ A multiplayer MMORPG inspired by classic EverQuest-era games. **Two repos:** a G
   everyone). Streams live to a unique `logs/server_<timestamp>.log` (never overwritten on restart)
   **and** `server.log`, and regenerates `world_report.html` on exit. Preferred over the raw
   `cargo run` for playtests, since it stops losing logs across restarts.
-- **Ops bins (read-only DB tools; the crate has 3 binaries, so `--bin` selects — the plain
+- **Ops bins (the crate has 5 binaries, so `--bin` selects — the plain
   `cargo run -p projectdawn-server` still runs the server via the `default-run` manifest key):**
-  `cargo run -p projectdawn-server --bin admin_report` (accounts + characters incl. soft-deletes
-  and per-char coins/inventory → console + a local `world_report.html`), and
-  `cargo run -p projectdawn-server --bin grant_gm -- <username> on|off` (set per-account GM; no
-  args = list). `grant_gm` writes; `admin_report` is read-only.
+  `--bin admin_report` (read-only: accounts + characters incl. soft-deletes, per-char
+  coins/inventory, and the newest GM action audit rows → console + a local `world_report.html`),
+  `--bin grant_gm -- <username> on|off` (set per-account GM; no args = list),
+  `--bin reset_password -- <username>` (new password printed once, sessions purged), and
+  `--bin admin_account` (no args = list; `-- ban <username> [reason]` / `-- unban <username>`).
+  The three that write open the DB with `mode=rw` and never create one: run them from the
+  directory that holds `world.db` (on the R720 that is `/opt/projectdawn`, NOT the source tree)
+  or set `PROJECTDAWN_DATABASE_URL`. Full detail in `docs/reference/commands.md`.
 - **GM playtest (dev commands OFF, only `is_gm` accounts get tools):** `PD_DEV_CMDS` enables dev
   commands *only* when it equals exactly `"1"`, so to run with them off, unset it or set anything
   else. PowerShell (note: bare `null`/`false` are not literals — use `$null`/`$false` or a string):
@@ -1122,15 +1126,70 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Hit/Miss/Evade and the cast broadcasts are cosmetic fan-outs a client can forge onto peers'
   screens (no state change; worth a rate cap when public). `EquipItem` item-vs-slot, the
   fourth part, is DONE (Track 14.1).
+  **(a) BUILT 2026-10-01, pending playtest** (server `3523bd1` + review fixes `30f0474`, client
+  `cd9f1d1`; `inspect_range_gm_audit_ban_checklist.md` §1). `InspectPlayer` requires the two
+  players within `INSPECT_RANGE` (30 m, written keep-only-when-in-range so a non-finite
+  distance refuses); the client checks its own tighter 20 m first so an honest player gets a
+  clean "too far" line. The review caught that the first cut's refusal NAMED the target and
+  answered far and absent ids differently, which would have made the gate a char_id to name map
+  and an is-online oracle; far, offline and never-existed now get one generic line and the same
+  empty result. No line-of-sight half (there is no server collision model; that stays with
+  (b)). (b) and (c) remain open.
 - [ ] **GM action audit log** *(deferred "to a fast follow" when `is_gm` shipped 2026-07-17;
   server_design's day-one rule "all GM actions audited"; the `gm_actions` table has existed
   since the auth schema; audit 2026-09-29)*. Write one row per dev/GM command (`/give`, coin
   grants, dev spawns, Full Heal, Level Up) with account, char, payload, timestamp. Read-only
   value today (one operator), load-bearing the day a second GM exists.
+  **BUILT 2026-10-01, pending playtest** (server `b47aadb` + review fixes `30f0474`;
+  `inspect_range_gm_audit_ban_checklist.md` §2; server-only). The gate and the audit are ONE
+  call, `PerConnection::authorize_dev_cmd`: a dev command runs only if its `gm_actions` row
+  was queued, and one that cannot be recorded is REFUSED, never run unrecorded. All six
+  dev-gated handlers go through it (`grant_xp`, `dev_spawn_mob`, `damage_self`, `heal_self`,
+  `give_coins`, `give`). Rows are written in one transaction per tick, before any reap, and
+  `reap_connection` flushes its own. Each row ends `via=gm`, `via=dev` or `via=gm+dev`: on the
+  R720 anything with `dev` in it means the server ran with `PD_DEV_CMDS` on. A refused
+  (unauthorized) attempt writes nothing, so no ordinary client can make the server write. The
+  write bound is a per-connection token bucket (burst 128, refill 8/s), sized so the Test
+  Panel's crafting-materials button (about 34 gives in one frame) is recorded whole.
+  `admin_report` shows the newest 50 rows (console + HTML card). **The review's catch, and why
+  the shape changed:** the first cut capped a tick at 8 rows but still RAN the commands past
+  the cap, so a GM client could bury a coin grant behind eight fillers.
 - [ ] **Account admin tooling: ban/unban and delete/purge bins** *(`handoff_account_admin.md`
   2026-07-31; audit 2026-09-29)*. `is_banned` is enforced at login but nothing can set it, and
   there is no account delete or purge. Same shape as `grant_gm` and the scoped
   `reset_password` bin above: operator-only, session rows cleared on ban.
+  **Ban/unban BUILT 2026-10-01, pending playtest** (server `81150c7` + review fixes `30f0474`;
+  `inspect_range_gm_audit_ban_checklist.md` §3). New `admin_account` bin: no args lists accounts
+  (flags, ban reason, live characters, live sessions), `ban <username> [reason]`, `unban
+  <username>`. `db::set_account_banned` writes the flag and reason AND purges the account's
+  sessions in one transaction. The ban bites at login, at EVERY session redemption
+  (`touch_session`; the review found that a login in flight when the ban landed got a usable
+  session, because only the login path checked the flag), and at world connect
+  (`KickCode::BannedNow`, for a connect token minted just before the ban). A re-ban with no
+  reason keeps the reason on file. **Delete/purge is deliberately NOT built and stays open
+  here:** the 2026-09-17 wipe retired the throwaway accounts that motivated it, and every child
+  table cascades from accounts or characters EXCEPT `gm_actions` (which now has rows), so a
+  delete must first decide what happens to audit history.
+- [ ] **Kick by account: a ban or password reset does not remove a character already in the
+  world** *(the stated limit of both ops tools, 2026-10-01)*. `admin_account ban` and
+  `reset_password` close every way IN (login, session use, world connect), but a connection
+  that is already in the world keeps playing until it drops; today the operator's only lever is
+  a server restart, which costs everyone up to 60 s of progress. Shape: at the 60 s checkpoint
+  (the world loop already has the pool there), read the banned account ids, and kick any
+  connection whose account is in the set with `KickCode::BannedNow`. One small query a minute.
+  Decide deliberately whether the kicked character reaps at once or lingers linkdead like any
+  other unclean exit (lingering is the anti-force-off default and is probably right).
+- [ ] **PET_CHARM had no range check** *(found 2026-10-01 while reading the charm arm for a test
+  fix; **BUILT same day, pending playtest**, server `30f0474`;
+  `inspect_range_gm_audit_ban_checklist.md` §4)*. The charm arm checked that the target id was a
+  live enemy and nothing else, so a modified client could charm ANY mob in the world by id from
+  anywhere (a named mob from the safety of town). It now has the nuke arm's reach
+  (`RANGED_ATTACK_RANGE`, 25 m), written keep-only-when-in-range, refunding and answering "That
+  target is too far away." Integration test `charm_refuses_a_target_out_of_range` runs the
+  exploit as a client would: the caster names the id of a mob two cells away that it was never
+  even told exists. Same audit frame as always: the server validated what the spell does and
+  not whether the caster was entitled to cast it there. Worth a sweep of the other target-type
+  arms for the same gap (ALLY heals, AOE centre, PET_SUMMON are the candidates).
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the

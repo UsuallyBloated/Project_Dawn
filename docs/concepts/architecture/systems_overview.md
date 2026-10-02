@@ -702,6 +702,12 @@ player can never use them (exploit-audit finding #1). Two independent grants:
 - **`admin_report`** bin: read-only `world.db` viewer (accounts + characters incl. soft-deletes,
   per-char four-tier coins + bank + inventory) → console + a local `world_report.html`. WAL-aware
   (`?mode=ro`), safe to run while the server is live.
+- **`reset_password`** bin (operator tool, built 2026-09-30): `cargo run -p projectdawn-server
+  --bin reset_password -- <username>` generates a password and prints it once (or `--stdin` reads
+  one), writing the Argon2 hash and purging every session for the account in one transaction, so
+  a live session cannot outlive the reset. The password is never an argv word (shell history,
+  other users' `ps`). Like every ops tool that writes, it opens the database with `mode=rw` and
+  never creates one: run it from the directory that holds `world.db`.
 
 ---
 

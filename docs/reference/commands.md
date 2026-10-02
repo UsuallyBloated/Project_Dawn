@@ -17,17 +17,26 @@ in-game chat commands, and keybinds. **Keep this current** as commands are added
 | `.\scripts\run-server.ps1 -Dev` | Same, but `PD_DEV_CMDS=1` (dev commands ON for **every** connection; local solo). |
 | `cargo run -p projectdawn-server` | Run the server directly (auth WS `0.0.0.0:8765`, world UDP `0.0.0.0:7777`). Dev commands OFF unless `PD_DEV_CMDS=1`. |
 | `scripts/dev-run.sh` | Bash run helper: sources `.env`, sets `RUST_LOG`. |
-| `cargo run -p projectdawn-server --bin admin_report` | **Read-only** `world.db` viewer → console summary + local `world_report.html`. Accounts + characters (incl. soft-deleted), per-char four-tier coins + bank + inventory. WAL-aware, safe while the server runs. Optional args: `[db_path] [output_html]`. |
+| `cargo run -p projectdawn-server --bin admin_report` | **Read-only** `world.db` viewer → console summary + local `world_report.html`. Accounts + characters (incl. soft-deleted), per-char four-tier coins + bank + inventory, and the newest 50 rows of the **GM action audit log** (who issued which dev command, when; each row ends `via=gm`, and anything with `dev` in it means the server ran with `PD_DEV_CMDS` on). WAL-aware, safe while the server runs. Optional args: `[db_path] [output_html]`. |
 | `cargo run -p projectdawn-server --bin grant_gm -- <username> on\|off` | Set a per-account GM flag (**writes** `accounts.is_gm`). No args = list every account's GM status. Takes effect on that account's **next login**. |
 | `cargo run -p projectdawn-server --bin reset_password -- <username>` | Reset a locked-out tester's password (**writes** the Argon2 hash **and purges every session** for that account in one transaction, so a live session can't outlive the reset). Generates a password and prints it **once**; add `--stdin` to supply one instead (`echo newpass \| cargo run ...`). The password is never an argv word: argv lands in shell history and other users' `ps`. |
+| `cargo run -p projectdawn-server --bin admin_account` | List every account: flags, ban reason, live characters, live sessions. |
+| `cargo run -p projectdawn-server --bin admin_account -- ban <username> [reason...]` | Ban an account (**writes** the flag and reason **and purges its sessions** in one transaction). The reason is shown to them at login. Refused from then on: login, any use of an existing session, and world connect. **A character already in the world keeps playing until it drops**; restart the server to force it out. Re-running with no reason purges sessions again and keeps the reason on file. |
+| `cargo run -p projectdawn-server --bin admin_account -- unban <username>` | Lift a ban and clear its reason. |
 | `cargo test` | Run the test suite (~30s incl. build). The `world_two_clients.rs` flake was root-caused 2026-09-16 and the suite runs green; if one fails, re-run it **alone** — a failure that reproduces in isolation is real, one that passes alone is load-sensitivity. |
 | `cargo build --release` | Release build. |
 | `scripts/backup.sh` | Deploy-host nightly `world.db` backup (cron/systemd; `sqlite3 .backup`, 7-day retention). Not a local-dev tool. |
 
-**The crate has 4 binaries** (`projectdawn-server`, `admin_report`, `grant_gm`,
-`reset_password`), so a bare `cargo run -p projectdawn-server` resolves to the server via the
-`default-run` manifest key; `--bin` selects the tools. `admin_report` is read-only; `grant_gm`
-and `reset_password` write.
+**The crate has 5 binaries** (`projectdawn-server`, `admin_report`, `grant_gm`,
+`reset_password`, `admin_account`), so a bare `cargo run -p projectdawn-server` resolves to the
+server via the `default-run` manifest key; `--bin` selects the tools. `admin_report` is read-only;
+`grant_gm`, `reset_password` and `admin_account` write.
+
+**The three tools that write never create a database** (they open with `mode=rw`). Run them from
+the directory that holds `world.db`, or set `PROJECTDAWN_DATABASE_URL`. On the R720 the source tree
+(`/opt/projectdawn/src`) and the live data (`/opt/projectdawn`) are different directories, so a
+tool run from the source tree fails with "unable to open database" instead of quietly making an
+empty `world.db` there.
 
 **`PD_DEV_CMDS`** enables dev commands only when it equals exactly `"1"`. To run with them off, unset
 it (`Remove-Item Env:\PD_DEV_CMDS`) or set anything else. In PowerShell, bare `null`/`false` are not
@@ -66,13 +75,13 @@ Parsed in `scripts/hud.gd::_handle_chat_input`. Press Enter to open chat, type t
 | `/say <msg>` (`/s`) | Local say. |
 | `/shout <msg>` (`/sh`) | Shout. |
 | `/ooc <msg>` | Out-of-character channel. |
-| `/tell <name> <msg>` (`/t`) | Private tell (outbound; incoming `/tell` RPC still open per the To-Do). |
+| `/tell <name> <msg>` (`/t`) | Private tell. The recipient sees it in their Tells (In) channel. |
 | `/group <msg>` (`/g`) | Group chat. |
 
 ### Social / info
 | Command | Effect |
 |---|---|
-| `/inspect` | Inspect your current player target's equipment. |
+| `/inspect` | Inspect your current player target's equipment. Works within 20 m; further away you get "You are too far away to inspect X." (the server has its own 30 m backstop). |
 | `/sense`, `/sense heading` | Sense heading (direction readout, fuzzy below max skill). |
 | `/loc` (or `/location`) | Your position as `x, y, z` to one decimal (paste-ready for `zone_camps.toml` / `npcs.toml`) plus an exact facing. Free for everyone, works while dead. Compass: +Z is north, +X is east. |
 | `/track` | Tracking (ranger-style). |
@@ -110,6 +119,11 @@ Grant 250 XP, Give Selected Item, Spawn Normal/Named, give-coins). Those routing
 **[GM]**-gated; buttons like Trigger Death and time-of-day are client-side/legitimate and not gated.
 Note: Full Heal fills the bars optimistically client-side even when the server refuses it (a display
 lie that self-corrects), so it can look like it worked for a non-GM.
+
+**Every [GM] command that reaches the server is recorded** in the GM action audit log (read it with
+`admin_report`), and a command that cannot be recorded is refused rather than run. The budget is
+generous (a burst of 128, then 8 a second), so ordinary use never meets it; a script hammering dev
+commands gets "Dev commands are rate limited; that one was not run."
 
 ---
 
