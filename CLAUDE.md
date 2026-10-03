@@ -540,6 +540,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (2) a leash: a pet further than some distance from its owner drops its stance and returns
   or warps to the owner; (3) WoW's answer, the pet is dismissed past a distance with a line
   saying so.
+  **DECIDED 2026-10-02 (user): (1), "You should absolutely see your own pet, wherever it
+  is." BUILT same day, pending playtest** (server `43dc287`; `scale_readiness_checklist.md`
+  §4; server-only, no client change, rides the next redeploy). One helper, `pet_owner_cid`,
+  carries the rule: the owner is always in the pet's Position audience, is skipped by both
+  view-loss despawn paths (the pet crossing a cell, and the owner's own crossing, which also
+  no longer re-sends a PetSpawn the owner never lost), and is added wherever the pet really
+  ends (charm expiry, the body expiring). Integration test
+  `owner_keeps_seeing_a_pet_parked_two_cells_away` parks a skeleton, walks the owner two cells
+  off, and calls it back; it fails on the previous code at the first assertion. Not an
+  information leak: the owner learns only their own pet's position, and the pet goes only
+  where the owner already sent it.
 - [ ] **The cursor-slot epic: left-click ground pickup + corpse auto-re-equip** *(left-click
   requested 2026-08-27; the user chose the full server-side cursor slot — "Option B for sure.
   this sounds amazing and we need the corpse auto-re-equip feature" — over a client-only

@@ -42,5 +42,13 @@ new; these fixes are invisible when they work, which is the point of §1 and §3
 - [ ] **Partner summons a pet while out of your view, then YOU walk toward them** → when they come into view the pet is already there (the third gap: walking into view of an existing pet used to show nothing). notes:
 - [ ] **A mob chasing your partner across a camp edge into your view** → it appears mid-chase with a name and health bar. Hard to stage on purpose; mark `[-]` if it never comes up, the integration test `enemy_crossing_a_cell_boundary_spawns_and_despawns_for_players` is the evidence. notes:
 
+## 4 — Your own pet stays with you (one seat; needs the 2026-10-02 server build, `43dc287` or later)
+Before this build, walking about 240 m from a parked pet dropped it from your pet panel and killed every `/pet` command until you walked back.
+
+- [ ] **Summon or auto-summon a pet, `/pet guard`, then walk away well past 300 m (use `/loc` to measure)** → the pet panel keeps its name and health the whole way; no "pet dismissed" moment. notes:
+- [ ] **From out there, `/pet follow`** → "Your pet follows you." and the pet comes running; it arrives beside you. notes:
+- [ ] **Park it again, walk far away, then kill something near you** → the pet's health bar on the panel is untouched (it is still parked); `/pet attack` on a mob near you brings it running to fight. notes:
+- [ ] **Regression: let the pet die, or re-summon over it** → the panel clears or swaps as before. notes:
+
 ## Notes / observations
 -
