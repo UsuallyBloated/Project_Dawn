@@ -194,7 +194,10 @@ Keep the main model for design, code, and any exploit or verification work.
   choke point and the client mirrors `XpGained` / `LevelUp`. The per-level stat tables are
   kept in **lockstep** on both sides (`char_data::level_gains` vs `CLASS_LEVEL_GAINS`) and
   anchor-tested, so editing one without the other IS still live drift to watch.)*
-- Time-of-day is per-client; a server broadcast is planned.
+- *(Closed in code 2026-10-04, pending playtest: time of day is server-driven. The server's
+  `world/clock.rs` and the client's `autoloads/time_of_day.gd` each hold the day length
+  (`DAY_LENGTH_SECS` / `DAY_DURATION`, 1200 s) and must stay in **lockstep**, since the client
+  runs its own clock between the server's once-a-minute sends.)*
 
 ---
 
@@ -1548,6 +1551,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   day length moves server-side; `DAY_DURATION` stays only as the offline / Test Room fallback. No
   protocol bump (the variant is already in the shared enum), but it does need a gdext rebuild and a
   client re-export.
+  **BUILT 2026-10-04, pending playtest** (server `e8164b1`, client in this commit;
+  `time_of_day_checklist.md`; needs the redeploy AND the export, in either order). The server's
+  new `world/clock.rs` derives the hour from the wall clock over a 20-minute day, so every
+  client is told the same hour, a restart does not reset the day, and nothing is persisted.
+  The hour goes to each player on entering the world and to everyone once a minute. The wire
+  layer decodes it (`time_of_day` signal, rebuilt DLL), `Net` re-emits `world_time_of_day`,
+  and `TimeOfDay` follows: a difference over one game hour is a jump (the first send after
+  login), anything smaller is absorbed by running the clock up to 4x fast or down to a
+  quarter speed, never backwards, so the sun does not step. The Test Panel's Pause holds a
+  hand-set sky; unpaused, the clock rejoins the server at the next send. Nothing on the server
+  reads the hour (the sky is cosmetic; night vision is a client-side tint). An older client
+  drops the message harmlessly, so the server half can deploy first. If a build ever
+  carries a DLL without the signal, `Net` says so in the console and falls back to the local
+  clock instead of failing to load. **Export note:** the DLL is hand-copied into `builds/`;
+  the copy there today (09-25) predates this, so the export must take the rebuilt
+  `addons/gdext_net/gdext_net.dll` with it.
 - [ ] **Weather system**; **Water & swimming** (breath/drowning); **Doors & locks** (lockpicking)
 - [ ] **Zone transition effects** — fade/loading screen
 - [ ] **Test Panel "Despawn All Enemies" leaves enemies invisible, not gone** (playtest

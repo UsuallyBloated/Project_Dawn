@@ -179,6 +179,9 @@ signal world_resurrect_offer(corpse_id: int, caster_name: String, xp_percent: in
 # PD_W0022 — server-forced reposition (a resurrection summon). Net snaps the local
 # player to `pos` and re-emits for any other listener.
 signal world_teleport(pos: Vector3)
+# The server's world clock: the hour in [0, 24), sent as we enter the world and
+# about once a minute after. TimeOfDay follows it so every player shares a sky.
+signal world_time_of_day(hour: float)
 # Track 5 sub-task 4 — private confirmation that the local player's
 # LootItem / LootAll intent landed. Carries one stack the looter just
 # claimed; the GDScript handler loads `item_path` → ItemData and adds
@@ -293,6 +296,16 @@ func _ready() -> void:
 	corpse_contents.connect(_on_corpse_contents)
 	resurrect_offer.connect(_on_resurrect_offer)
 	teleport.connect(_on_teleport)
+	# Connected by NAME, unlike its neighbours: a bare `time_of_day` is a parse
+	# error against a wire layer built before the signal existed, and a parse
+	# error here takes the whole Net autoload down. The DLL is hand-copied into
+	# builds/, so a stale one is a real possibility; this way it costs the
+	# shared sky and says so, instead of costing the client.
+	if has_signal("time_of_day"):
+		connect("time_of_day", _on_time_of_day)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates the world clock (no time_of_day signal). "
+			+ "The sky will run on a local clock; rebuild the DLL with addons/gdext_net/build.ps1.")
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
@@ -1112,6 +1125,9 @@ func _on_teleport(pos: Vector3) -> void:
 		if "velocity" in player:
 			player.velocity = Vector3.ZERO
 	world_teleport.emit(pos)
+
+func _on_time_of_day(hour: float) -> void:
+	world_time_of_day.emit(hour)
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)
