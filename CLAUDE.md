@@ -1087,6 +1087,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `BIND` for Bind Affinity, a wire addition so the client learns its bind position (protocol bump,
   gdext rebuild, re-export), Gate reading it, and retiring `PlayerStats.bind_zone_path`. Server
   support for the other seven would be moot — there is nowhere to send anyone.
+  **DESIGNED 2026-10-04: `docs/design/bind_and_gate.md`** (EQ and SWG reference, what exists,
+  a twelve-point exploit ledger, three slices). **Six decisions wait on the user (§7)**, each
+  with a recommendation: where Bind Affinity may bind (recommended: not within 60 m of a
+  hostile spawn point, which keeps the caster perk and removes the self-built death loop),
+  binding others (self only for now), an unbound Gate (goes to the starter spawn like
+  Respawn), the pet on Gate (comes along unless parked), Succor and Evacuate (wait for the
+  content pass: their numbers are offline-era leftovers and the only safe point is the town),
+  and who gets Gate (content call). **The scope shrank again:** the wire addition this entry
+  expected is NOT needed. The client never has to know where the bind is; the server moves
+  the player with the existing `Teleport` message and confirms a bind with a chat line. So
+  slice 1 (Bind Affinity + Gate) needs no protocol bump and no DLL rebuild, and does not have
+  to wait for the trade window's deploy day. Also verified while writing it: online today the
+  client runs its own Gate and bind in the same function that sends the cast, so Gate
+  reloads the whole world scene and Bind Affinity prints "You are now bound" next to the
+  server's "That magic has no effect here yet."
 - [x] **The vendor window claims a quantity and price the server never agreed to** *(found
   2026-08-24; **BUILT 2026-08-24, pending playtest** — client `vendor_window.gd`, needs a
   re-export)*. Chat correctly said "Only 7 fit in your bags." while the vendor dialog said
