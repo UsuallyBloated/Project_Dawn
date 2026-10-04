@@ -5,6 +5,7 @@ const _CraftingWindowScript := preload("res://scripts/crafting_window.gd")
 const _VendorWindowScript   := preload("res://scripts/vendor_window.gd")
 const _BankWindowScript     := preload("res://scripts/bank_window.gd")
 const _HudDeathScreen       := preload("res://scripts/hud_death_screen.gd")
+const _HudDisconnectNotice  := preload("res://scripts/hud_disconnect_notice.gd")
 const _HudCastBar           := preload("res://scripts/hud_cast_bar.gd")
 const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
 const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
@@ -184,6 +185,8 @@ func _ready() -> void:
 func _build_components() -> void:
 	var death_screen := _HudDeathScreen.new()
 	add_child(death_screen)
+
+	add_child(_HudDisconnectNotice.new())
 
 	var cast_bar := _HudCastBar.new()
 	add_child(cast_bar)

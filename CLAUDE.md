@@ -455,6 +455,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   return-to-character-select flow; a kick strands the player. Also the lobby shows the
   server's one-shot "try again in ~Ns" string instead of a live-ticking countdown from
   `reconnect_after_secs`. Client-only (the wire already carries the seconds).
+  **Scoped 2026-10-04, and it is three different sizes of job.** (1) **The stranding was worse
+  than recorded and is BUILT, pending playtest** (client, next export;
+  `inspect_range_gm_audit_ban_checklist.md` §3): when the world connection ended in game (a
+  kick, a ban, a server restart, a network drop) the client showed NOTHING. `Net` emitted
+  `app_disconnected(reason)` and in the world only the camp label listened, so the player
+  stood in a frozen world with no message, and the 10-02 ban kick's "told why" was not true
+  on screen. New `scripts/hud_disconnect_notice.gd`: the screen dims, a "Disconnected" panel
+  shows the server's reason (or a plain line when there is none), a relogin hint, and Quit;
+  the same line goes to chat and the debug log. (2) **The live countdown is not client-only.**
+  The wire carries `reconnect_after_secs` but the DLL drops it (the `kicked` signal passes
+  reason and code only), so it needs a wire-layer change and a DLL rebuild, no protocol bump.
+  (3) **A real return to character select is a multi-day client job, not a small one:** the
+  session token and the auth socket live in the login SCENE and are lost on a scene change;
+  `Net.leave_session` relies on process exit to close the socket; and 54 autoloads hold
+  per-character state that a second character would inherit unless each is audited (the
+  hotbar bleed of 08-26 was one of them). Needs its own design pass and a state-reset audit
+  before any code.
 - [x] **Tell testers about the ~45 s worst-case relogin after a crash** — **DONE 2026-09-30
   (a doc line with no playtest surface, ticked on the edit like the reset_password bin)**.
   `camp_and_linkdead.md` §Risks called the number out ("a hard crash can take up to the 15 s
@@ -1252,7 +1269,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   runs on its own task and never blocks the loop): any connection whose account is banned is
   sent `KickCode::BannedNow`, its messages are ignored from that moment, and the server drops
   the transport `KICK_FLUSH_GRACE` (1 s) later so the kick arrives first. The character then
-  leaves by the ordinary unclean-exit path (the linger was kept, as proposed). **Still open:
+  leaves by the ordinary unclean-exit path (the linger was kept, as proposed). **Found
+  2026-10-04: the kicked CLIENT showed nothing** (no in-world listener for the kick reason);
+  the disconnect notice built that day is what makes "told why" true, and it needs the
+  export. **Still open:
   the password-reset half.** Nothing in the database says "end sessions that began before
   now", and adding a column for it means a migration, after which an older binary refuses to
   boot on that database (no rollback). `reset_password` names the lever instead: ban, wait

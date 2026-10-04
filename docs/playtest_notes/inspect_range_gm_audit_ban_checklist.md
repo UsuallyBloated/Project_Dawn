@@ -56,7 +56,9 @@ Use a throwaway account, not your own.
 - [ ] **With the throwaway logged OUT: `admin_account ban <name> testing the ban tool`, then try to log in as it** → login is refused and the reason "testing the ban tool" is shown. notes:
 - [ ] **`admin_account` again** → the account shows `[BANNED]` with its reason. notes:
 - [ ] **`admin_account unban <name>`, then log in** → login works again. notes:
-- [ ] **Ban it WHILE its character is in the world** → within about ten seconds that client is kicked with "This account is banned."; `server.log` shows `banned account kicked from the world`. No restart. notes:
+- [ ] **Ban it WHILE its character is in the world** → within about ten seconds that client is kicked; `server.log` shows `banned account kicked from the world`. No restart. On a client exported 2026-10-04 or later the screen dims and a "Disconnected" notice shows the reason ("This account is banned.") with a Quit button. On an OLDER client nothing is shown at all: the world just freezes (found 10-04; the client never displayed a kick reason in the world). notes:
+- [ ] **(New client) Restart the server while a character is in the world** → the same "Disconnected" notice appears within about 15 seconds, with a plain reason, the relogin hint, and Quit. The line "Disconnected: ..." is also in chat. notes:
+- [ ] **(New client) `/camp` to completion** → the game closes as before; no notice flashes up on the way out. notes:
 - [ ] **Watch the kicked character from the other seat** → it stands where it was for about 30 seconds (the ordinary linkdead linger), then vanishes. notes:
 - [ ] **Try to log the banned account back in** → refused with the reason. notes:
 - [ ] **From the wrong directory (for example the source tree on the R720), run `admin_account`** → an error about opening the database, and no new `world.db` file appears there. notes:
