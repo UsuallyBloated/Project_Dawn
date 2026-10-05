@@ -50,6 +50,7 @@ literals (use `$null`/`$false` or a string).
 |---|---|
 | Open the project in Godot 4.4 and Run | Normal dev loop. |
 | `godot --path f:\Projects\Project_Dawn` | Headless / from CLI. Godot exe: `F:\GODOT Engine\Godot_v4.4.1-stable_win64.exe\Godot_v4.4.1-stable_win64.exe`. |
+| `godot --headless --path . -s tools/check_spell_lockstep.gd` | **Spell lockstep check** (read-only). Compares `data/spell_definitions.gd` with the server's `spells.toml` and prints DRIFT (a value that differs, a bug), SERVER-ONLY (a bug) and CLIENT-ONLY (spells the server refuses as unknown, listed by target type). Exit code 1 on drift. Run it after editing a spell on either side. Add `-- <path>` to point at a different `spells.toml`. |
 
 ---
 

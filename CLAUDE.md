@@ -187,8 +187,11 @@ Keep the main model for design, code, and any exploit or verification work.
   156 spells, `spells.toml` has 133, so **23 are client-only** and are refused server-side as
   an unknown spell (no effect; since 10-02 no mana is taken either). All 23 need something the
   server does not model yet (ports, prestige classes, damage over time, mana drain, stealth,
-  the pet heal) — see the To-Do "Client-only spell backlog". The 133 shared spells showed
-  ZERO drift that day on damage, mana, cast time, cooldown and level.
+  the pet heal) — see the To-Do "Client-only spell backlog". **Check it with
+  `tools/check_spell_lockstep.gd`** (see `docs/reference/commands.md`): it compares every
+  field the server carries and exits 1 on drift. On 2026-10-05 the 133 shared spells showed
+  ZERO drift. One deliberate exception is built into the check: Bard songs carry 0 damage
+  and 0 heal on the server because their pulses are still client-side.
   `tools/export_spells.gd` (Godot editor) is the intended regen path but is stale.
 - *(Closed 2026-06-22: leveling used to be client-local and provisional. The corpse epic's
   Slice 0 moved XP + leveling server-side — `world/progression.rs::award_xp` is the single
@@ -1801,6 +1804,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both
   generators are the intended lockstep tools for the two client/server data pairs and neither
   is trusted; one regen-and-diff pass each, then keep them honest.
+  **Spells half answered a different way, 2026-10-05:** `tools/check_spell_lockstep.gd` is a
+  read-only CHECK (drift, server-only, client-only; exit 1 on drift) that reads the client's
+  real `SpellDefinitions.ALL`, so the two files can be verified without trusting or running
+  the stale exporter. It found the files in step. The exporter itself is still stale, and the
+  items pair (`items.toml` vs the `.tres` files) has no check yet; the same shape would do.
 - [ ] **Docs debt** *(audit 2026-09-29)*: `server/README.md` is "badly stale" (still claims the
   world sim is unbuilt, per `deployment_linux.md`); `server/docs/flaky_integration_tests.md`
   still describes the flaky trio the 09-16 fix retired; `docs/concepts/passive_skills/*` says
