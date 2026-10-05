@@ -1511,10 +1511,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   server does not model at all** (Dark Decay, Entangle: the only two DoT spells in the game,
   and most of their damage is the DoT, so porting the direct hit alone would misrepresent
   them); Exsanguinate (mana drain, no server field); Camouflage (stealth); Warder's Mend
-  (PET_HEAL); and **Torpor, whose data looks wrong**: it is authored as an ENEMY spell that
-  heals over time and slows attacks, which reads like the Shaman's ally heal with the wrong
-  target type. Ask the user before porting it. The file header in `spells.toml` now states
-  what the server models and what it does not.
+  (PET_HEAL); and **Torpor**. *(Corrected the same day: this entry first said Torpor's data
+  "looks wrong", an ENEMY spell that heals. That was a misreading. The data matches the
+  design in `docs/concepts/classes/shaman.md`: Torpor slows the TARGET's attacks by 70% and
+  puts a heal-over-time on the CASTER, the Shaman's signature line. The client applies
+  `hot_hps` to the local player whatever the target type.)* It is blocked only because the
+  server's ENEMY arm applies the slow but has no step that gives the caster the HoT, a small
+  addition. Waiting on the user, who was asked on the wrong premise and answered "remove the
+  heal": without it Torpor is a costlier, shorter Slow, which the Shaman already has at
+  level 8. The file header in `spells.toml` now states what the server models and what it
+  does not.
 
 ### World systems
 - [x] **Phase 4 content: the replacement world** — **DONE + playtested 2026-09-27**
