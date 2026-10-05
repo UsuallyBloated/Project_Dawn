@@ -209,6 +209,21 @@ doing its job.
 
 ## 7. Decisions for the user
 
+**DECIDED 2026-10-05 (user). Where an answer differs from the recommendation below, the answer
+wins:**
+
+- **D1:** self-bind **anywhere**, as in EQ (the clearance rule was not taken).
+- **D2:** a caster **can** bind someone else: a **group member**, and only while that member
+  stands in a pre-determined safe area such as a town.
+- **D3:** cannot arise. Every character has a bind from birth (the starter spawn); a bind is
+  only ever replaced, never removed.
+- **D4:** the pet **always** comes with you.
+- **D5:** Succor and Evacuate **get built now**, content or not.
+- **D6:** Gate goes to the nine pure INT and WIS casters **plus Bard** (the Bind Affinity list).
+
+The build plan that follows from these is `docs/design/spell_batch_plan_2026_10_05.md`.
+The original options are kept below for the record.
+
 Each has a recommendation; a one-word answer per line is enough.
 
 - **D1. Where can Bind Affinity bind?**

@@ -1123,6 +1123,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   client runs its own Gate and bind in the same function that sends the cast, so Gate
   reloads the whole world scene and Bind Affinity prints "You are now bound" next to the
   server's "That magic has no effect here yet."
+  **ALL SIX DECIDED 2026-10-05 (user), recorded in the design doc's §7:** self-bind anywhere;
+  a GROUP MEMBER can be bound only inside a safe area (town); every character is bound at the
+  starter spawn from birth; the pet always comes on Gate; Succor and Evacuate get built now;
+  Gate goes to the nine pure casters plus Bard. Build-ready as step 2 of
+  `docs/design/spell_batch_plan_2026_10_05.md` (proposed, not yet approved).
 - [x] **The vendor window claims a quantity and price the server never agreed to** *(found
   2026-08-24; **BUILT 2026-08-24, pending playtest** — client `vendor_window.gd`, needs a
   re-export)*. Chat correctly said "Only 7 fit in your bags." while the vendor dialog said
@@ -1423,6 +1428,41 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `ENEMY_DESPAWN_LINGER_SECS`).
 
 ### Combat / weapons
+- [ ] **The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)**.
+  One sitting of user answers decided a cluster of spell-system work. Plan and build order:
+  `docs/design/spell_batch_plan_2026_10_05.md`. **Decided (user):** the group share range
+  becomes **200 m** for XP shares, quest journal ticks AND the coin split (was 30 m; journal
+  ticks had no range rule); friendly spells reach **30 m**; **Slow** = level 8, 10 mana, 1.0 s
+  cast, 5% attack slow for 30 s; **Torpor** = level 20, 20 mana, 1.5 s cast, 10% for 1 minute,
+  NO heal; attack slows do not stack (one at a time, strongest wins); a **global cooldown**
+  gets built now; **damage over time** gets a server model (Dark Decay, Entangle); an
+  **interrupted cast costs mana in proportion to progress, hits only** (a deliberate cancel
+  stays free); the friends build **ships silent** (no time to source audio by 11-08). Bind and
+  Gate decisions are on that item. **Known trade-off, user informed:** at 200 m a group-mate
+  can sit in town and share XP and coin from the nearest camps. **Open:** Aria of Dismay (Bard
+  song) is a 35% attack slow on the client and would outrank Slow and Torpor under "strongest
+  wins".
+- [ ] **Cast-code findings from the 2026-10-05 design review** *(a reviewer agent's read of
+  the code; status marked per item; none fixed)*. Step 0 of the spell batch plan.
+  (a) **VERIFIED by reading, live on the host: mobs with a leash shorter than spell reach can
+  be nuked with no response.** `tick_idle` (`entity.rs` ~816) ignores attackers beyond
+  `leash_range()`, leash defaults to aggro x 2, and spells reach 25 m, so a caster standing
+  between a mob's leash and 25 m (mobs with aggro 8, 10 or 12: leash 16 to 24 m) is never
+  acquired. The 09-22 "being attacked IS aggro" fix closed this only inside the leash.
+  (b) **VERIFIED by reading: Charm appears to expire the tick after it lands.** The charm
+  decay sweep tests `now.duration_since(exp) >= 0.0`, and `duration_since` saturates to zero
+  when `exp` is still in the future, so the test is always true. The charm integration tests
+  only assert the PetSpawn, so nothing catches it. Needs a playtest or a test to confirm in
+  play.
+  (c) Reported, not yet verified: a caster at 0 HP can still complete a cast in the tick they
+  die (a self-heal would revive; Gate would move the corpse).
+  (d) Verified: a silenced or mesmerized caster is never told their cast failed (the CastFail
+  goes to everyone except the sender), and the cooldown and not-enough-mana refusals send no
+  mana correction, so the client's bar stays low.
+  (e) Reported: a hit and a completed cast in the same tick can both succeed; a finished cast
+  can be held with no expiry; casting does not stand a seated caster server-side.
+  (f) **Verified: a mob finished off by a damage shield (Thorns) pays nothing**, no XP, no
+  quest credit, no loot (`tick.rs` ~8085 marks it dead and fans EntityDied, nothing else).
 - [ ] **Proc follow-ups** *(the server-authoritative proc core shipped + playtested 2026-07-31, PD_W0025
   — see systems_overview)*: (a) **elemental resist for procs** — the server has no enemy-resist model
   at all, so proc damage is flat; needs resist fields on `MobTemplate`/`Entity` first. (b) **PvP-player
@@ -1801,7 +1841,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Clockwork Engineering prestige** (Tinkering 150+ for Gnomes/Kobolds)
 
 ### Audio & tech debt
-- [ ] **Sound system** — combat/spell/ambient/music
+- [ ] **Sound system** — combat/spell/ambient/music. **DECIDED 2026-10-05 (user): the friends
+  build ships silent**; there is no time to source audio by 2026-11-08. This answers the
+  schedule's one standing open question (§4); the schedule files get the note with the spell
+  batch's first step.
 - [ ] **EQ-style food/water gating** — food/water should gate base HP/MP regen (no food =
   no regen) instead of stacking as additive buffs; passive consumption from inventory,
   no buff-bar entry
