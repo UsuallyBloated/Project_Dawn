@@ -183,11 +183,12 @@ Keep the main model for design, code, and any exploit or verification work.
 
 ### Known client↔server drift to watch
 - Spells exist in **both** GDScript (`data/spell_definitions.gd`) and server `spells.toml`
-  — adding/editing one without the other causes drift. Quantified 2026-07-22: the client has
-  156 spells, `spells.toml` has 124, so **~32 are client-only** and get dropped server-side as
-  "unknown spell" (mana spent, no effect). Life Drain + Dark Shroud closed that day; the rest
-  need server support first (9 `PORT` teleport/gate spells, prestige-class tags like
-  `Paladin_Fallen`, `Warder's Mend` PET_HEAL) — see the To-Do "Client-only spell backlog".
+  — adding/editing one without the other causes drift. Recounted 2026-10-05: the client has
+  156 spells, `spells.toml` has 133, so **23 are client-only** and are refused server-side as
+  an unknown spell (no effect; since 10-02 no mana is taken either). All 23 need something the
+  server does not model yet (ports, prestige classes, damage over time, mana drain, stealth,
+  the pet heal) — see the To-Do "Client-only spell backlog". The 133 shared spells showed
+  ZERO drift that day on damage, mana, cast time, cooldown and level.
   `tools/export_spells.gd` (Godot editor) is the intended regen path but is stale.
 - *(Closed 2026-06-22: leveling used to be client-local and provisional. The corpse epic's
   Slice 0 moved XP + leveling server-side — `world/progression.rs::award_xp` is the single
@@ -1493,6 +1494,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   cast gate keys on base `conn.class`, so these need the prestige-class model), and **`Warder's
   Mend` PET_HEAL** (also its own long-standing gap). `tools/export_spells.gd` is the intended regen
   path but is stale. Audit list: see the "Known drift" note + the 2026-07-22 session note.
+  **Recounted and partly PORTED 2026-10-05, pending playtest** (server `c0046af`;
+  `ported_spells_checklist.md`; server-only, works on the client testers already have). The
+  32 split into 13 ordinary class nukes, 10 ports, and 9 blocked on other systems. **Nine of
+  the 13 are plain direct damage and are now in `spells.toml` with the client's values
+  unchanged:** Blizzard and Thunder Clap (Wizard), Bloodfire, Void Lance and Tempest Bolt
+  (Sorcerer), Cascade of Stars (Enchanter), Chorus of Misery (Bard), Feral Shriek (Beast
+  Master), Judgment (Paladin). A unit test pins all nine and an integration test has a level
+  4 Sorcerer land Bloodfire (it fails without the data). **The 23 that remain, by what
+  blocks each:** 10 ports (Gate, Succor, Evacuate: the bind and Gate design; seven zone ports:
+  zones that do not exist); 7 prestige-class spells (`Paladin_Fallen` x4, `Shadow
+  Knight_Redeemed` x3: the cast gate keys on the base class); **damage over time, which the
+  server does not model at all** (Dark Decay, Entangle: the only two DoT spells in the game,
+  and most of their damage is the DoT, so porting the direct hit alone would misrepresent
+  them); Exsanguinate (mana drain, no server field); Camouflage (stealth); Warder's Mend
+  (PET_HEAL); and **Torpor, whose data looks wrong**: it is authored as an ENEMY spell that
+  heals over time and slows attacks, which reads like the Shaman's ally heal with the wrong
+  target type. Ask the user before porting it. The file header in `spells.toml` now states
+  what the server models and what it does not.
 
 ### World systems
 - [x] **Phase 4 content: the replacement world** — **DONE + playtested 2026-09-27**
