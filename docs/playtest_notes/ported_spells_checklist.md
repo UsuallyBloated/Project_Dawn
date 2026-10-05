@@ -36,5 +36,11 @@ the nine should produce that line any more.
 ## 3 — Regression
 - [ ] **Cast a spell your class has always had (Fireball, Smite, a heal)** → unchanged. notes:
 
+## 4 — Two suspected bugs to confirm (found by reading the code on 2026-10-05, never seen in play)
+Either result is useful. A "yes, it happens" turns a suspicion into a confirmed bug with a fix already planned.
+
+- [ ] **Charm a mob (Enchanter or any class with a charm spell) and watch it for ten seconds** → SUSPECTED: the charmed pet vanishes about a second after the charm lands, and `server.log` shows `charm expired — pet released`. If it stays for its full duration, the suspicion is wrong. notes:
+- [ ] **Stand about 20 m from a Decrepit Skeleton (west of town) and cast a nuke at it; keep casting** → SUSPECTED: it stands still and takes every hit without coming for you, because you are outside its 16 m leash but inside the 25 m spell range. A mob that turns and chases you means the suspicion is wrong. Try the same from about 10 m to see the normal reaction. notes:
+
 ## Notes / observations
 -
