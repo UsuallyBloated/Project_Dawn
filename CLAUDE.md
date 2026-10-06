@@ -296,7 +296,11 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
    friends-build push, `docs/schedule.md` says which phase we're in and what's in it.
 3. Implement it. **Don't tick anything yet** — built is not done.
 4. Append a summary to `docs/session_notes/session_YYYY_MM_DD.md` and update
-   `docs/session_notes/README.md`.
+   `docs/session_notes/README.md`. If the session changed a To-Do status or a checklist,
+   regenerate the planner's week-by-week detail: `python tools/schedule_detail.py` (edit
+   `docs/schedule_detail.toml` first if a row needs to move), commit the plan file with both
+   outputs, and republish the page at the link recorded in the plan file. The detail carries
+   dates and dependencies only, never status.
 5. Run a review pass (`/code-review`) if the session touches 5+ files or a core system
    (combat, inventory, spells, PlayerStats, networking).
 6. **Tick only on playtest evidence.** An item earns `[x]` when a filled checklist in
@@ -367,6 +371,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   fold anything unfinished back into the To-Do and retire this pointer.
   `docs/schedule.html` is a browser-readable rendering of it for non-repo readers (open it
   locally); keep it in sync when the plan changes.
+  **Week-by-week detail for the planner** → `docs/schedule_detail.html` (+ `.md`), generated
+  from `docs/schedule_detail.toml` by `tools/schedule_detail.py`: one row per checklist sitting,
+  build step, redeploy, decision or friend session, with owner, needs and dependencies. Dates
+  only, never status; every row names the checklist or To-Do entry its status lives in.
 - **What systems exist & how they work** → `docs/concepts/architecture/systems_overview.md`
 - **Commands you type** (CLI/cargo tools, server run wrappers, in-game chat commands, keybinds) →
   `docs/reference/commands.md`. Keep it current when a command is added or renamed.
