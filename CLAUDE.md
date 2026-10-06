@@ -1462,14 +1462,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   aggro-0 dev dummies stay passive; a long leash is untouched. A unit test pins the floor and
   an integration test nukes a 1 m-aggro dummy from 20 m and waits for the mob to turn (it
   checks its own setup off the server's Position fan, because a first cut passed on the old
-  code on a stale target message from spawn time).
-  (b) **CONFIRMED IN PLAY 2026-10-06 and BUILT the same day, pending redeploy** (same commit,
-  same checklist rows). Charm expired the tick after it landed: the decay sweep tested
+  code on a stale target message from spawn time). **PLAYTESTED 2026-10-06 evening, PASS**
+  (`ported_spells_checklist.md` §5: the boar came for the bard from 22 m on the redeployed
+  `6a802f4`).
+  (b) **CONFIRMED IN PLAY 2026-10-06 and BUILT the same day** (same commit, same checklist
+  rows). Charm expired the tick after it landed: the decay sweep tested
   `now.duration_since(exp) >= 0.0`, which saturates to zero while `exp` is still ahead. Seen
   twice in the log as `charm expired` 50 ms after the charm. One line (`now >= exp`);
   `charm_converts_enemy_to_pet` now also asserts no despawn for 1.5 s after the PetSpawn and
-  fails on the old code. Both were built ahead of the batch plan's approval because they were
-  proven bugs on the host, not design; the other four parts of step 0 still wait on the plan.
+  fails on the old code. **PLAYTESTED 2026-10-06 evening, PASS** (§5: the charm held its full
+  60 s). The tester's follow-up from that row, that the mob should come back hostile at expiry
+  instead of vanishing, is its own entry directly below. Both fixes were built ahead of the
+  batch plan's approval because they were proven bugs on the host, not design; the other four
+  parts of step 0 still wait on the plan.
   (c) Reported, not yet verified: a caster at 0 HP can still complete a cast in the tick they
   die (a self-heal would revive; Gate would move the corpse).
   (d) Verified: a silenced or mesmerized caster is never told their cast failed (the CastFail
@@ -1479,6 +1484,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   can be held with no expiry; casting does not stand a seated caster server-side.
   (f) **Verified: a mob finished off by a damage shield (Thorns) pays nothing**, no XP, no
   quest credit, no loot (`tick.rs` ~8085 marks it dead and fans EntityDied, nothing else).
+- [ ] **A charm that ends should hand the mob back, not delete it** *(user, 2026-10-06, on
+  the §5 rerun: "When charm expires the target vanishes. It should revert to being its
+  original npc enemy type.")*. Today the charm arm (`tick.rs` ~5378) converts the enemy into
+  a pet entity and frees its camp slot at once (`spawner.on_enemy_died`), and the expiry sweep
+  (~3117) removes the pet with no body and no replacement: the Track 12 v1 call, "mob runs
+  away". EQ breaks a charm by handing the mob back, hostile and usually straight onto the
+  charmer, which is what makes charm dangerous to lean on. Build shape: the charmed pet keeps
+  its `spawn_point_idx` and the slot stays occupied for the charm's life; at expiry (and on
+  the owner's logout) the pet is rebuilt as an enemy at its position with its current HP, back
+  in its slot, with threat on the former owner so it comes for them; a pet that dies while
+  charmed frees the slot as any death would. **Exploit lens, and the reason for the slot
+  rule:** with the slot freed at charm time (as now), a revert would add a mob to the camp on
+  every charm whose replacement had already spawned, a charm-and-wait farm for XP and loot.
+  Server-only; one decision for the user: does the returned mob attack the charmer
+  (recommended yes, EQ-authentic; the alternative is a hostile mob standing idle until
+  provoked).
 - [ ] **Proc follow-ups** *(the server-authoritative proc core shipped + playtested 2026-07-31, PD_W0025
   — see systems_overview)*: (a) **elemental resist for procs** — the server has no enemy-resist model
   at all, so proc damage is flat; needs resist fields on `MobTemplate`/`Entity` first. (b) **PvP-player
@@ -1560,8 +1581,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   unchanged:** Blizzard and Thunder Clap (Wizard), Bloodfire, Void Lance and Tempest Bolt
   (Sorcerer), Cascade of Stars (Enchanter), Chorus of Misery (Bard), Feral Shriek (Beast
   Master), Judgment (Paladin). A unit test pins all nine and an integration test has a level
-  4 Sorcerer land Bloodfire (it fails without the data). **The 23 that remain, by what
-  blocks each:** 10 ports (Gate, Succor, Evacuate: the bind and Gate design; seven zone ports:
+  4 Sorcerer land Bloodfire (it fails without the data). **The nine PLAYTESTED 2026-10-06,
+  PASS** (`ported_spells_checklist.md` §1 to §3: six characters, one per class, all with
+  spell kills; Cascade of Stars reached the server's interrupt roll, which the old server
+  could not do; no unknown-spell line all evening; an old Bard song still resolves). **The 23
+  that remain, by what blocks each:** 10 ports (Gate, Succor, Evacuate: the bind and Gate design; seven zone ports:
   zones that do not exist); 7 prestige-class spells (`Paladin_Fallen` x4, `Shadow
   Knight_Redeemed` x3: the cast gate keys on the base class); **damage over time, which the
   server does not model at all** (Dark Decay, Entangle: the only two DoT spells in the game,

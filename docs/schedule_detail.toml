@@ -258,17 +258,9 @@ checklist = "full_bags_move_checklist.md"
 todo = "Full bags should move with their contents"
 done_when = "Every row filled."
 
-[[row]]
-id = "v3"
-week = "w1"
-lane = "verify"
-day = "before the Oct 12 redeploy"
-what = "The nine ported spells land; the class and level gates still hold. Section 4 looks for the two suspected bugs (Charm ending at once, creatures ignoring spells from beyond their reaction range): run it before the October 12 redeploy to see them in play, after it the same rows become the fix's regression."
-who = "user at a desk"
-needs = ["the GM account's Level Up tool to reach each spell's level"]
-checklist = "ported_spells_checklist.md"
-todo = "Client-only spell backlog"
-done_when = "Every row filled."
+# v3 (the ported-spells sitting) ran and filled on 2026-10-06, both halves: the nine spells,
+# then the two suspected bugs found, fixed, redeployed and rerun the same evening. Its row
+# left the plan per the generator's rule; the verdicts are in ported_spells_checklist.md.
 
 [[row]]
 id = "v4"

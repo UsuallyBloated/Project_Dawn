@@ -31,7 +31,11 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   (Druid / Enchanter).
 - **Enemy state machine:** IDLE → CHASE → ATTACK → FLEE/LEASH. Caster enemies kite at
   `caster_range`; healer enemies flee to spawn below `healer_flee_hp`. Relevant exports:
-  `spell_damage`, `caster_range`, `flee_range`.
+  `spell_damage`, `caster_range`, `flee_range`. Server-side, a mob's leash (how far it
+  chases, and how far out it turns on something that hits it) is `leash` from
+  `zone_camps.toml` or aggro x 2, floored at `MIN_LEASH_RANGE` (30 m, `world/mod.rs`) for
+  any mob with an aggro radius, so nothing inside spell reach (25 m) can be nuked without a
+  response (2026-10-06; aggro-0 dev dummies stay passive).
 - **Hit reactions / VFX:** physical hits flash the mesh white; spell hits flash an
   elemental color + spawn an `OmniLight3D` burst at the impact point, via
   `enemy.flash_spell_hit(color)` from `Combat.deal_spell_damage()`. Color per type: fire
