@@ -4,8 +4,10 @@ The order to run the open playtest checklists in, and what each needs. Kept curr
 checklist is added or finished (last update 2026-10-06). The status of every row lives in the
 checklist files themselves; this page only says what to run next.
 
-**As of 2026-10-06 both sides are current:** server `c0046af` on the R720, client exported
-from `fc880df`. Every list below is runnable now.
+**As of 2026-10-06:** server `c0046af` on the R720, client exported from `fc880df`. Every
+list below is runnable now. Server `6a802f4` (the charm and leash fixes from the first
+ported-spells sitting) is pushed but **not deployed**; after the redeploy, rerun
+`ported_spells_checklist.md` §4 as the regression.
 
 **Test characters:** the `spelltest` account holds one character per class the spell rows
 need (table in `ported_spells_checklist.md`); the password is in `docs/deployment/test_accounts.md`

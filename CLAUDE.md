@@ -1451,17 +1451,25 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   song) is a 35% attack slow on the client and would outrank Slow and Torpor under "strongest
   wins".
 - [ ] **Cast-code findings from the 2026-10-05 design review** *(a reviewer agent's read of
-  the code; status marked per item; none fixed)*. Step 0 of the spell batch plan.
-  (a) **VERIFIED by reading, live on the host: mobs with a leash shorter than spell reach can
-  be nuked with no response.** `tick_idle` (`entity.rs` ~816) ignores attackers beyond
-  `leash_range()`, leash defaults to aggro x 2, and spells reach 25 m, so a caster standing
-  between a mob's leash and 25 m (mobs with aggro 8, 10 or 12: leash 16 to 24 m) is never
-  acquired. The 09-22 "being attacked IS aggro" fix closed this only inside the leash.
-  (b) **VERIFIED by reading: Charm appears to expire the tick after it lands.** The charm
-  decay sweep tests `now.duration_since(exp) >= 0.0`, and `duration_since` saturates to zero
-  when `exp` is still in the future, so the test is always true. The charm integration tests
-  only assert the PetSpawn, so nothing catches it. Needs a playtest or a test to confirm in
-  play.
+  the code; status marked per item)*. Step 0 of the spell batch plan.
+  (a) **CONFIRMED IN PLAY 2026-10-06 and BUILT the same day, pending redeploy** (server
+  `6a802f4`; `ported_spells_checklist.md` §4, whose rows rerun as the regression after the
+  redeploy). Mobs with a leash shorter than spell reach could be nuked with no response:
+  `tick_idle` ignores attackers beyond `leash_range()`, leash defaulted to aggro x 2, and
+  spells reach 25 m. Seen as a Wild Boar (aggro 10, leash 20) taking Chorus of Misery from
+  about 22 m without moving while Plagued Zombies (leash 28) came at once. Fix: new
+  `MIN_LEASH_RANGE` (30 m, `world/mod.rs`) floors the leash of every mob that aggros at all;
+  aggro-0 dev dummies stay passive; a long leash is untouched. A unit test pins the floor and
+  an integration test nukes a 1 m-aggro dummy from 20 m and waits for the mob to turn (it
+  checks its own setup off the server's Position fan, because a first cut passed on the old
+  code on a stale target message from spawn time).
+  (b) **CONFIRMED IN PLAY 2026-10-06 and BUILT the same day, pending redeploy** (same commit,
+  same checklist rows). Charm expired the tick after it landed: the decay sweep tested
+  `now.duration_since(exp) >= 0.0`, which saturates to zero while `exp` is still ahead. Seen
+  twice in the log as `charm expired` 50 ms after the charm. One line (`now >= exp`);
+  `charm_converts_enemy_to_pet` now also asserts no despawn for 1.5 s after the PetSpawn and
+  fails on the old code. Both were built ahead of the batch plan's approval because they were
+  proven bugs on the host, not design; the other four parts of step 0 still wait on the plan.
   (c) Reported, not yet verified: a caster at 0 HP can still complete a cast in the tick they
   die (a self-heal would revive; Gate would move the corpse).
   (d) Verified: a silenced or mesmerized caster is never told their cast failed (the CastFail

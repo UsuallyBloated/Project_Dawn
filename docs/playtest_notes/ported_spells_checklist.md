@@ -25,12 +25,12 @@ drag to a slot), which is per-character client state no tool can do for you.
 
 | Log in as | Class | Level | Rows |
 |---|---|---|---|
-| Embris | Sorcerer | 10 | Bloodfire, Void Lance, Tempest Bolt |
-| Rimewind | Wizard | 10 | Blizzard, Thunder Clap; the leash spot check in §4 |
-| Mirelle | Enchanter | 20 | Cascade of Stars; the charm spot check in §4 |
-| Caderyn | Bard | 10 | Chorus of Misery |
-| Fennric | Beast Master | 4 | Feral Shriek |
-| Aldous | Paladin | 12 | Judgment |
+x| Embris | Sorcerer | 10 | Bloodfire, Void Lance, Tempest Bolt |
+x| Rimewind | Wizard | 10 | Blizzard, Thunder Clap; the leash spot check in §4 |
+x| Mirelle | Enchanter | 20 | Cascade of Stars; the charm spot check in §4 |
+x| Caderyn | Bard | 10 | Chorus of Misery |
+x| Fennric | Beast Master | 4 | Feral Shriek |
+x| Aldous | Paladin | 12 | Judgment |
 
 Tip: on your own GM account the Test Panel's Level Up button reaches any level too. In `server.log`
 a cast the server does not know logs `unknown spell name — server-side cast dropped`; none of
@@ -54,8 +54,10 @@ the nine should produce that line any more.
 ## 4 — Two suspected bugs to confirm (found by reading the code on 2026-10-05, never seen in play)
 Either result is useful. A "yes, it happens" turns a suspicion into a confirmed bug with a fix already planned.
 
-- [ ] **Charm a mob (Enchanter or any class with a charm spell) and watch it for ten seconds** → SUSPECTED: the charmed pet vanishes about a second after the charm lands, and `server.log` shows `charm expired — pet released`. If it stays for its full duration, the suspicion is wrong. notes:
-- [ ] **Stand about 20 m from a Decrepit Skeleton (west of town) and cast a nuke at it; keep casting** → SUSPECTED: it stands still and takes every hit without coming for you, because you are outside its 16 m leash but inside the 25 m spell range. A mob that turns and chases you means the suspicion is wrong. Try the same from about 10 m to see the normal reaction. notes:
+- [x] **Charm a mob (Enchanter or any class with a charm spell) and watch it for ten seconds** → SUSPECTED: the charmed pet vanishes about a second after the charm lands, and `server.log` shows `charm expired — pet released`. If it stays for its full duration, the suspicion is wrong. notes: Target briefly appears as blue capsule, the quickly vanishes.  As you expected. **Triage 10-06:** confirmed; the journal shows `charm expired` 50 ms after each charm, twice. Fixed in server `6a802f4` (one line: the sweep's saturating comparison). Rerun this row after the redeploy; the pet should stay for Charm's full 60 s.
+- [x] **Stand about 20 m from a Decrepit Skeleton (west of town) and cast a nuke at it; keep casting** → SUSPECTED: it stands still and takes every hit without coming for you, because you are outside its 16 m leash but inside the 25 m spell range. A mob that turns and chases you means the suspicion is wrong. Try the same from about 10 m to see the normal reaction. notes: Tested as Mirelle against zombies, zombies attacked immediately after being provoked.  This is good!  Tested with Caderyn using Chorus of Misery:  Wild boar did not attack when provoked, only when character moved closer, presumably within the boars aggro range.f This is not good. **Triage 10-06:** confirmed, and the split is the bug exactly: Plagued Zombies have aggro 14 (leash 28 m) so the song landed inside their leash; the Wild Boar has aggro 10 (leash 20 m) and was hit from about 22 m. Fixed in server `6a802f4`: every mob that aggros at all now has a leash of at least 30 m, past the 25 m spell reach. Rerun this row on the boar after the redeploy.
 
 ## Notes / observations
--
+- 2026-10-06 journal (Claude's read, the ticks are the tester's): spell kills by Embris, Rimewind,
+  Mirelle, Caderyn and Aldous with kill credit, so §1 rows 1 to 3 have log support; no
+  `unknown spell name` line for any of the nine. §4 rows rerun after the redeploy of `6a802f4`.
