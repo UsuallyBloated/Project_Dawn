@@ -10,8 +10,9 @@ from `fc880df`. Every list below is runnable now; `ported_spells_checklist.md` Â
 the regression for those two fixes.
 
 **Test characters:** the `spelltest` account holds one character per class the spell rows
-need (table in `ported_spells_checklist.md`); the password is in `docs/deployment/test_accounts.md`
-on the dev box (untracked, never committed).
+need (table in `ported_spells_checklist.md`). Log in as `spelltest` with password
+`VFRJDgPerb25yzDk` (a throwaway non-GM account on the tailnet-only server; the user asked for
+it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` on the host).
 
 ## One seat, in this order
 

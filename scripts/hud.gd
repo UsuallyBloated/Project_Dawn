@@ -30,6 +30,9 @@ const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 @onready var target_frame: Panel = $TargetFrame
 @onready var target_name_label: Label = $TargetFrame/VBox/NameLabel
 @onready var target_level_label: Label = $TargetFrame/VBox/LevelLabel
+# Distance to the target, refreshed every frame while the frame is shown. Added
+# 2026-10-06 as a testing aid (standing at an exact range from a mob); may stay.
+@onready var target_distance_label: Label = $TargetFrame/VBox/DistanceLabel
 @onready var target_hp_bar: ProgressBar = $TargetFrame/VBox/HPBar
 @onready var target_mp_bar: ProgressBar = $TargetFrame/VBox/MPBar
 @onready var target_st_bar: ProgressBar = $TargetFrame/VBox/StaminaBar
@@ -635,6 +638,7 @@ func _process(delta: float) -> void:
 	if target_cast_bar.visible and is_instance_valid(_tracked_target):
 		if _tracked_target.has_method("cast_progress_ratio"):
 			target_cast_bar.value = _tracked_target.cast_progress_ratio()
+	_refresh_target_distance()
 	# Camp slice B — tick the local /camp countdown. Standing/moving cancels it
 	# immediately client-side for responsiveness (the server independently cancels
 	# on stand/move/damage and fans camp_update(false), handled idempotently);
@@ -788,6 +792,7 @@ func _show_self_target() -> void:
 	var pname := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
 	target_name_label.text = pname
 	target_level_label.text = "Level %d" % PlayerStats.level
+	target_distance_label.text = ""
 	target_hp_bar.max_value = PlayerStats.max_hp
 	target_hp_bar.value = PlayerStats.hp
 	if _target_hp_label:
@@ -799,6 +804,20 @@ func _show_self_target() -> void:
 		PlayerStats.hp_changed.connect(_on_self_target_hp_changed)
 	if _tot_frame != null:
 		_tot_frame.visible = false
+
+# The same straight-line distance the cast range check uses (Spells.SPELL_RANGE
+# compares global positions), so the number on the frame is the number the gate
+# judges. Blank for a self-target or when either end is missing.
+func _refresh_target_distance() -> void:
+	if not target_frame.visible:
+		return
+	var text := ""
+	if not _self_targeted and is_instance_valid(_tracked_target) and _tracked_target is Node3D \
+			and _player != null and is_instance_valid(_player):
+		var d: float = _player.global_position.distance_to((_tracked_target as Node3D).global_position)
+		text = "%.1f m" % d
+	if target_distance_label.text != text:
+		target_distance_label.text = text
 
 func _clear_self_target() -> void:
 	_self_targeted = false
