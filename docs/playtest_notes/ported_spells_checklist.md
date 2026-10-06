@@ -17,7 +17,22 @@ client has always had these on its bars.
 | Feral Shriek | Beast Master | 4 | instant | 35 spirit |
 | Judgment | Paladin | 12 | 2.0 s | 80 holy |
 
-Tip: a GM account can reach the level with the Test Panel's Level Up button. In `server.log`
+**Who to log in as.** The `spelltest` account (password in `docs/deployment/test_accounts.md`
+on the dev box, untracked) holds one character per class, made 2026-10-06. Their levels are set
+by the one sqlite command on the host that `provision_test_characters` printed; until that has
+run they are level 1 and every row below refuses. Memorize the spell onto the bar first (B, then
+drag to a slot), which is per-character client state no tool can do for you.
+
+| Log in as | Class | Level | Rows |
+|---|---|---|---|
+| Embris | Sorcerer | 10 | Bloodfire, Void Lance, Tempest Bolt |
+| Rimewind | Wizard | 10 | Blizzard, Thunder Clap; the leash spot check in §4 |
+| Mirelle | Enchanter | 20 | Cascade of Stars; the charm spot check in §4 |
+| Caderyn | Bard | 10 | Chorus of Misery |
+| Fennric | Beast Master | 4 | Feral Shriek |
+| Aldous | Paladin | 12 | Judgment |
+
+Tip: on your own GM account the Test Panel's Level Up button reaches any level too. In `server.log`
 a cast the server does not know logs `unknown spell name — server-side cast dropped`; none of
 the nine should produce that line any more.
 
