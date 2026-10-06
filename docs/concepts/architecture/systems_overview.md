@@ -436,6 +436,18 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 ## Pets, warders, transforms, mounts
 
 - **PetManager:** generic pet lifecycle (summon / unsummon / charm).
+- **Charm (server):** a charm converts the enemy into a pet entity (new id in the pet
+  partition, same template, current HP) for the spell's duration. **When it ends, the mob
+  comes back** (2026-10-06, EQ's rule): the pet is despawned and the same creature is
+  rebuilt as an enemy where the pet stood, with the HP it had, back in the camp slot it came
+  from, and it goes straight for its former charmer (threat + Chase) if they are in the world
+  and alive; if the charmer logged out it returns hostile but idle. The camp slot stays
+  occupied for the charm's life, so a charm never makes the camp respawn a replacement early
+  (the earlier v1 freed the slot on charm and deleted the pet at expiry as "mob runs away";
+  reverting on top of that would have added a mob to the camp per charm). A pet that dies
+  while charmed frees the slot through the ordinary corpse sweep. `Entity::released_from_charm`
+  + `turn_on` (`entity.rs`), `return_charmed_mob` (`tick.rs`), used by the expiry sweep and by
+  `despawn_owned_pets`.
 - **WarderAI:** Beast Master warder behavior (retreat / fury / `setup_for_class`),
   extracted from PetManager. Warder idle state faces the player's look direction.
 - **Pet stats & buffs (server-authoritative):** the server `Entity` carries `PrimaryStats`

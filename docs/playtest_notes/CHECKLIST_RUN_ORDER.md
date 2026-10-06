@@ -16,7 +16,10 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
 
 ## One seat, in this order
 
-1. `ported_spells_checklist.md` (7 rows + 2 spot checks in §4). Use the `spelltest` characters.
+1. `ported_spells_checklist.md`: COMPLETE 2026-10-06 (every row filled; the §4 bugs fixed and
+   rerun the same evening).
+1b. `charm_return_checklist.md` (9 rows; needs a redeploy with `e3a6fa8` or later, server
+   only): a charm that ends hands the mob back hostile. Mirelle on the `spelltest` account.
 2. `scale_readiness_checklist.md` §1, §2, §4. The §1 log line on the R720:
    `journalctl -u projectdawn --since "5 min ago" --no-pager | grep "enemy position fan"`.
    §4 is the pet: `/pet guard`, run off past 300 m (`/loc` measures it), `/pet follow`.

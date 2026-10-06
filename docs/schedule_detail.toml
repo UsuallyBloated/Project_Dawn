@@ -263,6 +263,18 @@ done_when = "Every row filled."
 # left the plan per the generator's rule; the verdicts are in ported_spells_checklist.md.
 
 [[row]]
+id = "v3b"
+week = "w1"
+lane = "verify"
+day = "after the next redeploy"
+what = "A charm that ends hands the creature back, hostile, instead of deleting it (asked for during the ported-spells sitting and built the same evening). The camp does not gain a creature from a charm; a charmed pet that dies frees its place on the camp's own timer."
+who = "user at a desk"
+needs = ["a redeploy of the R720 with e3a6fa8 or later (server only, no export)", "Mirelle on the spelltest account"]
+checklist = "charm_return_checklist.md"
+todo = "A charm that ends should hand the mob back, not delete it"
+done_when = "Every row filled."
+
+[[row]]
 id = "v4"
 week = "w1"
 lane = "verify"

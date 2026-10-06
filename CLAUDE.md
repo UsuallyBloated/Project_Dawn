@@ -1497,9 +1497,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   charmed frees the slot as any death would. **Exploit lens, and the reason for the slot
   rule:** with the slot freed at charm time (as now), a revert would add a mob to the camp on
   every charm whose replacement had already spawned, a charm-and-wait farm for XP and loot.
-  Server-only; one decision for the user: does the returned mob attack the charmer
-  (recommended yes, EQ-authentic; the alternative is a hostile mob standing idle until
-  provoked).
+  Server-only. **DECIDED 2026-10-06 (user): yes, it attacks the charmer, EQ-authentic. BUILT
+  the same evening, pending playtest** (server `e3a6fa8`; `charm_return_checklist.md`; needs a
+  redeploy, no export). As shaped: the slot and home ride on the pet and the charm arm no
+  longer frees the slot; one helper, `return_charmed_mob`, serves both ways a charm ends (the
+  expiry sweep, and `despawn_owned_pets` when the charmer goes linkdead or is reaped): the pet
+  is despawned for everyone who saw it and `Entity::released_from_charm` rebuilds the enemy
+  (fresh id, same template, the pet's HP and position, its slot and home; a named mob is not
+  scaled twice), then `turn_on` sets threat and Chase on the charmer when they are in the
+  world and alive. A pet that dies charmed frees the slot through the ordinary corpse sweep.
+  Tests: a unit test on the rebuild, and an integration test that charms with a Bard's 30 s
+  Siren's Song in real time and waits for the EnemySpawn, the EntityTarget and the first hit
+  on the bard; it fails on the previous code at the EnemySpawn.
 - [ ] **Proc follow-ups** *(the server-authoritative proc core shipped + playtested 2026-07-31, PD_W0025
   — see systems_overview)*: (a) **elemental resist for procs** — the server has no enemy-resist model
   at all, so proc damage is flat; needs resist fields on `MobTemplate`/`Entity` first. (b) **PvP-player
