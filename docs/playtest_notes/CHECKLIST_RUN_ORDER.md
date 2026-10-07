@@ -4,10 +4,10 @@ The order to run the open playtest checklists in, and what each needs. Kept curr
 checklist is added or finished (last update 2026-10-06). The status of every row lives in the
 checklist files themselves; this page only says what to run next.
 
-**As of 2026-10-06 late evening, both sides are current:** server `e3a6fa8` on the R720
-(redeployed 02:34 UTC Oct 7 with the charm return; `6a802f4`'s charm and leash fixes were
-deployed and playtested earlier the same evening), client exported from `fc880df`. Every list
-below is runnable now.
+**As of 2026-10-07 evening:** server `8a826a5` on the R720 (redeployed 23:40 UTC with
+Warder's Mend and the charm walk-home; `e3a6fa8` and `6a802f4` earlier the same day), client
+exported from `fc880df` (10-05). Every server-side list below is runnable now; the
+client-only sheet (1c) needs an export or the editor.
 
 **Test characters:** the `spelltest` account holds one character per class the spell rows
 need (table in `ported_spells_checklist.md`). Log in as `spelltest` with password
