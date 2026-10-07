@@ -591,6 +591,32 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 > still exists for solo iteration. Read `server/docs/server_design.md` before touching anything
 > here.
 
+- **The enemy position stream (server, 2026-09-30, playtested 2026-10-07):** an enemy's
+  Position fans only when it moved past 0.005 m or turned past 0.001 rad since its last
+  send, or at the 500 ms `ENEMY_POSITION_KEEPALIVE`; the sequence advances only on a real
+  send, and a mob nobody can see costs nothing (the audience is tested before anything is
+  encoded). An idle camp therefore streams about 2 messages a second per mob instead of 20.
+  Measured on the R720: about 5,000 sends a minute for 54 mobs and one player where the old
+  stream was 64,800; a mob in motion adds about 1,200 a minute for as long as it moves. The
+  `enemy position fan sent=N window_secs=60 enemies_alive=E players_in_world=P` log line
+  reports it once a minute while anyone is online. The client renders 100 ms behind, so a mob
+  setting off is nudged by at most one tick of travel; not visible in play.
+- **AOI crossings (server, 2026-09-30, playtested 2026-10-07):** the world is a grid of
+  120 m cells and a player sees the 3x3 around their own. When an enemy or pet crosses a
+  cell edge, players in the cells its neighbourhood gained get its spawn message
+  (`fan_out_entity_spawn` picks EnemySpawn or PetSpawn by kind, never by id partition) and
+  players in the cells it lost get an EntityDespawn; a player crossing gets the same for
+  everything in the cells they gained or lost, pets included (pets used to fall through the
+  loot-bag arm because the id partitions stack). The EnterWorld seed keys a pet's visibility
+  on the pet's own cell like every other path.
+- **The own-pet rule (server, 2026-10-02, playtested 2026-10-07; user call: "You should
+  absolutely see your own pet, wherever it is"):** `pet_owner_cid` puts the owner in their
+  pet's Position audience regardless of distance, skips the owner in both view-loss despawn
+  paths (the pet crossing a cell, the owner crossing), and includes the owner wherever the
+  pet really ends (charm expiry, the body expiring). So a pet parked with `/pet guard` keeps
+  its panel and every `/pet` command from any distance (the test parks one two cells away;
+  the playtest walked past 300 m). Not a leak: the owner learns only their own pet's
+  position.
 - `Network` / `Net` — connection + wire message routing.
 - `SaveManager` — owns window-close. Two distinct exits (see the disconnect-lifecycle entry
   below): **Quit Game** is a clean save + app-layer `Disconnect`; the **window X button** is a

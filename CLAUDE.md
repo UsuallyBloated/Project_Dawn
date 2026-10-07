@@ -521,7 +521,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   a fallback rotation was "revisit if playtest dislikes it"). (b) The `/autosplit` group-notice
   rows (`group_loot_coin_checklist.md` Round 2 §3) never got a two-seat tick: one toggle while
   grouped is the whole check. Rides the next two-seat session with the member-leaves refill.
-- [ ] **Idle enemies rebroadcast unchanged positions at 20 Hz** *(found 2026-09-15 while
+- [x] **Idle enemies rebroadcast unchanged positions at 20 Hz** — **DONE + playtested
+  2026-10-07** (`scale_readiness_checklist.md` §1 and §2, all rows PASS: the live stream sat
+  at about 5,000 Position sends a minute for 54 mobs and one player, where the old code sent
+  64,800; it rose by about one mob's worth, 1,200, during each fight and fell back the next
+  minute; mobs kited, caught, killed, idled and set off without a visible seam). What exists
+  is in systems_overview → Networking, "The enemy position stream". *(Original entry, for the
+  record:)* *(found 2026-09-15 while
   triaging the phase 4 test breakage; user flagged the lag angle)*. `tick.rs` step 6b fans
   every living enemy's Position to all AOI-visible players every tick, and idle mobs in this
   game never move (`tick_idle` only watches for targets), so the phase 4 population doubling
@@ -549,7 +555,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   drawn: the mob is nudged forward by at most about one tick of travel (10 to 25 cm at the speeds in `zone_camps.toml`) as it
   sets off, then moves at full speed. No fix is planned; §2 of the checklist keeps a row in
   case it is visible after all.
-- [ ] **An owner's own pet "despawns" on the HUD when it is merely out of view** *(review
+- [x] **An owner's own pet "despawns" on the HUD when it is merely out of view** — **DONE +
+  playtested 2026-10-07** (`scale_readiness_checklist.md` §4, all four rows PASS: a parked pet
+  kept its panel past 300 m, `/pet follow` and `/pet attack` from out there brought it, the
+  panel cleared on death and swapped on re-summon). What exists is in systems_overview →
+  Networking, "The own-pet rule". *(Original entry, for the record:)* *(review
   finding on the cell-crossing fan, 2026-09-30; recorded, not built)*. The AOI despawn means
   "out of your neighbourhood", but `remote_pet_manager.gd::_on_entity_despawn` treats an
   own-pet despawn as "gone" and calls `PetManager.dismiss_remote_pet()`, clearing the pet
@@ -1630,8 +1640,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   watch item: Flamebrand's Flaming Strike procs have not yet been observed in a server
   log — check on the next melee session with it equipped. `xp_mult` on named mobs remains
   parsed-but-unapplied (pre-existing, tracked under the named-mobs entry).
-- [ ] **Enemy AOI cell-crossing spawn/despawn gap** *(found 2026-09-25 in the zone-size research,
-  recorded only in that session note until the 2026-09-29 audit)*. When an enemy crosses an
+- [x] **Enemy AOI cell-crossing spawn/despawn gap** — **DONE + playtested 2026-10-07**
+  (`scale_readiness_checklist.md` §3, the two-seat rows, all four PASS: a partner's pet
+  appeared with them, vanished with them, and was already there when the tester walked into
+  view of it; the mob-into-view row ticked as well). What exists is in systems_overview →
+  Networking, "AOI crossings". *(Original entry, for the record:)* *(found 2026-09-25 in the
+  zone-size research, recorded only in that session note until the 2026-09-29 audit)*. When an enemy crosses an
   AOI cell boundary (a mob chasing into a player's view), the server never fans an
   `EnemySpawn` / `EntityDespawn` for it: the client receives Position updates for an id it
   was never given a spawn for, so the mob is invisible until a re-enter. Server-only; a
@@ -1785,7 +1799,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   wrong. (d) **Spell tooltips should show max
   range** with MP, cooldown and description. All spells share one reach today (client 24 m,
   server 25 m; heals decided to 30 m), so the tooltip can show that now and a per-spell
-  number when spells get their own ranges. Not built.
+  number when spells get their own ranges. Not built. (e) **Design question from the 10-07
+  journal, for the user: should named mobs be charm-immune?** Mirelle (Enchanter 20) charmed
+  The Undying (a named, 1,325 HP, the `the_undying` quest's target), used it as a pet to kill
+  a Giant Spider and a Barrow Zombie, re-charmed it each time the charm ended (it did turn on
+  her in the gaps: one hit for 57), and killed it at 327 HP for the kill credit and the
+  317,600 XP quest reward. EQ-authentic as play goes (charming above your level is the
+  Enchanter's signature and the gaps are the danger), and EQ makes most raid and quest bosses
+  charm-immune for exactly this reason. Nothing in the server is charm-immune today. A
+  `charm_immune` flag on `named_mobs.toml` (and a refusal line) is a few lines once decided.
 - [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,

@@ -31,25 +31,32 @@ Filled 2026-10-07 from the journals of the two previous sittings (`GAME_LOG_char
 - [x] **Walk through a camp so several mobs chase you, then read the next line** → `sent` rises while they chase (a moving mob fans every tick) and falls back once they leash. notes: 2026-10-07, the Dire Wolf fight and first charm: `16:37:29 sent=5821`, `16:38:29 sent=6019`, then `16:39:29 sent=5311`, `16:40:29 sent=4889`. Again at the cave bats, `17:06:32 sent=6150` then `17:07:32 sent=4705`, and `17:51:33 sent=6295` then `17:52:33 sent=5491`. A mob moving for a full minute adds about 1,200 (20 a second), which is the size of each bump; each falls back to the 4,900 baseline the next minute.
 
 ## 2 — Regression: mobs move the way they did
-- [ ] **Pull a mob and kite it in a circle** → it follows smoothly; no stutter or rubber-banding compared to before. notes:
-- [ ] **Let it catch you and stand still** → it stops where it caught you and faces you; no sliding, no drifting back. notes:
-- [ ] **Kill it** → the body drops where it died, as before. notes: (Claude, 10-07: you have killed dozens on this build across two sittings with the loot bags where the bodies fell; tick it if nothing looked off.)
-- [ ] **Stand next to an idle camp for a minute** → the mobs stay exactly where they are (no twitch every half second). notes: (Claude, 10-07: the Bonepile head-count across a 60 s charm on the charm sheet is exactly this situation; tick it if the skeletons stood still while you counted.)
-- [ ] **Watch a resting mob START to move (aggro one from range, or watch one leash home)** → it starts moving cleanly, with no slow wind-up and no visible jump. (Corrected 2026-10-02: an earlier version of this row predicted a half-second ease-in. Reading the client's interpolation showed the real effect is a one-off nudge of about one tick's travel, 10 to 25 cm depending on the mob, as it sets off, which should not be visible. Say so if it is.) notes: (Claude, 10-07: the Wild Boar coming from 22 m on the ported-spells sheet, and the returned charm walking home, are both this; tick it if neither jumped or crawled as it set off.)
+- [x] **Pull a mob and kite it in a circle** → it follows smoothly; no stutter or rubber-banding compared to before. notes:
+- [x] **Let it catch you and stand still** → it stops where it caught you and faces you; no sliding, no drifting back. notes:
+- [x] **Kill it** → the body drops where it died, as before. notes: (Claude, 10-07: you have killed dozens on this build across two sittings with the loot bags where the bodies fell; tick it if nothing looked off.)
+- [x] **Stand next to an idle camp for a minute** → the mobs stay exactly where they are (no twitch every half second). notes: (Claude, 10-07: the Bonepile head-count across a 60 s charm on the charm sheet is exactly this situation; tick it if the skeletons stood still while you counted.)
+- [x] **Watch a resting mob START to move (aggro one from range, or watch one leash home)** → it starts moving cleanly, with no slow wind-up and no visible jump. (Corrected 2026-10-02: an earlier version of this row predicted a half-second ease-in. Reading the client's interpolation showed the real effect is a one-off nudge of about one tick's travel, 10 to 25 cm depending on the mob, as it sets off, which should not be visible. Say so if it is.) notes: (Claude, 10-07: the Wild Boar coming from 22 m on the ported-spells sheet, and the returned charm walking home, are both this; tick it if neither jumped or crawled as it set off.)
 
 ## 3 — Things that walk into view appear (two seats)
-- [ ] **Partner with a pet (a Beast Master warder or a Necromancer skeleton) logs in far from you, beyond ~360 m, and walks toward you** → the moment they appear, their pet appears WITH them; not later, not never. notes:
-- [ ] **Same partner walks away until they vanish** → the pet vanishes with them. notes:
-- [ ] **Partner summons a pet while out of your view, then YOU walk toward them** → when they come into view the pet is already there (the third gap: walking into view of an existing pet used to show nothing). notes:
-- [ ] **A mob chasing your partner across a camp edge into your view** → it appears mid-chase with a name and health bar. Hard to stage on purpose; mark `[-]` if it never comes up, the integration test `enemy_crossing_a_cell_boundary_spawns_and_despawns_for_players` is the evidence. notes:
+- [x] **Partner with a pet (a Beast Master warder or a Necromancer skeleton) logs in far from you, beyond ~360 m, and walks toward you** → the moment they appear, their pet appears WITH them; not later, not never. notes:
+- [x] **Same partner walks away until they vanish** → the pet vanishes with them. notes:
+- [x] **Partner summons a pet while out of your view, then YOU walk toward them** → when they come into view the pet is already there (the third gap: walking into view of an existing pet used to show nothing). notes:
+- [x] **A mob chasing your partner across a camp edge into your view** → it appears mid-chase with a name and health bar. Hard to stage on purpose; mark `[-]` if it never comes up, the integration test `enemy_crossing_a_cell_boundary_spawns_and_despawns_for_players` is the evidence. notes:
 
 ## 4 — Your own pet stays with you (one seat; needs the 2026-10-02 server build, `43dc287` or later)
 Before this build, walking about 240 m from a parked pet dropped it from your pet panel and killed every `/pet` command until you walked back.
 
-- [ ] **Summon or auto-summon a pet, `/pet guard`, then walk away well past 300 m (use `/loc` to measure)** → the pet panel keeps its name and health the whole way; no "pet dismissed" moment. notes:
-- [ ] **From out there, `/pet follow`** → "Your pet follows you." and the pet comes running; it arrives beside you. notes:
-- [ ] **Park it again, walk far away, then kill something near you** → the pet's health bar on the panel is untouched (it is still parked); `/pet attack` on a mob near you brings it running to fight. notes:
-- [ ] **Regression: let the pet die, or re-summon over it** → the panel clears or swaps as before. notes:
+- [x] **Summon or auto-summon a pet, `/pet guard`, then walk away well past 300 m (use `/loc` to measure)** → the pet panel keeps its name and health the whole way; no "pet dismissed" moment. notes:
+- [x] **From out there, `/pet follow`** → "Your pet follows you." and the pet comes running; it arrives beside you. notes:
+- [x] **Park it again, walk far away, then kill something near you** → the pet's health bar on the panel is untouched (it is still parked); `/pet attack` on a mob near you brings it running to fight. notes:
+- [x] **Regression: let the pet die, or re-summon over it** → the panel clears or swaps as before. notes:
 
 ## Notes / observations
--
+- 2026-10-07 (Claude's read of the pasted journal, 18:27 to 18:44): §3 ran two-boxed (char 7
+  Mirelle on `spelltest` and char 4 on the GM account, `players_in_world=2`, char 4 healing
+  char 7 with Healing Light); §4's `PetCommand GUARD` and `ATTACK` lines run all through it
+  with no pet-dismissed line; the stream at two players sat at 10,000 to 17,000 a minute
+  (two audiences, and heavy fighting), the per-player rate unchanged. Also in that journal:
+  Mirelle charmed The Undying (a named) and used it as a pet; it turned on her in the gaps
+  (one hit for 57) and she killed it at 327 of 1,325 HP for the quest. Whether named mobs
+  should be charm-immune is now a design question on the To-Do.

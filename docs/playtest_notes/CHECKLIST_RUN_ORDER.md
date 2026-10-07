@@ -22,9 +22,7 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
    the next redeploy (the quit case now walks home).
 1c. `chat_wrap_and_pet_buttons_checklist.md` (8 rows; client-only, run from the editor or wait
    for the next export): chat lines wrap, pet panel buttons, the distance readout.
-2. `scale_readiness_checklist.md` §1, §2, §4. The §1 log line on the R720:
-   `journalctl -u projectdawn --since "5 min ago" --no-pager | grep "enemy position fan"`.
-   §4 is the pet: `/pet guard`, run off past 300 m (`/loc` measures it), `/pet follow`.
+2. `scale_readiness_checklist.md`: COMPLETE 2026-10-07 (every row, §3 two-boxed).
 3. `xp_eligibility_and_pet_levels_checklist.md` §2, §3, §4. In §3 judge on "refused, and the
    mana stayed", not the exact wording (it changed on 10-02).
 4. `loc_command_checklist.md` (5 rows).
@@ -40,7 +38,6 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
 - `xp_eligibility_and_pet_levels_checklist.md` §1. **Skip** the row where the dead member
   respawns in town and the killer keeps killing: that 30 m rule is changing to 200 m and the row
   will be rewritten.
-- `scale_readiness_checklist.md` §3
 - `time_of_day_checklist.md` §2
 - `inspect_range_gm_audit_ban_checklist.md` §1 (inspect range), §3 (ban a throwaway account
   while it is logged in), §4 (heals and nukes out of range)

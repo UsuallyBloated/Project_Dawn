@@ -297,16 +297,9 @@ checklist = "time_of_day_checklist.md"
 todo = "Time of day is per-client; make it server-driven"
 done_when = "Every row filled."
 
-[[row]]
-id = "v5"
-week = "w1"
-lane = "verify"
-what = "Idle creatures stop flooding the network; creatures and pets walking into view appear; your own pet stays on your screen wherever it is."
-who = "user at a desk"
-needs = ["second seat for section 3 (two-boxing works)"]
-checklist = "scale_readiness_checklist.md"
-todo = "Enemy AOI cell-crossing spawn/despawn gap"
-done_when = "Every row filled."
+# v5 (scale readiness: the enemy position stream, AOI crossings, the own-pet rule) ran and
+# filled on 2026-10-07, section 3 two-boxed. Its row left the plan per the generator's rule;
+# the verdicts are in scale_readiness_checklist.md and the three To-Do entries are ticked.
 
 [[row]]
 id = "v6"
