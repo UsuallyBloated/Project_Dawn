@@ -1806,8 +1806,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   her in the gaps: one hit for 57), and killed it at 327 HP for the kill credit and the
   317,600 XP quest reward. EQ-authentic as play goes (charming above your level is the
   Enchanter's signature and the gaps are the danger), and EQ makes most raid and quest bosses
-  charm-immune for exactly this reason. Nothing in the server is charm-immune today. A
-  `charm_immune` flag on `named_mobs.toml` (and a refusal line) is a few lines once decided.
+  charm-immune for exactly this reason. Nothing in the server is charm-immune today.
+  **DECIDED 2026-10-07 (user): "dont make named mobs charm-immune."** Named mobs stay
+  charmable; no flag. (EQ's other gate, a maximum target level on each charm rank, was
+  described but not asked about and is not decided; charm today has no level cap at all.)
 - [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
