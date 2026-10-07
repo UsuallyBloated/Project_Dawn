@@ -183,11 +183,12 @@ Keep the main model for design, code, and any exploit or verification work.
 
 ### Known client↔server drift to watch
 - Spells exist in **both** GDScript (`data/spell_definitions.gd`) and server `spells.toml`
-  — adding/editing one without the other causes drift. Recounted 2026-10-05: the client has
-  156 spells, `spells.toml` has 133, so **23 are client-only** and are refused server-side as
-  an unknown spell (no effect; since 10-02 no mana is taken either). All 23 need something the
-  server does not model yet (ports, prestige classes, damage over time, mana drain, stealth,
-  the pet heal) — see the To-Do "Client-only spell backlog". **Check it with
+  — adding/editing one without the other causes drift. Recounted 2026-10-07: the client has
+  156 spells, `spells.toml` has 134, so **22 are client-only** and are refused server-side as
+  an unknown spell (no effect; since 10-02 no mana is taken either). All 22 need something the
+  server does not model yet (ports, prestige classes, damage over time, mana drain, stealth);
+  no pet spell is among them since Warder's Mend was ported on 10-07 — see the To-Do
+  "Client-only spell backlog". **Check it with
   `tools/check_spell_lockstep.gd`** (see `docs/reference/commands.md`): it compares every
   field the server carries and exits 1 on drift. On 2026-10-05 the 133 shared spells showed
   ZERO drift. One deliberate exception is built into the check: Bard songs carry 0 damage
@@ -987,6 +988,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **2026-08-27:** the group playtest showed a skill's stamina cost is invisible to group-mates —
   the spend is client-local (`skills.gd`), the server's stamina never moves, so nothing fans.
   Another face of the missing server skill model tracked here.
+  **Seen again in the 2026-10-07 journal:** six `Attack rejected — swing-rate limit (too
+  fast)` lines for char 1 in four minutes of melee, wielding Bonecrusher's War Axe
+  (`weapon_delay` 3.2, no proc, so `min_interval` 1.25). With no proc on the weapon the only
+  client-driven second Attack inside 1.25 s is an active damage skill fired mid-cycle: this
+  gap in play, not a limiter false positive. Each one cost the stamina and the cooldown the
+  client had already spent. The user can confirm which skill was on the bar.
 - [x] **Right-click is the world-interact verb** — **DONE + playtested 2026-08-24** (client
   `fa2ff04`, all 13 rows of `right_click_interact_checklist.md`). One mouse grammar everywhere:
   right-click (tap) interacts — NPC talk/vendor/bank, corpse + bag loot, veins, stations,
@@ -1611,14 +1618,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   4 Sorcerer land Bloodfire (it fails without the data). **The nine PLAYTESTED 2026-10-06,
   PASS** (`ported_spells_checklist.md` §1 to §3: six characters, one per class, all with
   spell kills; Cascade of Stars reached the server's interrupt roll, which the old server
-  could not do; no unknown-spell line all evening; an old Bard song still resolves). **The 23
-  that remain, by what blocks each:** 10 ports (Gate, Succor, Evacuate: the bind and Gate design; seven zone ports:
+  could not do; no unknown-spell line all evening; an old Bard song still resolves). **The 22
+  that remain (23 until Warder's Mend was ported on 10-07, below), by what blocks each:** 10 ports (Gate, Succor, Evacuate: the bind and Gate design; seven zone ports:
   zones that do not exist); 7 prestige-class spells (`Paladin_Fallen` x4, `Shadow
   Knight_Redeemed` x3: the cast gate keys on the base class); **damage over time, which the
   server does not model at all** (Dark Decay, Entangle: the only two DoT spells in the game,
   and most of their damage is the DoT, so porting the direct hit alone would misrepresent
-  them); Exsanguinate (mana drain, no server field); Camouflage (stealth); Warder's Mend
-  (PET_HEAL); and **Torpor**. *(Corrected the same day: this entry first said Torpor's data
+  them); Exsanguinate (mana drain, no server field); Camouflage (stealth); and **Torpor**.
+  **Warder's Mend, the one PET_HEAL, PORTED 2026-10-07, pending playtest** (server `8a826a5`;
+  the tester asked for no client-only pet spells; `xp_eligibility_and_pet_levels_checklist.md`
+  §3's pet-spell row, after the redeploy): the cast pre-flight resolves PET_HEAL to the
+  caster's own live pet in reach ("You have no pet to mend." otherwise) and the arm heals it
+  by `heal_amount` and fans its HealthUpdate, whatever the client had targeted. The lockstep
+  check now reads 134 server spells, 22 client-only, no pet spell among them. *(Corrected the same day: this entry first said Torpor's data
   "looks wrong", an ENEMY spell that heals. That was a misreading. The data matches the
   design in `docs/concepts/classes/shaman.md`: Torpor slows the TARGET's attacks by 70% and
   puts a heal-over-time on the CASTER, the Shaman's signature line. The client applies

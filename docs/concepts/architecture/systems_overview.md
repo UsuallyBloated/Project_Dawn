@@ -449,6 +449,11 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   while charmed frees the slot through the ordinary corpse sweep. `Entity::released_from_charm`
   + `turn_on` (`entity.rs`), `return_charmed_mob` (`tick.rs`), used by the expiry sweep and by
   `despawn_owned_pets`.
+- **Pet heal (server, 2026-10-07):** `PET_HEAL` spells (Warder's Mend) mend the caster's OWN
+  pet, whatever is targeted. The cast pre-flight resolves the pet (alive, in reach, else "You
+  have no pet to mend."), the arm heals it by `heal_amount` capped at max and fans its
+  HealthUpdate. The client's `WarderAI.heal_warder` call is a no-op online (the RemotePet
+  stub); the server's update moves the panel.
 - **WarderAI:** Beast Master warder behavior (retreat / fury / `setup_for_class`),
   extracted from PetManager. Warder idle state faces the player's look direction.
 - **Pet panel (`scripts/hud_pet_panel.gd`):** top left while you have a pet (summoned,
