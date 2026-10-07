@@ -4,10 +4,10 @@ The order to run the open playtest checklists in, and what each needs. Kept curr
 checklist is added or finished (last update 2026-10-06). The status of every row lives in the
 checklist files themselves; this page only says what to run next.
 
-**As of 2026-10-06 evening, both sides are current:** server `6a802f4` on the R720 (redeployed
-20:06 with the charm and leash fixes from the first ported-spells sitting), client exported
-from `fc880df`. Every list below is runnable now; `ported_spells_checklist.md` §4 reruns as
-the regression for those two fixes.
+**As of 2026-10-06 late evening, both sides are current:** server `e3a6fa8` on the R720
+(redeployed 02:34 UTC Oct 7 with the charm return; `6a802f4`'s charm and leash fixes were
+deployed and playtested earlier the same evening), client exported from `fc880df`. Every list
+below is runnable now.
 
 **Test characters:** the `spelltest` account holds one character per class the spell rows
 need (table in `ported_spells_checklist.md`). Log in as `spelltest` with password
@@ -18,8 +18,8 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
 
 1. `ported_spells_checklist.md`: COMPLETE 2026-10-06 (every row filled; the §4 bugs fixed and
    rerun the same evening).
-1b. `charm_return_checklist.md` (9 rows; needs a redeploy with `e3a6fa8` or later, server
-   only): a charm that ends hands the mob back hostile. Mirelle on the `spelltest` account.
+1b. `charm_return_checklist.md` (9 rows; `e3a6fa8` is on the R720): a charm that ends hands
+   the mob back hostile. Mirelle on the `spelltest` account.
 2. `scale_readiness_checklist.md` §1, §2, §4. The §1 log line on the R720:
    `journalctl -u projectdawn --since "5 min ago" --no-pager | grep "enemy position fan"`.
    §4 is the pet: `/pet guard`, run off past 300 m (`/loc` measures it), `/pet follow`.
