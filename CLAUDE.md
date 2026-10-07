@@ -1771,9 +1771,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   on the pet panel, each the same `PetManager` call as its `/pet` command. (c) **Re-target
   the returned mob when a charm ends**: the returned mob is a fresh enemy id, so the client
   sees a pet despawn and an enemy spawn with no link, and the player must click it again. EQ
-  keeps the target because the mob is one entity throughout. Options: a client heuristic (an
-  EnemySpawn arriving in the same frame as the own-pet despawn, same name, within a metre of
-  it, re-targets) or a server hint; neither built. (d) **Spell tooltips should show max
+  keeps the target because the mob is one entity throughout. **DECIDED 2026-10-07 (user):
+  "I want ours to work the same as EQ", one entity throughout, the target kept across the
+  charm landing and ending.** Not built. The honest shape is a wire change, not a client
+  guess: the charm re-keys the mob between the enemy and pet id partitions (the client routes
+  every message by partition), so the spawn that replaces a despawn has to SAY what it
+  replaces, a `replaces: Option<EntityId>` on `PetSpawn` and `EnemySpawn`, and the client's
+  `Targeting` moves its target to the new id when the old one was targeted (the same hook
+  keeps the target when the mob is charmed, not only when it is released). That is a
+  protocol bump plus a DLL rebuild and an export, so it rides the next bump day (the trade
+  window's) rather than forcing one of its own. The client-heuristic alternative (same name,
+  same frame, within a metre) is rejected: it guesses, and a camp of same-named mobs makes it
+  wrong. (d) **Spell tooltips should show max
   range** with MP, cooldown and description. All spells share one reach today (client 24 m,
   server 25 m; heals decided to 30 m), so the tooltip can show that now and a per-spell
   number when spells get their own ranges. Not built.
