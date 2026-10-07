@@ -7,7 +7,7 @@ var _hp_bar: ProgressBar = null
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_TOP_LEFT)
 	position = Vector2(10.0, 120.0)
-	size = Vector2(200.0, 56.0)
+	size = Vector2(230.0, 84.0)
 	visible = false
 
 	var style := StyleBoxFlat.new()
@@ -48,6 +48,28 @@ func _ready() -> void:
 	_hp_bar.custom_minimum_size = Vector2(0, 14)
 	UITheme.style_bar(_hp_bar, UITheme.C_BAR_HP, false)
 	vbox.add_child(_hp_bar)
+
+	# One row of the /pet commands (user ask 2026-10-07: "Buttons for attack,
+	# guard, etc. would be terrific"). Each button is the chat command it
+	# names, through the same PetManager call the command uses.
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 3)
+	vbox.add_child(row)
+	var commands: Array = [
+		["Attack", PetManager.command_attack],
+		["Back", PetManager.command_back],
+		["Guard", PetManager.command_guard],
+		["Follow", PetManager.command_follow],
+		["Sit", PetManager.command_passive],
+	]
+	for entry in commands:
+		var btn := Button.new()
+		btn.text = entry[0]
+		btn.add_theme_font_size_override("font_size", 10)
+		btn.focus_mode = Control.FOCUS_NONE
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.pressed.connect(entry[1])
+		row.add_child(btn)
 
 	PetManager.pet_summoned.connect(_on_pet_summoned)
 	PetManager.pet_dismissed.connect(func(): visible = false)

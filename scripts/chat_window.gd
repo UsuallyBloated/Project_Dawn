@@ -332,7 +332,10 @@ func add_line(text: String, type: int) -> void:
 	lbl.text = text
 	lbl.add_theme_font_size_override("font_size", font_size)
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl.clip_text = true
+	# Long lines wrap at the window's width and re-wrap when it is resized
+	# (user ask 2026-10-07). The width is bounded because the scroll
+	# container never scrolls sideways; clipping used to cut them off instead.
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	# Tag the MsgType so apply_display_settings can re-derive the base
 	# colour when the user changes font_alpha (the stored colour on the
 	# Label already has alpha baked in and isn't reversible).

@@ -18,8 +18,10 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
 
 1. `ported_spells_checklist.md`: COMPLETE 2026-10-06 (every row filled; the §4 bugs fixed and
    rerun the same evening).
-1b. `charm_return_checklist.md` (9 rows; `e3a6fa8` is on the R720): a charm that ends hands
-   the mob back hostile. Mirelle on the `spelltest` account.
+1b. `charm_return_checklist.md`: COMPLETE 2026-10-07 (all 9 rows); one re-check row after
+   the next redeploy (the quit case now walks home).
+1c. `chat_wrap_and_pet_buttons_checklist.md` (8 rows; client-only, run from the editor or wait
+   for the next export): chat lines wrap, pet panel buttons, the distance readout.
 2. `scale_readiness_checklist.md` §1, §2, §4. The §1 log line on the R720:
    `journalctl -u projectdawn --since "5 min ago" --no-pager | grep "enemy position fan"`.
    §4 is the pet: `/pet guard`, run off past 300 m (`/loc` measures it), `/pet follow`.

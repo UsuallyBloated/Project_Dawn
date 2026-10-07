@@ -1484,9 +1484,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   can be held with no expiry; casting does not stand a seated caster server-side.
   (f) **Verified: a mob finished off by a damage shield (Thorns) pays nothing**, no XP, no
   quest credit, no loot (`tick.rs` ~8085 marks it dead and fans EntityDied, nothing else).
-- [ ] **A charm that ends should hand the mob back, not delete it** *(user, 2026-10-06, on
-  the §5 rerun: "When charm expires the target vanishes. It should revert to being its
-  original npc enemy type.")*. Today the charm arm (`tick.rs` ~5378) converts the enemy into
+- [x] **A charm that ends should hand the mob back, not delete it** — **DONE + playtested
+  2026-10-07** (`charm_return_checklist.md`, all 9 rows PASS on `e3a6fa8`: the mob came back
+  with its HP and attacked; the Bonepile count did not grow across a charm; a charmed pet
+  that died respawned on the camp's timer; the quit case logged `charm broken by owner
+  leaving — mob returned`; re-charming the returned mob worked. What exists is in
+  systems_overview → Pets, "Charm (server)".) **One refinement from the sitting, BUILT
+  2026-10-07, pending redeploy** (server `3e1c200`): a returned mob with nobody to hate now
+  walks home instead of standing where the pet was, so the quit case ends like the walk-away
+  case; one re-check row in the checklist's §3. *(Original entry, for the record:)* *(user,
+  2026-10-06, on the §5 rerun: "When charm expires the target vanishes. It should revert to
+  being its original npc enemy type.")*. Today the charm arm (`tick.rs` ~5378) converts the enemy into
   a pet entity and frees its camp slot at once (`spawner.on_enemy_died`), and the expiry sweep
   (~3117) removes the pet with no body and no replacement: the Track 12 v1 call, "mob runs
   away". EQ breaks a charm by handing the mob back, hostile and usually straight onto the
@@ -1661,7 +1669,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   gear drops and tables for the Ossuary/Wraith Gate line wait on a data-driven table format.
   (c) Per-vendor server-side stocking: the server sells anything with a `vendor_price` to
   anyone in range of any vendor; stock lists are client-only. Fine at friends scale, a
-  correctness gap for a public host.
+  correctness gap for a public host. (d) **Ask 2026-10-07 (user): humanoid mobs (bandits,
+  gnolls, anything with a lore history) should have gear tables and be equipped from them,
+  and carry coin; animals carry none.** This wants a creature type on the mob template
+  (humanoid / beast / undead / ...), the hook EQ keys loot by creature and WoW keys both loot
+  and spell eligibility on (its charm takes only humanoids and beasts). Content and data;
+  sequenced behind (b).
 - [ ] **Character creation follow-ups** *(scattered: race expansion memory 2026-06, the CHA
   memory, `item_weight_proposal.md` §Findings, `classes.md`; audit 2026-09-29)*. (a) The three
   drafted races (Aerathi, Vesperin, Sylphari) exist as docs only (`race_expansion_brainstorm.md`
@@ -1748,6 +1761,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   intentional-for-now, fix before ship). (b) Merchant/guard NPC names do not flash when
   targeted. (c) The target-of-target frame was called "huge, taking up too much space"; make
   it adjustable/movable with the other HUD pieces.
+- [ ] **Playtest asks from the charm-return sitting (2026-10-07)** *(the tester's notes on
+  `charm_return_checklist.md`)*. (a) **Chat lines did not wrap**: long combat lines were
+  clipped at the window's right edge. **BUILT 2026-10-07, pending playtest** (client;
+  `chat_wrap_and_pet_buttons_checklist.md` §1): message labels wrap at the window's width and
+  re-wrap on resize (`autowrap_mode` on the label; the scroll container never scrolls
+  sideways, so the width is bounded). (b) **Pet panel buttons** ("Buttons for attack, guard,
+  etc. would be terrific"). **BUILT 2026-10-07, pending playtest** (§2): a row of five buttons
+  on the pet panel, each the same `PetManager` call as its `/pet` command. (c) **Re-target
+  the returned mob when a charm ends**: the returned mob is a fresh enemy id, so the client
+  sees a pet despawn and an enemy spawn with no link, and the player must click it again. EQ
+  keeps the target because the mob is one entity throughout. Options: a client heuristic (an
+  EnemySpawn arriving in the same frame as the own-pet despawn, same name, within a metre of
+  it, re-targets) or a server hint; neither built. (d) **Spell tooltips should show max
+  range** with MP, cooldown and description. All spells share one reach today (client 24 m,
+  server 25 m; heals decided to 30 m), so the tooltip can show that now and a per-spell
+  number when spells get their own ranges. Not built.
 - [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
@@ -1885,7 +1914,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Hadrik and blocked him, and all eight have been dead furniture since the online guards.
   Git holds them (commit removing: see session 09-22); re-place them WITH npcs.toml-style
   server positions when this item is built.
-- [ ] **Consumables system** (food/drink regen loop, fermentation, ritual components)
+- [ ] **Consumables system** (food/drink regen loop, fermentation, ritual components).
+  **Ask 2026-10-07 (user):** a consumable's cooldown should equal its effect's length, so
+  drinking a second Water Flask while the first still works is refused rather than wasted
+  (Water Flask: 180 s). Confirmed in play that stacking flasks does not stack the regen.
+  Belongs with the server-side consumables pass; consumable effects are client-side today.
 - [ ] **Bookbinding / player-authored lore**
 - [ ] **Clockwork Engineering prestige** (Tinkering 150+ for Gnomes/Kobolds)
 

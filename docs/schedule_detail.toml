@@ -275,6 +275,18 @@ todo = "A charm that ends should hand the mob back, not delete it"
 done_when = "Every row filled."
 
 [[row]]
+id = "v3c"
+week = "w1"
+lane = "verify"
+day = "after the next export, or from the editor"
+what = "Chat lines wrap to the window and re-wrap on resize; the pet panel has buttons for the five pet commands; the target frame shows the distance to the target (three asks from the 10-06 and 10-07 sittings, all client-only)."
+who = "user at a desk"
+needs = ["a run from the editor, or the next export (the bump day is the next one planned)"]
+checklist = "chat_wrap_and_pet_buttons_checklist.md"
+todo = "Playtest asks from the charm-return sitting"
+done_when = "Every row filled."
+
+[[row]]
 id = "v4"
 week = "w1"
 lane = "verify"

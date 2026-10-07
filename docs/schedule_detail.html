@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Oct 6<span class="stat-sub">repo 282cdf5</span></div></div>
-<div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">137 rows<span class="stat-sub">in 10 checklists, 14 need a second seat; all runnable now</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Wed Oct 7<span class="stat-sub">repo edd556c</span></div></div>
+<div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">137 rows<span class="stat-sub">in 11 checklists, 14 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">14 days<span class="stat-sub">of Claude time, 9 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">40.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">41.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -160,7 +160,7 @@
 <section>
 <h2><span class="week-head"><span>Clear the desk</span><span class="when">W1 &middot; October 5 to 11</span></span></h2>
 <p class="lede">Everything built in the last two weeks is on the hosted server and in the client exported this afternoon, so every open checklist can run now. The week&#x27;s other job is one yes: the spell batch plan, so Claude&#x27;s build lane can start.</p>
-<div class="week-meta"><span>the user's time: 16 h</span><span>Claude build days: 2</span></div>
+<div class="week-meta"><span>the user's time: 16.5 h</span><span>Claude build days: 2</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -268,10 +268,20 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">after the next redeploy</span>A charm that ends hands the creature back, hostile, instead of deleting it (asked for during the ported-spells sitting and built the same evening). The camp does not gain a creature from a charm; a charmed pet that dies frees its place on the camp&#x27;s own timer.</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist charm_return_checklist.md: 10 rows to run</li><li>a redeploy of the R720 with e3a6fa8 or later (server only, no export)</li><li>Mirelle on the spelltest account</li></ul></td>
-<td class="time">1 h</td>
+<td class="needs"><ul><li>checklist charm_return_checklist.md: 1 rows to run</li><li>a redeploy of the R720 with e3a6fa8 or later (server only, no export)</li><li>Mirelle on the spelltest account</li></ul></td>
+<td class="time">0.5 h</td>
 <td class="id"></td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/charm_return_checklist.md"><code>charm_return_checklist.md</code></a></span><span class="ref">To-Do entry: <code>A charm that ends should hand the mob back, not delete it</code></span></td>
+</tr>
+<tr>
+<td class="id">v3c</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">after the next export, or from the editor</span>Chat lines wrap to the window and re-wrap on resize; the pet panel has buttons for the five pet commands; the target frame shows the distance to the target (three asks from the 10-06 and 10-07 sittings, all client-only).</td>
+<td>user at a desk</td>
+<td class="needs"><ul><li>checklist chat_wrap_and_pet_buttons_checklist.md: 9 rows to run</li><li>a run from the editor, or the next export (the bump day is the next one planned)</li></ul></td>
+<td class="time">1 h</td>
+<td class="id"></td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/chat_wrap_and_pet_buttons_checklist.md"><code>chat_wrap_and_pet_buttons_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Playtest asks from the charm-return sitting</code></span></td>
 </tr>
 <tr>
 <td class="id">v4</td>
@@ -759,5 +769,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-06 at repo 282cdf5</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-07 at repo edd556c</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

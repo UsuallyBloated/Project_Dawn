@@ -441,7 +441,8 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   comes back** (2026-10-06, EQ's rule): the pet is despawned and the same creature is
   rebuilt as an enemy where the pet stood, with the HP it had, back in the camp slot it came
   from, and it goes straight for its former charmer (threat + Chase) if they are in the world
-  and alive; if the charmer logged out it returns hostile but idle. The camp slot stays
+  and alive; if the charmer logged out it walks home (Leash) like a mob that lost its target
+  (2026-10-07; it used to stand where the pet was). The camp slot stays
   occupied for the charm's life, so a charm never makes the camp respawn a replacement early
   (the earlier v1 freed the slot on charm and deleted the pet at expiry as "mob runs away";
   reverting on top of that would have added a mob to the camp per charm). A pet that dies
@@ -450,6 +451,10 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   `despawn_owned_pets`.
 - **WarderAI:** Beast Master warder behavior (retreat / fury / `setup_for_class`),
   extracted from PetManager. Warder idle state faces the player's look direction.
+- **Pet panel (`scripts/hud_pet_panel.gd`):** top left while you have a pet (summoned,
+  warder or charmed): name, level, HP bar, and since 2026-10-07 a row of buttons for the five
+  `/pet` commands (Attack, Back, Guard, Follow, Sit), each the same `PetManager` call the chat
+  command makes. Draggable.
 - **Pet stats & buffs (server-authoritative):** the server `Entity` carries `PrimaryStats`
   (`stats` + `base_stats`) and `active_buffs`. Pets get a level-derived stat base on summon;
   melee damage adds the STR *buff delta* `(stats.strength − base_stats.strength)/5` on top of
