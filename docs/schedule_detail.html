@@ -132,7 +132,7 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Wed Oct 7<span class="stat-sub">repo ee52475</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Thu Oct 8<span class="stat-sub">repo 9fb2953</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">108 rows<span class="stat-sub">in 10 checklists, 7 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">14 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
 <div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">40.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
@@ -462,12 +462,22 @@
 <tr>
 <td class="id">v14</td>
 <td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>The interrupt-charge and global-cooldown checklists (interrupt_charge_checklist.md, and the global cooldown&#x27;s sheet once step 4 is built): an interrupted cast costs part of its mana, a cancelled one nothing; every gem greys after a cast; a Bard can still twist.</td>
+<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>The interrupt-charge checklist: an interrupted cast costs part of its mana, a cancelled one nothing, a zero-damage hit charges nothing; the line and the log agree.</td>
 <td>user at a desk</td>
 <td class="needs"><ul><li>checklist interrupt_charge_checklist.md: 13 rows to run, 1 of them in a two-seat section</li><li>second seat for the group-panel row (two-boxing works)</li></ul></td>
-<td class="time">1 h</td>
+<td class="time">0.5 h</td>
 <td class="id">o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/interrupt_charge_checklist.md"><code>interrupt_charge_checklist.md</code></a></span><span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
+</tr>
+<tr>
+<td class="id">v14b</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>The global-cooldown checklist: every gem greys for two seconds after a cast, a second cast inside it is refused before any bar, a Bard still twists songs back to back, per-spell cooldowns unchanged.</td>
+<td>user at a desk</td>
+<td class="needs"><ul><li>checklist global_cooldown_checklist.md: 18 rows to run, 2 of them in a two-seat section</li><li>the export from the same batch (the greying and the client-side refusal are client code)</li></ul></td>
+<td class="time">0.5 h</td>
+<td class="id">o4</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/global_cooldown_checklist.md"><code>global_cooldown_checklist.md</code></a></span><span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
 </tr>
 <tr>
 <td class="id">p2</td>
@@ -725,5 +735,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-07 at repo ee52475</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-08 at repo 9fb2953</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>
