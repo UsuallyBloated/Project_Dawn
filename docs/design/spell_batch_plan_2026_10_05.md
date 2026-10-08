@@ -24,7 +24,7 @@ tests, so you can stop me after any of them.
 | Group share range | **200 m** for XP shares, quest journal ticks and the coin split (was 30 m). You must be alive for XP and journal credit. |
 | Heal range | 30 m, applied to every friendly spell (heals and buffs). |
 | Slow | Level 8, 10 mana, 1.0 s cast, 5% attack slow for 30 s. |
-| Torpor | Level 20, 20 mana, 1.5 s cast, 10% attack slow for 1 minute, **no heal**. |
+| Torpor | Level 20, 20 mana, 1.5 s cast, 10% attack slow for 1 minute, **no heal** (re-confirmed 2026-10-07 after the premise was corrected: the heal had been the Shaman's designed self-HoT, not a data error; it goes anyway). |
 | Slow stacking | One attack slow on a target at a time; a weaker one never replaces a stronger one. |
 | Global cooldown | Build it now. After any spell, all your spells lock briefly. Slow and Torpor have no other cooldown. |
 | Bind Affinity | Bind yourself anywhere. Bind a **group member** only while they stand in a safe area (town). |
@@ -96,7 +96,11 @@ before it is touched, since these came from a reviewer, not from me)
 
 - **Aria of Dismay**, a Bard song, is a 35% attack slow on the client. Under "strongest wins"
   it would outrank Slow (5%) and Torpor (10%) whenever a Bard is singing. Fine, or should it
-  come down?
+  come down? **DECIDED 2026-10-07 (user): bring it down, "on par with Slow and Torpor; 35% is
+  a nutty slow."** Step 1 sets it at **8%** (level 16 sits between Slow's 5% at 8 and Torpor's
+  10% at 20; the user can name another number). Note for the build: the server's entry has no
+  `attack_slow_amount` at all today, so online the song slows nothing; the client's 35% pulse
+  is a no-op against a server mob. Both sides get the 8%.
 - **200 m sharing** lets a group-mate sit in town and still collect XP and coin from the camps
   nearest town. Your call stands; this is here so it is a known trade-off, not a surprise.
 

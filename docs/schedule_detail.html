@@ -132,7 +132,7 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Wed Oct 7<span class="stat-sub">repo 09ded13</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Wed Oct 7<span class="stat-sub">repo c1f3475</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">108 rows<span class="stat-sub">in 10 checklists, 7 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">14 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
 <div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">38.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
@@ -164,34 +164,14 @@
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
-<td class="id">d2</td>
-<td><span class="chip decide">Decide</span></td>
-<td class="what"><span class="day">by Thu Oct 8</span>Torpor: confirm &quot;no heal&quot; now that its data is known to match the Shaman design (the question was first asked on a wrong premise; without the heal it is a costlier, shorter Slow).<span class="blocks"><b>Blocks:</b> Step 1&#x27;s Torpor numbers. One word settles it.</span></td>
-<td>user (the phone is fine)</td>
-<td class="needs">nothing</td>
-<td class="time">by Thu Oct 8</td>
-<td class="id"></td>
-<td class="done">The answer is recorded in the spell batch plan&#x27;s decisions table.<span class="ref">To-Do entry: <code>Client-only spell backlog</code></span></td>
-</tr>
-<tr>
-<td class="id">d3</td>
-<td><span class="chip decide">Decide</span></td>
-<td class="what"><span class="day">by Thu Oct 8</span>Aria of Dismay: the Bard song is a 35% attack slow and would outrank Slow (5%) and Torpor (10%) under &quot;strongest wins&quot;. Leave it or bring it down.<span class="blocks"><b>Blocks:</b> Nothing structural; step 1&#x27;s data if the number changes.</span></td>
-<td>user (the phone is fine)</td>
-<td class="needs">nothing</td>
-<td class="time">by Thu Oct 8</td>
-<td class="id"></td>
-<td class="done">The answer is recorded in the spell batch plan&#x27;s open-items list.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
-</tr>
-<tr>
 <td class="id">d4</td>
 <td><span class="chip decide">Decide</span></td>
-<td class="what"><span class="day">by Sun Oct 11</span>Name the two rehearsal friends and fix the date (Saturday October 31 proposed). Ask them to accept the Tailscale share this month so the network part is done long before the build arrives.<span class="blocks"><b>Blocks:</b> Every people row.</span></td>
+<td class="what"><span class="day">by Sun Oct 11</span>Fix the rehearsal date (Saturday October 31 proposed) and pick which two of the friends rehearse. The friends are named (2026-10-07): dusty_avo, nakdeyes, zanath, delta. Ask the two to accept the Tailscale share this month so the network part is done long before the build arrives.<span class="blocks"><b>Blocks:</b> Every people row.</span></td>
 <td>user and planner</td>
 <td class="needs">nothing</td>
 <td class="time">by Sun Oct 11</td>
 <td class="id"></td>
-<td class="done">Two names and a date, written into this plan file.</td>
+<td class="done">The two rehearsal names and the date, written into this plan file (the four friends are already named here).</td>
 </tr>
 <tr>
 <td class="id">b0</td>
@@ -210,7 +190,7 @@
 <td>Claude unattended</td>
 <td class="needs">nothing</td>
 <td class="time">1 Claude day</td>
-<td class="id">b0, d2, d3</td>
+<td class="id">b0</td>
 <td class="done">Reported built with its checklist written, and the 30 m rows of the experience checklist rewritten for 200 m.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
 </tr>
 <tr>
@@ -374,12 +354,12 @@
 <tr>
 <td class="id">v10</td>
 <td><span class="chip verify">Verify</span></td>
-<td class="what">Step 0&#x27;s checklist (named when written): a creature attacked from its full spell reach comes for you; a charmed creature stays charmed; a cast refused while silenced or mesmerized says so and the mana bar is right.</td>
+<td class="what">Step 0&#x27;s checklist: a cast refused for any reason says so to you alone and your mana bar lands on the true value; sitting through a cast stands you; a cast cannot complete after you die. (The leash and charm halves of step 0 already passed on their own sheets.)</td>
 <td>user at a desk</td>
-<td class="needs">nothing</td>
+<td class="needs"><ul><li>checklist cast_hardening_checklist.md: 13 rows to run</li></ul></td>
 <td class="time">1 h</td>
 <td class="id">o2</td>
-<td class="done">Every row filled.</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/cast_hardening_checklist.md"><code>cast_hardening_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Cast-code findings from the 2026-10-05 design review</code></span></td>
 </tr>
 <tr>
 <td class="id">v11</td>
@@ -680,9 +660,7 @@
 <section><h2>Waiting on a yes</h2>
 <p class="lede">Every decision above, by the date it starts to block something.</p>
 <div class="scroll"><table><thead><tr><th>By</th><th>Decision</th><th>Who</th><th>Blocks</th></tr></thead><tbody>
-<tr><td class="time">Thu Oct 8</td><td class="what">Torpor: confirm &quot;no heal&quot; now that its data is known to match the Shaman design (the question was first asked on a wrong premise; without the heal it is a costlier, shorter Slow).</td><td>user (the phone is fine)</td><td class="needs">Step 1&#x27;s Torpor numbers. One word settles it.</td></tr>
-<tr><td class="time">Thu Oct 8</td><td class="what">Aria of Dismay: the Bard song is a 35% attack slow and would outrank Slow (5%) and Torpor (10%) under &quot;strongest wins&quot;. Leave it or bring it down.</td><td>user (the phone is fine)</td><td class="needs">Nothing structural; step 1&#x27;s data if the number changes.</td></tr>
-<tr><td class="time">Sun Oct 11</td><td class="what">Name the two rehearsal friends and fix the date (Saturday October 31 proposed). Ask them to accept the Tailscale share this month so the network part is done long before the build arrives.</td><td>user and planner</td><td class="needs">Every people row.</td></tr>
+<tr><td class="time">Sun Oct 11</td><td class="what">Fix the rehearsal date (Saturday October 31 proposed) and pick which two of the friends rehearse. The friends are named (2026-10-07): dusty_avo, nakdeyes, zanath, delta. Ask the two to accept the Tailscale share this month so the network part is done long before the build arrives.</td><td>user and planner</td><td class="needs">Every people row.</td></tr>
 <tr><td class="time">Mon Oct 19</td><td class="what">Confirm the bump day (Thursday October 22 evening proposed) and tell every tester that their current client stops connecting after it.</td><td>user (the phone is fine)</td><td class="needs">The bump day itself.</td></tr>
 <tr><td class="time">Sun Nov 1</td><td class="what">Trade range: keep 10 m or tighten it. Flagged as far when decided; the first trade sitting is the evidence.</td><td>user (the phone is fine)</td><td class="needs">Nothing. A one-constant change if it moves.</td></tr>
 <tr><td class="time">Sun Nov 8</td><td class="what">Phase 5&#x27;s four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in.</td><td>user and planner</td><td class="needs">The &quot;after the door opens&quot; list below becoming a dated plan.</td></tr>
@@ -747,5 +725,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-07 at repo 09ded13</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-07 at repo c1f3475</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

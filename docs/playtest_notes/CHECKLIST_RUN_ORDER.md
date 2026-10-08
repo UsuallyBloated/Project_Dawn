@@ -26,6 +26,8 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
 3. `xp_eligibility_and_pet_levels_checklist.md`: mostly filled 2026-10-07. Left: the
    dying-ally heal row (§3), the Warder's Mend row after the redeploy of `8a826a5` (§3), and
    the `members=2` line for §1's shared kill. The pet tuning read wants a summoned pet.
+3b. `cast_hardening_checklist.md` (12 rows; needs a redeploy with `5d8d385` or later,
+   server only): spell batch step 0. Two rows want a second seat; two are test-pinned.
 4. `loc_command_checklist.md` (5 rows).
 5. `full_bags_move_checklist.md` (9 rows).
 6. `time_of_day_checklist.md` §1, §3, §4 (quit and relaunch: the clock carries on, not back to 08:00).

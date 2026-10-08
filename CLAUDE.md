@@ -1467,9 +1467,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **interrupted cast costs mana in proportion to progress, hits only** (a deliberate cancel
   stays free); the friends build **ships silent** (no time to source audio by 11-08). Bind and
   Gate decisions are on that item. **Known trade-off, user informed:** at 200 m a group-mate
-  can sit in town and share XP and coin from the nearest camps. **Open:** Aria of Dismay (Bard
-  song) is a 35% attack slow on the client and would outrank Slow and Torpor under "strongest
-  wins".
+  can sit in town and share XP and coin from the nearest camps. **Aria of Dismay DECIDED
+  2026-10-07 (user): "needs to be adjusted to fit on par with Slow and Torpor. 35% is a nutty
+  slow."** Step 1 takes it to 8% (level 16, between Slow's 5% at 8 and Torpor's 10% at 20),
+  on both sides; the server entry carries no slow at all today, so online the song does
+  nothing. d2 (Torpor, no heal) was re-confirmed the same day.
 - [ ] **Cast-code findings from the 2026-10-05 design review** *(a reviewer agent's read of
   the code; status marked per item)*. Step 0 of the spell batch plan.
   (a) **CONFIRMED IN PLAY 2026-10-06 and BUILT the same day, pending redeploy** (server
@@ -1495,13 +1497,31 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   instead of vanishing, is its own entry directly below. Both fixes were built ahead of the
   batch plan's approval because they were proven bugs on the host, not design; the other four
   parts of step 0 still wait on the plan.
-  (c) Reported, not yet verified: a caster at 0 HP can still complete a cast in the tick they
-  die (a self-heal would revive; Gate would move the corpse).
-  (d) Verified: a silenced or mesmerized caster is never told their cast failed (the CastFail
-  goes to everyone except the sender), and the cooldown and not-enough-mana refusals send no
-  mana correction, so the client's bar stays low.
-  (e) Reported: a hit and a completed cast in the same tick can both succeed; a finished cast
-  can be held with no expiry; casting does not stand a seated caster server-side.
+  (c) **Verified and BUILT 2026-10-08, pending playtest** (server `5d8d385`;
+  `cast_hardening_checklist.md`, needs a redeploy). The dead-state gate at message arrival
+  already refused a cast once the death sweep had run; the real window was the tick in
+  which hp hit zero with a cast queued before the sweep (a PvP hit or dev damage lands
+  before the cast step, the sweep runs after it). The cast step now refuses any caster at
+  0 HP or `death_processed`. Test: `a_dead_caster_casts_nothing` sends the dev damage and a
+  Smite in one batch; on the old code the Smite landed.
+  (d) **BUILT 2026-10-08, pending playtest** (same commit and checklist). Every refusal from
+  the cast handler goes through `refuse_cast`: a private CastFail plus a ManaUpdate with the
+  server's true mana (class/level, the cast-time gate, moved, cooldown, not enough mana, the
+  resurrection arm's four). The silenced and mesmerized refusals, which fan to every peer
+  BUT the sender, now also reach the caster with a ManaUpdate. **Deliberate exception:**
+  interrupts keep their fan to peers, so the bar peers drew cancels; the caster is already
+  among the recipients. Test: `a_refusal_reaches_only_the_caster_with_the_true_mana` (a
+  bystander hears nothing).
+  (e) **BUILT 2026-10-08, pending playtest** (same commit). A finished cast cannot be held:
+  past `CAST_HOLD_GRACE_MS` (2 s) after the bar's end the release is refused as lapsed and
+  the stale bar dropped (`a_finished_cast_cannot_be_held`). An interrupt that lands after a
+  bar began beats that bar's completion even in the same tick
+  (`PerConnection::cast_interrupted_at`, stamped by `roll_cast_interrupt`; the gate read the
+  cache as of dispatch, which let a hit earlier in the tick clear the live cache while the
+  cast still went through). Casting stands the caster at CastStart and on an instant cast.
+  The pure decisions are `world/cast_gate.rs` with unit tests. Client follow-up, not built:
+  the client should stand the local player on cast start too (today it only stops drawing
+  you seated when the server's regen or the next Sit/Stand catches up).
   (f) **Verified: a mob finished off by a damage shield (Thorns) pays nothing**, no XP, no
   quest credit, no loot (`tick.rs` ~8085 marks it dead and fans EntityDied, nothing else).
 - [x] **A charm that ends should hand the mob back, not delete it** — **DONE + playtested
@@ -1639,9 +1659,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   puts a heal-over-time on the CASTER, the Shaman's signature line. The client applies
   `hot_hps` to the local player whatever the target type.)* It is blocked only because the
   server's ENEMY arm applies the slow but has no step that gives the caster the HoT, a small
-  addition. Waiting on the user, who was asked on the wrong premise and answered "remove the
-  heal": without it Torpor is a costlier, shorter Slow, which the Shaman already has at
-  level 8. The file header in `spells.toml` now states what the server models and what it
+  addition. The user was asked on the wrong premise and answered "remove the heal";
+  **re-confirmed 2026-10-07 on the corrected premise: no heal.** Torpor becomes the 10%, one
+  minute attack slow of the spell batch's step 1 (Slow is 5% for 30 s at level 8). The file header in `spells.toml` now states what the server models and what it
   does not.
 
 ### World systems

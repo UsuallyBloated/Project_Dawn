@@ -36,6 +36,16 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   `zone_camps.toml` or aggro x 2, floored at `MIN_LEASH_RANGE` (30 m, `world/mod.rs`) for
   any mob with an aggro radius, so nothing inside spell reach (25 m) can be nuked without a
   response (2026-10-06; aggro-0 dev dummies stay passive).
+- **The CastSpell gate (server, hardened 2026-10-08, spell batch step 0):** in order, a
+  cast is refused when the caster is dead (0 HP or `death_processed`), when the class or
+  level is not eligible, when a timed cast's release falls outside its window (the bar must
+  have run its length less 100 ms of jitter, and no more than `CAST_HOLD_GRACE_MS` 2 s past
+  it, or the cast was being held), when an interrupt landed after the bar began (even in
+  the same tick), when the caster moved more than 5 m since CastStart, when the spell is on
+  cooldown, when the mana is short, and when the target pre-flight (`cast_target_refusal`)
+  says no. Every refusal is private and carries the server's true mana (`refuse_cast`);
+  interrupts, silence and mez also fan to peers so the bar they drew cancels. Casting
+  stands the caster. The pure timing and interrupt decisions are `world/cast_gate.rs`.
 - **Hit reactions / VFX:** physical hits flash the mesh white; spell hits flash an
   elemental color + spawn an `OmniLight3D` burst at the impact point, via
   `enemy.flash_spell_hit(color)` from `Combat.deal_spell_damage()`. Color per type: fire

@@ -172,40 +172,22 @@ summary = "Deliberately light. Fixes from the rehearsal, the rest of the group o
 # d1 (approve the spell batch plan) was answered on 2026-10-07 ("Approved. Thanks!").
 # The row left the plan; the build rows below lost their tentative mark with it.
 
-[[row]]
-id = "d2"
-week = "w1"
-lane = "decide"
-day = "by Thu Oct 8"
-what = "Torpor: confirm \"no heal\" now that its data is known to match the Shaman design (the question was first asked on a wrong premise; without the heal it is a costlier, shorter Slow)."
-who = "user (the phone is fine)"
-by = 2026-10-08
-blocks = "Step 1's Torpor numbers. One word settles it."
-done_when = "The answer is recorded in the spell batch plan's decisions table."
-todo = "Client-only spell backlog"
+# d2 (Torpor, confirm "no heal" on the corrected premise) was confirmed on 2026-10-07; the
+# decisions table in the plan file records it. The row left the plan.
 
-[[row]]
-id = "d3"
-week = "w1"
-lane = "decide"
-day = "by Thu Oct 8"
-what = "Aria of Dismay: the Bard song is a 35% attack slow and would outrank Slow (5%) and Torpor (10%) under \"strongest wins\". Leave it or bring it down."
-who = "user (the phone is fine)"
-by = 2026-10-08
-blocks = "Nothing structural; step 1's data if the number changes."
-done_when = "The answer is recorded in the spell batch plan's open-items list."
-todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
+# d3 (Aria of Dismay) was decided on 2026-10-07: brought down to the Slow/Torpor band (8% in
+# step 1). The row left the plan.
 
 [[row]]
 id = "d4"
 week = "w1"
 lane = "decide"
 day = "by Sun Oct 11"
-what = "Name the two rehearsal friends and fix the date (Saturday October 31 proposed). Ask them to accept the Tailscale share this month so the network part is done long before the build arrives."
+what = "Fix the rehearsal date (Saturday October 31 proposed) and pick which two of the friends rehearse. The friends are named (2026-10-07): dusty_avo, nakdeyes, zanath, delta. Ask the two to accept the Tailscale share this month so the network part is done long before the build arrives."
 who = "user and planner"
 by = 2026-10-11
 blocks = "Every people row."
-done_when = "Two names and a date, written into this plan file."
+done_when = "The two rehearsal names and the date, written into this plan file (the four friends are already named here)."
 
 [[row]]
 id = "o1"
@@ -355,7 +337,7 @@ day = "Oct 10 to 11"
 what = "Spell batch step 1: the small rules. Group share range to 200 m for experience, quest credit and coin; heals and buffs reach 30 m; Slow and Torpor numbers on both sides with strongest-slow-wins; every new character born bound at the starter spawn; \"ships silent\" recorded in both schedule files."
 who = "Claude unattended"
 days = 1
-waits_on = ["b0", "d2", "d3"]
+waits_on = ["b0"]
 done_when = "Reported built with its checklist written, and the 30 m rows of the experience checklist rewritten for 200 m."
 todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
 
@@ -378,10 +360,12 @@ done_when = "The boot log line shows the new build= and dev_cmds=false."
 id = "v10"
 week = "w2"
 lane = "verify"
-what = "Step 0's checklist (named when written): a creature attacked from its full spell reach comes for you; a charmed creature stays charmed; a cast refused while silenced or mesmerized says so and the mana bar is right."
+what = "Step 0's checklist: a cast refused for any reason says so to you alone and your mana bar lands on the true value; sitting through a cast stands you; a cast cannot complete after you die. (The leash and charm halves of step 0 already passed on their own sheets.)"
 who = "user at a desk"
 hours = 1.0
 waits_on = ["o2"]
+checklist = "cast_hardening_checklist.md"
+todo = "Cast-code findings from the 2026-10-05 design review"
 done_when = "Every row filled."
 
 [[row]]
