@@ -71,6 +71,28 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   refused or interrupted cast starts no global cooldown. The point, besides feel: without it
   a modified client could fire every instant spell on its bar inside one second, metered only
   by each spell's own cooldown and the one-cast-per-tick rule.
+  **Damage over time (spell batch step 5, 2026-10-08, user call):** `Spell.dot_dps` /
+  `dot_duration` (Entangle, Dark Decay in `spells.toml`, the client's numbers). On a mob or
+  pet the direct hit lands with the cast and `Entity::active_dots` carries the DoT (one per
+  spell name, a re-cast refreshes), ticked by the AI sweep every `DOT_TICK_SECS` (3 s) for
+  `dps x 3` per tick, whole ticks only; a tick builds the caster's aggro and threat (so an
+  idle mob turns on them), breaks mez, fans the Hit and HealthUpdate to everyone and the
+  caster's own "<spell> for N" line through the proc message, and a tick that kills goes
+  through `kill_enemy`, the one kill step (XP via `award_kill`, quest credit, warder retreat,
+  loot) that the spell arm now shares with it and with the two damage-shield reflect sites,
+  so a mob finished off by Thorns pays like any other (it used to pay nothing; the reflect
+  counts as the shielded player's or pet owner's damage). Anti-farming: `Entity::transition`
+  to Leash or Dead clears every DoT (tag it and let it leash home pays nothing), `wipe_hate`
+  clears the caster's DoTs when they die or port, and `reap_connection` when they log out (a
+  linkdead body keeps its DoTs for the linger; it can still be killed). On a PLAYER a DoT is
+  an `ActiveBuff` with `BuffEffect::Dot`, ticked in the player buff sweep on the same
+  cadence and fanned the same way; the death sweep handles a bearer at 0. **The target frame
+  shows what is on a mob:** `Entity::status_pairs` (buffs, DoTs, and the crowd control as
+  "Mesmerized" / "Rooted" / "Snared" / "Slowed") is the BuffSnapshot payload for every mob and
+  pet, re-fanned by the AI sweep whenever the set of names changes (`last_status_fanned`);
+  the client's `RemoteEnemyManager` routes it to `RemoteEnemy`, which mirrors the pet's buff
+  surface, and `hud.gd`'s target frame reads it through the same icon row as a pet's or a
+  peer's. Online the client no longer runs its own local DoT on a server mob (`spells.gd`).
   Reach (2026-10-08): hostile spells 25 m (`RANGED_ATTACK_RANGE`), friendly spells (ALLY
   heals and buffs, PET_HEAL) 30 m (`FRIENDLY_SPELL_RANGE`); the client checks one metre
   inside each. One attack slow holds a mob at a time, strongest wins: in `Entity::apply_cc`

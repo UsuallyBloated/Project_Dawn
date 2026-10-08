@@ -576,10 +576,13 @@ done_when = "The boot log line shows the new build= and dev_cmds=false."
 id = "v15"
 week = "w4"
 lane = "verify"
-what = "Damage over time's checklist: ticks show, a DoT kill pays once, a creature walking home sheds its DoTs, dying or porting ends yours, the target frame shows the debuffs."
+what = "Damage over time's checklist: ticks show, a DoT kill pays once, a creature walking home sheds its DoTs, dying or porting ends yours, the target frame shows the debuffs, a Thorns kill pays."
 who = "user at a desk"
 hours = 1.5
+needs = ["a Druid 6 (Entangle) or Necromancer 10 (Dark Decay); spelltest has neither", "second seat for the logout and PvP rows (two-boxing works)", "the export from the same batch (the target-frame icons are client code)"]
 waits_on = ["o5"]
+checklist = "damage_over_time_checklist.md"
+todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
 done_when = "Every row filled."
 
 [[row]]

@@ -355,11 +355,11 @@ func _apply_spell(spell: SpellData) -> void:
 		PlayerStats.set_hp(PlayerStats.hp - spell.hp_cost)
 
 	if spell.dot_dps > 0.0 and spell.dot_duration > 0.0:
-		# Track 6 sub-task 3b: DoTs on RemotePlayer targets aren't
-		# applied client-side (BuffManager.add_dot expects an enemy
-		# node with take_damage etc.). Server-side DoT processing
-		# lands in sub-task 4 when buff state moves server-side.
-		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and not (Combat.current_target is RemotePlayer or Combat.current_target is RemotePet):
+		# Online the server owns the DoT (spell batch step 5): it ticks every
+		# three seconds there, fans the hit, the bar and the caster's named
+		# line, and shows in the target frame; nothing runs here. Offline keeps
+		# the local BuffManager DoT on the local enemy node.
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and not Net.is_launcher_mode() and not (Combat.current_target is RemotePlayer or Combat.current_target is RemotePet):
 			BuffManager.add_dot(Combat.current_target, spell.dot_dps * effectiveness,
 				spell.dot_duration * dur_mult, spell.spell_name)
 

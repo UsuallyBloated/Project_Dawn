@@ -41,6 +41,7 @@ func _ready() -> void:
 	Net.world_health_update.connect(_on_health_update)
 	Net.world_entity_died.connect(_on_entity_died)
 	Net.world_entity_despawn.connect(_on_entity_despawn)
+	Net.world_buff_snapshot.connect(_on_buff_snapshot)
 
 # Track 21B — public accessor for the target-of-target frame to
 # resolve a server-sent target_id back to a RemoteEnemy node.
@@ -138,6 +139,18 @@ func _on_entity_target(id: int, target_id: int) -> void:
 	var re = _by_id.get(id)
 	if re != null and is_instance_valid(re):
 		re.apply_target_change(target_id)
+
+# Spell batch step 5: the server fans a status snapshot under a mob's id
+# whenever what is on it changes (a DoT, mez, root, snare or slow landing or
+# running out). RemoteEnemy mirrors the pet's buff surface, so the target
+# frame's icon row shows it. Only the live node is told: an enemy that is
+# not instantiated has no frame to show it in, and the next change re-fans.
+func _on_buff_snapshot(target: int, names: PackedStringArray, durations: PackedFloat32Array) -> void:
+	if not _is_enemy_id(target):
+		return
+	var re = _by_id.get(target)
+	if re != null and is_instance_valid(re):
+		re.apply_buff_snapshot(names, durations)
 
 func _instantiate_into(id: int, scene: Node) -> void:
 	var data: Dictionary = _spawn_data[id]

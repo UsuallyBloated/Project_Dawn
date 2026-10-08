@@ -978,6 +978,12 @@ func _on_target_changed(enemy) -> void:
 	if enemy.has_signal("target_changed"):
 		enemy.target_changed.connect(_on_tracked_target_target_changed)
 	_refresh_tot()
+	# Spell batch step 5: the server fans a status snapshot for a mob (its
+	# DoTs, mez, root, snare, slow) under the enemy id; RemoteEnemy mirrors
+	# the pet's buff surface, so the same icon row shows what is on it.
+	if enemy.has_signal("buffs_changed"):
+		enemy.buffs_changed.connect(_on_target_buffs_changed)
+	_refresh_target_buffs_label()
 
 # Targeting a remote player. Resources are server-replicated via Track 4
 # ResourceUpdate fan-out and cached on the RemotePlayer node; we read the
