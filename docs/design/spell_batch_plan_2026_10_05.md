@@ -1,9 +1,10 @@
 # The spell batch: your 2026-10-05 answers, built in six steps
 
-> **Status: PROPOSED, not approved and not built** (as of 2026-10-05 evening). This is a
-> copy of the plan-mode file so the plan lives in the repo under a real name. The user's
-> decisions in the table below ARE decided; the build order and everything under "Things I
-> chose" still wait for approval. Per-item status belongs in the CLAUDE.md To-Do, not here.
+> **Status: APPROVED 2026-10-07** (user: "Approved. Thanks!"), after two days as a proposal.
+> Of step 0, the leash floor and the charm expiry shipped and were playtested on 10-06 and
+> 10-07 ahead of the approval, since they were proven bugs on the host; the rest of step 0
+> starts 10-08. This is a copy of the plan-mode file so the plan lives in the repo under a
+> real name. Per-item status belongs in the CLAUDE.md To-Do, not here.
 
 ## Context
 

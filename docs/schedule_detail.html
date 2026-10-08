@@ -132,9 +132,9 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Wed Oct 7<span class="stat-sub">repo 207f892</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Wed Oct 7<span class="stat-sub">repo 09ded13</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">108 rows<span class="stat-sub">in 10 checklists, 7 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">14 days<span class="stat-sub">of Claude time, 9 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">14 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
 <div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">38.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
@@ -143,7 +143,7 @@
 <p class="lede">Placed by working back from November 8 at the measured pace, with the fifth week left as slack. A dashed top edge means the milestone waits on an approval.</p>
 <div class="milestones">
 <div class="ms"><div class="when">Sun Oct 11</div><div class="name">Verification debt cleared</div><div class="means">Every checklist scheduled in week 1 filled: each row passed, failed or skipped with a note. The To-Do ticks follow, each citing its row.</div></div>
-<div class="ms tent"><div class="when">Thu Oct 22</div><div class="name">Bind and Gate live</div><div class="means">On the hosted server and in the client every tester holds. Tentative: needs the spell batch approved by October 7.</div></div>
+<div class="ms"><div class="when">Thu Oct 22</div><div class="name">Bind and Gate live</div><div class="means">On the hosted server and in the client every tester holds. The spell batch was approved October 7.</div></div>
 <div class="ms"><div class="when">Thu Oct 22</div><div class="name">Trade live</div><div class="means">The same evening as Bind and Gate: one protocol bump carries both, so testers change clients once.</div></div>
 <div class="ms"><div class="when">Sat Oct 31</div><div class="name">The rehearsal</div><div class="means">Two friends, three hours. The phase 4 acceptance measure, on the build the friends will keep.</div></div>
 <div class="ms"><div class="when">Sun Nov 8</div><div class="name">The door opens</div><div class="means">The full friend group&#x27;s first evening. The only fixed date on this page.</div></div>
@@ -159,20 +159,10 @@
 </div></section>
 <section>
 <h2><span class="week-head"><span>Clear the desk</span><span class="when">W1 &middot; October 5 to 11</span></span></h2>
-<p class="lede">Everything built in the last two weeks is on the hosted server and in the client exported this afternoon, so every open checklist can run now. The week&#x27;s other job is one yes: the spell batch plan, so Claude&#x27;s build lane can start.</p>
+<p class="lede">Everything built in the last two weeks is on the hosted server and in the client exported this afternoon, so every open checklist can run now. The week&#x27;s other job was one yes: the spell batch plan, approved on the evening of October 7.</p>
 <div class="week-meta"><span>the user's time: 13.5 h</span><span>Claude build days: 2</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
-<tr>
-<td class="id">d1</td>
-<td><span class="chip decide">Decide</span></td>
-<td class="what"><span class="day">by Wed Oct 7</span>Approve the spell batch plan, or approve its step 0 on its own. Step 0 fixes two bugs that are live on the hosted server today (creatures that can be attacked with spells from beyond the distance at which they react, and Charm appearing to end the moment it lands).<span class="blocks"><b>Blocks:</b> Every build row below. After about October 12 the last two steps miss the October 22 client and need their own export.</span></td>
-<td>user (the phone is fine)</td>
-<td class="needs">nothing</td>
-<td class="time">by Wed Oct 7</td>
-<td class="id"></td>
-<td class="done">The plan file&#x27;s status line reads APPROVED with a date, and the To-Do&#x27;s spell batch entry says so.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)</code></span></td>
-</tr>
 <tr>
 <td class="id">d2</td>
 <td><span class="chip decide">Decide</span></td>
@@ -191,7 +181,7 @@
 <td class="needs">nothing</td>
 <td class="time">by Thu Oct 8</td>
 <td class="id"></td>
-<td class="done">The answer is recorded in the spell batch plan&#x27;s open-items list.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)</code></span></td>
+<td class="done">The answer is recorded in the spell batch plan&#x27;s open-items list.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
 </tr>
 <tr>
 <td class="id">d4</td>
@@ -203,25 +193,25 @@
 <td class="id"></td>
 <td class="done">Two names and a date, written into this plan file.</td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">b0</td>
-<td><span class="chip build">Build</span><span class="chip tent">tentative</span></td>
-<td class="what"><span class="day">Oct 6 to 7</span>Spell batch step 0: harden the cast code. Creatures react to spells from their full reach; Charm&#x27;s expiry fixed if the reading holds; no cast completes at 0 HP; every refusal private and carrying the caster&#x27;s true mana; a finished cast cannot be held; casting stands a seated caster.</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 8 to 9</span>Spell batch step 0: harden the cast code. Creatures react to spells from their full reach; Charm&#x27;s expiry fixed if the reading holds; no cast completes at 0 HP; every refusal private and carrying the caster&#x27;s true mana; a finished cast cannot be held; casting stands a seated caster.</td>
 <td>Claude unattended</td>
 <td class="needs">nothing</td>
 <td class="time">1 Claude day</td>
-<td class="id">d1</td>
+<td class="id"></td>
 <td class="done">Reported built on the deploy branch with the server tests green and a checklist for it in docs/playtest_notes/. Done only when that checklist is filled.<span class="ref">To-Do entry: <code>Cast-code findings from the 2026-10-05 design review</code></span></td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">b1</td>
-<td><span class="chip build">Build</span><span class="chip tent">tentative</span></td>
-<td class="what"><span class="day">Oct 8 to 9</span>Spell batch step 1: the small rules. Group share range to 200 m for experience, quest credit and coin; heals and buffs reach 30 m; Slow and Torpor numbers on both sides with strongest-slow-wins; every new character born bound at the starter spawn; &quot;ships silent&quot; recorded in both schedule files.</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 10 to 11</span>Spell batch step 1: the small rules. Group share range to 200 m for experience, quest credit and coin; heals and buffs reach 30 m; Slow and Torpor numbers on both sides with strongest-slow-wins; every new character born bound at the starter spawn; &quot;ships silent&quot; recorded in both schedule files.</td>
 <td>Claude unattended</td>
 <td class="needs">nothing</td>
 <td class="time">1 Claude day</td>
 <td class="id">b0, d2, d3</td>
-<td class="done">Reported built with its checklist written, and the 30 m rows of the experience checklist rewritten for 200 m.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)</code></span></td>
+<td class="done">Reported built with its checklist written, and the 30 m rows of the experience checklist rewritten for 200 m.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
 </tr>
 <tr>
 <td class="id">o1</td>
@@ -341,9 +331,9 @@
 <div class="week-meta"><span>the user's time: 3 h</span><span>Claude build days: 3</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
-<tr class="tent">
+<tr>
 <td class="id">b2</td>
-<td><span class="chip build">Build</span><span class="chip tent">tentative</span></td>
+<td><span class="chip build">Build</span></td>
 <td class="what"><span class="day">Oct 12 to 14</span>Spell batch step 2: Bind and Gate (design: docs/design/bind_and_gate.md). A data file of safe areas, Bind Affinity on yourself anywhere and on a group member only in town, Gate for ten classes with the pet along, Succor and Evacuate to town, the client no longer running Gate locally online.</td>
 <td>Claude unattended</td>
 <td class="needs">nothing</td>
@@ -351,19 +341,19 @@
 <td class="id">b1</td>
 <td class="done">Reported built with its checklist written; the review pass run.<span class="ref">To-Do entry: <code>Gate and the Soul Binder use two different bind points</code></span></td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">b3</td>
-<td><span class="chip build">Build</span><span class="chip tent">tentative</span></td>
+<td><span class="chip build">Build</span></td>
 <td class="what"><span class="day">Oct 15</span>Spell batch step 3: a hit that interrupts a cast costs mana in proportion to how far the cast got; cancelling on purpose stays free; a zero-damage hit charges nothing.</td>
 <td>Claude unattended</td>
 <td class="needs">nothing</td>
 <td class="time">1 Claude day</td>
 <td class="id">b2</td>
-<td class="done">Reported built with its checklist written.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)</code></span></td>
+<td class="done">Reported built with its checklist written.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">o2</td>
-<td><span class="chip operate">Operate</span><span class="chip tent">tentative</span></td>
+<td><span class="chip operate">Operate</span></td>
 <td class="what"><span class="day">Mon Oct 12</span>Redeploy the R720 with steps 0 and 1. Server only: the client testers hold keeps working.</td>
 <td>user at a desk</td>
 <td class="needs"><ul><li>everyone logged out</li><li>a backup first (the run script takes one)</li></ul></td>
@@ -371,9 +361,9 @@
 <td class="id">b0, b1</td>
 <td class="done">The boot log line shows the new build= and dev_cmds=false.</td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">o3</td>
-<td><span class="chip operate">Operate</span><span class="chip tent">tentative</span></td>
+<td><span class="chip operate">Operate</span></td>
 <td class="what"><span class="day">Fri Oct 16, optional</span>Redeploy with steps 2 and 3 if time allows. Only the interrupt charge is testable on the old client; Gate needs the October 22 client to behave. Otherwise both steps ride the bump day and nothing moves.</td>
 <td>user at a desk</td>
 <td class="needs">nothing</td>
@@ -381,9 +371,9 @@
 <td class="id">b2, b3</td>
 <td class="done">The boot log line shows the new build= and dev_cmds=false.</td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">v10</td>
-<td><span class="chip verify">Verify</span><span class="chip tent">tentative</span></td>
+<td><span class="chip verify">Verify</span></td>
 <td class="what">Step 0&#x27;s checklist (named when written): a creature attacked from its full spell reach comes for you; a charmed creature stays charmed; a cast refused while silenced or mesmerized says so and the mana bar is right.</td>
 <td>user at a desk</td>
 <td class="needs">nothing</td>
@@ -391,9 +381,9 @@
 <td class="id">o2</td>
 <td class="done">Every row filled.</td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">v11</td>
-<td><span class="chip verify">Verify</span><span class="chip tent">tentative</span></td>
+<td><span class="chip verify">Verify</span></td>
 <td class="what">Step 1&#x27;s checklist: a group-mate 150 m away still shares experience and coin, 250 m away does not; a heal at 28 m lands and at 32 m is refused; Slow and Torpor at their new numbers; a weaker slow never replaces a stronger one; a brand-new character respawns at the starter spawn.</td>
 <td>user at a desk</td>
 <td class="needs"><ul><li>second seat for the range rows (two-boxing works)</li></ul></td>
@@ -429,25 +419,25 @@
 <td class="id"></td>
 <td class="done">The date is fixed in this plan file and the testers have been told.</td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">b4</td>
-<td><span class="chip build">Build</span><span class="chip tent">tentative</span></td>
+<td><span class="chip build">Build</span></td>
 <td class="what"><span class="day">Oct 19 to 20</span>Spell batch step 4: the global cooldown. After any spell, all your spells lock briefly; the server refuses a cast started inside the lockout; the hotbar greys every gem; Bard songs exempt.</td>
 <td>Claude unattended</td>
 <td class="needs">nothing</td>
 <td class="time">2 Claude days</td>
 <td class="id">b3</td>
-<td class="done">Reported built with its checklist written; the review pass run.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)</code></span></td>
+<td class="done">Reported built with its checklist written; the review pass run.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">b5</td>
-<td><span class="chip build">Build</span><span class="chip tent">tentative</span></td>
+<td><span class="chip build">Build</span></td>
 <td class="what"><span class="day">Oct 20 to 23</span>Spell batch step 5: damage over time (Dark Decay, Entangle). Ticks every three seconds, builds aggro, kills with full rewards; a creature&#x27;s DoTs end when it starts walking home and yours end when you die, port or log out; the target frame shows what is on a creature. Aimed to merge before the bump day; if it slips, its server half rides the week-4 redeploy with no bump and nothing else moves.</td>
 <td>Claude unattended</td>
 <td class="needs">nothing</td>
 <td class="time">2 Claude days</td>
 <td class="id">b4</td>
-<td class="done">Reported built with its checklist written; the review pass run.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)</code></span></td>
+<td class="done">Reported built with its checklist written; the review pass run.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
 </tr>
 <tr>
 <td class="id">b6</td>
@@ -479,9 +469,9 @@
 <td class="id">o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/trade_window_checklist.md"><code>trade_window_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Trade window</code></span></td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">v13</td>
-<td><span class="chip verify">Verify</span><span class="chip tent">tentative</span><span class="chip ms">Bind and Gate live</span></td>
+<td><span class="chip verify">Verify</span><span class="chip ms">Bind and Gate live</span></td>
 <td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>Bind and Gate&#x27;s checklist: bind yourself in the field, Gate home with the pet, a group member bound only in town, Succor and Evacuate arrive in town, a forged destination refused.</td>
 <td>user at a desk</td>
 <td class="needs"><ul><li>second seat for the group-bind rows (two-boxing works)</li></ul></td>
@@ -489,9 +479,9 @@
 <td class="id">o4</td>
 <td class="done">Every row filled.</td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">v14</td>
-<td><span class="chip verify">Verify</span><span class="chip tent">tentative</span></td>
+<td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>The interrupt-charge and global-cooldown checklists: an interrupted cast costs part of its mana, a cancelled one nothing; every gem greys after a cast; a Bard can still twist.</td>
 <td>user at a desk</td>
 <td class="needs">nothing</td>
@@ -537,9 +527,9 @@
 <td class="id">v12, v13, v14</td>
 <td class="done">Each fix has its own checklist row or To-Do line; nothing ticked.</td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">o5</td>
-<td><span class="chip operate">Operate</span><span class="chip tent">tentative</span></td>
+<td><span class="chip operate">Operate</span></td>
 <td class="what"><span class="day">Tue Oct 27</span>Redeploy with step 5 if it missed the bump day, plus any fixes from the week-3 sittings. Server only, no bump; the friends&#x27; clients keep working.</td>
 <td>user at a desk</td>
 <td class="needs">nothing</td>
@@ -557,9 +547,9 @@
 <td class="id"></td>
 <td class="done">All three checks pass.</td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">v15</td>
-<td><span class="chip verify">Verify</span><span class="chip tent">tentative</span></td>
+<td><span class="chip verify">Verify</span></td>
 <td class="what">Damage over time&#x27;s checklist: ticks show, a DoT kill pays once, a creature walking home sheds its DoTs, dying or porting ends yours, the target frame shows the debuffs.</td>
 <td>user at a desk</td>
 <td class="needs">nothing</td>
@@ -690,7 +680,6 @@
 <section><h2>Waiting on a yes</h2>
 <p class="lede">Every decision above, by the date it starts to block something.</p>
 <div class="scroll"><table><thead><tr><th>By</th><th>Decision</th><th>Who</th><th>Blocks</th></tr></thead><tbody>
-<tr><td class="time">Wed Oct 7</td><td class="what">Approve the spell batch plan, or approve its step 0 on its own. Step 0 fixes two bugs that are live on the hosted server today (creatures that can be attacked with spells from beyond the distance at which they react, and Charm appearing to end the moment it lands).</td><td>user (the phone is fine)</td><td class="needs">Every build row below. After about October 12 the last two steps miss the October 22 client and need their own export.</td></tr>
 <tr><td class="time">Thu Oct 8</td><td class="what">Torpor: confirm &quot;no heal&quot; now that its data is known to match the Shaman design (the question was first asked on a wrong premise; without the heal it is a costlier, shorter Slow).</td><td>user (the phone is fine)</td><td class="needs">Step 1&#x27;s Torpor numbers. One word settles it.</td></tr>
 <tr><td class="time">Thu Oct 8</td><td class="what">Aria of Dismay: the Bard song is a 35% attack slow and would outrank Slow (5%) and Torpor (10%) under &quot;strongest wins&quot;. Leave it or bring it down.</td><td>user (the phone is fine)</td><td class="needs">Nothing structural; step 1&#x27;s data if the number changes.</td></tr>
 <tr><td class="time">Sun Oct 11</td><td class="what">Name the two rehearsal friends and fix the date (Saturday October 31 proposed). Ask them to accept the Tailscale share this month so the network part is done long before the build arrives.</td><td>user and planner</td><td class="needs">Every people row.</td></tr>
@@ -731,7 +720,6 @@
 </section>
 <section><h2>Risks</h2>
 <div class="scroll"><table><thead><tr><th>Risk</th><th>Impact</th><th>Mitigation</th></tr></thead><tbody>
-<tr><td class="what"><b>The spell batch waits on approval</b></td><td class="needs">Every day unapproved shifts the whole build lane. After about October 12 the last two steps miss the October 22 client and need their own export, and Bind and Gate&#x27;s milestone moves.</td><td class="needs">Approve step 0 alone if the rest needs thought; it closes two live bugs and blocks nothing else.</td></tr>
 <tr><td class="what"><b>Thirteen hours of checklist sittings, all the user&#x27;s</b></td><td class="needs">Built is not done. If week 1 runs short, the ticks wait and the To-Do keeps saying pending.</td><td class="needs">Run the solo sittings first; the two-seat sections can bundle into one two-boxed evening and slide into week 2 without moving anything else.</td></tr>
 <tr><td class="what"><b>The bump day strands anyone on the old client</b></td><td class="needs">A tester who misses the message cannot log in and may think the server is down.</td><td class="needs">Pick an evening, tell everyone a week ahead (d5), send the zip within the hour, keep the old server build to hand for one day.</td></tr>
 <tr><td class="what"><b>A client-side fix after the rehearsal</b></td><td class="needs">A new zip for every friend already onboarded, days before the door opens.</td><td class="needs">Prefer server-side fixes in week 5; hold any export to one, before the rest of the group is onboarded.</td></tr>
@@ -759,5 +747,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-07 at repo 207f892</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-07 at repo 09ded13</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

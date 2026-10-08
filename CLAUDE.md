@@ -1453,9 +1453,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `ENEMY_DESPAWN_LINGER_SECS`).
 
 ### Combat / weapons
-- [ ] **The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)**.
+- [ ] **The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)**.
   One sitting of user answers decided a cluster of spell-system work. Plan and build order:
-  `docs/design/spell_batch_plan_2026_10_05.md`. **Decided (user):** the group share range
+  `docs/design/spell_batch_plan_2026_10_05.md`. **APPROVED 2026-10-07 (user: "Approved.
+  Thanks!")**; step 0's leash and charm halves had already shipped and passed (the cast-code
+  entry below), the remaining four step 0 items start 10-08, then steps 1 to 5 in order,
+  each its own commit with its own tests and checklist. **Decided (user):** the group share range
   becomes **200 m** for XP shares, quest journal ticks AND the coin split (was 30 m; journal
   ticks had no range rule); friendly spells reach **30 m**; **Slow** = level 8, 10 mana, 1.0 s
   cast, 5% attack slow for 30 s; **Torpor** = level 20, 20 mana, 1.5 s cast, 10% for 1 minute,

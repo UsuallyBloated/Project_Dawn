@@ -113,8 +113,7 @@ means = "Every checklist scheduled in week 1 filled: each row passed, failed or 
 id = "m2"
 date = 2026-10-22
 name = "Bind and Gate live"
-means = "On the hosted server and in the client every tester holds. Tentative: needs the spell batch approved by October 7."
-tentative = true
+means = "On the hosted server and in the client every tester holds. The spell batch was approved October 7."
 
 [[milestone]]
 id = "m3"
@@ -141,7 +140,7 @@ means = "The full friend group's first evening. The only fixed date on this page
 id = "w1"
 starts = 2026-10-05
 title = "Clear the desk"
-summary = "Everything built in the last two weeks is on the hosted server and in the client exported this afternoon, so every open checklist can run now. The week's other job is one yes: the spell batch plan, so Claude's build lane can start."
+summary = "Everything built in the last two weeks is on the hosted server and in the client exported this afternoon, so every open checklist can run now. The week's other job was one yes: the spell batch plan, approved on the evening of October 7."
 
 [[week]]
 id = "w2"
@@ -170,17 +169,8 @@ summary = "Deliberately light. Fixes from the rehearsal, the rest of the group o
 # ---------------------------------------------------------------------------------------
 # Week 1: October 5 to 11
 
-[[row]]
-id = "d1"
-week = "w1"
-lane = "decide"
-day = "by Wed Oct 7"
-what = "Approve the spell batch plan, or approve its step 0 on its own. Step 0 fixes two bugs that are live on the hosted server today (creatures that can be attacked with spells from beyond the distance at which they react, and Charm appearing to end the moment it lands)."
-who = "user (the phone is fine)"
-by = 2026-10-07
-blocks = "Every build row below. After about October 12 the last two steps miss the October 22 client and need their own export."
-done_when = "The plan file's status line reads APPROVED with a date, and the To-Do's spell batch entry says so."
-todo = "The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)"
+# d1 (approve the spell batch plan) was answered on 2026-10-07 ("Approved. Thanks!").
+# The row left the plan; the build rows below lost their tentative mark with it.
 
 [[row]]
 id = "d2"
@@ -204,7 +194,7 @@ who = "user (the phone is fine)"
 by = 2026-10-08
 blocks = "Nothing structural; step 1's data if the number changes."
 done_when = "The answer is recorded in the spell batch plan's open-items list."
-todo = "The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)"
+todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
 
 [[row]]
 id = "d4"
@@ -350,12 +340,10 @@ done_when = "Every row filled."
 id = "b0"
 week = "w1"
 lane = "build"
-day = "Oct 6 to 7"
+day = "Oct 8 to 9"
 what = "Spell batch step 0: harden the cast code. Creatures react to spells from their full reach; Charm's expiry fixed if the reading holds; no cast completes at 0 HP; every refusal private and carrying the caster's true mana; a finished cast cannot be held; casting stands a seated caster."
 who = "Claude unattended"
 days = 1
-waits_on = ["d1"]
-tentative = true
 done_when = "Reported built on the deploy branch with the server tests green and a checklist for it in docs/playtest_notes/. Done only when that checklist is filled."
 todo = "Cast-code findings from the 2026-10-05 design review"
 
@@ -363,14 +351,13 @@ todo = "Cast-code findings from the 2026-10-05 design review"
 id = "b1"
 week = "w1"
 lane = "build"
-day = "Oct 8 to 9"
+day = "Oct 10 to 11"
 what = "Spell batch step 1: the small rules. Group share range to 200 m for experience, quest credit and coin; heals and buffs reach 30 m; Slow and Torpor numbers on both sides with strongest-slow-wins; every new character born bound at the starter spawn; \"ships silent\" recorded in both schedule files."
 who = "Claude unattended"
 days = 1
 waits_on = ["b0", "d2", "d3"]
-tentative = true
 done_when = "Reported built with its checklist written, and the 30 m rows of the experience checklist rewritten for 200 m."
-todo = "The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)"
+todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
 
 # ---------------------------------------------------------------------------------------
 # Week 2: October 12 to 18
@@ -385,7 +372,6 @@ who = "user at a desk"
 hours = 0.25
 needs = ["everyone logged out", "a backup first (the run script takes one)"]
 waits_on = ["b0", "b1"]
-tentative = true
 done_when = "The boot log line shows the new build= and dev_cmds=false."
 
 [[row]]
@@ -396,7 +382,6 @@ what = "Step 0's checklist (named when written): a creature attacked from its fu
 who = "user at a desk"
 hours = 1.0
 waits_on = ["o2"]
-tentative = true
 done_when = "Every row filled."
 
 [[row]]
@@ -408,7 +393,6 @@ who = "user at a desk"
 hours = 1.0
 needs = ["second seat for the range rows (two-boxing works)"]
 waits_on = ["o2"]
-tentative = true
 done_when = "Every row filled."
 
 [[row]]
@@ -420,7 +404,6 @@ what = "Spell batch step 2: Bind and Gate (design: docs/design/bind_and_gate.md)
 who = "Claude unattended"
 days = 2
 waits_on = ["b1"]
-tentative = true
 done_when = "Reported built with its checklist written; the review pass run."
 todo = "Gate and the Soul Binder use two different bind points"
 
@@ -433,9 +416,8 @@ what = "Spell batch step 3: a hit that interrupts a cast costs mana in proportio
 who = "Claude unattended"
 days = 1
 waits_on = ["b2"]
-tentative = true
 done_when = "Reported built with its checklist written."
-todo = "The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)"
+todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
 
 [[row]]
 id = "o3"
@@ -446,7 +428,6 @@ what = "Redeploy with steps 2 and 3 if time allows. Only the interrupt charge is
 who = "user at a desk"
 hours = 0.25
 waits_on = ["b2", "b3"]
-tentative = true
 done_when = "The boot log line shows the new build= and dev_cmds=false."
 
 [[row]]
@@ -471,9 +452,8 @@ what = "Spell batch step 4: the global cooldown. After any spell, all your spell
 who = "Claude unattended"
 days = 2
 waits_on = ["b3"]
-tentative = true
 done_when = "Reported built with its checklist written; the review pass run."
-todo = "The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)"
+todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
 
 [[row]]
 id = "b5"
@@ -484,9 +464,8 @@ what = "Spell batch step 5: damage over time (Dark Decay, Entangle). Ticks every
 who = "Claude unattended"
 days = 2
 waits_on = ["b4"]
-tentative = true
 done_when = "Reported built with its checklist written; the review pass run."
-todo = "The spell batch (decisions of 2026-10-05; plan proposed, NOT approved, nothing built)"
+todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
 
 [[row]]
 id = "b6"
@@ -549,7 +528,6 @@ who = "user at a desk"
 hours = 1.5
 needs = ["second seat for the group-bind rows (two-boxing works)"]
 waits_on = ["o4"]
-tentative = true
 milestone = "m2"
 done_when = "Every row filled."
 
@@ -562,7 +540,6 @@ what = "The interrupt-charge and global-cooldown checklists: an interrupted cast
 who = "user at a desk"
 hours = 1.0
 waits_on = ["o4"]
-tentative = true
 done_when = "Every row filled."
 
 [[row]]
@@ -588,7 +565,6 @@ what = "Redeploy with step 5 if it missed the bump day, plus any fixes from the 
 who = "user at a desk"
 hours = 0.25
 waits_on = ["b5"]
-tentative = true
 done_when = "The boot log line shows the new build= and dev_cmds=false."
 
 [[row]]
@@ -599,7 +575,6 @@ what = "Damage over time's checklist: ticks show, a DoT kill pays once, a creatu
 who = "user at a desk"
 hours = 1.5
 waits_on = ["o5"]
-tentative = true
 done_when = "Every row filled."
 
 [[row]]
@@ -787,11 +762,6 @@ text = "The multi-zone epic, with the procedural dungeon as its first customer."
 
 # ---------------------------------------------------------------------------------------
 # Risks, from schedule.md section 5 and this autumn.
-
-[[risk]]
-risk = "The spell batch waits on approval"
-impact = "Every day unapproved shifts the whole build lane. After about October 12 the last two steps miss the October 22 client and need their own export, and Bind and Gate's milestone moves."
-mitigation = "Approve step 0 alone if the rest needs thought; it closes two live bugs and blocks nothing else."
 
 [[risk]]
 risk = "Thirteen hours of checklist sittings, all the user's"
