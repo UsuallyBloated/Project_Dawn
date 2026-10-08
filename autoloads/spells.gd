@@ -154,17 +154,29 @@ func cast_spell(spell: SpellData) -> bool:
 	if spell.target_type == SpellData.TargetType.PORT:
 		var is_gate        := spell.port_zone_path.is_empty() and spell.port_entry_id.is_empty()
 		var is_same_zone   := spell.port_zone_path.is_empty() and not spell.port_entry_id.is_empty()
-		if is_gate and PlayerStats.bind_zone_path.is_empty():
-			spell_failed.emit("You have no bind point. Cast Bind Affinity first.")
-			return false
-		if is_same_zone and ZoneLoader.current_zone_path.is_empty():
-			spell_failed.emit("Cannot port — no zone loaded.")
-			return false
-		if not spell.port_zone_path.is_empty() and not FileAccess.file_exists(spell.port_zone_path):
-			spell_failed.emit("That destination has not yet been discovered.")
-			return false
+		if Net.is_launcher_mode():
+			# Online the server owns the bind and every destination (spell
+			# batch step 2): Gate always has somewhere to go (every character
+			# is bound from birth), Succor and Evacuate land at the nearest
+			# safe area, and the zone ports have no zones to go to yet, so
+			# they refuse here before any mana is spent.
+			if not spell.port_zone_path.is_empty():
+				spell_failed.emit("%s isn't available online yet." % spell.spell_name)
+				return false
+		else:
+			if is_gate and PlayerStats.bind_zone_path.is_empty():
+				spell_failed.emit("You have no bind point. Cast Bind Affinity first.")
+				return false
+			if is_same_zone and ZoneLoader.current_zone_path.is_empty():
+				spell_failed.emit("Cannot port — no zone loaded.")
+				return false
+			if not spell.port_zone_path.is_empty() and not FileAccess.file_exists(spell.port_zone_path):
+				spell_failed.emit("That destination has not yet been discovered.")
+				return false
 
-	if spell.target_type == SpellData.TargetType.BIND:
+	# Online the server decides where a bind may land (anywhere for yourself,
+	# a safe area for a group member); these zone checks are the offline game's.
+	if spell.target_type == SpellData.TargetType.BIND and not Net.is_launcher_mode():
 		if ZoneLoader.current_zone_path.is_empty():
 			spell_failed.emit("You cannot bind here.")
 			return false
@@ -362,11 +374,15 @@ func _apply_spell(spell: SpellData) -> void:
 			spell.max_hp_buff, spell.max_mp_buff,
 			spell.primary_stat_buff_duration * dur_mult, spell.spell_name)
 
-	if spell.target_type == SpellData.TargetType.PORT:
-		_execute_port(spell)
-
-	if spell.target_type == SpellData.TargetType.BIND:
-		_execute_bind()
+	# Online the server binds and ports (spell batch step 2): its Teleport and
+	# its chat line are the result, so nothing runs here (Gate used to reload
+	# the whole scene and Bind Affinity printed a bind only the client
+	# believed in). Offline keeps the local zone travel and bind.
+	if not Net.is_launcher_mode():
+		if spell.target_type == SpellData.TargetType.PORT:
+			_execute_port(spell)
+		if spell.target_type == SpellData.TargetType.BIND:
+			_execute_bind()
 
 	if not spell.is_song:
 		if spell.move_speed_mult > 0.0 and spell.move_speed_duration > 0.0 and not ally_remote:

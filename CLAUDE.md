@@ -1152,7 +1152,27 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   a GROUP MEMBER can be bound only inside a safe area (town); every character is bound at the
   starter spawn from birth; the pet always comes on Gate; Succor and Evacuate get built now;
   Gate goes to the nine pure casters plus Bard. Build-ready as step 2 of
-  `docs/design/spell_batch_plan_2026_10_05.md` (proposed, not yet approved).
+  `docs/design/spell_batch_plan_2026_10_05.md` (approved 10-07).
+  **BUILT 2026-10-08, pending playtest** (server `75ab979`; client `spells.gd` + the Gate class
+  list in the same-day commit; `bind_and_gate_checklist.md`, 23 rows; needs the redeploy AND
+  the next export, since the old client still reloads the world scene on Gate). One bind, the
+  server's: a `BIND` arm (self anywhere; a group member only inside a safe area; a non-member
+  gets one line whether absent or present, so no is-online oracle) and a `PORT` arm
+  (`Spell.port` "bind" for Gate, "safe" for Succor and Evacuate: the nearest safe area's
+  arrival point; the destination never comes from the client; the move is the existing
+  `Teleport`, no wire change). `data/safe_areas.toml` holds the town square, with a unit test
+  that no camp's aggro plus jitter reaches into a safe area. Every mover is wiped from every
+  mob's hate and the cleared mobs are fanned as `EntityTarget None` (`wipe_hate` is shared
+  with the death sweep, which had never fanned the change either); pets come along in Follow
+  with their AOI cell updated; Evacuate takes the alive, present, non-linkdead members within
+  30 m and nobody else. Gate: ten classes at 8, 50 mana, 5 s, 300 s cooldown; Succor:
+  Druid/Wizard 12; Evacuate: Druid 16. `PlayerStats.bind_zone_path` is offline-only now.
+  Tests, all failing on the previous code: Gate lands at the bind and the aggroed mob drops
+  the caster; a second Gate inside the cooldown is refused; a Warrior cannot Gate; a group
+  member is bound only in the square; Evacuate moves the member in reach and not the stranger
+  beside them; binding a stranger is refused before the mana comes off. What exists is in
+  systems_overview → "Respawn, bind points, and the death lock". The seven zone ports stay
+  client-only and refuse online (no zones to send anyone to).
 - [x] **The vendor window claims a quantity and price the server never agreed to** *(found
   2026-08-24; **BUILT 2026-08-24, pending playtest** — client `vendor_window.gd`, needs a
   re-export)*. Chat correctly said "Only 7 fit in your bags." while the vendor dialog said
@@ -1473,6 +1493,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (`create_character`). Tests: a share reaches a group-mate at 150 m and stops past 200 m, a
   heal lands at 28 m and is refused at about 34 m, Slow is refused while Torpor holds, a new
   character loads bound. "Ships silent" is recorded in both schedule files' §4.
+  **Step 2 BUILT 2026-10-08, pending playtest** (server `75ab979`, client in the same-day
+  commit; `bind_and_gate_checklist.md`; needs the redeploy AND the export; detail on the
+  "Gate and the Soul Binder" entry above). Steps 3 to 5 remain; the build lane is ahead of
+  the planner's dates.
   **Deliberate scope note:** PvP attack slows on players go through `apply_buff` (same-named
   refresh) and are not under the strongest-wins rule yet; only slows on mobs are. **Decided (user):** the group share range
   becomes **200 m** for XP shares, quest journal ticks AND the coin split (was 30 m; journal

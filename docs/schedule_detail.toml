@@ -512,9 +512,11 @@ day = "Fri Oct 23 to Sun Oct 25"
 what = "Bind and Gate's checklist: bind yourself in the field, Gate home with the pet, a group member bound only in town, Succor and Evacuate arrive in town, a forged destination refused."
 who = "user at a desk"
 hours = 1.5
-needs = ["second seat for the group-bind rows (two-boxing works)"]
+needs = ["second seat for the group-bind and Evacuate rows (two-boxing works)", "the export from the same batch (the old client reloads the world on Gate)"]
 waits_on = ["o4"]
 milestone = "m2"
+checklist = "bind_and_gate_checklist.md"
+todo = "Gate and the Soul Binder use two different bind points"
 done_when = "Every row filled."
 
 [[row]]

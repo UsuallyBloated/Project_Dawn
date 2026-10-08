@@ -93,8 +93,10 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   replicated buff state yet); heals/HoTs still route to pets. Damage shields (Thorns,
   Spellshield, Rune/Primal Bond absorb) are self-only by design except Thorns, which is
   ally-castable.
-- **Ports:** `TargetType.PORT` with `port_zone_path` / `port_entry_id`; Gate uses empty
-  strings to resolve to the bind point.
+- **Ports:** `TargetType.PORT` with `port_zone_path` / `port_entry_id` (offline / Test Room
+  only). Online, Gate, Succor and Evacuate are server moves (see "Respawn, bind points, and
+  the death lock"); the client sends the cast and waits for the `Teleport`. The seven zone
+  ports refuse online: there are no zones to send anyone to.
 - **Notable resolved spells:** Complete Heal (Cleric, self-heal for now), Torpor (Shaman),
   Clarity/Breeze (Enchanter), Haste (Enchanter), Spirit of Wolf (Druid/Shaman), Lich Form
   (Necromancer — skips HP regen, extreme MP regen), Gate (Wizard), Exsanguinate (Blood
@@ -266,10 +268,10 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   `Teleport`ed to the corpse and refunded that percentage of **that death's actual lost xp**
   (captured on `Corpse.lost_xp` — the ACTUAL amount removed, not nominal, which closes a
   level-5-floor over-refund exploit). One res per corpse (persisted `resurrected` flag).
-- **Not built:** **res-sickness** (specced for Slice 3, dropped from v1), respawn-at-bind /
-  Soul Binder NPC (respawn still honors the *client* bind; `BindAtCurrentLocation` is an inert wire
-  variant with no server handler), corpse auto-re-equip on loot, and per-creature corpse
-  models/scale.
+- **Not built:** **res-sickness** (specced for Slice 3, dropped from v1), corpse auto-re-equip
+  on loot, and per-creature corpse models/scale. (Respawn-at-bind and the Soul Binder shipped
+  2026-08-12; Bind Affinity and Gate joined them server-side 2026-10-08. See "Respawn, bind
+  points, and the death lock".)
 
 ---
 
@@ -720,6 +722,29 @@ Where you wake up after dying is server-authoritative (2026-08-12, playtested 08
   the corpse twitching as local prediction was repeatedly overridden.
 - **Aggro breaks on death.** Dead players are excluded from the enemy-AI target list and wiped from
   every enemy's aggro/threat table, so mobs disengage and leash home instead of beating the corpse.
+  `wipe_hate` is the one helper (shared with the port arm below) and fans `EntityTarget None` for
+  every mob it cleared, since the AI pass only reports target changes it made itself.
+- **Bind Affinity and Gate, server-side (spell batch step 2, 2026-10-08; design
+  `docs/design/bind_and_gate.md`, user calls D1 to D6).** Two cast arms in `tick.rs`, both behind
+  `cast_target_refusal` so a refused cast costs nothing. **`BIND`:** no target, a self target or a
+  mob target all mean "bind myself", anywhere (D1); a GROUP MEMBER can be bound only while they
+  stand in a safe area (D2), and a non-member gets one line whether absent or present (no
+  is-online oracle). The bind written is always the bound player's own server position. Every
+  character is born bound at the starter spawn (`create_character`, D3), so an unbound Gate
+  cannot arise. **`PORT`:** `Spell.port` is `"bind"` (Gate: the caster's bind) or `"safe"`
+  (Succor, Evacuate: the nearest safe area's arrival point); the destination never comes from
+  the client, and the move is the existing `Teleport` message, so no wire change. `port_group`
+  (Evacuate) also moves the alive, present, non-linkdead group members within
+  `FRIENDLY_SPELL_RANGE`, and nobody else. Every mover is wiped from every mob's hate (no trains
+  into town, and a mob that loses its target leashes and heals, so "tag it, Gate out" pays
+  nothing); the mover's pets come along (D4), set to follow, with their AOI cell updated so
+  nobody keeps a ghost. Gate: 50 mana, 5 s, 300 s cooldown, level 8, the ten Bind Affinity
+  classes (D6); Succor: Druid/Wizard 12, 80 mana, 3 s, 60 s cooldown; Evacuate: Druid 16, 120
+  mana, 5 s, 60 s cooldown (D5). **Safe areas** live in `data/safe_areas.toml` (`world/safe_areas.rs`;
+  the town square, 10 m round the spawn, arrival at the spawn), with a unit test that no camp
+  spawn's aggro plus jitter reaches into one. The client (`spells.gd`) no longer runs Gate or a
+  bind locally online (Gate used to reload the whole world scene): the cast goes up, the
+  `Teleport` or the bind line comes back. `PlayerStats.bind_zone_path` is now offline-only.
 
 **Why it was broken:** `Respawn` restored HP but never touched position. Because the server owns
 position, the client's own respawn move was overridden by the next Position broadcast and the player
