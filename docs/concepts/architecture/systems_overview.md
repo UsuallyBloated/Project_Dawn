@@ -46,6 +46,16 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   says no. Every refusal is private and carries the server's true mana (`refuse_cast`);
   interrupts, silence and mez also fan to peers so the bar they drew cancels. Casting
   stands the caster. The pure timing and interrupt decisions are `world/cast_gate.rs`.
+  **An interrupt costs mana (spell batch step 3, 2026-10-08, user call):** when a hit that
+  did real damage interrupts a cast, `roll_cast_interrupt` takes the spell's mana cost times
+  the fraction of the bar that had run (`cast_gate::interrupt_charge`; the server's own cast
+  time, never the client's bar length, so a forged long bar cannot shrink it), capped at the
+  mana held, and the caster alone gets the true `ManaUpdate` plus "Your concentration
+  breaks: N mana lost." right behind the CastFail. A zero-damage or fully absorbed hit
+  charges nothing (or a damage shield would be a mana-drain weapon), and a deliberate cancel
+  never reaches the server, so it stays free. All five interrupt sites (enemy melee, PvP
+  melee, PvP spell, both damage-shield reflects) pass the applied damage. The client refunds
+  locally on the CastFail as before and settles on the ManaUpdate a frame later.
   Reach (2026-10-08): hostile spells 25 m (`RANGED_ATTACK_RANGE`), friendly spells (ALLY
   heals and buffs, PET_HEAL) 30 m (`FRIENDLY_SPELL_RANGE`); the client checks one metre
   inside each. One attack slow holds a mob at a time, strongest wins: in `Entity::apply_cc`
@@ -737,8 +747,13 @@ Where you wake up after dying is server-authoritative (2026-08-12, playtested 08
   (Evacuate) also moves the alive, present, non-linkdead group members within
   `FRIENDLY_SPELL_RANGE`, and nobody else. Every mover is wiped from every mob's hate (no trains
   into town, and a mob that loses its target leashes and heals, so "tag it, Gate out" pays
-  nothing); the mover's pets come along (D4), set to follow, with their AOI cell updated so
-  nobody keeps a ghost. Gate: 50 mana, 5 s, 300 s cooldown, level 8, the ten Bind Affinity
+  nothing); the mover's summoned pets come along (D4), set to follow, with their AOI cell
+  updated so nobody keeps a ghost, and the mover's `last_attacked_enemy` is cleared so the pet
+  pre-pass cannot hand the pet its old target back and send it walking out of town (the review
+  of the first cut found exactly that). A CHARMED mob is not carried: it is released where it
+  stands and walks home, as when its charmer logs out, since carrying it would park a camp mob
+  (a named one, even) inside the one safe area to turn hostile when the charm ends. Binding a
+  group member reaches 30 m like any friendly cast. Gate: 50 mana, 5 s, 300 s cooldown, level 8, the ten Bind Affinity
   classes (D6); Succor: Druid/Wizard 12, 80 mana, 3 s, 60 s cooldown; Evacuate: Druid 16, 120
   mana, 5 s, 60 s cooldown (D5). **Safe areas** live in `data/safe_areas.toml` (`world/safe_areas.rs`;
   the town square, 10 m round the spawn, arrival at the spawn), with a unit test that no camp

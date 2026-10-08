@@ -1173,6 +1173,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   beside them; binding a stranger is refused before the mana comes off. What exists is in
   systems_overview → "Respawn, bind points, and the death lock". The seven zone ports stay
   client-only and refuse online (no zones to send anyone to).
+  **Review pass, two HIGH finds fixed same day** (server `7e07351`, both test-pinned, failing
+  on `75ab979`): a CHARMED mob is a pet with the charmer as owner, so it rode every port into
+  the town square and stood there hostile when the charm ended (a named mob, even); it is now
+  released where it stands and walks home, as when its charmer logs out, and only summoned
+  pets are carried. And the arm cleared the pet's target but not the owner's
+  `last_attacked_enemy`, so the pet pre-pass handed the pet its old target back within 10 s
+  and it walked out of town to fight unsupervised (a pet kill credits the owner); the mover's
+  last-attacked fields are cleared with the port. Smaller: bind-other reaches 30 m like any
+  friendly cast; the pet's move fans next tick, not at the keepalive; the group-bind test reads
+  both binds back from the DB and Evacuate's test has a grouped member out of reach.
+  **Flagged, not changed (content):** the square is 10 m round the spawn and cannot grow much
+  (the Bonepile's nearest spawn leaves 10.3 m of aggro clearance), so a group member standing
+  at the far NPCs on the z = 5 row (x out to 14) cannot be bound; the user may want a second
+  safe area there or the NPCs closer in.
 - [x] **The vendor window claims a quantity and price the server never agreed to** *(found
   2026-08-24; **BUILT 2026-08-24, pending playtest** — client `vendor_window.gd`, needs a
   re-export)*. Chat correctly said "Only 7 fit in your bags." while the vendor dialog said
@@ -1495,8 +1509,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   character loads bound. "Ships silent" is recorded in both schedule files' §4.
   **Step 2 BUILT 2026-10-08, pending playtest** (server `75ab979`, client in the same-day
   commit; `bind_and_gate_checklist.md`; needs the redeploy AND the export; detail on the
-  "Gate and the Soul Binder" entry above). Steps 3 to 5 remain; the build lane is ahead of
-  the planner's dates.
+  "Gate and the Soul Binder" entry above; the review pass's two HIGH finds are fixed in
+  `7e07351`). **Step 3 BUILT 2026-10-08, pending playtest** (server `4303459`, server-only;
+  `interrupt_charge_checklist.md`, 13 rows; needs the redeploy, no export). An interrupt from a
+  hit that did real damage charges the spell's mana times the fraction of the bar that had run
+  (`cast_gate::interrupt_charge`, the server's own cast time so a forged long bar cannot
+  shrink it), capped at the mana held; the caster alone gets the true ManaUpdate behind the
+  CastFail and "Your concentration breaks: N mana lost."; a zero-damage or absorbed hit
+  charges nothing (a damage shield must not be a mana drain), and a deliberate cancel never
+  reaches the server. All five interrupt sites pass their applied damage. Integration test
+  pins the line, the charge and the settled mana; fails on the previous code. Steps 4 and 5
+  remain; the build lane is ahead of the planner's dates.
   **Deliberate scope note:** PvP attack slows on players go through `apply_buff` (same-named
   refresh) and are not under the strongest-wins rule yet; only slows on mobs are. **Decided (user):** the group share range
   becomes **200 m** for XP shares, quest journal ticks AND the coin split (was 30 m; journal

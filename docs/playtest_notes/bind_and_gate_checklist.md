@@ -37,7 +37,9 @@ The `/loc` command gives you a position to compare against the log.
 ## 2 — No trains, and the pet comes along
 - [ ] **Aggro a mob (let it hit you once), step out of its melee reach, cast Gate** → you land at the bind; the mob does NOT follow and walks home; nothing is beating on you at the bind. (A mob in melee range interrupts the bar on about 70% of hits: that is the channeling roll, not a bug. Use Evade or just distance.) notes:
 - [ ] **Beast Master or a summoner: Gate with the pet out** → the pet is beside you at the bind in Follow stance; the pet panel still works. notes:
+- [ ] **Have the pet fighting a mob when you Gate** → the pet arrives with you and STAYS (watch it for ten seconds: it must not run back out to the mob). The review found the first cut's pet walking straight back to the fight; the fix is test-pinned. notes:
 - [ ] **Park the pet with `/pet guard` 20 m from you, then Gate** → the pet still comes (user call D4: the pet always comes). notes:
+- [ ] **Enchanter or Bard: CHARM a mob, then Gate** → the charmed mob does NOT come to town; it is released where it stood and walks home (hostile again), and your pet panel clears. `charm broken by the owner porting away` in the log. notes:
 
 ## 3 — Binding another player (second seat)
 - [ ] **Not grouped: target the other player anywhere and cast Bind Affinity** → "Cast failed: You can only bind yourself or a group member."; your mana does not dip. notes:

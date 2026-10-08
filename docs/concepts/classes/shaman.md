@@ -127,6 +127,11 @@ Spells are received through ancestral rites performed at tribal spirit shrines o
 
 ### Level 34
 
+> **2026-10-07 (user decision, spell batch):** the Torpor the game ships is not this row. In
+> `data/spell_definitions.gd` and the server's `spells.toml` Torpor is **level 20, 20 mana,
+> 1.5 s cast, a 10% attack slow for 60 s, no heal**, sitting above Slow (level 8, 5% for 30 s)
+> with the strongest slow winning on a target. The line below stays as the class concept.
+
 | Spell | Description | School | Mana |
 |---|---|---|---|
 | Torpor | Target: slow 65% attack speed; self HoT +50/s for 30s; 4.0s cast; signature | Alteration | 100 |
