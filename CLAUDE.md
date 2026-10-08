@@ -1531,8 +1531,36 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   keeps that one), and a refused or interrupted cast starts none. Tests: refused at the start
   and the release fails the cast-time gate, lands after the cooldown, an instant cast refused
   (fails on the previous code); three songs 100 ms apart all accepted. Exploit lens: without
-  it a modified client fires every instant spell on its bar inside one second. Step 5 (damage
-  over time) remains; the build lane is ahead of the planner's dates.
+  it a modified client fires every instant spell on its bar inside one second.
+  **Step 5 BUILT 2026-10-08, pending playtest, the last of the batch** (server `d593609`,
+  client `9783d3a`; `damage_over_time_checklist.md`, 17 rows; needs the redeploy AND the
+  export: the ticks, lines and kills work on the old client, the target-frame icons and the
+  client no longer running its own DoT online do not). Entangle and Dark Decay are server
+  spells: the direct hit with the cast, then `Entity::active_dots` ticks every 3 s for dps x 3
+  (whole ticks counted off the duration), builds aggro, breaks mez, fans the hit and the
+  caster's "<spell> for N" line, and a tick that kills goes through `kill_enemy`, the one kill
+  step now shared by the spell arm and both damage-shield reflect sites (a Thorns kill paid
+  nothing before). Anti-farming: a mob entering Leash or Dead sheds its DoTs and takes none
+  on the walk home; the caster's DoTs end on death, any port, and logout, on mobs and on
+  flagged players alike (PvP DoTs ride the player buff list as `BuffEffect::Dot`). The
+  target frame shows what is on a mob (DoTs plus Mesmerized / Rooted / Snared / Slowed) via
+  the mob's BuffSnapshot, fanned to the players who can see it. **The review pass caught two
+  exploits before the commit:** a DoT cast on a mob walking home kept ticking on an idle mob
+  that could never acquire its caster, paying a full kill from safety (now refused on the
+  walk and cleared at the door); and the kill step rolled LOOT for owned victims, which the
+  melee and pet-kill paths had ALWAYS done (a warder is "Wolf" with a wolf's table and
+  returns free every 15 s, so two flagged accounts could farm its bag); every path now drops
+  nothing for a pet or a charmed mob, as none ever paid XP for one. Also from the review: the
+  last tick of a DoT was a float coin-flip (now a count), PvP DoTs outlived a caster who
+  logged out, a 0-HP body could stand unkilled, mob snapshots went to everyone in the world.
+  Tests: entity cadence incl. exactly six ticks at the real 20 Hz; a DoT kill pays XP and
+  loot, a DoT ends when its caster Gates, a DoT ends when the mob leashes, a Thorns kill
+  pays; all fail on the previous code. **Not built, flagged:** per-spell DoT resistance (no
+  resist model exists), a DoT on a charmed pet carried through a charm ending (the charm
+  rebuilds the mob fresh, so none crosses), and `/pvp off` ending a DoT already on you (a dev
+  toggle today). **The spell batch is built end to end**; five checklists wait on one redeploy
+  and one export: `cast_hardening`, `small_rules`, `bind_and_gate`, `interrupt_charge`,
+  `global_cooldown`, `damage_over_time`.
   **Deliberate scope note:** PvP attack slows on players go through `apply_buff` (same-named
   refresh) and are not under the strongest-wins rule yet; only slows on mobs are. **Decided (user):** the group share range
   becomes **200 m** for XP shares, quest journal ticks AND the coin split (was 30 m; journal

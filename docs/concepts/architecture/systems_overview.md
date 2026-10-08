@@ -81,15 +81,26 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   through `kill_enemy`, the one kill step (XP via `award_kill`, quest credit, warder retreat,
   loot) that the spell arm now shares with it and with the two damage-shield reflect sites,
   so a mob finished off by Thorns pays like any other (it used to pay nothing; the reflect
-  counts as the shielded player's or pet owner's damage). Anti-farming: `Entity::transition`
-  to Leash or Dead clears every DoT (tag it and let it leash home pays nothing), `wipe_hate`
-  clears the caster's DoTs when they die or port, and `reap_connection` when they log out (a
-  linkdead body keeps its DoTs for the linger; it can still be killed). On a PLAYER a DoT is
-  an `ActiveBuff` with `BuffEffect::Dot`, ticked in the player buff sweep on the same
-  cadence and fanned the same way; the death sweep handles a bearer at 0. **The target frame
+  counts as the shielded player's or pet owner's damage). The kill step, like `award_kill`,
+  pays nothing for an OWNED victim (a pet, a charmed mob): no XP and, since the step 5 review,
+  no loot or coin on any path either; the melee and pet-kill paths had always rolled a
+  warder's wolf table every free respawn, a bag two flagged accounts could farm. Anti-farming:
+  `Entity::transition` to Leash or Dead clears every DoT, `apply_dot` refuses one while the
+  mob is walking home and the home reset clears again (a DoT landed on the walk would tick on
+  an idle mob that cannot acquire its caster beyond its leash: a kill from safety, caught in
+  review), `wipe_hate` clears the caster's DoTs when they die or port, and `reap_connection`
+  when they log out (a linkdead body keeps its DoTs for the linger; it can still be killed).
+  Whole ticks are counted off the duration (`ticks_left`), so float drift between the two
+  accumulators can never lose the last one (unit-tested at the real 20 Hz). On a PLAYER a DoT
+  is an `ActiveBuff` with `BuffEffect::Dot`, ticked in the player buff sweep by elapsed time
+  on the same cadence and fanned the same way, ended by `clear_player_dots_from` on the same
+  three events; the death sweep handles a bearer at 0. **The target frame
   shows what is on a mob:** `Entity::status_pairs` (buffs, DoTs, and the crowd control as
   "Mesmerized" / "Rooted" / "Snared" / "Slowed") is the BuffSnapshot payload for every mob and
-  pet, re-fanned by the AI sweep whenever the set of names changes (`last_status_fanned`);
+  pet, re-fanned by the AI sweep to the players who can see the mob whenever the set changes
+  or a whole second passes on any entry (`last_status_fanned` holds "name:seconds", so a
+  same-name refresh re-fans too); a body found at 0 HP with no tick to blame is killed
+  through the same step rather than left standing;
   the client's `RemoteEnemyManager` routes it to `RemoteEnemy`, which mirrors the pet's buff
   surface, and `hud.gd`'s target frame reads it through the same icon row as a pet's or a
   peer's. Online the client no longer runs its own local DoT on a server mob (`spells.gd`).

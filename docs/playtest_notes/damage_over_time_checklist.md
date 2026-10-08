@@ -7,8 +7,9 @@ you, breaks mez, and a tick that kills pays exactly what a direct hit would (XP,
 credit, loot). Two anti-farming rules: a mob that starts walking home sheds every DoT on it,
 and your DoTs end when you die, Gate, Succor, Evacuate or log out. The target frame shows
 what is on a mob (DoTs, and the crowd control that was invisible before: mez, root, snare,
-slow). Also fixed: a mob finished off by Thorns used to pay nothing. **Needs the redeploy
-with the step 5 commit or later AND the next export** (the target-frame icons and the
+slow). Also fixed: a mob finished off by Thorns used to pay nothing, and a pet or charmed mob
+killed on any path used to drop loot and coin (it never paid XP; now it drops nothing
+either). **Needs the redeploy with `d593609` or later AND the next export** (the target-frame icons and the
 client no longer running its own DoT online are client code; the ticks, the lines and the
 kills work on the old client too).
 
@@ -23,7 +24,7 @@ line reads like a proc: "Entangle for 15". `spelltest` has no Druid or Necromanc
 or Level Up a fresh character (Entangle at 6, Dark Decay at 10).
 
 ## Setup
-- [ ] Redeploy the R720 with the step 5 commit or later (boot line `dev_cmds=false`)
+- [ ] Redeploy the R720 with `d593609` or later (boot line `dev_cmds=false`)
 - [ ] Export the client from the same batch; `/version` shows it
 - [ ] A Druid 6+ with Entangle on the bar (a Necromancer 10+ with Dark Decay for the long one)
 
@@ -47,8 +48,9 @@ or Level Up a fresh character (Entangle at 6, Dark Decay at 10).
 - [ ] **Cast a mez, root, snare or slow on a mob** → "Mesmerized", "Rooted", "Snared" or "Slowed" appears on the target frame with its countdown and leaves on expiry. notes:
 - [ ] **Hit a mesmerized mob with a DoT tick** → the mez breaks (icon leaves) as any damage would. notes:
 
-## 5 — Thorns pays now
+## 5 — Thorns pays now, pets never drop
 - [ ] **Druid with Thorns up, let a nearly dead mob swing at you until the reflect kills it** → XP and loot land; before this the kill paid nothing. notes:
+- [ ] **Second seat, both /pvp on: kill the other player's warder (or a charmed mob) by any means** → no XP (as before) and now NO loot bag and no coin either; it used to drop a wolf's table every free respawn. notes:
 
 ## 6 — PvP (second seat, both /pvp on)
 - [ ] **Entangle a flagged player** → their bar drops 15 every three seconds, you see "Entangle for 15", they see the hit; it ends on time. notes:
