@@ -524,12 +524,26 @@ id = "v14"
 week = "w3"
 lane = "verify"
 day = "Fri Oct 23 to Sun Oct 25"
-what = "The interrupt-charge and global-cooldown checklists (interrupt_charge_checklist.md, and the global cooldown's sheet once step 4 is built): an interrupted cast costs part of its mana, a cancelled one nothing; every gem greys after a cast; a Bard can still twist."
+what = "The interrupt-charge checklist: an interrupted cast costs part of its mana, a cancelled one nothing, a zero-damage hit charges nothing; the line and the log agree."
 who = "user at a desk"
-hours = 1.0
+hours = 0.5
 needs = ["second seat for the group-panel row (two-boxing works)"]
 waits_on = ["o4"]
 checklist = "interrupt_charge_checklist.md"
+todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
+done_when = "Every row filled."
+
+[[row]]
+id = "v14b"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "The global-cooldown checklist: every gem greys for two seconds after a cast, a second cast inside it is refused before any bar, a Bard still twists songs back to back, per-spell cooldowns unchanged."
+who = "user at a desk"
+hours = 0.5
+needs = ["the export from the same batch (the greying and the client-side refusal are client code)"]
+waits_on = ["o4"]
+checklist = "global_cooldown_checklist.md"
 todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
 done_when = "Every row filled."
 

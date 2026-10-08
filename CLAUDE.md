@@ -1518,8 +1518,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   CastFail and "Your concentration breaks: N mana lost."; a zero-damage or absorbed hit
   charges nothing (a damage shield must not be a mana drain), and a deliberate cancel never
   reaches the server. All five interrupt sites pass their applied damage. Integration test
-  pins the line, the charge and the settled mana; fails on the previous code. Steps 4 and 5
-  remain; the build lane is ahead of the planner's dates.
+  pins the line, the charge and the settled mana; fails on the previous code.
+  **Step 4 BUILT 2026-10-08, pending playtest** (server `9c4895e`, client in the same-day
+  commit; `global_cooldown_checklist.md`, 16 rows; needs the redeploy AND the export, since
+  the gem greying and the client-side refusal are client code). After any accepted cast no
+  spell may START for `GLOBAL_COOLDOWN` (2.0 s server, 2.25 s client, so an honest player is
+  never refused): a timed cast is refused at its CastStart with a private "You cannot cast
+  again yet." and the true mana (nothing cached, no cast time lost), an instant one at its
+  CastSpell. Bard songs are exempt on both sides (`Spell.is_song` on the six songs, compared
+  by the lockstep check), or twisting stops working. The client refuses before any bar or
+  mana, `hotbar.gd` greys every non-song gem for it (a gem under a longer cooldown of its own
+  keeps that one), and a refused or interrupted cast starts none. Tests: refused at the start
+  and the release fails the cast-time gate, lands after the cooldown, an instant cast refused
+  (fails on the previous code); three songs 100 ms apart all accepted. Exploit lens: without
+  it a modified client fires every instant spell on its bar inside one second. Step 5 (damage
+  over time) remains; the build lane is ahead of the planner's dates.
   **Deliberate scope note:** PvP attack slows on players go through `apply_buff` (same-named
   refresh) and are not under the strongest-wins rule yet; only slows on mobs are. **Decided (user):** the group share range
   becomes **200 m** for XP shares, quest journal ticks AND the coin split (was 30 m; journal

@@ -9,8 +9,8 @@ Warder's Mend and the charm walk-home; `e3a6fa8` and `6a802f4` earlier the same 
 exported from `fc880df` (10-05). Every server-side list below is runnable now; the
 client-only sheet (1c) needs an export or the editor. **Pushed, not deployed (10-08):**
 `5d8d385` (step 0), `c71b686` (step 1), `75ab979` + review fixes `7e07351` (step 2),
-`4303459` (step 3); 3b to 3e wait on that redeploy, 3c's spell rows and all of 3d on the next
-export too.
+`4303459` (step 3), `9c4895e` (step 4); 3b to 3f wait on that redeploy, 3c's spell rows and
+all of 3d and 3f on the next export too.
 
 **Test characters:** the `spelltest` account holds one character per class the spell rows
 need (table in `ported_spells_checklist.md`). Log in as `spelltest` with password
@@ -38,6 +38,9 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
    want a second seat.
 3e. `interrupt_charge_checklist.md` (13 rows; needs a redeploy with `4303459` or later;
    server only): spell batch step 3. §3 wants a second seat.
+3f. `global_cooldown_checklist.md` (16 rows; needs a redeploy with `9c4895e` or later AND
+   the next export, since the gem greying and the client-side refusal are client code): spell
+   batch step 4. Caderyn (Bard 10 on `spelltest`) for the twisting rows.
 4. `loc_command_checklist.md` (5 rows).
 5. `full_bags_move_checklist.md` (9 rows).
 6. `time_of_day_checklist.md` §1, §3, §4 (quit and relaunch: the clock carries on, not back to 08:00).

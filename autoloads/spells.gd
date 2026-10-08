@@ -3,6 +3,8 @@ extends Node
 signal spell_cast(spell: SpellData)
 signal spell_failed(reason: String)
 signal spell_cooldown_updated(spell_name: String, remaining: float, total: float)
+# The global cooldown's countdown, every frame while it runs and a final zero.
+signal global_cooldown_updated(remaining: float, total: float)
 signal casting_started(spell: SpellData)
 signal casting_cancelled
 signal spells_changed
@@ -15,6 +17,8 @@ var _casting: SpellData = null
 var _cast_timer: float = 0.0
 var _hit_during_cast: bool = false
 var no_cooldowns: bool = false
+# Seconds left on the global cooldown (0 when none runs).
+var _gcd_remaining: float = 0.0
 
 # How far a targeted spell reaches, in metres. One metre inside the server's
 # RANGED_ATTACK_RANGE (25 m), which is the authority: this check only spares an
@@ -24,6 +28,11 @@ const SPELL_RANGE := 24.0
 # Friendly spells (heals and buffs on another player or a pet) reach further:
 # one metre inside the server's FRIENDLY_SPELL_RANGE (30 m), decided 2026-10-05.
 const FRIENDLY_SPELL_RANGE := 29.0
+# The global cooldown (decided 2026-10-05): after any cast no spell may start
+# for this long, Bard songs excepted (twisting is casting songs back to back).
+# The server's GLOBAL_COOLDOWN is a quarter second shorter (2.0 s), so an
+# honest player who waits this out is never refused; every gem greys meanwhile.
+const GLOBAL_COOLDOWN_SECS := 2.25
 
 # The spell most recently sent to the server, and when. A server refusal
 # (CastFail) arriving within REFUSAL_WINDOW_MSEC of it means that cast never
@@ -46,6 +55,9 @@ func _process(delta: float) -> void:
 		if _cast_timer <= 0.0:
 			_finish_cast()
 	_cooldowns.tick(delta)
+	if _gcd_remaining > 0.0:
+		_gcd_remaining = maxf(_gcd_remaining - delta, 0.0)
+		global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
 
 func setup_for_class(_player_class: String) -> void:
 	var effective := Alignment.get_effective_class()
@@ -89,6 +101,11 @@ func cast_spell(spell: SpellData) -> bool:
 		return false
 	if _cooldowns.is_active(spell.spell_name) and not no_cooldowns:
 		spell_failed.emit("Spell is on cooldown.")
+		return false
+	# The global cooldown: a refusal here costs nothing (no bar, no mana), where
+	# the server's own gate at CastStart would answer with a CastFail.
+	if _gcd_remaining > 0.0 and not spell.is_song and not no_cooldowns:
+		spell_failed.emit("You cannot cast again yet.")
 		return false
 	if PlayerStats.mp < spell.mana_cost:
 		spell_failed.emit("Not enough mana.")
@@ -253,6 +270,9 @@ func is_on_cooldown(spell_name: String) -> bool:
 func get_cooldown_remaining(spell_name: String) -> float:
 	return _cooldowns.get_remaining(spell_name)
 
+func get_global_cooldown_remaining() -> float:
+	return _gcd_remaining
+
 # Any loaded spell by exact name, regardless of class/level gating
 # (`available` is the class-filtered subset; `_all_spells` is everything).
 # Used by BuffManager to reconstruct an ALLY buff another player cast on
@@ -284,6 +304,11 @@ func _apply_spell(spell: SpellData) -> void:
 		_sent_at_msec = Time.get_ticks_msec()
 
 	_cooldowns.start(spell.spell_name, spell.cooldown)
+	# The global cooldown starts as the cast lands (the server stamps its own
+	# when it accepts the CastSpell); a song starts none.
+	if not spell.is_song and not no_cooldowns:
+		_gcd_remaining = GLOBAL_COOLDOWN_SECS
+		global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
 	var effectiveness := _get_alignment_effectiveness(PlayerStats.player_class)
 	var dmg_mult    := CastingSkills.get_damage_mult(spell.discipline)
 	var dur_mult    := CastingSkills.get_duration_mult(spell.discipline)
@@ -505,6 +530,9 @@ func on_server_cast_refused() -> void:
 		return
 	if Time.get_ticks_msec() - _sent_at_msec <= REFUSAL_WINDOW_MSEC:
 		_cooldowns.clear(_sent_spell_name)
+		# A refused cast stamped no global cooldown server-side either.
+		_gcd_remaining = 0.0
+		global_cooldown_updated.emit(0.0, GLOBAL_COOLDOWN_SECS)
 	_sent_spell_name = ""
 
 # True when an ALLY-target spell is being cast on a remote recipient (peer

@@ -56,6 +56,21 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   never reaches the server, so it stays free. All five interrupt sites (enemy melee, PvP
   melee, PvP spell, both damage-shield reflects) pass the applied damage. The client refunds
   locally on the CastFail as before and settles on the ManaUpdate a frame later.
+  **The global cooldown (spell batch step 4, 2026-10-08, user call):** after any accepted
+  cast no spell may START for `GLOBAL_COOLDOWN` (2.0 s, `world/mod.rs`), stamped on
+  `PerConnection::gcd_until` beside the per-spell cooldown. A timed cast is refused at its
+  CastStart (handlers.rs: a private CastFail "You cannot cast again yet." plus the true mana,
+  nothing cached, so its CastSpell fails the cast-time gate too; the caster loses no cast
+  time), an instant cast at its CastSpell next to the per-spell cooldown gate. Bard songs are
+  exempt on both sides (`Spell.is_song`, set on the six songs in `spells.toml` and compared
+  by the lockstep check against the client's `is_song`): they neither start nor honour it,
+  or twisting stops working. The client (`Spells.GLOBAL_COOLDOWN_SECS` 2.25 s, a quarter
+  second longer so an honest player is never refused) refuses before any bar or mana, starts
+  its countdown as a cast lands, clears it on a server refusal, and `hotbar.gd` greys every
+  non-song gem for it, with a gem under a longer cooldown of its own keeping that one. A
+  refused or interrupted cast starts no global cooldown. The point, besides feel: without it
+  a modified client could fire every instant spell on its bar inside one second, metered only
+  by each spell's own cooldown and the one-cast-per-tick rule.
   Reach (2026-10-08): hostile spells 25 m (`RANGED_ATTACK_RANGE`), friendly spells (ALLY
   heals and buffs, PET_HEAL) 30 m (`FRIENDLY_SPELL_RANGE`); the client checks one metre
   inside each. One attack slow holds a mob at a time, strongest wins: in `Entity::apply_cc`
