@@ -307,7 +307,7 @@ minutes before a friend runs dry. This phase is the difference between "I saw yo
       position.
 - **Tune `CORPSE_LINGER_SECS` for production** properly (Phase 0 is the emergency raise; this
       is the considered value).
-- **Minimal sound pass.** See the open question in §4. Not yet committed to.
+- **Minimal sound pass.** See §4: DECIDED 2026-10-05, the friends build ships silent.
 
 **Done means:** two friends can group and play three hours without running out of things to do.
 
@@ -321,7 +321,11 @@ minutes before a friend runs dry. This phase is the difference between "I saw yo
 
 ---
 
-## 4. Open question (needs a decision, not blocking yet)
+## 4. Open question (DECIDED 2026-10-05: the friends build ships silent)
+
+**Decision (user, 2026-10-05):** "No time for sound files by Nov 8." The build ships with no
+audio; sound stays its own epic on the To-Do afterward. The question as it stood, kept for
+the record:
 
 **Sound.** There is currently none: no combat, no spell, no ambient, no music. To a returning
 developer this is invisible. To a friend logging in for the first time, total silence is one of

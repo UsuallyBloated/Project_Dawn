@@ -183,12 +183,12 @@ Keep the main model for design, code, and any exploit or verification work.
 
 ### Known client↔server drift to watch
 - Spells exist in **both** GDScript (`data/spell_definitions.gd`) and server `spells.toml`
-  — adding/editing one without the other causes drift. Recounted 2026-10-07: the client has
-  156 spells, `spells.toml` has 134, so **22 are client-only** and are refused server-side as
-  an unknown spell (no effect; since 10-02 no mana is taken either). All 22 need something the
+  — adding/editing one without the other causes drift. Recounted 2026-10-08: the client has
+  156 spells, `spells.toml` has 135, so **21 are client-only** and are refused server-side as
+  an unknown spell (no effect; since 10-02 no mana is taken either). All 21 need something the
   server does not model yet (ports, prestige classes, damage over time, mana drain, stealth);
-  no pet spell is among them since Warder's Mend was ported on 10-07 — see the To-Do
-  "Client-only spell backlog". **Check it with
+  no pet spell is among them since Warder's Mend was ported on 10-07, and Torpor joined the
+  server on 10-08 — see the To-Do "Client-only spell backlog". **Check it with
   `tools/check_spell_lockstep.gd`** (see `docs/reference/commands.md`): it compares every
   field the server carries and exits 1 on drift. On 2026-10-05 the 133 shared spells showed
   ZERO drift. One deliberate exception is built into the check: Bard songs carry 0 damage
@@ -1458,7 +1458,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `docs/design/spell_batch_plan_2026_10_05.md`. **APPROVED 2026-10-07 (user: "Approved.
   Thanks!")**; step 0's leash and charm halves had already shipped and passed (the cast-code
   entry below), the remaining four step 0 items start 10-08, then steps 1 to 5 in order,
-  each its own commit with its own tests and checklist. **Decided (user):** the group share range
+  each its own commit with its own tests and checklist.
+  **Step 0 BUILT 2026-10-08** (server `5d8d385`; `cast_hardening_checklist.md`; the
+  cast-code entry has the detail). **Step 1 BUILT 2026-10-08, pending playtest** (server
+  `c71b686`, client in the same-day commit; `small_rules_checklist.md`; needs a redeploy AND
+  the next export, since Slow, Torpor and Aria's numbers and the 29 m friendly check changed
+  on the client too). What it is: `GROUP_SHARE_RANGE` 200 m for XP, journal ticks and the
+  coin split (journal credit takes the same alive-and-in-range test as XP now);
+  `FRIENDLY_SPELL_RANGE` 30 m for ALLY and PET_HEAL in the pre-flight, hostile spells keep
+  25 m; Slow 5% for 30 s at 10 mana, Torpor on the server at 10% for 60 s at 20 mana with
+  no heal, Aria of Dismay 8%, none with a cooldown of its own until step 4; one attack slow
+  per target with the strongest winning (`Entity::apply_cc` ignores a weaker one, the
+  pre-flight refuses it at no cost); every new character born bound at the starter spawn
+  (`create_character`). Tests: a share reaches a group-mate at 150 m and stops past 200 m, a
+  heal lands at 28 m and is refused at about 34 m, Slow is refused while Torpor holds, a new
+  character loads bound. "Ships silent" is recorded in both schedule files' §4.
+  **Deliberate scope note:** PvP attack slows on players go through `apply_buff` (same-named
+  refresh) and are not under the strongest-wins rule yet; only slows on mobs are. **Decided (user):** the group share range
   becomes **200 m** for XP shares, quest journal ticks AND the coin split (was 30 m; journal
   ticks had no range rule); friendly spells reach **30 m**; **Slow** = level 8, 10 mana, 1.0 s
   cast, 5% attack slow for 30 s; **Torpor** = level 20, 20 mana, 1.5 s cast, 10% for 1 minute,
@@ -1660,8 +1676,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `hot_hps` to the local player whatever the target type.)* It is blocked only because the
   server's ENEMY arm applies the slow but has no step that gives the caster the HoT, a small
   addition. The user was asked on the wrong premise and answered "remove the heal";
-  **re-confirmed 2026-10-07 on the corrected premise: no heal.** Torpor becomes the 10%, one
-  minute attack slow of the spell batch's step 1 (Slow is 5% for 30 s at level 8). The file header in `spells.toml` now states what the server models and what it
+  **re-confirmed 2026-10-07 on the corrected premise: no heal.** Torpor became the 10%, one
+  minute attack slow of the spell batch's step 1 (Slow is 5% for 30 s at level 8) and
+  **joined the server on 2026-10-08** (`c71b686`), leaving 21 client-only. The file header in `spells.toml` now states what the server models and what it
   does not.
 
 ### World systems

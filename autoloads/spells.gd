@@ -21,6 +21,9 @@ var no_cooldowns: bool = false
 # honest player a wasted cast bar, and the margin keeps position interpolation
 # from turning a cast the client allowed into a server refusal.
 const SPELL_RANGE := 24.0
+# Friendly spells (heals and buffs on another player or a pet) reach further:
+# one metre inside the server's FRIENDLY_SPELL_RANGE (30 m), decided 2026-10-05.
+const FRIENDLY_SPELL_RANGE := 29.0
 
 # The spell most recently sent to the server, and when. A server refusal
 # (CastFail) arriving within REFUSAL_WINDOW_MSEC of it means that cast never
@@ -470,7 +473,8 @@ func _target_out_of_reach(spell: SpellData) -> bool:
 	var me := get_tree().get_first_node_in_group("player") as Node3D
 	if me == null:
 		return false
-	return me.global_position.distance_to((t as Node3D).global_position) > SPELL_RANGE
+	var reach := FRIENDLY_SPELL_RANGE if spell.target_type == SpellData.TargetType.ALLY else SPELL_RANGE
+	return me.global_position.distance_to((t as Node3D).global_position) > reach
 
 # Launcher mode: the server refused a cast that had ALREADY completed here
 # (target out of reach or gone, a spell the server has no effect for). It took

@@ -21,7 +21,7 @@ the exact words below.
 - [x] **The dead member respawns at bind (town), the killer kills again at the camp** →
       the far member still gets NO XP (outside the 30 m share range) but DOES get
       the quest journal tick if the mob matches — deliberate: the range gate was
-      decided for XP shares only. Flag it here if that feels wrong in play. notes: (Claude, 10-07: SKIP this row. The 30 m rule is changing to 200 m for XP, journal ticks and coin alike, decided 10-05; the row gets rewritten with step 1 of the spell batch.) Triage 10-07: the XP half shows in the journal anyway: char 1's five Gnoll Brute kills from 21:48 to 21:51, while grouped with char 7 at the skeletons, all read `members=1`, so the far member got no share.
+      decided for XP shares only. Flag it here if that feels wrong in play. notes: (Claude, 10-07: SKIP this row. The 30 m rule is changing to 200 m for XP, journal ticks and coin alike, decided 10-05; the row gets rewritten with step 1 of the spell batch.) Triage 10-07: the XP half shows in the journal anyway: char 1's five Gnoll Brute kills from 21:48 to 21:51, while grouped with char 7 at the skeletons, all read `members=1`, so the far member got no share. **Rewritten 2026-10-08 (step 1 built, 200 m for XP, journal AND coin):** the rows that replace this one live on `small_rules_checklist.md` §1.
 - [x] **Both alive at the camp, kill together** → the ordinary split is intact
       (pool = 1.2x base, half each, `members=2`), both journals tick. notes: Triage 10-07: the pasted journal (to 21:54) has no `members=2` line; if the shared kill came after that, paste its `kill credit granted ... pool=... per_member=... members=2` line here and the row is proven.
 

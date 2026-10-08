@@ -125,7 +125,7 @@ means = "The same evening as Bind and Gate: one protocol bump carries both, so t
 id = "m4"
 date = 2026-10-31
 name = "The rehearsal"
-means = "Two friends, three hours. The phase 4 acceptance measure, on the build the friends will keep."
+means = "Four friends, three hours (the user widened it from two on 2026-10-07). The phase 4 acceptance measure, on the build the friends will keep."
 
 [[milestone]]
 id = "m5"
@@ -146,18 +146,18 @@ summary = "Everything built in the last two weeks is on the hosted server and in
 id = "w2"
 starts = 2026-10-12
 title = "The first spell steps reach the server"
-summary = "A Monday redeploy carries the cast hardening and the small rules; their checklists run the same week. Claude builds Bind and Gate behind it. The two rehearsal friends get their network access now, while nothing depends on it."
+summary = "A Monday redeploy carries the cast hardening and the small rules; their checklists run the same week. Claude builds Bind and Gate behind it. The four friends get their network access now, while nothing depends on it."
 
 [[week]]
 id = "w3"
 starts = 2026-10-19
 title = "One evening when every client changes"
-summary = "Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the two rehearsal friends receive their first zip from this build and never need another."
+summary = "Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the four friends receive their first zip from this build and never need another."
 
 [[week]]
 id = "w4"
 starts = 2026-10-26
-title = "Prove it with two friends"
+title = "Prove it with four friends"
 summary = "Fixes from the week-3 sittings, a fresh-character sweep on the exact build the friends hold, and the rehearsal on Saturday. Whatever it finds is the fifth week's work."
 
 [[week]]
@@ -183,11 +183,11 @@ id = "d4"
 week = "w1"
 lane = "decide"
 day = "by Sun Oct 11"
-what = "Fix the rehearsal date (Saturday October 31 proposed) and pick which two of the friends rehearse. The friends are named (2026-10-07): dusty_avo, nakdeyes, zanath, delta. Ask the two to accept the Tailscale share this month so the network part is done long before the build arrives."
+what = "Fix the rehearsal date (Saturday October 31 proposed). All four friends rehearse (user, 2026-10-07): dusty_avo, nakdeyes, zanath, delta; the user tells them on October 8. Ask them to accept the Tailscale share this month so the network part is done long before the build arrives."
 who = "user and planner"
 by = 2026-10-11
 blocks = "Every people row."
-done_when = "The two rehearsal names and the date, written into this plan file (the four friends are already named here)."
+done_when = "The date, written into this plan file (the four friends are named here)."
 
 [[row]]
 id = "o1"
@@ -372,11 +372,13 @@ done_when = "Every row filled."
 id = "v11"
 week = "w2"
 lane = "verify"
-what = "Step 1's checklist: a group-mate 150 m away still shares experience and coin, 250 m away does not; a heal at 28 m lands and at 32 m is refused; Slow and Torpor at their new numbers; a weaker slow never replaces a stronger one; a brand-new character respawns at the starter spawn."
+what = "Step 1's checklist: a group-mate 150 m away still shares experience, journal ticks and coin, 250 m away does not; a heal at 28 m lands and at 32 m is refused; Slow, Torpor and Aria at their new numbers; a weaker slow never replaces a stronger one; a brand-new character is bound at the starter spawn."
 who = "user at a desk"
-hours = 1.0
-needs = ["second seat for the range rows (two-boxing works)"]
+hours = 1.5
+needs = ["second seat for the range rows (two-boxing works)", "a Shaman 20 for Torpor (Level Up tool, or ask for one on spelltest)", "the spell rows want the next export or the editor (the numbers changed on the client too)"]
 waits_on = ["o2"]
+checklist = "small_rules_checklist.md"
+todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
 done_when = "Every row filled."
 
 [[row]]
@@ -418,11 +420,11 @@ done_when = "The boot log line shows the new build= and dev_cmds=false."
 id = "p1"
 week = "w2"
 lane = "people"
-what = "Send both rehearsal friends the Tailscale share link (inviting_a_player.md step 2: share the machine, never the tailnet) and the tester guide, so the network part is done before the build arrives."
+what = "Send all four friends the Tailscale share link (inviting_a_player.md step 2: share the machine, never the tailnet) and the tester guide, so the network part is done before the build arrives."
 who = "user at a desk, friends"
-hours = 0.5
+hours = 1.0
 waits_on = ["d4"]
-done_when = "Both shares accepted; they appear in the Tailscale admin console."
+done_when = "All four shares accepted; they appear in the Tailscale admin console."
 
 # ---------------------------------------------------------------------------------------
 # Week 3: October 19 to 25
@@ -468,11 +470,11 @@ id = "d5"
 week = "w3"
 lane = "decide"
 day = "by Mon Oct 19"
-what = "Confirm the bump day (Thursday October 22 evening proposed) and tell every tester that their current client stops connecting after it."
+what = "The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client stops connecting that evening, a week ahead, and sending the new zip within the hour."
 who = "user (the phone is fine)"
 by = 2026-10-19
-blocks = "The bump day itself."
-done_when = "The date is fixed in this plan file and the testers have been told."
+blocks = "Nothing now; the date is set. The telling is the people half."
+done_when = "Every tester told (a note here saying who)."
 
 [[row]]
 id = "o4"
@@ -531,11 +533,11 @@ id = "p2"
 week = "w3"
 lane = "people"
 day = "Oct 22 to 25"
-what = "Onboard the two rehearsal friends with the bump-day zip (inviting_a_player.md steps 3 to 5: the bundle, wait for them to register, confirm no GM tag). Their first client is the one they keep."
+what = "Onboard the four friends with the bump-day zip (inviting_a_player.md steps 3 to 5: the bundle, wait for them to register, confirm no GM tag). Their first client is the one they keep. Half an hour each."
 who = "user at a desk, friends"
-hours = 1.0
+hours = 2.0
 waits_on = ["o4", "p1"]
-done_when = "Both accounts appear in the account list without a [GM] tag."
+done_when = "All four accounts appear in the account list without a [GM] tag."
 
 # ---------------------------------------------------------------------------------------
 # Week 4: October 26 to November 1
@@ -597,10 +599,10 @@ id = "p3"
 week = "w4"
 lane = "people"
 day = "Sat Oct 31, evening"
-what = "The rehearsal: two friends, three hours. Group up, level, die, run back to the corpse, trade, quest. The phase 4 acceptance measure, and the opening act of phase 5."
+what = "The rehearsal: four friends, three hours. Group up, level, die, run back to the corpse, trade, quest. The phase 4 acceptance measure (written for two; four is a superset), and the opening act of phase 5."
 who = "user at a desk, friends"
 hours = 3.5
-needs = ["both friends onboarded", "the user online as GM for the evening", "the morning check (o6)"]
+needs = ["all four friends onboarded", "the user online as GM for the evening", "the morning check (o6)"]
 waits_on = ["p2", "o6"]
 milestone = "m4"
 done_when = "A playtest note in docs/playtest_notes/ records the session and its findings (model: first_external_tester_2026_08_11.md); the phase 4 row in schedule.md section 7 moves to complete."
@@ -657,7 +659,7 @@ id = "p4"
 week = "w5"
 lane = "people"
 day = "Nov 2 to 6"
-what = "Onboard the rest of the friend group, each with the final build (inviting_a_player.md, steps 2 to 5). Half an hour each; the count is the user's call."
+what = "Onboard anyone beyond the four (the four are onboarded for the rehearsal), each with the final build (inviting_a_player.md, steps 2 to 5). Half an hour each; the count is the user's call, and may be nobody."
 who = "user at a desk, friends"
 hours = 1.5
 needs = ["the final build settled (o7), so nobody receives two zips"]

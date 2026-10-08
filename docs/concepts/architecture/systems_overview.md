@@ -46,6 +46,16 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   says no. Every refusal is private and carries the server's true mana (`refuse_cast`);
   interrupts, silence and mez also fan to peers so the bar they drew cancels. Casting
   stands the caster. The pure timing and interrupt decisions are `world/cast_gate.rs`.
+  Reach (2026-10-08): hostile spells 25 m (`RANGED_ATTACK_RANGE`), friendly spells (ALLY
+  heals and buffs, PET_HEAL) 30 m (`FRIENDLY_SPELL_RANGE`); the client checks one metre
+  inside each. One attack slow holds a mob at a time, strongest wins: in `Entity::apply_cc`
+  a stronger slow replaces the holder, an equal one refreshes it, a weaker one is ignored,
+  and the pre-flight refuses a weaker one at no cost.
+- **The group share range (2026-10-08, user call of 10-05):** `GROUP_SHARE_RANGE` is 200 m
+  (was 30) and covers the XP split, the quest journal tick and the auto-split coin drop; XP
+  and journal credit also need the member alive. A group-mate in town shares from the camps
+  within 200 m of it, which the user accepted as the trade-off. Every new character is bound
+  at the starter spawn from creation.
 - **Hit reactions / VFX:** physical hits flash the mesh white; spell hits flash an
   elemental color + spawn an `OmniLight3D` burst at the impact point, via
   `enemy.flash_spell_hit(color)` from `Combat.deal_spell_damage()`. Color per type: fire
