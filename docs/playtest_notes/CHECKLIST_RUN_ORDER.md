@@ -4,14 +4,13 @@ The order to run the open playtest checklists in, and what each needs. Kept curr
 checklist is added or finished (last update 2026-10-06). The status of every row lives in the
 checklist files themselves; this page only says what to run next.
 
-**As of 2026-10-07 evening:** server `8a826a5` on the R720 (redeployed 23:40 UTC with
-Warder's Mend and the charm walk-home; `e3a6fa8` and `6a802f4` earlier the same day), client
-exported from `fc880df` (10-05). Every server-side list below is runnable now; the
-client-only sheet (1c) needs an export or the editor. **Pushed, not deployed (10-08):**
-`5d8d385` (step 0), `c71b686` (step 1), `75ab979` + review fixes `7e07351` (step 2),
-`4303459` (step 3), `9c4895e` (step 4), `d593609` (step 5, the last of the batch); 3b to 3g
-wait on that redeploy, 3c's spell rows and all of 3d, 3f and 3g's frame rows on the next
-export too.
+**As of 2026-10-08 16:32 UTC:** server `d593609` on the R720 (the whole spell batch, steps
+0 to 5, plus `8a826a5`'s Warder's Mend and the charm walk-home), boot line `dev_cmds=false`.
+Client exported from `fc880df` (10-05). **Runnable on the old client now:** 1b's re-check row,
+3's Warder's Mend row, 3b (`cast_hardening`), 3e (`interrupt_charge`), and the server-side
+rows of 3c, 3d, 3f and 3g. **Waiting on the next export:** 1c, 3c's spell rows (the numbers
+changed on the client too), all of 3d (the old client reloads the world on Gate), 3f's gem
+greying and client-side refusal, 3g's target-frame icons.
 
 **Test characters:** the `spelltest` account holds one character per class the spell rows
 need (table in `ported_spells_checklist.md`). Log in as `spelltest` with password
