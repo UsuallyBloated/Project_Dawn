@@ -235,21 +235,6 @@ todo = "Playtest asks from the charm-return sitting"
 done_when = "Every row filled."
 
 [[row]]
-id = "v4"
-week = "w1"
-lane = "verify"
-what = "Every player sees the same time of day; the sky follows the server's clock without stepping."
-who = "user at a desk"
-needs = ["second seat for section 2 (two-boxing works)"]
-checklist = "time_of_day_checklist.md"
-todo = "Time of day is per-client; make it server-driven"
-done_when = "Every row filled."
-
-# v5 (scale readiness: the enemy position stream, AOI crossings, the own-pet rule) ran and
-# filled on 2026-10-07, section 3 two-boxed. Its row left the plan per the generator's rule;
-# the verdicts are in scale_readiness_checklist.md and the three To-Do entries are ticked.
-
-[[row]]
 id = "v6"
 week = "w1"
 lane = "verify"

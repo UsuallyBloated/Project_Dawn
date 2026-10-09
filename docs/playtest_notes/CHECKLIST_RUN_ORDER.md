@@ -47,7 +47,7 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
    `spelltest` does not have; §3's logout row and §6 want a second seat.
 4. `loc_command_checklist.md`: COMPLETE 2026-10-09 (all five rows).
 5. `full_bags_move_checklist.md`: COMPLETE 2026-10-09 (all nine rows).
-6. `time_of_day_checklist.md` §1, §3, §4 (quit and relaunch: the clock carries on, not back to 08:00).
+6. `time_of_day_checklist.md`: COMPLETE 2026-10-09 (every row, §2 two-boxed).
 7. `inspect_range_gm_audit_ban_checklist.md` §2 (audit log via `admin_report`), §5 (dev tools
    regression), §6 (the Hunter's Medal on the sheet).
 8. `bagspace_groupbars_checklist.md` §1 (carry a pouch, buy something, watch it fill).
@@ -58,7 +58,6 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
 - `xp_eligibility_and_pet_levels_checklist.md` §1. **Skip** the row where the dead member
   respawns in town and the killer keeps killing: that 30 m rule is changing to 200 m and the row
   will be rewritten.
-- `time_of_day_checklist.md` §2
 - `inspect_range_gm_audit_ban_checklist.md` §1 (inspect range), §3 (ban a throwaway account
   while it is logged in), §4 (heals and nukes out of range)
 

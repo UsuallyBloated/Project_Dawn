@@ -568,8 +568,20 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 ## World & environment
 
 - **Zones:** `ZoneLoader` owns transitions and the current zone path/name.
-- **Day/night:** `TimeOfDay` emits `hour_changed`. EnemySpawner `night_only` mobs spawn at
-  hour 20, despawn at hour 6. (Per-client today; server broadcast planned.)
+- **Day/night: one sky for everyone, server-driven** (built 2026-10-04, playtested 2026-10-09,
+  `time_of_day_checklist.md`). The server's `world/clock.rs` derives the hour from the wall
+  clock over a 20-minute day (50 real seconds a game hour), so every player is told the same
+  hour, a server restart does not reset the day, and nothing is persisted. The hour goes to
+  each player on entering the world and to everyone once a minute (`ServerWorldMsg::TimeOfDay`,
+  decoded by the DLL, re-emitted by `Net` as `world_time_of_day`). `TimeOfDay` follows it: a
+  difference over one game hour is a jump (the first send after login), anything smaller is
+  absorbed by running the clock up to 4x fast or down to a quarter speed, never backwards, so
+  the sun never steps. The Test Panel's Pause holds a hand-set sky; unpaused, the clock rejoins
+  the server at the next send. Nothing on the server reads the hour (the sky is cosmetic; night
+  vision is a client-side tint), and a DLL without the signal makes `Net` say so in the console
+  and fall back to the local clock. `DAY_LENGTH_SECS` (server) and `DAY_DURATION` (client), both
+  1200 s, must stay in lockstep. `TimeOfDay` emits `hour_changed`; the offline EnemySpawner's
+  `night_only` mobs spawn at hour 20 and despawn at 6.
 - **Vision:** `VisionSystem` adjusts brightness + infravision green tint at night by race —
   ultravision (Dark Elf, Ogre, Troll, Kel\`varath), infravision (Elf, Wood Elf, Half-Elf,
   Dwarf, Gnome, Halfling, Fae, Felhari, Kobold), normal (Human, Minotaur, Half-Ogre).

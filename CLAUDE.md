@@ -199,7 +199,7 @@ Keep the main model for design, code, and any exploit or verification work.
   choke point and the client mirrors `XpGained` / `LevelUp`. The per-level stat tables are
   kept in **lockstep** on both sides (`char_data::level_gains` vs `CLASS_LEVEL_GAINS`) and
   anchor-tested, so editing one without the other IS still live drift to watch.)*
-- *(Closed in code 2026-10-04, pending playtest: time of day is server-driven. The server's
+- *(Closed 2026-10-04, playtested 2026-10-09: time of day is server-driven. The server's
   `world/clock.rs` and the client's `autoloads/time_of_day.gd` each hold the day length
   (`DAY_LENGTH_SECS` / `DAY_DURATION`, 1200 s) and must stay in **lockstep**, since the client
   runs its own clock between the server's once-a-minute sends.)*
@@ -1861,7 +1861,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   attack NPCs and suffer the consequences (evil races farming reputation by killing good
   merchants/guards/villagers, good races by killing bad guards); ask the user for the
   reputation rules before designing.
-- [ ] **Time of day is per-client; make it server-driven** *(reported 2026-08-14; this is the
+- [x] **Time of day is per-client; make it server-driven** — **DONE + playtested 2026-10-09**
+  (`time_of_day_checklist.md`, every row PASS including §2's two seats: the clocks agreed to the
+  minute and through a full day, dusk came together, the sky carried on across a relaunch and a
+  server restart, no step at the minute sends, the Test Panel's Pause behaves, night vision
+  intact; the old-client row skipped by choice). What exists is in systems_overview → World &
+  environment. *(Original entry:)* *(reported 2026-08-14; this is the
   "server broadcast is planned" line in "Known client↔server drift" made into a real item)*. No two
   players share a sky. `autoloads/time_of_day.gd` starts at `START_HOUR = 8.0` and advances purely
   from `_process(delta)` against a 20-minute `DAY_DURATION`, so the clock restarts at 8 AM every

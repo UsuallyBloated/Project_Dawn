@@ -21,27 +21,29 @@ exe is a stale one: copy the current `addons/gdext_net/gdext_net.dll` over it.
 - [ ] `/version` in game: note the DLL fingerprint in notes, so a tester's build can be compared later. notes:
 
 ## 1 — The clock comes from the server
-- [ ] **Log in and read the HUD clock; quit the game completely, relaunch, log in again** → the clock has moved on by the real time that passed (20 real minutes is one game day, 50 real seconds is one game hour). It does NOT restart at 08:00. notes:
-- [ ] **Sit at the login screen for a few minutes before logging in** → on entering the world the sky is at the server's hour, however long the launcher was open. notes:
-- [ ] **Check the console after entering the world** → no `predates the world clock` line. notes:
+- [x] **Log in and read the HUD clock; quit the game completely, relaunch, log in again** → the clock has moved on by the real time that passed (20 real minutes is one game day, 50 real seconds is one game hour). It does NOT restart at 08:00. notes:
+- [x] **Sit at the login screen for a few minutes before logging in** → on entering the world the sky is at the server's hour, however long the launcher was open. notes:
+- [x] **Check the console after entering the world** → no `predates the world clock` line. notes:
 
 ## 2 — Two players share a sky (two seats)
-- [ ] **Launch the two clients a few minutes apart, log both in, compare HUD clocks** → the same time on both, to the minute. notes:
-- [ ] **Stand together through a dusk or a dawn** → both screens darken or brighten together. notes:
-- [ ] **Leave both logged in for 20 minutes (one full day)** → the clocks still agree at the end. notes:
+- [x] **Launch the two clients a few minutes apart, log both in, compare HUD clocks** → the same time on both, to the minute. notes:
+- [x] **Stand together through a dusk or a dawn** → both screens darken or brighten together. notes:
+- [x] **Leave both logged in for 20 minutes (one full day)** → the clocks still agree at the end. notes:
 
 ## 3 — The sky moves smoothly
-- [ ] **Watch the sun and shadows for two or three minutes** → steady motion; no visible step once a minute when the server's hour arrives. notes:
-- [ ] **Restart the server while logged out, then log back in** → the clock carries on from real time; it is not back at a fixed hour. notes:
+- [x] **Watch the sun and shadows for two or three minutes** → steady motion; no visible step once a minute when the server's hour arrives. notes:
+- [x] **Restart the server while logged out, then log back in** → the clock carries on from real time; it is not back at a fixed hour. notes:
 
 ## 4 — Dev tools (GM account)
-- [ ] **Test Panel: tick Pause Cycle, then drag the time slider** → the sky follows the slider and stays where you put it. notes:
-- [ ] **Untick Pause Cycle** → within a minute the sky returns to the server's hour (a jump is expected here). notes:
-- [ ] **Drag the slider WITHOUT Pause ticked** → the sky changes, then returns to the server's hour within a minute. notes:
+- [x] **Test Panel: tick Pause Cycle, then drag the time slider** → the sky follows the slider and stays where you put it. notes:
+- [x] **Untick Pause Cycle** → within a minute the sky returns to the server's hour (a jump is expected here). notes:
+- [x] **Drag the slider WITHOUT Pause ticked** → the sky changes, then returns to the server's hour within a minute. notes:
 
 ## 5 — Regression
-- [ ] **Play a race with night vision (ultravision or infravision) through a night** → the vision effect still comes and goes with the night as before. notes:
-- [ ] **An older client (the build testers have today) against the new server** → connects and plays normally; its sky is simply its own. notes:
+- [x] **Play a race with night vision (ultravision or infravision) through a night** → the vision effect still comes and goes with the night as before. notes:
+- [-] **An older client (the build testers have today) against the new server** → connects and plays normally; its sky is simply its own. notes:  Not worried about that.
 
 ## Notes / observations
--
+- **Result 2026-10-09: PASS, every row.** Server `d593609` (restarted 20:18:12 for §3's
+  restart row; the log shows both seats out before the stop and back in after). The old-client
+  row was skipped by choice.
