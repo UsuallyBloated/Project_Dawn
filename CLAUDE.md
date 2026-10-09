@@ -645,7 +645,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   polls hardware buttons; the dialogs now report closes and `request_ground_drop` ignores taps
   in a 400 ms echo window. Client-only. Also from the notes: the movable-full-bags design item
   directly below.
-- [ ] **Full bags should move with their contents** *(asked 2026-09-09 on the slice 1.5
+- [x] **Full bags should move with their contents** — **DONE + playtested 2026-10-09**
+  (`full_bags_move_checklist.md`, all nine rows PASS; the log shows a held bag surviving a
+  relog, a death while holding one leaving an 18-stack corpse looted empty, and the sell and
+  bag-in-bag refusals). What exists is in systems_overview → Items (bags). The tester asked
+  whether a swap swaps places or contents: places, each bag keeping its own contents, which is
+  what they wanted. *(Original entry:)* *(asked 2026-09-09 on the slice 1.5
   checklist: "We plan on changing this, correct?")*. Today a non-empty bag refuses to lift or
   move ("Empty the bag before moving it.") because the server keys a bag's contents to the
   base slot holding it — moving the bag would orphan them. EQ moves full bags freely, so the

@@ -211,20 +211,6 @@ todo = "The cursor-slot epic: left-click ground pickup + corpse auto-re-equip"
 done_when = "Every row filled or annotated."
 
 [[row]]
-id = "v2"
-week = "w1"
-lane = "verify"
-what = "Full bags move with their contents; the hand can hold a full bag; death strips bag and contents."
-who = "user at a desk"
-checklist = "full_bags_move_checklist.md"
-todo = "Full bags should move with their contents"
-done_when = "Every row filled."
-
-# v3 (the ported-spells sitting) ran and filled on 2026-10-06, both halves: the nine spells,
-# then the two suspected bugs found, fixed, redeployed and rerun the same evening. Its row
-# left the plan per the generator's rule; the verdicts are in ported_spells_checklist.md.
-
-[[row]]
 id = "v3b"
 week = "w1"
 lane = "verify"

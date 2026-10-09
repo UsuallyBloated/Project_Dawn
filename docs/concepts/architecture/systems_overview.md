@@ -407,7 +407,11 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     (**superseded 2026-09-27 by full-bags-move**: online, a full bag now lifts and moves WITH
     its contents, re-keyed server-side under `CURSOR_BAG_KEY` while held; the empty-first rule
     survives only for selling, destroying, dropping, and the Test Room's local drag —
-    `Inventory.bag_has_contents()` now serves those callers); and **bag windows are keyed by base slot index**, so a
+    `Inventory.bag_has_contents()` now serves those callers; playtested 2026-10-09,
+    `full_bags_move_checklist.md` all nine rows: two full bags dropped on each other swap
+    PLACES and each keeps its own contents, a held full bag survives a relog, and a death
+    while holding one puts the bag and everything in it on the corpse with nothing duplicated);
+    and **bag windows are keyed by base slot index**, so a
     window could outlive the bag that opened it and show a slot holding no bag, now closed on
     refresh. Bag cells no longer stamp a static slot-count number; the tooltip reports capacity.
   - **Inventory stays in sync with the server (2026-08-20).** Three faults used to let the client's
