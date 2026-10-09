@@ -45,7 +45,7 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
    the next export for the target-frame icons; the ticks and kills work on the old client):
    spell batch step 5. Wants a Druid 6 (Entangle) or a Necromancer 10 (Dark Decay), which
    `spelltest` does not have; §3's logout row and §6 want a second seat.
-4. `loc_command_checklist.md` (5 rows).
+4. `loc_command_checklist.md`: COMPLETE 2026-10-09 (all five rows).
 5. `full_bags_move_checklist.md` (9 rows).
 6. `time_of_day_checklist.md` §1, §3, §4 (quit and relaunch: the clock carries on, not back to 08:00).
 7. `inspect_range_gm_audit_ban_checklist.md` §2 (audit log via `admin_report`), §5 (dev tools

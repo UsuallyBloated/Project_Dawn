@@ -87,7 +87,7 @@ Parsed in `scripts/hud.gd::_handle_chat_input`. Press Enter to open chat, type t
 |---|---|
 | `/inspect` | Inspect your current player target's equipment (a right-click on the player does the same). Works within 20 m; further away you get "You are too far away to inspect X." (the server has its own 30 m backstop). |
 | `/sense`, `/sense heading` | Sense heading (direction readout, fuzzy below max skill). |
-| `/loc` (or `/location`) | Your position as `x, y, z` to one decimal (paste-ready for `zone_camps.toml` / `npcs.toml`) plus an exact facing. Free for everyone, works while dead. Compass: +Z is north, +X is east. |
+| `/loc` (or `/location`) | Your position as `x, y, z` to one decimal (paste-ready for `zone_camps.toml` / `npcs.toml`), coordinates only; which way you face is `/sense`. Free for everyone, works while dead. Compass: +Z is north, +X is east. |
 | `/track` | Tracking (ranger-style). |
 | `/languages` | List languages you know. |
 | `/lang <name>` | Set your active spoken language. |

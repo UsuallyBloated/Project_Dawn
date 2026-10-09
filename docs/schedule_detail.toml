@@ -211,16 +211,6 @@ todo = "The cursor-slot epic: left-click ground pickup + corpse auto-re-equip"
 done_when = "Every row filled or annotated."
 
 [[row]]
-id = "v1"
-week = "w1"
-lane = "verify"
-what = "/loc prints position and facing; the compass reads +Z north."
-who = "user at a desk"
-checklist = "loc_command_checklist.md"
-todo = "`/loc` command"
-done_when = "Every row of the checklist filled."
-
-[[row]]
 id = "v2"
 week = "w1"
 lane = "verify"

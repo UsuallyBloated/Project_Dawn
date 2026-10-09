@@ -655,6 +655,15 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   BuffBar, PetPanel, GroupPanel. Includes the always-visible XP bar, target frame with
   actual HP numbers, and a target-of-target frame.
 - **Buff/debuff bar:** icons with countdown timers (absorb, HoT, evade, etc.).
+- **`/loc` and the compass** (playtested 2026-10-09, `loc_command_checklist.md`, all five rows):
+  `/loc` (or `/location`) prints your position as `x, y, z` to one decimal, paste-ready for
+  `zone_camps.toml` / `npcs.toml`, free for everyone and working while dead. Coordinates only
+  (user, 2026-10-09): which way you face is the Sense Heading skill's job on `/sense`, whose
+  roll is fuzzy below 75% of its cap. The world compass is settled: **+Z is north, +X is
+  east** (`sense_heading.gd`'s ring, the camp labels and the quest dialogue all agree). Known
+  quirk: Sense Heading starts at the level-1 cap, so a fresh character always reads exact and
+  the skill only shows after leveling; it is also client-local and resets each launch (the
+  "L1 cap = starting score" item in the To-Do).
 - **Floating numbers:** `DamageNumbers` — damage (with crit), incoming damage, heals,
   misses, XP gains; billboard `Label3D` that faces the camera; per-category toggles in
   Options → Interface.

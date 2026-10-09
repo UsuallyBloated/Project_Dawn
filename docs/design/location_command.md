@@ -72,7 +72,7 @@ files speak `[x, y, z]` and paste-ability is the whole point. Sources:
 Built client-only per this note (`sense_heading.gd` + the `hud.gd` router;
 `commands.md` updated). The three calls landed as:
 
-1. **Facing: free for everyone, and exact.** /loc exists for triage and
+1. **SUPERSEDED 2026-10-09 (user, on the playtest): `/loc` prints coordinates only,** as EQ's did; which way you face is the Sense Heading skill's job on `/sense`. The facing suffix and `SenseHeading.exact_facing` are removed. The original call, for the record: **Facing: free for everyone, and exact.** /loc exists for triage and
    authoring; a garbled position report defeats the point. The Sense Heading
    SKILL keeps its fuzzy roll on `/sense` (new `SenseHeading.exact_facing`).
 2. **GM drift extra: not in v1** — add when someone actually wants it.

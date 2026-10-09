@@ -1726,6 +1726,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   quirk (handoff_track_22 Option F, "deferred for next playtest's verdict", never revisited):
   a level 1 character cannot advance any weapon or armor skill because the cap equals the
   start; decide whether that is EQ-authentic enough to keep.
+  **Seen again 2026-10-09 on Sense Heading** (`loc_command_checklist.md` note: "I don't think
+  there is a skill for /sense"): it starts at the level-1 cap, so a fresh character always reads
+  exact and the skill is invisible until leveling raises the cap; it is also client-local and
+  resets every launch (`character_setup.gd` re-initializes it).
 - [ ] **Client-only spell backlog (~32 spells missing from `spells.toml`)** *(quantified
   2026-07-22 from a Life Drain / Dark Shroud playtest; those two are now ported)*. The client's
   `spell_definitions.gd` has 156 spells; the server has 124. A client-only spell is dropped as
@@ -1963,7 +1967,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   "one checkbox list", since it is an asset manifest, not a task queue); "future zone themes"
   are deferred there per the atlas. Nothing in it is on any schedule.
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
-- [ ] **`/loc` command** *(designed 2026-09-25, `docs/design/location_command.md`)*.
+- [x] **`/loc` command** — **DONE + playtested 2026-10-09** (`loc_command_checklist.md`, all five rows
+  PASS on the 10-05 build: matches Sister Maelis's position, the four facings, `/sense`, works
+  while dead, NPC directions read true). What exists is in systems_overview → UI / HUD. **One
+  change from the sitting, BUILT same day, rides the next export:** `/loc` prints coordinates
+  only (user: "should only show coordinates, not direction facing. that's what Sense heading
+  is for"); `SenseHeading.exact_facing` is removed. *(Original entry:)* *(designed 2026-09-25, `docs/design/location_command.md`)*.
   **BUILT 2026-09-27, pending playtest** (client-only, rides the next export;
   `loc_command_checklist.md`). Prints `x, y, z` to one decimal (paste-ready for the toml
   authoring files) plus an exact facing, free for everyone, working while dead; `/sense`

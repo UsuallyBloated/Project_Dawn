@@ -1482,15 +1482,13 @@ func _handle_chat_input(text: String) -> void:
 	if lower == "/loc" or lower == "/location":
 		# EQ-style position print (docs/design/location_command.md). Printed
 		# x, y, z — NOT EQ's Y-first — so the line pastes straight into
-		# zone_camps.toml / npcs.toml. Facing is exact and free for everyone;
-		# the Sense Heading SKILL keeps its fuzzy roll on /sense. Works while
-		# dead on purpose: a corpse run is exactly when you want it.
+		# zone_camps.toml / npcs.toml. Coordinates only (user, 2026-10-09):
+		# which way you face is the Sense Heading skill's job, on /sense.
+		# Works while dead on purpose: a corpse run is exactly when you want it.
 		if is_instance_valid(_player):
 			var p: Vector3 = _player.global_position
 			CombatLog.add_line(
-				"Your location is %.1f, %.1f, %.1f (x, y, z). Facing %s." % [
-					p.x, p.y, p.z, SenseHeading.exact_facing(_player.rotation.y),
-				],
+				"Your location is %.1f, %.1f, %.1f (x, y, z)." % [p.x, p.y, p.z],
 				CombatLog.MsgType.INFO)
 		else:
 			# A triage tool must never be silent — say why there is no
