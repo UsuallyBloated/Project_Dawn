@@ -15,10 +15,10 @@ a minute); the proof is two clients agreeing. If a new client shows
 exe is a stale one: copy the current `addons/gdext_net/gdext_net.dll` over it.
 
 ## Setup
-- [ ] Redeploy the server (boot line shows `build=` at `e8164b1` or later, `dev_cmds=false`)
-- [ ] Re-export Project_Dawn and confirm `[BuildStamp] stamped <sha>`
-- [ ] Copy `addons/gdext_net/gdext_net.dll` into `builds/` beside the exe (this is a hand copy; the one in `builds/` today is from 09-25 and has no world clock in it)
-- [ ] `/version` in game: note the DLL fingerprint in notes, so a tester's build can be compared later. notes:
+- [x] Redeploy the server (boot line shows `build=` at `e8164b1` or later, `dev_cmds=false`) notes: (filled from the log) `d593609`, which contains `e8164b1`; `dev_cmds=false`.
+- [x] Re-export Project_Dawn and confirm `[BuildStamp] stamped <sha>` notes: (filled from `builds/`) exported 2026-10-09 13:34.
+- [x] Copy `addons/gdext_net/gdext_net.dll` into `builds/` beside the exe (this is a hand copy; the one in `builds/` today is from 09-25 and has no world clock in it) notes: (filled from `builds/`) the copy there is the 10-04 rebuild, same size as `addons/`; the §1 console row confirms it.
+- [-] `/version` in game: note the DLL fingerprint in notes, so a tester's build can be compared later. notes: not recorded this sitting.
 
 ## 1 — The clock comes from the server
 - [x] **Log in and read the HUD clock; quit the game completely, relaunch, log in again** → the clock has moved on by the real time that passed (20 real minutes is one game day, 50 real seconds is one game hour). It does NOT restart at 08:00. notes:
