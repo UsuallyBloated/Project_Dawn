@@ -692,6 +692,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (server-driven, holds no state), the holding-click-a-player trigger in `targeting.gd`, Net
   signal wiring. Kept on the side branch until a desk day merges it with a fresh export, so a
   casual R720 pull never bricks the testers' client. **Still slice 2:** NPC give (one-sided).
+  **Pre-merge review 2026-10-12 found one real hole, FIXED on the branch** (server `bac726e`):
+  the lock covered only the offered slot, but a full bag moves with its contents (09-27), so
+  after the partner accepted, a player could swap the pouch HOLDING the offer with another
+  pouch; the reference then named the other pouch's item, the commit checked only the count,
+  and the partner's window never refreshed. Now an offer inside a bag locks the bag, an
+  offered empty bag cannot be filled, the commit verifies the item as well as the count, and a
+  trade request no longer tells absent from too-far (an is-online check by id). Test
+  `trade_locks_the_bag_holding_an_offered_item`; three new rows in `trade_window_checklist.md`.
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
