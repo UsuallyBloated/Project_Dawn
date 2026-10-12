@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Oct 12<span class="stat-sub">repo b4e19b5</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Oct 12<span class="stat-sub">repo 9d8e45e</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">77 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">14 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">37.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">38.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -356,13 +356,13 @@
 <section>
 <h2><span class="week-head"><span>One evening when every client changes</span><span class="when">W3 &middot; October 19 to 25</span></span></h2>
 <p class="lede">Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the four friends receive their first zip from this build and never need another.</p>
-<div class="week-meta"><span>the user's time: 9 h</span><span>Claude build days: 4.5</span></div>
+<div class="week-meta"><span>the user's time: 9.5 h</span><span>Claude build days: 4.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
 <td class="id">d5</td>
 <td><span class="chip decide">Decide</span></td>
-<td class="what"><span class="day">by Mon Oct 19</span>The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client stops connecting that evening, a week ahead, and sending the new zip within the hour.<span class="blocks"><b>Blocks:</b> Nothing now; the date is set. The telling is the people half.</span></td>
+<td class="what"><span class="day">by Mon Oct 19</span>The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client is refused at login from that evening (the host raises the minimum client version), a week ahead, and sending the new zip within the hour.<span class="blocks"><b>Blocks:</b> Nothing now; the date is set. The telling is the people half.</span></td>
 <td>user (the phone is fine)</td>
 <td class="needs">nothing</td>
 <td class="time">by Mon Oct 19</td>
@@ -402,12 +402,12 @@
 <tr>
 <td class="id">o4</td>
 <td><span class="chip operate">Operate</span><span class="chip ms">Trade live</span></td>
-<td class="what"><span class="day">Thu Oct 22, the bump day</span>Stop the server, redeploy the merged build, export the client from the merged commit with the rebuilt wire layer, zip, send to every tester, log in once to smoke it. The one evening everyone changes clients.</td>
+<td class="what"><span class="day">Thu Oct 22, the bump day</span>Stop the server, redeploy the merged build, add PROJECTDAWN_MIN_CLIENT_VERSION=0.2.0 to /opt/projectdawn/.env before starting it (without it, old clients still log in and simply have no trade), export the client from the merged commit with the rebuilt wire layer, zip, send to every tester, log in once to smoke it. The one evening everyone changes clients.</td>
 <td>user at a desk</td>
 <td class="needs"><ul><li>everyone logged out</li><li>the testers told (d5)</li><li>a backup first</li></ul></td>
 <td class="time">1.5 h</td>
 <td class="id">b6, d5</td>
-<td class="done">The boot log shows the new build= with dev_cmds=false; the export log shows [BuildStamp] stamped; /version in game shows the new wire-layer fingerprint.<span class="ref">To-Do entry: <code>Trade window</code></span></td>
+<td class="done">The boot log shows the new build= with dev_cmds=false and min_client=0.2.0; the export log shows [BuildStamp] stamped; /version in game shows the new wire-layer fingerprint.<span class="ref">To-Do entry: <code>Trade window</code></span></td>
 </tr>
 <tr>
 <td class="id">v12</td>
@@ -424,8 +424,8 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>A charm keeps your target: the mob stays targeted when it becomes a pet and again when the charm ends and it turns hostile, as in EQ.</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist charm_retarget_checklist.md (on branch feat/trade-window until the merge): 10 rows to run</li><li>an Enchanter 20 or a Bard 14</li><li>second seat for two rows (two-boxing works)</li></ul></td>
-<td class="time">1 h</td>
+<td class="needs"><ul><li>checklist charm_retarget_checklist.md (on branch feat/trade-window until the merge): 14 rows to run</li><li>an Enchanter 20 or a Bard 14</li><li>second seat for two rows (two-boxing works)</li></ul></td>
+<td class="time">1.5 h</td>
 <td class="id">o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/charm_retarget_checklist.md"><code>charm_retarget_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Playtest asks from the charm-return sitting</code></span></td>
 </tr>
@@ -651,7 +651,7 @@
 <p class="lede">Every decision above, by the date it starts to block something.</p>
 <div class="scroll"><table><thead><tr><th>By</th><th>Decision</th><th>Who</th><th>Blocks</th></tr></thead><tbody>
 <tr><td class="time">Sun Oct 11</td><td class="what">Fix the rehearsal date (Saturday October 31 proposed). All four friends rehearse (user, 2026-10-07): dusty_avo, nakdeyes, zanath, delta; the user tells them on October 8. Ask them to accept the Tailscale share this month so the network part is done long before the build arrives.</td><td>user and planner</td><td class="needs">Every people row.</td></tr>
-<tr><td class="time">Mon Oct 19</td><td class="what">The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client stops connecting that evening, a week ahead, and sending the new zip within the hour.</td><td>user (the phone is fine)</td><td class="needs">Nothing now; the date is set. The telling is the people half.</td></tr>
+<tr><td class="time">Mon Oct 19</td><td class="what">The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client is refused at login from that evening (the host raises the minimum client version), a week ahead, and sending the new zip within the hour.</td><td>user (the phone is fine)</td><td class="needs">Nothing now; the date is set. The telling is the people half.</td></tr>
 <tr><td class="time">Sun Nov 1</td><td class="what">Trade range: keep 10 m or tighten it. Flagged as far when decided; the first trade sitting is the evidence.</td><td>user (the phone is fine)</td><td class="needs">Nothing. A one-constant change if it moves.</td></tr>
 <tr><td class="time">Sun Nov 8</td><td class="what">Phase 5&#x27;s four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in.</td><td>user and planner</td><td class="needs">The &quot;after the door opens&quot; list below becoming a dated plan.</td></tr>
 <tr><td class="time">Sun Nov 8</td><td class="what">docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it.</td><td>user</td><td class="needs">Nothing.</td></tr>
@@ -715,5 +715,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-12 at repo b4e19b5</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-12 at repo 9d8e45e</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

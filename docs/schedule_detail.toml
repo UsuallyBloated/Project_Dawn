@@ -431,7 +431,7 @@ id = "d5"
 week = "w3"
 lane = "decide"
 day = "by Mon Oct 19"
-what = "The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client stops connecting that evening, a week ahead, and sending the new zip within the hour."
+what = "The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client is refused at login from that evening (the host raises the minimum client version), a week ahead, and sending the new zip within the hour."
 who = "user (the phone is fine)"
 by = 2026-10-19
 blocks = "Nothing now; the date is set. The telling is the people half."
@@ -442,13 +442,13 @@ id = "o4"
 week = "w3"
 lane = "operate"
 day = "Thu Oct 22, the bump day"
-what = "Stop the server, redeploy the merged build, export the client from the merged commit with the rebuilt wire layer, zip, send to every tester, log in once to smoke it. The one evening everyone changes clients."
+what = "Stop the server, redeploy the merged build, add PROJECTDAWN_MIN_CLIENT_VERSION=0.2.0 to /opt/projectdawn/.env before starting it (without it, old clients still log in and simply have no trade), export the client from the merged commit with the rebuilt wire layer, zip, send to every tester, log in once to smoke it. The one evening everyone changes clients."
 who = "user at a desk"
 hours = 1.5
 needs = ["everyone logged out", "the testers told (d5)", "a backup first"]
 waits_on = ["b6", "d5"]
 milestone = "m3"
-done_when = "The boot log shows the new build= with dev_cmds=false; the export log shows [BuildStamp] stamped; /version in game shows the new wire-layer fingerprint."
+done_when = "The boot log shows the new build= with dev_cmds=false and min_client=0.2.0; the export log shows [BuildStamp] stamped; /version in game shows the new wire-layer fingerprint."
 todo = "Trade window"
 
 [[row]]
