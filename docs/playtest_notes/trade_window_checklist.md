@@ -45,6 +45,13 @@ a single atomic commit. Design + the exploit ledger this list follows:
       player already trading refuses quietly to you only. notes:
 - [ ] **Enemy/NPC target (ledger 10)**: holding an item and clicking a mob or NPC
       does NOT open a trade (targets only). notes:
+- [ ] **Bag swap (review 2026-10-12)**: offer an item that sits inside a pouch, then
+      try to move or swap that pouch → refused with "That item is offered in a
+      trade."; the partner receives exactly what their window showed. notes:
+- [ ] **Filling an offered bag**: offer an EMPTY pouch, then try to drag something
+      into it → refused with the same line. notes:
+- [ ] **Request from afar**: request a trade with a player more than 10 m away →
+      "There is no one here to trade with." (the same line as for nobody). notes:
 
 ## 3 — Persistence / crash safety
 
