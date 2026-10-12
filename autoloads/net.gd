@@ -189,6 +189,10 @@ signal world_teleport(pos: Vector3)
 # The server's world clock: the hour in [0, 24), sent as we enter the world and
 # about once a minute after. TimeOfDay follows it so every player shares a sky.
 signal world_time_of_day(hour: float)
+# PD_W0028 — the entity just spawned as `new_id` is the creature that was
+# `old_id` (a charm landing or ending). Emitted after its spawn signal, so the
+# new node exists. Targeting uses it to keep the target across the change.
+signal world_entity_replaced(old_id: int, new_id: int)
 # Track 5 sub-task 4 — private confirmation that the local player's
 # LootItem / LootAll intent landed. Carries one stack the looter just
 # claimed; the GDScript handler loads `item_path` → ItemData and adds
@@ -317,6 +321,12 @@ func _ready() -> void:
 	else:
 		DebugLog.error("Net: gdext_net.dll predates the world clock (no time_of_day signal). "
 			+ "The sky will run on a local clock; rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name for the same reason: a stale DLL costs only the charm re-target.
+	if has_signal("entity_replaced"):
+		connect("entity_replaced", _on_entity_replaced)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates entity_replaced. A charm will drop "
+			+ "your target; rebuild the DLL with addons/gdext_net/build.ps1.")
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
@@ -1182,6 +1192,9 @@ func _on_teleport(pos: Vector3) -> void:
 
 func _on_time_of_day(hour: float) -> void:
 	world_time_of_day.emit(hour)
+
+func _on_entity_replaced(old_id: int, new_id: int) -> void:
+	world_entity_replaced.emit(old_id, new_id)
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)

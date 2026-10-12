@@ -10,6 +10,35 @@ signal inspect_requested(player: RemotePlayer)
 var _tab_index := 0
 var _camera: Camera3D = null
 var _player: Node3D = null
+# Server entity id of the current target, kept by id because a despawn frees
+# the node without clearing Combat's target. 0 = none, or no server id.
+var _target_entity_id := 0
+
+func _ready() -> void:
+	Combat.target_changed.connect(_on_target_changed)
+	Net.world_entity_replaced.connect(_on_entity_replaced)
+
+func _on_target_changed(node) -> void:
+	_target_entity_id = 0
+	if not is_instance_valid(node):
+		return
+	for key in ["enemy_id", "pet_id", "char_id"]:
+		if key in node:
+			_target_entity_id = int(node.get(key))
+			return
+
+# A charm landing or ending re-keys the creature under a new id (the server's
+# enemy and pet ids live in separate ranges). EQ keeps one entity throughout,
+# so if it was our target, the new id becomes our target.
+func _on_entity_replaced(old_id: int, new_id: int) -> void:
+	if old_id == 0 or old_id != _target_entity_id:
+		return
+	var node: Node = RemoteEnemyManager.get_by_id(new_id)
+	if node == null:
+		node = RemotePetManager.get_by_id(new_id)
+	if node == null or not is_instance_valid(node):
+		return
+	Combat.set_target(node)
 
 func register_camera(cam: Camera3D) -> void:
 	_camera = cam
