@@ -214,12 +214,14 @@ func _on_cast_complete(caster: int, spell_name: String) -> void:
 
 func _on_cast_fail(caster: int, reason: String) -> void:
 	if caster == Net.get_player_id():
-		# Own cast rejected by the server (silenced / mezzed / etc.).
-		# Surface the reason in the combat log so the player knows
-		# why nothing happened. Also cancel any local cast bar that
-		# may still be running.
+		# Own cast rejected by the server (silenced / mezzed / out of
+		# reach / etc.). Surface the reason in the combat log so the
+		# player knows why nothing happened. If the cast had already
+		# completed here, undo the cooldown started for it (the server
+		# stamped none); if a cast bar is still running, cancel it.
 		if reason != "":
 			CombatLog.add_line("Cast failed: %s" % reason, CombatLog.MsgType.INFO)
+		Spells.on_server_cast_refused()
 		Spells.cancel_cast()
 		return
 	var rp = _by_id.get(caster)

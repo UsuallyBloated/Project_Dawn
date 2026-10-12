@@ -267,6 +267,12 @@ func _update_mouse_camera(chat_focused: bool) -> void:
 		if _rmb_tap_candidate and _rmb_motion <= CAMERA_DRAG_THRESHOLD:
 			Targeting.interact_at(_rmb_press_vp)
 		_rmb_tap_candidate = false
+	elif rmb and lmb:
+		# The left button joined mid-hold: that is the both-buttons run, not a
+		# tap, even if the mouse never moved. Without this, a run started
+		# right-button-first over an NPC, a corpse or a player interacted with
+		# it on release.
+		_rmb_tap_candidate = false
 	_rmb_was_down = rmb
 
 	# Left button edges: a click selects a target, a drag orbits the camera.

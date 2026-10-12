@@ -67,13 +67,6 @@ func query(rotation_y: float) -> String:
 	else:
 		return "You are facing %s." % DIRS[idx]
 
-# Exact facing label, no skill roll — /loc's suffix. Free for everyone by
-# design: /loc exists for triage and content authoring, and a garbled
-# position report defeats the point. The Sense Heading SKILL keeps its
-# fuzzy roll in query() above.
-func exact_facing(rotation_y: float) -> String:
-	return DIRS[_rotation_to_idx(rotation_y)]
-
 # Godot rotation.y is counter-clockwise from above; 0 faces -Z, which is
 # SOUTH under the settled compass (see DIRS above). Returns an index 0-7
 # into DIRS, 45 degrees per step.

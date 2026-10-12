@@ -38,12 +38,16 @@ A multiplayer MMORPG inspired by classic EverQuest-era games. **Two repos:** a G
   everyone). Streams live to a unique `logs/server_<timestamp>.log` (never overwritten on restart)
   **and** `server.log`, and regenerates `world_report.html` on exit. Preferred over the raw
   `cargo run` for playtests, since it stops losing logs across restarts.
-- **Ops bins (read-only DB tools; the crate has 3 binaries, so `--bin` selects — the plain
+- **Ops bins (the crate has 5 binaries, so `--bin` selects — the plain
   `cargo run -p projectdawn-server` still runs the server via the `default-run` manifest key):**
-  `cargo run -p projectdawn-server --bin admin_report` (accounts + characters incl. soft-deletes
-  and per-char coins/inventory → console + a local `world_report.html`), and
-  `cargo run -p projectdawn-server --bin grant_gm -- <username> on|off` (set per-account GM; no
-  args = list). `grant_gm` writes; `admin_report` is read-only.
+  `--bin admin_report` (read-only: accounts + characters incl. soft-deletes, per-char
+  coins/inventory, and the newest GM action audit rows → console + a local `world_report.html`),
+  `--bin grant_gm -- <username> on|off` (set per-account GM; no args = list),
+  `--bin reset_password -- <username>` (new password printed once, sessions purged), and
+  `--bin admin_account` (no args = list; `-- ban <username> [reason]` / `-- unban <username>`).
+  The three that write open the DB with `mode=rw` and never create one: run them from the
+  directory that holds `world.db` (on the R720 that is `/opt/projectdawn`, NOT the source tree)
+  or set `PROJECTDAWN_DATABASE_URL`. Full detail in `docs/reference/commands.md`.
 - **GM playtest (dev commands OFF, only `is_gm` accounts get tools):** `PD_DEV_CMDS` enables dev
   commands *only* when it equals exactly `"1"`, so to run with them off, unset it or set anything
   else. PowerShell (note: bare `null`/`false` are not literals — use `$null`/`$false` or a string):
@@ -179,18 +183,26 @@ Keep the main model for design, code, and any exploit or verification work.
 
 ### Known client↔server drift to watch
 - Spells exist in **both** GDScript (`data/spell_definitions.gd`) and server `spells.toml`
-  — adding/editing one without the other causes drift. Quantified 2026-07-22: the client has
-  156 spells, `spells.toml` has 124, so **~32 are client-only** and get dropped server-side as
-  "unknown spell" (mana spent, no effect). Life Drain + Dark Shroud closed that day; the rest
-  need server support first (9 `PORT` teleport/gate spells, prestige-class tags like
-  `Paladin_Fallen`, `Warder's Mend` PET_HEAL) — see the To-Do "Client-only spell backlog".
+  — adding/editing one without the other causes drift. Recounted 2026-10-08: the client has
+  156 spells, `spells.toml` has 135, so **21 are client-only** and are refused server-side as
+  an unknown spell (no effect; since 10-02 no mana is taken either). All 21 need something the
+  server does not model yet (ports, prestige classes, damage over time, mana drain, stealth);
+  no pet spell is among them since Warder's Mend was ported on 10-07, and Torpor joined the
+  server on 10-08 — see the To-Do "Client-only spell backlog". **Check it with
+  `tools/check_spell_lockstep.gd`** (see `docs/reference/commands.md`): it compares every
+  field the server carries and exits 1 on drift. On 2026-10-05 the 133 shared spells showed
+  ZERO drift. One deliberate exception is built into the check: Bard songs carry 0 damage
+  and 0 heal on the server because their pulses are still client-side.
   `tools/export_spells.gd` (Godot editor) is the intended regen path but is stale.
 - *(Closed 2026-06-22: leveling used to be client-local and provisional. The corpse epic's
   Slice 0 moved XP + leveling server-side — `world/progression.rs::award_xp` is the single
   choke point and the client mirrors `XpGained` / `LevelUp`. The per-level stat tables are
   kept in **lockstep** on both sides (`char_data::level_gains` vs `CLASS_LEVEL_GAINS`) and
   anchor-tested, so editing one without the other IS still live drift to watch.)*
-- Time-of-day is per-client; a server broadcast is planned.
+- *(Closed 2026-10-04, playtested 2026-10-09: time of day is server-driven. The server's
+  `world/clock.rs` and the client's `autoloads/time_of_day.gd` each hold the day length
+  (`DAY_LENGTH_SECS` / `DAY_DURATION`, 1200 s) and must stay in **lockstep**, since the client
+  runs its own clock between the server's once-a-minute sends.)*
 
 ---
 
@@ -285,7 +297,11 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
    friends-build push, `docs/schedule.md` says which phase we're in and what's in it.
 3. Implement it. **Don't tick anything yet** — built is not done.
 4. Append a summary to `docs/session_notes/session_YYYY_MM_DD.md` and update
-   `docs/session_notes/README.md`.
+   `docs/session_notes/README.md`. If the session changed a To-Do status or a checklist,
+   regenerate the planner's week-by-week detail: `python tools/schedule_detail.py` (edit
+   `docs/schedule_detail.toml` first if a row needs to move), commit the plan file with both
+   outputs, and republish the page at the link recorded in the plan file. The detail carries
+   dates and dependencies only, never status.
 5. Run a review pass (`/code-review`) if the session touches 5+ files or a core system
    (combat, inventory, spells, PlayerStats, networking).
 6. **Tick only on playtest evidence.** An item earns `[x]` when a filled checklist in
@@ -356,6 +372,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   fold anything unfinished back into the To-Do and retire this pointer.
   `docs/schedule.html` is a browser-readable rendering of it for non-repo readers (open it
   locally); keep it in sync when the plan changes.
+  **Week-by-week detail for the planner** → `docs/schedule_detail.html` (+ `.md`), generated
+  from `docs/schedule_detail.toml` by `tools/schedule_detail.py`: one row per checklist sitting,
+  build step, redeploy, decision or friend session, with owner, needs and dependencies. Dates
+  only, never status; every row names the checklist or To-Do entry its status lives in.
 - **What systems exist & how they work** → `docs/concepts/architecture/systems_overview.md`
 - **Commands you type** (CLI/cargo tools, server run wrappers, in-game chat commands, keybinds) →
   `docs/reference/commands.md`. Keep it current when a command is added or renamed.
@@ -433,12 +453,47 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   playtest)*. `/r` replies to the most recent tell sender; pressing TAB cycles through everyone
   who has sent you a tell this session. Client-only chat UX (command parsing + a small
   tell-sender history in `ChatWindowManager` or `CombatLog`).
+  **BUILT 2026-10-02, pending playtest** (client-only, rides the next export;
+  `tell_reply_and_inspect_click_checklist.md` §1-2). `CombatLog` keeps the last ten tell
+  senders, newest first, cleared on entering the world. `/r <msg>` (or `/reply`) answers the
+  newest; a bare `/r` reopens the chat line holding `/tell <name> `. TAB in the chat line
+  turns an empty line into a tell to the newest sender and, on a tell, steps to the next older
+  one keeping the typed message; a `/say`, plain text, or a message addressed to someone who
+  never sent a tell is left alone (TAB must not re-address words written for someone else). TAB no longer walks
+  keyboard focus out of the chat line (which used to hide it mid-sentence). Headless probes
+  cover the history and the TAB handler; the live key path and the reopen are the playtest.
 - [ ] **Camp / kick return-to-lobby flow + live relogin countdown** *(deferred 2026-06-19 in the
   camp/linkdead session's "Not done"; recovered by the 2026-09-29 crack audit)*. `/camp`
   completion and a server kick both exit to the desktop because there is no in-game
   return-to-character-select flow; a kick strands the player. Also the lobby shows the
   server's one-shot "try again in ~Ns" string instead of a live-ticking countdown from
   `reconnect_after_secs`. Client-only (the wire already carries the seconds).
+  **Scoped 2026-10-04, and it is three different sizes of job.** (1) **The stranding was worse
+  than recorded and is BUILT, pending playtest** (client, next export;
+  `inspect_range_gm_audit_ban_checklist.md` §3): when the world connection ended in game (a
+  kick, a ban, a server restart, a network drop) the client showed NOTHING. `Net` emitted
+  `app_disconnected(reason)` and in the world only the camp label listened, so the player
+  stood in a frozen world with no message, and the 10-02 ban kick's "told why" was not true
+  on screen. New `scripts/hud_disconnect_notice.gd`: the screen dims, a "Disconnected" panel
+  shows the server's reason (or a plain line when there is none), a relogin hint, and Quit;
+  the same line goes to chat and the debug log. (2) **The live countdown is not client-only.**
+  The wire carries `reconnect_after_secs` but the DLL drops it (the `kicked` signal passes
+  reason and code only), so it needs a wire-layer change and a DLL rebuild, no protocol bump.
+  (3) **A real return to character select is a multi-day client job, not a small one:** the
+  session token and the auth socket live in the login SCENE and are lost on a scene change;
+  `Net.leave_session` relies on process exit to close the socket; and 54 autoloads hold
+  per-character state that a second character would inherit unless each is audited (the
+  hotbar bleed of 08-26 was one of them). Needs its own design pass and a state-reset audit
+  before any code.
+- [x] **Tell testers about the ~45 s worst-case relogin after a crash** — **DONE 2026-09-30
+  (a doc line with no playtest surface, ticked on the edit like the reset_password bin)**.
+  `camp_and_linkdead.md` §Risks called the number out ("a hard crash can take up to the 15 s
+  netcode timeout to detect, then about 30 s of linger, so up to ~45 s before relogin.
+  Acceptable; document it.") and `systems_overview.md` carries it for developers, but
+  `README_FOR_TESTERS.md`'s X-button paragraph said "about 30 seconds" and nothing about
+  detection time, so a tester refused at 40 s had no reference saying that was expected. One
+  bullet added there. Surfaced by the 2026-09-30 belt-and-braces sweep, one of the two
+  findings the hand audit missed.
 - [ ] **Reconnect grace on a brief network blip (session resurrection)** *(server_design.md
   "deferred enhancement"; audit 2026-09-29)*. Today a drop is linkdead: the body lingers ~30 s
   and a relogin is refused until it reaps. Seamless resume (the old 60 s frozen-and-untargetable
@@ -467,7 +522,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   a fallback rotation was "revisit if playtest dislikes it"). (b) The `/autosplit` group-notice
   rows (`group_loot_coin_checklist.md` Round 2 §3) never got a two-seat tick: one toggle while
   grouped is the whole check. Rides the next two-seat session with the member-leaves refill.
-- [ ] **Idle enemies rebroadcast unchanged positions at 20 Hz** *(found 2026-09-15 while
+- [x] **Idle enemies rebroadcast unchanged positions at 20 Hz** — **DONE + playtested
+  2026-10-07** (`scale_readiness_checklist.md` §1 and §2, all rows PASS: the live stream sat
+  at about 5,000 Position sends a minute for 54 mobs and one player, where the old code sent
+  64,800; it rose by about one mob's worth, 1,200, during each fight and fell back the next
+  minute; mobs kited, caught, killed, idled and set off without a visible seam). What exists
+  is in systems_overview → Networking, "The enemy position stream". *(Original entry, for the
+  record:)* *(found 2026-09-15 while
   triaging the phase 4 test breakage; user flagged the lag angle)*. `tick.rs` step 6b fans
   every living enemy's Position to all AOI-visible players every tick, and idle mobs in this
   game never move (`tick_idle` only watches for targets), so the phase 4 population doubling
@@ -476,6 +537,63 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   with a slow keepalive — the exact pattern `regen.rs` already uses for resources (>5% swing
   or 500 ms gap). Server-only, but measure before/after (a bandwidth counter in the log)
   rather than eyeballing; needs its own small pass.
+  **BUILT 2026-09-30, pending playtest** (server `ac38cc2`; `scale_readiness_checklist.md`
+  §1-2; server-only, no client change). Exactly the regen pattern: `Entity` keeps the
+  pos / yaw / time of its last send and fans only on a move past 0.005 m, a turn past
+  0.001 rad, or the 500 ms `ENEMY_POSITION_KEEPALIVE`; the sequence advances only on a real
+  send. **Measured:** the new integration test counts one idle mob's Position messages to one
+  player over 2 s, 32 before and 4 after. A new `enemy position fan` log line (sends, window,
+  alive enemies, players in world) reports the live stream once a minute while anyone is
+  online, so the R720 shows the same before/after from one deploy (the old stream is
+  `enemies_alive x players x 20 x window`). `AiEvents.moved`, whose comment claimed to gate
+  this and which nothing ever read, is deleted. Ticks on the §1 log-line row.
+  Review pass (`818a902`): step 6b now tests the audience first (allocation-free
+  `aoi.can_see` per connection) and only marks and encodes when someone can see the mob, so a
+  camp with no player near it costs nothing per keepalive. **The "known cosmetic" recorded here was overstated, corrected
+  2026-10-02 after reading `remote_enemy.gd`'s interpolation:** the review predicted a mob
+  easing into motion over up to 500 ms. The client renders 100 ms behind, so of the span
+  between the last keepalive and the first moving snapshot only the final 100 ms is ever
+  drawn: the mob is nudged forward by at most about one tick of travel (10 to 25 cm at the speeds in `zone_camps.toml`) as it
+  sets off, then moves at full speed. No fix is planned; §2 of the checklist keeps a row in
+  case it is visible after all.
+- [x] **An owner's own pet "despawns" on the HUD when it is merely out of view** — **DONE +
+  playtested 2026-10-07** (`scale_readiness_checklist.md` §4, all four rows PASS: a parked pet
+  kept its panel past 300 m, `/pet follow` and `/pet attack` from out there brought it, the
+  panel cleared on death and swapped on re-summon). What exists is in systems_overview →
+  Networking, "The own-pet rule". *(Original entry, for the record:)* *(review
+  finding on the cell-crossing fan, 2026-09-30; recorded, not built)*. The AOI despawn means
+  "out of your neighbourhood", but `remote_pet_manager.gd::_on_entity_despawn` treats an
+  own-pet despawn as "gone" and calls `PetManager.dismiss_remote_pet()`, clearing the pet
+  panel and `/pet` commands while the server pet is alive. Reachable only when owner and pet
+  are two cells apart (120 m plus): pre-existing via the owner walking away (step 5b's lost
+  arm), and now also via the pet crossing away. The pet AI keeps pets within tens of metres,
+  so it is theoretical today; the right fix is client-side (treat an own-pet despawn as
+  hidden, not dismissed, and re-attach on the next PetSpawn) and rides an export.
+  **Re-read 2026-10-02: it is not theoretical.** `/pet guard` and `/pet sit` pin the pet
+  (`entity.rs::tick_pet_ai` returns before the follow step for both stances), so an owner who
+  walks two cells away loses the panel and every `/pet` command (all gated on
+  `PetManager.has_pet()`, a live node), and cannot call the pet back until they walk into
+  view of it again. The client-only fix is also weaker than it looked: one `EntityDespawn`
+  means both "left your view" and "is gone" (a charm ending, a replacement summon), and the
+  client can only guess which from distance. Deaths and HP are not the problem; the server
+  fans those to everyone in the world, not by view.
+  **Needs a design call (user)**, each a small server change, none built: (1) the owner
+  always sees their own pet (never send the owner a view-loss despawn for it, and always
+  include the owner in its position fan), which keeps guard-and-walk-away working as in EQ;
+  (2) a leash: a pet further than some distance from its owner drops its stance and returns
+  or warps to the owner; (3) WoW's answer, the pet is dismissed past a distance with a line
+  saying so.
+  **DECIDED 2026-10-02 (user): (1), "You should absolutely see your own pet, wherever it
+  is." BUILT same day, pending playtest** (server `43dc287`; `scale_readiness_checklist.md`
+  §4; server-only, no client change, rides the next redeploy). One helper, `pet_owner_cid`,
+  carries the rule: the owner is always in the pet's Position audience, is skipped by both
+  view-loss despawn paths (the pet crossing a cell, and the owner's own crossing, which also
+  no longer re-sends a PetSpawn the owner never lost), and is added wherever the pet really
+  ends (charm expiry, the body expiring). Integration test
+  `owner_keeps_seeing_a_pet_parked_two_cells_away` parks a skeleton, walks the owner two cells
+  off, and calls it back; it fails on the previous code at the first assertion. Not an
+  information leak: the owner learns only their own pet's position, and the pet goes only
+  where the owner already sent it.
 - [ ] **The cursor-slot epic: left-click ground pickup + corpse auto-re-equip** *(left-click
   requested 2026-08-27; the user chose the full server-side cursor slot — "Option B for sure.
   this sounds amazing and we need the corpse auto-re-equip feature" — over a client-only
@@ -527,7 +645,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   polls hardware buttons; the dialogs now report closes and `request_ground_drop` ignores taps
   in a 400 ms echo window. Client-only. Also from the notes: the movable-full-bags design item
   directly below.
-- [ ] **Full bags should move with their contents** *(asked 2026-09-09 on the slice 1.5
+- [x] **Full bags should move with their contents** — **DONE + playtested 2026-10-09**
+  (`full_bags_move_checklist.md`, all nine rows PASS; the log shows a held bag surviving a
+  relog, a death while holding one leaving an 18-stack corpse looted empty, and the sell and
+  bag-in-bag refusals). What exists is in systems_overview → Items (bags). The tester asked
+  whether a swap swaps places or contents: places, each bag keeping its own contents, which is
+  what they wanted. *(Original entry:)* *(asked 2026-09-09 on the slice 1.5
   checklist: "We plan on changing this, correct?")*. Today a non-empty bag refuses to lift or
   move ("Empty the bag before moving it.") because the server keys a bag's contents to the
   base slot holding it — moving the bag would orphan them. EQ moves full bags freely, so the
@@ -605,23 +728,33 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   opened by a chat command (`hud.gd` ~1399: `open_for` + `broadcast_inspect_player`) over the
   existing wire round-trip. Remaining: the right-click-a-player trigger this entry names, and a
   playtest — no checklist has ever exercised it)*
+  **Right-click trigger BUILT 2026-10-02, pending playtest** (client-only, next export;
+  `tell_reply_and_inspect_click_checklist.md` §3). A right-click tap on a living player targets
+  them and opens inspect through the same path as `/inspect` (20 m client range, the server's
+  30 m gate behind it); a right-drag is still the camera. The range gate itself has rows in
+  `inspect_range_gm_audit_ban_checklist.md` §1.
 - [ ] **LFG flag**, **Guild system**, **Dueling**, **Auction / bazaar**, and the later social
   layer recorded elsewhere and pulled in by the 2026-09-29 audit: **player-owned towns + guild
   taxes** (user idea 2026-06-18, "revisit later", sparked by the Banker fee mechanic) and a
   **mail system** (server_design.md open question 6, "defer until requested").
 - [ ] **Language system wiring** — `hear_language()` passive gain not yet called from the
   chat-receive path; needs multiplayer chat RPC + trainer NPCs
-- [ ] **Quest reward item follow-ups** *(surfaced while closing quest phase 2; phase 2 itself
-  shipped — see systems_overview)* — (a) the **Tarnished Silver Ring** (wolf_threat reward)
-  equips but its **AGI +1 never applies** to the character sheet. **The recorded "bad stat
-  block" hypothesis is DISPROVEN (audit 09-09): the `.tres` carries `bonus_agility = 1` AND
-  `items.toml` carries `agi_bonus = 1` — both data sources are correct**, so the fault is in an
-  apply or display path (candidates: the server's equip-bonus recompute not mapping AGI for
-  ring-type items, or the sheet not re-reading it; the gnoll boots applying fine means the path
-  works for some slot/stat pairs — diff those two). (b) The
-  **Hunter's Medal** (rotfang_hunt turn-in, STR +2 / CON +2) was never re-tested landing on
-  turn-in — `5ae6808` closed only the kill-credit + golden-orb complaints on that quest, not the
-  item itself. Fix the ring; re-test the Medal. Evidence: `quest_phase2_sliceB_checklist.md`.
+- [x] **Quest reward item follow-ups** — **STALE ENTRY, CORRECTED + TICKED 2026-10-02: both
+  halves were done and playtested, and this entry never caught up.** (a) The **Tarnished
+  Silver Ring's AGI +1 not applying** was fixed on 2026-07-14 (client `b1df906`, "Gear stat
+  bonuses display in launcher mode": the six primary stats have no server-to-client sync, so
+  the client's server-driven equip path now applies gear bonuses itself) and playtested with
+  the ring as the test item: `gear_stat_display_checklist.md` §1-4, every row passing (equip
+  toggles AGI, relog keeps it, death strips it, STR and CON items move too). The one note from
+  that sitting ("unequip, relog, it is equipped again") was the disconnect-flush bug, fixed and
+  passed in `disconnect_flush_checklist.md` §1. The 09-09 audit looked at this entry, disproved
+  its hypothesis, and proposed a diff against the gnoll boots, without finding that the fix
+  had shipped eight weeks earlier; a 2026-10-02 read of both sides of the equip path found
+  nothing wrong because there is nothing wrong. (b) The **Hunter's Medal landing on turn-in**
+  passed 2026-09-22 (`phase4_content_checklist.md`, the Rotfang turn-in row: refused on full
+  bags, paid on the retry). One eyeball is left and has a row, not an entry: the Medal is a
+  NECK item, the one slot nobody looked at for STR/CON on the sheet
+  (`inspect_range_gm_audit_ban_checklist.md` §6).
 
 ### Security / exploits
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
@@ -690,7 +823,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   before the port opens** — that caveat is the surviving obligation of this item. (History:
   found 2026-08-11 when the 5-per-60s gate pushed the first tester into creating a duplicate
   account; the 2026-09-17 fresh-world wipe retired those duplicates.)
-- [ ] **No way to reset an account password** *(requested 2026-08-14)*. A tester who forgets their
+- [x] **No way to reset an account password** — **BUILT 2026-09-30** (server `1c1f523`;
+  `cargo run -p projectdawn-server --bin reset_password -- <username>` generates and prints a
+  password once, or `-- <username> --stdin` reads one; the password is never an argv word,
+  since argv lands in shell history and other users' `ps`). `db::reset_password` writes the
+  Argon2 hash AND purges every session row for the account in ONE transaction, so a live
+  session cannot outlive the reset; the bin is a thin front end so there is one
+  implementation. Unit-tested: new password works, old one stops, a pre-reset session token
+  stops being redeemable, a short password is refused leaving the old intact, unknown account
+  errors. Exercised against a COPY of the dev `world.db`. **This is a tool, not a feature —
+  ticked on the tests plus the dry run, since there is no in-game surface to playtest.** The
+  self-serve change-password flow stays open below. *(Original entry, for the record:)*
+  A tester who forgets their
   password is locked out permanently, and their only recovery is registering *another* account —
   which is exactly how the duplicate accounts in the item above happened. Nothing in the server can
   change a password today: `db/mod.rs` hashes on `create_account` (`:76`) and verifies on login
@@ -707,6 +851,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   operator bin doesn't: the *old* password re-verified, its own rate-limit budget (`LoginRateLimiter`
   is keyed to Login and Register only, so a change-password endpoint would be an unmetered Argon2
   oracle), and the same session invalidation. That's the argument for doing the bin first.
+- [ ] **Self-serve change-password flow** *(the surviving half of the item above, 2026-09-30)*. The
+  operator bin covers the lockout case; a player changing their own password needs the three
+  things named directly above (old password re-verified, its own rate-limit budget, session
+  invalidation), plus a launcher or in-game surface. Not a friends-build need.
 - [x] **Server move-merge ignores `stack_size`** — **DONE + playtested 2026-08-21** (server
   `393cc64`, §5 of `atomic_transfers_checklist.md`). A playtest had built a **41-stack of Bread
   Loaf** whose cap was 10, because the move paths merged with a bare `saturating_add`. The helper
@@ -739,10 +887,25 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   inventory family, the group arms, and `BindAtCurrentLocation`, and the 08-24
   `silent_refusals_checklist.md` playtest exercised the surface; later handler reads confirm
   EquipItem / UnequipItem / SplitStack / DropItem / DestroyItem / UseConsumable all answer
-  today. **What actually remains open:** the post-mana-deduct cast arms — the out-of-range and
-  catch-all arms refund + report since `da36216` (08-24), but the "8 arms" figure predates
-  those fixes and was never recounted. Close this item by recounting the cast resolver's
-  silent arms and answering any that remain.
+  today. **RECOUNTED + CLOSED OUT 2026-09-30** (server `2e59690` on the deploy branch,
+  cherry-picked from the trade branch; pending playtest). The recount found **11 silent arms,
+  8 player-reachable**, each charging full mana for nothing; all 8 now refund and report via
+  the out-of-range arm's pattern: ALLY heal on someone who just died or zoned, an ENEMY nuke
+  with NO target selected (the user reported exactly this on 2026-05-05 and the server half
+  was that it ate the mana), an ENEMY spell on yourself, a PvP target dead or gone (liveness
+  hoisted above the mutable borrow so the refusal can refund), AOE with no radius, PET_SUMMON
+  with an empty or unknown pet_type (the client-only spell backlog reaches this in ordinary
+  play), and all three PET_CHARM arms. Only PET_SUMMON's vanished-caster arm stays silent —
+  nobody left to tell. Several arms went debug to info so player-visible failures show at the
+  default log level. **Checked, no change needed:** `fan_out_cast_fail`'s broadcast is not a
+  leak, because the client filters CastFail by caster id (`remote_player_manager.gd:216`) and
+  bystanders only use it to cancel the caster's bar. Integration test
+  `enemy_spell_without_a_target_refunds_and_reports` pins the headline case (line AND refund).
+  Ticks when a playtest sees a refused cast keep its mana.
+  **Superseded in shape 2026-10-02:** the cast refusals no longer refund, because they no
+  longer take anything; a pre-flight refuses before the mana comes off (see "Spells had no
+  reach" above), and the refusal arrives as "Cast failed: <reason>". The playtest row is the
+  same: a refused cast keeps its mana.
   **Deliberately left silent** (confirmed correct): anti-cheat gates, dev/GM authorization (a reply
   is an oracle for whether `PD_DEV_CMDS` is on or an account is GM), transport/lifecycle gates, and
   rejections only a forged client can reach.
@@ -840,6 +1003,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **2026-08-27:** the group playtest showed a skill's stamina cost is invisible to group-mates —
   the spend is client-local (`skills.gd`), the server's stamina never moves, so nothing fans.
   Another face of the missing server skill model tracked here.
+  **Seen again in the 2026-10-07 journal:** six `Attack rejected — swing-rate limit (too
+  fast)` lines for char 1 in four minutes of melee, wielding Bonecrusher's War Axe
+  (`weapon_delay` 3.2, no proc, so `min_interval` 1.25). With no proc on the weapon the only
+  client-driven second Attack inside 1.25 s is an active damage skill fired mid-cycle: this
+  gap in play, not a limiter false positive. Each one cost the stamina and the cooldown the
+  client had already spent. The user can confirm which skill was on the bar.
 - [x] **Right-click is the world-interact verb** — **DONE + playtested 2026-08-24** (client
   `fa2ff04`, all 13 rows of `right_click_interact_checklist.md`). One mouse grammar everywhere:
   right-click (tap) interacts — NPC talk/vendor/bank, corpse + bag loot, veins, stations,
@@ -979,6 +1148,60 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `BIND` for Bind Affinity, a wire addition so the client learns its bind position (protocol bump,
   gdext rebuild, re-export), Gate reading it, and retiring `PlayerStats.bind_zone_path`. Server
   support for the other seven would be moot — there is nowhere to send anyone.
+  **DESIGNED 2026-10-04: `docs/design/bind_and_gate.md`** (EQ and SWG reference, what exists,
+  a twelve-point exploit ledger, three slices). **Six decisions wait on the user (§7)**, each
+  with a recommendation: where Bind Affinity may bind (recommended: not within 60 m of a
+  hostile spawn point, which keeps the caster perk and removes the self-built death loop),
+  binding others (self only for now), an unbound Gate (goes to the starter spawn like
+  Respawn), the pet on Gate (comes along unless parked), Succor and Evacuate (wait for the
+  content pass: their numbers are offline-era leftovers and the only safe point is the town),
+  and who gets Gate (content call). **The scope shrank again:** the wire addition this entry
+  expected is NOT needed. The client never has to know where the bind is; the server moves
+  the player with the existing `Teleport` message and confirms a bind with a chat line. So
+  slice 1 (Bind Affinity + Gate) needs no protocol bump and no DLL rebuild, and does not have
+  to wait for the trade window's deploy day. Also verified while writing it: online today the
+  client runs its own Gate and bind in the same function that sends the cast, so Gate
+  reloads the whole world scene and Bind Affinity prints "You are now bound" next to the
+  server's "That magic has no effect here yet."
+  **ALL SIX DECIDED 2026-10-05 (user), recorded in the design doc's §7:** self-bind anywhere;
+  a GROUP MEMBER can be bound only inside a safe area (town); every character is bound at the
+  starter spawn from birth; the pet always comes on Gate; Succor and Evacuate get built now;
+  Gate goes to the nine pure casters plus Bard. Build-ready as step 2 of
+  `docs/design/spell_batch_plan_2026_10_05.md` (approved 10-07).
+  **BUILT 2026-10-08, pending playtest** (server `75ab979`; client `spells.gd` + the Gate class
+  list in the same-day commit; `bind_and_gate_checklist.md`, 23 rows; needs the redeploy AND
+  the next export, since the old client still reloads the world scene on Gate). One bind, the
+  server's: a `BIND` arm (self anywhere; a group member only inside a safe area; a non-member
+  gets one line whether absent or present, so no is-online oracle) and a `PORT` arm
+  (`Spell.port` "bind" for Gate, "safe" for Succor and Evacuate: the nearest safe area's
+  arrival point; the destination never comes from the client; the move is the existing
+  `Teleport`, no wire change). `data/safe_areas.toml` holds the town square, with a unit test
+  that no camp's aggro plus jitter reaches into a safe area. Every mover is wiped from every
+  mob's hate and the cleared mobs are fanned as `EntityTarget None` (`wipe_hate` is shared
+  with the death sweep, which had never fanned the change either); pets come along in Follow
+  with their AOI cell updated; Evacuate takes the alive, present, non-linkdead members within
+  30 m and nobody else. Gate: ten classes at 8, 50 mana, 5 s, 300 s cooldown; Succor:
+  Druid/Wizard 12; Evacuate: Druid 16. `PlayerStats.bind_zone_path` is offline-only now.
+  Tests, all failing on the previous code: Gate lands at the bind and the aggroed mob drops
+  the caster; a second Gate inside the cooldown is refused; a Warrior cannot Gate; a group
+  member is bound only in the square; Evacuate moves the member in reach and not the stranger
+  beside them; binding a stranger is refused before the mana comes off. What exists is in
+  systems_overview → "Respawn, bind points, and the death lock". The seven zone ports stay
+  client-only and refuse online (no zones to send anyone to).
+  **Review pass, two HIGH finds fixed same day** (server `7e07351`, both test-pinned, failing
+  on `75ab979`): a CHARMED mob is a pet with the charmer as owner, so it rode every port into
+  the town square and stood there hostile when the charm ended (a named mob, even); it is now
+  released where it stands and walks home, as when its charmer logs out, and only summoned
+  pets are carried. And the arm cleared the pet's target but not the owner's
+  `last_attacked_enemy`, so the pet pre-pass handed the pet its old target back within 10 s
+  and it walked out of town to fight unsupervised (a pet kill credits the owner); the mover's
+  last-attacked fields are cleared with the port. Smaller: bind-other reaches 30 m like any
+  friendly cast; the pet's move fans next tick, not at the keepalive; the group-bind test reads
+  both binds back from the DB and Evacuate's test has a grouped member out of reach.
+  **Flagged, not changed (content):** the square is 10 m round the spawn and cannot grow much
+  (the Bonepile's nearest spawn leaves 10.3 m of aggro clearance), so a group member standing
+  at the far NPCs on the z = 5 row (x out to 14) cannot be bound; the user may want a second
+  safe area there or the NPCs closer in.
 - [x] **The vendor window claims a quantity and price the server never agreed to** *(found
   2026-08-24; **BUILT 2026-08-24, pending playtest** — client `vendor_window.gd`, needs a
   re-export)*. Chat correctly said "Only 7 fit in your bags." while the vendor dialog said
@@ -1070,15 +1293,108 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Hit/Miss/Evade and the cast broadcasts are cosmetic fan-outs a client can forge onto peers'
   screens (no state change; worth a rate cap when public). `EquipItem` item-vs-slot, the
   fourth part, is DONE (Track 14.1).
+  **(a) BUILT 2026-10-01, pending playtest** (server `3523bd1` + review fixes `30f0474`, client
+  `cd9f1d1`; `inspect_range_gm_audit_ban_checklist.md` §1). `InspectPlayer` requires the two
+  players within `INSPECT_RANGE` (30 m, written keep-only-when-in-range so a non-finite
+  distance refuses); the client checks its own tighter 20 m first so an honest player gets a
+  clean "too far" line. The review caught that the first cut's refusal NAMED the target and
+  answered far and absent ids differently, which would have made the gate a char_id to name map
+  and an is-online oracle; far, offline and never-existed now get one generic line and the same
+  empty result. No line-of-sight half (there is no server collision model; that stays with
+  (b)). (b) and (c) remain open.
 - [ ] **GM action audit log** *(deferred "to a fast follow" when `is_gm` shipped 2026-07-17;
   server_design's day-one rule "all GM actions audited"; the `gm_actions` table has existed
   since the auth schema; audit 2026-09-29)*. Write one row per dev/GM command (`/give`, coin
   grants, dev spawns, Full Heal, Level Up) with account, char, payload, timestamp. Read-only
   value today (one operator), load-bearing the day a second GM exists.
+  **BUILT 2026-10-01, pending playtest** (server `b47aadb` + review fixes `30f0474`;
+  `inspect_range_gm_audit_ban_checklist.md` §2; server-only). The gate and the audit are ONE
+  call, `PerConnection::authorize_dev_cmd`: a dev command runs only if its `gm_actions` row
+  was queued, and one that cannot be recorded is REFUSED, never run unrecorded. All six
+  dev-gated handlers go through it (`grant_xp`, `dev_spawn_mob`, `damage_self`, `heal_self`,
+  `give_coins`, `give`). Rows are written in one transaction per tick, before any reap, and
+  `reap_connection` flushes its own. Each row ends `via=gm`, `via=dev` or `via=gm+dev`: on the
+  R720 anything with `dev` in it means the server ran with `PD_DEV_CMDS` on. A refused
+  (unauthorized) attempt writes nothing, so no ordinary client can make the server write. The
+  write bound is a per-connection token bucket (burst 128, refill 8/s), sized so the Test
+  Panel's crafting-materials button (about 34 gives in one frame) is recorded whole.
+  `admin_report` shows the newest 50 rows (console + HTML card). **The review's catch, and why
+  the shape changed:** the first cut capped a tick at 8 rows but still RAN the commands past
+  the cap, so a GM client could bury a coin grant behind eight fillers.
 - [ ] **Account admin tooling: ban/unban and delete/purge bins** *(`handoff_account_admin.md`
   2026-07-31; audit 2026-09-29)*. `is_banned` is enforced at login but nothing can set it, and
   there is no account delete or purge. Same shape as `grant_gm` and the scoped
   `reset_password` bin above: operator-only, session rows cleared on ban.
+  **Ban/unban BUILT 2026-10-01, pending playtest** (server `81150c7` + review fixes `30f0474`;
+  `inspect_range_gm_audit_ban_checklist.md` §3). New `admin_account` bin: no args lists accounts
+  (flags, ban reason, live characters, live sessions), `ban <username> [reason]`, `unban
+  <username>`. `db::set_account_banned` writes the flag and reason AND purges the account's
+  sessions in one transaction. The ban bites at login, at EVERY session redemption
+  (`touch_session`; the review found that a login in flight when the ban landed got a usable
+  session, because only the login path checked the flag), and at world connect
+  (`KickCode::BannedNow`, for a connect token minted just before the ban). A re-ban with no
+  reason keeps the reason on file. **Delete/purge is deliberately NOT built and stays open
+  here:** the 2026-09-17 wipe retired the throwaway accounts that motivated it, and every child
+  table cascades from accounts or characters EXCEPT `gm_actions` (which now has rows), so a
+  delete must first decide what happens to audit history.
+- [ ] **Kick by account: a ban or password reset does not remove a character already in the
+  world** *(the stated limit of both ops tools, 2026-10-01)*. `admin_account ban` and
+  `reset_password` close every way IN (login, session use, world connect), but a connection
+  that is already in the world keeps playing until it drops; today the operator's only lever is
+  a server restart, which costs everyone up to 60 s of progress. Shape: at the 60 s checkpoint
+  (the world loop already has the pool there), read the banned account ids, and kick any
+  connection whose account is in the set with `KickCode::BannedNow`. One small query a minute.
+  Decide deliberately whether the kicked character reaps at once or lingers linkdead like any
+  other unclean exit (lingering is the anti-force-off default and is probably right).
+  **Ban half BUILT 2026-10-02, pending playtest** (server `9b0bf87` + `8e662d6`;
+  `inspect_range_gm_audit_ban_checklist.md` §3). The world loop runs a ban sweep every
+  `BAN_SWEEP_INTERVAL` (10 s, tighter than the checkpoint this entry proposed, since the query
+  runs on its own task and never blocks the loop): any connection whose account is banned is
+  sent `KickCode::BannedNow`, its messages are ignored from that moment, and the server drops
+  the transport `KICK_FLUSH_GRACE` (1 s) later so the kick arrives first. The character then
+  leaves by the ordinary unclean-exit path (the linger was kept, as proposed). **Found
+  2026-10-04: the kicked CLIENT showed nothing** (no in-world listener for the kick reason);
+  the disconnect notice built that day is what makes "told why" true, and it needs the
+  export. **Still open:
+  the password-reset half.** Nothing in the database says "end sessions that began before
+  now", and adding a column for it means a migration, after which an older binary refuses to
+  boot on that database (no rollback). `reset_password` names the lever instead: ban, wait
+  for the `banned account kicked from the world` log line, unban.
+- [ ] **PET_CHARM had no range check** *(found 2026-10-01 while reading the charm arm for a test
+  fix; **BUILT same day, pending playtest**, server `30f0474`;
+  `inspect_range_gm_audit_ban_checklist.md` §4)*. The charm arm checked that the target id was a
+  live enemy and nothing else, so a modified client could charm ANY mob in the world by id from
+  anywhere (a named mob from the safety of town). It now has the nuke arm's reach
+  (`RANGED_ATTACK_RANGE`, 25 m), written keep-only-when-in-range, refunding and answering "That
+  target is too far away." Integration test `charm_refuses_a_target_out_of_range` runs the
+  exploit as a client would: the caster names the id of a mob two cells away that it was never
+  even told exists. Same audit frame as always: the server validated what the spell does and
+  not whether the caster was entitled to cast it there. The sweep of the other target-type
+  arms ran 2026-10-02 and found two more; see the entry directly below.
+- [ ] **Spells had no reach on heals, buffs or PvP nukes, and a refused cast was a free
+  skill-up** *(found by the 2026-10-02 sweep; **BUILT same day, pending playtest**: server
+  `fe0e789` + `8e662d6`, client `228db25`; `inspect_range_gm_audit_ban_checklist.md` §4)*.
+  **ALLY spells** (heals and buffs, on a player or a pet) and **ENEMY spells against a player**
+  had no range check at all: a modified client could keep a friend alive in a dungeon from
+  town, or nuke a PvP-flagged player from across the world, by naming an id. Separately, the
+  09-30 refund work handed mana back AFTER the handler had stamped the cooldown and rolled
+  the casting skill, so a cast the server was always going to refuse was a free skill-up
+  attempt and still burned its cooldown; Bind Affinity (no server arm, on ten classes' bars
+  at level 1) made that reachable from an HONEST hotbar every three seconds.
+  **Built as** `cast_target_refusal`, one pre-flight that runs before the mana comes off and
+  covers every target type: presence, liveness, reach (`RANGED_ATTACK_RANGE`, 25 m, written
+  keep-only-when-in-reach) and the PvP gates for ENEMY / ALLY / PET_CHARM; CORPSE; an AOE with
+  no radius; a summon with no known pet; any type with no arm. A refused cast costs nothing
+  at all. Also: **one CastSpell per caster per tick** (one cast bar used to authorise any
+  number in a single datagram); refusals are a **private CastFail** (the client's signal to
+  drop the cooldown it started; current builds print "Cast failed: <reason>"); and **no
+  refusal names a player** (far, offline and never-existed targets share one line; "Unable to
+  attack <name>" used to answer for any connected char id from anywhere). Client half, next
+  export: a 24 m range check before the cast bar, and the cooldown handed back on a refused
+  cast. Tests run the exploits as a client would and fail on the previous code.
+  **Design note, flagged not decided:** heals now share the nuke's 25 m reach because spells
+  have no range field; say so if heals should reach further (a per-spell range is the real
+  answer, with the content pass).
 - [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
@@ -1186,6 +1502,180 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `ENEMY_DESPAWN_LINGER_SECS`).
 
 ### Combat / weapons
+- [ ] **The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)**.
+  One sitting of user answers decided a cluster of spell-system work. Plan and build order:
+  `docs/design/spell_batch_plan_2026_10_05.md`. **APPROVED 2026-10-07 (user: "Approved.
+  Thanks!")**; step 0's leash and charm halves had already shipped and passed (the cast-code
+  entry below), the remaining four step 0 items start 10-08, then steps 1 to 5 in order,
+  each its own commit with its own tests and checklist.
+  **Step 0 BUILT 2026-10-08** (server `5d8d385`; `cast_hardening_checklist.md`; the
+  cast-code entry has the detail). **Step 1 BUILT 2026-10-08, pending playtest** (server
+  `c71b686`, client in the same-day commit; `small_rules_checklist.md`; needs a redeploy AND
+  the next export, since Slow, Torpor and Aria's numbers and the 29 m friendly check changed
+  on the client too). What it is: `GROUP_SHARE_RANGE` 200 m for XP, journal ticks and the
+  coin split (journal credit takes the same alive-and-in-range test as XP now);
+  `FRIENDLY_SPELL_RANGE` 30 m for ALLY and PET_HEAL in the pre-flight, hostile spells keep
+  25 m; Slow 5% for 30 s at 10 mana, Torpor on the server at 10% for 60 s at 20 mana with
+  no heal, Aria of Dismay 8%, none with a cooldown of its own until step 4; one attack slow
+  per target with the strongest winning (`Entity::apply_cc` ignores a weaker one, the
+  pre-flight refuses it at no cost); every new character born bound at the starter spawn
+  (`create_character`). Tests: a share reaches a group-mate at 150 m and stops past 200 m, a
+  heal lands at 28 m and is refused at about 34 m, Slow is refused while Torpor holds, a new
+  character loads bound. "Ships silent" is recorded in both schedule files' §4.
+  **Step 2 BUILT 2026-10-08, pending playtest** (server `75ab979`, client in the same-day
+  commit; `bind_and_gate_checklist.md`; needs the redeploy AND the export; detail on the
+  "Gate and the Soul Binder" entry above; the review pass's two HIGH finds are fixed in
+  `7e07351`). **Step 3 BUILT 2026-10-08, pending playtest** (server `4303459`, server-only;
+  `interrupt_charge_checklist.md`, 13 rows; needs the redeploy, no export). An interrupt from a
+  hit that did real damage charges the spell's mana times the fraction of the bar that had run
+  (`cast_gate::interrupt_charge`, the server's own cast time so a forged long bar cannot
+  shrink it), capped at the mana held; the caster alone gets the true ManaUpdate behind the
+  CastFail and "Your concentration breaks: N mana lost."; a zero-damage or absorbed hit
+  charges nothing (a damage shield must not be a mana drain), and a deliberate cancel never
+  reaches the server. All five interrupt sites pass their applied damage. Integration test
+  pins the line, the charge and the settled mana; fails on the previous code.
+  **Step 4 BUILT 2026-10-08, pending playtest** (server `9c4895e`, client in the same-day
+  commit; `global_cooldown_checklist.md`, 16 rows; needs the redeploy AND the export, since
+  the gem greying and the client-side refusal are client code). After any accepted cast no
+  spell may START for `GLOBAL_COOLDOWN` (2.0 s server, 2.25 s client, so an honest player is
+  never refused): a timed cast is refused at its CastStart with a private "You cannot cast
+  again yet." and the true mana (nothing cached, no cast time lost), an instant one at its
+  CastSpell. Bard songs are exempt on both sides (`Spell.is_song` on the six songs, compared
+  by the lockstep check), or twisting stops working. The client refuses before any bar or
+  mana, `hotbar.gd` greys every non-song gem for it (a gem under a longer cooldown of its own
+  keeps that one), and a refused or interrupted cast starts none. Tests: refused at the start
+  and the release fails the cast-time gate, lands after the cooldown, an instant cast refused
+  (fails on the previous code); three songs 100 ms apart all accepted. Exploit lens: without
+  it a modified client fires every instant spell on its bar inside one second.
+  **Step 5 BUILT 2026-10-08, pending playtest, the last of the batch** (server `d593609`,
+  client `9783d3a`; `damage_over_time_checklist.md`, 17 rows; needs the redeploy AND the
+  export: the ticks, lines and kills work on the old client, the target-frame icons and the
+  client no longer running its own DoT online do not). Entangle and Dark Decay are server
+  spells: the direct hit with the cast, then `Entity::active_dots` ticks every 3 s for dps x 3
+  (whole ticks counted off the duration), builds aggro, breaks mez, fans the hit and the
+  caster's "<spell> for N" line, and a tick that kills goes through `kill_enemy`, the one kill
+  step now shared by the spell arm and both damage-shield reflect sites (a Thorns kill paid
+  nothing before). Anti-farming: a mob entering Leash or Dead sheds its DoTs and takes none
+  on the walk home; the caster's DoTs end on death, any port, and logout, on mobs and on
+  flagged players alike (PvP DoTs ride the player buff list as `BuffEffect::Dot`). The
+  target frame shows what is on a mob (DoTs plus Mesmerized / Rooted / Snared / Slowed) via
+  the mob's BuffSnapshot, fanned to the players who can see it. **The review pass caught two
+  exploits before the commit:** a DoT cast on a mob walking home kept ticking on an idle mob
+  that could never acquire its caster, paying a full kill from safety (now refused on the
+  walk and cleared at the door); and the kill step rolled LOOT for owned victims, which the
+  melee and pet-kill paths had ALWAYS done (a warder is "Wolf" with a wolf's table and
+  returns free every 15 s, so two flagged accounts could farm its bag); every path now drops
+  nothing for a pet or a charmed mob, as none ever paid XP for one. Also from the review: the
+  last tick of a DoT was a float coin-flip (now a count), PvP DoTs outlived a caster who
+  logged out, a 0-HP body could stand unkilled, mob snapshots went to everyone in the world.
+  Tests: entity cadence incl. exactly six ticks at the real 20 Hz; a DoT kill pays XP and
+  loot, a DoT ends when its caster Gates, a DoT ends when the mob leashes, a Thorns kill
+  pays; all fail on the previous code. **Not built, flagged:** per-spell DoT resistance (no
+  resist model exists), a DoT on a charmed pet carried through a charm ending (the charm
+  rebuilds the mob fresh, so none crosses), and `/pvp off` ending a DoT already on you (a dev
+  toggle today). **The spell batch is built end to end**; five checklists wait on one redeploy
+  and one export: `cast_hardening`, `small_rules`, `bind_and_gate`, `interrupt_charge`,
+  `global_cooldown`, `damage_over_time`.
+  **Deliberate scope note:** PvP attack slows on players go through `apply_buff` (same-named
+  refresh) and are not under the strongest-wins rule yet; only slows on mobs are. **Decided (user):** the group share range
+  becomes **200 m** for XP shares, quest journal ticks AND the coin split (was 30 m; journal
+  ticks had no range rule); friendly spells reach **30 m**; **Slow** = level 8, 10 mana, 1.0 s
+  cast, 5% attack slow for 30 s; **Torpor** = level 20, 20 mana, 1.5 s cast, 10% for 1 minute,
+  NO heal; attack slows do not stack (one at a time, strongest wins); a **global cooldown**
+  gets built now; **damage over time** gets a server model (Dark Decay, Entangle); an
+  **interrupted cast costs mana in proportion to progress, hits only** (a deliberate cancel
+  stays free); the friends build **ships silent** (no time to source audio by 11-08). Bind and
+  Gate decisions are on that item. **Known trade-off, user informed:** at 200 m a group-mate
+  can sit in town and share XP and coin from the nearest camps. **Aria of Dismay DECIDED
+  2026-10-07 (user): "needs to be adjusted to fit on par with Slow and Torpor. 35% is a nutty
+  slow."** Step 1 takes it to 8% (level 16, between Slow's 5% at 8 and Torpor's 10% at 20),
+  on both sides; the server entry carries no slow at all today, so online the song does
+  nothing. d2 (Torpor, no heal) was re-confirmed the same day.
+- [ ] **Cast-code findings from the 2026-10-05 design review** *(a reviewer agent's read of
+  the code; status marked per item)*. Step 0 of the spell batch plan.
+  (a) **CONFIRMED IN PLAY 2026-10-06 and BUILT the same day, pending redeploy** (server
+  `6a802f4`; `ported_spells_checklist.md` §4, whose rows rerun as the regression after the
+  redeploy). Mobs with a leash shorter than spell reach could be nuked with no response:
+  `tick_idle` ignores attackers beyond `leash_range()`, leash defaulted to aggro x 2, and
+  spells reach 25 m. Seen as a Wild Boar (aggro 10, leash 20) taking Chorus of Misery from
+  about 22 m without moving while Plagued Zombies (leash 28) came at once. Fix: new
+  `MIN_LEASH_RANGE` (30 m, `world/mod.rs`) floors the leash of every mob that aggros at all;
+  aggro-0 dev dummies stay passive; a long leash is untouched. A unit test pins the floor and
+  an integration test nukes a 1 m-aggro dummy from 20 m and waits for the mob to turn (it
+  checks its own setup off the server's Position fan, because a first cut passed on the old
+  code on a stale target message from spawn time). **PLAYTESTED 2026-10-06 evening, PASS**
+  (`ported_spells_checklist.md` §5: the boar came for the bard from 22 m on the redeployed
+  `6a802f4`).
+  (b) **CONFIRMED IN PLAY 2026-10-06 and BUILT the same day** (same commit, same checklist
+  rows). Charm expired the tick after it landed: the decay sweep tested
+  `now.duration_since(exp) >= 0.0`, which saturates to zero while `exp` is still ahead. Seen
+  twice in the log as `charm expired` 50 ms after the charm. One line (`now >= exp`);
+  `charm_converts_enemy_to_pet` now also asserts no despawn for 1.5 s after the PetSpawn and
+  fails on the old code. **PLAYTESTED 2026-10-06 evening, PASS** (§5: the charm held its full
+  60 s). The tester's follow-up from that row, that the mob should come back hostile at expiry
+  instead of vanishing, is its own entry directly below. Both fixes were built ahead of the
+  batch plan's approval because they were proven bugs on the host, not design; the other four
+  parts of step 0 still wait on the plan.
+  (c) **Verified and BUILT 2026-10-08, pending playtest** (server `5d8d385`;
+  `cast_hardening_checklist.md`, needs a redeploy). The dead-state gate at message arrival
+  already refused a cast once the death sweep had run; the real window was the tick in
+  which hp hit zero with a cast queued before the sweep (a PvP hit or dev damage lands
+  before the cast step, the sweep runs after it). The cast step now refuses any caster at
+  0 HP or `death_processed`. Test: `a_dead_caster_casts_nothing` sends the dev damage and a
+  Smite in one batch; on the old code the Smite landed.
+  (d) **BUILT 2026-10-08, pending playtest** (same commit and checklist). Every refusal from
+  the cast handler goes through `refuse_cast`: a private CastFail plus a ManaUpdate with the
+  server's true mana (class/level, the cast-time gate, moved, cooldown, not enough mana, the
+  resurrection arm's four). The silenced and mesmerized refusals, which fan to every peer
+  BUT the sender, now also reach the caster with a ManaUpdate. **Deliberate exception:**
+  interrupts keep their fan to peers, so the bar peers drew cancels; the caster is already
+  among the recipients. Test: `a_refusal_reaches_only_the_caster_with_the_true_mana` (a
+  bystander hears nothing).
+  (e) **BUILT 2026-10-08, pending playtest** (same commit). A finished cast cannot be held:
+  past `CAST_HOLD_GRACE_MS` (2 s) after the bar's end the release is refused as lapsed and
+  the stale bar dropped (`a_finished_cast_cannot_be_held`). An interrupt that lands after a
+  bar began beats that bar's completion even in the same tick
+  (`PerConnection::cast_interrupted_at`, stamped by `roll_cast_interrupt`; the gate read the
+  cache as of dispatch, which let a hit earlier in the tick clear the live cache while the
+  cast still went through). Casting stands the caster at CastStart and on an instant cast.
+  The pure decisions are `world/cast_gate.rs` with unit tests. Client follow-up, not built:
+  the client should stand the local player on cast start too (today it only stops drawing
+  you seated when the server's regen or the next Sit/Stand catches up).
+  (f) **Verified: a mob finished off by a damage shield (Thorns) pays nothing**, no XP, no
+  quest credit, no loot (`tick.rs` ~8085 marks it dead and fans EntityDied, nothing else).
+- [x] **A charm that ends should hand the mob back, not delete it** — **DONE + playtested
+  2026-10-07** (`charm_return_checklist.md`, all 9 rows PASS on `e3a6fa8`: the mob came back
+  with its HP and attacked; the Bonepile count did not grow across a charm; a charmed pet
+  that died respawned on the camp's timer; the quit case logged `charm broken by owner
+  leaving — mob returned`; re-charming the returned mob worked. What exists is in
+  systems_overview → Pets, "Charm (server)".) **One refinement from the sitting, BUILT
+  2026-10-07, pending redeploy** (server `3e1c200`): a returned mob with nobody to hate now
+  walks home instead of standing where the pet was, so the quit case ends like the walk-away
+  case; one re-check row in the checklist's §3. *(Original entry, for the record:)* *(user,
+  2026-10-06, on the §5 rerun: "When charm expires the target vanishes. It should revert to
+  being its original npc enemy type.")*. Today the charm arm (`tick.rs` ~5378) converts the enemy into
+  a pet entity and frees its camp slot at once (`spawner.on_enemy_died`), and the expiry sweep
+  (~3117) removes the pet with no body and no replacement: the Track 12 v1 call, "mob runs
+  away". EQ breaks a charm by handing the mob back, hostile and usually straight onto the
+  charmer, which is what makes charm dangerous to lean on. Build shape: the charmed pet keeps
+  its `spawn_point_idx` and the slot stays occupied for the charm's life; at expiry (and on
+  the owner's logout) the pet is rebuilt as an enemy at its position with its current HP, back
+  in its slot, with threat on the former owner so it comes for them; a pet that dies while
+  charmed frees the slot as any death would. **Exploit lens, and the reason for the slot
+  rule:** with the slot freed at charm time (as now), a revert would add a mob to the camp on
+  every charm whose replacement had already spawned, a charm-and-wait farm for XP and loot.
+  Server-only. **DECIDED 2026-10-06 (user): yes, it attacks the charmer, EQ-authentic. BUILT
+  the same evening, pending playtest** (server `e3a6fa8`; `charm_return_checklist.md`; needs a
+  redeploy, no export). As shaped: the slot and home ride on the pet and the charm arm no
+  longer frees the slot; one helper, `return_charmed_mob`, serves both ways a charm ends (the
+  expiry sweep, and `despawn_owned_pets` when the charmer goes linkdead or is reaped): the pet
+  is despawned for everyone who saw it and `Entity::released_from_charm` rebuilds the enemy
+  (fresh id, same template, the pet's HP and position, its slot and home; a named mob is not
+  scaled twice), then `turn_on` sets threat and Chase on the charmer when they are in the
+  world and alive. A pet that dies charmed frees the slot through the ordinary corpse sweep.
+  Tests: a unit test on the rebuild, and an integration test that charms with a Bard's 30 s
+  Siren's Song in real time and waits for the EnemySpawn, the EntityTarget and the first hit
+  on the bard; it fails on the previous code at the EnemySpawn.
 - [ ] **Proc follow-ups** *(the server-authoritative proc core shipped + playtested 2026-07-31, PD_W0025
   — see systems_overview)*: (a) **elemental resist for procs** — the server has no enemy-resist model
   at all, so proc damage is flat; needs resist fields on `MobTemplate`/`Entity` first. (b) **PvP-player
@@ -1251,6 +1741,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   quirk (handoff_track_22 Option F, "deferred for next playtest's verdict", never revisited):
   a level 1 character cannot advance any weapon or armor skill because the cap equals the
   start; decide whether that is EQ-authentic enough to keep.
+  **Seen again 2026-10-09 on Sense Heading** (`loc_command_checklist.md` note: "I don't think
+  there is a skill for /sense"): it starts at the level-1 cap, so a fresh character always reads
+  exact and the skill is invisible until leveling raises the cap; it is also client-local and
+  resets every launch (`character_setup.gd` re-initializes it).
 - [ ] **Client-only spell backlog (~32 spells missing from `spells.toml`)** *(quantified
   2026-07-22 from a Life Drain / Dark Shroud playtest; those two are now ported)*. The client's
   `spell_definitions.gd` has 156 spells; the server has 124. A client-only spell is dropped as
@@ -1260,6 +1754,39 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   cast gate keys on base `conn.class`, so these need the prestige-class model), and **`Warder's
   Mend` PET_HEAL** (also its own long-standing gap). `tools/export_spells.gd` is the intended regen
   path but is stale. Audit list: see the "Known drift" note + the 2026-07-22 session note.
+  **Recounted and partly PORTED 2026-10-05, pending playtest** (server `c0046af`;
+  `ported_spells_checklist.md`; server-only, works on the client testers already have). The
+  32 split into 13 ordinary class nukes, 10 ports, and 9 blocked on other systems. **Nine of
+  the 13 are plain direct damage and are now in `spells.toml` with the client's values
+  unchanged:** Blizzard and Thunder Clap (Wizard), Bloodfire, Void Lance and Tempest Bolt
+  (Sorcerer), Cascade of Stars (Enchanter), Chorus of Misery (Bard), Feral Shriek (Beast
+  Master), Judgment (Paladin). A unit test pins all nine and an integration test has a level
+  4 Sorcerer land Bloodfire (it fails without the data). **The nine PLAYTESTED 2026-10-06,
+  PASS** (`ported_spells_checklist.md` §1 to §3: six characters, one per class, all with
+  spell kills; Cascade of Stars reached the server's interrupt roll, which the old server
+  could not do; no unknown-spell line all evening; an old Bard song still resolves). **The 22
+  that remain (23 until Warder's Mend was ported on 10-07, below), by what blocks each:** 10 ports (Gate, Succor, Evacuate: the bind and Gate design; seven zone ports:
+  zones that do not exist); 7 prestige-class spells (`Paladin_Fallen` x4, `Shadow
+  Knight_Redeemed` x3: the cast gate keys on the base class); **damage over time, which the
+  server does not model at all** (Dark Decay, Entangle: the only two DoT spells in the game,
+  and most of their damage is the DoT, so porting the direct hit alone would misrepresent
+  them); Exsanguinate (mana drain, no server field); Camouflage (stealth); and **Torpor**.
+  **Warder's Mend, the one PET_HEAL, PORTED 2026-10-07, pending playtest** (server `8a826a5`;
+  the tester asked for no client-only pet spells; `xp_eligibility_and_pet_levels_checklist.md`
+  §3's pet-spell row, after the redeploy): the cast pre-flight resolves PET_HEAL to the
+  caster's own live pet in reach ("You have no pet to mend." otherwise) and the arm heals it
+  by `heal_amount` and fans its HealthUpdate, whatever the client had targeted. The lockstep
+  check now reads 134 server spells, 22 client-only, no pet spell among them. *(Corrected the same day: this entry first said Torpor's data
+  "looks wrong", an ENEMY spell that heals. That was a misreading. The data matches the
+  design in `docs/concepts/classes/shaman.md`: Torpor slows the TARGET's attacks by 70% and
+  puts a heal-over-time on the CASTER, the Shaman's signature line. The client applies
+  `hot_hps` to the local player whatever the target type.)* It is blocked only because the
+  server's ENEMY arm applies the slow but has no step that gives the caster the HoT, a small
+  addition. The user was asked on the wrong premise and answered "remove the heal";
+  **re-confirmed 2026-10-07 on the corrected premise: no heal.** Torpor became the 10%, one
+  minute attack slow of the spell batch's step 1 (Slow is 5% for 30 s at level 8) and
+  **joined the server on 2026-10-08** (`c71b686`), leaving 21 client-only. The file header in `spells.toml` now states what the server models and what it
+  does not.
 
 ### World systems
 - [x] **Phase 4 content: the replacement world** — **DONE + playtested 2026-09-27**
@@ -1272,12 +1799,36 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   watch item: Flamebrand's Flaming Strike procs have not yet been observed in a server
   log — check on the next melee session with it equipped. `xp_mult` on named mobs remains
   parsed-but-unapplied (pre-existing, tracked under the named-mobs entry).
-- [ ] **Enemy AOI cell-crossing spawn/despawn gap** *(found 2026-09-25 in the zone-size research,
-  recorded only in that session note until the 2026-09-29 audit)*. When an enemy crosses an
+- [x] **Enemy AOI cell-crossing spawn/despawn gap** — **DONE + playtested 2026-10-07**
+  (`scale_readiness_checklist.md` §3, the two-seat rows, all four PASS: a partner's pet
+  appeared with them, vanished with them, and was already there when the tester walked into
+  view of it; the mob-into-view row ticked as well). What exists is in systems_overview →
+  Networking, "AOI crossings". *(Original entry, for the record:)* *(found 2026-09-25 in the
+  zone-size research, recorded only in that session note until the 2026-09-29 audit)*. When an enemy crosses an
   AOI cell boundary (a mob chasing into a player's view), the server never fans an
   `EnemySpawn` / `EntityDespawn` for it: the client receives Position updates for an id it
   was never given a spawn for, so the mob is invisible until a re-enter. Server-only; a
   scale-readiness prerequisite next to the idle-enemy rebroadcast fix.
+  **BUILT 2026-09-30, pending playtest** (server `c121341`; `scale_readiness_checklist.md`
+  §3; server-only). The crossing loop now uses the `(gained, lost)` cells `aoi.update`
+  already returned and discarded: players in the gained cells get the entity's EnemySpawn
+  or PetSpawn, players in the lost cells an EntityDespawn, a mirror of the step 5b player
+  handler. **A third gap found while verifying, never recorded until now: pets were
+  invisible to a player walking INTO view of them**, because the player crossing handler
+  tested ids against `LOOT_BAG_ID_BASE` first and the partitions stack (player < enemy <
+  bag < pet), so a pet matched the bag arm, found neither a bag nor a corpse, and was
+  skipped; it gains a pet arm ahead of the bag arm. Three integration tests seed the second
+  client two cells from spawn through the characters table (no 240 m walk) and all three
+  fail on the previous tick.rs with their asserted messages. Ticks on the §3 two-seat rows
+  (the mob-into-view row may stay `[-]`; the test is its evidence).
+  Review pass (`818a902`) folded in three more of the same class: the EnterWorld pet seed
+  keyed visibility on the OWNER's cell while every other pet path keys on the pet's own (a
+  ghost pet with no Positions, or Positions with no spawn, depending on which was near); the
+  EnterWorld ENEMY seed iterated the whole `enemies` map with no pet skip, and the client's
+  enemy manager has no partition guard, so a late joiner got a second, enemy-flavoured node
+  for every visible pet riding the pet's Positions; and the spawn-by-kind choice now lives in
+  one `fan_out_entity_spawn` used by both the player crossing and the entity crossing, so no
+  partition-test ordering can swallow a kind again.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
@@ -1291,7 +1842,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   gear drops and tables for the Ossuary/Wraith Gate line wait on a data-driven table format.
   (c) Per-vendor server-side stocking: the server sells anything with a `vendor_price` to
   anyone in range of any vendor; stock lists are client-only. Fine at friends scale, a
-  correctness gap for a public host.
+  correctness gap for a public host. (d) **Ask 2026-10-07 (user): humanoid mobs (bandits,
+  gnolls, anything with a lore history) should have gear tables and be equipped from them,
+  and carry coin; animals carry none.** This wants a creature type on the mob template
+  (humanoid / beast / undead / ...), the hook EQ keys loot by creature and WoW keys both loot
+  and spell eligibility on (its charm takes only humanoids and beasts). Content and data;
+  sequenced behind (b).
 - [ ] **Character creation follow-ups** *(scattered: race expansion memory 2026-06, the CHA
   memory, `item_weight_proposal.md` §Findings, `classes.md`; audit 2026-09-29)*. (a) The three
   drafted races (Aerathi, Vesperin, Sylphari) exist as docs only (`race_expansion_brainstorm.md`
@@ -1315,7 +1871,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   attack NPCs and suffer the consequences (evil races farming reputation by killing good
   merchants/guards/villagers, good races by killing bad guards); ask the user for the
   reputation rules before designing.
-- [ ] **Time of day is per-client; make it server-driven** *(reported 2026-08-14; this is the
+- [x] **Time of day is per-client; make it server-driven** — **DONE + playtested 2026-10-09**
+  (`time_of_day_checklist.md`, every row PASS including §2's two seats: the clocks agreed to the
+  minute and through a full day, dusk came together, the sky carried on across a relaunch and a
+  server restart, no step at the minute sends, the Test Panel's Pause behaves, night vision
+  intact; the old-client row skipped by choice). What exists is in systems_overview → World &
+  environment. *(Original entry:)* *(reported 2026-08-14; this is the
   "server broadcast is planned" line in "Known client↔server drift" made into a real item)*. No two
   players share a sky. `autoloads/time_of_day.gd` starts at `START_HOUR = 8.0` and advances purely
   from `_process(delta)` against a 20-minute `DAY_DURATION`, so the clock restarts at 8 AM every
@@ -1333,6 +1894,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   day length moves server-side; `DAY_DURATION` stays only as the offline / Test Room fallback. No
   protocol bump (the variant is already in the shared enum), but it does need a gdext rebuild and a
   client re-export.
+  **BUILT 2026-10-04, pending playtest** (server `e8164b1`, client in this commit;
+  `time_of_day_checklist.md`; needs the redeploy AND the export, in either order). The server's
+  new `world/clock.rs` derives the hour from the wall clock over a 20-minute day, so every
+  client is told the same hour, a restart does not reset the day, and nothing is persisted.
+  The hour goes to each player on entering the world and to everyone once a minute. The wire
+  layer decodes it (`time_of_day` signal, rebuilt DLL), `Net` re-emits `world_time_of_day`,
+  and `TimeOfDay` follows: a difference over one game hour is a jump (the first send after
+  login), anything smaller is absorbed by running the clock up to 4x fast or down to a
+  quarter speed, never backwards, so the sun does not step. The Test Panel's Pause holds a
+  hand-set sky; unpaused, the clock rejoins the server at the next send. Nothing on the server
+  reads the hour (the sky is cosmetic; night vision is a client-side tint). An older client
+  drops the message harmlessly, so the server half can deploy first. If a build ever
+  carries a DLL without the signal, `Net` says so in the console and falls back to the local
+  clock instead of failing to load. **Export note:** the DLL is hand-copied into `builds/`;
+  the copy there today (09-25) predates this, so the export must take the rebuilt
+  `addons/gdext_net/gdext_net.dll` with it.
 - [ ] **Weather system**; **Water & swimming** (breath/drowning); **Doors & locks** (lockpicking)
 - [ ] **Zone transition effects** — fade/loading screen
 - [ ] **Test Panel "Despawn All Enemies" leaves enemies invisible, not gone** (playtest
@@ -1362,16 +1939,60 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   intentional-for-now, fix before ship). (b) Merchant/guard NPC names do not flash when
   targeted. (c) The target-of-target frame was called "huge, taking up too much space"; make
   it adjustable/movable with the other HUD pieces.
+- [ ] **Playtest asks from the charm-return sitting (2026-10-07)** *(the tester's notes on
+  `charm_return_checklist.md`)*. (a) **Chat lines did not wrap**: long combat lines were
+  clipped at the window's right edge. **BUILT 2026-10-07, pending playtest** (client;
+  `chat_wrap_and_pet_buttons_checklist.md` §1): message labels wrap at the window's width and
+  re-wrap on resize (`autowrap_mode` on the label; the scroll container never scrolls
+  sideways, so the width is bounded). (b) **Pet panel buttons** ("Buttons for attack, guard,
+  etc. would be terrific"). **BUILT 2026-10-07, pending playtest** (§2): a row of five buttons
+  on the pet panel, each the same `PetManager` call as its `/pet` command. (c) **Re-target
+  the returned mob when a charm ends**: the returned mob is a fresh enemy id, so the client
+  sees a pet despawn and an enemy spawn with no link, and the player must click it again. EQ
+  keeps the target because the mob is one entity throughout. **DECIDED 2026-10-07 (user):
+  "I want ours to work the same as EQ", one entity throughout, the target kept across the
+  charm landing and ending.** Not built. The honest shape is a wire change, not a client
+  guess: the charm re-keys the mob between the enemy and pet id partitions (the client routes
+  every message by partition), so the spawn that replaces a despawn has to SAY what it
+  replaces, a `replaces: Option<EntityId>` on `PetSpawn` and `EnemySpawn`, and the client's
+  `Targeting` moves its target to the new id when the old one was targeted (the same hook
+  keeps the target when the mob is charmed, not only when it is released). That is a
+  protocol bump plus a DLL rebuild and an export, so it rides the next bump day (the trade
+  window's) rather than forcing one of its own. The client-heuristic alternative (same name,
+  same frame, within a metre) is rejected: it guesses, and a camp of same-named mobs makes it
+  wrong. (d) **Spell tooltips should show max
+  range** with MP, cooldown and description. All spells share one reach today (client 24 m,
+  server 25 m; heals decided to 30 m), so the tooltip can show that now and a per-spell
+  number when spells get their own ranges. Not built. (e) **Design question from the 10-07
+  journal, for the user: should named mobs be charm-immune?** Mirelle (Enchanter 20) charmed
+  The Undying (a named, 1,325 HP, the `the_undying` quest's target), used it as a pet to kill
+  a Giant Spider and a Barrow Zombie, re-charmed it each time the charm ended (it did turn on
+  her in the gaps: one hit for 57), and killed it at 327 HP for the kill credit and the
+  317,600 XP quest reward. EQ-authentic as play goes (charming above your level is the
+  Enchanter's signature and the gaps are the danger), and EQ makes most raid and quest bosses
+  charm-immune for exactly this reason. Nothing in the server is charm-immune today.
+  **DECIDED 2026-10-07 (user): "dont make named mobs charm-immune."** Named mobs stay
+  charmable; no flag. (EQ's other gate, a maximum target level on each charm rank, was
+  described but not asked about and is not decided; charm today has no level cap at all.)
 - [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
   ~5 minutes", 2026-05-26; audit 2026-09-29)*. Rides with the `/r` + TAB item.
+  **Mostly existed already; the gap is closed 2026-10-02, pending playtest**
+  (`tell_reply_and_inspect_click_checklist.md` §4). The layout has carried `is_active_tab`
+  and the restore has read it for months, and a clean quit saved it; what was missing was a
+  save when the tab is clicked, so the window X (a hard kill) lost the choice. One line.
 - [ ] **Art asset pipeline** *(pointer; audit 2026-09-29)*. The art work is tracked in its own
   checkbox list, `docs/design/art_assets_checklist.md` (the one deliberate exception to
   "one checkbox list", since it is an asset manifest, not a task queue); "future zone themes"
   are deferred there per the atlas. Nothing in it is on any schedule.
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
-- [ ] **`/loc` command** *(designed 2026-09-25, `docs/design/location_command.md`)*.
+- [x] **`/loc` command** — **DONE + playtested 2026-10-09** (`loc_command_checklist.md`, all five rows
+  PASS on the 10-05 build: matches Sister Maelis's position, the four facings, `/sense`, works
+  while dead, NPC directions read true). What exists is in systems_overview → UI / HUD. **One
+  change from the sitting, BUILT same day, rides the next export:** `/loc` prints coordinates
+  only (user: "should only show coordinates, not direction facing. that's what Sense heading
+  is for"); `SenseHeading.exact_facing` is removed. *(Original entry:)* *(designed 2026-09-25, `docs/design/location_command.md`)*.
   **BUILT 2026-09-27, pending playtest** (client-only, rides the next export;
   `loc_command_checklist.md`). Prints `x, y, z` to one decimal (paste-ready for the toml
   authoring files) plus an exact facing, free for everyone, working while dead; `/sense`
@@ -1495,12 +2116,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Hadrik and blocked him, and all eight have been dead furniture since the online guards.
   Git holds them (commit removing: see session 09-22); re-place them WITH npcs.toml-style
   server positions when this item is built.
-- [ ] **Consumables system** (food/drink regen loop, fermentation, ritual components)
+- [ ] **Consumables system** (food/drink regen loop, fermentation, ritual components).
+  **Ask 2026-10-07 (user):** a consumable's cooldown should equal its effect's length, so
+  drinking a second Water Flask while the first still works is refused rather than wasted
+  (Water Flask: 180 s). Confirmed in play that stacking flasks does not stack the regen.
+  Belongs with the server-side consumables pass; consumable effects are client-side today.
 - [ ] **Bookbinding / player-authored lore**
 - [ ] **Clockwork Engineering prestige** (Tinkering 150+ for Gnomes/Kobolds)
 
 ### Audio & tech debt
-- [ ] **Sound system** — combat/spell/ambient/music
+- [ ] **Sound system** — combat/spell/ambient/music. **DECIDED 2026-10-05 (user): the friends
+  build ships silent**; there is no time to source audio by 2026-11-08. This answers the
+  schedule's one standing open question (§4); the schedule files get the note with the spell
+  batch's first step.
 - [ ] **EQ-style food/water gating** — food/water should gate base HP/MP regen (no food =
   no regen) instead of stacking as additive buffs; passive consumption from inventory,
   no buff-bar entry
@@ -1509,12 +2137,35 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both
   generators are the intended lockstep tools for the two client/server data pairs and neither
   is trusted; one regen-and-diff pass each, then keep them honest.
+  **Spells half answered a different way, 2026-10-05:** `tools/check_spell_lockstep.gd` is a
+  read-only CHECK (drift, server-only, client-only; exit 1 on drift) that reads the client's
+  real `SpellDefinitions.ALL`, so the two files can be verified without trusting or running
+  the stale exporter. It found the files in step. The exporter itself is still stale, and the
+  items pair (`items.toml` vs the `.tres` files) has no check yet; the same shape would do.
 - [ ] **Docs debt** *(audit 2026-09-29)*: `server/README.md` is "badly stale" (still claims the
   world sim is unbuilt, per `deployment_linux.md`); `server/docs/flaky_integration_tests.md`
   still describes the flaky trio the 09-16 fix retired; `docs/concepts/passive_skills/*` says
   casting passives are "not yet implemented" while `CastingSkills` has shipped for months;
   `docs/deployment/` remains untracked by decision and CLAUDE.md links it as canonical (decide
   one way). Small, but each is a trap for the next reader.
+- [ ] **The cast arms duplicate the pre-flight** *(review finding, 2026-10-02; recorded, not
+  built)*. `cast_target_refusal` decides target presence, reach, liveness and the PvP gates
+  before any side effect, and the per-target-type arms in `tick.rs` still carry their own
+  copies of the same checks (now unreachable, with slightly different lines and the old
+  refund-after-stamp order). Two homes for one rule: the next change to one (a per-spell
+  range, a new target kind) silently reopens the free-roll or the disclosure if the other is
+  missed. The right shape is for the pre-flight to return the RESOLVED target and for the arms
+  to consume it, deleting their refusal branches. A refactor of the cast handler, so its own
+  task, never under cover of a feature.
+- [ ] **Procedural dungeon: pick the canonical copy** *(surfaced by the 2026-09-30
+  belt-and-braces sweep, the other of its two findings)*. The generator exists twice:
+  `addons/procedural_dungeon/` in this repo (12 scripts dated 2026-05-01 to 05-05, the plugin
+  enabled in `project.godot` while its `plugin.gd` is an empty `_enter_tree` / `_exit_tree`
+  shell that registers nothing) and the standalone project `F:\Projects\ProceduralDungeon\`
+  (`dungeon_gen/`, its own README, todo list and session notes). No decision was ever
+  recorded about which is the source of truth, there is no sync script, and the two are in
+  step by luck. Decide when the multi-zone epic (the dungeon's first customer) is scheduled;
+  until then either disable the empty plugin or write down why it stays enabled.
 - [ ] **Localization scaffold** *(server_design.md open question 8: "wrap UI text in `tr()`
   calls preemptively so the i18n migration is just a translation file later"; audit
   2026-09-29)*. Nothing is wrapped. Cheapest done early, expensive done late.

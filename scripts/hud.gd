@@ -5,6 +5,7 @@ const _CraftingWindowScript := preload("res://scripts/crafting_window.gd")
 const _VendorWindowScript   := preload("res://scripts/vendor_window.gd")
 const _BankWindowScript     := preload("res://scripts/bank_window.gd")
 const _HudDeathScreen       := preload("res://scripts/hud_death_screen.gd")
+const _HudDisconnectNotice  := preload("res://scripts/hud_disconnect_notice.gd")
 const _HudCastBar           := preload("res://scripts/hud_cast_bar.gd")
 const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
 const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
@@ -30,6 +31,9 @@ const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 @onready var target_frame: Panel = $TargetFrame
 @onready var target_name_label: Label = $TargetFrame/VBox/NameLabel
 @onready var target_level_label: Label = $TargetFrame/VBox/LevelLabel
+# Distance to the target, refreshed every frame while the frame is shown. Added
+# 2026-10-06 as a testing aid (standing at an exact range from a mob); may stay.
+@onready var target_distance_label: Label = $TargetFrame/VBox/DistanceLabel
 @onready var target_hp_bar: ProgressBar = $TargetFrame/VBox/HPBar
 @onready var target_mp_bar: ProgressBar = $TargetFrame/VBox/MPBar
 @onready var target_st_bar: ProgressBar = $TargetFrame/VBox/StaminaBar
@@ -111,6 +115,11 @@ var _self_targeted: bool = false
 # (which instances this HUD) is on screen. Turn this dial for the HUD only.
 const GAME_UI_SCALE := 1.0
 
+# How far away /inspect works, in metres. Tighter than the server's own
+# INSPECT_RANGE (30 m) on purpose: the server gate is the backstop against a
+# modified client, and this one is what an honest player actually meets.
+const INSPECT_RANGE := 20.0
+
 func _ready() -> void:
 	get_window().content_scale_factor = GAME_UI_SCALE
 	_style_panel()
@@ -182,6 +191,8 @@ func _build_components() -> void:
 	var death_screen := _HudDeathScreen.new()
 	add_child(death_screen)
 
+	add_child(_HudDisconnectNotice.new())
+
 	var cast_bar := _HudCastBar.new()
 	add_child(cast_bar)
 
@@ -218,6 +229,7 @@ func _build_components() -> void:
 	_inspect_window.visible = false
 	add_child(_inspect_window)
 	_inspect_window.visibility_changed.connect(_on_window_visibility_changed.bind(_inspect_window))
+	Targeting.inspect_requested.connect(_inspect_player)
 
 	# PD_W0028 — the trade window opens itself on `world_trade_opened` (a
 	# holding-click on a player) and closes on `world_trade_closed`. Mounted
@@ -635,6 +647,7 @@ func _process(delta: float) -> void:
 	if target_cast_bar.visible and is_instance_valid(_tracked_target):
 		if _tracked_target.has_method("cast_progress_ratio"):
 			target_cast_bar.value = _tracked_target.cast_progress_ratio()
+	_refresh_target_distance()
 	# Camp slice B — tick the local /camp countdown. Standing/moving cancels it
 	# immediately client-side for responsiveness (the server independently cancels
 	# on stand/move/damage and fans camp_update(false), handled idempotently);
@@ -788,6 +801,7 @@ func _show_self_target() -> void:
 	var pname := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
 	target_name_label.text = pname
 	target_level_label.text = "Level %d" % PlayerStats.level
+	target_distance_label.text = ""
 	target_hp_bar.max_value = PlayerStats.max_hp
 	target_hp_bar.value = PlayerStats.hp
 	if _target_hp_label:
@@ -799,6 +813,20 @@ func _show_self_target() -> void:
 		PlayerStats.hp_changed.connect(_on_self_target_hp_changed)
 	if _tot_frame != null:
 		_tot_frame.visible = false
+
+# The same straight-line distance the cast range check uses (Spells.SPELL_RANGE
+# compares global positions), so the number on the frame is the number the gate
+# judges. Blank for a self-target or when either end is missing.
+func _refresh_target_distance() -> void:
+	if not target_frame.visible:
+		return
+	var text := ""
+	if not _self_targeted and is_instance_valid(_tracked_target) and _tracked_target is Node3D \
+			and _player != null and is_instance_valid(_player):
+		var d: float = _player.global_position.distance_to((_tracked_target as Node3D).global_position)
+		text = "%.1f m" % d
+	if target_distance_label.text != text:
+		target_distance_label.text = text
 
 func _clear_self_target() -> void:
 	_self_targeted = false
@@ -959,6 +987,12 @@ func _on_target_changed(enemy) -> void:
 	if enemy.has_signal("target_changed"):
 		enemy.target_changed.connect(_on_tracked_target_target_changed)
 	_refresh_tot()
+	# Spell batch step 5: the server fans a status snapshot for a mob (its
+	# DoTs, mez, root, snare, slow) under the enemy id; RemoteEnemy mirrors
+	# the pet's buff surface, so the same icon row shows what is on it.
+	if enemy.has_signal("buffs_changed"):
+		enemy.buffs_changed.connect(_on_target_buffs_changed)
+	_refresh_target_buffs_label()
 
 # Targeting a remote player. Resources are server-replicated via Track 4
 # ResourceUpdate fan-out and cached on the RemotePlayer node; we read the
@@ -1301,6 +1335,29 @@ func _on_player_state_changed(new_state: int) -> void:
 
 # ── Command input ─────────────────────────────────────────────────────────────
 
+# One tell on the wire plus the sender's own echo line (the server does not
+# echo a tell back to its sender). Shared by /tell and /r.
+func _send_tell(target_name: String, msg: String) -> void:
+	CombatLog.add_line("You -> %s: %s" % [target_name, msg], CombatLog.MsgType.TELL_OUT)
+	Net.broadcast_chat(Net.CHAT_CHANNEL_TELL, msg, target_name)
+
+# Open the inspect window on another player. Shared by /inspect and a
+# right-click on the player (Targeting.inspect_requested).
+func _inspect_player(rp: RemotePlayer) -> void:
+	if rp.char_id < 0:
+		CombatLog.add_line("Target has no character id.", CombatLog.MsgType.INFO)
+		return
+	# The server refuses an inspect beyond its own (looser) range; checking
+	# here first gives a clean line instead of an empty window.
+	if is_instance_valid(_player) \
+			and _player.global_position.distance_to(rp.global_position) > INSPECT_RANGE:
+		CombatLog.add_line(
+			"You are too far away to inspect %s." % rp.player_name, CombatLog.MsgType.INFO)
+		return
+	if _inspect_window != null:
+		_inspect_window.open_for(rp.char_id, rp.player_name)
+	Net.broadcast_inspect_player(rp.char_id)
+
 func _handle_chat_input(text: String) -> void:
 	var my_name := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
 
@@ -1378,18 +1435,34 @@ func _handle_chat_input(text: String) -> void:
 		Net.broadcast_chat(Net.CHAT_CHANNEL_OOC, msg)
 		return
 
-	for prefix in ["/tell ", "/t "]:
+	for prefix in CombatLog.TELL_PREFIXES:
 		if lower.begins_with(prefix):
 			var rest := text.substr(prefix.length())
 			var space_idx := rest.find(" ")
 			if space_idx > 0:
-				var target_name := rest.substr(0, space_idx)
-				var msg := rest.substr(space_idx + 1)
-				CombatLog.add_line("You -> %s: %s" % [target_name, msg], CombatLog.MsgType.TELL_OUT)
-				Net.broadcast_chat(Net.CHAT_CHANNEL_TELL, msg, target_name)
+				_send_tell(rest.substr(0, space_idx), rest.substr(space_idx + 1))
 			else:
 				CombatLog.add_line("Usage: /tell <name> <message>", CombatLog.MsgType.INFO)
 			return
+
+	# EQ-style reply. `/r <message>` answers whoever last sent us a tell; a
+	# bare `/r` reopens the chat line already addressed to them. TAB in the
+	# chat line walks the older senders (CombatLog.cycle_tell_text).
+	if lower == "/r" or lower == "/reply" \
+			or lower.begins_with("/r ") or lower.begins_with("/reply "):
+		var reply_to := CombatLog.last_tell_sender()
+		if reply_to == "":
+			CombatLog.add_line("No one has sent you a tell yet.", CombatLog.MsgType.INFO)
+			return
+		var space_idx := text.find(" ")
+		var msg := "" if space_idx < 0 else text.substr(space_idx + 1).strip_edges()
+		if msg == "":
+			# Deferred: this runs inside the chat line's own submit, which
+			# hides the line again as soon as we return.
+			ChatWindowManager.show_chat_input.call_deferred("/tell %s " % reply_to)
+		else:
+			_send_tell(reply_to, msg)
+		return
 
 	for prefix in ["/g ", "/group "]:
 		if lower.begins_with(prefix):
@@ -1407,13 +1480,7 @@ func _handle_chat_input(text: String) -> void:
 		if not is_instance_valid(target) or not (target is RemotePlayer):
 			CombatLog.add_line("Target a player to inspect.", CombatLog.MsgType.INFO)
 			return
-		var rp: RemotePlayer = target
-		if rp.char_id < 0:
-			CombatLog.add_line("Target has no character id.", CombatLog.MsgType.INFO)
-			return
-		if _inspect_window != null:
-			_inspect_window.open_for(rp.char_id, rp.player_name)
-		Net.broadcast_inspect_player(rp.char_id)
+		_inspect_player(target)
 		return
 
 	if lower == "/sense" or lower == "/sense heading":
@@ -1424,15 +1491,13 @@ func _handle_chat_input(text: String) -> void:
 	if lower == "/loc" or lower == "/location":
 		# EQ-style position print (docs/design/location_command.md). Printed
 		# x, y, z — NOT EQ's Y-first — so the line pastes straight into
-		# zone_camps.toml / npcs.toml. Facing is exact and free for everyone;
-		# the Sense Heading SKILL keeps its fuzzy roll on /sense. Works while
-		# dead on purpose: a corpse run is exactly when you want it.
+		# zone_camps.toml / npcs.toml. Coordinates only (user, 2026-10-09):
+		# which way you face is the Sense Heading skill's job, on /sense.
+		# Works while dead on purpose: a corpse run is exactly when you want it.
 		if is_instance_valid(_player):
 			var p: Vector3 = _player.global_position
 			CombatLog.add_line(
-				"Your location is %.1f, %.1f, %.1f (x, y, z). Facing %s." % [
-					p.x, p.y, p.z, SenseHeading.exact_facing(_player.rotation.y),
-				],
+				"Your location is %.1f, %.1f, %.1f (x, y, z)." % [p.x, p.y, p.z],
 				CombatLog.MsgType.INFO)
 		else:
 			# A triage tool must never be silent — say why there is no

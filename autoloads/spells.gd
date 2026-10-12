@@ -3,6 +3,8 @@ extends Node
 signal spell_cast(spell: SpellData)
 signal spell_failed(reason: String)
 signal spell_cooldown_updated(spell_name: String, remaining: float, total: float)
+# The global cooldown's countdown, every frame while it runs and a final zero.
+signal global_cooldown_updated(remaining: float, total: float)
 signal casting_started(spell: SpellData)
 signal casting_cancelled
 signal spells_changed
@@ -15,6 +17,29 @@ var _casting: SpellData = null
 var _cast_timer: float = 0.0
 var _hit_during_cast: bool = false
 var no_cooldowns: bool = false
+# Seconds left on the global cooldown (0 when none runs).
+var _gcd_remaining: float = 0.0
+
+# How far a targeted spell reaches, in metres. One metre inside the server's
+# RANGED_ATTACK_RANGE (25 m), which is the authority: this check only spares an
+# honest player a wasted cast bar, and the margin keeps position interpolation
+# from turning a cast the client allowed into a server refusal.
+const SPELL_RANGE := 24.0
+# Friendly spells (heals and buffs on another player or a pet) reach further:
+# one metre inside the server's FRIENDLY_SPELL_RANGE (30 m), decided 2026-10-05.
+const FRIENDLY_SPELL_RANGE := 29.0
+# The global cooldown (decided 2026-10-05): after any cast no spell may start
+# for this long, Bard songs excepted (twisting is casting songs back to back).
+# The server's GLOBAL_COOLDOWN is a quarter second shorter (2.0 s), so an
+# honest player who waits this out is never refused; every gem greys meanwhile.
+const GLOBAL_COOLDOWN_SECS := 2.25
+
+# The spell most recently sent to the server, and when. A server refusal
+# (CastFail) arriving within REFUSAL_WINDOW_MSEC of it means that cast never
+# happened, so the cooldown started for it here is dropped again.
+const REFUSAL_WINDOW_MSEC := 1500
+var _sent_spell_name: String = ""
+var _sent_at_msec: int = 0
 
 func _ready() -> void:
 	SpellDefinitions.validate()
@@ -30,6 +55,9 @@ func _process(delta: float) -> void:
 		if _cast_timer <= 0.0:
 			_finish_cast()
 	_cooldowns.tick(delta)
+	if _gcd_remaining > 0.0:
+		_gcd_remaining = maxf(_gcd_remaining - delta, 0.0)
+		global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
 
 func setup_for_class(_player_class: String) -> void:
 	var effective := Alignment.get_effective_class()
@@ -73,6 +101,11 @@ func cast_spell(spell: SpellData) -> bool:
 		return false
 	if _cooldowns.is_active(spell.spell_name) and not no_cooldowns:
 		spell_failed.emit("Spell is on cooldown.")
+		return false
+	# The global cooldown: a refusal here costs nothing (no bar, no mana), where
+	# the server's own gate at CastStart would answer with a CastFail.
+	if _gcd_remaining > 0.0 and not spell.is_song and not no_cooldowns:
+		spell_failed.emit("You cannot cast again yet.")
 		return false
 	if PlayerStats.mp < spell.mana_cost:
 		spell_failed.emit("Not enough mana.")
@@ -129,20 +162,38 @@ func cast_spell(spell: SpellData) -> bool:
 			spell_failed.emit("No valid target to charm.")
 			return false
 
+	# Reach. The server refuses a targeted cast beyond its range (and charges
+	# nothing for it), but checking here first means the cast bar never runs.
+	if Net.is_launcher_mode() and _target_out_of_reach(spell):
+		spell_failed.emit("Your target is too far away.")
+		return false
+
 	if spell.target_type == SpellData.TargetType.PORT:
 		var is_gate        := spell.port_zone_path.is_empty() and spell.port_entry_id.is_empty()
 		var is_same_zone   := spell.port_zone_path.is_empty() and not spell.port_entry_id.is_empty()
-		if is_gate and PlayerStats.bind_zone_path.is_empty():
-			spell_failed.emit("You have no bind point. Cast Bind Affinity first.")
-			return false
-		if is_same_zone and ZoneLoader.current_zone_path.is_empty():
-			spell_failed.emit("Cannot port — no zone loaded.")
-			return false
-		if not spell.port_zone_path.is_empty() and not FileAccess.file_exists(spell.port_zone_path):
-			spell_failed.emit("That destination has not yet been discovered.")
-			return false
+		if Net.is_launcher_mode():
+			# Online the server owns the bind and every destination (spell
+			# batch step 2): Gate always has somewhere to go (every character
+			# is bound from birth), Succor and Evacuate land at the nearest
+			# safe area, and the zone ports have no zones to go to yet, so
+			# they refuse here before any mana is spent.
+			if not spell.port_zone_path.is_empty():
+				spell_failed.emit("%s isn't available online yet." % spell.spell_name)
+				return false
+		else:
+			if is_gate and PlayerStats.bind_zone_path.is_empty():
+				spell_failed.emit("You have no bind point. Cast Bind Affinity first.")
+				return false
+			if is_same_zone and ZoneLoader.current_zone_path.is_empty():
+				spell_failed.emit("Cannot port — no zone loaded.")
+				return false
+			if not spell.port_zone_path.is_empty() and not FileAccess.file_exists(spell.port_zone_path):
+				spell_failed.emit("That destination has not yet been discovered.")
+				return false
 
-	if spell.target_type == SpellData.TargetType.BIND:
+	# Online the server decides where a bind may land (anywhere for yourself,
+	# a safe area for a group member); these zone checks are the offline game's.
+	if spell.target_type == SpellData.TargetType.BIND and not Net.is_launcher_mode():
 		if ZoneLoader.current_zone_path.is_empty():
 			spell_failed.emit("You cannot bind here.")
 			return false
@@ -180,13 +231,15 @@ func cancel_cast() -> void:
 	if _casting == null:
 		return
 	# Refund the mana. It was spent at cast START (before the bar), but the
-	# server only deducts when CastSpell arrives at completion — which a
-	# cancelled cast never sends — so the client's optimistic spend is the only
+	# server only deducts when CastSpell arrives at completion, which a
+	# cancelled cast never sends, so the client's optimistic spend is the only
 	# record and would linger until the next server ManaUpdate overwrote it.
 	# Same principle as the server's unknown-spell refund: hand back what was
 	# never really taken. Applies to every cancel path (deliberate stop,
-	# server CastFail) and offline alike — in no cancel case was mana truly
-	# consumed anywhere.
+	# server CastFail) and offline alike. One exception online (spell batch
+	# step 3): a cast that a HIT interrupts costs part of its mana server-side,
+	# and the server's ManaUpdate arrives right behind the CastFail to settle
+	# the bar on the true value; the refund here is just the first frame.
 	PlayerStats.set_mp(minf(PlayerStats.mp + _casting.mana_cost, PlayerStats.max_mp))
 	_casting = null
 	_cast_timer = 0.0
@@ -217,6 +270,9 @@ func is_on_cooldown(spell_name: String) -> bool:
 func get_cooldown_remaining(spell_name: String) -> float:
 	return _cooldowns.get_remaining(spell_name)
 
+func get_global_cooldown_remaining() -> float:
+	return _gcd_remaining
+
 # Any loaded spell by exact name, regardless of class/level gating
 # (`available` is the class-filtered subset; `_all_spells` is everything).
 # Used by BuffManager to reconstruct an ALLY buff another player cast on
@@ -244,8 +300,15 @@ func _apply_spell(spell: SpellData) -> void:
 	# effects land. target_id = 0 encodes "no target" for SELF.
 	if Net.is_launcher_mode() and Net.is_app_ready():
 		Net.broadcast_cast_spell(spell.spell_name, _cast_target_id(spell))
+		_sent_spell_name = spell.spell_name
+		_sent_at_msec = Time.get_ticks_msec()
 
 	_cooldowns.start(spell.spell_name, spell.cooldown)
+	# The global cooldown starts as the cast lands (the server stamps its own
+	# when it accepts the CastSpell); a song starts none.
+	if not spell.is_song and not no_cooldowns:
+		_gcd_remaining = GLOBAL_COOLDOWN_SECS
+		global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
 	var effectiveness := _get_alignment_effectiveness(PlayerStats.player_class)
 	var dmg_mult    := CastingSkills.get_damage_mult(spell.discipline)
 	var dur_mult    := CastingSkills.get_duration_mult(spell.discipline)
@@ -292,11 +355,11 @@ func _apply_spell(spell: SpellData) -> void:
 		PlayerStats.set_hp(PlayerStats.hp - spell.hp_cost)
 
 	if spell.dot_dps > 0.0 and spell.dot_duration > 0.0:
-		# Track 6 sub-task 3b: DoTs on RemotePlayer targets aren't
-		# applied client-side (BuffManager.add_dot expects an enemy
-		# node with take_damage etc.). Server-side DoT processing
-		# lands in sub-task 4 when buff state moves server-side.
-		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and not (Combat.current_target is RemotePlayer or Combat.current_target is RemotePet):
+		# Online the server owns the DoT (spell batch step 5): it ticks every
+		# three seconds there, fans the hit, the bar and the caster's named
+		# line, and shows in the target frame; nothing runs here. Offline keeps
+		# the local BuffManager DoT on the local enemy node.
+		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and not Net.is_launcher_mode() and not (Combat.current_target is RemotePlayer or Combat.current_target is RemotePet):
 			BuffManager.add_dot(Combat.current_target, spell.dot_dps * effectiveness,
 				spell.dot_duration * dur_mult, spell.spell_name)
 
@@ -338,11 +401,15 @@ func _apply_spell(spell: SpellData) -> void:
 			spell.max_hp_buff, spell.max_mp_buff,
 			spell.primary_stat_buff_duration * dur_mult, spell.spell_name)
 
-	if spell.target_type == SpellData.TargetType.PORT:
-		_execute_port(spell)
-
-	if spell.target_type == SpellData.TargetType.BIND:
-		_execute_bind()
+	# Online the server binds and ports (spell batch step 2): its Teleport and
+	# its chat line are the result, so nothing runs here (Gate used to reload
+	# the whole scene and Bind Affinity printed a bind only the client
+	# believed in). Offline keeps the local zone travel and bind.
+	if not Net.is_launcher_mode():
+		if spell.target_type == SpellData.TargetType.PORT:
+			_execute_port(spell)
+		if spell.target_type == SpellData.TargetType.BIND:
+			_execute_bind()
 
 	if not spell.is_song:
 		if spell.move_speed_mult > 0.0 and spell.move_speed_duration > 0.0 and not ally_remote:
@@ -431,6 +498,42 @@ func _cast_target_id(spell: SpellData) -> int:
 	if t is RemotePet:
 		return (t as RemotePet).pet_id
 	return 0
+
+# True when `spell` needs a target within SPELL_RANGE and the current target
+# is further than that. Only the cases the server range-checks: an ENEMY or
+# PET_CHARM spell on its target, and an ALLY spell aimed at another player or a
+# pet (an ALLY spell with anything else targeted falls back to the caster, so
+# it has no reach to check).
+func _target_out_of_reach(spell: SpellData) -> bool:
+	var ranged := spell.target_type == SpellData.TargetType.ENEMY \
+			or spell.target_type == SpellData.TargetType.PET_CHARM \
+			or _ally_target_is_remote(spell)
+	if not ranged:
+		return false
+	var t = Combat.current_target
+	if t == null or not is_instance_valid(t) or not (t is Node3D):
+		return false
+	var me := get_tree().get_first_node_in_group("player") as Node3D
+	if me == null:
+		return false
+	var reach := FRIENDLY_SPELL_RANGE if spell.target_type == SpellData.TargetType.ALLY else SPELL_RANGE
+	return me.global_position.distance_to((t as Node3D).global_position) > reach
+
+# Launcher mode: the server refused a cast that had ALREADY completed here
+# (target out of reach or gone, a spell the server has no effect for). It took
+# no mana and stamped no cooldown, so the cooldown this client started when it
+# sent the cast is dropped; the server's ManaUpdate corrects the mana. Does
+# nothing while a cast bar is running (that CastFail is an interrupt, which
+# cancel_cast handles) or when no cast was sent recently.
+func on_server_cast_refused() -> void:
+	if _casting != null or _sent_spell_name == "":
+		return
+	if Time.get_ticks_msec() - _sent_at_msec <= REFUSAL_WINDOW_MSEC:
+		_cooldowns.clear(_sent_spell_name)
+		# A refused cast stamped no global cooldown server-side either.
+		_gcd_remaining = 0.0
+		global_cooldown_updated.emit(0.0, GLOBAL_COOLDOWN_SECS)
+	_sent_spell_name = ""
 
 # True when an ALLY-target spell is being cast on a remote recipient (peer
 # or pet) the server — not the client — applies it to. The caster skips its

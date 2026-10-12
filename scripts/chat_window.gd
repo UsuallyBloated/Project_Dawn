@@ -253,7 +253,23 @@ func _build_chat_input() -> void:
 	_chat_input.visible = false
 	_chat_input.text_submitted.connect(_on_chat_text_submitted)
 	_chat_input.focus_exited.connect(func(): _chat_input.visible = false)
+	_chat_input.gui_input.connect(_on_chat_input_gui_input)
 	add_child(_chat_input)
+
+# TAB in the chat line walks the tell reply targets (EQ) and never leaves the
+# line: left to the engine, TAB moves keyboard focus to the next control, which
+# hides the input mid-sentence. The `gui_input` signal fires before the
+# LineEdit's own handling, so accepting here stops both.
+func _on_chat_input_gui_input(event: InputEvent) -> void:
+	if not (event is InputEventKey and event.pressed and event.keycode == KEY_TAB):
+		return
+	_chat_input.accept_event()
+	if event.echo:
+		return
+	var cycled := CombatLog.cycle_tell_text(_chat_input.text)
+	if cycled != _chat_input.text:
+		_chat_input.text = cycled
+		_chat_input.caret_column = cycled.length()
 
 func _apply_input_placeholder() -> void:
 	if _chat_input == null:
@@ -264,12 +280,15 @@ func _apply_input_placeholder() -> void:
 		_chat_input.placeholder_text = "[%s] Press Enter to type..." % \
 				CHANNEL_LABELS.get(default_channel, default_channel.capitalize())
 
-func show_input() -> void:
+## Open the chat line, optionally already holding `prefill` (a bare `/r` opens
+## it on "/tell <name> ") with the caret at the end.
+func show_input(prefill: String = "") -> void:
 	if _chat_input == null:
 		return
 	_chat_input.visible = true
-	_chat_input.text = ""
+	_chat_input.text = prefill
 	_chat_input.grab_focus()
+	_chat_input.caret_column = prefill.length()
 
 func is_input_focused() -> bool:
 	return _chat_input != null and _chat_input.has_focus()
@@ -313,7 +332,10 @@ func add_line(text: String, type: int) -> void:
 	lbl.text = text
 	lbl.add_theme_font_size_override("font_size", font_size)
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl.clip_text = true
+	# Long lines wrap at the window's width and re-wrap when it is resized
+	# (user ask 2026-10-07). The width is bounded because the scroll
+	# container never scrolls sideways; clipping used to cut them off instead.
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	# Tag the MsgType so apply_display_settings can re-derive the base
 	# colour when the user changes font_alpha (the stored colour on the
 	# Label already has alpha baked in and isn't reversible).

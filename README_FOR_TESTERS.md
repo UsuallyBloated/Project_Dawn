@@ -140,6 +140,10 @@ quit matters.
   clean logout, so the server keeps your character in the world for about 30 seconds,
   vulnerable, and refuses your own re-login during that window. This is intentional, for
   testing the linkdead system. It is not a bug.
+- **After a crash or the X button, allow up to about 45 seconds before your login is
+  accepted again:** the server needs up to 15 seconds to notice the connection is gone, and
+  the 30-second linger starts from there. A refused login inside that window is the
+  linkdead guard working; just try again.
 
 Progress is written continuously, but up to about a minute of position, HP and XP can be
 lost if the server is stopped while you are connected. A clean logout flushes immediately.

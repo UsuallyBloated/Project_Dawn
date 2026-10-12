@@ -124,6 +124,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 11
 horizontal_alignment = 1
 
+[node name="DistanceLabel" type="Label" parent="TargetFrame/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
 [node name="HPBar" type="ProgressBar" parent="TargetFrame/VBox"]
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2

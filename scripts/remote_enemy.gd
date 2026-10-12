@@ -57,6 +57,32 @@ var _last_seq: int = -1
 var _hit_tween: Tween = null
 var _base_color: Color
 
+# Spell batch step 5: the server fans a status snapshot under this mob's id
+# whenever what is on it changes (DoTs, mez, root, snare, slow). Mirrors
+# RemotePet's buff surface so the HUD target frame's icon row reads it
+# uniformly; durations count down locally between snapshots.
+signal buffs_changed
+const _BUFF_INF_SENTINEL := 999999.0
+var buff_names: PackedStringArray = PackedStringArray()
+var buff_durations: PackedFloat32Array = PackedFloat32Array()
+
+func apply_buff_snapshot(names: PackedStringArray, durations: PackedFloat32Array) -> void:
+	buff_names = names.duplicate()
+	buff_durations = durations.duplicate()
+	buffs_changed.emit()
+
+func _process(delta: float) -> void:
+	if buff_durations.is_empty():
+		return
+	var any_changed := false
+	for i in buff_durations.size():
+		var d: float = buff_durations[i]
+		if d > 0.0 and d < _BUFF_INF_SENTINEL:
+			buff_durations[i] = maxf(0.0, d - delta)
+			any_changed = true
+	if any_changed:
+		buffs_changed.emit()
+
 func _ready() -> void:
 	if _name_label:
 		_name_label.text = "%s (%d)" % [mob_name, level] if level > 1 else mob_name

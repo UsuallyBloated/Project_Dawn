@@ -61,6 +61,7 @@ func _ready() -> void:
 	Skills.skill_cooldown_updated.connect(_on_skill_cooldown)
 	Skills.skills_changed.connect(_refresh_hotkey_slots)
 	Spells.spell_cooldown_updated.connect(_on_spell_cooldown)
+	Spells.global_cooldown_updated.connect(_on_global_cooldown)
 	Spells.spells_changed.connect(_refresh_spell_slots)
 	SocialHotkeys.bank_changed.connect(_on_bank_changed)
 	SocialHotkeys.slot_changed.connect(_on_slot_changed)
@@ -824,12 +825,40 @@ func _on_skill_cooldown(skill_name: String, remaining: float, total: float) -> v
 		_apply_cooldown(_hotkey_slots[idx], remaining, total)
 
 func _on_spell_cooldown(spell_name: String, remaining: float, total: float) -> void:
+	var shown := _overlay_for(spell_name, remaining, total)
 	var hidx: int = _hotkey_by_spell.get(spell_name, -1)
 	if hidx >= 0:
-		_apply_cooldown(_hotkey_slots[hidx], remaining, total)
+		_apply_cooldown(_hotkey_slots[hidx], shown[0], shown[1])
 	var sidx: int = _spell_bar_idx.get(spell_name, -1)
 	if sidx >= 0:
-		_apply_cooldown(_spell_slots[sidx], remaining, total)
+		_apply_cooldown(_spell_slots[sidx], shown[0], shown[1])
+
+# The global cooldown greys every spell gem that is not a Bard song and not
+# already under a longer cooldown of its own; the per-spell update above
+# takes the longer of the two the same way, so neither can shorten the
+# other's countdown. A gem under its own longer cooldown keeps that one.
+func _on_global_cooldown(remaining: float, total: float) -> void:
+	for spell_name in _hotkey_by_spell:
+		if _gem_follows_global(String(spell_name), remaining):
+			_apply_cooldown(_hotkey_slots[_hotkey_by_spell[spell_name]], remaining, total)
+	for spell_name in _spell_bar_idx:
+		if _gem_follows_global(String(spell_name), remaining):
+			_apply_cooldown(_spell_slots[_spell_bar_idx[spell_name]], remaining, total)
+
+func _gem_follows_global(spell_name: String, gcd_remaining: float) -> bool:
+	var sp: SpellData = Spells.get_spell_by_name(spell_name)
+	if sp != null and sp.is_song:
+		return false
+	return Spells.get_cooldown_remaining(spell_name) <= gcd_remaining
+
+# [remaining, total] to draw for a spell's own cooldown update: its own pair,
+# or the global cooldown's when that runs longer (never for a song).
+func _overlay_for(spell_name: String, own_remaining: float, own_total: float) -> Array:
+	var sp: SpellData = Spells.get_spell_by_name(spell_name)
+	var gcd := Spells.get_global_cooldown_remaining()
+	if sp != null and not sp.is_song and gcd > own_remaining:
+		return [gcd, Spells.GLOBAL_COOLDOWN_SECS]
+	return [own_remaining, own_total]
 
 func _apply_cooldown(vis: Dictionary, remaining: float, total: float) -> void:
 	var overlay: ColorRect = vis["cooldown_overlay"]

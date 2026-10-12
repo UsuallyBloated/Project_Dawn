@@ -31,7 +31,89 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   (Druid / Enchanter).
 - **Enemy state machine:** IDLE → CHASE → ATTACK → FLEE/LEASH. Caster enemies kite at
   `caster_range`; healer enemies flee to spawn below `healer_flee_hp`. Relevant exports:
-  `spell_damage`, `caster_range`, `flee_range`.
+  `spell_damage`, `caster_range`, `flee_range`. Server-side, a mob's leash (how far it
+  chases, and how far out it turns on something that hits it) is `leash` from
+  `zone_camps.toml` or aggro x 2, floored at `MIN_LEASH_RANGE` (30 m, `world/mod.rs`) for
+  any mob with an aggro radius, so nothing inside spell reach (25 m) can be nuked without a
+  response (2026-10-06; aggro-0 dev dummies stay passive).
+- **The CastSpell gate (server, hardened 2026-10-08, spell batch step 0):** in order, a
+  cast is refused when the caster is dead (0 HP or `death_processed`), when the class or
+  level is not eligible, when a timed cast's release falls outside its window (the bar must
+  have run its length less 100 ms of jitter, and no more than `CAST_HOLD_GRACE_MS` 2 s past
+  it, or the cast was being held), when an interrupt landed after the bar began (even in
+  the same tick), when the caster moved more than 5 m since CastStart, when the spell is on
+  cooldown, when the mana is short, and when the target pre-flight (`cast_target_refusal`)
+  says no. Every refusal is private and carries the server's true mana (`refuse_cast`);
+  interrupts, silence and mez also fan to peers so the bar they drew cancels. Casting
+  stands the caster. The pure timing and interrupt decisions are `world/cast_gate.rs`.
+  **An interrupt costs mana (spell batch step 3, 2026-10-08, user call):** when a hit that
+  did real damage interrupts a cast, `roll_cast_interrupt` takes the spell's mana cost times
+  the fraction of the bar that had run (`cast_gate::interrupt_charge`; the server's own cast
+  time, never the client's bar length, so a forged long bar cannot shrink it), capped at the
+  mana held, and the caster alone gets the true `ManaUpdate` plus "Your concentration
+  breaks: N mana lost." right behind the CastFail. A zero-damage or fully absorbed hit
+  charges nothing (or a damage shield would be a mana-drain weapon), and a deliberate cancel
+  never reaches the server, so it stays free. All five interrupt sites (enemy melee, PvP
+  melee, PvP spell, both damage-shield reflects) pass the applied damage. The client refunds
+  locally on the CastFail as before and settles on the ManaUpdate a frame later.
+  **The global cooldown (spell batch step 4, 2026-10-08, user call):** after any accepted
+  cast no spell may START for `GLOBAL_COOLDOWN` (2.0 s, `world/mod.rs`), stamped on
+  `PerConnection::gcd_until` beside the per-spell cooldown. A timed cast is refused at its
+  CastStart (handlers.rs: a private CastFail "You cannot cast again yet." plus the true mana,
+  nothing cached, so its CastSpell fails the cast-time gate too; the caster loses no cast
+  time), an instant cast at its CastSpell next to the per-spell cooldown gate. Bard songs are
+  exempt on both sides (`Spell.is_song`, set on the six songs in `spells.toml` and compared
+  by the lockstep check against the client's `is_song`): they neither start nor honour it,
+  or twisting stops working. The client (`Spells.GLOBAL_COOLDOWN_SECS` 2.25 s, a quarter
+  second longer so an honest player is never refused) refuses before any bar or mana, starts
+  its countdown as a cast lands, clears it on a server refusal, and `hotbar.gd` greys every
+  non-song gem for it, with a gem under a longer cooldown of its own keeping that one. A
+  refused or interrupted cast starts no global cooldown. The point, besides feel: without it
+  a modified client could fire every instant spell on its bar inside one second, metered only
+  by each spell's own cooldown and the one-cast-per-tick rule.
+  **Damage over time (spell batch step 5, 2026-10-08, user call):** `Spell.dot_dps` /
+  `dot_duration` (Entangle, Dark Decay in `spells.toml`, the client's numbers). On a mob or
+  pet the direct hit lands with the cast and `Entity::active_dots` carries the DoT (one per
+  spell name, a re-cast refreshes), ticked by the AI sweep every `DOT_TICK_SECS` (3 s) for
+  `dps x 3` per tick, whole ticks only; a tick builds the caster's aggro and threat (so an
+  idle mob turns on them), breaks mez, fans the Hit and HealthUpdate to everyone and the
+  caster's own "<spell> for N" line through the proc message, and a tick that kills goes
+  through `kill_enemy`, the one kill step (XP via `award_kill`, quest credit, warder retreat,
+  loot) that the spell arm now shares with it and with the two damage-shield reflect sites,
+  so a mob finished off by Thorns pays like any other (it used to pay nothing; the reflect
+  counts as the shielded player's or pet owner's damage). The kill step, like `award_kill`,
+  pays nothing for an OWNED victim (a pet, a charmed mob): no XP and, since the step 5 review,
+  no loot or coin on any path either; the melee and pet-kill paths had always rolled a
+  warder's wolf table every free respawn, a bag two flagged accounts could farm. Anti-farming:
+  `Entity::transition` to Leash or Dead clears every DoT, `apply_dot` refuses one while the
+  mob is walking home and the home reset clears again (a DoT landed on the walk would tick on
+  an idle mob that cannot acquire its caster beyond its leash: a kill from safety, caught in
+  review), `wipe_hate` clears the caster's DoTs when they die or port, and `reap_connection`
+  when they log out (a linkdead body keeps its DoTs for the linger; it can still be killed).
+  Whole ticks are counted off the duration (`ticks_left`), so float drift between the two
+  accumulators can never lose the last one (unit-tested at the real 20 Hz). On a PLAYER a DoT
+  is an `ActiveBuff` with `BuffEffect::Dot`, ticked in the player buff sweep by elapsed time
+  on the same cadence and fanned the same way, ended by `clear_player_dots_from` on the same
+  three events; the death sweep handles a bearer at 0. **The target frame
+  shows what is on a mob:** `Entity::status_pairs` (buffs, DoTs, and the crowd control as
+  "Mesmerized" / "Rooted" / "Snared" / "Slowed") is the BuffSnapshot payload for every mob and
+  pet, re-fanned by the AI sweep to the players who can see the mob whenever the set changes
+  or a whole second passes on any entry (`last_status_fanned` holds "name:seconds", so a
+  same-name refresh re-fans too); a body found at 0 HP with no tick to blame is killed
+  through the same step rather than left standing;
+  the client's `RemoteEnemyManager` routes it to `RemoteEnemy`, which mirrors the pet's buff
+  surface, and `hud.gd`'s target frame reads it through the same icon row as a pet's or a
+  peer's. Online the client no longer runs its own local DoT on a server mob (`spells.gd`).
+  Reach (2026-10-08): hostile spells 25 m (`RANGED_ATTACK_RANGE`), friendly spells (ALLY
+  heals and buffs, PET_HEAL) 30 m (`FRIENDLY_SPELL_RANGE`); the client checks one metre
+  inside each. One attack slow holds a mob at a time, strongest wins: in `Entity::apply_cc`
+  a stronger slow replaces the holder, an equal one refreshes it, a weaker one is ignored,
+  and the pre-flight refuses a weaker one at no cost.
+- **The group share range (2026-10-08, user call of 10-05):** `GROUP_SHARE_RANGE` is 200 m
+  (was 30) and covers the XP split, the quest journal tick and the auto-split coin drop; XP
+  and journal credit also need the member alive. A group-mate in town shares from the camps
+  within 200 m of it, which the user accepted as the trade-off. Every new character is bound
+  at the starter spawn from creation.
 - **Hit reactions / VFX:** physical hits flash the mesh white; spell hits flash an
   elemental color + spawn an `OmniLight3D` burst at the impact point, via
   `enemy.flash_spell_hit(color)` from `Combat.deal_spell_damage()`. Color per type: fire
@@ -69,8 +151,10 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   replicated buff state yet); heals/HoTs still route to pets. Damage shields (Thorns,
   Spellshield, Rune/Primal Bond absorb) are self-only by design except Thorns, which is
   ally-castable.
-- **Ports:** `TargetType.PORT` with `port_zone_path` / `port_entry_id`; Gate uses empty
-  strings to resolve to the bind point.
+- **Ports:** `TargetType.PORT` with `port_zone_path` / `port_entry_id` (offline / Test Room
+  only). Online, Gate, Succor and Evacuate are server moves (see "Respawn, bind points, and
+  the death lock"); the client sends the cast and waits for the `Teleport`. The seven zone
+  ports refuse online: there are no zones to send anyone to.
 - **Notable resolved spells:** Complete Heal (Cleric, self-heal for now), Torpor (Shaman),
   Clarity/Breeze (Enchanter), Haste (Enchanter), Spirit of Wolf (Druid/Shaman), Lich Form
   (Necromancer — skips HP regen, extreme MP regen), Gate (Wizard), Exsanguinate (Blood
@@ -242,10 +326,10 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   `Teleport`ed to the corpse and refunded that percentage of **that death's actual lost xp**
   (captured on `Corpse.lost_xp` — the ACTUAL amount removed, not nominal, which closes a
   level-5-floor over-refund exploit). One res per corpse (persisted `resurrected` flag).
-- **Not built:** **res-sickness** (specced for Slice 3, dropped from v1), respawn-at-bind /
-  Soul Binder NPC (respawn still honors the *client* bind; `BindAtCurrentLocation` is an inert wire
-  variant with no server handler), corpse auto-re-equip on loot, and per-creature corpse
-  models/scale.
+- **Not built:** **res-sickness** (specced for Slice 3, dropped from v1), corpse auto-re-equip
+  on loot, and per-creature corpse models/scale. (Respawn-at-bind and the Soul Binder shipped
+  2026-08-12; Bind Affinity and Gate joined them server-side 2026-10-08. See "Respawn, bind
+  points, and the death lock".)
 
 ---
 
@@ -323,7 +407,11 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     (**superseded 2026-09-27 by full-bags-move**: online, a full bag now lifts and moves WITH
     its contents, re-keyed server-side under `CURSOR_BAG_KEY` while held; the empty-first rule
     survives only for selling, destroying, dropping, and the Test Room's local drag —
-    `Inventory.bag_has_contents()` now serves those callers); and **bag windows are keyed by base slot index**, so a
+    `Inventory.bag_has_contents()` now serves those callers; playtested 2026-10-09,
+    `full_bags_move_checklist.md` all nine rows: two full bags dropped on each other swap
+    PLACES and each keeps its own contents, a held full bag survives a relog, and a death
+    while holding one puts the bag and everything in it on the corpse with nothing duplicated);
+    and **bag windows are keyed by base slot index**, so a
     window could outlive the bag that opened it and show a slot holding no bag, now closed on
     refresh. Bag cells no longer stamp a static slot-count number; the tooltip reports capacity.
   - **Inventory stays in sync with the server (2026-08-20).** Three faults used to let the client's
@@ -432,8 +520,30 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 ## Pets, warders, transforms, mounts
 
 - **PetManager:** generic pet lifecycle (summon / unsummon / charm).
+- **Charm (server):** a charm converts the enemy into a pet entity (new id in the pet
+  partition, same template, current HP) for the spell's duration. **When it ends, the mob
+  comes back** (2026-10-06, EQ's rule): the pet is despawned and the same creature is
+  rebuilt as an enemy where the pet stood, with the HP it had, back in the camp slot it came
+  from, and it goes straight for its former charmer (threat + Chase) if they are in the world
+  and alive; if the charmer logged out it walks home (Leash) like a mob that lost its target
+  (2026-10-07; it used to stand where the pet was). The camp slot stays
+  occupied for the charm's life, so a charm never makes the camp respawn a replacement early
+  (the earlier v1 freed the slot on charm and deleted the pet at expiry as "mob runs away";
+  reverting on top of that would have added a mob to the camp per charm). A pet that dies
+  while charmed frees the slot through the ordinary corpse sweep. `Entity::released_from_charm`
+  + `turn_on` (`entity.rs`), `return_charmed_mob` (`tick.rs`), used by the expiry sweep and by
+  `despawn_owned_pets`.
+- **Pet heal (server, 2026-10-07):** `PET_HEAL` spells (Warder's Mend) mend the caster's OWN
+  pet, whatever is targeted. The cast pre-flight resolves the pet (alive, in reach, else "You
+  have no pet to mend."), the arm heals it by `heal_amount` capped at max and fans its
+  HealthUpdate. The client's `WarderAI.heal_warder` call is a no-op online (the RemotePet
+  stub); the server's update moves the panel.
 - **WarderAI:** Beast Master warder behavior (retreat / fury / `setup_for_class`),
   extracted from PetManager. Warder idle state faces the player's look direction.
+- **Pet panel (`scripts/hud_pet_panel.gd`):** top left while you have a pet (summoned,
+  warder or charmed): name, level, HP bar, and since 2026-10-07 a row of buttons for the five
+  `/pet` commands (Attack, Back, Guard, Follow, Sit), each the same `PetManager` call the chat
+  command makes. Draggable.
 - **Pet stats & buffs (server-authoritative):** the server `Entity` carries `PrimaryStats`
   (`stats` + `base_stats`) and `active_buffs`. Pets get a level-derived stat base on summon;
   melee damage adds the STR *buff delta* `(stats.strength − base_stats.strength)/5` on top of
@@ -458,8 +568,20 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 ## World & environment
 
 - **Zones:** `ZoneLoader` owns transitions and the current zone path/name.
-- **Day/night:** `TimeOfDay` emits `hour_changed`. EnemySpawner `night_only` mobs spawn at
-  hour 20, despawn at hour 6. (Per-client today; server broadcast planned.)
+- **Day/night: one sky for everyone, server-driven** (built 2026-10-04, playtested 2026-10-09,
+  `time_of_day_checklist.md`). The server's `world/clock.rs` derives the hour from the wall
+  clock over a 20-minute day (50 real seconds a game hour), so every player is told the same
+  hour, a server restart does not reset the day, and nothing is persisted. The hour goes to
+  each player on entering the world and to everyone once a minute (`ServerWorldMsg::TimeOfDay`,
+  decoded by the DLL, re-emitted by `Net` as `world_time_of_day`). `TimeOfDay` follows it: a
+  difference over one game hour is a jump (the first send after login), anything smaller is
+  absorbed by running the clock up to 4x fast or down to a quarter speed, never backwards, so
+  the sun never steps. The Test Panel's Pause holds a hand-set sky; unpaused, the clock rejoins
+  the server at the next send. Nothing on the server reads the hour (the sky is cosmetic; night
+  vision is a client-side tint), and a DLL without the signal makes `Net` say so in the console
+  and fall back to the local clock. `DAY_LENGTH_SECS` (server) and `DAY_DURATION` (client), both
+  1200 s, must stay in lockstep. `TimeOfDay` emits `hour_changed`; the offline EnemySpawner's
+  `night_only` mobs spawn at hour 20 and despawn at 6.
 - **Vision:** `VisionSystem` adjusts brightness + infravision green tint at night by race —
   ultravision (Dark Elf, Ogre, Troll, Kel\`varath), infravision (Elf, Wood Elf, Half-Elf,
   Dwarf, Gnome, Halfling, Fae, Felhari, Kobold), normal (Human, Minotaur, Half-Ogre).
@@ -508,9 +630,11 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   L5 / silk_harvest L7 / champions_crypt L9 / the_undying L12 (Flamebrand finale), every tier
   payout exact (0.15/0.30/0.50/0.80 x the cubic band at level_req), plus two new town NPCs —
   Hadrik the Blacksmith (weapons + the iron chain set) and Elara upgraded to a dialogue NPC
-  with her shop behind "Let me see your wares." Open follow-ups live in
-  the `CLAUDE.md` To-Do (a ring-reward stat bug, a Hunter's Medal re-test, the deliberately-cut
-  low-level dialogue-refusal polish).
+  with her shop behind "Let me see your wares." The quest reward
+  items are confirmed in play: the ring's stat bonus (fixed 2026-07-14, `b1df906`,
+  `gear_stat_display_checklist.md`) and the Hunter's Medal landing on turn-in (2026-09-22,
+  `phase4_content_checklist.md`). The deliberately-cut low-level dialogue-refusal polish is
+  the one follow-up left.
 - **Vendors:** `VendorManager` + `scenes/vendor_npc.tscn` / `scripts/vendor_npc.gd`
   (proximity register, right-click to open since the 2026-08-24 interact grammar); types in
   `data/vendor_definitions.gd`; buy/sell window functional. The transaction is fully
@@ -547,6 +671,15 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   BuffBar, PetPanel, GroupPanel. Includes the always-visible XP bar, target frame with
   actual HP numbers, and a target-of-target frame.
 - **Buff/debuff bar:** icons with countdown timers (absorb, HoT, evade, etc.).
+- **`/loc` and the compass** (playtested 2026-10-09, `loc_command_checklist.md`, all five rows):
+  `/loc` (or `/location`) prints your position as `x, y, z` to one decimal, paste-ready for
+  `zone_camps.toml` / `npcs.toml`, free for everyone and working while dead. Coordinates only
+  (user, 2026-10-09): which way you face is the Sense Heading skill's job on `/sense`, whose
+  roll is fuzzy below 75% of its cap. The world compass is settled: **+Z is north, +X is
+  east** (`sense_heading.gd`'s ring, the camp labels and the quest dialogue all agree). Known
+  quirk: Sense Heading starts at the level-1 cap, so a fresh character always reads exact and
+  the skill only shows after leveling; it is also client-local and resets each launch (the
+  "L1 cap = starting score" item in the To-Do).
 - **Floating numbers:** `DamageNumbers` — damage (with crit), incoming damage, heals,
   misses, XP gains; billboard `Label3D` that faces the camera; per-category toggles in
   Options → Interface.
@@ -568,6 +701,32 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 > still exists for solo iteration. Read `server/docs/server_design.md` before touching anything
 > here.
 
+- **The enemy position stream (server, 2026-09-30, playtested 2026-10-07):** an enemy's
+  Position fans only when it moved past 0.005 m or turned past 0.001 rad since its last
+  send, or at the 500 ms `ENEMY_POSITION_KEEPALIVE`; the sequence advances only on a real
+  send, and a mob nobody can see costs nothing (the audience is tested before anything is
+  encoded). An idle camp therefore streams about 2 messages a second per mob instead of 20.
+  Measured on the R720: about 5,000 sends a minute for 54 mobs and one player where the old
+  stream was 64,800; a mob in motion adds about 1,200 a minute for as long as it moves. The
+  `enemy position fan sent=N window_secs=60 enemies_alive=E players_in_world=P` log line
+  reports it once a minute while anyone is online. The client renders 100 ms behind, so a mob
+  setting off is nudged by at most one tick of travel; not visible in play.
+- **AOI crossings (server, 2026-09-30, playtested 2026-10-07):** the world is a grid of
+  120 m cells and a player sees the 3x3 around their own. When an enemy or pet crosses a
+  cell edge, players in the cells its neighbourhood gained get its spawn message
+  (`fan_out_entity_spawn` picks EnemySpawn or PetSpawn by kind, never by id partition) and
+  players in the cells it lost get an EntityDespawn; a player crossing gets the same for
+  everything in the cells they gained or lost, pets included (pets used to fall through the
+  loot-bag arm because the id partitions stack). The EnterWorld seed keys a pet's visibility
+  on the pet's own cell like every other path.
+- **The own-pet rule (server, 2026-10-02, playtested 2026-10-07; user call: "You should
+  absolutely see your own pet, wherever it is"):** `pet_owner_cid` puts the owner in their
+  pet's Position audience regardless of distance, skips the owner in both view-loss despawn
+  paths (the pet crossing a cell, the owner crossing), and includes the owner wherever the
+  pet really ends (charm expiry, the body expiring). So a pet parked with `/pet guard` keeps
+  its panel and every `/pet` command from any distance (the test parks one two cells away;
+  the playtest walked past 300 m). Not a leak: the owner learns only their own pet's
+  position.
 - `Network` / `Net` — connection + wire message routing.
 - `SaveManager` — owns window-close. Two distinct exits (see the disconnect-lifecycle entry
   below): **Quit Game** is a clean save + app-layer `Disconnect`; the **window X button** is a
@@ -646,6 +805,34 @@ Where you wake up after dying is server-authoritative (2026-08-12, playtested 08
   the corpse twitching as local prediction was repeatedly overridden.
 - **Aggro breaks on death.** Dead players are excluded from the enemy-AI target list and wiped from
   every enemy's aggro/threat table, so mobs disengage and leash home instead of beating the corpse.
+  `wipe_hate` is the one helper (shared with the port arm below) and fans `EntityTarget None` for
+  every mob it cleared, since the AI pass only reports target changes it made itself.
+- **Bind Affinity and Gate, server-side (spell batch step 2, 2026-10-08; design
+  `docs/design/bind_and_gate.md`, user calls D1 to D6).** Two cast arms in `tick.rs`, both behind
+  `cast_target_refusal` so a refused cast costs nothing. **`BIND`:** no target, a self target or a
+  mob target all mean "bind myself", anywhere (D1); a GROUP MEMBER can be bound only while they
+  stand in a safe area (D2), and a non-member gets one line whether absent or present (no
+  is-online oracle). The bind written is always the bound player's own server position. Every
+  character is born bound at the starter spawn (`create_character`, D3), so an unbound Gate
+  cannot arise. **`PORT`:** `Spell.port` is `"bind"` (Gate: the caster's bind) or `"safe"`
+  (Succor, Evacuate: the nearest safe area's arrival point); the destination never comes from
+  the client, and the move is the existing `Teleport` message, so no wire change. `port_group`
+  (Evacuate) also moves the alive, present, non-linkdead group members within
+  `FRIENDLY_SPELL_RANGE`, and nobody else. Every mover is wiped from every mob's hate (no trains
+  into town, and a mob that loses its target leashes and heals, so "tag it, Gate out" pays
+  nothing); the mover's summoned pets come along (D4), set to follow, with their AOI cell
+  updated so nobody keeps a ghost, and the mover's `last_attacked_enemy` is cleared so the pet
+  pre-pass cannot hand the pet its old target back and send it walking out of town (the review
+  of the first cut found exactly that). A CHARMED mob is not carried: it is released where it
+  stands and walks home, as when its charmer logs out, since carrying it would park a camp mob
+  (a named one, even) inside the one safe area to turn hostile when the charm ends. Binding a
+  group member reaches 30 m like any friendly cast. Gate: 50 mana, 5 s, 300 s cooldown, level 8, the ten Bind Affinity
+  classes (D6); Succor: Druid/Wizard 12, 80 mana, 3 s, 60 s cooldown; Evacuate: Druid 16, 120
+  mana, 5 s, 60 s cooldown (D5). **Safe areas** live in `data/safe_areas.toml` (`world/safe_areas.rs`;
+  the town square, 10 m round the spawn, arrival at the spawn), with a unit test that no camp
+  spawn's aggro plus jitter reaches into one. The client (`spells.gd`) no longer runs Gate or a
+  bind locally online (Gate used to reload the whole world scene): the cast goes up, the
+  `Teleport` or the bind line comes back. `PlayerStats.bind_zone_path` is now offline-only.
 
 **Why it was broken:** `Respawn` restored HP but never touched position. Because the server owns
 position, the client's own respawn move was overridden by the next Position broadcast and the player
@@ -702,6 +889,12 @@ player can never use them (exploit-audit finding #1). Two independent grants:
 - **`admin_report`** bin: read-only `world.db` viewer (accounts + characters incl. soft-deletes,
   per-char four-tier coins + bank + inventory) → console + a local `world_report.html`. WAL-aware
   (`?mode=ro`), safe to run while the server is live.
+- **`reset_password`** bin (operator tool, built 2026-09-30): `cargo run -p projectdawn-server
+  --bin reset_password -- <username>` generates a password and prints it once (or `--stdin` reads
+  one), writing the Argon2 hash and purging every session for the account in one transaction, so
+  a live session cannot outlive the reset. The password is never an argv word (shell history,
+  other users' `ps`). Like every ops tool that writes, it opens the database with `mode=rw` and
+  never creates one: run it from the directory that holds `world.db`.
 
 ---
 

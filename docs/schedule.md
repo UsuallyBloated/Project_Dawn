@@ -21,6 +21,12 @@ standalone page with everything inlined, so it works offline and can be emailed 
 This markdown file is canonical; the HTML is a rendering of it. If they disagree, this one wins,
 so update `schedule.html` in the same pass whenever you change the plan here.
 
+**The week-by-week detail** (added 2026-10-05 at the planner's request): `docs/schedule_detail.html`
+and its twin `docs/schedule_detail.md` lay out every checklist sitting, build step, redeploy,
+decision and friend session between now and the target, week by week, with who does it, what it
+needs and what it waits on. Both are generated from `docs/schedule_detail.toml` by
+`tools/schedule_detail.py`; neither is edited by hand.
+
 ### How this doc is tracked (restructured 2026-09-09)
 
 **This doc tracks phases. `CLAUDE.md`'s To-Do tracks items — and it is the ONLY live list.**
@@ -33,6 +39,13 @@ fix is structural, not more discipline:
   again; per-item status after the freeze lives only in the To-Do.
 - **§7 Status is the only live part of this doc**, one line per phase, no item enumeration.
   A row changes only when its phase's state changes.
+- **The detail pages carry dates, never status.** `schedule_detail.md` / `.html` say what happens
+  in which week, who does it, and what it waits on; every row names the checklist or To-Do entry
+  where its status lives, so nothing is ticked there. They are regenerated, not hand-edited, in
+  every session that changes a To-Do status or a checklist (Session workflow step 4 in
+  `CLAUDE.md`): `python tools/schedule_detail.py`, then commit the plan file with both outputs and
+  republish the page. The script refuses to write if a row points at a checklist or To-Do entry
+  that no longer exists, and lists every open checklist that nothing schedules.
 - Nothing gets ticked (in the To-Do) until a filled checklist in `docs/playtest_notes/` shows
   it passing. Built is not done.
 - Time-boxed to the 2026-11-08 target (originally 09-14, then 10-05). When it lands, fold anything unfinished back into the
@@ -294,7 +307,7 @@ minutes before a friend runs dry. This phase is the difference between "I saw yo
       position.
 - **Tune `CORPSE_LINGER_SECS` for production** properly (Phase 0 is the emergency raise; this
       is the considered value).
-- **Minimal sound pass.** See the open question in §4. Not yet committed to.
+- **Minimal sound pass.** See §4: DECIDED 2026-10-05, the friends build ships silent.
 
 **Done means:** two friends can group and play three hours without running out of things to do.
 
@@ -308,7 +321,11 @@ minutes before a friend runs dry. This phase is the difference between "I saw yo
 
 ---
 
-## 4. Open question (needs a decision, not blocking yet)
+## 4. Open question (DECIDED 2026-10-05: the friends build ships silent)
+
+**Decision (user, 2026-10-05):** "No time for sound files by Nov 8." The build ships with no
+audio; sound stays its own epic on the To-Do afterward. The question as it stood, kept for
+the record:
 
 **Sound.** There is currently none: no combat, no spell, no ambient, no music. To a returning
 developer this is invisible. To a friend logging in for the first time, total silence is one of
