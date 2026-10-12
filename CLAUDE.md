@@ -1950,7 +1950,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   protocol bump plus a DLL rebuild and an export, so it rides the next bump day (the trade
   window's) rather than forcing one of its own. The client-heuristic alternative (same name,
   same frame, within a metre) is rejected: it guesses, and a camp of same-named mobs makes it
-  wrong. (d) **Spell tooltips should show max
+  wrong. **BUILT 2026-10-12 on the `feat/trade-window` branches, pending playtest** (server
+  `98ff015`, client `20ba679`; `charm_retarget_checklist.md`, on the branch until the merge;
+  rides the Oct 22 bump with the trade window, nothing on the deploy branch). Both spawns
+  carry a trailing `replaces`, set only at the charm landing (pet replaces enemy) and the
+  charm ending (mob replaces pet), on charm expiry and on the charmer leaving alike. The DLL
+  emits a separate `entity_replaced(old, new)` after the spawn so the spawn signals keep their
+  arity; `Targeting` keeps the target's id (a despawn frees the node without clearing
+  Combat's target) and moves to the new node on a match. The real-time charm test pins all
+  three values and fails on either site sending `None`; a headless probe covers the client
+  handler and fails with it disconnected. (d) **Spell tooltips should show max
   range** with MP, cooldown and description. All spells share one reach today (client 24 m,
   server 25 m; heals decided to 30 m), so the tooltip can show that now and a per-spell
   number when spells get their own ranges. Not built. (e) **Design question from the 10-07
