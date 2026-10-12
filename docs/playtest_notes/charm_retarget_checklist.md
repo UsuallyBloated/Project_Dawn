@@ -41,7 +41,25 @@ Log anchors: `enemy charmed into pet` (landing, has `old_enemy_id` and `new_pet_
 - [ ] **Charmer camps / quits while the pet is targeted by a second seat** → the second
       seat's target moves to the mob that walks home. notes:
 
-## 3 — Regression
+## 3 — Target-of-target for players (revived 2026-10-12)
+
+The client stopped telling the server its target on 2026-05-29, so another player's
+target-of-target frame never showed what you were fighting. The server now sends your target
+only to players who can see you.
+
+- [ ] **Second seat targets the first seat; first seat targets a mob** → the second seat's
+      target-of-target frame shows the mob; retarget and it follows. notes:
+- [ ] **First seat clears its target (Esc)** → the second seat's target-of-target frame
+      empties. notes:
+
+## 4 — Bump-day cut-over
+
+- [ ] **An October 5 client tries to log in** after the R720 has
+      `PROJECTDAWN_MIN_CLIENT_VERSION=0.2.0` → refused at login with "client version 0.1.0
+      below required 0.2.0". notes:
+- [ ] **The new client logs in** → normal login. notes:
+
+## 5 — Regression
 
 - [ ] **Ordinary summon (warder or Summon Skeleton) while targeting a mob** → target
       unchanged. notes:

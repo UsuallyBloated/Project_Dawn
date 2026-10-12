@@ -106,6 +106,11 @@ func set_target(node) -> void:
 		_auto_attack_timer.stop()
 		_offhand_timer.stop()
 	target_changed.emit(current_target)
+	# Tell the server, so the players who can see us draw our target in
+	# their target-of-target frame. 0 means no target (and is all a Test
+	# Room target has).
+	if Net.is_launcher_mode():
+		Net.broadcast_set_target(target_server_id(current_target))
 
 func _target_display_name(node) -> String:
 	if node == null:
@@ -123,21 +128,6 @@ func _target_display_name(node) -> String:
 		if pn != null and String(pn) != "":
 			return String(pn)
 	return ""
-	# Track 22.H — broadcast the new target id to the server so peers
-	# can render target-of-target for the local player. Extracts the
-	# id from whichever node type the target is (RemoteEnemy /
-	# RemotePlayer / RemotePet). Solo / Test Room targets have no
-	# server id and broadcast 0 (no-op for peers since there are none).
-	if Net.is_launcher_mode():
-		var tid: int = 0
-		if is_instance_valid(current_target):
-			if "enemy_id" in current_target:
-				tid = current_target.enemy_id
-			elif "char_id" in current_target:
-				tid = current_target.char_id
-			elif "pet_id" in current_target:
-				tid = current_target.pet_id
-		Net.broadcast_set_target(tid)
 
 # The server entity id behind a target node (RemoteEnemy / RemotePlayer /
 # RemotePet), or 0 for none or a node with no server id (Test Room).
