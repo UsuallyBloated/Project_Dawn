@@ -139,6 +139,16 @@ func _target_display_name(node) -> String:
 				tid = current_target.pet_id
 		Net.broadcast_set_target(tid)
 
+# The server entity id behind a target node (RemoteEnemy / RemotePlayer /
+# RemotePet), or 0 for none or a node with no server id (Test Room).
+func target_server_id(node) -> int:
+	if not is_instance_valid(node):
+		return 0
+	for key in ["enemy_id", "char_id", "pet_id"]:
+		if key in node:
+			return int(node.get(key))
+	return 0
+
 func toggle_auto_attack() -> void:
 	is_auto_attacking = not is_auto_attacking
 	auto_attack_toggled.emit(is_auto_attacking)

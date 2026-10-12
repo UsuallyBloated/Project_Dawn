@@ -19,17 +19,13 @@ func _ready() -> void:
 	Net.world_entity_replaced.connect(_on_entity_replaced)
 
 func _on_target_changed(node) -> void:
-	_target_entity_id = 0
-	if not is_instance_valid(node):
-		return
-	for key in ["enemy_id", "pet_id", "char_id"]:
-		if key in node:
-			_target_entity_id = int(node.get(key))
-			return
+	_target_entity_id = Combat.target_server_id(node)
 
 # A charm landing or ending re-keys the creature under a new id (the server's
 # enemy and pet ids live in separate ranges). EQ keeps one entity throughout,
-# so if it was our target, the new id becomes our target.
+# so if it was our target, the new id becomes our target. A target that is now
+# a pet is no longer a fight: auto-attack stops, as EQ refuses attacks on a
+# group-mate's pet (the charmer's own pet was never attackable).
 func _on_entity_replaced(old_id: int, new_id: int) -> void:
 	if old_id == 0 or old_id != _target_entity_id:
 		return
@@ -39,6 +35,8 @@ func _on_entity_replaced(old_id: int, new_id: int) -> void:
 	if node == null or not is_instance_valid(node):
 		return
 	Combat.set_target(node)
+	if node is RemotePet and Combat.is_auto_attacking:
+		Combat.toggle_auto_attack()
 
 func register_camera(cam: Camera3D) -> void:
 	_camera = cam
