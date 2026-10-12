@@ -26,6 +26,11 @@ Log anchors: `enemy charmed into pet` (landing, has `old_enemy_id` and `new_pet_
       also stays on it (now the first seat's pet). notes:
 - [ ] **Second seat targets a DIFFERENT mob while the first seat charms** → the second seat's
       target does not move. notes:
+- [ ] **Second seat AUTO-ATTACKING the mob when the first seat charms it** → the second
+      seat's target moves to the pet and auto-attack turns off ("Auto attack is now OFF."),
+      with no "Unable to attack" spam. notes:
+- [ ] **Charm while you already have a pet** (Enchanter re-charming) → your pet panel is not
+      cleared by the cast itself; it changes only when the server's new pet arrives. notes:
 
 ## 2 — The charm ends
 

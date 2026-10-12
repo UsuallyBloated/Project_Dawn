@@ -50,6 +50,10 @@ a single atomic commit. Design + the exploit ledger this list follows:
       trade."; the partner receives exactly what their window showed. notes:
 - [ ] **Filling an offered bag**: offer an EMPTY pouch, then try to drag something
       into it → refused with the same line. notes:
+- [ ] **An offered stack grows** (offer some bread, then buy or loot one more bread so it
+      merges, then both accept) → refused, the bread leaves your trade window with "An
+      item you offered changed...", the partner sees "Their offer changed..."; offer it
+      again and the trade goes through with the new count. notes:
 - [ ] **Request from afar**: request a trade with a player more than 10 m away →
       "There is no one here to trade with." (the same line as for nobody). notes:
 
