@@ -1,6 +1,6 @@
 # Passive Casting Skills
 
-Casting passive skills are a design target — not yet implemented. This document defines the intended system.
+Casting passive skills are implemented: the server advances a discipline skill on each cast it accepts (crates/projectdawn-server/src/world/skills.rs, casting_try_advance; a refused cast rolls nothing) and fans SkillProgressUpdate, which the client tracker autoloads/casting_skills.gd mirrors; the cap tables live in data/casting_skill_definitions.gd and must stay in step with the server copy. This document is the design the system was built from: the skill-up loop is in code, and the secondary benefits described below are the intent, each applied only where the code says so. (Status line corrected 2026-10-12; it read not yet implemented long after the port.)
 
 Spell casting is divided into two orthogonal systems: **spell disciplines** (what kind of magic the spell *is*) and **damage schools** (what element the spell *deals in*). A Wizard's Fireball is both Evocation discipline and Fire school.
 

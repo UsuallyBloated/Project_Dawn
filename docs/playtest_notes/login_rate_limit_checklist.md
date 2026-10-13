@@ -1,5 +1,9 @@
 # Login Rate-Limit + Auth-Timing Playtest Checklist — 2026-07-29
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): two rows left, superseded: the limiter is switched off by user decision (CLAUDE.md, CLOSED 2026-09-17) and comes back with the public hosting cutover (public_hosting_checklist.md section 4).
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: none (line numbers as of the triage).
+
 Closes the last Phase 1 exploit gate: the auth path now (1) rate-limits Login+Register attempts per
 client IP (5 per 60s; a successful login clears the IP), and (2) equalizes login timing so a
 non-existent username can't be told apart from a wrong password by response time.
@@ -17,7 +21,7 @@ wire protocol is unchanged; the launcher just shows the error message the server
 Diagnostic: the launcher shows the server's error message on a failed login.
 
 ## Setup
-- [ ] Rebuild + restart the server (release build) — REQUIRED for the re-test (exemption removed)
+- [-] Rebuild + restart the server (release build) — REQUIRED for the re-test (exemption removed) triage 2026-10-12: SUPERSEDED, a build step.
 - [x] Have a real account (known username + password) to log in with
 
 ## 1 — Normal auth still works (regression, from anywhere incl. localhost)
@@ -55,7 +59,7 @@ Diagnostic: the launcher shows the server's error message on a failed login.
 > that can't be judged by eye; it's unit-reasoned + code-reviewed. No action needed unless you want to
 > measure login response times for an existing vs. a made-up username with a script (they should be
 > ~equal).
-- [ ] **(Optional)** measured timing of a real-username-wrong-password vs a nonexistent-username login
+- [-] **(Optional)** measured timing of a real-username-wrong-password vs a nonexistent-username login triage 2026-10-12: SUPERSEDED, optional; the limiter is off on the tailnet and its return is public_hosting_checklist.md section 4.
   and they're comparable. notes:
 
 ## Notes / observations

@@ -419,7 +419,7 @@ id = "b6"
 week = "w3"
 lane = "build"
 day = "Oct 21"
-what = "Merge the trade window branch into the deploy branch, run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. The trade window itself has been built and reviewed since September 29 and waits only for this day."
+what = "Merge the trade window branch into the deploy branch, run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. The trade window itself has been built and reviewed since September 29 and waits only for this day. The branch also carries the charm re-target (built 2026-10-12): a charm no longer drops your target."
 who = "Claude unattended"
 days = 0.5
 waits_on = ["b4"]
@@ -431,7 +431,7 @@ id = "d5"
 week = "w3"
 lane = "decide"
 day = "by Mon Oct 19"
-what = "The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client stops connecting that evening, a week ahead, and sending the new zip within the hour."
+what = "The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client is refused at login from that evening (the host raises the minimum client version), a week ahead, and sending the new zip within the hour."
 who = "user (the phone is fine)"
 by = 2026-10-19
 blocks = "Nothing now; the date is set. The telling is the people half."
@@ -442,13 +442,13 @@ id = "o4"
 week = "w3"
 lane = "operate"
 day = "Thu Oct 22, the bump day"
-what = "Stop the server, redeploy the merged build, export the client from the merged commit with the rebuilt wire layer, zip, send to every tester, log in once to smoke it. The one evening everyone changes clients."
+what = "Stop the server, redeploy the merged build, add PROJECTDAWN_MIN_CLIENT_VERSION=0.2.0 to /opt/projectdawn/.env before starting it (without it, old clients still log in and simply have no trade), export the client from the merged commit with the rebuilt wire layer, zip, send to every tester, log in once to smoke it. The one evening everyone changes clients."
 who = "user at a desk"
 hours = 1.5
 needs = ["everyone logged out", "the testers told (d5)", "a backup first"]
 waits_on = ["b6", "d5"]
 milestone = "m3"
-done_when = "The boot log shows the new build= with dev_cmds=false; the export log shows [BuildStamp] stamped; /version in game shows the new wire-layer fingerprint."
+done_when = "The boot log shows the new build= with dev_cmds=false and min_client=0.2.0; the export log shows [BuildStamp] stamped; /version in game shows the new wire-layer fingerprint."
 todo = "Trade window"
 
 [[row]]
@@ -463,6 +463,20 @@ checklist = "trade_window_checklist.md"
 checklist_branch = "feat/trade-window"
 waits_on = ["o4"]
 todo = "Trade window"
+done_when = "Every row filled."
+
+[[row]]
+id = "v12b"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "A charm keeps your target: the mob stays targeted when it becomes a pet and again when the charm ends and it turns hostile, as in EQ."
+who = "user at a desk"
+needs = ["an Enchanter 20 or a Bard 14", "second seat for two rows (two-boxing works)"]
+checklist = "charm_retarget_checklist.md"
+checklist_branch = "feat/trade-window"
+waits_on = ["o4"]
+todo = "Playtest asks from the charm-return sitting"
 done_when = "Every row filled."
 
 [[row]]
@@ -545,6 +559,53 @@ waits_on = ["o5"]
 checklist = "damage_over_time_checklist.md"
 todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
 done_when = "Every row filled."
+
+[[row]]
+id = "bh1"
+week = "w2"
+lane = "build"
+day = "Oct 12"
+what = "Public hosting, slices 1 to 3 (docs/design/public_hosting_plan.md): the login socket hardened for a public port, invite codes and the invite tool, the world address as a name with a clean restart when it moves, intent budgets; the client connecting over wss with an invite field. Built on feat/public-hosting in both repos, off the deploy branches until cutover."
+who = "Claude unattended"
+days = 1.5
+done_when = "Both suites green on feat/public-hosting and pushed; the To-Do entry says BUILT. Done only when public_hosting_checklist.md is filled on cutover day."
+checklist = "public_hosting_checklist.md"
+todo = "Public-host hardening checklist (mandatory before any exposure beyond Tailscale)"
+
+[[row]]
+id = "oh0"
+week = "w3"
+lane = "operate"
+what = "Public hosting slice 0, at the router (user only): confirm the router's WAN address is the public 98.50.18.x (not CGNAT), reserve the R720's LAN address (runbook H6), check hairpin NAT, create the DuckDNS name and token, decide IPv6 (AAAA or not)."
+who = "user at the router"
+hours = 1.0
+tentative = true
+done_when = "The DDNS name resolves to the home address from outside; the reservation and the hairpin answer written in the plan."
+todo = "Public-host hardening checklist (mandatory before any exposure beyond Tailscale)"
+
+[[row]]
+id = "oh4"
+week = "w3"
+lane = "operate"
+what = "Public hosting slice 4, the host sitting: Caddy with the DDNS name, the .env lines (auth on loopback, the world endpoint as the name, PROJECTDAWN_REQUIRE_INVITE=1, PD_NO_RATE_LIMIT removed), the DuckDNS updater timer, UFW for 443/tcp and 7777/udp, the router forward, then the outside test from a phone hotspot and a port scan."
+who = "user at a desk, Claude writes the commands"
+hours = 2.0
+waits_on = ["oh0", "bh1"]
+tentative = true
+done_when = "Login, enter world, walk and cast from outside the house; the scan shows exactly 443 and 7777."
+todo = "Public-host hardening checklist (mandatory before any exposure beyond Tailscale)"
+
+[[row]]
+id = "vh5"
+week = "w3"
+lane = "verify"
+what = "Cutover evening: redeploy from the hosting branch, export, an invite per tester, the zip and the code sent, the Tailscale shares removed, the minimum client version raised; then the cutover checklist with a tester outside the home network. Candidate: the Oct 22 bump day, so testers change clients once."
+who = "user, one tester outside"
+hours = 2.5
+waits_on = ["oh4"]
+tentative = true
+done_when = "public_hosting_checklist.md filled."
+checklist = "public_hosting_checklist.md"
 
 [[row]]
 id = "b7"

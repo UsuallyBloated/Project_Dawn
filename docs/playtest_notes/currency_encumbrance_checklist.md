@@ -1,5 +1,9 @@
 # Currency + Encumbrance Playtest Checklist — 2026-05-21
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): one row left, superseded.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: none (line numbers as of the triage).
+
 Four-tier coin (copper/silver/gold/platinum at 100:1) replaced the single coin count, end
 to end: server wallet + wire + client stacks + vendor UI. Encumbrance v1 rides on it —
 coins have weight, STR sets capacity, over-cap slows you and chokes stamina regen.
@@ -59,7 +63,7 @@ Diagnostics: in-game console (F2/backtick) for client state; server greps:
   visibly slower. notes:
 - [x] **Keep stacking (≥2× capacity)** → speed near the 0.25 floor crawl; stamina stops
   regenerating. notes:
-- [ ] **Drop back under capacity** (spend/sell so coin count < capacity) → "You are no
+- [-] **Drop back under capacity** (spend/sell so coin count < capacity) → "You are no triage 2026-10-12: SUPERSEDED, coin_and_stack_checklist.md section 2 and cursor_slot_checklist.md row 50 cover weight and capacity.
   longer encumbered."; speed and stamina regen back to normal. notes:
 - [x] **Second client observes** → the encumbered player's avatar moves slowly for the
   remote viewer too (server integrates the scaled direction). notes:

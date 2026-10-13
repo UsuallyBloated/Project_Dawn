@@ -1,5 +1,9 @@
 # Regen Model (EQ-authentic) Playtest Checklist — 2026-07-20
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): three rows retired (skill stamina is client-local so there is nothing to observe; row 52 needs a forged client and belongs in a server test), three worth a re-run (the log grep, the Warrior without Meditate, combat suppressing seated regen).
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 46, 56, 69 (line numbers as of the triage).
+
 Verifies the classic-EQ regen rewrite (`docs/design/regen_model.md`): flat per-6s-tick rates by
 level bracket + posture, the Troll HP bonus, and the new **Meditate** casting skill (server-trained
 while sitting, scales sitting MP). Commit (a) flat rates was already playtested and felt good; this
@@ -49,7 +53,7 @@ The skill only advances while **sitting, out of combat, with MP below max** (act
 ## 3 — Meditate persists + syncs
 - [x] **Med for a while, then log out and back in** → Meditate score is retained (rides
   `character_skills`). notes:
-- [ ] **Second client can't inflate its own Meditate** (server-authoritative; a client value never
+- [-] **Second client can't inflate its own Meditate** (server-authoritative; a client value never triage 2026-10-12: RETIRED, needs a forged client; a server test, not a sitting.
   overrides the server). notes: I'm not sure how to test this.
 
 ## 4 — Pure-melee classes have no Meditate
@@ -62,8 +66,8 @@ The skill only advances while **sitting, out of combat, with MP below max** (act
 - [x] **Both sitting** → Troll HP climbs on the fast column (4 vs 2 at low level). notes:
 
 ## 6 — Stamina flat
-- [ ] **Spend stamina, wait ticks, standing** → stamina regens ~10/tick. notes:I'm not sure what costs Stamina at the moment.
-- [ ] **Sit** → stamina still ~10/tick (posture makes no difference). notes: I'm not sure what costs Stamina at the moment.
+- [-] **Spend stamina, wait ticks, standing** → stamina regens ~10/tick. notes:I'm not sure what costs Stamina at the moment. triage 2026-10-12: RETIRED, skill stamina is client-local; nothing to observe.
+- [-] **Sit** → stamina still ~10/tick (posture makes no difference). notes: I'm not sure what costs Stamina at the moment. triage 2026-10-12: RETIRED, skill stamina is client-local; nothing to observe.
 
 ## 7 — Combat gate (regression: attack-while-seated fix intact)
 - [ ] **Sit, then take or deal damage** → for the next ~6s seated HP/MP regen is suppressed to the

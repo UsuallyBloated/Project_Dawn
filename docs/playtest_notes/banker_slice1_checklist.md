@@ -1,5 +1,9 @@
 # Banker NPC — Slice 1 (coins) Playtest Checklist — 2026-06-17
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): two rows worth a re-run (the partial exchange and From == To), nothing retired.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 48, 51 (line numbers as of the triage).
+
 The Banker is a town NPC offering **zero-weight coin storage** (deposit/withdraw) and
 **tier exchange** (convert coin between tiers, free for this MVP). This is the relief valve
 for the four-tier coin-weight system — bank your heavy copper and carry nothing.

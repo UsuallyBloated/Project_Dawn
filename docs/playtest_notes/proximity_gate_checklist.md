@@ -1,5 +1,9 @@
 # NPC Proximity Gate Playtest Checklist — 2026-08-25
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): one row left, superseded.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: none (line numbers as of the triage).
+
 Verifies the server now refuses vendor / bank / quest turn-in / soul-bind when the player isn't
 actually near the right NPC. Closes the Medium exploit from the 2026-08-24 dead-intents audit.
 
@@ -46,7 +50,7 @@ that you can trigger:
 ## 3 — Regression
 
 - [x] **A full quest arc** — accept, kill, turn in at the right NPC — start to finish. notes:
-- [ ] **Die, corpse-run, loot your corpse** → the death/corpse path is untouched by this change.
+- [-] **Die, corpse-run, loot your corpse** → the death/corpse path is untouched by this change. triage 2026-10-12: SUPERSEDED, the die / corpse-run regression; the gate does not touch that path and respawn_bind_checklist.md recorded the 2026-08-14 sweep passing.
       notes:
 - [x] **No `no ... within range` lines appear during ordinary town play** in the log. notes:
 

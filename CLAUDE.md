@@ -38,14 +38,16 @@ A multiplayer MMORPG inspired by classic EverQuest-era games. **Two repos:** a G
   everyone). Streams live to a unique `logs/server_<timestamp>.log` (never overwritten on restart)
   **and** `server.log`, and regenerates `world_report.html` on exit. Preferred over the raw
   `cargo run` for playtests, since it stops losing logs across restarts.
-- **Ops bins (the crate has 5 binaries, so `--bin` selects — the plain
+- **Ops bins (the crate has 6 binaries, so `--bin` selects — the plain
   `cargo run -p projectdawn-server` still runs the server via the `default-run` manifest key):**
   `--bin admin_report` (read-only: accounts + characters incl. soft-deletes, per-char
   coins/inventory, and the newest GM action audit rows → console + a local `world_report.html`),
   `--bin grant_gm -- <username> on|off` (set per-account GM; no args = list),
-  `--bin reset_password -- <username>` (new password printed once, sessions purged), and
-  `--bin admin_account` (no args = list; `-- ban <username> [reason]` / `-- unban <username>`).
-  The three that write open the DB with `mode=rw` and never create one: run them from the
+  `--bin reset_password -- <username>` (new password printed once, sessions purged),
+  `--bin admin_account` (no args = list; `-- ban <username> [reason]` / `-- unban <username>`),
+  and `--bin invite` (no args = list; `-- new [n] [note]` mints codes shown once; `-- revoke
+  <code>`; on `feat/public-hosting` until cutover).
+  The four that write open the DB with `mode=rw` and never create one: run them from the
   directory that holds `world.db` (on the R720 that is `/opt/projectdawn`, NOT the source tree)
   or set `PROJECTDAWN_DATABASE_URL`. Full detail in `docs/reference/commands.md`.
 - **GM playtest (dev commands OFF, only `is_gm` accounts get tools):** `PD_DEV_CMDS` enables dev
@@ -1292,6 +1294,25 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   logging, a nightly dupe-detection query, an optional client integrity hash, input replays.
   (5) TLS for the auth WebSocket. None of it is a friends-build blocker; all of it gates a
   public port.
+  **Plan 2026-10-08, BUILT 2026-10-12 (slices 1 to 3), pending the host sitting and the
+  cutover playtest** (`docs/design/public_hosting_plan.md`; `feat/public-hosting` in both
+  repos, server `e977cf4` + `eb7d96f` + `fe004db`, client `198c333`;
+  `public_hosting_checklist.md`). The user is leaving Tailscale for good (a tester runs Nord
+  Meshnet, which will not run beside it): a port forward, DuckDNS, Caddy for TLS, invite
+  codes, one cutover day. Server: socket limits (64 KB cap, 10 s handshake, 10 min idle, 8
+  connections per address), `X-Forwarded-For` trusted from loopback only, the limiter keyed
+  by IPv6 /64 with a global ceiling and a per-account budget (items 1, 3 and 4), a ban that
+  answers like a wrong password until the password is right (item 2), an `invites` table
+  (migration 0012, forward-only) with `Register.invite` burned in the account's own
+  transaction and the `invite` bin, `PROJECTDAWN_WORLD_ENDPOINT` as a name with an address
+  watch that checkpoints everyone and exits for systemd when it moves, and two
+  per-connection intent budgets (inventory 64/16 s, cosmetic broadcasts 40/20 s; finding
+  10c's rate cap). Client: `wss://` for any non-local server (item 5), an invite field,
+  `tools/check_login_url.gd`. Kept off the deploy branches until cutover: exported early,
+  the wss rule would stop the tailnet testers connecting, and the migration means an older
+  binary cannot boot on the migrated `world.db`. Still later, by the plan: a per-account
+  login budget is in; position-anomaly logging, the nightly dupe query, the client
+  integrity hash and input replays are not.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -1647,7 +1668,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   cache as of dispatch, which let a hit earlier in the tick clear the live cache while the
   cast still went through). Casting stands the caster at CastStart and on an instant cast.
   The pure decisions are `world/cast_gate.rs` with unit tests. Client follow-up, not built:
-  the client should stand the local player on cast start too (today it only stops drawing
+  the client should stand the local player on cast start too; **BUILT 2026-10-12, pending
+  playtest** (client, next export; `chat_wrap_and_pet_buttons_checklist.md` §4): `cast_spell`
+  stands a seated caster and goes on instead of refusing with "You cannot cast while
+  sitting.", and Regen forwards the Stand (today it only stops drawing
   you seated when the server's regen or the next Sit/Stand catches up).
   (f) **Verified: a mob finished off by a damage shield (Thorns) pays nothing**, no XP, no
   quest credit, no loot (`tick.rs` ~8085 marks it dead and fans EntityDied, nothing else).
@@ -1844,6 +1868,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   corpse/bind zone handling (the 06-23 "cross-zone bind corpse rendering" caveat). The
   procedural dungeon (`F:\Projects\ProceduralDungeon`, seed-deterministic BSP) is its first
   customer. Caves and stacked floors additionally need real Y (the height model), not a sample.
+  **Structure to carry into the design** *(from the 2026-10-12 research on how EQ, WoW,
+  Lineage II, SWG and Ragnarok split their servers; user agreed all five)*. Stay one process
+  for now; build the seams so a later split is a deployment change, not a rewrite.
+  (1) **Zone as a self-contained unit** (EQ's zone-per-process shape, inside one process): each
+  zone owns its entities, AOI and tick, keyed by zone id, under a world layer. (2) **Keep the
+  login/world split as it is**: the signed connect token already lets auth move to its own
+  process. (3) **Cross-zone services stay out of zone code** (tells, groups, guilds, the ban
+  sweep; Ragnarok's Inter server, EQ's chat service). (4) **One path for database writes**
+  (Lineage II's CacheD role): `save_stores_atomic` and the corpse transaction are the rule,
+  not a coincidence. (5) **Every object is owned by exactly one zone at a time** (Blizzard's
+  JAM talk, GDC 2013): the zone handoff is the dupe vector, so a character or item crossing
+  zones moves in one atomic step, never existing in both or neither. Deliberately NOT
+  borrowed: a separate NPC/AI process (Lineage II, Aion) and EVE's single-shard cluster.
 - [ ] **Quest and loot content plumbing deferred by phase 4** *(`phase4_content_plan.md`
   §4.3/§4.5; audit 2026-09-29)*. (a) Quest objective types beyond kills: fetch, delivery,
   dialogue (the server counts kills only). (b) Loot tables as data: `loot.rs` is code, so
@@ -1968,10 +2005,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   protocol bump plus a DLL rebuild and an export, so it rides the next bump day (the trade
   window's) rather than forcing one of its own. The client-heuristic alternative (same name,
   same frame, within a metre) is rejected: it guesses, and a camp of same-named mobs makes it
-  wrong. (d) **Spell tooltips should show max
+  wrong. **BUILT 2026-10-12 on the `feat/trade-window` branches, pending playtest** (server
+  `98ff015`, client `20ba679`; `charm_retarget_checklist.md`, on the branch until the merge;
+  rides the Oct 22 bump with the trade window, nothing on the deploy branch). Both spawns
+  carry a trailing `replaces`, set only at the charm landing (pet replaces enemy) and the
+  charm ending (mob replaces pet), on charm expiry and on the charmer leaving alike. The DLL
+  emits a separate `entity_replaced(old, new)` after the spawn so the spawn signals keep their
+  arity; `Targeting` keeps the target's id (a despawn frees the node without clearing
+  Combat's target) and moves to the new node on a match. The real-time charm test pins all
+  three values and fails on either site sending `None`; a headless probe covers the client
+  handler and fails with it disconnected. (d) **Spell tooltips should show max
   range** with MP, cooldown and description. All spells share one reach today (client 24 m,
   server 25 m; heals decided to 30 m), so the tooltip can show that now and a per-spell
-  number when spells get their own ranges. Not built. (e) **Design question from the 10-07
+  number when spells get their own ranges. **BUILT 2026-10-12, pending playtest** (client,
+  next export; `chat_wrap_and_pet_buttons_checklist.md` §3): `Spells.spell_range_text` gives
+  the kind's reach (hostile 24 m, friendly 29 m to others, a corpse 30 m, nothing for a
+  spell with no target to reach) and all three tooltips (hotbar gem, spell bar gem, book
+  row) end with it. (e) **Design question from the 10-07
   journal, for the user: should named mobs be charm-immune?** Mirelle (Enchanter 20) charmed
   The Undying (a named, 1,325 HP, the `the_undying` quest's target), used it as a pet to kill
   a Giant Spider and a Barrow Zombie, re-charmed it each time the charm ended (it did turn on
@@ -2150,12 +2200,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   real `SpellDefinitions.ALL`, so the two files can be verified without trusting or running
   the stale exporter. It found the files in step. The exporter itself is still stale, and the
   items pair (`items.toml` vs the `.tres` files) has no check yet; the same shape would do.
+  **Items half answered the same way, 2026-10-12:** `tools/check_item_lockstep.gd` compares all 172
+  `.tres` items with `items.toml` through `export_items.gd`'s own field map and the server's serde
+  defaults (proc fields compared only on items that proc). First run: one drift, the Arrow
+  Bundle's stack (200 on the server, 20 in the `.tres`), fixed in the TOML the same day (server
+  `93f5360`); the exporter itself stays stale and unrun. Both checks are in `commands.md`.
 - [ ] **Docs debt** *(audit 2026-09-29)*: `server/README.md` is "badly stale" (still claims the
   world sim is unbuilt, per `deployment_linux.md`); `server/docs/flaky_integration_tests.md`
   still describes the flaky trio the 09-16 fix retired; `docs/concepts/passive_skills/*` says
   casting passives are "not yet implemented" while `CastingSkills` has shipped for months;
   `docs/deployment/` remains untracked by decision and CLAUDE.md links it as canonical (decide
   one way). Small, but each is a trap for the next reader.
+  **Checked 2026-10-12:** three of the four are closed. `server/README.md` was rewritten on 10-08 (`c6fccd1`, no unbuilt-world claim remains); `flaky_integration_tests.md` has carried a RESOLVED header since 10-01 with no known-flaky test; `casting_passive.md` now says the system is implemented and where (client `CastingSkills`, server `world/skills.rs`). The `weapons_passive.md` line is about Parry and Riposte, which really are unbuilt. **Open: whether `docs/deployment/` stays untracked** (a user decision; CLAUDE.md links it as canonical and `public_hosting_sitting.md` joined it on 2026-10-12).
 - [ ] **The cast arms duplicate the pre-flight** *(review finding, 2026-10-02; recorded, not
   built)*. `cast_target_refusal` decides target presence, reach, liveness and the PvP gates
   before any side effect, and the per-target-type arms in `tick.rs` still carry their own

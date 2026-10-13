@@ -1,5 +1,9 @@
 # CastSpell Class/Level Gate Playtest Checklist — 2026-07-20
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): one setup row left; the gate is DONE + playtested 2026-07-22 (CLAUDE.md).
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: none (line numbers as of the triage).
+
 Server now rejects a `CastSpell` unless the caster's class is in the spell's `classes` AND the
 caster's level meets `min_level` (audit finding: "any class can cast any spell it can name").
 Checked before mana / cooldown / skill side effects. The point of this playtest is a **regression
@@ -25,7 +29,7 @@ if a forbidden cast is attempted; must NOT appear for any cast below).
 
 ## Setup
 - [x] Restart server (release build)
-- [ ] Log in a caster of a mana class; have MP available (regen is slow — sit/med or use Test Panel)
+- [-] Log in a caster of a mana class; have MP available (regen is slow — sit/med or use Test Panel) triage 2026-10-12: SUPERSEDED, a setup row; the gate passed its sweep 2026-07-22.
 
 > **Known gotcha:** a cast can silently fail for unrelated reasons (not enough mana, on cooldown,
 > silenced, moved during cast). If a legit cast "doesn't land", check `server.log` for the specific

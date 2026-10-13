@@ -898,7 +898,8 @@ func _on_hotkey_hover(slot: int) -> void:
 		SocialHotkeys.TYPE_SPELL:
 			var sp := _find_spell(sd["identifier"])
 			if sp:
-				text = "%s\n%s\nMP: %.0f  CD: %.1fs" % [sp.spell_name, sp.description, sp.mana_cost, sp.cooldown]
+				text = "%s\n%s\nMP: %.0f  CD: %.1fs%s" % [
+					sp.spell_name, sp.description, sp.mana_cost, sp.cooldown, _range_suffix(sp)]
 		SocialHotkeys.TYPE_SKILL:
 			var sk := _find_skill(sd["identifier"])
 			if sk:
@@ -915,11 +916,18 @@ func _on_hotkey_hover(slot: int) -> void:
 	_tooltip_panel.position = frame.global_position - _hotkey_panel.global_position + Vector2(0, -80)
 	_tooltip_panel.visible = true
 
+# "  Range: 24 m" for a spell with a reach, "" otherwise (playtest ask
+# 2026-10-07: tooltips should show the max range).
+func _range_suffix(sp: SpellData) -> String:
+	var rng := Spells.spell_range_text(sp)
+	return ("  Range: " + rng) if rng != "" else ""
+
 func _on_spell_hover(index: int) -> void:
 	var text := ""
 	var sp := SpellBar.get_spell(index)
 	if sp != null:
-		text = "%s\n%s\nMP: %.0f  CD: %.1fs" % [sp.spell_name, sp.description, sp.mana_cost, sp.cooldown]
+		text = "%s\n%s\nMP: %.0f  CD: %.1fs%s" % [
+			sp.spell_name, sp.description, sp.mana_cost, sp.cooldown, _range_suffix(sp)]
 	elif Memorize.candidate != null:
 		text = "Click to memorize %s here." % Memorize.candidate.spell_name
 	if text == "":

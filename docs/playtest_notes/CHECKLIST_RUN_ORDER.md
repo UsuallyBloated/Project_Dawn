@@ -4,13 +4,7 @@ The order to run the open playtest checklists in, and what each needs. Kept curr
 checklist is added or finished (last update 2026-10-06). The status of every row lives in the
 checklist files themselves; this page only says what to run next.
 
-**As of 2026-10-08 16:32 UTC:** server `d593609` on the R720 (the whole spell batch, steps
-0 to 5, plus `8a826a5`'s Warder's Mend and the charm walk-home), boot line `dev_cmds=false`.
-Client exported from `fc880df` (10-05). **Runnable on the old client now:** 1b's re-check row,
-3's Warder's Mend row, 3b (`cast_hardening`), 3e (`interrupt_charge`), and the server-side
-rows of 3c, 3d, 3f and 3g. **Waiting on the next export:** 1c, 3c's spell rows (the numbers
-changed on the client too), all of 3d (the old client reloads the world on Gate), 3f's gem
-greying and client-side refusal, 3g's target-frame icons.
+**As of 2026-10-12:** server `d593609` on the R720 (the whole spell batch, steps 0 to 5, plus `8a826a5` Warder's Mend and the charm walk-home), boot line `dev_cmds=false`. Client exported 2026-10-09 13:34 from `bd0c81b` with the rebuilt wire DLL (the stamp is in the exe). **Every open checklist below is runnable on that pair**; nothing waits on an export. The bump day (Thursday Oct 22) brings the next server and client change together.
 
 **Test characters:** the `spelltest` account holds one character per class the spell rows
 need (table in `ported_spells_checklist.md`). Log in as `spelltest` with password
