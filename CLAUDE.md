@@ -2188,6 +2188,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   casting passives are "not yet implemented" while `CastingSkills` has shipped for months;
   `docs/deployment/` remains untracked by decision and CLAUDE.md links it as canonical (decide
   one way). Small, but each is a trap for the next reader.
+  **Checked 2026-10-12:** three of the four are closed. `server/README.md` was rewritten on 10-08 (`c6fccd1`, no unbuilt-world claim remains); `flaky_integration_tests.md` has carried a RESOLVED header since 10-01 with no known-flaky test; `casting_passive.md` now says the system is implemented and where (client `CastingSkills`, server `world/skills.rs`). The `weapons_passive.md` line is about Parry and Riposte, which really are unbuilt. **Open: whether `docs/deployment/` stays untracked** (a user decision; CLAUDE.md links it as canonical and `public_hosting_sitting.md` joined it on 2026-10-12).
 - [ ] **The cast arms duplicate the pre-flight** *(review finding, 2026-10-02; recorded, not
   built)*. `cast_target_refusal` decides target presence, reach, liveness and the PvP gates
   before any side effect, and the per-target-type arms in `tick.rs` still carry their own
