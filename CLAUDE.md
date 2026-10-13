@@ -38,14 +38,16 @@ A multiplayer MMORPG inspired by classic EverQuest-era games. **Two repos:** a G
   everyone). Streams live to a unique `logs/server_<timestamp>.log` (never overwritten on restart)
   **and** `server.log`, and regenerates `world_report.html` on exit. Preferred over the raw
   `cargo run` for playtests, since it stops losing logs across restarts.
-- **Ops bins (the crate has 5 binaries, so `--bin` selects — the plain
+- **Ops bins (the crate has 6 binaries, so `--bin` selects — the plain
   `cargo run -p projectdawn-server` still runs the server via the `default-run` manifest key):**
   `--bin admin_report` (read-only: accounts + characters incl. soft-deletes, per-char
   coins/inventory, and the newest GM action audit rows → console + a local `world_report.html`),
   `--bin grant_gm -- <username> on|off` (set per-account GM; no args = list),
-  `--bin reset_password -- <username>` (new password printed once, sessions purged), and
-  `--bin admin_account` (no args = list; `-- ban <username> [reason]` / `-- unban <username>`).
-  The three that write open the DB with `mode=rw` and never create one: run them from the
+  `--bin reset_password -- <username>` (new password printed once, sessions purged),
+  `--bin admin_account` (no args = list; `-- ban <username> [reason]` / `-- unban <username>`),
+  and `--bin invite` (no args = list; `-- new [n] [note]` mints codes shown once; `-- revoke
+  <code>`; on `feat/public-hosting` until cutover).
+  The four that write open the DB with `mode=rw` and never create one: run them from the
   directory that holds `world.db` (on the R720 that is `/opt/projectdawn`, NOT the source tree)
   or set `PROJECTDAWN_DATABASE_URL`. Full detail in `docs/reference/commands.md`.
 - **GM playtest (dev commands OFF, only `is_gm` accounts get tools):** `PD_DEV_CMDS` enables dev
@@ -1274,6 +1276,39 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   logging, a nightly dupe-detection query, an optional client integrity hash, input replays.
   (5) TLS for the auth WebSocket. None of it is a friends-build blocker; all of it gates a
   public port.
+  **Plan 2026-10-08, BUILT 2026-10-12 (slices 1 to 3), pending the host sitting and the
+  cutover playtest** (`docs/design/public_hosting_plan.md`; `feat/public-hosting` in both
+  repos, server `e977cf4` + `eb7d96f` + `fe004db`, client `198c333`;
+  `public_hosting_checklist.md`). The user is leaving Tailscale for good (a tester runs Nord
+  Meshnet, which will not run beside it): a port forward, DuckDNS, Caddy for TLS, invite
+  codes, one cutover day. Server: socket limits (64 KB cap, 10 s handshake, 10 min idle, 8
+  connections per address), `X-Forwarded-For` trusted from loopback only, the limiter keyed
+  by IPv6 /64 with a global ceiling and a per-account budget (items 1, 3 and 4), a ban that
+  answers like a wrong password until the password is right (item 2), an `invites` table
+  (migration 0012, forward-only) with `Register.invite` burned in the account's own
+  transaction and the `invite` bin, `PROJECTDAWN_WORLD_ENDPOINT` as a name with an address
+  watch that checkpoints everyone and exits for systemd when it moves, and two
+  per-connection intent budgets (inventory 64/16 s, cosmetic broadcasts 40/20 s; finding
+  10c's rate cap). Client: `wss://` for any non-local server (item 5), an invite field,
+  `tools/check_login_url.gd`. Kept off the deploy branches until cutover: exported early,
+  the wss rule would stop the tailnet testers connecting, and the migration means an older
+  binary cannot boot on the migrated `world.db`. Still later, by the plan: a per-account
+  login budget is in; position-anomaly logging, the nightly dupe query, the client
+  integrity hash and input replays are not. **Reviewed 2026-10-12** (server `72fa214`,
+  client `9a43c33`; session note §6): the account and global caps were lockout levers
+  (one address could keep an owner out indefinitely, two dozen could refuse every login),
+  closed by exempting the source an account last logged in from and refunding a success;
+  every auth send under the idle timeout; canonical addresses; wider intent budgets; the
+  launcher keeps its session across the idle close. The review also found two bugs older
+  than the branch, fixed on the deploy branch as their own entry (Death / corpses).
+  **Latency readout BUILT 2026-10-13, pending the export** (on the DEPLOY branches, server
+  `a18e355`, client `f6aa0ff`; `public_hosting_checklist.md` §1 has its row; session note §5).
+  Asked for after the user's "keeping latency in mind?" question: `/ping` prints renet's
+  smoothed round trip and packet-loss estimate for the world connection (the DLL's new
+  `rtt_ms` / `packet_loss`, called by name so a stale DLL costs the command, not `Net`), the
+  server logs a `player link` line per player once a minute, and `tools/check_wire_layer.gd`
+  says whether a checkout's DLL carries what `Net` calls by name. Needs the DLL rebuild the
+  Oct 22 export already carries; the server half rides the next redeploy.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -1446,6 +1481,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   call, flagged for the user:** quest kill-credit takes the alive filter but NOT the range
   gate — the decision covered XP shares, and range-gating journal ticks would silently change
   quest play; say the word if journal ticks should be range-gated too.
+- [ ] **A dead character died again on relogin, and lost reliable packets were never resent**
+  *(both found 2026-10-12 by the review of the hosting branch; both older than it; **BUILT
+  the same day on the deploy branch, pending redeploy + playtest**: server `6a09aa1` +
+  `645606a`, `dead_relogin_and_resend_checklist.md`)*. (a) `from_spawn` set `death_processed: false`
+  for every spawn, so a character persisted at 0 HP (a crash, a window-X, a restart while
+  dead) was killed again by the death sweep on its first tick back: a second XP penalty and
+  a second, empty corpse. Now `death_processed: spawn.hp <= 0.0`; Respawn still works (it
+  gates on that flag); the client learns it is dead from the HP seed as before. The
+  integration test fails on the old code at the XP assertion. (b) The world loop never
+  called `RenetServer::update`, the only place renet's per-connection clock moves, and its
+  reliable channels resend a lost packet only when that clock passes the resend time: a
+  lost inventory delta, chat line, kick or teleport was never resent. Invisible on a
+  lossless tailnet; on the internet it would have read as random desyncs. Called every
+  tick now. No client change for either.
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
@@ -1629,7 +1678,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   cache as of dispatch, which let a hit earlier in the tick clear the live cache while the
   cast still went through). Casting stands the caster at CastStart and on an instant cast.
   The pure decisions are `world/cast_gate.rs` with unit tests. Client follow-up, not built:
-  the client should stand the local player on cast start too (today it only stops drawing
+  the client should stand the local player on cast start too; **BUILT 2026-10-12, pending
+  playtest** (client, next export; `chat_wrap_and_pet_buttons_checklist.md` §4): `cast_spell`
+  stands a seated caster and goes on instead of refusing with "You cannot cast while
+  sitting.", and Regen forwards the Stand (today it only stops drawing
   you seated when the server's regen or the next Sit/Stand catches up).
   (f) **Verified: a mob finished off by a damage shield (Thorns) pays nothing**, no XP, no
   quest credit, no loot (`tick.rs` ~8085 marks it dead and fans EntityDied, nothing else).
@@ -1826,6 +1878,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   corpse/bind zone handling (the 06-23 "cross-zone bind corpse rendering" caveat). The
   procedural dungeon (`F:\Projects\ProceduralDungeon`, seed-deterministic BSP) is its first
   customer. Caves and stacked floors additionally need real Y (the height model), not a sample.
+  **Structure to carry into the design** *(from the 2026-10-12 research on how EQ, WoW,
+  Lineage II, SWG and Ragnarok split their servers; user agreed all five)*. Stay one process
+  for now; build the seams so a later split is a deployment change, not a rewrite.
+  (1) **Zone as a self-contained unit** (EQ's zone-per-process shape, inside one process): each
+  zone owns its entities, AOI and tick, keyed by zone id, under a world layer. (2) **Keep the
+  login/world split as it is**: the signed connect token already lets auth move to its own
+  process. (3) **Cross-zone services stay out of zone code** (tells, groups, guilds, the ban
+  sweep; Ragnarok's Inter server, EQ's chat service). (4) **One path for database writes**
+  (Lineage II's CacheD role): `save_stores_atomic` and the corpse transaction are the rule,
+  not a coincidence. (5) **Every object is owned by exactly one zone at a time** (Blizzard's
+  JAM talk, GDC 2013): the zone handoff is the dupe vector, so a character or item crossing
+  zones moves in one atomic step, never existing in both or neither. Deliberately NOT
+  borrowed: a separate NPC/AI process (Lineage II, Aion) and EVE's single-shard cluster.
 - [ ] **Quest and loot content plumbing deferred by phase 4** *(`phase4_content_plan.md`
   §4.3/§4.5; audit 2026-09-29)*. (a) Quest objective types beyond kills: fetch, delivery,
   dialogue (the server counts kills only). (b) Loot tables as data: `loot.rs` is code, so
@@ -1950,10 +2015,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   protocol bump plus a DLL rebuild and an export, so it rides the next bump day (the trade
   window's) rather than forcing one of its own. The client-heuristic alternative (same name,
   same frame, within a metre) is rejected: it guesses, and a camp of same-named mobs makes it
-  wrong. (d) **Spell tooltips should show max
+  wrong. **BUILT 2026-10-12 on the `feat/trade-window` branches, pending playtest** (server
+  `98ff015`, client `20ba679`; `charm_retarget_checklist.md`, on the branch until the merge;
+  rides the Oct 22 bump with the trade window, nothing on the deploy branch). Both spawns
+  carry a trailing `replaces`, set only at the charm landing (pet replaces enemy) and the
+  charm ending (mob replaces pet), on charm expiry and on the charmer leaving alike. The DLL
+  emits a separate `entity_replaced(old, new)` after the spawn so the spawn signals keep their
+  arity; `Targeting` keeps the target's id (a despawn frees the node without clearing
+  Combat's target) and moves to the new node on a match. The real-time charm test pins all
+  three values and fails on either site sending `None`; a headless probe covers the client
+  handler and fails with it disconnected. (d) **Spell tooltips should show max
   range** with MP, cooldown and description. All spells share one reach today (client 24 m,
   server 25 m; heals decided to 30 m), so the tooltip can show that now and a per-spell
-  number when spells get their own ranges. Not built. (e) **Design question from the 10-07
+  number when spells get their own ranges. **BUILT 2026-10-12, pending playtest** (client,
+  next export; `chat_wrap_and_pet_buttons_checklist.md` §3): `Spells.spell_range_text` gives
+  the kind's reach (hostile 24 m, friendly 29 m to others, a corpse 30 m, nothing for a
+  spell with no target to reach) and all three tooltips (hotbar gem, spell bar gem, book
+  row) end with it. (e) **Design question from the 10-07
   journal, for the user: should named mobs be charm-immune?** Mirelle (Enchanter 20) charmed
   The Undying (a named, 1,325 HP, the `the_undying` quest's target), used it as a pet to kill
   a Giant Spider and a Barrow Zombie, re-charmed it each time the charm ended (it did turn on
@@ -2111,6 +2189,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   drinking a second Water Flask while the first still works is refused rather than wasted
   (Water Flask: 180 s). Confirmed in play that stacking flasks does not stack the regen.
   Belongs with the server-side consumables pass; consumable effects are client-side today.
+  **Traced and stopgapped 2026-10-12** (server `a9219b9`, pending redeploy;
+  `dead_relogin_and_resend_checklist.md` §3): the server DID refuse a second drink while one
+  ran, but the mana-only leg of the drink buff is named `Drink MP: X` and the check looked
+  only for `Drink: X`, so a Water Flask (mana only) was taken again. Both names are checked
+  now. **Superseded in shape by the EQ food and water design above**, where eating by hand
+  when full is refused with EQ's own line and nothing is ever "wasted" by stacking.
 - [ ] **Bookbinding / player-authored lore**
 - [ ] **Clockwork Engineering prestige** (Tinkering 150+ for Gnomes/Kobolds)
 
@@ -2121,7 +2205,51 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   batch's first step.
 - [ ] **EQ-style food/water gating** — food/water should gate base HP/MP regen (no food =
   no regen) instead of stacking as additive buffs; passive consumption from inventory,
-  no buff-bar entry
+  no buff-bar entry. **DIRECTION CONFIRMED 2026-10-12 (user): "Our food and water system
+  needs to work like EQ. Instead of like quick consumables." DESIGNED 2026-10-12:
+  `docs/design/food_and_water.md`** (EQ's rules from the Project 1999 wiki and forums and
+  EQEmulator: hunger and thirst counters, the first food in slot order eaten by itself when
+  the counter empties, sizes in 144 s units, stages with "You are hungry." and the explode
+  line, no HP or mana regen when out, nobody dies of it; the design, an eight-point exploit
+  ledger, three slices). **Six decisions wait on the user (§7)**: the scale (a Bread Loaf as a
+  20-minute meal, a 2-hour cap), what stops when famished, race timing, the hand-eat rules,
+  Summon Food/Drink for Mag/Cle/Dru, the HUD form. Slice 1 needs one protocol bump
+  (`HungerUpdate`), so it rides a bump day. Supersedes the buff model in
+  `docs/concepts/tradeskills/consumables.md` "The Regen Loop".
+  **ALL SIX DECIDED 2026-10-13 (user), recorded in §7:** EQ's own pace (a Bread Loaf is a
+  48-minute meal, a Water Flask a 36-minute drink, the cap 4 hours); no food stops HP regen,
+  no water stops mana regen, either stops stamina; the drain is per race (Human 1.0,
+  Halfling 2.0 from the sources, the rest 1.0 with Ogre/Troll 1.5 and Fae 0.75 as our own
+  flagged calls); hand-eating by EQ's rules exactly; **Summon Food/Drink corrected on the
+  user's challenge** (one item per cast; Magician 1, Cleric and Shaman in the single digits,
+  Druid 10 to 14; stacks only from Magician 21/22 and Cleric 29/33) for slice 2; the bars in
+  their own small window (two icons beside a progress bar), planned as a note before the
+  client half is built. Build-ready: slice 1 is the server half plus the chat lines, aimed
+  at the Oct 22 bump day.
+  **Slice 1 BUILT 2026-10-13, pending review, merge and playtest** (server
+  `feat/food-and-water` `40d9f03`, client `7728793`; `food_and_water_checklist.md`, 20
+  rows; no wire change, so it needs the redeploy and the export but no bump). What exists:
+  `world/hunger.rs` (the counters in seconds of fullness, EQ's 144 s unit, a 4-hour cap,
+  the per-race drain, the three stages told once each, the first-in-slot-order search,
+  `feed`), migration `0013_hunger.sql` (every existing character full), persistence with
+  the resource checkpoint and the reap, the drain and auto-eat at the regen step for the
+  living in the world (the dead and the lobby do not drain; a famished character eats the
+  tick it runs out, fans the delta and is told "You eat a Bread Loaf."), the regen gate
+  (`regen::natural_regen_allowed`: food for HP, water for mana, both for stamina), the
+  UseConsumable arm under EQ's hand-eat rules (refused when full with the explode line,
+  half size when early), the food and drink buffs deleted. Bread Loaf 2880 s, Water Flask
+  2160 s on both sides (the item lockstep check is green). Tests: unit (drain by race, the
+  immune Revenant, the stage lines, the cap, slot order through bags and past a held bag)
+  and integration (base slot before pouch and regen back, out of food means no HP regen
+  while the dead do not drain, the full refusal and the halved hand-eat).
+  **Reviewed 2026-10-13** (session note §3): a forged `race: "Revenant"` at creation was
+  starvation-immune for life (the transformation's stat block was reachable;
+  `create_character` validated only the name), closed by `char_data::CREATION_RACES` and
+  `PLAYABLE_CLASSES` refusing anything off the creation lists, with the immunity no longer
+  keyed on the race; meditate skill-ups gated on water; the eat runs before the stage
+  lines; a famished login is told its stage; the server narrates a hand-eat and the client
+  stopped (`6b63ffe`). Accepted residual: one loaf per character per crash between the
+  resource and store writes. Merge into the deploy branch next, then the Oct 22 redeploy.
 - [ ] **Exporter drift** *(the "Known drift" note names `tools/export_spells.gd` as stale; the
   2026-07-10 session flagged the `items.toml` exporter emitting `weapon_delay` /
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both
@@ -2132,12 +2260,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   real `SpellDefinitions.ALL`, so the two files can be verified without trusting or running
   the stale exporter. It found the files in step. The exporter itself is still stale, and the
   items pair (`items.toml` vs the `.tres` files) has no check yet; the same shape would do.
+  **Items half answered the same way, 2026-10-12:** `tools/check_item_lockstep.gd` compares all 172
+  `.tres` items with `items.toml` through `export_items.gd`'s own field map and the server's serde
+  defaults (proc fields compared only on items that proc). First run: one drift, the Arrow
+  Bundle's stack (200 on the server, 20 in the `.tres`), fixed in the TOML the same day (server
+  `93f5360`); the exporter itself stays stale and unrun. Both checks are in `commands.md`.
 - [ ] **Docs debt** *(audit 2026-09-29)*: `server/README.md` is "badly stale" (still claims the
   world sim is unbuilt, per `deployment_linux.md`); `server/docs/flaky_integration_tests.md`
   still describes the flaky trio the 09-16 fix retired; `docs/concepts/passive_skills/*` says
   casting passives are "not yet implemented" while `CastingSkills` has shipped for months;
   `docs/deployment/` remains untracked by decision and CLAUDE.md links it as canonical (decide
   one way). Small, but each is a trap for the next reader.
+  **Checked 2026-10-12:** three of the four are closed. `server/README.md` was rewritten on 10-08 (`c6fccd1`, no unbuilt-world claim remains); `flaky_integration_tests.md` has carried a RESOLVED header since 10-01 with no known-flaky test; `casting_passive.md` now says the system is implemented and where (client `CastingSkills`, server `world/skills.rs`). The `weapons_passive.md` line is about Parry and Riposte, which really are unbuilt. **Open: whether `docs/deployment/` stays untracked** (a user decision; CLAUDE.md links it as canonical and `public_hosting_sitting.md` joined it on 2026-10-12).
 - [ ] **The cast arms duplicate the pre-flight** *(review finding, 2026-10-02; recorded, not
   built)*. `cast_target_refusal` decides target presence, reach, liveness and the PvP gates
   before any side effect, and the per-target-type arms in `tick.rs` still carry their own

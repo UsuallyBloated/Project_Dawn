@@ -28,6 +28,10 @@ const SPELL_RANGE := 24.0
 # Friendly spells (heals and buffs on another player or a pet) reach further:
 # one metre inside the server's FRIENDLY_SPELL_RANGE (30 m), decided 2026-10-05.
 const FRIENDLY_SPELL_RANGE := 29.0
+# A resurrection's reach to the corpse: the server's RES_CAST_RANGE (30 m). The
+# client runs no check of its own for it (the server reports the refusal);
+# the number is here for the tooltip.
+const CORPSE_SPELL_RANGE := 30.0
 # The global cooldown (decided 2026-10-05): after any cast no spell may start
 # for this long, Bard songs excepted (twisting is casting songs back to back).
 # The server's GLOBAL_COOLDOWN is a quarter second shorter (2.0 s), so an
@@ -93,12 +97,35 @@ func _get_alignment_effectiveness(player_class: String) -> float:
 				"Good":    return 0.4
 	return 1.0
 
+# The reach a spell's tooltip shows, or "" for a spell with no target to reach
+# (self, group-wide, a port, a bind, a summon). All spells of a kind share one
+# reach today (the server has no per-spell range), so this is the kind's
+# number: hostile 24 m, friendly 29 m (to another player or a pet; on yourself
+# there is nothing to reach), a corpse 30 m.
+func spell_range_text(spell: SpellData) -> String:
+	match spell.target_type:
+		SpellData.TargetType.ENEMY, SpellData.TargetType.PET_CHARM:
+			return "%.0f m" % SPELL_RANGE
+		SpellData.TargetType.ALLY:
+			return "%.0f m to others" % FRIENDLY_SPELL_RANGE
+		SpellData.TargetType.PET_HEAL:
+			return "%.0f m" % FRIENDLY_SPELL_RANGE
+		SpellData.TargetType.CORPSE:
+			return "%.0f m" % CORPSE_SPELL_RANGE
+	return ""
+
 func cast_spell(spell: SpellData) -> bool:
 	if _casting != null:
 		return false
+	# Casting stands a seated caster, as it does on the server (spell batch
+	# step 0: the server stands you at CastStart and on an instant cast). The
+	# client used to refuse instead, so the two disagreed about the first
+	# cast of a rest. Standing here sends the Stand (Regen forwards the
+	# transition), and the cast goes on.
 	if Combat.is_player_seated():
-		spell_failed.emit("You cannot cast while sitting.")
-		return false
+		var me := get_tree().get_first_node_in_group("player")
+		if me != null and me.has_method("stand"):
+			me.stand()
 	if _cooldowns.is_active(spell.spell_name) and not no_cooldowns:
 		spell_failed.emit("Spell is on cooldown.")
 		return false

@@ -1,5 +1,9 @@
 # Quest Phase 2 Slice A Playtest Checklist — 2026-07-09
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): the Test Room row retired; the three-seat bystander row worth a re-run (journal credit changed with spell batch step 1).
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 90 (line numbers as of the triage).
+
 Quest objective STATE moved server-side (PD_W0024). The server now counts quest kills itself
 (`active_quests` table + per-kill `QuestProgress`), the journal is seeded from a server
 `QuestSnapshot` on every login (survives relog AND server restart), turn-ins are rejected until
@@ -93,7 +97,7 @@ Diagnostics: in-game console (backtick) for client state; server.log anchors: `q
 ## 7 — Regression: nearby behavior unchanged
 - [x] **Kill XP still arrives** (XpGained line + bar move on every kill). notes:
 - [x] **Test Panel "Level Up" / "Grant 250 XP"** still work (dev-gated). notes:
-- [ ] **Test Room (no launcher): add test quest, kill 5 Test-Room wolves** → local counting
+- [-] **Test Room (no launcher): add test quest, kill 5 Test-Room wolves** → local counting triage 2026-10-12: RETIRED, Test Room.
   still auto-completes it there (Test Room keeps the old flow; no server). notes: Test room (no launcher)?  Not sure what you are refering to.
 - [x] **Loot, coins, bank, corpse loot** unaffected by the wire bump (spot-check one loot
   pickup + one bank open). notes: loot, coins, and corpse loot seem unaffected.  When i try to place items into bank they disapear.  To be more specific:

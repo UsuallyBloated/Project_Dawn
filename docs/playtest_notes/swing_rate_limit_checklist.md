@@ -1,5 +1,9 @@
 # Melee Swing-Rate Limit Playtest Checklist — 2026-07-29
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): two rows worth a re-run, and the most worthwhile of the lot: the haste spot-check the To-Do "Two small verifies" (a) asks for.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 33, 35 (line numbers as of the triage).
+
 The server now enforces a per-hand minimum interval between swings (no swing timer existed, so a
 modified client could spam `Attack` for an attack-speed hack). It derives the equipped weapon's
 `weapon_delay`, assumes max haste, and silently drops any same-hand swing that arrives faster than

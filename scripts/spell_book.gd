@@ -283,10 +283,12 @@ func _make_row(spell: SpellData) -> Panel:
 	bg.custom_minimum_size.y = ROW_H
 	bg.add_theme_stylebox_override("panel", normal_style)
 	bg.mouse_filter = Control.MOUSE_FILTER_STOP
-	bg.tooltip_text = "%s\n%s\nMP: %d  Cast: %s  CD: %s" % [
+	var rng := Spells.spell_range_text(spell)
+	bg.tooltip_text = "%s\n%s\nMP: %d  Cast: %s  CD: %s%s" % [
 		spell.spell_name, spell.description, int(spell.mana_cost),
 		("%.1fs" % spell.cast_time) if spell.cast_time > 0.0 else "instant",
 		("%.0fs" % spell.cooldown) if spell.cooldown > 0.0 else "—",
+		("  Range: " + rng) if rng != "" else "",
 	]
 
 	var row := HBoxContainer.new()

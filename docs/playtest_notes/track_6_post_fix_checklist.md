@@ -1,5 +1,9 @@
 # Track 6 Post-Fix Playtest Checklist — 2026-05-15
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): two three-seat rows worth a re-run; the buff-timer and reflect-expiry rows superseded by ally_buff_routing_checklist.md, pet_buffs_checklist.md and pet_buff_followups_checklist.md.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 42, 44 (line numbers as of the triage).
+
 Covers the five fixes landed in commits `9ab261f` (server) and `27f2549` (Project_Dawn). Re-export Project_Dawn and restart the server with the new build (`PD_W0006` protocol) before running.
 
 ## Setup
@@ -55,8 +59,8 @@ Earlier: absorb icon ("Shield 40hp") never drained in launcher mode because inco
 Earlier: local timer ticked at 60Hz, server at 20Hz, so the local buff icon could expire ~50ms before the server stripped the buff. Players observed "thorns reflected after I lost the buff." Reconciler now syncs each named buff's remaining time to the server's value every snapshot.
 
 - [x] Cast **Thorns** with a long duration (e.g. 60s)notes: Duration 600s
-- [ ] Watch the HUD countdown next to the server's expected timer. The local countdown should not race ahead of the server.
-- [ ] Let the buff expire naturally → no reflect damage to attackers after the icon disappears (within a single tick)
+- [-] Watch the HUD countdown next to the server's expected timer. The local countdown should not race ahead of the server. triage 2026-10-12: SUPERSEDED, ally_buff_routing_checklist.md and the pet buff sheets.
+- [-] Let the buff expire naturally → no reflect damage to attackers after the icon disappears (within a single tick) triage 2026-10-12: SUPERSEDED, ally_buff_routing_checklist.md and the pet buff sheets.
 
 ## Fix 7 — Damage-shield combat log line
 New: when a shield reflects damage, the defender's combat log shows `"<attacker> has been hit by N damage from <shield_name>."` and a floating number renders on the attacker.

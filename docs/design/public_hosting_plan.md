@@ -1,8 +1,15 @@
 # Off Tailscale: the R720 on the public internet
 
-> **Status: PLANNED 2026-10-08, not started.** Written in plan mode and kept for a later build
-> session. Slice 0 is the user's, at their own router; nothing in this plan gives Claude router
-> access.
+> **Status: slices 1, 2 and 3 BUILT 2026-10-12** on `feat/public-hosting` in both repos (server
+> `e977cf4` + `eb7d96f` + `fe004db`, client `198c333`), every item test-pinned, both suites
+> green, nothing on the deploy branches. **Not deployed:** slice 0 (the router, the user's) and
+> slice 4 (the host sitting) come first, then cutover day runs
+> `docs/playtest_notes/public_hosting_checklist.md`. Two things the build settled beyond the
+> plan: the client keeps a scheme typed by hand (`ws://100.93.108.112:8765` still reaches the
+> tailnet server without TLS, for the operator's own testing), and a name with both A and AAAA
+> records resolves to its first IPv4 address, so the port forward's family is the one every
+> token names. Slice 0 is the user's, at their own router; nothing in this plan gives Claude
+> router access.
 
 ## Context
 
@@ -124,7 +131,8 @@ one), or keep the DDNS name IPv4-only and keep UFW denying all IPv6 inbound exce
 - Install Caddy (Ubuntu package); a five-line Caddyfile: the DDNS name, `reverse_proxy
   127.0.0.1:8765`.
 - `.env`: `PROJECTDAWN_AUTH_BIND=127.0.0.1:8765`,
-  `PROJECTDAWN_WORLD_ENDPOINT=<ddns name>:7777`, **remove `PD_NO_RATE_LIMIT`**.
+  `PROJECTDAWN_WORLD_ENDPOINT=<ddns name>:7777`, `PROJECTDAWN_REQUIRE_INVITE=1`, **remove
+  `PD_NO_RATE_LIMIT`**. The boot line must then read `rate_limit=true require_invite=true`.
 - DuckDNS updater as a systemd timer.
 - UFW: allow `443/tcp` and `7777/udp`; SSH stays allowed **only on `tailscale0`** (it is
   Tailscale-only today; the plan keeps it that way).

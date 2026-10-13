@@ -1,5 +1,9 @@
 # Machine Day Checklist — 2026-09-22
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): one delivery row retired, two superseded (bagspace_groupbars_checklist.md and the UI-layout To-Do carry them), the equip-from-hand swap and drop-confirm retest (row 92) worth a re-run.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 92 (line numbers as of the triage).
+
 The whole desk session in order: phase 4 deploy, fresh-world wipe, re-provision,
 ship, then the playtest queue. Ops reference: `docs/deployment/server_operations.md`
 ("Fresh world reset" has the full command block).
@@ -52,7 +56,7 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 
 ## 3 — Ship it
 
-- [ ] **Send `builds/ProjectDawn-alpha.zip` (rebuilt 09-22 from the ae30557 export) to testers**
+- [-] **Send `builds/ProjectDawn-alpha.zip` (rebuilt 09-22 from the ae30557 export) to testers** triage 2026-10-12: RETIRED, a delivery action for the September 22 zip.
       → with the word: the world is new, EVERYONE re-registers, and the README's
       fresh-world callout covers the bar-file cleanup. notes:
 
@@ -88,7 +92,7 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
 - [x] **`phase4_content_checklist.md`** in full (six sections; §3 named mobs and
       the high rings want GM leveling). notes: COMPLETE 09-27, all 28 rows
       PASS across five sittings — see that checklist's Result block.
-- [ ] **`bagspace_groupbars_checklist.md`** (§2 needs the second seat). notes:
+- [-] **`bagspace_groupbars_checklist.md`** (§2 needs the second seat). notes: triage 2026-10-12: SUPERSEDED, bagspace_groupbars_checklist.md section 1 is the same row.
 - [ ] **`cursor_slice15_checklist.md` retest rows** → equip-from-hand swap no
       longer blanks the held item; drop-confirm dialog no longer re-prompts. notes:
 
@@ -114,7 +118,7 @@ ship, then the playtest queue. Ops reference: `docs/deployment/server_operations
       only at NPC turn-in (log: reward=48800 at Aldric); the XP at the kill
       was ordinary kill XP, a separate system. notes: user to confirm this
       reading matches what they meant.
-- [ ] **UI layout "pretty busted"** → FILED, not fixed: needs a screenshot
+- [-] **UI layout "pretty busted"** → FILED, not fixed: needs a screenshot triage 2026-10-12: SUPERSEDED, tracked by the To-Do "In-game UI layout is pretty busted".
       pass, belongs to the deferred theming/layout pass (To-Do, UI polish). notes:
 
 ## 7 — The death find (09-23, fixed both sides, verify after redeploy + relaunch)

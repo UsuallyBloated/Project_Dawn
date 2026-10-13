@@ -1,5 +1,9 @@
 # Dev Panel Modernization — Playtest Checklist — 2026-07-11
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): one row worth a (trivial) re-run: the Test Panel still has the Give Food & Drink button (test_panel.gd).
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 27 (line numbers as of the triage).
+
 Three things: (1) the Test Panel now grants items **server-side** (no more client-only ghosts),
 via a new **GEAR** section with a searchable item picker + the moved loadout buttons; (2) `/give`
 (GmCommand) is now **dev-gated** (`is_dev`), closing the exploit-audit's top finding while still

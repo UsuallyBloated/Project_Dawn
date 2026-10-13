@@ -1,5 +1,9 @@
 # Silent Refusals Playtest Checklist — 2026-08-23
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): two rows worth a re-run (a worthless-item sell attempt; a log check that needs no sitting); the refused-cast-keeps-its-mana row lives in inspect_range_gm_audit_ban_checklist.md section 4.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 31, 64 (line numbers as of the triage).
+
 Verifies that when the server refuses an action, it **says so**. Follows the audit prompted by the
 2026-08-21 vendor report ("player can buy from the merchant when their inventory is full, the item
 appears to disappear").

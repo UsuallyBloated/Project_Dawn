@@ -1,5 +1,9 @@
 # Quest Kill-Credit (online) — Playtest Checklist — 2026-07-07
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): two rows worth a re-run: spell-kill and pet-kill quest credit have no later sheet.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 41, 44 (line numbers as of the triage).
+
 **The bug:** in launcher (online) mode, `QuestManager.notify_kill` only fired for *local Test-Room*
 enemies, never for server-driven kills, so a "kill N X" objective **never advanced** from real kills and
 the quest could never complete naturally. (This is what you hit last pass.)

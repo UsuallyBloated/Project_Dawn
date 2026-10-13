@@ -360,6 +360,24 @@ func is_app_ready() -> bool:
 func get_player_id() -> int:
 	return _player_id
 
+# Round trip to the world server in milliseconds, from the wire layer's own
+# ack timing (renet's smoothed estimate of the UDP path play runs on), or
+# -1.0 when the DLL predates the getter. Called by NAME for the reason the
+# time_of_day signal is connected by name: a bare `rtt_ms()` against an
+# older DLL is a parse error that takes the whole autoload down, and the
+# DLL is hand-copied into builds/.
+func get_rtt_ms() -> float:
+	if not has_method("rtt_ms"):
+		return -1.0
+	return float(call("rtt_ms"))
+
+# Renet's packet-loss estimate for the world connection, 0.0 to 1.0, or
+# -1.0 when the DLL predates the getter.
+func get_packet_loss() -> float:
+	if not has_method("packet_loss"):
+		return -1.0
+	return float(call("packet_loss"))
+
 # Server-authoritative identity from ConnectOk. Empty strings / 0 until the
 # handshake completes; lobby's _on_app_connected uses these to drive
 # PlayerStats.apply_character.

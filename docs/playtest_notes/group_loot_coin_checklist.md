@@ -1,5 +1,9 @@
 # Group Loot Rights & Coin Drops Playtest Checklist — 2026-06-15
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): the Drop-cell rows superseded (the Drop cell was removed outright, cursor_slice15_checklist.md 14 of 14); the miss-message and /autosplit rows worth a two-seat re-run (CLAUDE.md "Loot rights odds and ends (b)").
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 161, 162, 163, 166, 167, 168, 169 (line numbers as of the triage).
+
 Coins now drop from mobs and corpses have loot rights: a kill belongs to the killer's
 group, coin auto-distributes (or not) by mode, and Round Robin rotates item turns.
 This verifies the whole feature two-client. **Design:** `docs/design/group_loot_and_coin.md`.
@@ -149,13 +153,13 @@ rejected at connect (clean version error). Two clients (A, B), launcher mode, sa
 server.log anchors: `"DropItem spawned loot bag"`, `"DropItem rejected"`, `"autosplit toggled"`.
 
 ### 1. Drop item to ground (Task 1 — playtest 2.3)
-- [ ] **A drags a stack from a base slot onto the Drop (⬇) cell, confirms** → a loot bag appears at A's feet; the source slot empties (server `InventoryDelta`). notes:
-- [ ] **A drags a base item out of the inventory window onto the 3D world, confirms** → same result (bag at feet, slot empties). notes:
-- [ ] **A drags an item from *inside a bag* onto the Drop cell (or out to world), confirms** → bag spawns, the bag's inner slot empties (server now honors `bag_<i>` drops). notes:
-- [ ] **B walks over the dropped bag and loots it** → B picks it up freely (public bag, no owner). notes:
-- [ ] **A cancels the drop-confirm dialog** → item snaps back to its source slot; nothing dropped. notes:
-- [ ] **A releases a drag over the window's own chrome (header / wallet line), or over another panel (vendor / loot / character window / hotbar)** → snaps back, no drop prompt. notes:
-- [ ] **A tries to drop a bag that still has items inside** → rejected (must empty the bag first); the bag stays in the slot. notes:
+- [-] **A drags a stack from a base slot onto the Drop (⬇) cell, confirms** → a loot bag appears at A's feet; the source slot empties (server `InventoryDelta`). notes: triage 2026-10-12: SUPERSEDED, the inventory Drop cell no longer exists; cursor_slice15_checklist.md passed 14 of 14.
+- [-] **A drags a base item out of the inventory window onto the 3D world, confirms** → same result (bag at feet, slot empties). notes: triage 2026-10-12: SUPERSEDED, the inventory Drop cell no longer exists; cursor_slice15_checklist.md passed 14 of 14.
+- [-] **A drags an item from *inside a bag* onto the Drop cell (or out to world), confirms** → bag spawns, the bag's inner slot empties (server now honors `bag_<i>` drops). notes: triage 2026-10-12: SUPERSEDED, the inventory Drop cell no longer exists; cursor_slice15_checklist.md passed 14 of 14.
+- [-] **B walks over the dropped bag and loots it** → B picks it up freely (public bag, no owner). notes: triage 2026-10-12: SUPERSEDED, the inventory Drop cell no longer exists; cursor_slice15_checklist.md passed 14 of 14.
+- [-] **A cancels the drop-confirm dialog** → item snaps back to its source slot; nothing dropped. notes: triage 2026-10-12: SUPERSEDED, the inventory Drop cell no longer exists; cursor_slice15_checklist.md passed 14 of 14.
+- [-] **A releases a drag over the window's own chrome (header / wallet line), or over another panel (vendor / loot / character window / hotbar)** → snaps back, no drop prompt. notes: triage 2026-10-12: SUPERSEDED, the inventory Drop cell no longer exists; cursor_slice15_checklist.md passed 14 of 14.
+- [-] **A tries to drop a bag that still has items inside** → rejected (must empty the bag first); the bag stays in the slot. notes: triage 2026-10-12: SUPERSEDED, the inventory Drop cell no longer exists; cursor_slice15_checklist.md passed 14 of 14.
 
 ### 2. Defender sees incoming misses (Task 2 — playtest 8.3)
 - [ ] **B attacks A (both `/pvp` on) and the swing misses (e.g. B steps out of range)** → A's combat log shows "B misses you." notes:

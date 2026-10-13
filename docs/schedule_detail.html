@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Oct 9<span class="stat-sub">repo 1700532</span></div></div>
-<div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">77 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">14 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">36.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Oct 13<span class="stat-sub">repo 7728793</span></div></div>
+<div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">18 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">46.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -160,7 +160,7 @@
 <section>
 <h2><span class="week-head"><span>Clear the desk</span><span class="when">W1 &middot; October 5 to 11</span></span></h2>
 <p class="lede">Everything built in the last two weeks is on the hosted server and in the client exported this afternoon, so every open checklist can run now. The week&#x27;s other job was one yes: the spell batch plan, approved on the evening of October 7.</p>
-<div class="week-meta"><span>the user's time: 10 h</span><span>Claude build days: 2</span></div>
+<div class="week-meta"><span>the user's time: 10.5 h</span><span>Claude build days: 2</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -208,7 +208,7 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what">Close out the September 22 machine-day checklist. Its one live leftover is the two cursor retests from the 09-09 fixes (equip-from-hand swap keeps the held item; the drop-confirm click no longer re-prompts); its other three open rows are superseded by o1 (the zip), v9 (the pouch rows) and the UI layout To-Do entry, and get a note saying so.</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist machine_day_2026_09_22_checklist.md: 4 rows to run</li></ul></td>
+<td class="needs"><ul><li>checklist machine_day_2026_09_22_checklist.md: 1 rows to run</li></ul></td>
 <td class="time">0.5 h</td>
 <td class="id"></td>
 <td class="done">Every row filled or annotated.<span class="ref">checklist: <a href="playtest_notes/machine_day_2026_09_22_checklist.md"><code>machine_day_2026_09_22_checklist.md</code></a></span><span class="ref">To-Do entry: <code>The cursor-slot epic: left-click ground pickup + corpse auto-re-equip</code></span></td>
@@ -228,8 +228,8 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">after the next export, or from the editor</span>Chat lines wrap to the window and re-wrap on resize; the pet panel has buttons for the five pet commands; the target frame shows the distance to the target (three asks from the 10-06 and 10-07 sittings, all client-only).</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist chat_wrap_and_pet_buttons_checklist.md: 9 rows to run</li><li>a run from the editor, or the next export (the bump day is the next one planned)</li></ul></td>
-<td class="time">1 h</td>
+<td class="needs"><ul><li>checklist chat_wrap_and_pet_buttons_checklist.md: 13 rows to run</li><li>a run from the editor, or the next export (the bump day is the next one planned)</li></ul></td>
+<td class="time">1.5 h</td>
 <td class="id"></td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/chat_wrap_and_pet_buttons_checklist.md"><code>chat_wrap_and_pet_buttons_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Playtest asks from the charm-return sitting</code></span></td>
 </tr>
@@ -278,7 +278,7 @@
 <section>
 <h2><span class="week-head"><span>The first spell steps reach the server</span><span class="when">W2 &middot; October 12 to 18</span></span></h2>
 <p class="lede">A Monday redeploy carries the cast hardening and the small rules; their checklists run the same week. Claude builds Bind and Gate behind it. The four friends get their network access now, while nothing depends on it.</p>
-<div class="week-meta"><span>the user's time: 4 h</span><span>Claude build days: 3</span></div>
+<div class="week-meta"><span>the user's time: 4 h</span><span>Claude build days: 7</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -300,6 +300,26 @@
 <td class="time">1 Claude day</td>
 <td class="id">b2</td>
 <td class="done">Reported built with its checklist written.<span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
+</tr>
+<tr>
+<td class="id">bh1</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 12</span>Public hosting, slices 1 to 3 (docs/design/public_hosting_plan.md): the login socket hardened for a public port, invite codes and the invite tool, the world address as a name with a clean restart when it moves, intent budgets; the client connecting over wss with an invite field. Built on feat/public-hosting in both repos, off the deploy branches until cutover.</td>
+<td>Claude unattended</td>
+<td class="needs"><ul><li>checklist public_hosting_checklist.md: 26 rows to run</li></ul></td>
+<td class="time">1.5 Claude days</td>
+<td class="id"></td>
+<td class="done">Both suites green on feat/public-hosting and pushed; the To-Do entry says BUILT. Done only when public_hosting_checklist.md is filled on cutover day.<span class="ref">checklist: <a href="playtest_notes/public_hosting_checklist.md"><code>public_hosting_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Public-host hardening checklist (mandatory before any exposure beyond Tailscale)</code></span></td>
+</tr>
+<tr>
+<td class="id">b11</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 13 to 16</span>Food and water the EQ way, slice 1 (docs/design/food_and_water.md, decided 2026-10-13): hunger and thirst counters persisted on the character, the drain per race, the server eating the first food in slot order when a counter empties, the stages and their lines, the regen gate, hand-eating by EQ&#x27;s rules, a HungerUpdate to the owner. Server half plus the chat lines; the window follows its own note. One protocol bump, so it rides the Oct 22 bump day.</td>
+<td>Claude unattended</td>
+<td class="needs">nothing</td>
+<td class="time">2.5 Claude days</td>
+<td class="id"></td>
+<td class="done">Reported built with its checklist written and the review pass run; merged for the bump day.<span class="ref">To-Do entry: <code>EQ-style food/water gating</code></span></td>
 </tr>
 <tr>
 <td class="id">o2</td>
@@ -356,13 +376,13 @@
 <section>
 <h2><span class="week-head"><span>One evening when every client changes</span><span class="when">W3 &middot; October 19 to 25</span></span></h2>
 <p class="lede">Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the four friends receive their first zip from this build and never need another.</p>
-<div class="week-meta"><span>the user's time: 8 h</span><span>Claude build days: 4.5</span></div>
+<div class="week-meta"><span>the user's time: 17 h</span><span>Claude build days: 4.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
 <td class="id">d5</td>
 <td><span class="chip decide">Decide</span></td>
-<td class="what"><span class="day">by Mon Oct 19</span>The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client stops connecting that evening, a week ahead, and sending the new zip within the hour.<span class="blocks"><b>Blocks:</b> Nothing now; the date is set. The telling is the people half.</span></td>
+<td class="what"><span class="day">by Mon Oct 19</span>The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client is refused at login from that evening (the host raises the minimum client version), a week ahead, and sending the new zip within the hour.<span class="blocks"><b>Blocks:</b> Nothing now; the date is set. The telling is the people half.</span></td>
 <td>user (the phone is fine)</td>
 <td class="needs">nothing</td>
 <td class="time">by Mon Oct 19</td>
@@ -392,7 +412,7 @@
 <tr>
 <td class="id">b6</td>
 <td><span class="chip build">Build</span></td>
-<td class="what"><span class="day">Oct 21</span>Merge the trade window branch into the deploy branch, run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. The trade window itself has been built and reviewed since September 29 and waits only for this day.</td>
+<td class="what"><span class="day">Oct 21</span>Merge the trade window branch into the deploy branch, run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. The trade window itself has been built and reviewed since September 29 and waits only for this day. The branch also carries the charm re-target (built 2026-10-12): a charm no longer drops your target.</td>
 <td>Claude unattended</td>
 <td class="needs">nothing</td>
 <td class="time">0.5 Claude days</td>
@@ -402,22 +422,52 @@
 <tr>
 <td class="id">o4</td>
 <td><span class="chip operate">Operate</span><span class="chip ms">Trade live</span></td>
-<td class="what"><span class="day">Thu Oct 22, the bump day</span>Stop the server, redeploy the merged build, export the client from the merged commit with the rebuilt wire layer, zip, send to every tester, log in once to smoke it. The one evening everyone changes clients.</td>
+<td class="what"><span class="day">Thu Oct 22, the bump day</span>Stop the server, redeploy the merged build, add PROJECTDAWN_MIN_CLIENT_VERSION=0.2.0 to /opt/projectdawn/.env before starting it (without it, old clients still log in and simply have no trade), export the client from the merged commit with the rebuilt wire layer, zip, send to every tester, log in once to smoke it. The one evening everyone changes clients.</td>
 <td>user at a desk</td>
 <td class="needs"><ul><li>everyone logged out</li><li>the testers told (d5)</li><li>a backup first</li></ul></td>
 <td class="time">1.5 h</td>
 <td class="id">b6, d5</td>
-<td class="done">The boot log shows the new build= with dev_cmds=false; the export log shows [BuildStamp] stamped; /version in game shows the new wire-layer fingerprint.<span class="ref">To-Do entry: <code>Trade window</code></span></td>
+<td class="done">The boot log shows the new build= with dev_cmds=false and min_client=0.2.0; the export log shows [BuildStamp] stamped; /version in game shows the new wire-layer fingerprint.<span class="ref">To-Do entry: <code>Trade window</code></span></td>
+</tr>
+<tr class="tent">
+<td class="id">oh0</td>
+<td><span class="chip operate">Operate</span><span class="chip tent">tentative</span></td>
+<td class="what">Public hosting slice 0, at the router (user only): confirm the router&#x27;s WAN address is the public 98.50.18.x (not CGNAT), reserve the R720&#x27;s LAN address (runbook H6), check hairpin NAT, create the DuckDNS name and token, decide IPv6 (AAAA or not).</td>
+<td>user at the router</td>
+<td class="needs">nothing</td>
+<td class="time">1 h</td>
+<td class="id"></td>
+<td class="done">The DDNS name resolves to the home address from outside; the reservation and the hairpin answer written in the plan.<span class="ref">To-Do entry: <code>Public-host hardening checklist (mandatory before any exposure beyond Tailscale)</code></span></td>
+</tr>
+<tr class="tent">
+<td class="id">oh4</td>
+<td><span class="chip operate">Operate</span><span class="chip tent">tentative</span></td>
+<td class="what">Public hosting slice 4, the host sitting: Caddy with the DDNS name, the .env lines (auth on loopback, the world endpoint as the name, PROJECTDAWN_REQUIRE_INVITE=1, PD_NO_RATE_LIMIT removed), the DuckDNS updater timer, UFW for 443/tcp and 7777/udp, the router forward, then the outside test from a phone hotspot and a port scan.</td>
+<td>user at a desk, Claude writes the commands</td>
+<td class="needs">nothing</td>
+<td class="time">2 h</td>
+<td class="id">oh0, bh1</td>
+<td class="done">Login, enter world, walk and cast from outside the house; the scan shows exactly 443 and 7777.<span class="ref">To-Do entry: <code>Public-host hardening checklist (mandatory before any exposure beyond Tailscale)</code></span></td>
 </tr>
 <tr>
 <td class="id">v12</td>
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>The trade window: offer, accept, every edit clears both accepts, nothing leaves a bag until the commit, the ten exploit cases refuse.</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist trade_window_checklist.md (on branch feat/trade-window until the merge): 16 rows to run</li><li>second seat (two-boxing works)</li></ul></td>
+<td class="needs"><ul><li>checklist trade_window_checklist.md (on branch feat/trade-window until the merge): 20 rows to run</li><li>second seat (two-boxing works)</li></ul></td>
 <td class="time">2 h</td>
 <td class="id">o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/trade_window_checklist.md"><code>trade_window_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Trade window</code></span></td>
+</tr>
+<tr>
+<td class="id">v12b</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>A charm keeps your target: the mob stays targeted when it becomes a pet and again when the charm ends and it turns hostile, as in EQ.</td>
+<td>user at a desk</td>
+<td class="needs"><ul><li>checklist charm_retarget_checklist.md (on branch feat/trade-window until the merge): 14 rows to run</li><li>an Enchanter 20 or a Bard 14</li><li>second seat for two rows (two-boxing works)</li></ul></td>
+<td class="time">1.5 h</td>
+<td class="id">o4</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/charm_retarget_checklist.md"><code>charm_retarget_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Playtest asks from the charm-return sitting</code></span></td>
 </tr>
 <tr>
 <td class="id">v13</td>
@@ -448,6 +498,36 @@
 <td class="time">0.5 h</td>
 <td class="id">o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/global_cooldown_checklist.md"><code>global_cooldown_checklist.md</code></a></span><span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
+</tr>
+<tr>
+<td class="id">v18</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what">After the bump-day redeploy: leave dead with the window X, log back in, same XP and one corpse (the double death the 2026-10-12 review found); the lossy-link row only if a hotspot is handy.</td>
+<td>user, one seat</td>
+<td class="needs"><ul><li>checklist dead_relogin_and_resend_checklist.md: 9 rows to run</li></ul></td>
+<td class="time">0.5 h</td>
+<td class="id">o4</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/dead_relogin_and_resend_checklist.md"><code>dead_relogin_and_resend_checklist.md</code></a></span><span class="ref">To-Do entry: <code>A dead character died again on relogin, and lost reliable packets were never resent</code></span></td>
+</tr>
+<tr class="tent">
+<td class="id">vh5</td>
+<td><span class="chip verify">Verify</span><span class="chip tent">tentative</span></td>
+<td class="what">Cutover evening: redeploy from the hosting branch, export, an invite per tester, the zip and the code sent, the Tailscale shares removed, the minimum client version raised; then the cutover checklist with a tester outside the home network. Candidate: the Oct 22 bump day, so testers change clients once.</td>
+<td>user, one tester outside</td>
+<td class="needs"><ul><li>checklist public_hosting_checklist.md: 26 rows to run</li></ul></td>
+<td class="time">2.5 h</td>
+<td class="id">oh4</td>
+<td class="done">public_hosting_checklist.md filled.<span class="ref">checklist: <a href="playtest_notes/public_hosting_checklist.md"><code>public_hosting_checklist.md</code></a></span></td>
+</tr>
+<tr class="tent">
+<td class="id">v19</td>
+<td><span class="chip verify">Verify</span><span class="chip tent">tentative</span></td>
+<td class="what">Food and water after the bump day: eating and drinking happen on their own and say so, the hungry and out-of-food lines come once each, no regen when out and regen back after eating, hand-eat refused when full and halved when early, slot order through a bag, the state survives a relogin, the dead do not starve.</td>
+<td>user, one seat</td>
+<td class="needs"><ul><li>checklist food_and_water_checklist.md: 22 rows to run</li></ul></td>
+<td class="time">1.5 h</td>
+<td class="id">b11, o4</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/food_and_water_checklist.md"><code>food_and_water_checklist.md</code></a></span><span class="ref">To-Do entry: <code>EQ-style food/water gating</code></span></td>
 </tr>
 <tr>
 <td class="id">p2</td>
@@ -641,7 +721,7 @@
 <p class="lede">Every decision above, by the date it starts to block something.</p>
 <div class="scroll"><table><thead><tr><th>By</th><th>Decision</th><th>Who</th><th>Blocks</th></tr></thead><tbody>
 <tr><td class="time">Sun Oct 11</td><td class="what">Fix the rehearsal date (Saturday October 31 proposed). All four friends rehearse (user, 2026-10-07): dusty_avo, nakdeyes, zanath, delta; the user tells them on October 8. Ask them to accept the Tailscale share this month so the network part is done long before the build arrives.</td><td>user and planner</td><td class="needs">Every people row.</td></tr>
-<tr><td class="time">Mon Oct 19</td><td class="what">The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client stops connecting that evening, a week ahead, and sending the new zip within the hour.</td><td>user (the phone is fine)</td><td class="needs">Nothing now; the date is set. The telling is the people half.</td></tr>
+<tr><td class="time">Mon Oct 19</td><td class="what">The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client is refused at login from that evening (the host raises the minimum client version), a week ahead, and sending the new zip within the hour.</td><td>user (the phone is fine)</td><td class="needs">Nothing now; the date is set. The telling is the people half.</td></tr>
 <tr><td class="time">Sun Nov 1</td><td class="what">Trade range: keep 10 m or tighten it. Flagged as far when decided; the first trade sitting is the evidence.</td><td>user (the phone is fine)</td><td class="needs">Nothing. A one-constant change if it moves.</td></tr>
 <tr><td class="time">Sun Nov 8</td><td class="what">Phase 5&#x27;s four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in.</td><td>user and planner</td><td class="needs">The &quot;after the door opens&quot; list below becoming a dated plan.</td></tr>
 <tr><td class="time">Sun Nov 8</td><td class="what">docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it.</td><td>user</td><td class="needs">Nothing.</td></tr>
@@ -649,28 +729,20 @@
 <section><h2>Open rows this plan does not schedule</h2>
 <p class="lede">Read from the checklist folder when this page was generated. A recent one (touched in the last 30 days) needs a row above or a reason. An older one is a candidate for the week-5 triage, which decides whether it is retired, superseded, or worth a re-run.</p>
 <div class="scroll"><table><thead><tr><th>Last touched</th><th>Open</th><th>Passed</th><th>Skipped</th><th>Checklist</th></tr></thead><tbody>
-<tr><td class="time">2026-08-26</td><td class="time">1</td><td class="time">9</td><td class="time">0</td><td><a href="playtest_notes/proximity_gate_checklist.md"><code>proximity_gate_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-08-24</td><td class="time">2</td><td class="time">12</td><td class="time">1</td><td><a href="playtest_notes/silent_refusals_checklist.md"><code>silent_refusals_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-08-20</td><td class="time">1</td><td class="time">20</td><td class="time">0</td><td><a href="playtest_notes/inventory_desync_checklist.md"><code>inventory_desync_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-08-14</td><td class="time">5</td><td class="time">15</td><td class="time">0</td><td><a href="playtest_notes/respawn_bind_checklist.md"><code>respawn_bind_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-31</td><td class="time">2</td><td class="time">11</td><td class="time">0</td><td><a href="playtest_notes/login_rate_limit_checklist.md"><code>login_rate_limit_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-29</td><td class="time">2</td><td class="time">9</td><td class="time">2</td><td><a href="playtest_notes/swing_rate_limit_checklist.md"><code>swing_rate_limit_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-22</td><td class="time">1</td><td class="time">10</td><td class="time">1</td><td><a href="playtest_notes/cast_class_level_gate_checklist.md"><code>cast_class_level_gate_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-22</td><td class="time">6</td><td class="time">14</td><td class="time">0</td><td><a href="playtest_notes/regen_model_checklist.md"><code>regen_model_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-22</td><td class="time">7</td><td class="time">0</td><td class="time">0</td><td><a href="playtest_notes/spell_drift_life_drain_dark_shroud_checklist.md"><code>spell_drift_life_drain_dark_shroud_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-20</td><td class="time">1</td><td class="time">5</td><td class="time">0</td><td><a href="playtest_notes/attack_while_seated_checklist.md"><code>attack_while_seated_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-17</td><td class="time">2</td><td class="time">12</td><td class="time">1</td><td><a href="playtest_notes/quest_phase2_sliceB_checklist.md"><code>quest_phase2_sliceB_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-16</td><td class="time">1</td><td class="time">19</td><td class="time">1</td><td><a href="playtest_notes/dev_panel_modernization_checklist.md"><code>dev_panel_modernization_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-11</td><td class="time">17</td><td class="time">0</td><td class="time">0</td><td><a href="playtest_notes/gnome_model_checklist.md"><code>gnome_model_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-10</td><td class="time">2</td><td class="time">25</td><td class="time">0</td><td><a href="playtest_notes/quest_phase2_sliceA_checklist.md"><code>quest_phase2_sliceA_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-08</td><td class="time">2</td><td class="time">14</td><td class="time">0</td><td><a href="playtest_notes/quest_kill_credit_checklist.md"><code>quest_kill_credit_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-06</td><td class="time">2</td><td class="time">5</td><td class="time">0</td><td><a href="playtest_notes/quest_xp_retune_checklist.md"><code>quest_xp_retune_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-06-20</td><td class="time">18</td><td class="time">0</td><td class="time">0</td><td><a href="playtest_notes/camp_checklist.md"><code>camp_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-06-18</td><td class="time">2</td><td class="time">15</td><td class="time">0</td><td><a href="playtest_notes/banker_slice1_checklist.md"><code>banker_slice1_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-06-16</td><td class="time">14</td><td class="time">36</td><td class="time">1</td><td><a href="playtest_notes/group_loot_coin_checklist.md"><code>group_loot_coin_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-06-12</td><td class="time">20</td><td class="time">0</td><td class="time">0</td><td><a href="playtest_notes/item_weights_checklist.md"><code>item_weights_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-06-11</td><td class="time">1</td><td class="time">22</td><td class="time">0</td><td><a href="playtest_notes/currency_encumbrance_checklist.md"><code>currency_encumbrance_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-05-15</td><td class="time">4</td><td class="time">40</td><td class="time">2</td><td><a href="playtest_notes/track_6_post_fix_checklist.md"><code>track_6_post_fix_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">15</td><td class="time">0</td><td><a href="playtest_notes/banker_slice1_checklist.md"><code>banker_slice1_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">3</td><td class="time">0</td><td class="time">15</td><td><a href="playtest_notes/camp_checklist.md"><code>camp_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">1</td><td class="time">19</td><td class="time">1</td><td><a href="playtest_notes/dev_panel_modernization_checklist.md"><code>dev_panel_modernization_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">12</td><td class="time">0</td><td class="time">5</td><td><a href="playtest_notes/gnome_model_checklist.md"><code>gnome_model_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">7</td><td class="time">36</td><td class="time">8</td><td><a href="playtest_notes/group_loot_coin_checklist.md"><code>group_loot_coin_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">3</td><td class="time">0</td><td class="time">17</td><td><a href="playtest_notes/item_weights_checklist.md"><code>item_weights_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">14</td><td class="time">0</td><td><a href="playtest_notes/quest_kill_credit_checklist.md"><code>quest_kill_credit_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">1</td><td class="time">25</td><td class="time">1</td><td><a href="playtest_notes/quest_phase2_sliceA_checklist.md"><code>quest_phase2_sliceA_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">3</td><td class="time">14</td><td class="time">3</td><td><a href="playtest_notes/regen_model_checklist.md"><code>regen_model_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">1</td><td class="time">15</td><td class="time">4</td><td><a href="playtest_notes/respawn_bind_checklist.md"><code>respawn_bind_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">12</td><td class="time">1</td><td><a href="playtest_notes/silent_refusals_checklist.md"><code>silent_refusals_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">4</td><td class="time">0</td><td class="time">3</td><td><a href="playtest_notes/spell_drift_life_drain_dark_shroud_checklist.md"><code>spell_drift_life_drain_dark_shroud_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">9</td><td class="time">2</td><td><a href="playtest_notes/swing_rate_limit_checklist.md"><code>swing_rate_limit_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">40</td><td class="time">4</td><td><a href="playtest_notes/track_6_post_fix_checklist.md"><code>track_6_post_fix_checklist.md</code></a></td></tr>
 </tbody></table></div></section>
 <section><h2>After the door opens</h2>
 <p class="lede">Undated by the planner's choice. Status for each lives in the To-Do; phase 5's four decisions come first.</p>
@@ -705,5 +777,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-09 at repo 1700532</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-13 at repo 7728793</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

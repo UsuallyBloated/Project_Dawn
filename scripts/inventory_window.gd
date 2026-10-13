@@ -667,12 +667,11 @@ func _use_consumable(item: ItemData, index: int) -> void:
 	# broadcast on client-side data so a non-consumable doesn't
 	# round-trip just to be rejected.
 	if Net.is_launcher_mode():
-		if item.is_food:
+		# Food and water the EQ way: the server says "You eat a X." when it
+		# takes the item, or refuses with EQ's line when you are full, so no
+		# line is printed here (it would double or contradict the server's).
+		if item.is_food or item.is_drink:
 			Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)
-			CombatLog.add_line("You eat %s." % item.item_name, CombatLog.MsgType.INFO)
-		elif item.is_drink:
-			Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)
-			CombatLog.add_line("You drink %s." % item.item_name, CombatLog.MsgType.INFO)
 		elif item.heal_on_use > 0.0 or item.mp_on_use > 0.0:
 			Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)
 			CombatLog.add_line("You use %s." % item.item_name, CombatLog.MsgType.INFO)

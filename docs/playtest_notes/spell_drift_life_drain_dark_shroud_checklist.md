@@ -1,5 +1,9 @@
 # Ported Spells Re-test — Life Drain + Dark Shroud — 2026-07-22
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): the setup rows and the stock-client row retired; four casts worth a re-run (a Blood Mage and a Shadow Knight; ported_spells_checklist.md covered nine other spells, not these two).
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 25, 27, 30, 31 (line numbers as of the triage).
+
 Follow-up to the cast-gate playtest, which surfaced that a Blood Mage's **Life Drain** and a Shadow
 Knight's **Dark Shroud** did nothing (mana spent, "You cast X" in chat, no effect). Root cause was
 client/server spell drift: both existed only in the client `spell_definitions.gd`, so the server
@@ -18,8 +22,8 @@ Diagnostic: `server.log` should now show NO "unknown spell name ... spell=Life D
 lines for these casts.
 
 ## Setup
-- [ ] Restart server (release build)
-- [ ] Log a Blood Mage (>= level 6) and a Shadow Knight (>= level 10); have an enemy to hit
+- [-] Restart server (release build) triage 2026-10-12: RETIRED, a setup row.
+- [-] Log a Blood Mage (>= level 6) and a Shadow Knight (>= level 10); have an enemy to hit triage 2026-10-12: RETIRED, a setup row.
 
 ## 1 — Life Drain (Blood Mage lifetap)
 - [ ] **Cast Life Drain on an enemy** → enemy takes damage AND you heal (up to 20, capped at the
@@ -31,7 +35,7 @@ lines for these casts.
 - [ ] **`server.log` shows no "unknown spell ... Dark Shroud"** for this cast. notes:
 
 ## 3 — Regression: the cast gate still holds on the ported spells
-- [ ] **A non-Blood-Mage can't cast Life Drain / a non-Shadow-Knight can't cast Dark Shroud** (they
+- [-] **A non-Blood-Mage can't cast Life Drain / a non-Shadow-Knight can't cast Dark Shroud** (they triage 2026-10-12: RETIRED, marked likely skipped on a stock client.
   won't have it scribed on a stock client; this is the backstop) — no effect, no mana spent, and if
   forced, `server.log` logs `class/level not eligible`. notes: (likely `[-]` — stock client)
 

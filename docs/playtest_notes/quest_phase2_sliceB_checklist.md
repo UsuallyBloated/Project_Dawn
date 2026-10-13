@@ -1,5 +1,9 @@
 # Quest Phase 2 Slice B Playtest Checklist — 2026-07-10
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): two rows left, superseded by phase 4 (phase4_content_checklist.md section 1, four of four quests PASS; the To-Do says phase 4 is DONE + playtested 2026-09-27).
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: none (line numbers as of the triage).
+
 > **RECONCILED (Phase 0, 2026-07-17) — partial.** The `[-]` row 35 (rotfang_hunt turn-in) failed
 > on two specific complaints — "killing the dev-panel Rotfang grants no kill credit" and "Rotfang
 > drops the old golden orb". BOTH were closed by the dev-panel pass `5ae6808` (2026-07-16); see
@@ -34,7 +38,7 @@ line and the quest stays "Ready" so you can make room and retry (no item lost, n
 ## Setup
 - [x] Re-export Project_Dawn (3 new .tres present)
 - [x] Rebuild + restart server with `PD_DEV_CMDS=1`
-- [ ] A character that can accept wolf_threat from Aldric
+- [-] A character that can accept wolf_threat from Aldric triage 2026-10-12: SUPERSEDED, phase4_content_checklist.md section 1.
 
 ## 1 — Item reward lands on turn-in
 - [x] **Accept wolf_threat, kill 5 wolves, turn in at Aldric with free bag space** → a **Tarnished
@@ -67,7 +71,7 @@ line and the quest stays "Ready" so you can make room and retry (no item lost, n
 - [x] **Relog while it's equipped** → still equipped, stat still applied. notes: reloged, ring still equipped, stat not applied.
 
 ## 5 — Regression: no-reward quests unchanged
-- [ ] **Complete test_q1 (Test Panel) or rat_infestation** → XP only, no item, no "inventory full"
+- [-] **Complete test_q1 (Test Panel) or rat_infestation** → XP only, no item, no "inventory full" triage 2026-10-12: SUPERSEDED, phase4_content_checklist.md section 1.
   path triggered. notes:  Are you refering to the rotfang quest?  I dont know of a rat_infestation quest.
 - [x] **Normal loot still works** (kill a mob, loot a drop) → unaffected. notes:
 
