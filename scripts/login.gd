@@ -66,6 +66,7 @@ var _char_create_view: Control
 
 # Login widgets
 var _server_input: LineEdit
+var _invite_input: LineEdit
 var _username_input: LineEdit
 var _password_input: LineEdit
 var _login_status: Label
@@ -216,6 +217,14 @@ func _build_login_view() -> void:
 	_password_input.secret = true
 	_password_input.text_submitted.connect(_on_password_submitted)
 	v.add_child(_password_input)
+
+	# Only Register reads this; the hosted server refuses a registration
+	# without a code the operator minted (one code makes one account).
+	v.add_child(_make_label("Invite code (registering only)"))
+	_invite_input = LineEdit.new()
+	_invite_input.custom_minimum_size = Vector2(0, 36)
+	_invite_input.placeholder_text = "from the operator; leave empty to log in"
+	v.add_child(_invite_input)
 
 	v.add_child(_make_spacer())
 
@@ -399,7 +408,8 @@ func _send_or_queue(msg: Dictionary) -> void:
 		_set_status("Server host required")
 		return
 	_set_status("Connecting to %s..." % host)
-	if not AuthClient.connect_to("ws://%s" % host):
+	# ws for a local dev server, wss for anything else (NetProtocol.auth_url_for).
+	if not AuthClient.connect_to(NetProtocol.auth_url_for(host)):
 		_set_status("Failed to start connection")
 
 func _on_ws_connected() -> void:
@@ -426,6 +436,8 @@ func _on_message(msg: Dictionary) -> void:
 	match t:
 		NetProtocol.AUTH_REGISTER_OK:
 			_account_id = int(msg.get("account_id", -1))
+			# The code is spent; a second Register with it is refused anyway.
+			_invite_input.text = ""
 			_set_status("Account created. Logging in...")
 			AuthClient.send_msg(NetProtocol.make_login(
 				_username_input.text.strip_edges(), _password_pending))
@@ -469,7 +481,12 @@ func _on_message(msg: Dictionary) -> void:
 				# RequestWorldToken failed — re-enable Play so user can retry.
 				_play_pending = false
 				_play_btn.disabled = (_selected_char_id < 0)
-			_set_status("Error (%s): %s" % [code, emsg])
+			if code == NetProtocol.ERR_INVITE_INVALID:
+				# The server's line is the whole message ("An invite code is
+				# required to register." / "That invite code is not valid.").
+				_set_status(emsg)
+			else:
+				_set_status("Error (%s): %s" % [code, emsg])
 		_:
 			_set_status("Unknown message: %s" % t)
 
@@ -491,7 +508,7 @@ func _on_register_pressed() -> void:
 		_set_status("Username and password required")
 		return
 	_password_pending = p  # held for auto-Login on RegisterOk
-	_send_or_queue(NetProtocol.make_register(u, p))
+	_send_or_queue(NetProtocol.make_register(u, p, "", _invite_input.text.strip_edges()))
 
 func _on_password_submitted(_text: String) -> void:
 	_on_login_pressed()

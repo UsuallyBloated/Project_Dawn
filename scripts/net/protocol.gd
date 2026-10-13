@@ -36,13 +36,57 @@ const ERR_BANNED           := "banned"
 const ERR_INVALID_INPUT    := "invalid_input"
 const ERR_NOT_FOUND        := "not_found"
 const ERR_INTERNAL         := "internal"
+# Register needs an invite code, or the one given is unknown, spent or revoked.
+const ERR_INVITE_INVALID   := "invite_invalid"
+
+# ─── Auth: the socket's scheme ──────────────────────────────────────
+# docs/design/public_hosting_plan.md, slice 3. A local dev server has no
+# TLS, so these hosts keep plain ws; everything else is wss. The hosted
+# server sits behind Caddy on the TLS port, so a bare name needs no port.
+
+const LOCAL_AUTH_HOSTS: Array[String] = ["127.0.0.1", "localhost", "::1"]
+const LOCAL_AUTH_PORT := 8765
+const PUBLIC_AUTH_PORT := 443
+
+# The WebSocket URL for what was typed in the launcher's Server field. A
+# scheme typed by hand (`ws://` or `wss://`) is kept as is, which is how a LAN
+# or tailnet server without TLS is still reachable. Otherwise a local host
+# gets plain `ws` and the dev port when none was typed; any other host gets
+# `wss` (Godot verifies the certificate against its own CA bundle) and the TLS
+# port when none was typed, so a tester types just the server's name.
+static func auth_url_for(host: String) -> String:
+	var h := host.strip_edges()
+	if h.begins_with("ws://") or h.begins_with("wss://"):
+		return h
+	var name := h
+	var has_port := false
+	if h.begins_with("["):
+		# An IPv6 literal: "[::1]" or "[::1]:8765".
+		var close := h.find("]")
+		if close > 0:
+			name = h.substr(1, close - 1)
+			has_port = h.length() > close + 1 and h[close + 1] == ":"
+	elif h.count(":") == 1:
+		name = h.get_slice(":", 0)
+		has_port = true
+	elif h.count(":") > 1:
+		# A bare IPv6 literal without brackets; the URL needs them.
+		return "ws://[%s]:%d" % [h, LOCAL_AUTH_PORT] if h in LOCAL_AUTH_HOSTS \
+			else "wss://[%s]:%d" % [h, PUBLIC_AUTH_PORT]
+	if name in LOCAL_AUTH_HOSTS:
+		return "ws://%s" % h if has_port else "ws://%s:%d" % [h, LOCAL_AUTH_PORT]
+	return "wss://%s" % h if has_port else "wss://%s:%d" % [h, PUBLIC_AUTH_PORT]
 
 # ─── Auth: Client → Server builders ─────────────────────────────────
 
-static func make_register(username: String, password: String, email: String = "") -> Dictionary:
+static func make_register(username: String, password: String, email: String = "", invite: String = "") -> Dictionary:
 	var d := {"type": AUTH_REGISTER, "username": username, "password": password}
 	if email != "":
 		d["email"] = email
+	# Omitted when empty: the server treats a missing key and an empty string
+	# alike, and an old server ignores the key.
+	if invite != "":
+		d["invite"] = invite
 	return d
 
 static func make_login(username: String, password: String, client_version: String = CLIENT_VERSION) -> Dictionary:

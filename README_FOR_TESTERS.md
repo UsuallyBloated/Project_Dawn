@@ -18,27 +18,14 @@ rough edges are real and the point of this build is to find them.
 
 ---
 
-## Step 0: Tailscale (you cannot connect without this)
+## Step 0: your invite code (you cannot register without it)
 
-The server is not on the public internet. It sits on a private network called a **tailnet**,
-and you have to join it before the game can reach it.
+The server is on the public internet now, so there is nothing to install or join first.
+What you need instead is an **invite code**: 32 letters and digits, sent to you with this
+build. One code makes one account. Type it on the login screen the first time, when you
+register; after that you only log in, and the code is spent.
 
-1. Ask the operator for an invite to the tailnet. You will get an email or a link.
-2. Install Tailscale from **https://tailscale.com/download** (Windows).
-3. Sign in with whatever account the invite went to, and accept.
-4. Leave it running. The tray icon should say you are connected.
-
-To check it worked, open PowerShell and run:
-
-```
-ping 100.93.108.112
-```
-
-Replies mean you are on. Timeouts mean Tailscale is not connected, and nothing below will
-work until it is.
-
-> Tailscale only carries traffic to this tailnet. It is not a VPN for your general browsing
-> and it does not route the rest of your internet through anything.
+If you did not get a code, or yours is refused, ask the operator for one.
 
 ---
 
@@ -70,15 +57,12 @@ you are asked for it while chasing a bug.
 
 You land on a **login screen**.
 
-1. **Server**: it defaults to `127.0.0.1:8765`, which is wrong for you. Replace it with:
-
-   ```
-   100.93.108.112:8765
-   ```
-
-   It is remembered after the first time.
-2. **Register** with a username and password. This creates your account and logs you
-   straight in. Use **Login** on later visits.
+1. **Server**: it defaults to `127.0.0.1:8765`, which is wrong for you. Replace it with the
+   server name that came with this build (it looks like `something.duckdns.org`; no port
+   needed). It is remembered after the first time.
+2. **Register** with a username, a password and your **invite code**. This creates your
+   account and logs you straight in. Use **Login** on later visits, with the invite field
+   empty.
 3. **Create a character.** Names accept **letters, apostrophes and backticks only**, 2 to 24
    characters. Digits, spaces and punctuation are rejected.
 4. Pick a race and class, create, then hit **Play**.
@@ -206,8 +190,13 @@ feels wrong. We want all of it.
 
 ## Troubleshooting
 
-**Cannot reach the server / login fails immediately.** Tailscale is almost certainly not
-connected. Check the tray icon and re-run the `ping` from Step 0.
+**Cannot reach the server / login fails immediately.** Check the Server field for a typo
+against the name that came with the build, and that your internet works at all. If it
+still fails, report it with the time: the server may be restarting (it says so in chat
+when it does, and comes back within a minute).
+
+**"That invite code is not valid."** Codes are long and easy to mistype; paste it. A code
+works exactly once, so if you already registered with it, use **Login** instead.
 
 **Login and character select work, then Enter World hangs.** That is the network path for
 the game world specifically. Report it, and mention that login worked, which narrows it down
