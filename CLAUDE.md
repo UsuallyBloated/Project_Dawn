@@ -2182,6 +2182,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   real `SpellDefinitions.ALL`, so the two files can be verified without trusting or running
   the stale exporter. It found the files in step. The exporter itself is still stale, and the
   items pair (`items.toml` vs the `.tres` files) has no check yet; the same shape would do.
+  **Items half answered the same way, 2026-10-12:** `tools/check_item_lockstep.gd` compares all 172
+  `.tres` items with `items.toml` through `export_items.gd`'s own field map and the server's serde
+  defaults (proc fields compared only on items that proc). First run: one drift, the Arrow
+  Bundle's stack (200 on the server, 20 in the `.tres`), fixed in the TOML the same day (server
+  `93f5360`); the exporter itself stays stale and unrun. Both checks are in `commands.md`.
 - [ ] **Docs debt** *(audit 2026-09-29)*: `server/README.md` is "badly stale" (still claims the
   world sim is unbuilt, per `deployment_linux.md`); `server/docs/flaky_integration_tests.md`
   still describes the flaky trio the 09-16 fix retired; `docs/concepts/passive_skills/*` says
