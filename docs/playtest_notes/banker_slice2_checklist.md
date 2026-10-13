@@ -52,6 +52,7 @@ Potion, both stack to 10).
 - [x] **With A logged in, log in B on the same account (do not log A out first)** then B's login is REFUSED with "You already have a character in this world." shown in the lobby, and A keeps playing, undisturbed. notes:
 - [x] **Log A out cleanly, then log in B on the same account** then B connects normally (a clean logout frees the account at once). notes:
 - [x] **Kill A's client (unclean), then immediately try to log back in** then login is refused until A's stale session times out, then succeeds (known deny-on-duplicate tradeoff). notes:  Killed A's client, then immediately logged back in successfully.  
+  Triage 2026-10-13: the note does not reproduce against the current server. The integration test `an_unclean_drop_refuses_relogin_until_the_body_is_reaped` (server `f58b796`) runs this row on the server's own timers: the second handshake is ignored for the 10 s until the heartbeat timeout, then refused with a DuplicateLogin kick and a countdown for the 30 s linger, then accepted; knocking through the window does not extend it.
 
 ## 4. Edge cases
 - [x] **Try to deposit a bag (an item that holds other items)** then rejected ("Bags can't go in the bank vault."). notes: Tried with dev command "Give Bags"  Worn Satchel and Small Pouch both tested.  Also noticing that left-click is opening the bags, when it should be right-click, but these bags were created before we did the recent work on the inventory/cursor/bank.

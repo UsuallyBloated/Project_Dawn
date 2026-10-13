@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Oct 13<span class="stat-sub">repo 7728793</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Oct 13<span class="stat-sub">repo 46e372f</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">18 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">46.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">46.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -306,7 +306,7 @@
 <td><span class="chip build">Build</span></td>
 <td class="what"><span class="day">Oct 12</span>Public hosting, slices 1 to 3 (docs/design/public_hosting_plan.md): the login socket hardened for a public port, invite codes and the invite tool, the world address as a name with a clean restart when it moves, intent budgets; the client connecting over wss with an invite field. Built on feat/public-hosting in both repos, off the deploy branches until cutover.</td>
 <td>Claude unattended</td>
-<td class="needs"><ul><li>checklist public_hosting_checklist.md: 26 rows to run</li></ul></td>
+<td class="needs"><ul><li>checklist public_hosting_checklist.md: 27 rows to run</li></ul></td>
 <td class="time">1.5 Claude days</td>
 <td class="id"></td>
 <td class="done">Both suites green on feat/public-hosting and pushed; the To-Do entry says BUILT. Done only when public_hosting_checklist.md is filled on cutover day.<span class="ref">checklist: <a href="playtest_notes/public_hosting_checklist.md"><code>public_hosting_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Public-host hardening checklist (mandatory before any exposure beyond Tailscale)</code></span></td>
@@ -376,7 +376,7 @@
 <section>
 <h2><span class="week-head"><span>One evening when every client changes</span><span class="when">W3 &middot; October 19 to 25</span></span></h2>
 <p class="lede">Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the four friends receive their first zip from this build and never need another.</p>
-<div class="week-meta"><span>the user's time: 17 h</span><span>Claude build days: 4.5</span></div>
+<div class="week-meta"><span>the user's time: 17.5 h</span><span>Claude build days: 4.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -454,8 +454,8 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>The trade window: offer, accept, every edit clears both accepts, nothing leaves a bag until the commit, the ten exploit cases refuse.</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist trade_window_checklist.md (on branch feat/trade-window until the merge): 20 rows to run</li><li>second seat (two-boxing works)</li></ul></td>
-<td class="time">2 h</td>
+<td class="needs"><ul><li>checklist trade_window_checklist.md (on branch feat/trade-window until the merge): 21 rows to run</li><li>second seat (two-boxing works)</li></ul></td>
+<td class="time">2.5 h</td>
 <td class="id">o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/trade_window_checklist.md"><code>trade_window_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Trade window</code></span></td>
 </tr>
@@ -514,7 +514,7 @@
 <td><span class="chip verify">Verify</span><span class="chip tent">tentative</span></td>
 <td class="what">Cutover evening: redeploy from the hosting branch, export, an invite per tester, the zip and the code sent, the Tailscale shares removed, the minimum client version raised; then the cutover checklist with a tester outside the home network. Candidate: the Oct 22 bump day, so testers change clients once.</td>
 <td>user, one tester outside</td>
-<td class="needs"><ul><li>checklist public_hosting_checklist.md: 26 rows to run</li></ul></td>
+<td class="needs"><ul><li>checklist public_hosting_checklist.md: 27 rows to run</li></ul></td>
 <td class="time">2.5 h</td>
 <td class="id">oh4</td>
 <td class="done">public_hosting_checklist.md filled.<span class="ref">checklist: <a href="playtest_notes/public_hosting_checklist.md"><code>public_hosting_checklist.md</code></a></span></td>
@@ -777,5 +777,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-13 at repo 7728793</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-13 at repo 46e372f</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>
