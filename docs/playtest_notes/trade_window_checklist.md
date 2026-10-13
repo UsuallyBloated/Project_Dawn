@@ -54,6 +54,10 @@ a single atomic commit. Design + the exploit ledger this list follows:
       merges, then both accept) → refused, the bread leaves your trade window with "An
       item you offered changed...", the partner sees "Their offer changed..."; offer it
       again and the trade goes through with the new count. notes:
+- [ ] **Offered food is not auto-eaten**: run a character nearly out of food (or ask for it
+      to be set on the host), offer its only bread in a trade, and let the food run out →
+      the bread stays in the trade window (the character goes hungry rather than eat an
+      offer). notes:
 - [ ] **Request from afar**: request a trade with a player more than 10 m away →
       "There is no one here to trade with." (the same line as for nobody). notes:
 
