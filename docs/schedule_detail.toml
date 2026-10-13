@@ -573,6 +573,18 @@ checklist = "public_hosting_checklist.md"
 todo = "Public-host hardening checklist (mandatory before any exposure beyond Tailscale)"
 
 [[row]]
+id = "v18"
+week = "w3"
+lane = "verify"
+what = "After the bump-day redeploy: leave dead with the window X, log back in, same XP and one corpse (the double death the 2026-10-12 review found); the lossy-link row only if a hotspot is handy."
+who = "user, one seat"
+hours = 0.5
+waits_on = ["o4"]
+done_when = "Every row filled."
+checklist = "dead_relogin_and_resend_checklist.md"
+todo = "A dead character died again on relogin, and lost reliable packets were never resent"
+
+[[row]]
 id = "oh0"
 week = "w3"
 lane = "operate"
@@ -606,6 +618,30 @@ waits_on = ["oh4"]
 tentative = true
 done_when = "public_hosting_checklist.md filled."
 checklist = "public_hosting_checklist.md"
+
+[[row]]
+id = "b11"
+week = "w2"
+lane = "build"
+day = "Oct 13 to 16"
+what = "Food and water the EQ way, slice 1 (docs/design/food_and_water.md, decided 2026-10-13): hunger and thirst counters persisted on the character, the drain per race, the server eating the first food in slot order when a counter empties, the stages and their lines, the regen gate, hand-eating by EQ's rules, a HungerUpdate to the owner. Server half plus the chat lines; the window follows its own note. One protocol bump, so it rides the Oct 22 bump day."
+who = "Claude unattended"
+days = 2.5
+done_when = "Reported built with its checklist written and the review pass run; merged for the bump day."
+todo = "EQ-style food/water gating"
+
+[[row]]
+id = "v19"
+week = "w3"
+lane = "verify"
+what = "Food and water after the bump day: eating and drinking happen on their own and say so, the hungry and out-of-food lines come once each, no regen when out and regen back after eating, hand-eat refused when full and halved when early, slot order through a bag, the state survives a relogin, the dead do not starve."
+who = "user, one seat"
+hours = 1.5
+waits_on = ["b11", "o4"]
+tentative = true
+done_when = "Every row filled."
+checklist = "food_and_water_checklist.md"
+todo = "EQ-style food/water gating"
 
 [[row]]
 id = "b7"

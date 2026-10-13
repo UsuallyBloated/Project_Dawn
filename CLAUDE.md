@@ -1312,7 +1312,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   the wss rule would stop the tailnet testers connecting, and the migration means an older
   binary cannot boot on the migrated `world.db`. Still later, by the plan: a per-account
   login budget is in; position-anomaly logging, the nightly dupe query, the client
-  integrity hash and input replays are not.
+  integrity hash and input replays are not. **Reviewed 2026-10-12** (server `72fa214`,
+  client `9a43c33`; session note §6): the account and global caps were lockout levers
+  (one address could keep an owner out indefinitely, two dozen could refuse every login),
+  closed by exempting the source an account last logged in from and refunding a success;
+  every auth send under the idle timeout; canonical addresses; wider intent budgets; the
+  launcher keeps its session across the idle close. The review also found two bugs older
+  than the branch, fixed on the deploy branch as their own entry (Death / corpses).
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -1485,6 +1491,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   call, flagged for the user:** quest kill-credit takes the alive filter but NOT the range
   gate — the decision covered XP shares, and range-gating journal ticks would silently change
   quest play; say the word if journal ticks should be range-gated too.
+- [ ] **A dead character died again on relogin, and lost reliable packets were never resent**
+  *(both found 2026-10-12 by the review of the hosting branch; both older than it; **BUILT
+  the same day on the deploy branch, pending redeploy + playtest**: server `6a09aa1` +
+  `645606a`, `dead_relogin_and_resend_checklist.md`)*. (a) `from_spawn` set `death_processed: false`
+  for every spawn, so a character persisted at 0 HP (a crash, a window-X, a restart while
+  dead) was killed again by the death sweep on its first tick back: a second XP penalty and
+  a second, empty corpse. Now `death_processed: spawn.hp <= 0.0`; Respawn still works (it
+  gates on that flag); the client learns it is dead from the HP seed as before. The
+  integration test fails on the old code at the XP assertion. (b) The world loop never
+  called `RenetServer::update`, the only place renet's per-connection clock moves, and its
+  reliable channels resend a lost packet only when that clock passes the resend time: a
+  lost inventory delta, chat line, kick or teleport was never resent. Invisible on a
+  lossless tailnet; on the internet it would have read as random desyncs. Called every
+  tick now. No client change for either.
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
@@ -2179,6 +2199,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   drinking a second Water Flask while the first still works is refused rather than wasted
   (Water Flask: 180 s). Confirmed in play that stacking flasks does not stack the regen.
   Belongs with the server-side consumables pass; consumable effects are client-side today.
+  **Traced and stopgapped 2026-10-12** (server `a9219b9`, pending redeploy;
+  `dead_relogin_and_resend_checklist.md` §3): the server DID refuse a second drink while one
+  ran, but the mana-only leg of the drink buff is named `Drink MP: X` and the check looked
+  only for `Drink: X`, so a Water Flask (mana only) was taken again. Both names are checked
+  now. **Superseded in shape by the EQ food and water design above**, where eating by hand
+  when full is refused with EQ's own line and nothing is ever "wasted" by stacking.
 - [ ] **Bookbinding / player-authored lore**
 - [ ] **Clockwork Engineering prestige** (Tinkering 150+ for Gnomes/Kobolds)
 
@@ -2189,7 +2215,51 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   batch's first step.
 - [ ] **EQ-style food/water gating** — food/water should gate base HP/MP regen (no food =
   no regen) instead of stacking as additive buffs; passive consumption from inventory,
-  no buff-bar entry
+  no buff-bar entry. **DIRECTION CONFIRMED 2026-10-12 (user): "Our food and water system
+  needs to work like EQ. Instead of like quick consumables." DESIGNED 2026-10-12:
+  `docs/design/food_and_water.md`** (EQ's rules from the Project 1999 wiki and forums and
+  EQEmulator: hunger and thirst counters, the first food in slot order eaten by itself when
+  the counter empties, sizes in 144 s units, stages with "You are hungry." and the explode
+  line, no HP or mana regen when out, nobody dies of it; the design, an eight-point exploit
+  ledger, three slices). **Six decisions wait on the user (§7)**: the scale (a Bread Loaf as a
+  20-minute meal, a 2-hour cap), what stops when famished, race timing, the hand-eat rules,
+  Summon Food/Drink for Mag/Cle/Dru, the HUD form. Slice 1 needs one protocol bump
+  (`HungerUpdate`), so it rides a bump day. Supersedes the buff model in
+  `docs/concepts/tradeskills/consumables.md` "The Regen Loop".
+  **ALL SIX DECIDED 2026-10-13 (user), recorded in §7:** EQ's own pace (a Bread Loaf is a
+  48-minute meal, a Water Flask a 36-minute drink, the cap 4 hours); no food stops HP regen,
+  no water stops mana regen, either stops stamina; the drain is per race (Human 1.0,
+  Halfling 2.0 from the sources, the rest 1.0 with Ogre/Troll 1.5 and Fae 0.75 as our own
+  flagged calls); hand-eating by EQ's rules exactly; **Summon Food/Drink corrected on the
+  user's challenge** (one item per cast; Magician 1, Cleric and Shaman in the single digits,
+  Druid 10 to 14; stacks only from Magician 21/22 and Cleric 29/33) for slice 2; the bars in
+  their own small window (two icons beside a progress bar), planned as a note before the
+  client half is built. Build-ready: slice 1 is the server half plus the chat lines, aimed
+  at the Oct 22 bump day.
+  **Slice 1 BUILT 2026-10-13, pending review, merge and playtest** (server
+  `feat/food-and-water` `40d9f03`, client `7728793`; `food_and_water_checklist.md`, 20
+  rows; no wire change, so it needs the redeploy and the export but no bump). What exists:
+  `world/hunger.rs` (the counters in seconds of fullness, EQ's 144 s unit, a 4-hour cap,
+  the per-race drain, the three stages told once each, the first-in-slot-order search,
+  `feed`), migration `0013_hunger.sql` (every existing character full), persistence with
+  the resource checkpoint and the reap, the drain and auto-eat at the regen step for the
+  living in the world (the dead and the lobby do not drain; a famished character eats the
+  tick it runs out, fans the delta and is told "You eat a Bread Loaf."), the regen gate
+  (`regen::natural_regen_allowed`: food for HP, water for mana, both for stamina), the
+  UseConsumable arm under EQ's hand-eat rules (refused when full with the explode line,
+  half size when early), the food and drink buffs deleted. Bread Loaf 2880 s, Water Flask
+  2160 s on both sides (the item lockstep check is green). Tests: unit (drain by race, the
+  immune Revenant, the stage lines, the cap, slot order through bags and past a held bag)
+  and integration (base slot before pouch and regen back, out of food means no HP regen
+  while the dead do not drain, the full refusal and the halved hand-eat).
+  **Reviewed 2026-10-13** (session note §3): a forged `race: "Revenant"` at creation was
+  starvation-immune for life (the transformation's stat block was reachable;
+  `create_character` validated only the name), closed by `char_data::CREATION_RACES` and
+  `PLAYABLE_CLASSES` refusing anything off the creation lists, with the immunity no longer
+  keyed on the race; meditate skill-ups gated on water; the eat runs before the stage
+  lines; a famished login is told its stage; the server narrates a hand-eat and the client
+  stopped (`6b63ffe`). Accepted residual: one loaf per character per crash between the
+  resource and store writes. Merge into the deploy branch next, then the Oct 22 redeploy.
 - [ ] **Exporter drift** *(the "Known drift" note names `tools/export_spells.gd` as stale; the
   2026-07-10 session flagged the `items.toml` exporter emitting `weapon_delay` /
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both

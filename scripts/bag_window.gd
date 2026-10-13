@@ -374,12 +374,9 @@ func _use_consumable(item: ItemData, index: int) -> void:
 	# inventory_window arm; see the comment there for the full
 	# rationale.
 	if Net.is_launcher_mode():
-		if item.is_food:
+		# The server narrates a hand-eat (see inventory_window.gd).
+		if item.is_food or item.is_drink:
 			Net.broadcast_use_consumable(NetProtocol.inv_location_bag(bag_index), index)
-			CombatLog.add_line("You eat %s." % item.item_name, CombatLog.MsgType.INFO)
-		elif item.is_drink:
-			Net.broadcast_use_consumable(NetProtocol.inv_location_bag(bag_index), index)
-			CombatLog.add_line("You drink %s." % item.item_name, CombatLog.MsgType.INFO)
 		elif item.heal_on_use > 0.0 or item.mp_on_use > 0.0:
 			Net.broadcast_use_consumable(NetProtocol.inv_location_bag(bag_index), index)
 			CombatLog.add_line("You use %s." % item.item_name, CombatLog.MsgType.INFO)

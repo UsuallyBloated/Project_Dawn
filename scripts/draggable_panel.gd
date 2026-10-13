@@ -195,16 +195,32 @@ func _append_stat_lines(item: ItemData, lines: Array) -> void:
 		lines.append("Use: Restores %d HP" % int(item.heal_on_use))
 	if item.mp_on_use > 0.0:
 		lines.append("Use: Restores %d MP" % int(item.mp_on_use))
+	# Food and water the EQ way (docs/design/food_and_water.md): an item's
+	# `food_duration` is how long it feeds you for, not a buff. Named by EQ's
+	# tiers, with the real minutes alongside.
 	if item.is_food and item.food_duration > 0.0:
-		var parts: Array[String] = []
-		if item.food_hp_regen > 0.0: parts.append("%d HP" % int(item.food_hp_regen))
-		if item.food_mp_regen > 0.0: parts.append("%d MP" % int(item.food_mp_regen))
-		lines.append("Eat: +%s/tick for %ds" % ["/".join(parts), int(item.food_duration)])
+		lines.append("Food: %s (%d min)" % [_food_tier_name(item.food_duration, true), int(item.food_duration / 60.0)])
 	if item.is_drink and item.food_duration > 0.0:
-		var parts: Array[String] = []
-		if item.food_hp_regen > 0.0: parts.append("%d HP" % int(item.food_hp_regen))
-		if item.food_mp_regen > 0.0: parts.append("%d MP" % int(item.food_mp_regen))
-		lines.append("Drink: +%s/tick for %ds" % ["/".join(parts), int(item.food_duration)])
+		lines.append("Drink: %s (%d min)" % [_food_tier_name(item.food_duration, false), int(item.food_duration / 60.0)])
+
+# EQ's size names, by `food_duration` in seconds (one EQ unit is 144 s): a
+# snack is up to 5 units, a meal 6 to 20, a hearty meal 21 to 30, a banquet 31
+# to 40, a feast 41 to 50, an enduring meal 51 to 60, a miraculous meal beyond.
+static func _food_tier_name(duration_secs: float, is_food: bool) -> String:
+	var units := duration_secs / 144.0
+	if units <= 5.0:
+		return "a snack" if is_food else "a whistle wetter"
+	if units <= 20.0:
+		return "a meal" if is_food else "a drink"
+	if units <= 30.0:
+		return "a hearty meal" if is_food else "a refreshing drink"
+	if units <= 40.0:
+		return "a banquet" if is_food else "a lasting drink"
+	if units <= 50.0:
+		return "a feast" if is_food else "a flowing drink"
+	if units <= 60.0:
+		return "an enduring meal" if is_food else "an enduring drink"
+	return "a miraculous meal" if is_food else "a miraculous drink"
 
 func _find_meta_child(parent: Node, meta_key: String) -> Node:
 	for child in parent.get_children():
