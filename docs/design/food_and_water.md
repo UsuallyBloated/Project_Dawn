@@ -297,3 +297,20 @@ visibly between sends or step once a minute: proposed tick, as above. (d) Whethe
 hand-eat refusal flashes the bar: proposed yes, a brief flash on the full bar, with EQ's
 line in chat as now. (e) Icons: two from the existing item icons, or two glyphs; proposed
 glyphs until the art pass.
+
+**DECIDED 2026-10-13 (user):**
+- (a) Default position: directly below the character's information bar window.
+- (b) Never hidden, full bars included.
+- (c) The bars tick down between sends, as proposed; may change later.
+- (d) The user asked whether EQ's eating message was "takes a bit of a ration", for its
+  roleplay value. Checked against EQEmu's string table (`zone/string_ids.h`): EQ shows the
+  people around you `Chomp, chomp, chomp... %1 takes a bite from a %2.` and
+  `Glug, glug, glug... %1 takes a drink from a %2.` (`EATING_MESSAGE`, `DRINKING_MESSAGE`).
+  Player logs also show the eater's own lines as "You take a bite of Iron Ration." followed
+  by "Ahhh. That was tasty." Build shape: the eater keeps their own line; players within say
+  range get EQ's emote naming the eater and the item, on auto-eats and hand-eats alike. It
+  rides the existing System chat line, so it needs no protocol change. The refusal flash
+  this question originally asked about is left as proposed (a brief flash on the full bar)
+  unless the user says otherwise.
+- (e) Glyphs for now; icons with the art pass.
+
