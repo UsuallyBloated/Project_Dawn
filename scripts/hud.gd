@@ -1618,6 +1618,29 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line("Loot mode set to %s." % ("Free-for-all" if ffa else "Round Robin"), CombatLog.MsgType.INFO)
 			return
 
+	# Round trip to the world server, from the wire layer's own ack timing (the
+	# UDP path the game plays on, smoothed), with renet's packet-loss estimate.
+	# So a tester on the public host can report a number instead of "it feels
+	# laggy"; the server logs the same figures per player once a minute as a
+	# `player link` line. Not GM-gated, for the same reason as /version.
+	if lower == "/ping" or lower == "/latency":
+		if not Net.is_app_ready():
+			CombatLog.add_line("Not connected to a world server.", CombatLog.MsgType.INFO)
+			return
+		var rtt_ms := Net.get_rtt_ms()
+		if rtt_ms < 0.0:
+			CombatLog.add_line(
+				"This build's gdext_net.dll predates /ping (rebuild it with addons/gdext_net/build.ps1).",
+				CombatLog.MsgType.INFO,
+			)
+			return
+		CombatLog.add_line(
+			"Round trip to the server: %d ms, packet loss %d%%."
+				% [roundi(rtt_ms), roundi(maxf(Net.get_packet_loss(), 0.0) * 100.0)],
+			CombatLog.MsgType.INFO,
+		)
+		return
+
 	# Report which client build this is. The server stamps its own commit onto the
 	# boot line; this is the client half, and it is the quickest way to confirm a
 	# tester actually installed the build we sent them rather than re-running an

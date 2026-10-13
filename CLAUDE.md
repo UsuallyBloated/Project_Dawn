@@ -1319,6 +1319,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   every auth send under the idle timeout; canonical addresses; wider intent budgets; the
   launcher keeps its session across the idle close. The review also found two bugs older
   than the branch, fixed on the deploy branch as their own entry (Death / corpses).
+  **Latency readout BUILT 2026-10-13, pending the export** (on the DEPLOY branches, server
+  `a18e355`, client `f6aa0ff`; `public_hosting_checklist.md` §1 has its row; session note §5).
+  Asked for after the user's "keeping latency in mind?" question: `/ping` prints renet's
+  smoothed round trip and packet-loss estimate for the world connection (the DLL's new
+  `rtt_ms` / `packet_loss`, called by name so a stale DLL costs the command, not `Net`), the
+  server logs a `player link` line per player once a minute, and `tools/check_wire_layer.gd`
+  says whether a checkout's DLL carries what `Net` calls by name. Needs the DLL rebuild the
+  Oct 22 export already carries; the server half rides the next redeploy.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
