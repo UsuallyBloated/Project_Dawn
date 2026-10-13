@@ -2208,6 +2208,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Summon Food/Drink for Mag/Cle/Dru, the HUD form. Slice 1 needs one protocol bump
   (`HungerUpdate`), so it rides a bump day. Supersedes the buff model in
   `docs/concepts/tradeskills/consumables.md` "The Regen Loop".
+  **ALL SIX DECIDED 2026-10-13 (user), recorded in §7:** EQ's own pace (a Bread Loaf is a
+  48-minute meal, a Water Flask a 36-minute drink, the cap 4 hours); no food stops HP regen,
+  no water stops mana regen, either stops stamina; the drain is per race (Human 1.0,
+  Halfling 2.0 from the sources, the rest 1.0 with Ogre/Troll 1.5 and Fae 0.75 as our own
+  flagged calls); hand-eating by EQ's rules exactly; **Summon Food/Drink corrected on the
+  user's challenge** (one item per cast; Magician 1, Cleric and Shaman in the single digits,
+  Druid 10 to 14; stacks only from Magician 21/22 and Cleric 29/33) for slice 2; the bars in
+  their own small window (two icons beside a progress bar), planned as a note before the
+  client half is built. Build-ready: slice 1 is the server half plus the chat lines, aimed
+  at the Oct 22 bump day.
 - [ ] **Exporter drift** *(the "Known drift" note names `tools/export_spells.gd` as stale; the
   2026-07-10 session flagged the `items.toml` exporter emitting `weapon_delay` /
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both

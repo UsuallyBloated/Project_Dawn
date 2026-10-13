@@ -1,6 +1,7 @@
 # Food and water, the EverQuest way
 
-> **Status: DESIGNED 2026-10-12, decisions pending (section 7).** The user's direction of
+> **Status: DESIGNED 2026-10-12; ALL SIX DECIDED 2026-10-13 (user), build-ready as slice 1
+> (section 7 carries the decisions; section 5 the slices).** The user's direction of
 > 2026-10-12: "Our food and water system needs to work like EQ. Instead of like quick
 > consumables." This replaces the buff model the consumables design assumed
 > (`docs/concepts/tradeskills/consumables.md` "The Regen Loop") and the To-Do item
@@ -150,8 +151,9 @@ them and the two windows' offline eat paths are deleted.
   runs.
 - **Slice 1, the system (server + client, one protocol bump for `HungerUpdate`):** the two
   counters with migration `0013_hunger.sql`, persistence in the resource checkpoint and the
-  reap, the drain in the world loop, the eat check, the three stages and their lines, the
-  regen gate, the hand-eat rules, the client indicators, the deletions. Tests: the drain and
+  reap, the drain in the world loop with the per-race multiplier, the eat check, the three
+  stages and their lines, the regen gate, the hand-eat rules, the client's deletions and a
+  minimal state (the chat lines; the window follows its own note, decision 6). Tests: the drain and
   the stage lines (unit), the auto-eat picking slot order through bags (integration), the
   regen gate (integration: a famished character's HP does not rise out of combat, a fed
   one's does), the hand-eat refusal at the cap and the halving, persistence across a
@@ -168,7 +170,39 @@ say so, the bars update, the hungry and out-of-food lines come once each, no reg
 regen back after eating, hand-eat refused when full, hand-eat halves, slot order through a
 bag, the state survives a relogin, the dead do not starve, the Revenant is immune.
 
-## 7. Decisions for the user
+## 7. Decisions, all made 2026-10-13 (user)
+
+1. **The scale: EQ's own pace.** One unit is 144 s. Bread Loaf = a meal of 20 units (48
+   minutes); Water Flask = a drink of 15 units (36 minutes, the size of EQ's summoned Globe
+   of Water); the cap 100 units (4 hours); "You are hungry." at 12 units left (about 30
+   minutes); out at 0. A three-hour evening is four loaves and five flasks.
+2. **What stops when famished: EQ's split.** No food stops HP regen, no water stops mana
+   regen, either stops stamina regen.
+3. **Race timing: EQ drains by race.** The drain gets a per-race multiplier. What the
+   sources give: a Human reaches the final stage after about 3 hours without a meal, a
+   Halfling after about 90 minutes (the P99 wiki), so Human 1.0 and Halfling 2.0. No source
+   found for the other races; they start at 1.0, with two of our own (not EQ's) calls flagged
+   for the user: Ogre and Troll at 1.5 (big eaters in the lore), Fae at 0.75. One table in
+   `data/races.toml` beside the camps, read at the drain.
+4. **Hand-eating: EQ's rules exactly.** Refused when full with EQ's line; half size when
+   early; the first food in slot order is what the character eats on its own.
+5. **Summon Food and Summon Drink: corrected.** The first draft said "Mag, Cle, Dru at level
+   1, a stack of 20", which was wrong, as the user suspected. The data: **Summon Drink** is
+   Magician 1 (10 mana, 4 s, ONE Globe of Water per cast), Cleric 3 to 5, Shaman 2 to 5,
+   Druid 10 to 14 depending on the era's data; **Summon Food** is Magician 1, Cleric 9,
+   Shaman 9, Druid 14, one Black Bread ("This is a meal!") per cast. Stacks come much later:
+   Cornucopia (Magician 21, 20 breads), Everfount (Magician 22, 20 globes), Abundant Food
+   and Abundant Drink (Cleric 29 to 33, four each). Decided: slice 2 gets Summon Drink and
+   Summon Food at those levels for Magician, Cleric, Shaman and Druid, one item per cast,
+   with the item sizes above; the stack spells wait for the content pass.
+6. **The bars: its own UI window, planned first.** Two small icons (food, drink) each beside
+   a progress bar showing the character's current hunger and thirst, in its own small
+   movable window like the group and pet panels; colour per stage. The user wants it planned
+   rather than sent at once, so slice 1 ships the server half and the chat lines, and the
+   window's design (size, placement, what the bar reads, whether it hides when full) is a
+   short note for the user before the client half is built.
+
+## 7a. The questions as they were asked (for the record)
 
 1. **The scale.** EQ's unit is 144 s. Proposed: `Bread Loaf` = a meal of 20 minutes
    (1200 s), `Water Flask` = a drink of 20 minutes; the cap 2 hours; `HUNGRY_AT` 10 minutes
@@ -192,6 +226,13 @@ bag, the state survives a relogin, the dead do not starve, the Revenant is immun
 
 ## Sources
 
+- Project 1999 wiki, Summon Drink / Summon Food / Cornucopia / Everfount pages (via search
+  summaries; the wiki refused direct fetches), Al'Kabor spell data
+  https://lucy.alkabor.com/spell_50.html (Summon Food: CLR/9 DRU/14 SHM/9 MAG/1, 10 mana,
+  4.00 cast, one Black Bread) and https://lucy.alkabor.com/spell_52.html (Abundant Drink),
+  Allakhazam https://everquest.allakhazam.com/db/spell.html?spell=53 (Abundant Food, CLR 33)
+  and ?spell=55 (Cornucopia, MAG 21), and the Allakhazam magician spell list (Summon Drink
+  CLR/3 DRU/10 SHM/2 MAG/1; Everfount MAG/22): the summon line, decision 5.
 - Project 1999 wiki, Food and drink: https://wiki.project1999.com/Food_and_drink (the
   stages, "hit-points and mana will no longer regenerate", the explode line, race timing;
   the page reset twice on fetch, so its wording is from the search summary)
