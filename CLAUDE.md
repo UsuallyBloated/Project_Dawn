@@ -1420,7 +1420,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Design note, flagged not decided:** heals now share the nuke's 25 m reach because spells
   have no range field; say so if heals should reach further (a per-spell range is the real
   answer, with the content pass).
-- [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
+- [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
+  ticked on the integration test** (server `f58b796`,
+  `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
+  timers) **plus the 06-19 to 06-20 camp-and-linkdead verification**; the test suite is its
+  own checklist, as with the flaky-trio item. What the test pins, from the client's seat: a
+  client dropped without a Disconnect leaves its body in the world; for the 10 s until the
+  heartbeat timeout the old netcode connection still holds the client id and a second
+  handshake is ignored outright (a relogin can never boot a live session, the Lineage II
+  force-off); from then until the 30 s linger ends, the Connect is refused with a
+  DuplicateLogin kick carrying the countdown; after it the login succeeds, and knocking
+  every few seconds through the window does not extend it (the dodge-the-reap trap the
+  disconnect handler guards against). The checklist row's note ("immediately logged back in
+  successfully") does not reproduce against the current server and is annotated in place.
+  *(Original entry:)* `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
   Lineage II force-off pattern (a live session should linger vulnerable ~30s after an unclean
