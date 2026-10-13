@@ -266,3 +266,34 @@ bag, the state survives a relogin, the dead do not starve, the Revenant is immun
   https://www.eqemulator.org/forums/showthread.php?t=41676 (the emulator's hunger/thirst
   levels, mounted drain, "if a character is hungry or thirsty, client combat regeneration is
   affected")
+
+## 8. The hunger window: a plan for the user before any client code (decision 6)
+
+**What it is.** One small movable panel, built the way the group and pet panels are, that
+shows the two counters as bars: a food icon beside a horizontal progress bar for hunger,
+a drink icon beside one for thirst, each bar filled to `secs / cap`. Three colours by
+stage (fed, hungry, out), the bar empty and red when out. Hovering a bar says the stage
+in words and the time left ("Fed, about 2 h 10 min"; "Hungry, 20 min left"; "Out of
+food"). Nothing else: no numbers on the panel, no buttons. Shown whenever the character
+is in the world; movable and its position remembered like the other panels.
+
+**What feeds it.** A new `HungerUpdate { hunger_secs, thirst_secs, cap_secs }` from the
+server to its owner only: on EnterWorld, after every eat and drink (hand or auto), on
+every stage change, and otherwise once a minute. Between sends the client runs the bars
+down at the character's own rate (the race multiplier is a client-side copy of one small
+table, checked by the lockstep rule), so the bar moves smoothly and the minute send only
+corrects drift, the same shape as the server-driven time of day. The client never decides
+hunger from the bar: a bar at zero is a picture, the server's regen gate is the rule.
+
+**Cost.** One appended `ServerWorldMsg` variant (a protocol bump, so it rides a bump day
+with the DLL rebuild and an export), one gdext signal, one `Net` signal, one panel scene and
+script, a `HungerMeter` autoload or a few lines in `PlayerStats` to hold the two values and
+the rate. About a day. The chat lines stay as they are (EQ has both).
+
+**Choices for the user, each with a proposal.** (a) Where it sits by default: proposed
+under the pet panel's spot, so it never covers the buff bar. (b) Whether it hides when both
+bars are full: proposed no, a full bar is the reassurance. (c) Whether the bars tick down
+visibly between sends or step once a minute: proposed tick, as above. (d) Whether a
+hand-eat refusal flashes the bar: proposed yes, a brief flash on the full bar, with EQ's
+line in chat as now. (e) Icons: two from the existing item icons, or two glyphs; proposed
+glyphs until the art pass.
