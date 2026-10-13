@@ -1,7 +1,9 @@
 # Food and water, the EverQuest way
 
-> **Status: DESIGNED 2026-10-12; ALL SIX DECIDED 2026-10-13 (user), build-ready as slice 1
-> (section 7 carries the decisions; section 5 the slices).** The user's direction of
+> **Status: DESIGNED 2026-10-12; ALL SIX DECIDED 2026-10-13 (user); SLICE 1 BUILT
+> 2026-10-13, pending review, merge and playtest** (server `feat/food-and-water` `40d9f03`,
+> client `7728793`; `food_and_water_checklist.md`, 20 rows; section 7 carries the decisions,
+> section 5 the slices). The user's direction of
 > 2026-10-12: "Our food and water system needs to work like EQ. Instead of like quick
 > consumables." This replaces the buff model the consumables design assumed
 > (`docs/concepts/tradeskills/consumables.md` "The Regen Loop") and the To-Do item

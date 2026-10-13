@@ -2218,6 +2218,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   their own small window (two icons beside a progress bar), planned as a note before the
   client half is built. Build-ready: slice 1 is the server half plus the chat lines, aimed
   at the Oct 22 bump day.
+  **Slice 1 BUILT 2026-10-13, pending review, merge and playtest** (server
+  `feat/food-and-water` `40d9f03`, client `7728793`; `food_and_water_checklist.md`, 20
+  rows; no wire change, so it needs the redeploy and the export but no bump). What exists:
+  `world/hunger.rs` (the counters in seconds of fullness, EQ's 144 s unit, a 4-hour cap,
+  the per-race drain, the three stages told once each, the first-in-slot-order search,
+  `feed`), migration `0013_hunger.sql` (every existing character full), persistence with
+  the resource checkpoint and the reap, the drain and auto-eat at the regen step for the
+  living in the world (the dead and the lobby do not drain; a famished character eats the
+  tick it runs out, fans the delta and is told "You eat a Bread Loaf."), the regen gate
+  (`regen::natural_regen_allowed`: food for HP, water for mana, both for stamina), the
+  UseConsumable arm under EQ's hand-eat rules (refused when full with the explode line,
+  half size when early), the food and drink buffs deleted. Bread Loaf 2880 s, Water Flask
+  2160 s on both sides (the item lockstep check is green). Tests: unit (drain by race, the
+  immune Revenant, the stage lines, the cap, slot order through bags and past a held bag)
+  and integration (base slot before pouch and regen back, out of food means no HP regen
+  while the dead do not drain, the full refusal and the halved hand-eat).
 - [ ] **Exporter drift** *(the "Known drift" note names `tools/export_spells.gd` as stale; the
   2026-07-10 session flagged the `items.toml` exporter emitting `weapon_delay` /
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both

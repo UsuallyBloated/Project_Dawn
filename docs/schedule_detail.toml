@@ -640,6 +640,7 @@ hours = 1.5
 waits_on = ["b11", "o4"]
 tentative = true
 done_when = "Every row filled."
+checklist = "food_and_water_checklist.md"
 todo = "EQ-style food/water gating"
 
 [[row]]
