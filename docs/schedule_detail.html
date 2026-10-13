@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Oct 12<span class="stat-sub">repo 5e8c4aa</span></div></div>
-<div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">77 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Oct 12<span class="stat-sub">repo 20fc70b</span></div></div>
+<div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">15.5 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">43.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">44.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -160,7 +160,7 @@
 <section>
 <h2><span class="week-head"><span>Clear the desk</span><span class="when">W1 &middot; October 5 to 11</span></span></h2>
 <p class="lede">Everything built in the last two weeks is on the hosted server and in the client exported this afternoon, so every open checklist can run now. The week&#x27;s other job was one yes: the spell batch plan, approved on the evening of October 7.</p>
-<div class="week-meta"><span>the user's time: 10 h</span><span>Claude build days: 2</span></div>
+<div class="week-meta"><span>the user's time: 10.5 h</span><span>Claude build days: 2</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -208,7 +208,7 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what">Close out the September 22 machine-day checklist. Its one live leftover is the two cursor retests from the 09-09 fixes (equip-from-hand swap keeps the held item; the drop-confirm click no longer re-prompts); its other three open rows are superseded by o1 (the zip), v9 (the pouch rows) and the UI layout To-Do entry, and get a note saying so.</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist machine_day_2026_09_22_checklist.md: 4 rows to run</li></ul></td>
+<td class="needs"><ul><li>checklist machine_day_2026_09_22_checklist.md: 1 rows to run</li></ul></td>
 <td class="time">0.5 h</td>
 <td class="id"></td>
 <td class="done">Every row filled or annotated.<span class="ref">checklist: <a href="playtest_notes/machine_day_2026_09_22_checklist.md"><code>machine_day_2026_09_22_checklist.md</code></a></span><span class="ref">To-Do entry: <code>The cursor-slot epic: left-click ground pickup + corpse auto-re-equip</code></span></td>
@@ -228,8 +228,8 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">after the next export, or from the editor</span>Chat lines wrap to the window and re-wrap on resize; the pet panel has buttons for the five pet commands; the target frame shows the distance to the target (three asks from the 10-06 and 10-07 sittings, all client-only).</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist chat_wrap_and_pet_buttons_checklist.md: 9 rows to run</li><li>a run from the editor, or the next export (the bump day is the next one planned)</li></ul></td>
-<td class="time">1 h</td>
+<td class="needs"><ul><li>checklist chat_wrap_and_pet_buttons_checklist.md: 13 rows to run</li><li>a run from the editor, or the next export (the bump day is the next one planned)</li></ul></td>
+<td class="time">1.5 h</td>
 <td class="id"></td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/chat_wrap_and_pet_buttons_checklist.md"><code>chat_wrap_and_pet_buttons_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Playtest asks from the charm-return sitting</code></span></td>
 </tr>
@@ -699,28 +699,20 @@
 <section><h2>Open rows this plan does not schedule</h2>
 <p class="lede">Read from the checklist folder when this page was generated. A recent one (touched in the last 30 days) needs a row above or a reason. An older one is a candidate for the week-5 triage, which decides whether it is retired, superseded, or worth a re-run.</p>
 <div class="scroll"><table><thead><tr><th>Last touched</th><th>Open</th><th>Passed</th><th>Skipped</th><th>Checklist</th></tr></thead><tbody>
-<tr><td class="time">2026-08-26</td><td class="time">1</td><td class="time">9</td><td class="time">0</td><td><a href="playtest_notes/proximity_gate_checklist.md"><code>proximity_gate_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-08-24</td><td class="time">2</td><td class="time">12</td><td class="time">1</td><td><a href="playtest_notes/silent_refusals_checklist.md"><code>silent_refusals_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-08-20</td><td class="time">1</td><td class="time">20</td><td class="time">0</td><td><a href="playtest_notes/inventory_desync_checklist.md"><code>inventory_desync_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-08-14</td><td class="time">5</td><td class="time">15</td><td class="time">0</td><td><a href="playtest_notes/respawn_bind_checklist.md"><code>respawn_bind_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-31</td><td class="time">2</td><td class="time">11</td><td class="time">0</td><td><a href="playtest_notes/login_rate_limit_checklist.md"><code>login_rate_limit_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-29</td><td class="time">2</td><td class="time">9</td><td class="time">2</td><td><a href="playtest_notes/swing_rate_limit_checklist.md"><code>swing_rate_limit_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-22</td><td class="time">1</td><td class="time">10</td><td class="time">1</td><td><a href="playtest_notes/cast_class_level_gate_checklist.md"><code>cast_class_level_gate_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-22</td><td class="time">6</td><td class="time">14</td><td class="time">0</td><td><a href="playtest_notes/regen_model_checklist.md"><code>regen_model_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-22</td><td class="time">7</td><td class="time">0</td><td class="time">0</td><td><a href="playtest_notes/spell_drift_life_drain_dark_shroud_checklist.md"><code>spell_drift_life_drain_dark_shroud_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-20</td><td class="time">1</td><td class="time">5</td><td class="time">0</td><td><a href="playtest_notes/attack_while_seated_checklist.md"><code>attack_while_seated_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-17</td><td class="time">2</td><td class="time">12</td><td class="time">1</td><td><a href="playtest_notes/quest_phase2_sliceB_checklist.md"><code>quest_phase2_sliceB_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-16</td><td class="time">1</td><td class="time">19</td><td class="time">1</td><td><a href="playtest_notes/dev_panel_modernization_checklist.md"><code>dev_panel_modernization_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-11</td><td class="time">17</td><td class="time">0</td><td class="time">0</td><td><a href="playtest_notes/gnome_model_checklist.md"><code>gnome_model_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-10</td><td class="time">2</td><td class="time">25</td><td class="time">0</td><td><a href="playtest_notes/quest_phase2_sliceA_checklist.md"><code>quest_phase2_sliceA_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-08</td><td class="time">2</td><td class="time">14</td><td class="time">0</td><td><a href="playtest_notes/quest_kill_credit_checklist.md"><code>quest_kill_credit_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-07-06</td><td class="time">2</td><td class="time">5</td><td class="time">0</td><td><a href="playtest_notes/quest_xp_retune_checklist.md"><code>quest_xp_retune_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-06-20</td><td class="time">18</td><td class="time">0</td><td class="time">0</td><td><a href="playtest_notes/camp_checklist.md"><code>camp_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-06-18</td><td class="time">2</td><td class="time">15</td><td class="time">0</td><td><a href="playtest_notes/banker_slice1_checklist.md"><code>banker_slice1_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-06-16</td><td class="time">14</td><td class="time">36</td><td class="time">1</td><td><a href="playtest_notes/group_loot_coin_checklist.md"><code>group_loot_coin_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-06-12</td><td class="time">20</td><td class="time">0</td><td class="time">0</td><td><a href="playtest_notes/item_weights_checklist.md"><code>item_weights_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-06-11</td><td class="time">1</td><td class="time">22</td><td class="time">0</td><td><a href="playtest_notes/currency_encumbrance_checklist.md"><code>currency_encumbrance_checklist.md</code></a></td></tr>
-<tr><td class="time">2026-05-15</td><td class="time">4</td><td class="time">40</td><td class="time">2</td><td><a href="playtest_notes/track_6_post_fix_checklist.md"><code>track_6_post_fix_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">15</td><td class="time">0</td><td><a href="playtest_notes/banker_slice1_checklist.md"><code>banker_slice1_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">3</td><td class="time">0</td><td class="time">15</td><td><a href="playtest_notes/camp_checklist.md"><code>camp_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">1</td><td class="time">19</td><td class="time">1</td><td><a href="playtest_notes/dev_panel_modernization_checklist.md"><code>dev_panel_modernization_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">12</td><td class="time">0</td><td class="time">5</td><td><a href="playtest_notes/gnome_model_checklist.md"><code>gnome_model_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">7</td><td class="time">36</td><td class="time">8</td><td><a href="playtest_notes/group_loot_coin_checklist.md"><code>group_loot_coin_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">3</td><td class="time">0</td><td class="time">17</td><td><a href="playtest_notes/item_weights_checklist.md"><code>item_weights_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">14</td><td class="time">0</td><td><a href="playtest_notes/quest_kill_credit_checklist.md"><code>quest_kill_credit_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">1</td><td class="time">25</td><td class="time">1</td><td><a href="playtest_notes/quest_phase2_sliceA_checklist.md"><code>quest_phase2_sliceA_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">3</td><td class="time">14</td><td class="time">3</td><td><a href="playtest_notes/regen_model_checklist.md"><code>regen_model_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">1</td><td class="time">15</td><td class="time">4</td><td><a href="playtest_notes/respawn_bind_checklist.md"><code>respawn_bind_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">12</td><td class="time">1</td><td><a href="playtest_notes/silent_refusals_checklist.md"><code>silent_refusals_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">4</td><td class="time">0</td><td class="time">3</td><td><a href="playtest_notes/spell_drift_life_drain_dark_shroud_checklist.md"><code>spell_drift_life_drain_dark_shroud_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">9</td><td class="time">2</td><td><a href="playtest_notes/swing_rate_limit_checklist.md"><code>swing_rate_limit_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">40</td><td class="time">4</td><td><a href="playtest_notes/track_6_post_fix_checklist.md"><code>track_6_post_fix_checklist.md</code></a></td></tr>
 </tbody></table></div></section>
 <section><h2>After the door opens</h2>
 <p class="lede">Undated by the planner's choice. Status for each lives in the To-Do; phase 5's four decisions come first.</p>
@@ -755,5 +747,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-12 at repo 5e8c4aa</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-12 at repo 20fc70b</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

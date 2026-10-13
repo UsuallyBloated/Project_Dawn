@@ -1,5 +1,9 @@
 # Inventory Desync Recovery Playtest Checklist — 2026-08-18
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): one row left, retired.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: none (line numbers as of the triage).
+
 Verifies that the client and server can no longer disagree about inventory indefinitely. Found
 2026-08-18 during the bag playtest (`bag_click_grammar_checklist.md`), where items appeared to
 stick to the cursor or vanish outright, and the server log showed the same slots refused for half
@@ -95,7 +99,7 @@ what the button was for.
       rejections. This is the row that proves the desync source is closed. notes:
 - [x] **No stack ends up larger than the item's normal stack size** → the server's merge does not
       cap, so the client only pairs stacks that fit. notes:  Need you to look into this. Not sure what a full stack is.
-- [ ] **Offline / Test Room: Stack All still works the old way** (there is no server to ask).
+- [-] **Offline / Test Room: Stack All still works the old way** (there is no server to ask). triage 2026-10-12: RETIRED, Offline / Test Room; the project is multiplayer-only.
       notes: Did not check.
 - [x] **Bag windows no longer have a Stack All button** — it lives only in the main inventory
       window, and pressing it there still consolidates items held inside bags. notes:

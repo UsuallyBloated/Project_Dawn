@@ -1,5 +1,9 @@
 # Gnome Race Model Playtest Checklist — 2026-07-11
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): five rows retired (Solo / Test Room / editor import), twelve worth a re-run (the model is still shipped: assets/models/characters/gnome/gnome.glb); four of them need a second seat.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 32, 33, 34, 35, 40, 41, 44, 45, 54, 55, 56, 57 (line numbers as of the triage).
+
 Verifies the first per-race character model: a Gnome character should render as `gnome.glb`
 instead of the default 2 m capsule, for the local player (no server needed) and for other
 players who see a gnome (server needed). Cosmetic only — collision/camera/nameplates still
@@ -22,13 +26,13 @@ Reference — what's under test:
 > head because collision is still the 2 m human capsule. All known; see the session note.
 
 ## Setup
-- [ ] Open project in Godot 4.4.1; wait for import to finish (Output panel settles). notes:
-- [ ] Check the **Output / Debugger** panel is free of red script errors on load. notes:
+- [-] Open project in Godot 4.4.1; wait for import to finish (Output panel settles). notes: triage 2026-10-12: RETIRED, an editor import check.
+- [-] Check the **Output / Debugger** panel is free of red script errors on load. notes: triage 2026-10-12: RETIRED, an editor import check.
 
 ## 1 — Local gnome appears (no server)
 This is the core "i want to see" test. Uses the offline solo path, no server required.
 
-- [ ] Click **Solo** → character creation → pick race **Gnome**, any class → enter world. notes:
+- [-] Click **Solo** → character creation → pick race **Gnome**, any class → enter world. notes: triage 2026-10-12: RETIRED, Solo / Test Room; the project is multiplayer-only.
 - [ ] Scroll out to 3rd person → you are a **blocky gnome**, not a capsule. notes:
 - [ ] Gnome is **short** (roughly waist-to-chest of a normal capsule), not 2 m tall. notes:
 - [ ] **Feet sit on the ground** — not sunk into the floor, not floating above it. notes:
@@ -45,8 +49,8 @@ The one thing I couldn't verify headlessly. If it fails, it's a one-line fix (`y
 - [ ] Scroll back out → model reappears. notes:
 
 ## 4 — Regression: other races unaffected
-- [ ] Back to lobby → **Solo** → create a **Human** (or any non-gnome) → enter world → still the normal **capsule**, no errors. notes:
-- [ ] **Test Room** button (defaults to a Troll) → spawns the normal **capsule**, no errors in Output. notes:
+- [-] Back to lobby → **Solo** → create a **Human** (or any non-gnome) → enter world → still the normal **capsule**, no errors. notes: triage 2026-10-12: RETIRED, Solo / Test Room.
+- [-] **Test Room** button (defaults to a Troll) → spawns the normal **capsule**, no errors in Output. notes: triage 2026-10-12: RETIRED, Solo / Test Room.
 
 ## 5 — Remote view (needs Rust server + launcher mode + 2 clients)
 Confirms a gnome reads as a gnome to *other* players, via the server-authoritative path.

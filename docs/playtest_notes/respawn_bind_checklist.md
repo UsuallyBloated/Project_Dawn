@@ -1,5 +1,9 @@
 # Respawn / Bind Point Playtest Checklist — 2026-08-12
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): two build-step rows and the offline row retired, one superseded by the 2026-08-14 regression sweep, bind-while-dead (row 61) worth an optional re-run.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: 61 (line numbers as of the triage).
+
 Closes the respawn death-loop: the first external tester died, respawned on the spot beside the
 two mobs that killed her, and died again 20 seconds later. Respawn now moves you.
 
@@ -9,9 +13,9 @@ Binder NPC (**Sister Maelis**, at the town spawn) sets your bind. A **death lock
 your corpse around during the respawn countdown.
 
 **Build prereq (both halves):**
-- [ ] Server: pull + `cargo build --release` + `cp target/release/projectdawn-server ~/` + restart.
+- [-] Server: pull + `cargo build --release` + `cp target/release/projectdawn-server ~/` + restart. triage 2026-10-12: RETIRED, a build step.
       Migration `0011_bind_points.sql` applies automatically on boot.
-- [ ] Client: rebuild gdext (`addons/gdext_net/build.ps1` or the bash fallback) **then** re-export.
+- [-] Client: rebuild gdext (`addons/gdext_net/build.ps1` or the bash fallback) **then** re-export. triage 2026-10-12: RETIRED, a build step.
       The DLL carries the new bind send, and the export must happen AFTER the rebuild.
 
 > **Ordering trap:** verify the exported DLL matches the addon one before testing, or you will be
@@ -33,7 +37,7 @@ No bind needed for this section; unbound respawn goes to the starter spawn.
       CORPSE at the death site. Fixed in server 97c7fac (dead players excluded from the enemy-AI
       target list + aggro/threat wiped on death). Re-tested: mobs break off immediately and return
       to their spawn points.
-- [ ] **Your corpse is still back where you died** (the corpse run is intact — this fix must not have
+- [-] **Your corpse is still back where you died** (the corpse run is intact — this fix must not have triage 2026-10-12: SUPERSEDED, the section 6 regression sweep passed 2026-08-14 (CLAUDE.md).
       removed the corpse). notes:
 
 ## 2 — Death lock
@@ -73,7 +77,7 @@ Swept 2026-08-14. The first three are proven by the server log, quoted below.
       to the corpse rather than the bind point. notes: full chain in the log —
       `resurrection cast received spell=Reclaim Soul` -> `resurrection offered xp_percent=20` ->
       `resurrection accepted refund=45372`. The Paladin tier refunded 20% of that death's lost XP.
-- [ ] **Offline / Test Room death still respawns you locally** (the client keeps its own path when
+- [-] **Offline / Test Room death still respawns you locally** (the client keeps its own path when triage 2026-10-12: RETIRED, offline Test Room; the project is multiplayer-only.
       there is no server). notes: not exercised — offline leaves no server-log trace, so this row
       needs an in-client check if we want it closed.
 

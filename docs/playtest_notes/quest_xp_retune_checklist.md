@@ -1,5 +1,9 @@
 # Quest XP Re-tune (tier-based) — Playtest Checklist — 2026-07-06
 
+> **Triage 2026-10-12** (the planner's week-5 chore, done early): two rows left, superseded: every tier payout landed to the digit in phase 4 (CLAUDE.md), and the Brom bug is in phase4_content_plan.md section 4.
+> Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
+> rows still open are the re-run: none (line numbers as of the triage).
+
 Quest rewards used to be flat constants (80/150/350/600) that collapsed to a rounding error
 against the new cubic XP curve. They're now a **difficulty tier** = a % of ONE level at the
 quest's `level_req` — fixed to the quest's level, so it's a meaningful chunk at that level and
@@ -31,12 +35,12 @@ running or not — quest XP grants through the normal path either way.
   (30% of the level-1 band = 1,000), and a "Quest complete" line logs. notes: Ogre warrior @ level 1 +250 xp
 
 ## 2 — "Gray" to a high-level character (the key behavior)
-- [ ] Use Test Panel **"Level Up"** to reach ~level 20+, then complete the **level-1 test quest**
+- [-] Use Test Panel **"Level Up"** to reach ~level 20+, then complete the **level-1 test quest** triage 2026-10-12: SUPERSEDED, phase 4 verified every tier payout to the digit.
   again → it grants the **same ~300**, now a negligible sliver of your huge band. That's the
   intended EQ gray-quest behavior: a low quest is not an XP shortcut for a high-level char. notes: I cannot use the "Add test quest" more than once.  I receive "Quest already in journal" message in chat log.  This made me realize we need an "abandon quest" button for the player.
 
 ## 3 — Real quest turn-ins at-level (fuller check, needs the NPC flow)
-- [ ] Accept + complete + turn in **rat_infestation** (8 rats, from Brom) → **~150 XP**. notes: Brom is only a merchant, i dont see a quest option.
+- [-] Accept + complete + turn in **rat_infestation** (8 rats, from Brom) → **~150 XP**. notes: Brom is only a merchant, i dont see a quest option. triage 2026-10-12: SUPERSEDED, phase 4 verified every tier payout to the digit.
 - [x] **wolf_threat** (5 wolves, from Aldric) → **~300 XP**. notes:
 - [x] (if you can reach them) **gnoll_raiders** (L3) → **~5,700**; **rotfang_hunt** (L5 boss) →
   **~48,800** (a big chunk of a level, as a named-boss quest should be). notes: Partially complete, Rotfang quest complete, I dont know where to find the "Gnoll Raiders" quest.
