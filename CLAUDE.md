@@ -2181,6 +2181,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   drinking a second Water Flask while the first still works is refused rather than wasted
   (Water Flask: 180 s). Confirmed in play that stacking flasks does not stack the regen.
   Belongs with the server-side consumables pass; consumable effects are client-side today.
+  **Traced and stopgapped 2026-10-12** (server `a9219b9`, pending redeploy;
+  `dead_relogin_and_resend_checklist.md` §3): the server DID refuse a second drink while one
+  ran, but the mana-only leg of the drink buff is named `Drink MP: X` and the check looked
+  only for `Drink: X`, so a Water Flask (mana only) was taken again. Both names are checked
+  now. **Superseded in shape by the EQ food and water design above**, where eating by hand
+  when full is refused with EQ's own line and nothing is ever "wasted" by stacking.
 - [ ] **Bookbinding / player-authored lore**
 - [ ] **Clockwork Engineering prestige** (Tinkering 150+ for Gnomes/Kobolds)
 
@@ -2191,7 +2197,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   batch's first step.
 - [ ] **EQ-style food/water gating** — food/water should gate base HP/MP regen (no food =
   no regen) instead of stacking as additive buffs; passive consumption from inventory,
-  no buff-bar entry
+  no buff-bar entry. **DIRECTION CONFIRMED 2026-10-12 (user): "Our food and water system
+  needs to work like EQ. Instead of like quick consumables." DESIGNED 2026-10-12:
+  `docs/design/food_and_water.md`** (EQ's rules from the Project 1999 wiki and forums and
+  EQEmulator: hunger and thirst counters, the first food in slot order eaten by itself when
+  the counter empties, sizes in 144 s units, stages with "You are hungry." and the explode
+  line, no HP or mana regen when out, nobody dies of it; the design, an eight-point exploit
+  ledger, three slices). **Six decisions wait on the user (§7)**: the scale (a Bread Loaf as a
+  20-minute meal, a 2-hour cap), what stops when famished, race timing, the hand-eat rules,
+  Summon Food/Drink for Mag/Cle/Dru, the HUD form. Slice 1 needs one protocol bump
+  (`HungerUpdate`), so it rides a bump day. Supersedes the buff model in
+  `docs/concepts/tradeskills/consumables.md` "The Regen Loop".
 - [ ] **Exporter drift** *(the "Known drift" note names `tools/export_spells.gd` as stale; the
   2026-07-10 session flagged the `items.toml` exporter emitting `weapon_delay` /
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both

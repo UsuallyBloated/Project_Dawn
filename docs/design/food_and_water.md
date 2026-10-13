@@ -1,0 +1,204 @@
+# Food and water, the EverQuest way
+
+> **Status: DESIGNED 2026-10-12, decisions pending (section 7).** The user's direction of
+> 2026-10-12: "Our food and water system needs to work like EQ. Instead of like quick
+> consumables." This replaces the buff model the consumables design assumed
+> (`docs/concepts/tradeskills/consumables.md` "The Regen Loop") and the To-Do item
+> "EQ-style food/water gating".
+
+## 1. What EverQuest does
+
+Researched 2026-10-12 from the Project 1999 wiki and forums and the EQEmulator forums (the
+classic era; EverQuest II is a different game and was ignored). Sources at the end.
+
+- **A character carries food and drink and eats and drinks them by itself.** Two hidden
+  counters, hunger and thirst, run down in real time. When one empties, the game eats (or
+  drinks) the first matching item it finds in the inventory, top-left first, bags included,
+  and the counter refills by that item's size. "Only the top food in your inventory, ready
+  to eat next" is what will be consumed; nothing else in the bags matters until it is.
+- **Food has a size, not a buff.** An item's "duration" is the real time it feeds you for:
+  one unit is 144 seconds; a snack is 1 to 5 units (about 2 to 12 minutes), a meal 6 to 20
+  (14 to 48 minutes), a hearty meal 21 to 30, a banquet 31 to 40, a feast 41 to 50, an
+  enduring meal 51 to 60, a miraculous meal 61 to 240 (nearly ten hours). The game checks
+  whether it is time to eat about every 46 seconds, so there is a small lag. Drink is the
+  same with its own names (whistle wetter, drink, refreshing, lasting, flowing, enduring,
+  miraculous).
+- **Hunger has stages, and the last one stops regeneration.** "You are hungry." and "You
+  are thirsty." are the warnings; at the final stage, hit points and mana stop
+  regenerating, and the P99 wiki says both food and drink are needed for mana and
+  endurance to regenerate at all. The stage timing depends on the race (the wiki puts the
+  final stage at about 90 minutes without a meal for a Halfling and 3 hours for a Human).
+  Nobody dies of hunger, and there is no stat penalty.
+- **Eating by hand is allowed only when there is room.** Clicking a food when full is
+  refused with "You could not possibly eat any more, you would explode!" (drink likewise).
+  Clicking a food early, when not yet hungry but not full, eats it for half its duration,
+  which is how a player keeps a prized item from being auto-eaten (see stat food).
+- **Stat food.** Some food carries stat bonuses; they apply while that item is the next to
+  be eaten, so the classic trick is to keep the good item in the first slot and hand-eat
+  cheaper food before it would be reached. Clicking the stat food itself eats it.
+- **Modifiers.** On a mount food and drink go three times as fast; in a desert, drink goes
+  twice as fast (six on a mount); you do not eat while zoning or dead; the Innate
+  Metabolism AA slows consumption by about 2.5x.
+- **Summoned food and water** (Summon Food, Summon Drink: Magician, Cleric, Druid lines)
+  are ordinary small items that stack, the way a caster keeps a group fed.
+
+## 2. What exists here today
+
+- **Two items:** Bread Loaf (`food_hp_regen 4`, `food_duration 180`) and Water Flask
+  (`food_mp_regen 5`, `food_duration 180`), both sold by the General Merchant, both also
+  handed out by the Test Panel. No summon-food spell exists.
+- **A click-to-use buff model.** Right-click sends `UseConsumable`; the server takes the
+  stack, applies a 180 s HoT or MP-regen buff named `Food: <item>` / `Drink: <item>`
+  (the mana leg is named `Drink MP: <item>`), fans a BuffSnapshot, and the client's buff bar
+  shows a timer. The server refuses a second food or drink while one runs, except that the
+  mana-only leg's name does not start with `Drink: `, so a second Water Flask IS taken while
+  the first still runs: the "stacking flasks" the user saw on 2026-10-07 (fixed server-side
+  2026-10-12 as a stopgap; it will not matter once this design lands).
+- **Offline code** (`inventory_window.gd`, `bag_window.gd`, `BuffManager.add_food_buff`)
+  applies the same buffs locally; it is vestigial (the project is multiplayer-only).
+- **Regen** is server-authoritative (`world/regen.rs::tick_one`): per-level HP tables,
+  sitting and meditate rates for mana, a flat stamina rate. Nothing about food reaches it;
+  the food buffs are separate ticks in the buff step. Nothing is persisted about hunger.
+- **A design hook already written:** the Revenant transformation is "immune to starvation
+  and thirst; food/drink provide no benefit" (`docs/concepts/transformations/revenant.md`).
+
+## 3. The design
+
+Server-authoritative, one rule set, no client authority anywhere.
+
+**Two counters on the character, persisted.** `hunger` and `thirst`, in seconds of fullness,
+0 to a cap. Every character is born full. They run down one second per real second while
+the character is in the world and alive (not while dead, not while offline, not in the
+character select); the restart checkpoint writes them with the other resources.
+
+**Eating is the server's job.** Every `EAT_CHECK_INTERVAL` (46 s, EQ's cadence) the server
+looks at each in-world character: if `hunger` is at or under `EAT_AT` (the point a hungry
+character eats), it searches the inventory in slot order, base slots first then bags in
+order, for the first item with `is_food`, takes one, and adds the item's size to `hunger`
+(capped). Same for thirst with `is_drink`. The take is an ordinary inventory write (the
+existing `remove_at` + `InventoryDelta` path), so the client's bags update as they do for
+any server-side removal. The character is told: "You eat a Bread Loaf." / "You drink a
+Water Flask." in the System channel.
+
+**Hunger has three stages, told once each.** Full (above `HUNGRY_AT`): nothing. Hungry
+(`HUNGRY_AT` down to 0): one line, "You are hungry." (or thirsty); auto-eating happens in
+this band. Famished (0): one line, "You are out of food." (or water); the regen penalty
+applies. Lines repeat only when the stage is re-entered, never per tick.
+
+**The penalty is EQ's: regeneration, not health.** `regen.rs::tick_one` gates on the two
+flags: famished for food stops natural HP regen; famished for drink stops natural mana
+regen; either stops stamina regen (EQ ties endurance to both). Nothing else: no damage, no
+stat loss, no slowing, and the dead do not starve. Spells and potions still heal; sitting
+still raises the rate when you are fed.
+
+**Food size replaces the buff.** `ItemData.food_duration` is read as the fullness an item
+adds, in seconds (Bread Loaf's 180 s is a snack by EQ's scale; section 7 decides the
+numbers). `food_hp_regen` / `food_mp_regen` go away as effects; a FED character regenerates
+at the normal tables, which is the whole benefit. (The consumables tradeskill doc's tiers
+map onto sizes: a Simple Bread feeds longer than Hard Tack, a Lembas for hours; its stat
+bonuses become stat food, below.)
+
+**Eating by hand stays, with EQ's rules.** Right-clicking a food when `hunger` is at the cap
+is refused with EQ's own line ("You could not possibly eat any more, you would explode!");
+when there is room it eats the item now, for half its size (the hand-eat halving is what
+keeps the auto-eat order meaningful). The `UseConsumable` arm keeps its potion path (heal
+and mana potions are instant and unchanged).
+
+**Stat food, when the tradeskill pass adds any.** The bonuses on the first food in slot order
+apply while that item is next to be eaten; recomputed on every inventory change for that
+character. Not in slice 1 (no item carries stats yet), designed so the slot-order rule is
+already the one EQ's trick relies on.
+
+**Modifiers, deferred.** Mounts (3x) when the mount system is server-side; a desert zone
+multiplier with the multi-zone epic; a race multiplier on the drain if the per-race timing
+is wanted (section 7). The Revenant's immunity is one check in the drain.
+
+**The client shows the state and never decides it.** The buff bar's food and drink timers
+become two small hunger and thirst indicators (three states each: fed, hungry, out), fed by a
+new `HungerUpdate { hunger_secs, thirst_secs, hunger_cap, thirst_cap }` sent to the
+character alone on EnterWorld, on every change of stage, after every eat and drink, and
+otherwise once a minute (so a countdown can be drawn without a message per second). The
+chat lines come from the server. `BuffManager`'s food and drink buffs, `Regen`'s use of
+them and the two windows' offline eat paths are deleted.
+
+## 4. Exploit ledger
+
+1. **A forged `UseConsumable` cannot overfeed:** the server refuses at the cap and halves a
+   hand-eat; nothing is minted either way.
+2. **A forged inventory order cannot gain anything:** slot order only chooses WHICH food is
+   eaten, as in EQ; every food feeds by its own size.
+3. **Logging out does not pause hunger for free:** the counters are persisted at the
+   checkpoint and on disconnect, and do not run while offline, which is EQ's rule too (you
+   are not eating in the character select). The gain from logging out to avoid eating is
+   nil: you come back exactly as hungry.
+4. **Death does not reset the counters** (a famished player who dies and respawns is still
+   famished; a corpse run on no regen is EQ's lesson about packing food). The death strip
+   takes the food to the corpse like everything else.
+5. **The drain runs on the server clock, never on a client message**, so a client that
+   sends nothing cannot stay fed, and a client that floods cannot eat faster.
+6. **Stat food's bonus is recomputed server-side from the real inventory**, so a client
+   cannot claim a bonus from food it does not hold first.
+7. **The penalty is capped at "no regen",** so the worst case for a player who ignores the
+   system is the EQ experience, not a death loop (the one thing the first tester's bind
+   problem taught: no self-built unwinnable states).
+8. **No oracle:** `HungerUpdate` goes to its owner only.
+
+## 5. Slices
+
+- **Slice 0 (done 2026-10-12, stopgap on the current model):** the server's already-drinking
+  check recognises the mana-only leg, so a second Water Flask is refused while the first
+  runs.
+- **Slice 1, the system (server + client, one protocol bump for `HungerUpdate`):** the two
+  counters with migration `0013_hunger.sql`, persistence in the resource checkpoint and the
+  reap, the drain in the world loop, the eat check, the three stages and their lines, the
+  regen gate, the hand-eat rules, the client indicators, the deletions. Tests: the drain and
+  the stage lines (unit), the auto-eat picking slot order through bags (integration), the
+  regen gate (integration: a famished character's HP does not rise out of combat, a fed
+  one's does), the hand-eat refusal at the cap and the halving, persistence across a
+  relogin, no drain while dead. Rides the next protocol-bump day with the trade window.
+- **Slice 2, content:** sizes for the tradeskill tiers in `consumables.md`, Summon Food and
+  Summon Drink spells (which classes: section 7), the General Merchant's stock priced so a
+  day of play is affordable, stat food once an item carries stats.
+- **Slice 3, later:** the mount and zone multipliers, a race multiplier if wanted.
+
+## 6. Checklist
+
+`food_and_water_checklist.md`, written with slice 1: eat and drink happen on their own and
+say so, the bars update, the hungry and out-of-food lines come once each, no regen when out,
+regen back after eating, hand-eat refused when full, hand-eat halves, slot order through a
+bag, the state survives a relogin, the dead do not starve, the Revenant is immune.
+
+## 7. Decisions for the user
+
+1. **The scale.** EQ's unit is 144 s. Proposed: `Bread Loaf` = a meal of 20 minutes
+   (1200 s), `Water Flask` = a drink of 20 minutes; the cap 2 hours; `HUNGRY_AT` 10 minutes
+   left; `EAT_AT` 0 (eat when the counter empties, as EQ does, so a snack is not wasted
+   topping up a full stomach). A tester who plays a three-hour evening eats nine loaves
+   and drinks nine flasks; at the merchant's 3 copper a flask that is pocket change.
+   Alternative: EQ's own slower pace (a meal is 48 minutes, the cap 4 hours).
+2. **What stops when famished.** Proposed (EQ, per the P99 wiki): no food stops HP regen,
+   no drink stops mana regen, either stops stamina regen. Alternative: only halve them.
+3. **Race timing.** EQ drains by race (a Halfling starves in half a Human's time). Proposed:
+   no race multiplier in slice 1 (one number for everyone); add it with the race trade-off
+   pass if wanted.
+4. **Hand-eating.** Proposed: EQ's rules exactly (refused when full with EQ's line; half
+   size when early). Alternative: refuse any hand-eat above `HUNGRY_AT` (simpler to explain,
+   kills the stat-food trick).
+5. **Summon Food and Summon Drink.** Proposed for slice 2: Magician, Cleric and Druid get
+   both at level 1 (EQ), producing a stack of 20 snacks; it is also the honest answer to "I
+   forgot to buy bread" in a dungeon.
+6. **The bars.** Proposed: two small icons beside the buff bar with a tooltip countdown and a
+   colour per stage; no numbers on the HUD. Alternative: a text line in the character window.
+
+## Sources
+
+- Project 1999 wiki, Food and drink: https://wiki.project1999.com/Food_and_drink (the
+  stages, "hit-points and mana will no longer regenerate", the explode line, race timing;
+  the page reset twice on fetch, so its wording is from the search summary)
+- Project 1999 forums, "Food Duration... (Extremely Long!!!)":
+  https://www.project1999.com/forums/showthread.php?t=333600 (the 144 s unit, the tiers, the
+  46 s check, mounts, deserts, hand-eat halving, "only the top food... adds to your stats")
+- EQEmulator forums, "Food Consumption question":
+  https://www.eqemulator.org/forums/showthread.php?t=41676 (the emulator's hunger/thirst
+  levels, mounted drain, "if a character is hungry or thirsty, client combat regeneration is
+  affected")

@@ -26,5 +26,9 @@ resent. Needs a redeploy with `645606a` or later (`6a09aa1` carried the renet ca
 ## 2 — Reliable resend (needs a lossy link; otherwise `[-]` with a note)
 - [ ] **Over a connection with real packet loss (a phone hotspot, or a deliberately throttled Wi-Fi), play for ten minutes with heavy inventory dragging and chat** → no inventory desync and no missing chat lines; before the fix a lost delta stayed lost until relog. notes:
 
+## 3 — A second Water Flask is refused (server `a9219b9`, the stopgap before the EQ food model)
+- [ ] **Drink a Water Flask, then right-click another while the first still runs** → "You're already drinking something." and the second flask stays in the bag (before: taken for nothing). notes:
+- [ ] **Eat a Bread Loaf twice the same way** → "You're already eating something." (this one always worked; a regression row). notes:
+
 ## Notes / observations
 -

@@ -6,6 +6,14 @@ Consumables are tradeskill outputs that are destroyed when used. This gives them
 
 ## The Regen Loop
 
+> **Superseded 2026-10-12.** The user's direction of 2026-10-12 is EverQuest's model, not
+> click-to-use buffs: food and drink are carried and eaten by the character itself when
+> hunger and thirst run out, their "duration" is the time they feed you for, and being out
+> of either stops regeneration. `docs/design/food_and_water.md` is the design; the tiers
+> below map onto food sizes and stat food, and the regen numbers become the fed character's
+> normal regen tables rather than a bonus on top.
+
+
 The core reason consumables matter is the meditation regen system. Out-of-combat mechanics:
 
 1. **Sitting** triggers a meditate state: MP regenerates at 3× normal rate.
