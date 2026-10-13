@@ -421,11 +421,14 @@ func _on_ws_connected() -> void:
 func _on_ws_disconnected(_was_open: bool) -> void:
 	_pending_msg = {}
 	if _session_token != "":
-		# Server dropped us mid-session; bounce back to login.
-		_session_token = ""
-		_characters.clear()
-		_set_status("Connection lost. Please log in again.")
-		_show_login()
+		# The socket closed while a session is held: the hosted server closes
+		# an idle connection after ten minutes, and the session itself lives
+		# for its own TTL on the server. Keep the token and the character
+		# list; `_send_or_queue` reconnects on the next click, and a session
+		# the server no longer knows answers `session_expired`, which is
+		# handled below. Bouncing to the password prompt here, as this used
+		# to, logged out anyone who sat on character select.
+		_set_status("Connection idle. It reconnects when you act.")
 
 func _on_ws_failed(reason: String) -> void:
 	_pending_msg = {}
@@ -485,6 +488,13 @@ func _on_message(msg: Dictionary) -> void:
 				# The server's line is the whole message ("An invite code is
 				# required to register." / "That invite code is not valid.").
 				_set_status(emsg)
+			elif code == NetProtocol.ERR_SESSION_EXPIRED and _session_token != "":
+				# The session outlived the server's memory of it (its TTL, a
+				# restart, a password reset): back to the password prompt.
+				_session_token = ""
+				_characters.clear()
+				_show_login()
+				_set_status("Your session expired. Please log in again.")
 			else:
 				_set_status("Error (%s): %s" % [code, emsg])
 		_:
