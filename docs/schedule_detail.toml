@@ -561,6 +561,53 @@ todo = "The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)"
 done_when = "Every row filled."
 
 [[row]]
+id = "bh1"
+week = "w2"
+lane = "build"
+day = "Oct 12"
+what = "Public hosting, slices 1 to 3 (docs/design/public_hosting_plan.md): the login socket hardened for a public port, invite codes and the invite tool, the world address as a name with a clean restart when it moves, intent budgets; the client connecting over wss with an invite field. Built on feat/public-hosting in both repos, off the deploy branches until cutover."
+who = "Claude unattended"
+days = 1.5
+done_when = "Both suites green on feat/public-hosting and pushed; the To-Do entry says BUILT. Done only when public_hosting_checklist.md is filled on cutover day."
+checklist = "public_hosting_checklist.md"
+todo = "Public-host hardening checklist (mandatory before any exposure beyond Tailscale)"
+
+[[row]]
+id = "oh0"
+week = "w3"
+lane = "operate"
+what = "Public hosting slice 0, at the router (user only): confirm the router's WAN address is the public 98.50.18.x (not CGNAT), reserve the R720's LAN address (runbook H6), check hairpin NAT, create the DuckDNS name and token, decide IPv6 (AAAA or not)."
+who = "user at the router"
+hours = 1.0
+tentative = true
+done_when = "The DDNS name resolves to the home address from outside; the reservation and the hairpin answer written in the plan."
+todo = "Public-host hardening checklist (mandatory before any exposure beyond Tailscale)"
+
+[[row]]
+id = "oh4"
+week = "w3"
+lane = "operate"
+what = "Public hosting slice 4, the host sitting: Caddy with the DDNS name, the .env lines (auth on loopback, the world endpoint as the name, PROJECTDAWN_REQUIRE_INVITE=1, PD_NO_RATE_LIMIT removed), the DuckDNS updater timer, UFW for 443/tcp and 7777/udp, the router forward, then the outside test from a phone hotspot and a port scan."
+who = "user at a desk, Claude writes the commands"
+hours = 2.0
+waits_on = ["oh0", "bh1"]
+tentative = true
+done_when = "Login, enter world, walk and cast from outside the house; the scan shows exactly 443 and 7777."
+todo = "Public-host hardening checklist (mandatory before any exposure beyond Tailscale)"
+
+[[row]]
+id = "vh5"
+week = "w3"
+lane = "verify"
+what = "Cutover evening: redeploy from the hosting branch, export, an invite per tester, the zip and the code sent, the Tailscale shares removed, the minimum client version raised; then the cutover checklist with a tester outside the home network. Candidate: the Oct 22 bump day, so testers change clients once."
+who = "user, one tester outside"
+hours = 2.5
+waits_on = ["oh4"]
+tentative = true
+done_when = "public_hosting_checklist.md filled."
+checklist = "public_hosting_checklist.md"
+
+[[row]]
 id = "b7"
 week = "w4"
 lane = "build"

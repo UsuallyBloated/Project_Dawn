@@ -900,6 +900,30 @@ player can never use them (exploit-audit finding #1). Two independent grants:
 
 ## Hosted deployment (the R720)
 
+### Public hosting (built 2026-10-12, not deployed)
+The move off Tailscale (`docs/design/public_hosting_plan.md`) is built on `feat/public-hosting`
+in both repos and waits on the user's router work and one cutover evening
+(`public_hosting_checklist.md`). What it is, server side: the auth socket takes a 64 KB message
+and frame cap, a 10 s handshake timeout, a 10 min idle timeout and 8 open connections per
+address (`AuthPolicy`); the client address comes from `X-Forwarded-For` only when the TCP peer
+is loopback (Caddy on the same host), so a forged header from outside buys nothing
+(`client_ip_for`); the login limiter keys IPv6 by its /64 and holds three budgets under one lock
+(5 per source per minute, 120 per kind per minute in total, 20 per account per ten minutes,
+the last cleared by the owner's login); a banned account answers `auth_failed` until the
+password is right, so a ban is never an existence oracle; registration can require an invite
+code (`PROJECTDAWN_REQUIRE_INVITE=1`, migration 0012, `Register.invite`, burned in the same
+transaction that inserts the account, the `invite` bin to mint, list and revoke).
+`PROJECTDAWN_WORLD_ENDPOINT` may be a name: resolved once at boot to its first IPv4 address,
+which netcode is built with and every connect token names (a per-process boot-address
+registry; netcode refuses a token naming any other address); an address watch re-resolves
+every five minutes and, when the name moves, the world loop tells everyone in chat,
+checkpoints every connection, flushes the GM audit, kicks with `KickCode::Restart` and exits
+with an error, so systemd restarts it on the new address with nothing lost. Two per-connection
+intent budgets (inventory 64 burst / 16 a second; the cosmetic broadcasts 40 / 20) drop a
+forged flood past the burst with one log line a second. Client side: `NetProtocol.auth_url_for`
+makes any non-local server `wss://` (a typed scheme is kept), the login form has an invite
+field, and `README_FOR_TESTERS.md` on that branch has no Tailscale step.
+
 **Live since 2026-08-10; first external tester 2026-08-11.** Until then every session in this
 project's history had run on localhost. The game is now hosted on physical hardware that stays
 up when the dev box is off.
