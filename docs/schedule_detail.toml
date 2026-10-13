@@ -573,6 +573,18 @@ checklist = "public_hosting_checklist.md"
 todo = "Public-host hardening checklist (mandatory before any exposure beyond Tailscale)"
 
 [[row]]
+id = "v16"
+week = "w3"
+lane = "verify"
+what = "After the bump-day redeploy: leave dead with the window X, log back in, same XP and one corpse (the double death the 2026-10-12 review found); the lossy-link row only if a hotspot is handy."
+who = "user, one seat"
+hours = 0.5
+waits_on = ["o4"]
+done_when = "Every row filled."
+checklist = "dead_relogin_and_resend_checklist.md"
+todo = "A dead character died again on relogin, and lost reliable packets were never resent"
+
+[[row]]
 id = "oh0"
 week = "w3"
 lane = "operate"

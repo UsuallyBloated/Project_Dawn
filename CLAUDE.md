@@ -1294,7 +1294,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   the wss rule would stop the tailnet testers connecting, and the migration means an older
   binary cannot boot on the migrated `world.db`. Still later, by the plan: a per-account
   login budget is in; position-anomaly logging, the nightly dupe query, the client
-  integrity hash and input replays are not.
+  integrity hash and input replays are not. **Reviewed 2026-10-12** (server `72fa214`,
+  client `9a43c33`; session note §6): the account and global caps were lockout levers
+  (one address could keep an owner out indefinitely, two dozen could refuse every login),
+  closed by exempting the source an account last logged in from and refunding a success;
+  every auth send under the idle timeout; canonical addresses; wider intent budgets; the
+  launcher keeps its session across the idle close. The review also found two bugs older
+  than the branch, fixed on the deploy branch as their own entry (Death / corpses).
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -1467,6 +1473,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   call, flagged for the user:** quest kill-credit takes the alive filter but NOT the range
   gate — the decision covered XP shares, and range-gating journal ticks would silently change
   quest play; say the word if journal ticks should be range-gated too.
+- [ ] **A dead character died again on relogin, and lost reliable packets were never resent**
+  *(both found 2026-10-12 by the review of the hosting branch; both older than it; **BUILT
+  the same day on the deploy branch, pending redeploy + playtest**: server `6a09aa1` +
+  `645606a`, `dead_relogin_and_resend_checklist.md`)*. (a) `from_spawn` set `death_processed: false`
+  for every spawn, so a character persisted at 0 HP (a crash, a window-X, a restart while
+  dead) was killed again by the death sweep on its first tick back: a second XP penalty and
+  a second, empty corpse. Now `death_processed: spawn.hp <= 0.0`; Respawn still works (it
+  gates on that flag); the client learns it is dead from the HP seed as before. The
+  integration test fails on the old code at the XP assertion. (b) The world loop never
+  called `RenetServer::update`, the only place renet's per-connection clock moves, and its
+  reliable channels resend a lost packet only when that clock passes the resend time: a
+  lost inventory delta, chat line, kick or teleport was never resent. Invisible on a
+  lossless tailnet; on the internet it would have read as random desyncs. Called every
+  tick now. No client change for either.
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
