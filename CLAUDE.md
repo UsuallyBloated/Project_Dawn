@@ -2234,6 +2234,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   immune Revenant, the stage lines, the cap, slot order through bags and past a held bag)
   and integration (base slot before pouch and regen back, out of food means no HP regen
   while the dead do not drain, the full refusal and the halved hand-eat).
+  **Reviewed 2026-10-13** (session note §3): a forged `race: "Revenant"` at creation was
+  starvation-immune for life (the transformation's stat block was reachable;
+  `create_character` validated only the name), closed by `char_data::CREATION_RACES` and
+  `PLAYABLE_CLASSES` refusing anything off the creation lists, with the immunity no longer
+  keyed on the race; meditate skill-ups gated on water; the eat runs before the stage
+  lines; a famished login is told its stage; the server narrates a hand-eat and the client
+  stopped (`6b63ffe`). Accepted residual: one loaf per character per crash between the
+  resource and store writes. Merge into the deploy branch next, then the Oct 22 redeploy.
 - [ ] **Exporter drift** *(the "Known drift" note names `tools/export_spells.gd` as stale; the
   2026-07-10 session flagged the `items.toml` exporter emitting `weapon_delay` /
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both

@@ -1,9 +1,9 @@
 # Food and water, the EverQuest way
 
-> **Status: DESIGNED 2026-10-12; ALL SIX DECIDED 2026-10-13 (user); SLICE 1 BUILT
-> 2026-10-13, pending review, merge and playtest** (server `feat/food-and-water` `40d9f03`,
-> client `7728793`; `food_and_water_checklist.md`, 20 rows; section 7 carries the decisions,
-> section 5 the slices). The user's direction of
+> **Status: DESIGNED 2026-10-12; ALL SIX DECIDED 2026-10-13 (user); SLICE 1 BUILT AND
+> REVIEWED 2026-10-13, pending merge and playtest** (server `feat/food-and-water`, client
+> `7728793` + `6b63ffe`; `food_and_water_checklist.md`, 20 rows; section 7 carries the
+> decisions, section 5 the slices; the review's findings are folded into sections 3 and 4). The user's direction of
 > 2026-10-12: "Our food and water system needs to work like EQ. Instead of like quick
 > consumables." This replaces the buff model the consumables design assumed
 > (`docs/concepts/tradeskills/consumables.md` "The Regen Loop") and the To-Do item
@@ -74,19 +74,23 @@ Server-authoritative, one rule set, no client authority anywhere.
 the character is in the world and alive (not while dead, not while offline, not in the
 character select); the restart checkpoint writes them with the other resources.
 
-**Eating is the server's job.** Every `EAT_CHECK_INTERVAL` (46 s, EQ's cadence) the server
-looks at each in-world character: if `hunger` is at or under `EAT_AT` (the point a hungry
-character eats), it searches the inventory in slot order, base slots first then bags in
-order, for the first item with `is_food`, takes one, and adds the item's size to `hunger`
-(capped). Same for thirst with `is_drink`. The take is an ordinary inventory write (the
-existing `remove_at` + `InventoryDelta` path), so the client's bags update as they do for
-any server-side removal. The character is told: "You eat a Bread Loaf." / "You drink a
-Water Flask." in the System channel.
+**Eating is the server's job.** Every tick the server looks at each living in-world
+character (as built; EQ checks about every 46 s, and checking every tick only trims that
+lag): if `hunger` is at zero, it searches the inventory in slot order, base slots first
+then bags in order, for the first item with `is_food`, takes one, and adds the item's size
+to `hunger` (capped). Same for thirst with `is_drink`. The take is an ordinary inventory
+write (the existing `decrement_at` + `InventoryDelta` path), so the client's bags update as
+they do for any server-side removal. The character is told: "You eat a Bread Loaf." /
+"You drink a Water Flask." in the System channel. The eat runs BEFORE the stage lines, so
+a character that runs out with bread in the bags is fed that tick and never told it is
+out of food.
 
 **Hunger has three stages, told once each.** Full (above `HUNGRY_AT`): nothing. Hungry
-(`HUNGRY_AT` down to 0): one line, "You are hungry." (or thirsty); auto-eating happens in
-this band. Famished (0): one line, "You are out of food." (or water); the regen penalty
-applies. Lines repeat only when the stage is re-entered, never per tick.
+(`HUNGRY_AT` down to 0): one line, "You are hungry." (or thirsty). Famished (0): one line,
+"You are out of food." (or water), unless something was eaten that tick; the regen penalty
+applies. Lines repeat only when the stage is re-entered, never per tick, and a character
+that logs in hungry or out is told its stage once on entering the world (the counters do
+not move offline, so the transition happened before it left).
 
 **The penalty is EQ's: regeneration, not health.** `regen.rs::tick_one` gates on the two
 flags: famished for food stops natural HP regen; famished for drink stops natural mana
@@ -112,9 +116,15 @@ apply while that item is next to be eaten; recomputed on every inventory change 
 character. Not in slice 1 (no item carries stats yet), designed so the slot-order rule is
 already the one EQ's trick relies on.
 
-**Modifiers, deferred.** Mounts (3x) when the mount system is server-side; a desert zone
-multiplier with the multi-zone epic; a race multiplier on the drain if the per-race timing
-is wanted (section 7). The Revenant's immunity is one check in the drain.
+**Modifiers.** The race multiplier is one table, `hunger::race_drain_multiplier` (decision 3
+chose a toml beside the camps; a six-arm match with a unit test is the same fact in one
+place and was built instead). Deferred: mounts (3x) when the mount system is server-side; a
+desert zone multiplier with the multi-zone epic. The Revenant's immunity is NOT keyed on the
+race string: the review found that a modified launcher could create a "Revenant" (its stat
+block exists for the transformation; `create_character` validated only the name) and be
+starvation-immune for life. Creation now accepts only the sixteen birth races and the
+eighteen classes, and the immunity waits for the transformation to be server-side, keyed on
+that state.
 
 **The client shows the state and never decides it.** The buff bar's food and drink timers
 become two small hunger and thirst indicators (three states each: fed, hungry, out), fed by a
@@ -144,7 +154,16 @@ them and the two windows' offline eat paths are deleted.
 7. **The penalty is capped at "no regen",** so the worst case for a player who ignores the
    system is the EQ experience, not a death loop (the one thing the first tester's bind
    problem taught: no self-built unwinnable states).
-8. **No oracle:** `HungerUpdate` goes to its owner only.
+8. **No oracle:** `HungerUpdate` goes to its owner only (slice 1 sends only chat lines, to
+   the owner).
+9. **Accepted residual (review 2026-10-13):** the auto-eat writes the fed counter with the
+   resources and the missing loaf with the stores in two separate statements; a crash
+   between them restores one loaf per character while keeping the fullness. One
+   four-copper loaf per character per crash; recorded, not fixed (folding the counters into
+   `save_stores_atomic` is the fix if it ever matters).
+10. **A forged race or class at creation is refused** (`char_data::CREATION_RACES`,
+   `PLAYABLE_CLASSES`): the Revenant's block, and any future transformation's, cannot be
+   chosen at birth.
 
 ## 5. Slices
 
@@ -185,7 +204,9 @@ bag, the state survives a relogin, the dead do not starve, the Revenant is immun
    Halfling after about 90 minutes (the P99 wiki), so Human 1.0 and Halfling 2.0. No source
    found for the other races; they start at 1.0, with two of our own (not EQ's) calls flagged
    for the user: Ogre and Troll at 1.5 (big eaters in the lore), Fae at 0.75. One table in
-   `data/races.toml` beside the camps, read at the drain.
+   `data/races.toml` beside the camps, read at the drain. *(Built as a match in
+   `hunger.rs`, one place with its test; Half-Ogre joined Ogre and Troll at 1.5, the user's
+   to keep or drop.)*
 4. **Hand-eating: EQ's rules exactly.** Refused when full with EQ's line; half size when
    early; the first food in slot order is what the character eats on its own.
 5. **Summon Food and Summon Drink: corrected.** The first draft said "Mag, Cle, Dru at level
