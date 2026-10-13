@@ -1650,7 +1650,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   cache as of dispatch, which let a hit earlier in the tick clear the live cache while the
   cast still went through). Casting stands the caster at CastStart and on an instant cast.
   The pure decisions are `world/cast_gate.rs` with unit tests. Client follow-up, not built:
-  the client should stand the local player on cast start too (today it only stops drawing
+  the client should stand the local player on cast start too; **BUILT 2026-10-12, pending
+  playtest** (client, next export; `chat_wrap_and_pet_buttons_checklist.md` §4): `cast_spell`
+  stands a seated caster and goes on instead of refusing with "You cannot cast while
+  sitting.", and Regen forwards the Stand (today it only stops drawing
   you seated when the server's regen or the next Sit/Stand catches up).
   (f) **Verified: a mob finished off by a damage shield (Thorns) pays nothing**, no XP, no
   quest credit, no loot (`tick.rs` ~8085 marks it dead and fans EntityDied, nothing else).
@@ -1996,7 +1999,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   handler and fails with it disconnected. (d) **Spell tooltips should show max
   range** with MP, cooldown and description. All spells share one reach today (client 24 m,
   server 25 m; heals decided to 30 m), so the tooltip can show that now and a per-spell
-  number when spells get their own ranges. Not built. (e) **Design question from the 10-07
+  number when spells get their own ranges. **BUILT 2026-10-12, pending playtest** (client,
+  next export; `chat_wrap_and_pet_buttons_checklist.md` §3): `Spells.spell_range_text` gives
+  the kind's reach (hostile 24 m, friendly 29 m to others, a corpse 30 m, nothing for a
+  spell with no target to reach) and all three tooltips (hotbar gem, spell bar gem, book
+  row) end with it. (e) **Design question from the 10-07
   journal, for the user: should named mobs be charm-immune?** Mirelle (Enchanter 20) charmed
   The Undying (a named, 1,325 HP, the `the_undying` quest's target), used it as a pet to kill
   a Giant Spider and a Barrow Zombie, re-charmed it each time the charm ended (it did turn on
