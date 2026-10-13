@@ -198,6 +198,8 @@ Please include:
    - Paste that into the Windows Explorer address bar and it opens the right folder.
 4. **A screenshot or short clip** if it is visual.
 5. **Roughly what time it happened**, which lets us match it against the server log.
+6. **If it felt laggy** (rubber-banding, swings or spells landing late): type `/ping` in
+   chat and copy the line it prints, `Round trip to the server: N ms, packet loss N%.`
 
 Crashes, soft-locks, items disappearing, quests stuck, odd damage numbers, anything that
 feels wrong. We want all of it.

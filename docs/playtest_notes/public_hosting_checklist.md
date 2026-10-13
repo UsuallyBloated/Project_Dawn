@@ -31,6 +31,7 @@ on `world.db`, an older binary refuses to start on it.
 ## 1 — From outside the house (phone hotspot, off the home network)
 - [ ] **Type only the DDNS name in Server, Register with the code** → `Account created. Logging in...`, then character select, no certificate warning anywhere. notes:
 - [ ] **Create a character, Play, Enter World, walk, cast** → the world works as it did on the tailnet. notes:
+- [ ] **`/ping` from the hotspot, after a minute in the world** → `Round trip to the server: N ms, packet loss N%.` with a real number (tens of ms, not 0), and the server log's `player link` line for that character shows about the same `rtt_ms`. notes:
 - [ ] **Port scan from outside** (`nmap -p 1-65535 <name>` from the hotspot machine, or an online scanner) → exactly 443/tcp and 7777/udp answer; 8765 and 22 do not. notes:
 
 ## 2 — Invite codes
