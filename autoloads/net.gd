@@ -201,6 +201,10 @@ signal world_hunger(hunger_secs: float, thirst_secs: float, cap_secs: float, dra
 # is on its way to the server). The hunger panel flashes a full bar, since
 # the server will refuse with EQ's "you would explode" line.
 signal hand_eat_requested(is_food: bool, is_drink: bool)
+# A player you can see began a jump (never your own): the server's one-shot
+# for the rising edge of their Move's `jumping` flag. RemotePlayerManager
+# plays a hop on that body; nothing about position rides on it.
+signal world_player_jumped(id: int)
 # Track 5 sub-task 4 — private confirmation that the local player's
 # LootItem / LootAll intent landed. Carries one stack the looter just
 # claimed; the GDScript handler loads `item_path` → ItemData and adds
@@ -344,6 +348,13 @@ func _ready() -> void:
 	else:
 		DebugLog.error("Net: gdext_net.dll predates the hunger window (no hunger_update "
 			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs the remote hop, not the client.
+	if has_signal("player_jumped"):
+		connect("player_jumped", _on_player_jumped)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates the jump relay (no player_jumped "
+			+ "signal); other players' jumps will read as slides. Rebuild the DLL with "
+			+ "addons/gdext_net/build.ps1.")
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
@@ -1233,6 +1244,9 @@ func _on_entity_replaced(old_id: int, new_id: int) -> void:
 
 func _on_hunger_update(hunger_secs: float, thirst_secs: float, cap_secs: float, drain_per_sec: float) -> void:
 	world_hunger.emit(hunger_secs, thirst_secs, cap_secs, drain_per_sec)
+
+func _on_player_jumped(id: int) -> void:
+	world_player_jumped.emit(id)
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)

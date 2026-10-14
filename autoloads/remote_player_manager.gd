@@ -49,6 +49,7 @@ func _ready() -> void:
 	Net.world_miss.connect(_on_miss)
 	Net.world_evade.connect(_on_evade)
 	Net.world_entity_died.connect(_on_entity_died)
+	Net.world_player_jumped.connect(_on_player_jumped)
 	Net.world_damage_shield_trigger.connect(_on_damage_shield_trigger)
 	# Track 22.H — peer target broadcast routes through the same
 	# shared EntityTarget signal RemoteEnemyManager uses. We filter
@@ -436,6 +437,16 @@ func _on_entity_died(id: int) -> void:
 	var rp = _by_id.get(id)
 	if rp != null and is_instance_valid(rp):
 		rp.apply_death()
+
+# The jump relay: a peer we can see began a jump. The server never sends us
+# our own (the local body already jumped for real), so no self check is
+# needed, but it costs nothing.
+func _on_player_jumped(id: int) -> void:
+	if id == Net.get_player_id():
+		return
+	var rp = _by_id.get(id)
+	if rp != null and is_instance_valid(rp):
+		rp.play_jump()
 
 # Track 22.H — peer target broadcast. EntityTarget is shared with
 # enemy AI; filter by id partition (< ENEMY_ID_BASE = player) so
