@@ -557,7 +557,6 @@ func apply_named(named_id: String) -> void:
 	level      = data.get("level", level)
 	max_hp     = max_hp * data.get("hp_mult", 1.0)
 	hp         = max_hp
-	xp_reward  = int(xp_reward * data.get("xp_mult", 1.0))
 	_damage_mult       = data.get("damage_mult", 1.0)
 	_enrage_threshold  = data.get("enrage_threshold", 0.0)
 	_enrage_damage_mult = data.get("enrage_damage_mult", 1.5)

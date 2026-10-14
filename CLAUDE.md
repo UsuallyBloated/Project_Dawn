@@ -1763,7 +1763,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **The log confirms every number:** `max_hp=175.0` (50 x 3.5, scaled once — 612 would be double),
   `raw_amount=9` calm (5 x 1.8), `named mob enraged` at 27/175 = 15.4%, then `raw_amount=13`
   (9 x 1.4). Ordinary mobs untouched. Still open by design: nothing places one in the world (a
-  one-line camp tag, but which camp is content), and `xp_mult` is parsed but unapplied.
+  one-line camp tag, but which camp is content). `xp_mult` was REMOVED 2026-10-13 (user decision):
+  a named kill pays by its level alone, as in EQ.
 - [ ] **Heal magnitude client/server drift** *(deferred 2026-06-22 when the heal-bar bounce was
   fixed; still the case per the launcher-gaps memory; audit 2026-09-29)*. The server applies a
   flat `heal_amount` while the client's spell data adds `WIS*0.3 * effectiveness`, and at least
@@ -1852,8 +1853,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   XP value landed to the digit in play, and the gates (level_req, proximity, bag-space
   pre-flight, round-robin, dead-state) all refused correctly under real use. Standing
   watch item: Flamebrand's Flaming Strike procs have not yet been observed in a server
-  log — check on the next melee session with it equipped. `xp_mult` on named mobs remains
-  parsed-but-unapplied (pre-existing, tracked under the named-mobs entry).
+  log — check on the next melee session with it equipped. `xp_mult` on named mobs was removed
+  2026-10-13 (user decision; a named kill pays by level alone).
 - [x] **Enemy AOI cell-crossing spawn/despawn gap** — **DONE + playtested 2026-10-07**
   (`scale_readiness_checklist.md` §3, the two-seat rows, all four PASS: a partner's pet
   appeared with them, vanished with them, and was already there when the tester walked into

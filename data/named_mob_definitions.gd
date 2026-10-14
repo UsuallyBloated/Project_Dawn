@@ -7,7 +7,6 @@ class_name NamedMobDefinitions
 #   subtitle          — appended after display_name ("Rotfang the Feared")
 #   hp_mult           — multiplied against the base scene's max_hp
 #   damage_mult       — multiplied against base_damage and spell_damage at attack time
-#   xp_mult           — multiplied against xp_reward
 #   level             — overrides the scene level
 #   enrage_threshold  — fraction (0.0–1.0); enrage fires once when hp/max_hp drops below; 0 = disabled
 #   enrage_damage_mult — additional damage multiplier applied during enrage (stacks on damage_mult)
@@ -28,7 +27,6 @@ const ALL: Dictionary = {
 		"subtitle": "the Feared",
 		"hp_mult": 3.5,
 		"damage_mult": 1.8,
-		"xp_mult": 4.0,
 		"level": 6,
 		"enrage_threshold": 0.20,
 		"enrage_damage_mult": 1.4,
@@ -46,7 +44,6 @@ const ALL: Dictionary = {
 		"subtitle": "",
 		"hp_mult": 4.0,
 		"damage_mult": 2.0,
-		"xp_mult": 5.0,
 		"level": 10,
 		"enrage_threshold": 0.25,
 		"enrage_damage_mult": 1.5,
@@ -64,7 +61,6 @@ const ALL: Dictionary = {
 		"subtitle": "",
 		"hp_mult": 3.0,
 		"damage_mult": 1.6,
-		"xp_mult": 3.5,
 		"level": 8,
 		"enrage_threshold": 0.30,
 		"enrage_damage_mult": 1.3,
@@ -82,7 +78,6 @@ const ALL: Dictionary = {
 		"subtitle": "the Dark",
 		"hp_mult": 2.5,
 		"damage_mult": 1.5,
-		"xp_mult": 3.0,
 		"level": 5,
 		"enrage_threshold": 0.0,
 		"enrage_damage_mult": 1.0,
@@ -100,7 +95,6 @@ const ALL: Dictionary = {
 		"subtitle": "",
 		"hp_mult": 5.0,
 		"damage_mult": 2.2,
-		"xp_mult": 6.0,
 		"level": 12,
 		"enrage_threshold": 0.40,
 		"enrage_damage_mult": 1.6,
