@@ -419,10 +419,10 @@ id = "b6"
 week = "w3"
 lane = "build"
 day = "Oct 21"
-what = "Merge the trade window branch into the deploy branch, run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. The trade window itself has been built and reviewed since September 29 and waits only for this day. The branch also carries the charm re-target (built 2026-10-12): a charm no longer drops your target. And the hunger window (b12), merged into it from feat/hunger-window."
+what = "Merge the trade window branch into the deploy branch, run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. The trade window itself has been built and reviewed since September 29 and waits only for this day. The branch also carries the charm re-target (built 2026-10-12): a charm no longer drops your target. And the hunger window (b12) and the jump relay (b14), merged into it from their branches."
 who = "Claude unattended"
 days = 0.5
-waits_on = ["b4", "b12"]
+waits_on = ["b4", "b12", "b14"]
 done_when = "Both suites green on the merged deploy branch and pushed; the DLL in addons/gdext_net/ is the merged build."
 todo = "Trade window"
 
@@ -931,4 +931,30 @@ hours = 0.75
 checklist = "corpse_reequip_checklist.md"
 waits_on = ["b13", "o4"]
 todo = "Corpse auto-re-equip on loot"
+done_when = "Every row filled."
+
+[[row]]
+id = "b14"
+week = "w2"
+lane = "build"
+day = "Oct 14"
+what = "Remote jumps: other players' jumps show as hops instead of slides. The client sends its real jump flag, the server relays one cue per jump to the players who can see the jumper (rate-limited, never to the jumper, position untouched), and each client plays the local jump arc. One new message, so it rides the Oct 22 bump; built on feat/jump-relay off the trade branch."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both suites green on feat/jump-relay and pushed; handed to the trade session for the Oct 21 merge."
+todo = "Remote players never show a jump"
+
+[[row]]
+id = "v22"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Remote jumps: a second seat sees your jumps as hops (standing, running, spammed), nothing from out of view, nothing on a corpse, and your own position never changes for them."
+who = "user at a desk"
+hours = 0.5
+needs = ["second seat (two-boxing works)"]
+checklist = "remote_jump_checklist.md"
+checklist_branch = "feat/jump-relay"
+waits_on = ["o4"]
+todo = "Remote players never show a jump"
 done_when = "Every row filled."

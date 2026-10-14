@@ -443,6 +443,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Exploit note:** cosmetic-only is safe precisely because the server keeps owning XZ — a forged
   `jumping` flag can then only make you *look* silly, not move you. Don't let the flag become an
   input to position.
+  **BUILT 2026-10-14 (the cosmetic version), pending the Oct 22 bump** (on `feat/jump-relay` in
+  both repos, server `%s`, client `%s`, branched from `feat/trade-window` like the hunger window
+  so it rides the same `PD_W0028`; awaits the trade session's merge, which was offline when it was
+  built; `remote_jump_checklist.md`, 9 rows, on the branch). (a) `player.gd` latches a jump and
+  sends it on the next Move's `jumping` flag, once. (b) The Move handler reads the flag:
+  `PerConnection::note_move_jump` relays only its rising edge, at most once per
+  `JUMP_RELAY_MIN_INTERVAL` (500 ms; an honest jump lasts 0.7 s), and a relayed jump stands the
+  player; nothing reads the flag into position, Y stays the server's zero. (c) A new
+  `ServerWorldMsg::PlayerJumped { id }` appended after `HungerUpdate`, fanned to the in-world
+  players who can see the jumper (the Say reach), never the jumper; the DLL's `player_jumped`
+  signal, connected by name; `RemotePlayer.play_jump` draws the local jump arc (the same 7 m/s
+  and 20 m/s² as `player.gd`, 1.2 m, 0.7 s) as an offset on the visual and nameplate, never on
+  the interpolated position; a corpse does not hop. Tests: a unit test on the edge-and-rate rule;
+  an integration test with a watcher beside a jumper (one jump plus a forged burst of ten flags
+  inside the interval reaches the watcher as exactly one cue and the jumper as none, an edge
+  past the interval relays again, and the jumper's own Position keeps y = 0); a headless probe
+  of the hop (lift along the arc, the apex, an exact landing, no hop on a corpse). The first
+  piece of the remote animation-state channel.
 - [x] **Incoming `/tell` RPC** — **STALE ENTRY, CORRECTED 2026-08-26: built 2026-05-28**
   (`195891d`, "Chat wire-up: /say /shout /ooc /tell over the network"). The server fans
   `ChatMessage` to the single Tell target and `combat_log.gd:150` renders "%s tells you" into
