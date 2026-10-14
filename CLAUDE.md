@@ -1553,6 +1553,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   occupied or wrong slot, the slot survives a partial loot in the DB, and an integration test
   has a Warrior die in a cap and robe and loot them back onto slots 2 and 3 with the bread in
   the bags and the gear persisted as worn.
+  **DEPLOYED 2026-10-14** (R720 boot line `build="5986f26" dev_cmds=false`, the four old
+  corpses cleared by hand in the same stop, `loaded persisted corpses count=0`), so
+  `corpse_reequip_checklist.md` is runnable now on the 10-13 export.
 - [ ] **Per-creature corpse models / scale** — corpses (player + mob) share
   `scripts/corpse_body.gd`'s capsule; needs authored per-creature meshes.
 - [ ] **Tune `corpses::CORPSE_LINGER_SECS` for the considered production value** — **raised to 7
