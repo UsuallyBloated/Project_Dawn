@@ -30,7 +30,7 @@ Diagnostics: `server.log` anchors `corpse loot put worn gear back on` (with `ree
 
 ## 3 — Edges
 
-- [ ] **Die with full bags and loot everything** → worn gear goes back on (it needs no bag room); anything that does not fit stays on the corpse, and chat says "Your bags are full: N items stay on your corpse." Loot again after making room → it comes off. notes:
+- [ ] **Die, respawn, fill your bags first (buy from a vendor, or loot kills), then Loot All** → worn gear goes back on (it needs no bag room); anything that does not fit stays on the corpse, and chat says "Your bags are full: N items stay on your corpse." Loot again after making room → it comes off. notes:
 - [ ] **Die holding an item on the cursor** → it is on the corpse and comes back into your bags, not onto a slot. notes:
 - [ ] **A corpse from before the redeploy, if one exists** → loots into the bags as it always did. notes:
 - [ ] **Resurrected corpse** (a Cleric or Paladin res, then loot) → same behaviour; the res is unaffected. notes:
