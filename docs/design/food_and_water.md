@@ -314,3 +314,17 @@ glyphs until the art pass.
   unless the user says otherwise.
 - (e) Glyphs for now; icons with the art pass.
 
+**BUILT 2026-10-13 on `feat/hunger-window`, pending the Oct 22 bump** (server `993c82d`, client
+`c7c53b3`, both branched from `feat/trade-window` so the hunger update rides the same
+`PD_W0028`; `hunger_window_checklist.md`, 18 rows, on that branch). Three deviations from the
+plan above, each deliberate:
+- **The drain rate is sent, not copied.** `HungerUpdate` carries `drain_per_sec` (the race's
+  rate alive, 0 dead), so the race table keeps one home on the server and the client needs no
+  lockstep copy of it. Death and respawn change the rate, which is itself a reason to send.
+- **The position is not remembered.** The plan said "remembered like the other panels"; no HUD
+  panel persists its position today, so this one follows them and does not either.
+- **The glyphs are short text labels** ("Food", "Water"), matching the HP / MP / STA labels on
+  the bar above it, until the art pass brings icons.
+The amber threshold (`HUNGRY_AT_SECS`, 1728 s) is mirrored in `hud_hunger_panel.gd` with a
+lockstep comment, the only number the client copies.
+

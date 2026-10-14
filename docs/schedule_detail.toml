@@ -419,10 +419,10 @@ id = "b6"
 week = "w3"
 lane = "build"
 day = "Oct 21"
-what = "Merge the trade window branch into the deploy branch, run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. The trade window itself has been built and reviewed since September 29 and waits only for this day. The branch also carries the charm re-target (built 2026-10-12): a charm no longer drops your target."
+what = "Merge the trade window branch into the deploy branch, run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. The trade window itself has been built and reviewed since September 29 and waits only for this day. The branch also carries the charm re-target (built 2026-10-12): a charm no longer drops your target. And the hunger window (b12), merged into it from feat/hunger-window."
 who = "Claude unattended"
 days = 0.5
-waits_on = ["b4"]
+waits_on = ["b4", "b12"]
 done_when = "Both suites green on the merged deploy branch and pushed; the DLL in addons/gdext_net/ is the merged build."
 todo = "Trade window"
 
@@ -624,7 +624,7 @@ id = "b11"
 week = "w2"
 lane = "build"
 day = "Oct 13 to 16"
-what = "Food and water the EQ way, slice 1 (docs/design/food_and_water.md, decided 2026-10-13): hunger and thirst counters persisted on the character, the drain per race, the server eating the first food in slot order when a counter empties, the stages and their lines, the regen gate, hand-eating by EQ's rules, a HungerUpdate to the owner. Server half plus the chat lines; the window follows its own note. One protocol bump, so it rides the Oct 22 bump day."
+what = "Food and water the EQ way, slice 1 (docs/design/food_and_water.md, decided 2026-10-13): hunger and thirst counters persisted on the character, the drain per race, the server eating the first food in slot order when a counter empties, the stages and their lines, the regen gate, hand-eating by EQ's rules, a HungerUpdate to the owner. Server half plus the chat lines; the window follows its own note. No protocol change, so it shipped with the Oct 13 redeploy and export (o9)."
 who = "Claude unattended"
 days = 2.5
 done_when = "Reported built with its checklist written and the review pass run; merged for the bump day."
@@ -637,7 +637,7 @@ lane = "verify"
 what = "Food and water after the bump day: eating and drinking happen on their own and say so, the hungry and out-of-food lines come once each, no regen when out and regen back after eating, hand-eat refused when full and halved when early, slot order through a bag, the state survives a relogin, the dead do not starve."
 who = "user, one seat"
 hours = 1.5
-waits_on = ["b11", "o4"]
+waits_on = ["b11", "o9"]
 tentative = true
 done_when = "Every row filled."
 checklist = "food_and_water_checklist.md"
@@ -863,3 +863,39 @@ mitigation = "Week 5 is slack by design and absorbs a few days. A week away move
 risk = "Historical gaps of three to ten days"
 impact = "About a week of drift per six, already seen twice."
 mitigation = "Build steps are laid out at half the plan's pace, the schedule's own rule."
+
+[[row]]
+id = "o9"
+week = "w2"
+lane = "operate"
+day = "Tue Oct 13"
+what = "Redeploy the R720 at f58b796 (food and water slice 1 with migration 0013, the spell batch, the dead-relogin and resend fixes, the player link latency line) and export the client from 25eefb1 with the rebuilt wire layer. Every open checklist becomes runnable on that pair."
+who = "user at a desk, Claude writes the commands"
+hours = 1
+done_when = "The boot line shows build=f58b796 and dev_cmds=false; the export is stamped and its DLL matches the addon's."
+
+[[row]]
+id = "b12"
+week = "w2"
+lane = "build"
+day = "Oct 13"
+what = "The hunger window (docs/design/food_and_water.md section 8, decided 2026-10-13): a small panel below the character bar with a Food and a Water bar fed by the server, a full bar flashing when a hand-eat will be refused, and EQ's eating emote for the people nearby. Built on feat/hunger-window off the trade branch, so it rides the Oct 22 bump."
+who = "Claude unattended"
+days = 1
+done_when = "Both suites green on feat/hunger-window and pushed; handed to the trade session for the Oct 21 merge."
+todo = "EQ-style food/water gating"
+
+[[row]]
+id = "v20"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "The hunger window: the bars sit under the character bar and run down smoothly, turn amber and red with the chat lines, flash when you try to eat full, stop while you are dead; a second seat beside you sees Chomp, chomp, chomp when you eat and nothing from two cells away."
+who = "user at a desk"
+hours = 1
+needs = ["second seat for the emote rows (two-boxing works)"]
+checklist = "hunger_window_checklist.md"
+checklist_branch = "feat/hunger-window"
+waits_on = ["o4"]
+todo = "EQ-style food/water gating"
+done_when = "Every row filled."
