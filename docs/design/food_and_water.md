@@ -297,3 +297,34 @@ visibly between sends or step once a minute: proposed tick, as above. (d) Whethe
 hand-eat refusal flashes the bar: proposed yes, a brief flash on the full bar, with EQ's
 line in chat as now. (e) Icons: two from the existing item icons, or two glyphs; proposed
 glyphs until the art pass.
+
+**DECIDED 2026-10-13 (user):**
+- (a) Default position: directly below the character's information bar window.
+- (b) Never hidden, full bars included.
+- (c) The bars tick down between sends, as proposed; may change later.
+- (d) The user asked whether EQ's eating message was "takes a bit of a ration", for its
+  roleplay value. Checked against EQEmu's string table (`zone/string_ids.h`): EQ shows the
+  people around you `Chomp, chomp, chomp... %1 takes a bite from a %2.` and
+  `Glug, glug, glug... %1 takes a drink from a %2.` (`EATING_MESSAGE`, `DRINKING_MESSAGE`).
+  Player logs also show the eater's own lines as "You take a bite of Iron Ration." followed
+  by "Ahhh. That was tasty." Build shape: the eater keeps their own line; players within say
+  range get EQ's emote naming the eater and the item, on auto-eats and hand-eats alike. It
+  rides the existing System chat line, so it needs no protocol change. The refusal flash
+  this question originally asked about is left as proposed (a brief flash on the full bar)
+  unless the user says otherwise.
+- (e) Glyphs for now; icons with the art pass.
+
+**BUILT 2026-10-13 on `feat/hunger-window`, pending the Oct 22 bump** (server `993c82d`, client
+`c7c53b3`, both branched from `feat/trade-window` so the hunger update rides the same
+`PD_W0028`; `hunger_window_checklist.md`, 18 rows, on that branch). Three deviations from the
+plan above, each deliberate:
+- **The drain rate is sent, not copied.** `HungerUpdate` carries `drain_per_sec` (the race's
+  rate alive, 0 dead), so the race table keeps one home on the server and the client needs no
+  lockstep copy of it. Death and respawn change the rate, which is itself a reason to send.
+- **The position is not remembered.** The plan said "remembered like the other panels"; no HUD
+  panel persists its position today, so this one follows them and does not either.
+- **The glyphs are short text labels** ("Food", "Water"), matching the HP / MP / STA labels on
+  the bar above it, until the art pass brings icons.
+The amber threshold (`HUNGRY_AT_SECS`, 1728 s) is mirrored in `hud_hunger_panel.gd` with a
+lockstep comment, the only number the client copies.
+
