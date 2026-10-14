@@ -2268,8 +2268,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **The hunger window DECIDED and BUILT 2026-10-13, pending the Oct 22 bump** (design §8 with
   the user's five answers: below the character bar, never hidden, bars tick between sends, EQ's
   eating emote for the room, glyphs for now; built on `feat/hunger-window`, server `993c82d`,
-  client `c7c53b3`, branched from `feat/trade-window` so it rides the same `PD_W0028`, merged by
-  the trade session before Oct 21; `hunger_window_checklist.md`, 18 rows, on that branch). A
+  client `c7c53b3`, branched from `feat/trade-window` so it rides the same `PD_W0028`; **MERGED
+  into `feat/trade-window` 2026-10-13** by the trade session (a fast-forward, both repos), so it
+  rides the Oct 22 bump; `hunger_window_checklist.md`, 18 rows, on that branch). A
   `HungerUpdate` to the owner only (entering, any eat or drink, a stage change, death and
   respawn, once a minute) carrying the counters and the drain rate; the panel under `$Panel`,
   hidden until the first update; a full bar flashes on a hand-eat the server will refuse; EQ's
