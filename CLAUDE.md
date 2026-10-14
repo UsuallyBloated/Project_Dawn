@@ -1438,7 +1438,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Design note, flagged not decided:** heals now share the nuke's 25 m reach because spells
   have no range field; say so if heals should reach further (a per-spell range is the real
   answer, with the content pass).
-- [ ] **Unclean-kill relogin was not refused** — `banker_slice2_checklist.md:54` is ticked `[x]`
+- [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
+  ticked on the integration test** (server `f58b796`,
+  `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
+  timers) **plus the 06-19 to 06-20 camp-and-linkdead verification**; the test suite is its
+  own checklist, as with the flaky-trio item. What the test pins, from the client's seat: a
+  client dropped without a Disconnect leaves its body in the world; for the 10 s until the
+  heartbeat timeout the old netcode connection still holds the client id and a second
+  handshake is ignored outright (a relogin can never boot a live session, the Lineage II
+  force-off); from then until the 30 s linger ends, the Connect is refused with a
+  DuplicateLogin kick carrying the countdown; after it the login succeeds, and knocking
+  every few seconds through the window does not extend it (the dodge-the-reap trap the
+  disconnect handler guards against). The checklist row's note ("immediately logged back in
+  successfully") does not reproduce against the current server and is annotated in place.
+  *(Original entry:)* `banker_slice2_checklist.md:54` is ticked `[x]`
   but its own note reads *"Killed A's client, then immediately logged back in successfully"*,
   which contradicts the row's stated expectation and the design. This guard is what blocks the
   Lineage II force-off pattern (a live session should linger vulnerable ~30s after an unclean
@@ -1548,6 +1561,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   provenance. **Now slice 2 of the cursor-slot epic** (user-committed 2026-08-27; design:
   `docs/design/cursor_slot_and_reequip.md`) — the cursor slot is the overflow home that makes
   an honest version possible.
+  **BUILT 2026-10-13, pending a redeploy and playtest** (server `d598ad6` + `5986f26`, migration
+  `0014_corpse_equip_slot.sql`, approved by the user with the instruction to clear the R720's
+  four old corpses by hand; `corpse_reequip_checklist.md`, 11 rows; server-only, no export).
+  Worn gear goes back on the slot it died in when that slot is empty and still takes it,
+  everything else to the bags; overflow stays on the corpse with "Your bags are full: N items
+  stay on your corpse." rather than going to the cursor (design doc, slice 2's note). Tests: the
+  corpse list covers exactly the stacks the death strip takes, the restore rule refuses an
+  occupied or wrong slot, the slot survives a partial loot in the DB, and an integration test
+  has a Warrior die in a cap and robe and loot them back onto slots 2 and 3 with the bread in
+  the bags and the gear persisted as worn.
 - [ ] **Per-creature corpse models / scale** — corpses (player + mob) share
   `scripts/corpse_body.gd`'s capsule; needs authored per-creature meshes.
 - [ ] **Tune `corpses::CORPSE_LINGER_SECS` for the considered production value** — **raised to 7
@@ -1768,7 +1791,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **The log confirms every number:** `max_hp=175.0` (50 x 3.5, scaled once — 612 would be double),
   `raw_amount=9` calm (5 x 1.8), `named mob enraged` at 27/175 = 15.4%, then `raw_amount=13`
   (9 x 1.4). Ordinary mobs untouched. Still open by design: nothing places one in the world (a
-  one-line camp tag, but which camp is content), and `xp_mult` is parsed but unapplied.
+  one-line camp tag, but which camp is content). `xp_mult` was REMOVED 2026-10-13 (user decision):
+  a named kill pays by its level alone, as in EQ.
 - [ ] **Heal magnitude client/server drift** *(deferred 2026-06-22 when the heal-bar bounce was
   fixed; still the case per the launcher-gaps memory; audit 2026-09-29)*. The server applies a
   flat `heal_amount` while the client's spell data adds `WIS*0.3 * effectiveness`, and at least
@@ -1857,8 +1881,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   XP value landed to the digit in play, and the gates (level_req, proximity, bag-space
   pre-flight, round-robin, dead-state) all refused correctly under real use. Standing
   watch item: Flamebrand's Flaming Strike procs have not yet been observed in a server
-  log — check on the next melee session with it equipped. `xp_mult` on named mobs remains
-  parsed-but-unapplied (pre-existing, tracked under the named-mobs entry).
+  log — check on the next melee session with it equipped. `xp_mult` on named mobs was removed
+  2026-10-13 (user decision; a named kill pays by level alone).
 - [x] **Enemy AOI cell-crossing spawn/despawn gap** — **DONE + playtested 2026-10-07**
   (`scale_readiness_checklist.md` §3, the two-seat rows, all four PASS: a partner's pet
   appeared with them, vanished with them, and was already there when the tester walked into
@@ -2268,6 +2292,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   lines; a famished login is told its stage; the server narrates a hand-eat and the client
   stopped (`6b63ffe`). Accepted residual: one loaf per character per crash between the
   resource and store writes. Merge into the deploy branch next, then the Oct 22 redeploy.
+  **Slice 1 DEPLOYED 2026-10-13** (server `f58b796` on the R720, migration `0013` applied;
+  client exported from `25eefb1`), so `food_and_water_checklist.md` is runnable now.
+  **The hunger window DECIDED and BUILT 2026-10-13, pending the Oct 22 bump** (design §8 with
+  the user's five answers: below the character bar, never hidden, bars tick between sends, EQ's
+  eating emote for the room, glyphs for now; built on `feat/hunger-window`, server `993c82d`,
+  client `c7c53b3`, branched from `feat/trade-window` so it rides the same `PD_W0028`; **MERGED
+  into `feat/trade-window` 2026-10-13** by the trade session (a fast-forward, both repos), so it
+  rides the Oct 22 bump; `hunger_window_checklist.md`, 18 rows, on that branch). A
+  `HungerUpdate` to the owner only (entering, any eat or drink, a stage change, death and
+  respawn, once a minute) carrying the counters and the drain rate; the panel under `$Panel`,
+  hidden until the first update; a full bar flashes on a hand-eat the server will refuse; EQ's
+  `Chomp, chomp, chomp... X takes a bite from a Y.` (EQEmu's `EATING_MESSAGE`) to everyone
+  within say range, never the eater. Tests: an integration test with a watcher beside a
+  starving Halfling (the update carries the meal and the 2.0 rate, the watcher hears the emote
+  and never the eater's counters); a headless panel probe, 17 checks.
 - [ ] **Exporter drift** *(the "Known drift" note names `tools/export_spells.gd` as stale; the
   2026-07-10 session flagged the `items.toml` exporter emitting `weapon_delay` /
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both

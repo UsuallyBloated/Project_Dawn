@@ -88,6 +88,21 @@ loot restores gear to its slots first, bags second, cursor as the single-stack o
 honest chat line for anything that stays on the corpse. Design detail deferred until slice 1
 is playtested.
 
+**Slice 2 BUILT 2026-10-13, pending a redeploy and playtest** (server `d598ad6` + `5986f26`,
+migration `0014_corpse_equip_slot.sql`; `corpse_reequip_checklist.md`; no protocol change and
+no client change: a restored piece arrives as an ordinary `InventoryDelta` to `"equip"`). Built
+to classic EQ's behaviour (your own corpse's items were "filed away in their place"). As built:
+`corpse_items.equip_slot` records the slot each worn piece died in (NULL if carried); looting
+takes worn gear first, puts each piece back on its slot when that slot is empty and still takes
+it (`restore_worn`, the same `is_equippable_in_slot` rule every equip uses), and sends
+everything else through the existing placer; gear bonuses are recomputed after the atomic
+persist. The two open questions, settled: a partially lootable corpse re-equips what it can
+and leaves the rest, which keeps its slot for a later loot; and **the cursor is NOT the
+overflow**, departing from the line above. Overflow stays on the corpse with an honest line
+("Your bags are full: N items stay on your corpse."), because a stack dropped into the hand of
+someone mid-corpse-run is easy to lose to a stray click, and the corpse is the one place that
+cannot lose it.
+
 ## Open questions (carried, not blocking slice 1)
 
 - Should kill-loot bags with a single item stack + coin allow left-click (grab item, leave
