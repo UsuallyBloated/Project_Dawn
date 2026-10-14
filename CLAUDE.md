@@ -1543,6 +1543,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   provenance. **Now slice 2 of the cursor-slot epic** (user-committed 2026-08-27; design:
   `docs/design/cursor_slot_and_reequip.md`) — the cursor slot is the overflow home that makes
   an honest version possible.
+  **BUILT 2026-10-13, pending a redeploy and playtest** (server `d598ad6` + `5986f26`, migration
+  `0014_corpse_equip_slot.sql`, approved by the user with the instruction to clear the R720's
+  four old corpses by hand; `corpse_reequip_checklist.md`, 11 rows; server-only, no export).
+  Worn gear goes back on the slot it died in when that slot is empty and still takes it,
+  everything else to the bags; overflow stays on the corpse with "Your bags are full: N items
+  stay on your corpse." rather than going to the cursor (design doc, slice 2's note). Tests: the
+  corpse list covers exactly the stacks the death strip takes, the restore rule refuses an
+  occupied or wrong slot, the slot survives a partial loot in the DB, and an integration test
+  has a Warrior die in a cap and robe and loot them back onto slots 2 and 3 with the bread in
+  the bags and the gear persisted as worn.
 - [ ] **Per-creature corpse models / scale** — corpses (player + mob) share
   `scripts/corpse_body.gd`'s capsule; needs authored per-creature meshes.
 - [ ] **Tune `corpses::CORPSE_LINGER_SECS` for the considered production value** — **raised to 7

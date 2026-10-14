@@ -899,3 +899,36 @@ checklist_branch = "feat/hunger-window"
 waits_on = ["o4"]
 todo = "EQ-style food/water gating"
 done_when = "Every row filled."
+
+[[row]]
+id = "b13"
+week = "w2"
+lane = "build"
+day = "Oct 13"
+what = "Corpse auto-re-equip: looting your own corpse puts your worn gear back on the slot it was worn in, as classic EQ did; carried items still go to the bags. Server-only, with one migration (0014)."
+who = "Claude unattended"
+days = 0.5
+done_when = "Reported built with its checklist written; on the deploy branch for the next redeploy."
+todo = "Corpse auto-re-equip on loot"
+
+[[row]]
+id = "o10"
+week = "w2"
+lane = "operate"
+what = "Clear the R720's four old test corpses by hand, with the server stopped (DELETE FROM corpse_items; DELETE FROM corpses;), and confirm the boot line shows count=0."
+who = "user at a desk, Claude writes the commands"
+hours = 0.25
+done_when = "loaded persisted corpses count=0 on the boot line."
+
+[[row]]
+id = "v21"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Corpse auto-re-equip: die in a full set, loot your corpse, and the gear is back on with the stats it gave; a slot you have filled since keeps what you put on; full bags leave the rest on the corpse with a line."
+who = "user at a desk"
+hours = 0.75
+checklist = "corpse_reequip_checklist.md"
+waits_on = ["b13", "o4"]
+todo = "Corpse auto-re-equip on loot"
+done_when = "Every row filled."
