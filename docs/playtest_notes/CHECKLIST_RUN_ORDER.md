@@ -4,7 +4,7 @@ The order to run the open playtest checklists in, and what each needs. Kept curr
 checklist is added or finished (last update 2026-10-06). The status of every row lives in the
 checklist files themselves; this page only says what to run next.
 
-**As of 2026-10-12:** server `d593609` on the R720 (the whole spell batch, steps 0 to 5, plus `8a826a5` Warder's Mend and the charm walk-home), boot line `dev_cmds=false`. Client exported 2026-10-09 13:34 from `bd0c81b` with the rebuilt wire DLL (the stamp is in the exe). **Every open checklist below is runnable on that pair**; nothing waits on an export. The bump day (Thursday Oct 22) brings the next server and client change together.
+**As of 2026-10-13:** server `f58b796` on the R720 (the spell batch, food and water slice 1 with migration `0013_hunger.sql`, the dead-relogin and reliable-resend fixes, the `player link` latency line), boot line `dev_cmds=false`. Client exported 2026-10-13 20:48 from `25eefb1` with the rebuilt wire DLL (hash matches `addons/gdext_net/`; carries `/ping`). **Every open checklist below is runnable on that pair, including the rows that said "next export"**, and `food_and_water_checklist.md` and `dead_relogin_and_resend_checklist.md` join them. The bump day (Thursday Oct 22) brings the trade window, the charm retarget and the hunger window.
 
 **Test characters:** the `spelltest` account holds one character per class the spell rows
 need (table in `ported_spells_checklist.md`). Log in as `spelltest` with password
