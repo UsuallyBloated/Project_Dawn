@@ -10,6 +10,9 @@ const _HudCastBar           := preload("res://scripts/hud_cast_bar.gd")
 const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
 const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
 const _HudPetPanel          := preload("res://scripts/hud_pet_panel.gd")
+const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
+# The hunger window sits this far below the player's information bar.
+const HUNGER_PANEL_GAP := 4.0
 const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
 # Dev Test Panel, mounted on demand by `/testpanel` (world.gd also mounts it at
 # world entry for GMs and the Test Room).
@@ -86,6 +89,7 @@ var _bank_window: Panel = null
 
 var _group_panel = null
 var _pet_panel = null
+var _hunger_panel: Control = null
 var _track_window: TrackWindow = null
 var _spell_book: Panel = null
 var _quest_journal: Panel = null
@@ -208,6 +212,13 @@ func _build_components() -> void:
 	_pet_panel = _HudPetPanel.new()
 	add_child(_pet_panel)
 
+	# The hunger window (food design section 8), by default directly below
+	# the player's information bar and as wide as it. Placed deferred, once
+	# the bar's containers have their final size (the XP row grows it).
+	_hunger_panel = _HudHungerPanelScene.instantiate()
+	add_child(_hunger_panel)
+	_place_hunger_panel.call_deferred()
+
 	_track_window = _TrackWindowScript.new()
 	add_child(_track_window)
 
@@ -251,6 +262,11 @@ func _build_components() -> void:
 
 	_group_panel.layout_changed.connect(_reposition_pet_panel)
 	_reposition_pet_panel()
+
+func _place_hunger_panel() -> void:
+	var info: Control = $Panel
+	_hunger_panel.position = Vector2(info.position.x, info.position.y + info.size.y + HUNGER_PANEL_GAP)
+	_hunger_panel.size.x = info.size.x
 
 func _reposition_pet_panel() -> void:
 	if _pet_panel == null or _group_panel == null:

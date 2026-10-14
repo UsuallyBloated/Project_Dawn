@@ -671,6 +671,7 @@ func _use_consumable(item: ItemData, index: int) -> void:
 		# takes the item, or refuses with EQ's line when you are full, so no
 		# line is printed here (it would double or contradict the server's).
 		if item.is_food or item.is_drink:
+			Net.hand_eat_requested.emit(item.is_food, item.is_drink)
 			Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)
 		elif item.heal_on_use > 0.0 or item.mp_on_use > 0.0:
 			Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)

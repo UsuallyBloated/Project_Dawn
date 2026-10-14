@@ -193,6 +193,14 @@ signal world_time_of_day(hour: float)
 # `old_id` (a charm landing or ending). Emitted after its spawn signal, so the
 # new node exists. Targeting uses it to keep the target across the change.
 signal world_entity_replaced(old_id: int, new_id: int)
+# The hunger window: the local player's food and water counters in seconds of
+# fullness, the cap, and the drain per real second right now (0 while dead).
+# Owner-only on the server; the HUD's hunger panel draws it.
+signal world_hunger(hunger_secs: float, thirst_secs: float, cap_secs: float, drain_per_sec: float)
+# A food or drink was right-clicked in a bag or the inventory (the hand-eat
+# is on its way to the server). The hunger panel flashes a full bar, since
+# the server will refuse with EQ's "you would explode" line.
+signal hand_eat_requested(is_food: bool, is_drink: bool)
 # Track 5 sub-task 4 — private confirmation that the local player's
 # LootItem / LootAll intent landed. Carries one stack the looter just
 # claimed; the GDScript handler loads `item_path` → ItemData and adds
@@ -330,6 +338,12 @@ func _ready() -> void:
 	else:
 		DebugLog.error("Net: gdext_net.dll predates entity_replaced. A charm will drop "
 			+ "your target; rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs the hunger window, not the client.
+	if has_signal("hunger_update"):
+		connect("hunger_update", _on_hunger_update)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates the hunger window (no hunger_update "
+			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
@@ -1216,6 +1230,9 @@ func _on_time_of_day(hour: float) -> void:
 
 func _on_entity_replaced(old_id: int, new_id: int) -> void:
 	world_entity_replaced.emit(old_id, new_id)
+
+func _on_hunger_update(hunger_secs: float, thirst_secs: float, cap_secs: float, drain_per_sec: float) -> void:
+	world_hunger.emit(hunger_secs, thirst_secs, cap_secs, drain_per_sec)
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)
