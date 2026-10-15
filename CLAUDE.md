@@ -2388,6 +2388,28 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   within say range, never the eater. Tests: an integration test with a watcher beside a
   starving Halfling (the update carries the meal and the 2.0 rate, the watcher hears the emote
   and never the eater's counters); a headless panel probe, 17 checks.
+  **Slice 2, Summon Food and Summon Drink, BUILT 2026-10-15, pending the redeploy, the export and
+  the playtest** (server `4577350`, client `ec4fff2`; `summon_food_checklist.md`, 15 rows; both sides
+  move together: an old client knows neither the spell nor the item). **The user's numbers
+  (2026-10-15, from Monsters and Memories): "conjure 1 to 4 slices of bread / flasks of water,
+  scaling by level."** Built as a new `SUMMON_ITEM` target type: the spell's `summon_item` goes
+  into the caster's bags through the real placer, `summon_count` of them (one at the level the
+  class learns the spell, one more per `SUMMON_LEVELS_PER_EXTRA` = 10 levels, capped at
+  `summon_max` = 4; the step is a knob, M&M does not publish theirs), with "You conjure X xN."
+  and the inventory deltas; the pre-flight refuses "Your bags are full." before the mana comes
+  off (the placer's own `can_accept`). The design's per-class levels (Summon Drink: Magician 1,
+  Shaman 2, Cleric 3, Druid 10; Summon Food: Magician 1, Cleric 9, Shaman 9, Druid 14) are
+  honoured by a new `class_min_levels` table on a spell (the cast gate's level check and the
+  client's spell book both read `required_level(class)`, `min_level` for a class absent from
+  it); the lockstep check learned inline tables and dictionaries for it. Two new items on both
+  sides, Conjured Bread (a 48-minute meal) and Conjured Water (a 36-minute drink), with no
+  vendor value, so the existing SellItem rule refuses them (no coin faucet from free food); the
+  item lockstep check is green with 174 on each side. 10 mana, 4 s cast, no cooldown of its
+  own. **Flagged, not built:** EQ landed summoned items on the cursor (ours go to the bags), and
+  EQ's were NO RENT and vanished on logout (ours persist; a no-rent flag is the open "no-drop /
+  no-trade item flag" item). Tests: a unit test on the count and the per-class levels; an
+  integration test where a Magician 1 conjures one bread and is told, and a Magician 35
+  conjures four water; a headless probe of the client's data and the two item resources.
 - [ ] **Exporter drift** *(the "Known drift" note names `tools/export_spells.gd` as stale; the
   2026-07-10 session flagged the `items.toml` exporter emitting `weapon_delay` /
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both

@@ -1019,3 +1019,28 @@ checklist = "res_sickness_checklist.md"
 waits_on = ["o4"]
 todo = "Res-sickness"
 done_when = "Every row filled."
+
+[[row]]
+id = "b18"
+week = "w2"
+lane = "build"
+day = "Oct 15"
+what = "Summon Food and Summon Drink (food slice 2, on the user's Monsters and Memories numbers): a Magician, Cleric, Shaman or Druid conjures 1 to 4 loaves or flasks into the bags, scaling with level, at EQ's per-class spell levels; the conjured items have no vendor value. Both sides change, so it rides the Oct 22 redeploy and export together."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both suites green on the deploy branch; spell and item lockstep checks green. Done only when summon_food_checklist.md is filled."
+todo = "EQ-style food/water gating"
+
+[[row]]
+id = "v25"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Summon Food and Drink: a Magician conjures one loaf and one flask, more at higher levels, the items feed you and the merchant refuses them, a Cleric or Druid gets each spell at its level, full bags refuse before the cast."
+who = "user at a desk"
+hours = 0.75
+needs = ["a Magician", "a Cleric or Druid around level 9 to 14 (Level Up tool)"]
+checklist = "summon_food_checklist.md"
+waits_on = ["o4"]
+todo = "EQ-style food/water gating"
+done_when = "Every row filled."
