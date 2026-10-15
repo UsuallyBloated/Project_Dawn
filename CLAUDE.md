@@ -1553,36 +1553,34 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
-  **BUILT 2026-10-14, pending the redeploy, the export and the playtest** (server `53ad557`, client
-  `fc7688c`; `res_sickness_checklist.md`, 12 rows; the server half works on the client testers hold,
-  the sheet and buff-bar entry need the export). Classic EQ's Resurrection Effects as Project
-  1999 keeps them (five minutes, "You are exhausted." on accept, "You feel your strength
-  return." when it wears off); EQ cut STR, STA, AGI, WIS and INT by level-scaled absolutes on
-  hundred-point stats; here the cut is **one point per four levels (floor one) off each of the
-  five primaries**, and natural HP and mana regen run at **half** while it lasts
-  (`buffs::RES_SICKNESS_NAME / _SECS / _LEVELS_PER_POINT / _REGEN_MULT`, all tuning knobs,
-  chosen without a user decision). **OPEN, for the user (2026-10-14 evening):** the cut was
-  sized on a wrong claim about our stat scale. The real scale (`char_data.rs`): base 10, race
-  plus or minus 20, class up to 18, then a class's two or three main stats gain 1 to 4 a level
-  for life (a Human Warrior's STR is about 22 at 1, 60 at 20, 140 at 60) while every other
-  stat never moves (5 to 20 for life). So level/4 is a small bite on the stats that matter and
-  can take a secondary stat negative at high level; P99's cut was about half a level 60's STR.
-  Also: on the server only STR does anything at runtime (melee damage), so the stat cut is
-  mostly a sheet effect and the regen halving is the sting. Three shapes offered: keep level/4
-  capped at a quarter of each stat; a percentage of each stat (the sheet would read uncut until
-  the deltas ride the wire); or drop the stat cut and keep the regen half and the lines. The debuff
-  rides the stat-buff path, so the buff tick expires it and undoes its deltas like any stat
-  buff; the regen tick reads it by name; the owner's snapshot is fanned on accept; the client
-  recognises it by name in `BuffManager`'s reconcile and applies the same level-based cut (kept
-  in lockstep by hand) so the sheet shows what the server fights with. **Flagged, not built:**
-  P99's one-shot arrival at about a quarter HP and no mana (a bigger gameplay change beside the
-  corpse: a user call); buffs are not persisted, so a relog clears the sickness, as camping did
-  in classic (the dodge costs the camp or linkdead wait; a knob if it should persist). Tests:
-  unit (the cut per level, the buff's shape, the regen halving over forty ticks) and an
+  **BUILT 2026-10-14 and REBUILT 2026-10-15 to the P99 design, pending the redeploy, the export
+  and the playtest** (server `528ae23`, client `9c5e333`; `res_sickness_checklist.md`, 13 rows; the
+  server half works on the client testers hold, the sheet and buff-bar entry need the export).
+  **DECIDED 2026-10-15 (user): "Lets keep the design you found on the P99 wiki page. Difficult
+  is what we are looking for."** So, classic EQ's Resurrection Effects as Project 1999 keeps
+  them: five minutes; "You are exhausted." on landing, "You feel your strength return." when it
+  wears off; the player **lands at a quarter of max HP with no mana** (one-shot at the accept,
+  announced at once; not damage, so no stand or camp cancel rides on it); and STR, AGI, INT, WIS
+  and CON (EQ's STA) lose a **level-scaled fraction of their intrinsic value** (race, class and
+  level via `char_data::compute`, never gear or buffs), a tenth at level 1 to a half at 60
+  (`buffs::RES_SICKNESS_CUT_AT_1 / _AT_60 / _ARRIVAL_HP_FRACTION / _SECS`, tuning knobs). P99's
+  shape: about half a level 60's STR. The first build's level/4 cut and regen halving are gone
+  (the regen half was never P99's). The debuff rides the stat-buff path, so the buff tick
+  expires it and undoes its deltas like any stat buff. Intrinsic because the client computes the
+  same cut from the race, class and level it knows: `PlayerStats.intrinsic_character` (the
+  race-class-level math `apply_character` always ran, now callable on its own) and
+  `BuffManager`'s reconcile, the fraction in f64 in the same order of operations on both sides
+  so they round the same product (kept in lockstep by hand). **Unchanged, by the 2026-06-22
+  lock:** the XP refund tiers (25/50/75%). **Flagged:** buffs are not persisted, so a relog
+  clears the sickness, as camping did in classic (the dodge costs the camp or linkdead wait; a
+  knob if it should persist). Tests: unit (the fraction at 1, 20, 60 and past 60; the cut on
+  sample stats and on a level 60 Human Warrior, half off STR 142 and nothing below zero) and an
   integration test where a Warrior dies and respawns, a Cleric 20 casts Resurrection (Minor) on
-  the corpse, the owner accepts, is summoned, is told the line and carries the sickness with
-  five minutes on it. A headless probe covers the client half. Full suite green (277 unit, 98
-  integration).
+  the corpse, the owner accepts, is summoned, is told the line, lands at a quarter HP with no
+  mana and carries the sickness with five minutes on it; a headless probe for the client half
+  (a Human Warrior at 1, 20 and 60). Full suite green (276 unit, 98 integration). *(History:
+  the 2026-10-14 build took one point per four levels and halved regen, sized on a wrong claim
+  about the stat scale; the user caught it the same evening.)*
 - [x] **Respawn at bind / Soul Binder NPC + a real death state** — **DONE + playtested 2026-08-13**
   (proof: after die/respawn/logout the character's `pos` equals `bind_x/z` to every decimal, where a
   fallback would have written 0/0). What exists is in systems_overview → "Respawn, bind points, and
