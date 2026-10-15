@@ -346,6 +346,14 @@ func get_snapshot_arrays() -> Dictionary:
 		durations.append(0.0)
 	return {"names": names, "durations": durations}
 
+# Resurrection sickness: the server's five-minute debuff after an accepted
+# resurrection (classic EQ's Resurrection Effects). It is not a spell, so the
+# additive reconcile cannot rebuild it from a definition; the stat cut is
+# level-based on both sides (server `buffs::res_sickness_stat_cut`, kept in
+# lockstep by hand) so the sheet shows what the server fights with.
+const RES_SICKNESS_NAME := "Resurrection Sickness"
+const RES_SICKNESS_LEVELS_PER_POINT := 4
+
 func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedFloat32Array) -> void:
 	# Build a name -> remaining map. Matching local buffs get their
 	# remaining synced to the server's value so the HUD countdown
@@ -437,6 +445,11 @@ func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedF
 	for idx in names.size():
 		var nm: String = names[idx]
 		if _is_buff_locally_tracked(nm):
+			continue
+		if nm == RES_SICKNESS_NAME:
+			var cut: int = maxi(1, PlayerStats.level / RES_SICKNESS_LEVELS_PER_POINT)
+			var rem_sick: float = durations[idx] if idx < durations.size() else 0.0
+			add_primary_stat_buff(-cut, -cut, -cut, -cut, -cut, 0.0, 0.0, rem_sick, RES_SICKNESS_NAME)
 			continue
 		var spell: SpellData = Spells.get_spell_by_name(nm)
 		if spell == null:
