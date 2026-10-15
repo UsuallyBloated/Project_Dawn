@@ -245,6 +245,12 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
 		var players := get_tree().get_nodes_in_group("player")
 		if not players.is_empty():
 			DamageNumbers.spawn_incoming((players[0] as Node3D).global_position, amount)
+			# The seated-combat rule (classic EQ): any damage stands you. The
+			# server stood us already (its seated flag ends with the hit); this
+			# keeps the body and the regen display in step, since the Hit is
+			# the only word of it on the wire.
+			if amount > 0 and players[0].has_method("stand"):
+				players[0].stand()
 		if attacker >= RemoteEnemyManager.ENEMY_ID_BASE:
 			var attacker_node: Node = RemoteEnemyManager.get_enemy(attacker)
 			var attacker_name := ""
