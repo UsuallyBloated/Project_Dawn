@@ -1553,6 +1553,27 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
+  **BUILT 2026-10-14, pending the redeploy, the export and the playtest** (server `53ad557`, client
+  `fc7688c`; `res_sickness_checklist.md`, 12 rows; the server half works on the client testers hold,
+  the sheet and buff-bar entry need the export). Classic EQ's Resurrection Effects as Project
+  1999 keeps them (five minutes, "You are exhausted." on accept, "You feel your strength
+  return." when it wears off); EQ cut STR, STA, AGI, WIS and INT by level-scaled absolutes on
+  hundred-point stats, so on our ten-to-sixty scale the cut is **one point per four levels
+  (floor one) off each of the five primaries**, and natural HP and mana regen run at **half**
+  while it lasts (`buffs::RES_SICKNESS_NAME / _SECS / _LEVELS_PER_POINT / _REGEN_MULT`, all
+  tuning knobs, chosen without a user decision; say so if the numbers should move). The debuff
+  rides the stat-buff path, so the buff tick expires it and undoes its deltas like any stat
+  buff; the regen tick reads it by name; the owner's snapshot is fanned on accept; the client
+  recognises it by name in `BuffManager`'s reconcile and applies the same level-based cut (kept
+  in lockstep by hand) so the sheet shows what the server fights with. **Flagged, not built:**
+  P99's one-shot arrival at about a quarter HP and no mana (a bigger gameplay change beside the
+  corpse: a user call); buffs are not persisted, so a relog clears the sickness, as camping did
+  in classic (the dodge costs the camp or linkdead wait; a knob if it should persist). Tests:
+  unit (the cut per level, the buff's shape, the regen halving over forty ticks) and an
+  integration test where a Warrior dies and respawns, a Cleric 20 casts Resurrection (Minor) on
+  the corpse, the owner accepts, is summoned, is told the line and carries the sickness with
+  five minutes on it. A headless probe covers the client half. Full suite green (277 unit, 98
+  integration).
 - [x] **Respawn at bind / Soul Binder NPC + a real death state** — **DONE + playtested 2026-08-13**
   (proof: after die/respawn/logout the character's `pos` equals `bind_x/z` to every decimal, where a
   fallback would have written 0/0). What exists is in systems_overview → "Respawn, bind points, and

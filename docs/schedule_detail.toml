@@ -994,3 +994,28 @@ checklist = "seated_combat_checklist.md"
 waits_on = ["o4"]
 todo = "Seated-combat penalties (EQ-style)"
 done_when = "Every row filled."
+
+[[row]]
+id = "b17"
+week = "w2"
+lane = "build"
+day = "Oct 14"
+what = "Resurrection sickness, the corpse plan's last piece: an accepted resurrection leaves a five-minute debuff (one point per four levels off the five primaries, half natural regen, EQ's lines). Server on the deploy branch (rides the Oct 22 redeploy); the client shows it on the sheet and the buff bar (rides the Oct 22 export)."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both suites green on the deploy branch. Done only when res_sickness_checklist.md is filled."
+todo = "Res-sickness"
+
+[[row]]
+id = "v24"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Resurrection sickness: after an accepted res you are told you are exhausted, regen runs at half for five minutes, the sheet reads the cut and the bar shows the countdown, and it wears off with its line; a declined res and a plain respawn leave nothing."
+who = "user at a desk"
+hours = 0.75
+needs = ["second seat with a Cleric 20 or higher (two-boxing works)", "a character of level 8 or higher to die"]
+checklist = "res_sickness_checklist.md"
+waits_on = ["o4"]
+todo = "Res-sickness"
+done_when = "Every row filled."
