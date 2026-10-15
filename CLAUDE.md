@@ -1558,10 +1558,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   the sheet and buff-bar entry need the export). Classic EQ's Resurrection Effects as Project
   1999 keeps them (five minutes, "You are exhausted." on accept, "You feel your strength
   return." when it wears off); EQ cut STR, STA, AGI, WIS and INT by level-scaled absolutes on
-  hundred-point stats, so on our ten-to-sixty scale the cut is **one point per four levels
-  (floor one) off each of the five primaries**, and natural HP and mana regen run at **half**
-  while it lasts (`buffs::RES_SICKNESS_NAME / _SECS / _LEVELS_PER_POINT / _REGEN_MULT`, all
-  tuning knobs, chosen without a user decision; say so if the numbers should move). The debuff
+  hundred-point stats; here the cut is **one point per four levels (floor one) off each of the
+  five primaries**, and natural HP and mana regen run at **half** while it lasts
+  (`buffs::RES_SICKNESS_NAME / _SECS / _LEVELS_PER_POINT / _REGEN_MULT`, all tuning knobs,
+  chosen without a user decision). **OPEN, for the user (2026-10-14 evening):** the cut was
+  sized on a wrong claim about our stat scale. The real scale (`char_data.rs`): base 10, race
+  plus or minus 20, class up to 18, then a class's two or three main stats gain 1 to 4 a level
+  for life (a Human Warrior's STR is about 22 at 1, 60 at 20, 140 at 60) while every other
+  stat never moves (5 to 20 for life). So level/4 is a small bite on the stats that matter and
+  can take a secondary stat negative at high level; P99's cut was about half a level 60's STR.
+  Also: on the server only STR does anything at runtime (melee damage), so the stat cut is
+  mostly a sheet effect and the regen halving is the sting. Three shapes offered: keep level/4
+  capped at a quarter of each stat; a percentage of each stat (the sheet would read uncut until
+  the deltas ride the wire); or drop the stat cut and keep the regen half and the lines. The debuff
   rides the stat-buff path, so the buff tick expires it and undoes its deltas like any stat
   buff; the regen tick reads it by name; the owner's snapshot is fanned on accept; the client
   recognises it by name in `BuffManager`'s reconcile and applies the same level-based cut (kept
