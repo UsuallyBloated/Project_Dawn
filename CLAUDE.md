@@ -2332,7 +2332,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `docs/deployment/` remains untracked by decision and CLAUDE.md links it as canonical (decide
   one way). Small, but each is a trap for the next reader.
   **Checked 2026-10-12:** three of the four are closed. `server/README.md` was rewritten on 10-08 (`c6fccd1`, no unbuilt-world claim remains); `flaky_integration_tests.md` has carried a RESOLVED header since 10-01 with no known-flaky test; `casting_passive.md` now says the system is implemented and where (client `CastingSkills`, server `world/skills.rs`). The `weapons_passive.md` line is about Parry and Riposte, which really are unbuilt. **Open: whether `docs/deployment/` stays untracked** (a user decision; CLAUDE.md links it as canonical and `public_hosting_sitting.md` joined it on 2026-10-12).
-- [ ] **The cast arms duplicate the pre-flight** *(review finding, 2026-10-02; recorded, not
+- [x] **The cast arms duplicate the pre-flight** — **DONE 2026-10-14, ticked on the suites**
+  (server `c377a66` on the deploy branch; server-only, no wire change, no behaviour change, so no
+  checklist: a refactor with no playtest surface, and a test suite is its own checklist, the
+  flaky-trio precedent; the five spell checklists queued for the Oct 22 redeploy exercise every
+  arm and are its regression sweep). `cast_target_refusal` returns a `ResolvedTarget` (Nothing /
+  Player / Mob / Pet / Corpse) and the per-target-type arms act on it; every arm's own copy of
+  the presence, reach, liveness and PvP checks is deleted (594 lines out, 230 in), along with
+  the CORPSE arm's private class/level copy, which the general gate covers. The one fallback
+  left in an arm is `cast_resolution_lost`: a target the pre-flight resolved a moment ago
+  cannot be gone at the arm (they run back to back for one intent), so if it ever is, the
+  server logs it at error, refunds and refuses rather than charging for nothing. The full suite
+  was green before and after (272 unit, 96 integration) and a new unit test pins the variant
+  each target kind resolves to (a mob, a rival's pet, a flagged player, one's own pet refused,
+  an untargeted heal as a self-heal, Warder's Mend to the own pet whatever is targeted, a corpse
+  with its owner, Bind on oneself). *(Original entry:)* *(review finding, 2026-10-02; recorded, not
   built)*. `cast_target_refusal` decides target presence, reach, liveness and the PvP gates
   before any side effect, and the per-target-type arms in `tick.rs` still carry their own
   copies of the same checks (now unreachable, with slightly different lines and the old

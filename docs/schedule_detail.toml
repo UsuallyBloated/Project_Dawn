@@ -958,3 +958,14 @@ checklist_branch = "feat/jump-relay"
 waits_on = ["o4"]
 todo = "Remote players never show a jump"
 done_when = "Every row filled."
+
+[[row]]
+id = "b15"
+week = "w2"
+lane = "build"
+day = "Oct 14"
+what = "Cast handler refactor: the pre-flight resolves the target and the arms act on it, deleting each arm's own copy of the presence, reach, liveness and PvP checks (one home for the rule, the 10-02 review finding). No behaviour change, no wire change; on the deploy branch, rides the Oct 22 redeploy."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both suites green on the deploy branch; a unit test pins what each target kind resolves to. Ticked on the suites; the spell checklists after the redeploy are its regression sweep."
+todo = "The cast arms duplicate the pre-flight"

@@ -132,9 +132,9 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Wed Oct 14<span class="stat-sub">repo 7843ecb</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Wed Oct 14<span class="stat-sub">repo edc657a</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">20 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">20.5 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
 <div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">50.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
@@ -278,7 +278,7 @@
 <section>
 <h2><span class="week-head"><span>The first spell steps reach the server</span><span class="when">W2 &middot; October 12 to 18</span></span></h2>
 <p class="lede">A Monday redeploy carries the cast hardening and the small rules; their checklists run the same week. Claude builds Bind and Gate behind it. The four friends get their network access now, while nothing depends on it.</p>
-<div class="week-meta"><span>the user's time: 5.25 h</span><span>Claude build days: 9</span></div>
+<div class="week-meta"><span>the user's time: 5.25 h</span><span>Claude build days: 9.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -350,6 +350,16 @@
 <td class="time">0.5 Claude days</td>
 <td class="id"></td>
 <td class="done">Both suites green on feat/jump-relay and pushed; handed to the trade session for the Oct 21 merge.<span class="ref">To-Do entry: <code>Remote players never show a jump</code></span></td>
+</tr>
+<tr>
+<td class="id">b15</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 14</span>Cast handler refactor: the pre-flight resolves the target and the arms act on it, deleting each arm&#x27;s own copy of the presence, reach, liveness and PvP checks (one home for the rule, the 10-02 review finding). No behaviour change, no wire change; on the deploy branch, rides the Oct 22 redeploy.</td>
+<td>Claude unattended</td>
+<td class="needs">nothing</td>
+<td class="time">0.5 Claude days</td>
+<td class="id"></td>
+<td class="done">Both suites green on the deploy branch; a unit test pins what each target kind resolves to. Ticked on the suites; the spell checklists after the redeploy are its regression sweep.<span class="ref">To-Do entry: <code>The cast arms duplicate the pre-flight</code></span></td>
 </tr>
 <tr>
 <td class="id">o2</td>
@@ -857,5 +867,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-14 at repo 7843ecb</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-14 at repo edc657a</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

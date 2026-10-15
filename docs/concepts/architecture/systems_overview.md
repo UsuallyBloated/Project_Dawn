@@ -43,7 +43,11 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   it, or the cast was being held), when an interrupt landed after the bar began (even in
   the same tick), when the caster moved more than 5 m since CastStart, when the spell is on
   cooldown, when the mana is short, and when the target pre-flight (`cast_target_refusal`)
-  says no. Every refusal is private and carries the server's true mana (`refuse_cast`);
+  says no. The pre-flight is the one home of target resolution (since 2026-10-14): it
+  returns a `ResolvedTarget` (a player, a mob, a pet, a corpse with its owner, or nothing)
+  and the per-target-type arms act on it with no checks of their own, so a per-spell range
+  or a new target kind is decided in one place. Every refusal is private and carries the
+  server's true mana (`refuse_cast`);
   interrupts, silence and mez also fan to peers so the bar they drew cancels. Casting
   stands the caster. The pure timing and interrupt decisions are `world/cast_gate.rs`.
   **An interrupt costs mana (spell batch step 3, 2026-10-08, user call):** when a hit that
