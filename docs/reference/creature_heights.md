@@ -12,7 +12,7 @@ All heights in **meters** (M); proportions assume Godot's default humanoid scale
 | Race | Height (M) | Notes | Proportions |
 |---|---|---|---|
 | **Fae** | 0.60–0.85 | Impossibly small | Delicate, fairy-like, large eyes |
-| **Gnome** | 0.90–1.05 | Child-sized, stout torso | Short legs, rounded belly, large head |
+| **Gnome** | 0.90–1.05 | Child-sized, wiry (the approved base body, 2026-10-15; a wiry-to-stout build slider is an idea, see the CLAUDE.md To-Do on changing appearance) | Short legs, large head |
 | **Halfling** | 0.95–1.10 | Compact, delicate | Proportion similar to Gnome but slimmer |
 | **Kobold** | 1.00–1.20 | Dog-faced, wiry | Hunched posture, bat ears, tail (cosmetic) |
 | **Dwarf** | 1.20–1.35 | Blocky, massive shoulders | Barrel chest, thick limbs, small head |
@@ -67,7 +67,9 @@ All heights in **meters** (M); proportions assume Godot's default humanoid scale
   - Elves/Half-Elves/Dark Elves: Slightly larger, more angular heads
   - Dwarves: Proportionally larger heads (1/6 ratio)
   - Ogres/Trolls/Minotaurs: Smaller heads relative to body (1/9 ratio)
-- **Small races (Gnomes/Halflings/Fae):** Head = 1/6–1/7 (larger proportional to body)
+- **Small races (Halflings/Fae):** Head = 1/6–1/7 (larger proportional to body)
+- **Gnomes:** Head about 1/4 of total height, crown to chin (user, 2026-10-15: the user's
+  Blender model is the authority, and it measures about 1/4 in its front render)
 
 ### Eye Line
 - Typically 1/10 from top of head

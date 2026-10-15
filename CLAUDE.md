@@ -2036,6 +2036,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (`LOCKED_COMBOS` partial vs `race_class_restrictions.md`). (e) The Citizen class concept
   (non-combat: mobile merchant + field money-changer + bodyguard pet; field-exchange role
   committed 2026-06-16) and the planned Assassin/Warlock need class-kit design before code.
+- [ ] **Change your appearance in game, at any time** *(user, 2026-10-15, while setting the
+  art pipeline's base-body rule)*. Players will be able to modify their character's look
+  whenever they want, from in game. This is why every race's base body is made bald,
+  beardless and with no accent colour (`docs/design/meshy_asset_pipeline.md`, "The bare base
+  body"): hair, beards, markings and accent colours become separate, swappable pieces on top
+  of it. Not designed yet: which pieces, where the choice is made, what it costs, and how the
+  server stores and fans an appearance (others must see the change). **Idea, same day (user):
+  body sliders**, e.g. a Gnome's build from wiry to stout ("Perhaps a caster would be wiry
+  while a melee character would be more stout"); the approved Gnome base pack is the wiry end.
+  **Needs its own research session first (user):** how customisable characters are done in
+  comparable games (EQ's and SWG's character creators, later MMOs), and what sliders mean for
+  the art pipeline. A Meshy model is one fixed mesh, so a build slider would likely need extra
+  shapes of the same body authored in Blender (blend shapes), and every piece of equipment
+  would have to follow them; that cost belongs in the research, before any slider is promised.
+  **Second slider idea (user, same day): height**, from the race's minimum to its maximum in
+  `creature_heights.md` (a Gnome 0.90 to 1.05 m). Cheap by comparison: a uniform scale of the
+  model, so equipment follows with no extra shapes. Two calls for the design: the server must
+  clamp the stored height to the race's range (a forged value would otherwise reach every other
+  player), and whether the collision capsule and camera scale with it or it stays cosmetic (a
+  shorter character hiding behind cover is a PvP edge, small within one race).
 - [ ] **Fall damage follow-ups** *(the `TODO` in `player.gd::_on_land` since 2026-05-01 and the
   pet-collision memory; audit 2026-09-29)*. (a) Skip fall damage under Levitate / Feather
   Fall once those buffs are checked. (b) A player caught between their own pet and an enemy

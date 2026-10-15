@@ -12,12 +12,20 @@ class_name RaceModel
 # nameplates still use the capsule, so per-race collision/camera tuning is a
 # separate pass (see docs/reference/creature_heights.md).
 
+# Which way models face: every model is built facing Blender's Front view and
+# exported as glTF, which puts its face toward +Z (glTF's forward, and what
+# Meshy's rigging expects). Characters here move toward -Z (player.gd: forward
+# is -basis.z), so apply() turns every model around once. No model needs
+# rotating in Blender.
+const MODEL_FACING_YAW: float = PI
+
 # Fields per race:
 #   scene      - imported glb (a PackedScene under res://assets/models/...).
 #   feet_y     - the model's lowest point in its own space (metres, usually
 #                negative). apply() lifts the model by -feet_y so the feet
 #                rest on the ground instead of sinking or floating.
-#   yaw        - extra Y rotation (radians) if the model faces the wrong way.
+#   yaw        - extra Y rotation (radians) on top of MODEL_FACING_YAW, for a
+#                model that was not exported facing Blender's Front view.
 #   hide_nodes - child nodes to hide, e.g. modeling scaffolds exported
 #                alongside the body (reference planes, blockout frameworks).
 const MODELS: Dictionary = {
@@ -50,7 +58,7 @@ static func apply(mount: MeshInstance3D, race: String) -> void:
 	mount.mesh = null
 	var inst: Node3D = packed.instantiate()
 	inst.position.y = -float(cfg.get("feet_y", 0.0)) - mount.position.y
-	inst.rotation.y = float(cfg.get("yaw", 0.0))
+	inst.rotation.y = MODEL_FACING_YAW + float(cfg.get("yaw", 0.0))
 	mount.add_child(inst)
 
 	for node_name in cfg.get("hide_nodes", []):

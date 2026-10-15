@@ -254,10 +254,19 @@ def pick(args: dict, key: str, allowed: tuple, default):
     return value
 
 
+# Low-poly budget (user, 2026-10-15): a character's bare body is 2,000 triangles as the game
+# draws it; equipment gets its own budget later, on top of this. We ask Meshy for four-sided
+# polygons, each drawn as two triangles, so the request is half the triangle budget. Meshy's
+# own default is 30,000.
+TRIANGLE_BUDGET = 2000
+POLY_BUDGET = TRIANGLE_BUDGET // 2
+
+
 def polycount(args: dict) -> int:
-    n = args.get("target_polycount", 30000)
-    if not isinstance(n, int) or not 100 <= n <= 300000:
-        raise MeshyError("target_polycount must be a whole number from 100 to 300000")
+    n = args.get("target_polycount", POLY_BUDGET)
+    if not isinstance(n, int) or not 100 <= n <= POLY_BUDGET:
+        raise MeshyError(f"target_polycount must be a whole number from 100 to {POLY_BUDGET} four-sided "
+                         f"polygons (the {TRIANGLE_BUDGET}-triangle low-poly budget)")
     return n
 
 
@@ -364,8 +373,8 @@ def t_multi_image_to_3d(args: dict) -> str:
         "texture_resolution": pick(args, "texture_resolution", ("2k", "4k", "8k"), "2k"),
         "geometry_resolution": pick(args, "geometry_resolution", ("standard", "2k"), "standard"),
         "pose_mode": pick(args, "pose_mode", ("a-pose", "t-pose", ""), "a-pose"),
-        "should_remesh": bool(args.get("should_remesh", False)),
-        "topology": pick(args, "topology", ("triangle", "quad"), "triangle"),
+        "should_remesh": True,  # always: without it Meshy ignores target_polycount
+        "topology": "quad",  # four-sided polygons (user, 2026-10-15)
         "target_polycount": polycount(args),
         "target_formats": formats(args, ["glb", "fbx"]),
         "multi_view_thumbnails": True,
@@ -376,7 +385,7 @@ def t_multi_image_to_3d(args: dict) -> str:
 def t_remesh(args: dict) -> str:
     body = {
         "input_task_id": need_task_id(args, "input_task_id"),
-        "topology": pick(args, "topology", ("triangle", "quad"), "triangle"),
+        "topology": "quad",
         "target_polycount": polycount(args),
         "target_formats": formats(args, ["glb", "fbx"]),
     }
@@ -431,16 +440,13 @@ TOOLS = {
                                     "texture_resolution": {"type": "string", "enum": ["2k", "4k", "8k"]},
                                     "geometry_resolution": {"type": "string", "enum": ["standard", "2k"]},
                                     "pose_mode": {"type": "string", "enum": ["a-pose", "t-pose", ""]},
-                                    "should_remesh": {"type": "boolean"},
-                                    "topology": {"type": "string", "enum": ["triangle", "quad"]},
-                                    "target_polycount": {"type": "integer"},
+                                    "target_polycount": {"type": "integer", "maximum": POLY_BUDGET},
                                     "target_formats": {"type": "array", "items": {"type": "string"}}},
                                  "required": ["image_paths"]}),
     "meshy_remesh": (t_remesh, "PAID: 5 credits. Remesh a finished task to a polygon budget.",
                      {"type": "object", "properties": {
                          "input_task_id": {"type": "string"},
-                         "topology": {"type": "string", "enum": ["triangle", "quad"]},
-                         "target_polycount": {"type": "integer"},
+                         "target_polycount": {"type": "integer", "maximum": POLY_BUDGET},
                          "target_formats": {"type": "array", "items": {"type": "string"}}},
                       "required": ["input_task_id"]}),
     "meshy_rig": (t_rig, "PAID: 5 credits. Auto-rig a finished, textured humanoid (under 300,000 faces).",

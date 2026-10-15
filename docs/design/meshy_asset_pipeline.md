@@ -7,6 +7,24 @@ Drafted 2026-10-12 from the 2026-09-24 research conversation. Nothing is wired u
 The art wish list this serves is [art_assets_checklist.md](art_assets_checklist.md);
 target heights are in `docs/reference/creature_heights.md`.
 
+**Low poly, detail in the textures (user, 2026-10-15):** "We want to use low poly models
+with cool textures. So lets be sure not to go nuts with polygons." Every model this
+pipeline produces is kept to a small triangle budget, and the look comes from the texture
+rather than the geometry. For scale, the user's own blockouts are 1,442 (Human), 1,542
+(Halfling), 1,666 (Gnome) and 1,868 (Ogre) triangles. Meshy defaults to 30,000 polygons when
+it remeshes, and does not remesh at all by default with `meshy-7.1`, so the budget has to be
+asked for on every generation. **The budget (user, 2026-10-15): 2,000 triangles for a
+character's bare body.** Equipment is not part of that number; it gets its own budget later,
+on top. Models are built from **four-sided polygons** (user, same day), and the game draws each
+as two triangles, so Meshy is asked for **1,000 polygons** (user: the 2,000 counts triangles, as
+the game draws them, not Blender faces; the blockouts are 730 to 960 Blender faces).
+`meshy_client.py` enforces it (`TRIANGLE_BUDGET`, `POLY_BUDGET = TRIANGLE_BUDGET // 2`): every
+generation and remesh is reduced (`should_remesh` always on, so the budget cannot be switched
+off; `topology` always `quad`), `target_polycount` defaults to 1,000, and anything above is
+refused.
+Meshy's result can land somewhat off the target, so `measure_glb.py`'s triangle count is part
+of the model review.
+
 ## Stage 1: 2D model packs (the style lock)
 
 **Decided 2026-10-12 (user):** we start with 2D packs, to confirm the look we want
@@ -36,8 +54,13 @@ reference only and are not used commercially; they never ship in `assets/`.
   to guess at what does not match.
 - **Height bar** drawn from `creature_heights.md`, so proportions between races stay correct.
 - **Callout sheet:** skin tones, racial markings, silhouette notes.
-- **Base outfit only.** Armor tiers come later (see Caveats), so the pack shows the
-  body in simple base clothing.
+- **The bare base body** (user, 2026-10-15): plain form-fitting undergarments, barefoot,
+  **bald and beardless, no accent colour, a neutral expression and otherwise void of
+  character** (user, same day), so the body's true shape is visible. Every piece
+  of equipment, boots and helmets included, is later built to fit this body; clothes in the
+  pack would hide the shape it has to follow. Hair, beards, markings and accent colours are
+  left off because **players will be able to change their appearance in game at any time**
+  (user, same day): those become separate, swappable pieces, made later on top of the body.
 
 ### Style bible
 
@@ -117,6 +140,17 @@ it on sample subjects in a throwaway folder.
 Its look is a night sky at dawn (black, amber and rose glow, gold hairlines); the user's
 plan (2026-10-14) is to decorate it with the project's own art as that art is made, for
 example the logo in place of the CSS sun and approved portraits on the cards.
+
+**State of the user's Blender models (reviewed 2026-10-14 with `blender_review.py`, read-only;
+re-exported by the user 2026-10-15).** Bodies exist for four races, all low-poly A-pose
+blockouts with no materials: Human (1.79 m, 1,442 triangles), Halfling (0.96 m, 1,542), Ogre
+(2.54 m, 1,868) and Gnome (0.98 m, 1,666; a rigged `gnome.blend` and a `JoinedGnome.blend`).
+The other twelve `.blend` files hold only their `*_Framework` height bar. On 2026-10-15 all
+four GLBs were re-exported as one whole mesh each (mirror applied), facing Blender's Front
+view, which `race_model.gd` turns to the game's forward with one constant
+(`MODEL_FACING_YAW`). Only the Gnome is mounted in the game. Renders and `summary.json` are
+in `Project_Dawn_Source/reference/blender_review/`; the four front views are the style
+bible's proportion references.
 
 **What Claude can and cannot judge.** Claude can view still images (PNG, JPG), so it can
 review 2D packs and model renders and flag anything that departs from the written
@@ -225,7 +259,12 @@ automatic top-ups exist, so that switch is the one thing the hook cannot see.
 - **Rigs:** each Meshy character comes with its own rig. The art checklist wants one
   shared master humanoid rig plus a shared animation library (§5, §7). Retargeting onto
   that rig, in Blender or Godot, stays our job.
-- **Topology:** generated meshes usually need remeshing or cleanup to meet a game budget.
+- **Topology:** generated meshes need remeshing to meet our low-poly budget (see the top of
+  this page). Meshy's docs (read 2026-10-15) say `target_polycount` (100 to 300,000, default
+  30,000) and `topology` apply only when `should_remesh` is on, that the result "may deviate
+  from the target", and that they recommend remeshing off "for the highest-quality model".
+  They do not say whether a separate remesh task keeps the texture. A newer
+  `decimation_mode` option exists; by rule 3 it stays unused until the user adopts it.
 - **Textures are usually baked,** which makes paperdoll armor swaps and tier recolors
   awkward. Armor likely needs a separate approach: separate meshes or a material scheme
   decided before the first armor pack.
