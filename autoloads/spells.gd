@@ -70,7 +70,7 @@ func setup_for_class(_player_class: String) -> void:
 	for sname in _all_spells:
 		var spell: SpellData = _all_spells[sname]
 		if spell.allowed_classes.is_empty() or effective in spell.allowed_classes:
-			if current_level >= spell.min_level:
+			if current_level >= spell.required_level(effective):
 				candidates.append(spell)
 	# For ranked spells, keep only the highest accessible rank per base spell.
 	var by_base: Dictionary = {}
@@ -666,6 +666,9 @@ func _load_spells() -> void:
 		s.damage_shield_duration = d.get("damage_shield_duration", 0.0)
 		s.is_song             = d.get("is_song", false)
 		s.min_level           = d.get("min_level", 1)
+		s.class_min_levels    = d.get("class_min_levels", {})
+		s.summon_item         = d.get("summon_item", "")
+		s.summon_max          = int(d.get("summon_max", 0))
 		s.str_buff                  = d.get("str_buff", 0)
 		s.agi_buff                  = d.get("agi_buff", 0)
 		s.int_buff                  = d.get("int_buff", 0)
@@ -711,4 +714,5 @@ func _parse_target_type(s: String) -> SpellData.TargetType:
 		"BIND":       return SpellData.TargetType.BIND
 		"AOE":        return SpellData.TargetType.AOE
 		"CORPSE":     return SpellData.TargetType.CORPSE
+		"SUMMON_ITEM": return SpellData.TargetType.SUMMON_ITEM
 	return SpellData.TargetType.NONE

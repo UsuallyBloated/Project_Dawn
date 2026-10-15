@@ -1,7 +1,7 @@
 class_name SpellData
 extends Resource
 
-enum TargetType { ENEMY, SELF, ALLY, NONE, PET_SUMMON, PET_CHARM, PET_HEAL, PORT, BIND, AOE, CORPSE }
+enum TargetType { ENEMY, SELF, ALLY, NONE, PET_SUMMON, PET_CHARM, PET_HEAL, PORT, BIND, AOE, CORPSE, SUMMON_ITEM }
 enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, SHADOW, NONE }
 
 @export var spell_name: String = ""
@@ -77,6 +77,19 @@ enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, S
 @export var allowed_classes: Array[String] = []
 # Minimum character level required to have this spell available.
 @export var min_level: int = 1
+# Per-class level requirements on a spell several classes share (Summon
+# Drink: Magician 1, Shaman 2, Cleric 3, Druid 10); a class absent here uses
+# min_level. Mirror of the server's `class_min_levels`, compared by the
+# lockstep check.
+@export var class_min_levels: Dictionary = {}
+# SUMMON_ITEM spells (Summon Food / Drink): the item conjured into the bags
+# and the most of it one cast makes; the count is the server's (one at the
+# class's level, one more per ten levels).
+@export var summon_item: String = ""
+@export var summon_max: int = 0
+
+func required_level(cls: String) -> int:
+	return int(class_min_levels.get(cls, min_level))
 # Casting discipline that trains when this spell is cast. See CastingSkillDefinitions.ALL.
 # "evocation", "alteration", "abjuration", "conjuration", "divination" — or "" if unassigned.
 @export var discipline: String = ""

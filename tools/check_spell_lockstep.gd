@@ -99,6 +99,13 @@ func _initialize() -> void:
 	quit(1 if (not drift.is_empty() or not server_only.is_empty()) else 0)
 
 func _same(a, b) -> bool:
+	if a is Dictionary or b is Dictionary:
+		if not (a is Dictionary and b is Dictionary) or a.size() != b.size():
+			return false
+		for k in a:
+			if not b.has(k) or not _same(a[k], b[k]):
+				return false
+		return true
 	if a is Array or b is Array:
 		if not (a is Array and b is Array) or a.size() != b.size():
 			return false
@@ -142,6 +149,14 @@ func _parse_spells_toml(path: String) -> Dictionary:
 func _parse_value(raw: String):
 	if raw.begins_with("\""):
 		return raw.trim_prefix("\"").trim_suffix("\"")
+	if raw.begins_with("{"):
+		# An inline table (class_min_levels = { Cleric = 9, ... }).
+		var table: Dictionary = {}
+		for part in raw.trim_prefix("{").trim_suffix("}").split(",", false):
+			var kv := part.split("=", false)
+			if kv.size() == 2:
+				table[kv[0].strip_edges()] = _parse_value(kv[1].strip_edges())
+		return table
 	if raw.begins_with("["):
 		var items: Array = []
 		for part in raw.trim_prefix("[").trim_suffix("]").split(",", false):

@@ -15,6 +15,8 @@ const DISCIPLINE: Dictionary = {
 	"Heal":              "alteration",
 	"Arcane Missile":    "evocation",
 	"Inferno":           "evocation",
+	"Summon Food":       "conjuration",
+	"Summon Drink":      "conjuration",
 	# Cleric
 	"Healing Light":     "alteration",
 	"Greater Heal":      "alteration",
@@ -173,6 +175,11 @@ const ALL: Array = [
 	{"name": "Fireball",        "desc": "Hurls a ball of flame at the target.",              "mana_cost": 30.0, "cast_time": 1.5, "cooldown": 8.0,  "base_damage": 50.0, "damage_type": "FIRE",      "target_type": "ENEMY", "heal_amount": 0.0,  "classes": ["Magician"]},
 	{"name": "Frost Bolt",      "desc": "A bolt of freezing ice.",                           "mana_cost": 20.0, "cast_time": 0.0, "cooldown": 4.0,  "base_damage": 30.0, "damage_type": "ICE",       "target_type": "ENEMY", "heal_amount": 0.0,  "classes": ["Magician"]},
 	{"name": "Lightning Strike","desc": "Calls down a bolt of lightning.",                  "mana_cost": 40.0, "cast_time": 2.0, "cooldown": 12.0, "base_damage": 80.0, "damage_type": "LIGHTNING", "target_type": "ENEMY", "heal_amount": 0.0,  "min_level": 6,  "classes": ["Magician"]},
+	# Summon Food and Drink (food slice 2): the server conjures the item into
+	# the bags, one at the level the class learns the spell and one more per
+	# ten levels, four at most; class_min_levels carries EQ's per-class levels.
+	{"name": "Summon Food",     "desc": "Conjures bread into your bags: one loaf, and one more for every ten levels past the level you learned it, up to four.", "mana_cost": 10.0, "cast_time": 4.0, "cooldown": 0.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "SUMMON_ITEM", "heal_amount": 0.0, "min_level": 1, "classes": ["Magician", "Cleric", "Shaman", "Druid"], "class_min_levels": {"Magician": 1, "Cleric": 9, "Shaman": 9, "Druid": 14}, "summon_item": "res://data/loot/items/conjured_bread.tres", "summon_max": 4},
+	{"name": "Summon Drink",    "desc": "Conjures water into your bags: one flask, and one more for every ten levels past the level you learned it, up to four.", "mana_cost": 10.0, "cast_time": 4.0, "cooldown": 0.0, "base_damage": 0.0, "damage_type": "NONE", "target_type": "SUMMON_ITEM", "heal_amount": 0.0, "min_level": 1, "classes": ["Magician", "Cleric", "Shaman", "Druid"], "class_min_levels": {"Magician": 1, "Shaman": 2, "Cleric": 3, "Druid": 10}, "summon_item": "res://data/loot/items/conjured_water.tres", "summon_max": 4},
 	{"name": "Heal",            "desc": "Restores HP to yourself.",                         "mana_cost": 25.0, "cast_time": 1.0, "cooldown": 6.0,  "base_damage": 0.0,  "damage_type": "NONE",      "target_type": "ALLY",  "heal_amount": 40.0, "classes": ["Magician"]},
 	{"name": "Arcane Missile",  "desc": "Rapid arcane shots.",                              "mana_cost": 15.0, "cast_time": 0.0, "cooldown": 2.0,  "base_damage": 20.0, "damage_type": "ARCANE",    "target_type": "ENEMY", "heal_amount": 0.0,  "classes": ["Magician"]},
 	{"name": "Inferno",         "desc": "Unleashes a burst of fire that engulfs all nearby enemies.",  "mana_cost": 45.0, "cast_time": 2.5, "cooldown": 18.0, "base_damage": 45.0, "damage_type": "FIRE",   "target_type": "AOE",   "heal_amount": 0.0, "aoe_radius": 5.0, "min_level": 12, "classes": ["Magician"]},
