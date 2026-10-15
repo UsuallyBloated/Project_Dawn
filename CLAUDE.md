@@ -1782,6 +1782,32 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   take **bonus damage** and be a **bonus crit target** (higher crit chance + crit damage against
   them); (b) **taking damage should stand you up** (another stand trigger, alongside movement +
   attacking). Both EQ-authentic; neither is in the shipped fix.
+  **Researched 2026-10-14, and the rule is exactly what the sources keep:** the Project 1999
+  wiki (Decoy's Enchanter Notebook) says an enemy hitting a sitting player always hits for the
+  maximum it can, taking damage while sitting forces you to stand, and that stand closes an open
+  spellbook; EQEmu's `attack.cpp` has both halves (a seated client is always hit, and the damage
+  table returns its top entry). Not a separate crit bonus: the "bonus damage" of (a) is the max
+  roll with no mitigation. **DECIDED 2026-10-14 (user): "Both halves, the P99 rule... Changes
+  the med game for casters: sitting near a mob is now dangerous, as in EQ."**
+  **BUILT 2026-10-14, pending the redeploy, the export and the playtest** (server `d4f6b47`, client
+  `2495276`; `seated_combat_checklist.md`, 16 rows; the server half works on the client testers
+  hold, the body standing on a hit needs the export). The damage half is `combat::mitigated`
+  (one home: the mob swing and the PvP swing both call it; a seated target gets no armor off)
+  and `combat::calc_swing_max` (the top of the attacker's band for a seated PvP target; the
+  crit roll stays, a crit being luck on top of the roll; a mob's swing is flat, so its max is
+  the amount). The stand half is one line in `PerConnection::note_damage_taken`, which every
+  player-damage site already calls (melee, spells, DoT ticks, damage shields), so the seated
+  regen rate, `/camp` and the seated rule all end with the first hit. Nothing on the wire
+  carries the flag, so the client stands its own body on the Hit it receives, never on a
+  zero-damage one. Tests: unit (the band max, the offhand, the mitigation table, the stand) and
+  an integration test where a seated player is hit by bare fists for exactly 4 + STR/5, a
+  `/camp` straight after is refused (the one intent that needs the server's own seated flag)
+  and the same `/camp` after sitting again is accepted; it fails on the previous code at the
+  camp assertion. Headless probe for the client half. Full suite green (275 unit, 97
+  integration). **Exploit lens:** both rules key on the server's own seated flag, which the
+  client can only set through the Sit intent, so a client that lies about standing simply
+  forgoes the seated regen; a client that ignores the stand keeps drawing itself seated but is
+  standing to the server and gets no seated regen and no seated rule.
 - [x] **Named mobs lost enrage + guaranteed drops** — **DONE + playtested 2026-08-21**
   (server `393cc64`, `named_mobs_checklist.md`). What exists is in systems_overview → Combat.
   **They were never placed in the world**, which the old wording missed: no scene or spawner ever

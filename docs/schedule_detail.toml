@@ -969,3 +969,28 @@ who = "Claude unattended"
 days = 0.5
 done_when = "Both suites green on the deploy branch; a unit test pins what each target kind resolves to. Ticked on the suites; the spell checklists after the redeploy are its regression sweep."
 todo = "The cast arms duplicate the pre-flight"
+
+[[row]]
+id = "b16"
+week = "w2"
+lane = "build"
+day = "Oct 14"
+what = "Seated combat, the classic EQ rule (user call 2026-10-14): a sitting player is hit for the most the attacker can do with no armor, and any damage stands them. Server on the deploy branch (rides the Oct 22 redeploy); the client stands its own body on the hit (rides the Oct 22 export)."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both suites green on the deploy branch; the integration test fails on the previous code. Done only when seated_combat_checklist.md is filled."
+todo = "Seated-combat penalties (EQ-style)"
+
+[[row]]
+id = "v23"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Seated combat: a mob's hit on you while seated is its full swing with no armor and stands you; a PvP fist on a seated partner lands exactly the max; /camp is refused after a hit until you sit again; your body stands on the hit without a key press; the seated regen bonus still runs out of combat."
+who = "user at a desk"
+hours = 0.75
+needs = ["a character wearing armor", "second seat for the PvP and spell rows (two-boxing works)"]
+checklist = "seated_combat_checklist.md"
+waits_on = ["o4"]
+todo = "Seated-combat penalties (EQ-style)"
+done_when = "Every row filled."
