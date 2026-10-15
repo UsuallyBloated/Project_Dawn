@@ -90,6 +90,39 @@ func set_bind_point(zone_path: String, entry_id: String, zone_name: String) -> v
 	bind_entry_id  = entry_id
 	bind_zone_name = zone_name
 
+# The intrinsic character: the stats and maxes race, class and level alone
+# give, with no gear and no buffs. Mirror of the server's `char_data::compute`
+# (kept in lockstep, anchor-tested there). apply_character starts from it, and
+# Resurrection Sickness cuts a fraction of it on both sides so the sheet and
+# the server agree. An unknown race or class gets the all-10 block and the
+# base maxes, as the server does.
+func intrinsic_character(race_id: String, cls: String, lvl: int) -> Dictionary:
+	lvl = clampi(lvl, 1, 99)
+	var stats: Dictionary = {}
+	for k in CharacterData.STAT_KEYS:
+		stats[k] = CharacterData.BASE
+	if CharacterData.RACE_DATA.has(race_id):
+		for k: String in CharacterData.RACE_DATA[race_id]["bonuses"]:
+			stats[k] += CharacterData.RACE_DATA[race_id]["bonuses"][k]
+	var cd: Dictionary = CharacterData.CLASS_DATA.get(cls,
+		{"bonuses": {}, "hp_bonus": 0.0, "mp_bonus": 0.0, "stamina_bonus": 0.0})
+	for k: String in cd["bonuses"]:
+		stats[k] += cd["bonuses"][k]
+	var con_hp_bonus: float = (stats["constitution"] - 10) * 5.0
+	var new_max_hp := maxf(50.0, CharacterData.BASE_HP + cd["hp_bonus"] + con_hp_bonus)
+	var new_max_mp := maxf(20.0, CharacterData.BASE_MP + cd["mp_bonus"])
+	var new_max_st := maxf(20.0, CharacterData.BASE_ST + cd["stamina_bonus"])
+	var gains: Dictionary = CharacterData.CLASS_LEVEL_GAINS.get(cls, CharacterData.CLASS_LEVEL_GAINS["_default"])
+	for _i in lvl - 1:
+		var con_before: int = stats["constitution"]
+		for stat in gains["stats"]:
+			stats[stat] += gains["stats"][stat]
+		new_max_hp += gains["max_hp"]
+		new_max_mp += gains["max_mp"]
+		new_max_st += gains["max_stamina"]
+		new_max_hp += (stats["constitution"] - con_before) * 5.0
+	return {"stats": stats, "max_hp": new_max_hp, "max_mp": new_max_mp, "max_stamina": new_max_st}
+
 func apply_character(race_id: String, cls: String, lvl: int) -> void:
 	# Guard the dictionary lookups. An unknown race or class string used to
 	# crash this function partway with an INVISIBLE engine error (they never
@@ -101,31 +134,11 @@ func apply_character(race_id: String, cls: String, lvl: int) -> void:
 		DebugLog.error("apply_character: unknown race '%s' or class '%s' — character NOT initialized (spells/skills will be empty)" % [race_id, cls])
 		return
 	lvl = clampi(lvl, 1, 99)
-
-	var stats: Dictionary = {}
-	for k in CharacterData.STAT_KEYS:
-		stats[k] = CharacterData.BASE
-	for k: String in CharacterData.RACE_DATA[race_id]["bonuses"]:
-		stats[k] += CharacterData.RACE_DATA[race_id]["bonuses"][k]
-	for k: String in CharacterData.CLASS_DATA[cls]["bonuses"]:
-		stats[k] += CharacterData.CLASS_DATA[cls]["bonuses"][k]
-
-	var cd: Dictionary = CharacterData.CLASS_DATA[cls]
-	var con_hp_bonus: float = (stats["constitution"] - 10) * 5.0
-	var new_max_hp  := maxf(50.0, CharacterData.BASE_HP + cd["hp_bonus"] + con_hp_bonus)
-	var new_max_mp  := maxf(20.0, CharacterData.BASE_MP + cd["mp_bonus"])
-	var new_max_st  := maxf(20.0, CharacterData.BASE_ST + cd["stamina_bonus"])
-
-	var gains: Dictionary = CharacterData.CLASS_LEVEL_GAINS.get(cls, CharacterData.CLASS_LEVEL_GAINS["_default"])
-	for _i in lvl - 1:
-		var con_before: int = stats["constitution"]
-		for stat in gains["stats"]:
-			stats[stat] += gains["stats"][stat]
-		new_max_hp += gains["max_hp"]
-		new_max_mp += gains["max_mp"]
-		new_max_st += gains["max_stamina"]
-		new_max_hp += (stats["constitution"] - con_before) * 5.0
-
+	var intrinsic := intrinsic_character(race_id, cls, lvl)
+	var stats: Dictionary = intrinsic["stats"]
+	var new_max_hp: float = intrinsic["max_hp"]
+	var new_max_mp: float = intrinsic["max_mp"]
+	var new_max_st: float = intrinsic["max_stamina"]
 	var new_xp_to_next := band_for(lvl)
 
 	self.race            = race_id
