@@ -141,6 +141,7 @@ character, so commitment is visible on the character model.
   first-pass; totals 520–529. Photosynthesis vs the planned food/water regen
   gating needs a decision.
 - **Integration checklist (when promoting to playable):** `data/character_data.gd`
-  (race list + `LOCKED_COMBOS`), `races.md` master table,
-  `docs/reference/creature_heights.md`, languages (`data/language_definitions.gd`),
+  (race list + `LOCKED_COMBOS`), the race's file and its row in `races/README.md`,
+  `docs/design/race_class_restrictions.md`, `docs/reference/creature_heights.md` (and the
+  Blender height chart), languages (`data/language_definitions.gd`),
   starting-zone lore in `docs/concepts/world/`.

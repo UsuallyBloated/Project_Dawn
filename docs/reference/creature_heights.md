@@ -16,7 +16,7 @@ All heights in **meters** (M); proportions assume Godot's default humanoid scale
 | **Halfling** | 0.95–1.10 | Compact, delicate | Proportion similar to Gnome but slimmer |
 | **Kobold** | 1.00–1.20 | Dog-faced, wiry | Hunched posture, bat ears, tail (cosmetic) |
 | **Dwarf** | 1.20–1.35 | Blocky, massive shoulders | Barrel chest, thick limbs, small head |
-| **Wood Elf** | 1.55–1.70 | Lean, athletic | Muscular calves, defined shoulders |
+| **Wood Elf** | 1.43–1.57 | Lean, athletic; shorter than the other elves (user, 2026-10-14: 1.50 m on the height chart) | Muscular calves, defined shoulders |
 | **Elf** | 1.60–1.75 | Graceful, slender | Longer limbs, lighter frame |
 | **Dark Elf** | 1.65–1.80 | Sinuous, angular | Lithe, prominent cheekbones |
 | **Half-Elf** | 1.65–1.80 | Human-like with elven features | Blend of both parents |

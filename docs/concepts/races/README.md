@@ -1,14 +1,21 @@
-# docs/concepts/races — Directory Index
+# docs/concepts/races: Directory Index
 
-Sixteen playable races, each with its own file. For the overview — alignment table, male/female physical descriptions, and portrait notes — start with `races.md`.
+Sixteen playable races, each with its own file: lore, the male and female physical
+description (weight, build, distinctive features) and the race's allowed classes.
 
 ---
 
-## Master Reference
+## One home for each fact
 
-| File | Contents |
+| Fact | Lives in |
 |---|---|
-| [races.md](races.md) | **Race index** — all 16 races with alignment; full male/female physical description table (height, weight, build, distinctive features); special biology notes; start here |
+| Race heights (metres, every race) | [creature_heights.md](../../reference/creature_heights.md), matching the Blender height chart (each race at the middle of its range) |
+| Which races may play which classes, and why | [race_class_restrictions.md](../../design/race_class_restrictions.md) |
+| Everything else about a race | Its own file, listed below |
+
+The old `races.md` overview was retired on 2026-10-14: every part of it was duplicated
+here, in the race files or in the two docs above, and its heights had drifted from the
+height chart.
 
 ---
 
@@ -35,15 +42,15 @@ Sixteen playable races, each with its own file. For the overview — alignment t
 
 ---
 
-## In Design — Not Yet Playable
+## In Design, Not Yet Playable
 
 *Greenlit in `docs/design/race_expansion_brainstorm.md`; not in `data/character_data.gd` yet.*
 
 | File | Race | Default Alignment | Starting Zone |
 |---|---|---|---|
-| [aerathi.md](aerathi.md) | Aerathi (the Stoop-kin) | Neutral | TBD — cliff eyrie |
-| [vesperin.md](vesperin.md) | Vesperin | Neutral | TBD — jungle canopy city |
-| [sylphari.md](sylphari.md) | Sylphari | Neutral | TBD — jungle groves |
+| [aerathi.md](aerathi.md) | Aerathi (the Stoop-kin) | Neutral | TBD: cliff eyrie |
+| [vesperin.md](vesperin.md) | Vesperin | Neutral | TBD: jungle canopy city |
+| [sylphari.md](sylphari.md) | Sylphari | Neutral | TBD: jungle groves |
 
 ---
 

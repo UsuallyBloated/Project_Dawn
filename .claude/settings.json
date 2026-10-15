@@ -87,5 +87,21 @@
     "additionalDirectories": [
       "F:\\Projects\\server\\crates\\projectdawn-server\\src\\db"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__meshy__.*|Bash|PowerShell|WebFetch|Write|Edit|Read|Glob|Grep|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/meshy_spend_gate.py\"",
+            "timeout": 30,
+            "onFailure": "block",
+            "statusMessage": "Checking Meshy credit balance..."
+          }
+        ]
+      }
+    ]
   }
 }

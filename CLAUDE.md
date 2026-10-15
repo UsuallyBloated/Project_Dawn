@@ -135,6 +135,30 @@ header, and via `/version`. Two things worth knowing:
 
 ---
 
+## Secrets and paid services (absolute rules)
+
+- **The private key folder.** API keys live in a private folder outside both repos. Its path
+  is written only in `.claude/hooks/secret_paths.local.json`, which git ignores; never write
+  that path anywhere else (no doc, commit, chat, artifact or log). **Claude never reads,
+  lists, copies, prints, uploads, commits or pushes anything in that folder, under any
+  condition.** Nothing needs it to: our own Meshy client (`.claude/hooks/meshy_client.py`)
+  and the spend gate read the key themselves, outside any tool call. A PreToolUse hook
+  (`.claude/hooks/meshy_spend_gate.py`) refuses any tool call that names the folder or the
+  key file, and any shell command or new script that would reach the key or run the client
+  outside a Meshy tool call. Never edit, disable or work around that hook, and never spell a
+  path or name in pieces to get past it.
+- **Meshy spending.** Never spend more Meshy credits than the account holds, and every paid
+  call waits for the user's approval. The same hook enforces it (live balance check,
+  worst-case prices, unknown tools refused), and the client checks the balance again itself.
+  Never call Meshy's API outside the Meshy tools. **The price tripwire**
+  (`.claude/hooks/meshy_tripwire.json`, written when a task cost more than expected) blocks
+  every paid call until the **user** reviews and clears it; Claude never touches it. Only
+  `meshy_client.py` may contain Meshy's API address (the user's narrow exception,
+  2026-10-14), and every change to it is shown to the user before it runs. When Meshy changes
+  anything, follow "When Meshy changes something" in `docs/design/meshy_asset_pipeline.md`.
+
+---
+
 ## Debugging / chasing bugs
 
 The fastest way to chase a bug is the **in-game debug console** (`scripts/debug_console.gd`)
