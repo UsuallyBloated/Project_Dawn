@@ -2137,6 +2137,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   intentional-for-now, fix before ship). (b) Merchant/guard NPC names do not flash when
   targeted. (c) The target-of-target frame was called "huge, taking up too much space"; make
   it adjustable/movable with the other HUD pieces.
+  **(a) BUILT 2026-10-15, pending the export and the playtest** (client `fc0042f`;
+  `nameplates_through_walls_checklist.md`, 9 rows; client only). Verified before building:
+  enemy and NPC plates have depth-tested since `40dcad6` (2026-05-01, the day the complaint
+  was written; `enemy.tscn` went from `no_depth_test = true` to false), and every mob, NPC,
+  pet and station scene since carries false. The one plate still drawn through walls was
+  **other players'** (`remote_player.tscn`, true since `7faceef`, 2026-05-11), now false.
+  Exploit lens: that was a PvP information leak (a player hiding behind a wall showed their
+  name through it); a group-mate gets no exception, as in EQ. `tools/check_nameplates.gd`
+  instantiates all ten nameplate scenes headless and exits 1 if any draws through geometry;
+  it failed on the previous code for `remote_player.tscn` alone. Damage numbers stay drawn
+  over everything on purpose. (b) and (c) remain open.
 - [ ] **Playtest asks from the charm-return sitting (2026-10-07)** *(the tester's notes on
   `charm_return_checklist.md`)*. (a) **Chat lines did not wrap**: long combat lines were
   clipped at the window's right edge. **BUILT 2026-10-07, pending playtest** (client;

@@ -1044,3 +1044,28 @@ checklist = "summon_food_checklist.md"
 waits_on = ["o4"]
 todo = "EQ-style food/water gating"
 done_when = "Every row filled."
+
+[[row]]
+id = "b19"
+week = "w2"
+lane = "build"
+day = "Oct 15"
+what = "Nameplates through walls: other players' names no longer show through buildings (enemy and NPC names were already fixed in May). Client only, rides the Oct 22 export."
+who = "Claude unattended"
+days = 0.25
+done_when = "tools/check_nameplates.gd passes. Done only when nameplates_through_walls_checklist.md is filled."
+todo = "Nameplate and targeting polish"
+
+[[row]]
+id = "v26"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Nameplates through walls: a second seat's name hides when they walk behind a building and comes back in view; mob, NPC and corpse names stay hidden behind walls; damage numbers still float over."
+who = "user at a desk"
+hours = 0.25
+needs = ["second seat (two-boxing works)"]
+checklist = "nameplates_through_walls_checklist.md"
+waits_on = ["o4"]
+todo = "Nameplate and targeting polish"
+done_when = "Every row filled."
