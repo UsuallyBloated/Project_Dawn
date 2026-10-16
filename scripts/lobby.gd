@@ -26,6 +26,8 @@ const CHAR_CREATION_SCENE := "res://scenes/character_creation.tscn"
 ]
 
 func _ready() -> void:
+	# The countdown's _process runs only while a kick's relogin time ticks.
+	set_process(false)
 	Network.is_test_room = false
 	multiplayer.connected_to_server.connect(_on_connected)
 	Network.connection_failed.connect(_on_connection_failed)
@@ -142,9 +144,44 @@ func _on_app_connected(_player_id: int) -> void:
 
 func _on_app_disconnected(reason: String) -> void:
 	enter_world_btn.visible = false
-	status_label.text = "Disconnected: %s" % reason
+	_disconnect_reason = reason
+	_show_disconnect()
 	for control in _local_buttons:
 		control.visible = true
+
+# The live relogin countdown. When the kick named a time (a duplicate login
+# refused while the old body lingers), the server's one-shot "You can try again
+# in about Ns." is replaced by a line that ticks down to "now"; with no time,
+# the reason shows as the server wrote it.
+var _disconnect_reason := ""
+var _countdown_shown := -2
+
+func _show_disconnect() -> void:
+	var remaining := Net.get_kick_retry_remaining()
+	_countdown_shown = remaining
+	if remaining < 0:
+		status_label.text = "Disconnected: %s" % _disconnect_reason
+		set_process(false)
+		return
+	var reason := _strip_server_retry(_disconnect_reason)
+	if remaining > 0:
+		status_label.text = "Disconnected: %s You can log in again in %d s." % [reason, remaining]
+		set_process(true)
+	else:
+		status_label.text = "Disconnected: %s You can log in again now." % reason
+		set_process(false)
+
+# Drop the server's own "about Ns" sentence, which the live line replaces.
+# Matched on its exact wording (tick.rs, the duplicate-login refusal); if the
+# wording ever changes, the old sentence simply stays beside the countdown.
+func _strip_server_retry(reason: String) -> String:
+	var re := RegEx.new()
+	re.compile(" You can try again in about \\d+s\\.")
+	return re.sub(reason, "")
+
+func _process(_delta: float) -> void:
+	if Net.get_kick_retry_remaining() != _countdown_shown:
+		_show_disconnect()
 
 func _on_enter_world_pressed() -> void:
 	# Legacy ENet flags must be in a known state — they're irrelevant in

@@ -247,6 +247,14 @@ var _player_id: int = -1
 # _on_transport_disconnected; without this, that generic transport reason would
 # clobber the meaningful kick reason. Cleared when a fresh transport connects.
 var _kick_reason: String = ""
+# When the last kick said a relogin would be accepted (Time.get_ticks_msec()),
+# or 0 when it said nothing: the duplicate-login refusal while the old body
+# lingers linkdead carries the seconds. Display only; the server decides.
+var _kick_retry_at_msec: int = 0
+# The DLL's kick_retry_after arrives just before its `kicked`; it is held here
+# and taken (or, when absent, the time cleared) by that kick, so a time from an
+# earlier kick can never show on a later one that named none.
+var _pending_kick_retry_secs: int = -1
 var _move_sequence: int = 0
 var _heartbeat_timer: Timer = null
 
@@ -301,6 +309,10 @@ func _ready() -> void:
 	# error here takes the whole Net autoload down. The DLL is hand-copied into
 	# builds/, so a stale one is a real possibility; this way it costs the
 	# shared sky and says so, instead of costing the client.
+	# The kick's relogin time, by name: an older DLL has no such signal and
+	# costs only the lobby's countdown (the reason still says "about Ns").
+	if has_signal("kick_retry_after"):
+		connect("kick_retry_after", _on_kick_retry_after)
 	if has_signal("time_of_day"):
 		connect("time_of_day", _on_time_of_day)
 	else:
@@ -987,7 +999,24 @@ func _on_connect_ok(
 	_heartbeat_timer.start()
 	app_connected.emit(player_id)
 
+# Arrives just before `kicked` when the server said how long until a relogin
+# is accepted. Clamped to ten minutes so a malformed value cannot park a
+# countdown on screen.
+func _on_kick_retry_after(secs: int) -> void:
+	_pending_kick_retry_secs = clampi(secs, 0, 600)
+
+## Whole seconds until the last kick said a relogin would be accepted; 0 when
+## that time has passed, -1 when the last kick named no time at all.
+func get_kick_retry_remaining() -> int:
+	if _kick_retry_at_msec == 0:
+		return -1
+	return maxi(0, ceili((_kick_retry_at_msec - Time.get_ticks_msec()) / 1000.0))
+
 func _on_kicked(reason: String, code: String) -> void:
+	_kick_retry_at_msec = 0
+	if _pending_kick_retry_secs >= 0:
+		_kick_retry_at_msec = Time.get_ticks_msec() + _pending_kick_retry_secs * 1000
+	_pending_kick_retry_secs = -1
 	push_warning("Net: kicked code=%s reason=%s" % [code, reason])
 	_kick_reason = reason
 	_stop_heartbeat()
