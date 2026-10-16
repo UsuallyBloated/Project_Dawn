@@ -529,6 +529,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   per-character state that a second character would inherit unless each is audited (the
   hotbar bleed of 08-26 was one of them). Needs its own design pass and a state-reset audit
   before any code.
+  **(2) BUILT 2026-10-15, pending the Oct 22 export and the playtest** (server `33c7e28` the DLL,
+  client `1159a79`; `relogin_countdown_checklist.md`, 8 rows; no protocol change, no server change).
+  The DLL's `classify` keeps the kick's `reconnect_after_secs` and emits a separate
+  `kick_retry_after(secs)` just before `kicked` (a third argument would have changed
+  `kicked`'s arity; a separate signal costs an old client only the countdown). `Net` connects
+  it by name, holds it as pending until the `kicked` that follows (so an earlier kick's time
+  never shows on a later one that named none) and exposes `get_kick_retry_remaining()`; the
+  lobby shows "You can log in again in N s." ticking to "now" in place of the server's "about
+  Ns" sentence, and starts with its `_process` off. Display only: the server still decides.
+  Tests: a `classify` unit test in the DLL crate (27 s carried, a ban carries -1) and a headless
+  probe of the launcher-mode lobby (5, 2, now, stops; a later ban shows no stale countdown).
+  **Bump-day note:** the trade branch edited the same `SIGNALS` line of
+  `tools/check_wire_layer.gd`; the merge keeps both lists' entries.
 - [x] **Tell testers about the ~45 s worst-case relogin after a crash** — **DONE 2026-09-30
   (a doc line with no playtest surface, ticked on the edit like the reset_password bin)**.
   `camp_and_linkdead.md` §Risks called the number out ("a hard crash can take up to the 15 s

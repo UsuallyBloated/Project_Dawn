@@ -1069,3 +1069,28 @@ checklist = "nameplates_through_walls_checklist.md"
 waits_on = ["o4"]
 todo = "Nameplate and targeting polish"
 done_when = "Every row filled."
+
+[[row]]
+id = "b20"
+week = "w2"
+lane = "build"
+day = "Oct 15"
+what = "Live relogin countdown: a refused relogin (your body still in the world after a crash or the window X) counts down to \"You can log in again now\" in the lobby instead of a fixed estimate. A wire-layer change, so it rides the Oct 22 DLL rebuild and export; the server needs nothing."
+who = "Claude unattended"
+days = 0.5
+done_when = "The DLL crate's test and the client probe pass. Done only when relogin_countdown_checklist.md is filled."
+todo = "Camp / kick return-to-lobby flow + live relogin countdown"
+
+[[row]]
+id = "v27"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Live relogin countdown: close the game with the window X, relaunch, log in at once; the lobby counts down to now and the login then succeeds; a refusal while the other session is live shows no countdown."
+who = "user, one seat"
+hours = 0.25
+needs = ["the Oct 22 export with the rebuilt DLL"]
+checklist = "relogin_countdown_checklist.md"
+waits_on = ["o4"]
+todo = "Camp / kick return-to-lobby flow + live relogin countdown"
+done_when = "Every row filled."
