@@ -24,7 +24,7 @@ mesh = SubResource("CapsuleMesh_1")
 [node name="NameLabel" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
 billboard = 1
-no_depth_test = true
+no_depth_test = false
 fixed_size = false
 font_size = 36
 outline_size = 8
