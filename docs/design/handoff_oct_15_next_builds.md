@@ -140,6 +140,10 @@ The playtests of every checklist in `CHECKLIST_RUN_ORDER.md` wait on the redeplo
 
 ## 4. The queue, in order, with what is known about each
 
+**Progress (2026-10-15, later the same day, on Opus):** 4.1 and 4.2 are BUILT and recorded
+(client `fc0042f` + `1159a79`, server `33c7e28`; session note 2026-10-15 §4 and §5; planner
+b19/v26, b20/v27). 4.3 waits on the user's yes for its migration. Next planner ids: `b21`, `v28`.
+
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
 What is known: name labels are `Label3D` nodes named `NameLabel`.
