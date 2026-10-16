@@ -1440,6 +1440,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   now", and adding a column for it means a migration, after which an older binary refuses to
   boot on that database (no rollback). `reset_password` names the lever instead: ban, wait
   for the `banned account kicked from the world` log line, unban.
+  **DEFERRED FAR OUT 2026-10-16 (user): "I dont want the password-reset kick for a long time.
+  Im not worried about systems being abused by the people who are using the server."** Not a
+  friends-build item; it sits in the planner's after-the-door strip. Revisit only if the
+  player base grows beyond people the user knows, alongside the public-host hardening.
 - [ ] **PET_CHARM had no range check** *(found 2026-10-01 while reading the charm arm for a test
   fix; **BUILT same day, pending playtest**, server `30f0474`;
   `inspect_range_gm_audit_ban_checklist.md` §4)*. The charm arm checked that the target id was a

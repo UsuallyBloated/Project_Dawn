@@ -142,7 +142,8 @@ The playtests of every checklist in `CHECKLIST_RUN_ORDER.md` wait on the redeplo
 
 **Progress (2026-10-15, later the same day, on Opus):** 4.1 and 4.2 are BUILT and recorded
 (client `fc0042f` + `1159a79`, server `33c7e28`; session note 2026-10-15 §4 and §5; planner
-b19/v26, b20/v27). 4.3 waits on the user's yes for its migration. Next planner ids: `b21`, `v28`.
+b19/v26, b20/v27). 4.3 is DEFERRED FAR OUT by the user (2026-10-16: the people on the server
+are trusted); do not build it. Next is 4.4. Next planner ids: `b21`, `v28`.
 
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
