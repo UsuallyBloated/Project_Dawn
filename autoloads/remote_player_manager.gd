@@ -415,15 +415,37 @@ func _on_miss(attacker: int, target: int) -> void:
 		# matters most in PvP. Mirrors _on_hit's attacker-name resolution.
 		CombatLog.add_line("%s misses you." % _attacker_display_name(attacker), CombatLog.MsgType.DAMAGE_IN)
 		return
-	var rp = _by_id.get(target)
-	if rp != null and is_instance_valid(rp):
-		DamageNumbers.spawn_miss(rp.global_position)
+	# A miss on anyone else: draw it on them, whatever kind they are. Online
+	# the server rolls every melee miss (combat.rs), so this is also where your
+	# own misses come back, mob or player, with their "You miss X." line.
+	var node := _entity_node(target)
+	if node != null:
+		DamageNumbers.spawn_miss((node as Node3D).global_position)
+	if attacker == Net.get_player_id():
+		Combat.player_missed_enemy.emit(_attacker_display_name(target))
+
+# The scene node for an entity id, by partition: a pet, a mob, or a player.
+# Null when the id is not in view.
+func _entity_node(id: int) -> Node:
+	var node: Node = null
+	if id >= RemotePetManager.PET_ID_BASE:
+		node = RemotePetManager.get_pet(id)
+	elif id >= RemoteEnemyManager.ENEMY_ID_BASE:
+		node = RemoteEnemyManager.get_enemy(id)
+	else:
+		node = _by_id.get(id)
+	return node if node != null and is_instance_valid(node) else null
 
 # Resolve an attacker id to a combat-log name. Mirrors the enemy-vs-peer
 # split in _on_hit: enemy ids (>= ENEMY_ID_BASE) read the mob name, peer
 # ids read the RemotePlayer name; same fallbacks ("Something" / "another
 # player") so incoming-miss lines read like incoming-hit lines.
 func _attacker_display_name(attacker: int) -> String:
+	if attacker >= RemotePetManager.PET_ID_BASE:
+		var pet: Node = RemotePetManager.get_pet(attacker)
+		if pet != null and is_instance_valid(pet):
+			return pet.pet_name
+		return "Something"
 	if attacker >= RemoteEnemyManager.ENEMY_ID_BASE:
 		var en: Node = RemoteEnemyManager.get_enemy(attacker)
 		if en != null and is_instance_valid(en):

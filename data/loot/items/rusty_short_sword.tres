@@ -9,6 +9,7 @@ description = "A battered blade barely fit for combat."
 type = 0
 rarity = 0
 stack_size = 1
+weapon_skill = "1h_slashing"
 bonus_strength = 1
 vendor_price = 4
 weight = 4.0

@@ -9,6 +9,7 @@ description = "A heavy stick with a split running down its length."
 type = 0
 rarity = 0
 stack_size = 1
+weapon_skill = "1h_blunt"
 bonus_strength = 1
 vendor_price = 2
 weight = 3.0

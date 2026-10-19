@@ -226,12 +226,16 @@ func _on_auto_attack() -> void:
 		return
 	var skill_name := _get_weapon_skill_name()
 	WeaponSkills.try_advance(skill_name)
-	var miss_chance := maxf(0.0, WeaponSkills.get_miss_chance(skill_name) - BuffManager.get_accuracy_bonus())
-	if randf() < miss_chance:
-		player_missed_enemy.emit(current_target.mob_name)
-		DamageNumbers.spawn_miss(current_target.global_position)
-		_update_attack_interval()
-		return
+	# Online the server rolls the miss (combat.rs): every swing goes out, and a
+	# miss comes back as a Miss (RemotePlayerManager draws it). Offline the
+	# local roll stands.
+	if not Net.is_launcher_mode():
+		var miss_chance := maxf(0.0, WeaponSkills.get_miss_chance(skill_name) - BuffManager.get_accuracy_bonus())
+		if randf() < miss_chance:
+			player_missed_enemy.emit(current_target.mob_name)
+			DamageNumbers.spawn_miss(current_target.global_position)
+			_update_attack_interval()
+			return
 	deal_damage_to_target(calc_damage())
 	if is_ranged_weapon and is_instance_valid(current_target):
 		_spawn_arrow_fx(current_target.global_position)
@@ -270,12 +274,14 @@ func _on_offhand_attack() -> void:
 	var skill_name := oh.weapon_skill if oh.weapon_skill != "" else "1h_slashing"
 	WeaponSkills.try_advance(skill_name)
 	WeaponSkills.try_advance("dual_wield")
-	var miss_chance := minf(0.95, WeaponSkills.get_miss_chance(skill_name) + DUAL_WIELD_MISS_PENALTY - BuffManager.get_accuracy_bonus())
-	if randf() < miss_chance:
-		player_missed_enemy.emit(current_target.mob_name)
-		DamageNumbers.spawn_miss(current_target.global_position)
-		_update_offhand_interval()
-		return
+	# Online the server rolls the off-hand miss too (see _on_auto_attack).
+	if not Net.is_launcher_mode():
+		var miss_chance := minf(0.95, WeaponSkills.get_miss_chance(skill_name) + DUAL_WIELD_MISS_PENALTY - BuffManager.get_accuracy_bonus())
+		if randf() < miss_chance:
+			player_missed_enemy.emit(current_target.mob_name)
+			DamageNumbers.spawn_miss(current_target.global_position)
+			_update_offhand_interval()
+			return
 	deal_damage_to_target(calc_offhand_damage(), NetProtocol.DamageType.PHYSICAL, true)
 	# Procs are server-authoritative now (see the main-hand note in _on_auto_attack).
 	_update_offhand_interval()
