@@ -3,7 +3,7 @@
 Food slice 2, the two conjuring spells (user call 2026-10-15, Monsters and Memories' shape: 1 to 4
 items scaling with level). **Summon Food** conjures Conjured Bread (a 48-minute meal) and
 **Summon Drink** conjures Conjured Water (a 36-minute drink) into your bags: one at the level
-your class learns the spell, one more for every ten levels past it, four at most. 10 mana, a
+your class learns the spell, one more for every level past it, ten at most (user, 2026-10-19; it was one per ten levels to four). 10 mana, a
 four-second cast, no cooldown of its own (the global cooldown still applies). The conjured items
 have no vendor value, so a merchant will not buy them. **Needs the redeploy (server `4577350`
 or later) AND the next export** (the spells and items are on both sides; an old client does not
@@ -17,9 +17,9 @@ know the spell or the item).
 | Caster | Count |
 |---|---|
 | at the level the class learns it | 1 |
-| ten levels past it | 2 |
-| twenty past | 3 |
-| thirty past or more | 4 |
+| one level past it | 2 |
+| five past | 6 |
+| nine past or more | 10 |
 
 Diagnostics: `server.log` has `SUMMON_ITEM applied` with `qty`; a refusal before the cast is
 `CastSpell refused — target pre-flight` with "Your bags are full."; a class below its level is
@@ -31,9 +31,9 @@ Diagnostics: `server.log` has `SUMMON_ITEM applied` with `qty`; a refusal before
 - [ ] A Magician (any level) and, for §3, a Cleric or Druid below and above its level
 
 ## 1 — Conjuring
-- [ ] **Magician 1 to 10 casts Summon Food** → a four-second bar, then one Conjured Bread lands in the bags and chat says "You conjure Conjured Bread x1."; 10 mana spent. notes:
+- [ ] **A Magician 1 casts Summon Food** → a four-second bar, then one Conjured Bread lands in the bags and chat says "You conjure Conjured Bread x1."; 10 mana spent. notes:
 - [ ] **Cast Summon Drink** → one Conjured Water the same way. notes:
-- [ ] **A Magician 11 or higher (Level Up tool) casts either** → two; at 21 three; at 31 four, stacking onto the earlier ones. notes:
+- [ ] **Level the Magician (Level Up tool) and cast either** → two at level 2, five at 5, ten at 10 and every level after, stacking onto the earlier ones. notes:
 - [ ] **Cast again while the stack is under 20** → the new items join the stack; past 20 a new stack starts. notes:
 
 ## 2 — The items
