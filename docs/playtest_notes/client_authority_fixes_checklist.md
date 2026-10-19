@@ -36,5 +36,22 @@ crits show as crit hits in the combat log; carry weight shows on the character s
 - [ ] **A DoT (Entangle, Dark Decay)** → its ticks are the same size as before; only the direct hit grew. notes:
 - [ ] **Play an evening as a caster** → note whether low-level nukes now feel too strong; the formula is the client's as written, and `docs/design/spell_formula_research.md` has the options if it is. notes:
 
+## 4 — Melee misses come from the server (Oct 22 build)
+- [ ] **Auto-attack a mob for a minute with a fresh character** → some swings miss ("You miss X." and a MISS over the mob), more often than once skilled; the mob still turns on you after a miss. notes:
+- [ ] **A second seat watching** → sees your misses over the mob as well. notes:
+- [ ] **Swing a weapon your class cannot use** (a Rogue with a staff, say) → mostly misses, small hits. notes:
+
+## 5 — Dual wield is earned (Oct 22 build)
+- [ ] **A Warrior below 15 with a sword in each hand** → only the main hand swings, and equipping the second said "You will be able to dual wield at level 15." notes:
+- [ ] **The same Warrior at 15 (Level Up tool)** → both hands swing. notes:
+- [ ] **A Monk at level 1 with empty hands** → both fists swing; with a weapon in the main hand only the main hand swings. notes:
+- [ ] **A Cleric with two weapons** → "Your class cannot dual wield." and only the main hand swings. notes:
+
+## 6 — Each spell's own reach (Oct 22 build)
+- [ ] **Nuke a mob from about 28 m** → it lands (it used to be refused past 24 m). notes:
+- [ ] **From about 32 m** → refused, mana kept. notes:
+- [ ] **Hover any targeted spell** → the tooltip ends `Range: 30 m` (`30 m to others` on a heal or buff). notes:
+- [ ] **Pull a mob from 30 m and run** → it follows a little further than before before giving up (the leash floor moved to 35 m). notes:
+
 ## Notes / observations
 -

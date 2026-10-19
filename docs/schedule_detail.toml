@@ -1161,11 +1161,33 @@ id = "v29"
 week = "w3"
 lane = "verify"
 day = "Fri Oct 23 to Sun Oct 25"
-what = "Client-authority fixes: a GM's Test Panel hits still show; running, crouching, Spirit of Wolf and snares feel right with no rubber-banding; an overloaded character crawls; a mount whistle refuses; nukes and heals land bigger, crits show, DoT ticks are unchanged; a note on whether low-level nukes now feel too strong."
+what = "Client-authority fixes and the October 19 decisions: a GM's Test Panel hits still show; running, crouching, Spirit of Wolf and snares feel right with no rubber-banding; an overloaded character crawls; a mount whistle refuses; nukes and heals land bigger, crits show, DoT ticks are unchanged; misses come from the server; the off hand swings only from the class's level (Monks from 1); spells reach 30 m; a note on whether low-level nukes now feel too strong."
 who = "user at a desk, GM account"
-hours = 1
+hours = 1.5
 needs = ["second seat (two-boxing works)", "the Oct 22 export"]
 checklist = "client_authority_fixes_checklist.md"
 waits_on = ["b22", "b23", "o4"]
 todo = "Client-decided outcomes (audit 2026-10-19)"
 done_when = "Every row filled."
+
+[[row]]
+id = "b24"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Client-authority fix 4: the server rolls every melee miss and applies the weapon skill (a modified client used to never miss). On feat/server-speed, so it rides Oct 22."
+who = "Claude unattended"
+days = 0.5
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when client_authority_fixes_checklist.md section 4 is filled."
+todo = "Client-decided outcomes (audit 2026-10-19)"
+
+[[row]]
+id = "b25"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Three of the user's October 19 decisions: dual wield earned by class and level (Monks bare-fisted from 1), per-spell ranges on a 30 m baseline (mob leashes to 35 m to stay past them), and conjured food at one more per level to ten. On feat/server-speed, so they ride Oct 22."
+who = "Claude unattended"
+days = 1
+done_when = "The server suite and the client probes pass and both halves are pushed. Done only when client_authority_fixes_checklist.md sections 5 and 6 and summon_food_checklist.md are filled."
+todo = "Dual wield as an unlockable passive"

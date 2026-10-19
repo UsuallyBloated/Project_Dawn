@@ -167,6 +167,13 @@ it rides the Oct 22 bump only if done before it), then the decided builds: dual 
 per-spell ranges, conjured food (+1 per level to 10, NO RENT with the no-drop flag). Next
 planner ids: `b24`, `v30`.
 
+**Progress (2026-10-19, later still):** fix 4, dual wield, per-spell ranges and the conjured food
+count are BUILT on `feat/server-speed` (session note section 7; planner b24, b25). **Waiting on
+the user:** one migration (`0015`) for fix 5 (a server-side spell bar: MemorizeSpell intent,
+CastSpell refused for a spell not memorized) and the NO RENT flag (a per-character logout time
+for the 30-minute rule). Both ride Oct 22 only if approved and built before it. Next planner
+ids: `b26`, `v30`.
+
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
 What is known: name labels are `Label3D` nodes named `NameLabel`.

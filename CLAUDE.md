@@ -573,7 +573,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   "Temporary" tag, which P99 shows on Summoned: Black Bread): the item is destroyed once the
   character has been logged out for 30 minutes, not at the instant of logout, so a quick relog
   or a crash keeps it (Allakhazam's EQ item-tag reference; no classic-only source found that
-  differs). Built with this flag.
+  differs). Built with this flag. **Waits on the user's yes for a migration** (2026-10-19):
+  the 30-minute rule needs the time a character logged out, and the database keeps none per
+  character (only an account's last login and a session's last-seen).
 - [ ] **Pet persistence across logout: a design call** *(server_design.md open question 2;
   audit 2026-09-29)*. Today the warder auto-summons on every EnterWorld and conjured pets
   simply vanish, which is a de-facto answer nobody made on purpose. Confirm or change it when
@@ -840,6 +842,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   60 on the old code). Research for the later balance pass: `docs/design/spell_formula_research.md`
   (EQ, WoW, D&D 5e and 3.5e, M&M, Lineage II). Also found and fixed on the way: the
   hand-eating test raced the hunger drain (`3173fbc`).
+  **Fix 4 BUILT 2026-10-19, pending the Oct 22 bump and the playtest** (`feat/server-speed`,
+  server `fb49a20`, client `031d435`; checklist §4). `combat.rs` owns the whole swing, the
+  client's `weapon_skills.gd` numbers: the miss (35% at no skill to a 5% floor, 80% with a
+  weapon type the class cannot use, the off hand 20 points more, accuracy buffs off), the
+  skill damage multiplier (1.0 to 1.15, 0.5 unusable); a seated target is never missed. A miss
+  fans a Miss; on a mob it adds one point of hate (my call, EQ's: a swing angers a mob, and it
+  keeps the pet's assist working) and trains the weapon skill and defense, as the client did.
+  The client rolls no miss online and draws the server's on whatever it hit, with "You miss
+  X.". Four weapons named no skill (the server judged them hand-to-hand, the client's name
+  table otherwise, so they trained the wrong skill): both sides name it now. Test:
+  `the_server_rolls_the_melee_miss` (a Rogue with a two-handed staff, a Miss in eight swings;
+  fails with misses disabled). Tests that need a landed swing master the attacker's skill; the
+  six camp-walking tests walk by the server's own position, not the wall clock. **Fix 5 waits
+  on the user's yes for a migration** (the server has nowhere to keep a character's spell bar).
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
@@ -1526,6 +1542,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   10 m radius, one 15 m cone). Build: a real `range` field per spell on both sides, every
   single-target spell defaulting to 30 m (hostile goes from 25 m to 30 m), an AoE radius kept
   separate from the range, the tooltip showing the spell's own number.
+  **BUILT 2026-10-19, pending the Oct 22 bump and the playtest** (`feat/server-speed`, server
+  `aa225c5`, client `6ab89f1`; checklist §6). `Spell.range` / `SpellData.range` (0 = 30 m) and
+  `reach()`, the one reach for every targeted cast, the resurrection's corpse and Evacuate's
+  gather; hostile spells go 25 to 30 m; the client checks one metre inside. **The leash floor
+  moved 30 to 35 m** (it exists so no mob can be hit from beyond its own leash; a unit test now
+  holds every spell inside it). `check_spell_lockstep.gd` compares `range` even when only one
+  side writes it (a planted one-sided range is caught). Test: `a_nuke_reaches_thirty_metres`
+  (a Smite at about 28 m lands, at 33 m is refused; fails at the old 25 m).
 - [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
   ticked on the integration test** (server `f58b796`,
   `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
@@ -1992,6 +2016,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   refuses for everyone today (the 2026-07-29 swing-limit review closed a forged fist stream
   that way), so the opening is Monk-only and server-decided. Paladin, the casters and the
   priests stay at none.
+  **BUILT 2026-10-19, pending the Oct 22 bump and the playtest** (`feat/server-speed`, server
+  `803d7f4`, client `bfd8753`; `client_authority_fixes_checklist.md` §5). `skills::dual_wield_level`
+  and the client's `DUAL_WIELD_LEVELS`; the Attack path refuses an off-hand swing before the
+  level; a Monk with both hands empty punches with the off hand (no one else swings an empty
+  off hand); an off-hand swing trains dual wield on the server; the client prints "You will be
+  able to dual wield at level N." on equipping an off-hand weapon early. Test:
+  `dual_wield_is_earned_by_class_and_level` (a Warrior 1's off hand unanswered, answered past
+  15; a bare-handed Monk 1's answered), failing on the previous code. The dual wield skill
+  itself still changes nothing about the swing (as on the client); a later pass could tie the
+  off hand's chance to swing to it, as EQ did.
 - [ ] **Facing and view angle** *(user 2026-05-05: "currently doesn't seem like any PC or NPC has
   a view angle. Everything has to face the direction of their combat target"; audit
   2026-09-29)*. No facing model exists: mobs snap to their target and remote players show
@@ -2568,6 +2602,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **DECIDED 2026-10-19 (user): +1 item per level after the class learns the spell, cap 10**
   (was +1 per ten levels, cap 4): a Magician conjures 10 per cast from level 10. Safe because
   conjured food cannot be sold and becomes NO RENT (the no-drop flag item).
+  **BUILT 2026-10-19** (`feat/server-speed`, server `f7c0d05`, client `d0d4c4d`;
+  `summon_food_checklist.md` updated on that branch).
   **Server half DEPLOYED 2026-10-19** (R720 boot line `build="33c7e28" dev_cmds=false`, no
   migration); the spells stay unreachable until the Oct 22 export, since the 10-13
   client knows neither the spells nor the items.
