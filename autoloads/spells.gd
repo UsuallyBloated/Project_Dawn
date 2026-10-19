@@ -20,18 +20,12 @@ var no_cooldowns: bool = false
 # Seconds left on the global cooldown (0 when none runs).
 var _gcd_remaining: float = 0.0
 
-# How far a targeted spell reaches, in metres. One metre inside the server's
-# RANGED_ATTACK_RANGE (25 m), which is the authority: this check only spares an
-# honest player a wasted cast bar, and the margin keeps position interpolation
-# from turning a cast the client allowed into a server refusal.
-const SPELL_RANGE := 24.0
-# Friendly spells (heals and buffs on another player or a pet) reach further:
-# one metre inside the server's FRIENDLY_SPELL_RANGE (30 m), decided 2026-10-05.
-const FRIENDLY_SPELL_RANGE := 29.0
-# A resurrection's reach to the corpse: the server's RES_CAST_RANGE (30 m). The
-# client runs no check of its own for it (the server reports the refusal);
-# the number is here for the tooltip.
-const CORPSE_SPELL_RANGE := 30.0
+# Each spell reaches its own range (SpellData.reach(), 30 m unless the spell
+# names one; the server's Spell::reach is the authority). The client's own
+# check sits this far inside it: it only spares an honest player a wasted cast
+# bar, and the margin keeps position interpolation from turning a cast the
+# client allowed into a server refusal.
+const REACH_MARGIN := 1.0
 # The global cooldown (decided 2026-10-05): after any cast no spell may start
 # for this long, Bard songs excepted (twisting is casting songs back to back).
 # The server's GLOBAL_COOLDOWN is a quarter second shorter (2.0 s), so an
@@ -98,20 +92,13 @@ func _get_alignment_effectiveness(player_class: String) -> float:
 	return 1.0
 
 # The reach a spell's tooltip shows, or "" for a spell with no target to reach
-# (self, group-wide, a port, a bind, a summon). All spells of a kind share one
-# reach today (the server has no per-spell range), so this is the kind's
-# number: hostile 24 m, friendly 29 m (to another player or a pet; on yourself
-# there is nothing to reach), a corpse 30 m.
+# (self, group-wide, a port, a bind, a summon): the spell's own reach.
 func spell_range_text(spell: SpellData) -> String:
 	match spell.target_type:
-		SpellData.TargetType.ENEMY, SpellData.TargetType.PET_CHARM:
-			return "%.0f m" % SPELL_RANGE
+		SpellData.TargetType.ENEMY, SpellData.TargetType.PET_CHARM, 		SpellData.TargetType.PET_HEAL, SpellData.TargetType.CORPSE:
+			return "%.0f m" % spell.reach()
 		SpellData.TargetType.ALLY:
-			return "%.0f m to others" % FRIENDLY_SPELL_RANGE
-		SpellData.TargetType.PET_HEAL:
-			return "%.0f m" % FRIENDLY_SPELL_RANGE
-		SpellData.TargetType.CORPSE:
-			return "%.0f m" % CORPSE_SPELL_RANGE
+			return "%.0f m to others" % spell.reach()
 	return ""
 
 func cast_spell(spell: SpellData) -> bool:
@@ -526,8 +513,8 @@ func _cast_target_id(spell: SpellData) -> int:
 		return (t as RemotePet).pet_id
 	return 0
 
-# True when `spell` needs a target within SPELL_RANGE and the current target
-# is further than that. Only the cases the server range-checks: an ENEMY or
+# True when `spell` needs a target within its reach (less REACH_MARGIN) and
+# the current target is further than that. Only the cases the server range-checks: an ENEMY or
 # PET_CHARM spell on its target, and an ALLY spell aimed at another player or a
 # pet (an ALLY spell with anything else targeted falls back to the caster, so
 # it has no reach to check).
@@ -543,8 +530,7 @@ func _target_out_of_reach(spell: SpellData) -> bool:
 	var me := get_tree().get_first_node_in_group("player") as Node3D
 	if me == null:
 		return false
-	var reach := FRIENDLY_SPELL_RANGE if spell.target_type == SpellData.TargetType.ALLY else SPELL_RANGE
-	return me.global_position.distance_to((t as Node3D).global_position) > reach
+	return me.global_position.distance_to((t as Node3D).global_position) > spell.reach() - REACH_MARGIN
 
 # Launcher mode: the server refused a cast that had ALREADY completed here
 # (target out of reach or gone, a spell the server has no effect for). It took
@@ -669,6 +655,7 @@ func _load_spells() -> void:
 		s.class_min_levels    = d.get("class_min_levels", {})
 		s.summon_item         = d.get("summon_item", "")
 		s.summon_max          = int(d.get("summon_max", 0))
+		s.range               = float(d.get("range", 0.0))
 		s.str_buff                  = d.get("str_buff", 0)
 		s.agi_buff                  = d.get("agi_buff", 0)
 		s.int_buff                  = d.get("int_buff", 0)

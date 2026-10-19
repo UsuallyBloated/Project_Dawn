@@ -25,6 +25,10 @@ const DEFAULT_SERVER_TOML := "F:/Projects/server/crates/projectdawn-server/data/
 const EPSILON := 0.001
 # The fields a Bard song keeps on the client only (see the loop below).
 const SONG_CLIENT_SIDE_KEYS: Array[String] = ["base_damage", "heal_amount"]
+# Keys either side may leave out, meaning the same default on both: compared
+# even when only one side writes them, so a range set on one side only is
+# drift and not silence.
+const DEFAULTED_KEYS: Dictionary = {"range": 0.0}
 
 func _initialize() -> void:
 	var toml_path := DEFAULT_SERVER_TOML
@@ -52,8 +56,14 @@ func _initialize() -> void:
 			continue
 		var s: Dictionary = server[spell_name]
 		var c: Dictionary = client[spell_name]
+		for key in DEFAULTED_KEYS:
+			var sv = s.get(key, DEFAULTED_KEYS[key])
+			var cv = c.get(key, DEFAULTED_KEYS[key])
+			if not _same(sv, cv):
+				drift.append("%s: %s is %s on the server, %s on the client" % [
+					spell_name, key, str(sv), str(cv)])
 		for key in s:
-			if key == "name":
+			if key == "name" or DEFAULTED_KEYS.has(key):
 				continue
 			# A key the client never authors (res_xp_percent, for one) is the
 			# server's own business, not drift.

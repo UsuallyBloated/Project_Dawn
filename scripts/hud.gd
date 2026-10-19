@@ -830,8 +830,8 @@ func _show_self_target() -> void:
 	if _tot_frame != null:
 		_tot_frame.visible = false
 
-# The same straight-line distance the cast range check uses (Spells.SPELL_RANGE
-# compares global positions), so the number on the frame is the number the gate
+# The same straight-line distance the cast range check uses (each spell's
+# reach, compared between global positions), so the number on the frame is the number the gate
 # judges. Blank for a self-target or when either end is missing.
 func _refresh_target_distance() -> void:
 	if not target_frame.visible:

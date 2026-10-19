@@ -22,8 +22,8 @@ target-frame distance readout from 10-06 rides the same export.
 ## 3 — Spell tooltip range (built 2026-10-12, rides the same export)
 The three spell tooltips (a hotbar gem, a memorized gem, a book row) end with `Range:` for a
 spell that has something to reach; spells with no target to reach show no range.
-- [ ] **Hover a nuke on the hotbar, in the spell bar and in the book** → each tooltip ends `Range: 24 m`. notes:
-- [ ] **Hover a heal or a buff** → `Range: 29 m to others`; hover a self-only buff, a port, Bind Affinity or a summon → no Range at all; hover Reclaim Soul → `Range: 30 m`. notes:
+- [ ] **Hover a nuke on the hotbar, in the spell bar and in the book** → each tooltip ends `Range: 30 m` (the spell's own reach; per-spell ranges, 2026-10-19). notes:
+- [ ] **Hover a heal or a buff** → `Range: 30 m to others`; hover a self-only buff, a port, Bind Affinity or a summon → no Range at all; hover Reclaim Soul → `Range: 30 m`. notes:
 
 ## 4 — Casting while seated (built 2026-10-12, same export)
 The client used to refuse with "You cannot cast while sitting."; the server stands a caster
