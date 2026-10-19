@@ -44,14 +44,12 @@ const SERVER_SNAP_THRESHOLD := 1.0  # metres
 # feel at 60 fps, but stays stable when frame rate dips).
 const SERVER_LERP_RATE := 17.3
 
-# Must match MAX_MOVE_SPEED in server crates/projectdawn-server/src/world/mod.rs.
-# The server reads Move.direction as a unit vector and integrates `direction *
-# MAX_MOVE_SPEED * dt` per tick, so we scale outgoing direction by
-# (current_speed / SERVER_MAX_MOVE_SPEED) to make server-side movement match
-# whatever the client is locally predicting (base 5 m/s, crouch 2.5, with
-# speed-buff multipliers). Server clamps direction length to 1.0, so any
-# buff pushing local speed above the cap gets capped on the wire too.
-const SERVER_MAX_MOVE_SPEED := 7.5
+# Online the server decides how fast you move: its RUN_SPEED (the same 5 m/s
+# as SPEED) times the speed buffs, snare and encumbrance it applies itself
+# (crates/projectdawn-server/src/world/mod.rs, RUN_SPEED). A Move's direction
+# says only which way and how much of a run: full length to run, half to
+# crouch. The local prediction below applies the same buffs and encumbrance so
+# the two agree; it never tells the server a speed.
 
 # Throttle Move sends to the server's 20 Hz tick rate. The server applies a
 # fixed TICK_DT (50ms) of integration per accepted Move, so sending faster
@@ -498,10 +496,9 @@ func _physics_process(delta: float) -> void:
 		_move_send_accum += delta
 		if _move_send_accum >= MOVE_SEND_INTERVAL:
 			_move_send_accum -= MOVE_SEND_INTERVAL
-			# Scale unit direction to (current_speed / SERVER_MAX_MOVE_SPEED) so
-			# the server's `direction * MAX_MOVE_SPEED` integration produces
-			# current_speed.
-			var server_dir := direction * (current_speed / SERVER_MAX_MOVE_SPEED)
+			# Which way, and how much of a run (a crouch is half); the speed
+			# is the server's.
+			var server_dir := direction * (base_speed / SPEED)
 			Net.send_movement(server_dir, false)
 
 	move_and_slide()
