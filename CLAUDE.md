@@ -576,6 +576,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   differs). Built with this flag. **Waits on the user's yes for a migration** (2026-10-19):
   the 30-minute rule needs the time a character logged out, and the database keeps none per
   character (only an account's last login and a session's last-seen).
+  **NO RENT BUILT 2026-10-19, pending the Oct 22 bump and the playtest** (`feat/server-speed`,
+  same commits as audit fix 5, migration 0015; checklist §8). `no_rent` on items (both sides,
+  lockstep-checked), set on conjured bread and water; every departure stamps
+  `characters.logged_out_at`; at the next login 30 minutes or more later the server removes
+  every NO RENT stack (inventory, worn, bags, the cursor, both bank vaults); the tooltip leads
+  with "NO RENT". Test: 31 minutes away loses the conjured bread, 10 minutes keeps it, an
+  ordinary loaf is never touched, logout stamps the time. **The no-drop / no-trade binding flag
+  this entry is about is still open**; NO RENT was the part decided.
 - [ ] **Pet persistence across logout: a design call** *(server_design.md open question 2;
   audit 2026-09-29)*. Today the warder auto-summons on every EnterWorld and conjured pets
   simply vanish, which is a de-facto answer nobody made on purpose. Confirm or change it when
@@ -856,6 +864,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   fails with misses disabled). Tests that need a landed swing master the attacker's skill; the
   six camp-walking tests walk by the server's own position, not the wall clock. **Fix 5 waits
   on the user's yes for a migration** (the server has nowhere to keep a character's spell bar).
+  **Fix 5 BUILT 2026-10-19 (migration approved: "go ahead"), pending the Oct 22 bump and the
+  playtest** (`feat/server-speed`, server `ea9ff32`, client `817c786`; checklist §7; migration
+  `0015_spell_gems_and_logout_time.sql`, forward-only, ships in the merged build). The server
+  holds the bar (`spell_gems.rs`, the client's rules: ten gems, `3 + level/5` open, memorize
+  seated 2 s at half the mana, forget free) and refuses a cast of a spell in no gem before
+  anything is spent. New intents `MemorizeStart` / `MemorizeFinish` / `ForgetSpell` /
+  `SeedSpellGems` and a `SpellGems` snapshot, under PD_W0028; the DLL's four sends and
+  `spell_gems` signal, wired by name. **Existing bars** lived only on players' machines, so a
+  character the server never held a bar for offers its bar once, each spell checked as a
+  memorize would be (accepted residual: that one seed skips the memorize time and mana, for
+  spells the character could memorize anyway). Tests: a refused unmemorized cast, the memorize
+  timing (early, stood-up and closed-gem refusals, then half of 20 mana), the one-time seed
+  across a relog; the harness pre-memorizes every class spell, so the 70 existing casts are
+  unchanged. **Hosting-branch note:** add the four spell-bar intents to the per-connection
+  intent budgets when `feat/public-hosting` merges (a refused one answers with the bar). **The
+  client-authority list's fixes 1 to 5 are all built;** item 6 (active skills, Bard songs,
+  alignment, fall damage) stays as their own builds.
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and

@@ -53,5 +53,16 @@ crits show as crit hits in the combat log; carry weight shows on the character s
 - [ ] **Hover any targeted spell** → the tooltip ends `Range: 30 m` (`30 m to others` on a heal or buff). notes:
 - [ ] **Pull a mob from 30 m and run** → it follows a little further than before before giving up (the leash floor moved to 35 m). notes:
 
+## 7 — The server holds your spell bar (Oct 22 build)
+- [ ] **First login on the new build** → your bar is exactly as it was (the server takes it over once). notes:
+- [ ] **Sit, open the book, memorize a spell into an empty gem** → the two-second bar runs, then "You memorize X into slot N." and half the spell's mana is gone. notes:
+- [ ] **Start a memorize and stand up before it finishes** → it stops and the gem stays as it was. notes:
+- [ ] **Clear a gem (right-click it), relog** → the gem is still empty after the relog; a memorized spell is still there. notes:
+
+## 8 — NO RENT (Oct 22 build)
+- [ ] **Hover a Conjured Bread** → the tooltip starts with NO RENT. notes:
+- [ ] **Conjure some food, log out, log back in within a few minutes** → the food is still there. notes:
+- [ ] **Conjure some food, stay logged out over thirty minutes, log in** → the conjured food is gone; ordinary food is not. notes:
+
 ## Notes / observations
 -

@@ -1161,9 +1161,9 @@ id = "v29"
 week = "w3"
 lane = "verify"
 day = "Fri Oct 23 to Sun Oct 25"
-what = "Client-authority fixes and the October 19 decisions: a GM's Test Panel hits still show; running, crouching, Spirit of Wolf and snares feel right with no rubber-banding; an overloaded character crawls; a mount whistle refuses; nukes and heals land bigger, crits show, DoT ticks are unchanged; misses come from the server; the off hand swings only from the class's level (Monks from 1); spells reach 30 m; a note on whether low-level nukes now feel too strong."
+what = "Client-authority fixes and the October 19 decisions: a GM's Test Panel hits still show; running, crouching, Spirit of Wolf and snares feel right with no rubber-banding; an overloaded character crawls; a mount whistle refuses; nukes and heals land bigger, crits show, DoT ticks are unchanged; misses come from the server; the off hand swings only from the class's level (Monks from 1); spells reach 30 m; the spell bar survives the first login and memorizing works; conjured food vanishes after thirty minutes logged out; a note on whether low-level nukes now feel too strong."
 who = "user at a desk, GM account"
-hours = 1.5
+hours = 2
 needs = ["second seat (two-boxing works)", "the Oct 22 export"]
 checklist = "client_authority_fixes_checklist.md"
 waits_on = ["b22", "b23", "o4"]
@@ -1191,3 +1191,14 @@ who = "Claude unattended"
 days = 1
 done_when = "The server suite and the client probes pass and both halves are pushed. Done only when client_authority_fixes_checklist.md sections 5 and 6 and summon_food_checklist.md are filled."
 todo = "Dual wield as an unlockable passive"
+
+[[row]]
+id = "b26"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Client-authority fix 5 and NO RENT, with one migration (0015, approved): the server keeps each character's memorized spells (a modified client could cast spells it never memorized) and destroys conjured food thirty minutes after its owner logs out. On feat/server-speed, so they ride Oct 22."
+who = "Claude unattended"
+days = 1
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when client_authority_fixes_checklist.md sections 7 and 8 are filled."
+todo = "Client-decided outcomes (audit 2026-10-19)"

@@ -174,6 +174,13 @@ CastSpell refused for a spell not memorized) and the NO RENT flag (a per-charact
 for the 30-minute rule). Both ride Oct 22 only if approved and built before it. Next planner
 ids: `b26`, `v30`.
 
+**Progress (2026-10-19, last):** the migration was approved and fix 5 and NO RENT are BUILT on
+`feat/server-speed` (session note section 8; planner b26). **Every client-authority fix is
+built**; the decided builds are done except the no-drop / no-trade binding flag (not decided).
+**Oct 22 now carries migration 0015** with everything else: the merged build must deploy as one
+(an older binary cannot boot on a migrated `world.db`). When `feat/public-hosting` merges, add
+the four spell-bar intents to its per-connection intent budgets. Next planner ids: `b27`, `v30`.
+
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
 What is known: name labels are `Label3D` nodes named `NameLabel`.

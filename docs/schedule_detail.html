@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Oct 19<span class="stat-sub">repo 24a32e4</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Oct 19<span class="stat-sub">repo 828aa54</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">26.75 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">55.5 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">27.75 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">56 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -486,7 +486,7 @@
 <section>
 <h2><span class="week-head"><span>One evening when every client changes</span><span class="when">W3 &middot; October 19 to 25</span></span></h2>
 <p class="lede">Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the four friends receive their first zip from this build and never need another.</p>
-<div class="week-meta"><span>the user's time: 25 h</span><span>Claude build days: 8.5</span></div>
+<div class="week-meta"><span>the user's time: 25.5 h</span><span>Claude build days: 9.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -578,6 +578,16 @@
 <td class="time">1 Claude day</td>
 <td class="id"></td>
 <td class="done">The server suite and the client probes pass and both halves are pushed. Done only when client_authority_fixes_checklist.md sections 5 and 6 and summon_food_checklist.md are filled.<span class="ref">To-Do entry: <code>Dual wield as an unlockable passive</code></span></td>
+</tr>
+<tr>
+<td class="id">b26</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 19</span>Client-authority fix 5 and NO RENT, with one migration (0015, approved): the server keeps each character&#x27;s memorized spells (a modified client could cast spells it never memorized) and destroys conjured food thirty minutes after its owner logs out. On feat/server-speed, so they ride Oct 22.</td>
+<td>Claude unattended</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">The server suite and the client probe pass and both halves are pushed. Done only when client_authority_fixes_checklist.md sections 7 and 8 are filled.<span class="ref">To-Do entry: <code>Client-decided outcomes (audit 2026-10-19)</code></span></td>
 </tr>
 <tr>
 <td class="id">o4</td>
@@ -792,10 +802,10 @@
 <tr>
 <td class="id">v29</td>
 <td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>Client-authority fixes and the October 19 decisions: a GM&#x27;s Test Panel hits still show; running, crouching, Spirit of Wolf and snares feel right with no rubber-banding; an overloaded character crawls; a mount whistle refuses; nukes and heals land bigger, crits show, DoT ticks are unchanged; misses come from the server; the off hand swings only from the class&#x27;s level (Monks from 1); spells reach 30 m; a note on whether low-level nukes now feel too strong.</td>
+<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>Client-authority fixes and the October 19 decisions: a GM&#x27;s Test Panel hits still show; running, crouching, Spirit of Wolf and snares feel right with no rubber-banding; an overloaded character crawls; a mount whistle refuses; nukes and heals land bigger, crits show, DoT ticks are unchanged; misses come from the server; the off hand swings only from the class&#x27;s level (Monks from 1); spells reach 30 m; the spell bar survives the first login and memorizing works; conjured food vanishes after thirty minutes logged out; a note on whether low-level nukes now feel too strong.</td>
 <td>user at a desk, GM account</td>
-<td class="needs"><ul><li>checklist client_authority_fixes_checklist.md: 26 rows to run</li><li>second seat (two-boxing works)</li><li>the Oct 22 export</li></ul></td>
-<td class="time">1.5 h</td>
+<td class="needs"><ul><li>checklist client_authority_fixes_checklist.md: 33 rows to run</li><li>second seat (two-boxing works)</li><li>the Oct 22 export</li></ul></td>
+<td class="time">2 h</td>
 <td class="id">b22, b23, o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/client_authority_fixes_checklist.md"><code>client_authority_fixes_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Client-decided outcomes (audit 2026-10-19)</code></span></td>
 </tr>
@@ -1047,5 +1057,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-19 at repo 24a32e4</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-19 at repo 828aa54</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>
