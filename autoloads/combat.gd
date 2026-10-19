@@ -173,10 +173,28 @@ func _sync_auto_attack_timer() -> void:
 		_offhand_timer.stop()
 
 func _is_dual_wielding() -> bool:
+	if not can_dual_wield():
+		return false
 	var oh: ItemData = Equipment.equipped.get("offhand")
-	return oh != null and oh.type == ItemData.Type.WEAPON
+	if oh != null:
+		return oh.type == ItemData.Type.WEAPON
+	# A Monk fights with both fists: with both hands empty the off hand punches.
+	return PlayerStats.player_class == "Monk" and Equipment.equipped.get("weapon") == null
 
-func _on_equipment_changed(slot: String, _item) -> void:
+# Dual wield is earned at a class's level (WeaponSkillDefinitions.DUAL_WIELD_LEVELS,
+# the server's rule too); a class not listed never dual wields.
+func can_dual_wield() -> bool:
+	var at: int = WeaponSkillDefinitions.DUAL_WIELD_LEVELS.get(PlayerStats.player_class, 0)
+	return at > 0 and PlayerStats.level >= at
+
+func _on_equipment_changed(slot: String, item) -> void:
+	# An off-hand weapon before its time: say when it will swing.
+	if slot == "offhand" and item is ItemData and item.type == ItemData.Type.WEAPON and not can_dual_wield():
+		var at: int = WeaponSkillDefinitions.DUAL_WIELD_LEVELS.get(PlayerStats.player_class, 0)
+		if at > 0:
+			CombatLog.add_line("You will be able to dual wield at level %d." % at, CombatLog.MsgType.INFO)
+		else:
+			CombatLog.add_line("Your class cannot dual wield.", CombatLog.MsgType.INFO)
 	if slot not in ["weapon", "offhand"] or current_target == null:
 		return
 	# Dual-wield onset/offset honors the auto-attack toggle. Re-syncing
@@ -270,8 +288,9 @@ func _on_offhand_attack() -> void:
 	if dist > MELEE_RANGE:
 		_update_offhand_interval()
 		return
+	# A Monk's bare off hand is hand_to_hand, as on the server (combat.rs).
 	var oh: ItemData = Equipment.equipped.get("offhand")
-	var skill_name := oh.weapon_skill if oh.weapon_skill != "" else "1h_slashing"
+	var skill_name := "hand_to_hand" if oh == null or oh.weapon_skill == "" else oh.weapon_skill
 	WeaponSkills.try_advance(skill_name)
 	WeaponSkills.try_advance("dual_wield")
 	# Online the server rolls the off-hand miss too (see _on_auto_attack).
@@ -296,7 +315,7 @@ func calc_offhand_damage() -> int:
 	else:
 		base = randi_range(1, 4) + str_bonus
 	base = int(base * OFFHAND_DAMAGE_MULT)
-	var skill_name := oh.weapon_skill if oh != null and oh.weapon_skill != "" else "1h_slashing"
+	var skill_name := "hand_to_hand" if oh == null or oh.weapon_skill == "" else oh.weapon_skill
 	var skill_mult := WeaponSkills.get_damage_multiplier(skill_name)
 	var crit_chance := clampf((PlayerStats.dexterity - 10) * CRIT_PER_DEX * 0.6 + BuffManager.get_crit_bonus() * 0.6, 0.0, SPELL_CRIT_MAX)
 	_last_crit = randf() < crit_chance
