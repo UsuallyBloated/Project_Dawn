@@ -498,6 +498,19 @@ func _spawn_named_enemy() -> void:
 	e.apply_named(key)
 
 func _despawn_all_enemies() -> void:
+	# Launcher mode: the server owns the mobs, so ask it (dev-gated, audited)
+	# to remove every unowned enemy in view; the despawns arrive as ordinary
+	# EntityDespawn and the server says how many went. Freeing the local nodes,
+	# as this button used to, only hid the mobs while they stayed in the world.
+	# Called by name so a wire layer without the send costs this button, not
+	# the panel's script.
+	if Net.is_launcher_mode() and Net.is_app_ready():
+		if Net.has_method("send_dev_despawn_enemies"):
+			Net.call("send_dev_despawn_enemies")
+		else:
+			CombatLog.add_line("TestPanel: this build's wire layer cannot despawn enemies online.",
+				CombatLog.MsgType.INFO)
+		return
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if is_instance_valid(enemy):
 			enemy.queue_free()
