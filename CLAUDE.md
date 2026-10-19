@@ -820,6 +820,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   the server; (4) the melee miss roll and weapon-skill damage on the server; (5) memorized
   spell gems tracked by the server (a wire message); (6) active skills, Bard songs, alignment
   and fall damage as their own builds (the first three have entries already).
+  **Fixes 1 to 3 BUILT 2026-10-19, pending the redeploy, the Oct 22 export and the playtest**
+  (`client_authority_fixes_checklist.md`, 15 rows). (1) server `23bba2c`, deploy branch: the
+  three relays gated and audited like any dev command; the relay test has a plain account's
+  forged hit reach nobody (fails on the old relay). (2) `feat/server-speed` in both repos,
+  server `9a3e1aa`, client `291d433`: `RUN_SPEED` (5 m/s) x the server's speed buff x snare x
+  the new `encumbrance.rs` (coins and every carried and worn stack against 10 + STR, a port of
+  the client's `encumbrance.gd`; `items.toml` gained `weight`, compared by
+  `check_item_lockstep.gd`); the stamina half of encumbrance, documented but never wired,
+  now runs; mounts refuse online. Test: the per-tick step off the server's own Position fan
+  (0.25 m run, the same for a forged over-long direction, the crawl floor at 40,000 copper),
+  failing on the old formula at 0.375. **Must ship with the export**: an older client against
+  the new server walks at two thirds speed. (3) server `b81da60`, deploy branch, works with
+  any client: `spell_power.rs`, the client's formula as is (user: "stick with the client's
+  spell formula for now"): `(base + INT x 0.5) x evocation` on hostile spells, `+ WIS x 0.3`
+  on heals, abjuration on absorbs, alteration on durations, a per-hit crit off INT; the
+  alignment multiplier waits for server-side alignment; six spells missing from the server's
+  discipline map added. Tests: unit tests on the formula; a heal test (60 + WIS x 0.3, flat
+  60 on the old code). Research for the later balance pass: `docs/design/spell_formula_research.md`
+  (EQ, WoW, D&D 5e and 3.5e, M&M, Lineage II). Also found and fixed on the way: the
+  hand-eating test raced the hunger drain (`3173fbc`).
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and

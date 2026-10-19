@@ -419,10 +419,10 @@ id = "b6"
 week = "w3"
 lane = "build"
 day = "Oct 21"
-what = "Merge the trade window branch into the deploy branch, run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. The trade window itself has been built and reviewed since September 29 and waits only for this day. The branch also carries the charm re-target (built 2026-10-12): a charm no longer drops your target. And the hunger window (b12) and the jump relay (b14), merged into it from their branches."
+what = "Merge feat/server-speed into the deploy branch (re-merging the trade branch into it first if the trade session has added to it), run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. Since October 19 that one branch carries everything for the day: the trade window (built and reviewed since September 29), the charm re-target, the hunger window (b12), the jump relay (b14), Despawn All (b21) and the server-decided movement speed (b23), already merged and green together."
 who = "Claude unattended"
 days = 0.5
-waits_on = ["b4", "b12", "b14"]
+waits_on = ["b4", "b12", "b14", "b21", "b23"]
 done_when = "Both suites green on the merged deploy branch and pushed; the DLL in addons/gdext_net/ is the merged build."
 todo = "Trade window"
 
@@ -1132,4 +1132,40 @@ checklist = "despawn_all_enemies_checklist.md"
 checklist_branch = "feat/jump-relay"
 waits_on = ["b21", "o4"]
 todo = "Test Panel \"Despawn All Enemies\" leaves enemies invisible, not gone"
+done_when = "Every row filled."
+
+[[row]]
+id = "b22"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Client-authority fixes 1 and 3 on the deploy branch: made-up combat text is GM-only (a forged hit could have stood other players up), and spells get their power on the server (INT on nukes, WIS on heals, skill multipliers, crits; the client's formula as is, the user's call). Server only, so they ride any redeploy."
+who = "Claude unattended"
+days = 1
+done_when = "The server suite green and pushed. Done only when client_authority_fixes_checklist.md sections 1 and 3 are filled."
+todo = "Client-decided outcomes (audit 2026-10-19)"
+
+[[row]]
+id = "b23"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Client-authority fix 2: the server decides movement speed, carry weight moves server-side (item weights join the lockstep check), mounts wait for a server model. On feat/server-speed, which now also carries every other Oct 22 branch, merged and green together."
+who = "Claude unattended"
+days = 1
+done_when = "Both suites green on the merged branch and pushed. Done only when client_authority_fixes_checklist.md section 2 is filled."
+todo = "Client-decided outcomes (audit 2026-10-19)"
+
+[[row]]
+id = "v29"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Client-authority fixes: a GM's Test Panel hits still show; running, crouching, Spirit of Wolf and snares feel right with no rubber-banding; an overloaded character crawls; a mount whistle refuses; nukes and heals land bigger, crits show, DoT ticks are unchanged; a note on whether low-level nukes now feel too strong."
+who = "user at a desk, GM account"
+hours = 1
+needs = ["second seat (two-boxing works)", "the Oct 22 export"]
+checklist = "client_authority_fixes_checklist.md"
+waits_on = ["b22", "b23", "o4"]
+todo = "Client-decided outcomes (audit 2026-10-19)"
 done_when = "Every row filled."

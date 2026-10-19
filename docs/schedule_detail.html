@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Oct 19<span class="stat-sub">repo 544b8ba</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Oct 19<span class="stat-sub">repo 9636c19</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">23.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">54 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">25.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">55 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -486,7 +486,7 @@
 <section>
 <h2><span class="week-head"><span>One evening when every client changes</span><span class="when">W3 &middot; October 19 to 25</span></span></h2>
 <p class="lede">Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the four friends receive their first zip from this build and never need another.</p>
-<div class="week-meta"><span>the user's time: 23.5 h</span><span>Claude build days: 5</span></div>
+<div class="week-meta"><span>the user's time: 24.5 h</span><span>Claude build days: 7</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -522,11 +522,11 @@
 <tr>
 <td class="id">b6</td>
 <td><span class="chip build">Build</span></td>
-<td class="what"><span class="day">Oct 21</span>Merge the trade window branch into the deploy branch, run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. The trade window itself has been built and reviewed since September 29 and waits only for this day. The branch also carries the charm re-target (built 2026-10-12): a charm no longer drops your target. And the hunger window (b12) and the jump relay (b14), merged into it from their branches.</td>
+<td class="what"><span class="day">Oct 21</span>Merge feat/server-speed into the deploy branch (re-merging the trade branch into it first if the trade session has added to it), run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. Since October 19 that one branch carries everything for the day: the trade window (built and reviewed since September 29), the charm re-target, the hunger window (b12), the jump relay (b14), Despawn All (b21) and the server-decided movement speed (b23), already merged and green together.</td>
 <td>Claude unattended</td>
 <td class="needs">nothing</td>
 <td class="time">0.5 Claude days</td>
-<td class="id">b4, b12, b14</td>
+<td class="id">b4, b12, b14, b21, b23</td>
 <td class="done">Both suites green on the merged deploy branch and pushed; the DLL in addons/gdext_net/ is the merged build.<span class="ref">To-Do entry: <code>Trade window</code></span></td>
 </tr>
 <tr>
@@ -538,6 +538,26 @@
 <td class="time">0.5 Claude days</td>
 <td class="id"></td>
 <td class="done">The server suite and the client probe pass and both halves are pushed. Done only when despawn_all_enemies_checklist.md is filled.<span class="ref">To-Do entry: <code>Test Panel &quot;Despawn All Enemies&quot; leaves enemies invisible, not gone</code></span></td>
+</tr>
+<tr>
+<td class="id">b22</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 19</span>Client-authority fixes 1 and 3 on the deploy branch: made-up combat text is GM-only (a forged hit could have stood other players up), and spells get their power on the server (INT on nukes, WIS on heals, skill multipliers, crits; the client&#x27;s formula as is, the user&#x27;s call). Server only, so they ride any redeploy.</td>
+<td>Claude unattended</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">The server suite green and pushed. Done only when client_authority_fixes_checklist.md sections 1 and 3 are filled.<span class="ref">To-Do entry: <code>Client-decided outcomes (audit 2026-10-19)</code></span></td>
+</tr>
+<tr>
+<td class="id">b23</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 19</span>Client-authority fix 2: the server decides movement speed, carry weight moves server-side (item weights join the lockstep check), mounts wait for a server model. On feat/server-speed, which now also carries every other Oct 22 branch, merged and green together.</td>
+<td>Claude unattended</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">Both suites green on the merged branch and pushed. Done only when client_authority_fixes_checklist.md section 2 is filled.<span class="ref">To-Do entry: <code>Client-decided outcomes (audit 2026-10-19)</code></span></td>
 </tr>
 <tr>
 <td class="id">o4</td>
@@ -748,6 +768,16 @@
 <td class="time">0.5 h</td>
 <td class="id">b21, o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/despawn_all_enemies_checklist.md"><code>despawn_all_enemies_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Test Panel &quot;Despawn All Enemies&quot; leaves enemies invisible, not gone</code></span></td>
+</tr>
+<tr>
+<td class="id">v29</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>Client-authority fixes: a GM&#x27;s Test Panel hits still show; running, crouching, Spirit of Wolf and snares feel right with no rubber-banding; an overloaded character crawls; a mount whistle refuses; nukes and heals land bigger, crits show, DoT ticks are unchanged; a note on whether low-level nukes now feel too strong.</td>
+<td>user at a desk, GM account</td>
+<td class="needs"><ul><li>checklist client_authority_fixes_checklist.md: 15 rows to run</li><li>second seat (two-boxing works)</li><li>the Oct 22 export</li></ul></td>
+<td class="time">1 h</td>
+<td class="id">b22, b23, o4</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/client_authority_fixes_checklist.md"><code>client_authority_fixes_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Client-decided outcomes (audit 2026-10-19)</code></span></td>
 </tr>
 <tr>
 <td class="id">p2</td>
@@ -997,5 +1027,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-19 at repo 544b8ba</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-19 at repo 9636c19</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

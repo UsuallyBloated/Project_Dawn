@@ -75,10 +75,12 @@ res-sickness `528ae23`, Summon Food and Drink `4577350`. The testers' client is 
 export; client changes since then (seated stand `2495276`, res-sickness sheet `9c5e333`,
 summon spells `ec4fff2`) need the next export.
 
-**The Oct 22 bump day** (planner rows b6, o4): merge `feat/trade-window` into the deploy
-branch in both repos, merge `feat/jump-relay` into it first (or into the deploy branch after;
-it only appends `PlayerJumped` after `HungerUpdate` and adds the `player_jumped` DLL signal),
-run both suites on the merged tree, rebuild the DLL with
+**The Oct 22 bump day** (planner rows b6, o4): **since 2026-10-19 one branch carries it all**:
+`feat/server-speed` (both repos) contains `feat/jump-relay` (which contains `feat/trade-window`
+and the hunger window), Despawn All, the server-decided movement speed, and the deploy branch
+up to fix 3, merged and green together (297 unit, 111 integration). If the trade session has
+pushed to `feat/trade-window` since, merge it into `feat/server-speed` first. Then merge
+`feat/server-speed` into the deploy branch in both repos, run both suites on the merged tree, rebuild the DLL with
 `RUSTFLAGS="-C target-feature=+crt-static" cargo build -p gdext-net --release`, copy it into
 `addons/gdext_net/`, run `tools/check_wire_layer.gd` (must list every signal OK), redeploy with
 `PROJECTDAWN_MIN_CLIENT_VERSION=0.2.0` in `/opt/projectdawn/.env`, export, send the zip. The
@@ -153,6 +155,17 @@ A trial merge of that branch into the deploy branch conflicts in two expected pl
 server's `world_two_clients.rs` end of file (both sides append tests) and the client's
 `check_wire_layer.gd` `SIGNALS` line; keep both sides of each. Next is 4.5, which needs the
 user's answers before any build. Next planner ids: `b22`, `v29`.
+
+**Progress (2026-10-19, later, Opus):** 4.5's questions were answered (the To-Do entries carry
+them: WIS heals server-side, dual wield 13 / 15 / 20 with Monks at 1, per-spell ranges on a
+30 m baseline, conjured food NO RENT, +1 per level to 10), and the user set a rule: "Events
+happening on the client are a no-go." The client-authority audit
+(`docs/security/client_authority_audit_2026_10_19.md`) and fixes 1 to 3 are built (session note
+2026-10-19 section 6; planner b22, b23, v29). **Next, in order:** audit fix 4 (the melee miss
+roll and weapon-skill damage on the server), fix 5 (memorized spell gems, a wire message, so
+it rides the Oct 22 bump only if done before it), then the decided builds: dual wield levels,
+per-spell ranges, conjured food (+1 per level to 10, NO RENT with the no-drop flag). Next
+planner ids: `b24`, `v30`.
 
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
