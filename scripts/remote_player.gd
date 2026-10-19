@@ -95,6 +95,18 @@ const BUFFER_CAPACITY := 5
 # two snapshots to lerp between. 100 ms = 2 server ticks at 20 Hz; per
 # Track 3 handoff open question 2 (user-confirmed).
 const INTERP_LAG := 0.1
+
+# The hop a relayed jump plays on this body: the local player's own jump
+# arc (player.gd's JUMP_VELOCITY and GRAVITY, kept in step by hand), drawn
+# as an offset on the visual and the nameplate, never on the body's
+# position, which stays the server's interpolated ground track. 0.7 s in
+# the air, 1.2 m at the apex.
+const JUMP_VELOCITY := 7.0
+const GRAVITY := -20.0
+const JUMP_AIRTIME := -2.0 * JUMP_VELOCITY / GRAVITY
+var _jump_t := -1.0
+var _visual_base_y := 0.0
+var _label_base_y := 0.0
 var _snapshots: Array[Dictionary] = []
 var _last_seq: int = -1
 
@@ -107,6 +119,9 @@ func _ready() -> void:
 	# Show this peer with their race model so a gnome reads as a gnome to
 	# everyone, not just to themselves. race is set pre-add by the manager.
 	RaceModel.apply($Visual, race)
+	_visual_base_y = $Visual.position.y
+	if name_label:
+		_label_base_y = name_label.position.y
 	# Same group enemies use for "the local target can be set to this" —
 	# Targeting.click_target / Combat.set_target branch on the group.
 	add_to_group("remote_players")
@@ -244,7 +259,31 @@ func on_position_update(pos: Vector3, yaw: float, sequence: int) -> void:
 	if _snapshots.size() > BUFFER_CAPACITY:
 		_snapshots.pop_front()
 
+## The jump relay's cue: play the hop from the start (a second cue mid-air
+## restarts it, which is what a real double-tap looks like too). A corpse
+## does not jump.
+func play_jump() -> void:
+	if is_dead:
+		return
+	_jump_t = 0.0
+
+
+func _advance_jump(delta: float) -> void:
+	if _jump_t < 0.0:
+		return
+	_jump_t += delta
+	var lift := 0.0
+	if _jump_t >= JUMP_AIRTIME:
+		_jump_t = -1.0
+	else:
+		lift = JUMP_VELOCITY * _jump_t + 0.5 * GRAVITY * _jump_t * _jump_t
+	$Visual.position.y = _visual_base_y + lift
+	if name_label:
+		name_label.position.y = _label_base_y + lift
+
+
 func _process(delta: float) -> void:
+	_advance_jump(delta)
 	# Tick buff durations down so the target HUD shows a live countdown
 	# between server snapshots (server only fans BuffSnapshot when the
 	# set changes — apply / expire / strip — so otherwise values would

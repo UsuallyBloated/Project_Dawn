@@ -10,6 +10,9 @@ const _HudCastBar           := preload("res://scripts/hud_cast_bar.gd")
 const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
 const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
 const _HudPetPanel          := preload("res://scripts/hud_pet_panel.gd")
+const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
+# The hunger window sits this far below the player's information bar.
+const HUNGER_PANEL_GAP := 4.0
 const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
 # Dev Test Panel, mounted on demand by `/testpanel` (world.gd also mounts it at
 # world entry for GMs and the Test Room).
@@ -19,6 +22,7 @@ const _SpellBookScript      := preload("res://scripts/spell_book.gd")
 const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
 const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
 const _InspectWindowScript  := preload("res://scripts/inspect_window.gd")
+const _TradeWindowScript    := preload("res://scripts/trade_window.gd")
 const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 
 @onready var health_bar: ProgressBar = $Panel/VBoxContainer/HPRow/HealthBar
@@ -85,11 +89,13 @@ var _bank_window: Panel = null
 
 var _group_panel = null
 var _pet_panel = null
+var _hunger_panel: Control = null
 var _track_window: TrackWindow = null
 var _spell_book: Panel = null
 var _quest_journal: Panel = null
 var _dialogue_window: Panel = null
 var _inspect_window: InspectWindow = null
+var _trade_window: TradeWindow = null
 var _debug_console: DebugConsole = null
 var _target_hp_label: Label = null
 var _target_mp_label: Label = null
@@ -206,6 +212,13 @@ func _build_components() -> void:
 	_pet_panel = _HudPetPanel.new()
 	add_child(_pet_panel)
 
+	# The hunger window (food design section 8), by default directly below
+	# the player's information bar and as wide as it. Placed deferred, once
+	# the bar's containers have their final size (the XP row grows it).
+	_hunger_panel = _HudHungerPanelScene.instantiate()
+	add_child(_hunger_panel)
+	_place_hunger_panel.call_deferred()
+
 	_track_window = _TrackWindowScript.new()
 	add_child(_track_window)
 
@@ -229,6 +242,13 @@ func _build_components() -> void:
 	_inspect_window.visibility_changed.connect(_on_window_visibility_changed.bind(_inspect_window))
 	Targeting.inspect_requested.connect(_inspect_player)
 
+	# PD_W0028 — the trade window opens itself on `world_trade_opened` (a
+	# holding-click on a player) and closes on `world_trade_closed`. Mounted
+	# here so it survives with the HUD; it drives its own visibility.
+	_trade_window = _TradeWindowScript.new()
+	add_child(_trade_window)
+	_trade_window.visibility_changed.connect(_on_window_visibility_changed.bind(_trade_window))
+
 	# In-game DebugLog tail. Independent of the user-data debug.log
 	# file (which gets corrupted when two clients share the same
 	# Godot user dir), so this stays useful in multi-client testing.
@@ -242,6 +262,11 @@ func _build_components() -> void:
 
 	_group_panel.layout_changed.connect(_reposition_pet_panel)
 	_reposition_pet_panel()
+
+func _place_hunger_panel() -> void:
+	var info: Control = $Panel
+	_hunger_panel.position = Vector2(info.position.x, info.position.y + info.size.y + HUNGER_PANEL_GAP)
+	_hunger_panel.size.x = info.size.x
 
 func _reposition_pet_panel() -> void:
 	if _pet_panel == null or _group_panel == null:

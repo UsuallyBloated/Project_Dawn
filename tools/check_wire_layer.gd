@@ -1,7 +1,7 @@
 extends SceneTree
 
 # Wire-layer freshness check: does the gdext_net.dll this checkout carries
-# have everything Net reaches for BY NAME? The DLL is gitignored and
+# have everything Net (and the Test Panel, through Net) reaches for BY NAME? The DLL is gitignored and
 # hand-copied into addons/gdext_net/ and builds/, so a clean commit can run
 # on a stale wire layer, which then presents as a server bug (CLAUDE.md,
 # "Every export is stamped automatically"). Net guards each late addition
@@ -14,8 +14,8 @@ extends SceneTree
 # Exit code 1 when anything is missing, 0 when the DLL carries it all.
 # Add a name here whenever Net gains another by-name lookup.
 
-const SIGNALS: Array[String] = ["time_of_day", "kick_retry_after"]
-const METHODS: Array[String] = ["rtt_ms", "packet_loss"]
+const SIGNALS: Array[String] = ["time_of_day", "kick_retry_after", "entity_replaced", "hunger_update", "player_jumped"]
+const METHODS: Array[String] = ["rtt_ms", "packet_loss", "send_dev_despawn_enemies"]
 
 
 func _init() -> void:

@@ -58,6 +58,12 @@ const SERVER_LERP_RATE := 17.3
 # the client and looks like rubber-banding. 50ms == one server tick.
 const MOVE_SEND_INTERVAL := 0.05
 
+# A jump begun since the last Move went out. Latched here because Moves are
+# throttled to the server tick: the jump rides the NEXT Move's `jumping`
+# flag, once, however many frames pass before it is sent. The server relays
+# it to the players who can see us as a one-shot and moves nobody for it.
+var _jump_pending := false
+
 enum PlayerState { STANDING, CROUCHING, SITTING }
 
 var state := PlayerState.STANDING
@@ -438,6 +444,7 @@ func _physics_process(delta: float) -> void:
 		_peak_fall_speed = 0.0
 		if not chat_focused and Input.is_action_pressed("jump") and state != PlayerState.SITTING:
 			velocity.y = JUMP_VELOCITY
+			_jump_pending = true
 		else:
 			velocity.y = maxf(velocity.y, 0.0)
 	else:
@@ -497,9 +504,10 @@ func _physics_process(delta: float) -> void:
 		if _move_send_accum >= MOVE_SEND_INTERVAL:
 			_move_send_accum -= MOVE_SEND_INTERVAL
 			# Which way, and how much of a run (a crouch is half); the speed
-			# is the server's.
+			# is the server's. The jump flag goes once per jump.
 			var server_dir := direction * (base_speed / SPEED)
-			Net.send_movement(server_dir, false)
+			Net.send_movement(server_dir, _jump_pending)
+			_jump_pending = false
 
 	move_and_slide()
 

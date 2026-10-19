@@ -70,6 +70,13 @@ signal world_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: 
 # <amount>"). Damage is already applied server-side; this drives the client's
 # proc number + elemental flash + combat-log line.
 signal world_proc_triggered(attacker: int, target: int, proc_name: String, amount: int, crit: bool, dmg_type: int)
+# PD_W0028 — the trade window (docs/design/trade_window.md). Re-emitted from
+# the gdext signals for TradeWindow to render. `slots`/`counts` are parallel
+# arrays, TRADE_SLOTS long; an empty path is an empty window slot.
+signal world_trade_opened(partner_id: int, partner_name: String)
+signal world_trade_offer_update(mine: bool, item_paths: PackedStringArray, counts: PackedInt32Array, platinum: int, gold: int, silver: int, copper: int)
+signal world_trade_accept_state(you: bool, them: bool)
+signal world_trade_closed(committed: bool, reason: String)
 signal world_miss(attacker: int, target: int)
 signal world_evade(attacker: int, target: int)
 # Track 4 sub-task 5 — peer's HP hit zero. Receiver plays death anim;
@@ -182,6 +189,22 @@ signal world_teleport(pos: Vector3)
 # The server's world clock: the hour in [0, 24), sent as we enter the world and
 # about once a minute after. TimeOfDay follows it so every player shares a sky.
 signal world_time_of_day(hour: float)
+# PD_W0028: the entity just spawned as `new_id` is the creature that was
+# `old_id` (a charm landing or ending). Emitted after its spawn signal, so the
+# new node exists. Targeting uses it to keep the target across the change.
+signal world_entity_replaced(old_id: int, new_id: int)
+# The hunger window: the local player's food and water counters in seconds of
+# fullness, the cap, and the drain per real second right now (0 while dead).
+# Owner-only on the server; the HUD's hunger panel draws it.
+signal world_hunger(hunger_secs: float, thirst_secs: float, cap_secs: float, drain_per_sec: float)
+# A food or drink was right-clicked in a bag or the inventory (the hand-eat
+# is on its way to the server). The hunger panel flashes a full bar, since
+# the server will refuse with EQ's "you would explode" line.
+signal hand_eat_requested(is_food: bool, is_drink: bool)
+# A player you can see began a jump (never your own): the server's one-shot
+# for the rising edge of their Move's `jumping` flag. RemotePlayerManager
+# plays a hop on that body; nothing about position rides on it.
+signal world_player_jumped(id: int)
 # Track 5 sub-task 4 — private confirmation that the local player's
 # LootItem / LootAll intent landed. Carries one stack the looter just
 # claimed; the GDScript handler loads `item_path` → ItemData and adds
@@ -291,6 +314,10 @@ func _ready() -> void:
 	buff_snapshot.connect(_on_buff_snapshot)
 	hit.connect(_on_hit)
 	proc_triggered.connect(_on_proc_triggered)
+	trade_opened.connect(_on_trade_opened)
+	trade_offer_update.connect(_on_trade_offer_update)
+	trade_accept_state.connect(_on_trade_accept_state)
+	trade_closed.connect(_on_trade_closed)
 	miss.connect(_on_miss)
 	evade.connect(_on_evade)
 	entity_died.connect(_on_entity_died)
@@ -318,6 +345,28 @@ func _ready() -> void:
 	else:
 		DebugLog.error("Net: gdext_net.dll predates the world clock (no time_of_day signal). "
 			+ "The sky will run on a local clock; rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name for the same reason. A DLL built before this signal still
+	# connects (the protocol id comes from the server's connect token; only
+	# the auth min_client_version refuses a client) and still decodes the
+	# spawns, so it costs only the charm re-target.
+	if has_signal("entity_replaced"):
+		connect("entity_replaced", _on_entity_replaced)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates entity_replaced. A charm will drop "
+			+ "your target; rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs the hunger window, not the client.
+	if has_signal("hunger_update"):
+		connect("hunger_update", _on_hunger_update)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates the hunger window (no hunger_update "
+			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs the remote hop, not the client.
+	if has_signal("player_jumped"):
+		connect("player_jumped", _on_player_jumped)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates the jump relay (no player_jumped "
+			+ "signal); other players' jumps will read as slides. Rebuild the DLL with "
+			+ "addons/gdext_net/build.ps1.")
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
@@ -686,6 +735,37 @@ func broadcast_loot_to_cursor(bag_id: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_loot_to_cursor(bag_id)
+
+# ── PD_W0028 — the trade window (docs/design/trade_window.md). ──
+func broadcast_trade_request(target_id: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_request(target_id)
+
+func broadcast_trade_offer_item(window_slot: int, from_location: String, from_slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_offer_item(window_slot, from_location, from_slot)
+
+func broadcast_trade_retrieve_item(window_slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_retrieve_item(window_slot)
+
+func broadcast_trade_offer_coins(platinum: int, gold: int, silver: int, copper: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_offer_coins(platinum, gold, silver, copper)
+
+func broadcast_trade_accept() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_accept()
+
+func broadcast_trade_cancel() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_cancel()
 
 # Track 13.2.b — split `count` items off the src stack into dst. Dst
 # must be empty or hold the same item_path; the server rejects
@@ -1077,6 +1157,18 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
 func _on_proc_triggered(attacker: int, target: int, proc_name: String, amount: int, crit: bool, dmg_type: int) -> void:
 	world_proc_triggered.emit(attacker, target, proc_name, amount, crit, dmg_type)
 
+func _on_trade_opened(partner_id: int, partner_name: String) -> void:
+	world_trade_opened.emit(partner_id, partner_name)
+
+func _on_trade_offer_update(mine: bool, item_paths: PackedStringArray, counts: PackedInt32Array, platinum: int, gold: int, silver: int, copper: int) -> void:
+	world_trade_offer_update.emit(mine, item_paths, counts, platinum, gold, silver, copper)
+
+func _on_trade_accept_state(you: bool, them: bool) -> void:
+	world_trade_accept_state.emit(you, them)
+
+func _on_trade_closed(committed: bool, reason: String) -> void:
+	world_trade_closed.emit(committed, reason)
+
 func _on_miss(attacker: int, target: int) -> void:
 	world_miss.emit(attacker, target)
 
@@ -1175,6 +1267,15 @@ func _on_teleport(pos: Vector3) -> void:
 
 func _on_time_of_day(hour: float) -> void:
 	world_time_of_day.emit(hour)
+
+func _on_entity_replaced(old_id: int, new_id: int) -> void:
+	world_entity_replaced.emit(old_id, new_id)
+
+func _on_hunger_update(hunger_secs: float, thirst_secs: float, cap_secs: float, drain_per_sec: float) -> void:
+	world_hunger.emit(hunger_secs, thirst_secs, cap_secs, drain_per_sec)
+
+func _on_player_jumped(id: int) -> void:
+	world_player_jumped.emit(id)
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)

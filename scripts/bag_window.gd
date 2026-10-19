@@ -376,6 +376,7 @@ func _use_consumable(item: ItemData, index: int) -> void:
 	if Net.is_launcher_mode():
 		# The server narrates a hand-eat (see inventory_window.gd).
 		if item.is_food or item.is_drink:
+			Net.hand_eat_requested.emit(item.is_food, item.is_drink)
 			Net.broadcast_use_consumable(NetProtocol.inv_location_bag(bag_index), index)
 		elif item.heal_on_use > 0.0 or item.mp_on_use > 0.0:
 			Net.broadcast_use_consumable(NetProtocol.inv_location_bag(bag_index), index)

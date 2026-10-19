@@ -10,6 +10,33 @@ signal inspect_requested(player: RemotePlayer)
 var _tab_index := 0
 var _camera: Camera3D = null
 var _player: Node3D = null
+# Server entity id of the current target, kept by id because a despawn frees
+# the node without clearing Combat's target. 0 = none, or no server id.
+var _target_entity_id := 0
+
+func _ready() -> void:
+	Combat.target_changed.connect(_on_target_changed)
+	Net.world_entity_replaced.connect(_on_entity_replaced)
+
+func _on_target_changed(node) -> void:
+	_target_entity_id = Combat.target_server_id(node)
+
+# A charm landing or ending re-keys the creature under a new id (the server's
+# enemy and pet ids live in separate ranges). EQ keeps one entity throughout,
+# so if it was our target, the new id becomes our target. A target that is now
+# a pet is no longer a fight: auto-attack stops, as EQ refuses attacks on a
+# group-mate's pet (the charmer's own pet was never attackable).
+func _on_entity_replaced(old_id: int, new_id: int) -> void:
+	if old_id == 0 or old_id != _target_entity_id:
+		return
+	var node: Node = RemoteEnemyManager.get_by_id(new_id)
+	if node == null:
+		node = RemotePetManager.get_by_id(new_id)
+	if node == null or not is_instance_valid(node):
+		return
+	Combat.set_target(node)
+	if node is RemotePet and Combat.is_auto_attacking:
+		Combat.toggle_auto_attack()
 
 func register_camera(cam: Camera3D) -> void:
 	_camera = cam
@@ -77,6 +104,13 @@ func click_target(mouse_pos: Vector2) -> void:
 		Combat.set_target(body)
 	elif body.is_in_group("remote_players") and not body.is_dead:
 		Combat.set_target(body)
+		# PD_W0028 — a click that lands on a player while HOLDING an item
+		# targets (above) AND asks to trade. Empty-handed clicks target only.
+		# The server does every real check (range, liveness, one session);
+		# a refusal comes back as a chat line.
+		if Inventory.cursor_slot != null and Net.is_launcher_mode() \
+				and "char_id" in body and body.char_id >= 0:
+			Net.broadcast_trade_request(body.char_id)
 	elif body.is_in_group("pets") or body.is_in_group("remote_pets"):
 		# Targeting own/remote pets is allowed — useful for inspecting
 		# pet HP on the target frame and as a base for buff/heal target

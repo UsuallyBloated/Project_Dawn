@@ -135,6 +135,12 @@ func _on_remote_pet_died(remote_pet) -> void:
 	pet_died.emit(remote_pet)
 
 func charm_current_target(duration: float) -> void:
+	# Online the server converts the mob and sends a PetSpawn that names the
+	# enemy it replaces, so register_remote_pet and Targeting take it from
+	# there. The local conversion below is the offline path only: online it
+	# would dismiss a live server pet from the HUD and drop the target.
+	if Net.is_launcher_mode():
+		return
 	if not Combat.has_valid_target():
 		return
 	var enemy = Combat.current_target
