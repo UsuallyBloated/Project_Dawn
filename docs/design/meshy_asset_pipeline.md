@@ -1,5 +1,14 @@
 # Meshy asset pipeline
 
+> **Status (user, 2026-10-19): "Meshy isn't going to be our primary focus any more. At least
+> not right now."** Two Gnome tests (2026-10-15, 30 credits; 2026-10-16, 20 credits) gave
+> models the user judged unusable: the second, rebuilt from renders of the user's own mesh, lost
+> the face and detail and had topology unfit for animation. Base bodies are hand-made in
+> Blender, following `character_model_workflow.md`, which the Art Board now tracks. This page,
+> the client and the spend hook stay in place for whenever Meshy is picked up again (the user
+> may use it for 2D model packs); nothing here is the active plan. The session notes of 2026-10-15 and 2026-10-16 have
+> the detail.
+
 How we plan to use Meshy (meshy.ai) to produce 3D models for Project Dawn, starting
 with 2D reference packs that lock the aesthetic before any credits go into 3D.
 Drafted 2026-10-12 from the 2026-09-24 research conversation. Nothing is wired up yet.

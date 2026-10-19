@@ -1,23 +1,23 @@
-"""Project Dawn Art Board: a local page for the art pipeline.
+"""Project Dawn Art Board: a local page tracking the character-model workflow.
 
 Run `python tools/art_board/art_board.py` (or double-click open_art_board.bat) and it
-opens in your browser. Add `--demo` to see it filled with sample subjects in a
-throwaway folder (nothing real is read or changed). It shows:
-  * the style bible (step 1 of the review loop) with its prompt template,
-  * a card per subject (e.g. gnome/male) following the review loop in
-    docs/design/meshy_asset_pipeline.md: pack images, the prompt that made them,
-    Claude's review as pass/fail chips, Meshy's previews, measured height against the
-    target, credits spent, history, and Approve / Re-roll / Sign off buttons,
-  * a lineup of every pack's front view scaled to its race's height, the check that
-    keeps sixteen races in one style,
-  * progress for every section of docs/design/art_assets_checklist.md (the ONE art
-    list; this page reads it and never keeps a second copy),
-  * Meshy credits as last seen by the Meshy client, credits spent on art, and the
-    price tripwire.
+opens in your browser. Add `--demo` to try the buttons against a throwaway copy of the
+approvals and the checklist (the model files are only read). It shows:
+  * a card per playable race with a male and a female line, walking the hand-built
+    workflow in docs/design/character_model_workflow.md: model pack, body built in
+    Blender, exported, UV unwrap, texture, rig, in game. Each step is detected from the
+    files (race_progress.py), then approved here; approving "in game" ticks the race's
+    row in docs/design/art_assets_checklist.md (the ONE art list; this page reads it and
+    never keeps a second copy),
+  * a lineup of the exported models rendered and drawn at their measured heights,
+  * progress for every section of the art checklist,
+  * the shelved Meshy loop, kept whole: credits as last seen by the Meshy client, credits
+    spent, the price tripwire, the style bible and the concept-art cards (pack images,
+    prompts, Claude's review, Meshy's previews, Approve / Re-roll / Sign off).
 
-It never calls Meshy and never touches the API key: a button only records your
-decision in the subject's review.json, and sign-off ticks the checklist row.
-Standard library only; listens on 127.0.0.1 alone, and every change needs the page's
+It never calls Meshy and never touches the API key: a button only records your decision
+(progress.json for the races, review.json for the concept-art cards) and ticks checklist
+rows. Standard library only; listens on 127.0.0.1 alone, and every change needs the page's
 own random token, so no other website can click the buttons for you.
 """
 
@@ -38,10 +38,11 @@ import zlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
+import race_progress
+
 BOARD_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(BOARD_DIR))
 CHECKLIST = os.path.join(REPO_ROOT, "docs", "design", "art_assets_checklist.md")
-HEIGHTS_DOC = os.path.join(REPO_ROOT, "docs", "reference", "creature_heights.md")
 HOOK_DIR = os.path.join(REPO_ROOT, ".claude", "hooks")
 STATUS_CACHE = os.path.join(HOOK_DIR, "meshy_status.json")
 TRIPWIRE = os.path.join(HOOK_DIR, "meshy_tripwire.json")
@@ -62,7 +63,6 @@ SUBJECT_RE = re.compile(r"^[a-z0-9_]+(?:/[a-z0-9_]+)*$")
 ITEM_RE = re.compile(r"^- \[( |x|X)\] (.*)$")
 ITEM_SUBJECT_RE = re.compile(r"\(`([a-z0-9_]+(?:/[a-z0-9_]+)*)`\)\s*$")
 SECTION_RE = re.compile(r"^## (\d+)\. (.*)$")
-HEIGHT_ROW_RE = re.compile(r"^\|\s*\*\*(.+?)\*\*\s*\|\s*([\d.]+)\s*[–-]\s*([\d.]+)\s*\|")
 STEP_NAMES = ["Style bible", "Pack made", "Claude reviews", "You approve pack",
               "Meshy 3D", "In game", "Done"]
 
@@ -106,14 +106,16 @@ def read_checklist() -> list:
     return [s for s in sections if s["total"]]
 
 
-def tick_checklist(subject: str) -> bool:
+def tick_checklist(subject: str, done: bool = True) -> bool:
+    """Tick (or untick) the checklist row carrying (`subject`). False when there is nothing to change."""
+    old, new = ("- [ ]", "- [x]") if done else ("- [x]", "- [ ]")
     with open(CHECKLIST, encoding="utf-8", newline="") as f:
         lines = f.readlines()
     for i, line in enumerate(lines):
         m = ITEM_RE.match(line.rstrip("\r\n"))
         sm = ITEM_SUBJECT_RE.search(m.group(2)) if m else None
-        if m and sm and sm.group(1) == subject and m.group(1) == " ":
-            lines[i] = line.replace("- [ ]", "- [x]", 1)
+        if m and sm and sm.group(1) == subject and (m.group(1) == " ") == done:
+            lines[i] = line.replace(old, new, 1) if done else re.sub(r"- \[[xX]\]", "- [ ]", line, count=1)
             with open(CHECKLIST, "w", encoding="utf-8", newline="") as f:
                 f.writelines(lines)
             return True
@@ -122,25 +124,12 @@ def tick_checklist(subject: str) -> bool:
 
 # ----------------------------------------------------------------- heights
 
-def race_id(name: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "_", name.lower().replace("`", "").replace("'", "")).strip("_")
+race_id = race_progress.race_id  # one home for the race-name rule
 
 
 def read_heights() -> dict:
     """Race id to (low, high) metres, from the playable-race table of creature_heights.md."""
-    heights, inside = {}, False
-    try:
-        with open(HEIGHTS_DOC, encoding="utf-8") as f:
-            for line in f:
-                if line.startswith("## "):
-                    inside = "Playable Race Heights" in line
-                    continue
-                m = HEIGHT_ROW_RE.match(line) if inside else None
-                if m:
-                    heights[race_id(m.group(1))] = (float(m.group(2)), float(m.group(3)))
-    except FileNotFoundError:
-        pass
-    return heights
+    return {rid: (lo, hi) for rid, _name, lo, hi in race_progress.read_races()}
 
 
 # ------------------------------------------------------------------- spend
@@ -350,6 +339,16 @@ def do_action(sid: str, action: str, note: str, tool: str = "", text: str = "") 
     return "Saved."
 
 
+def do_race_action(rid: str, sex: str, step: str, action: str, note: str) -> str:
+    """Approve or undo one step of a race's workflow; the in-game step also (un)ticks the checklist."""
+    event = race_progress.apply(rid, sex, step, action, note)
+    if step == "ingame":
+        changed = tick_checklist(f"{rid}/{sex}", done=action == "approve")
+        if changed:
+            event += "; checklist " + ("ticked" if action == "approve" else "unticked")
+    return event + "."
+
+
 # ------------------------------------------------------------------ status
 
 def credits() -> dict:
@@ -374,22 +373,19 @@ def board_state() -> dict:
     subjects = discover_subjects(checklist)
     heights = read_heights()
     spend, spend_total = spend_by_subject(read_ledger())
-    states = [subject_state(sid, v["title"], v["ticked"], heights, spend) for sid, v in subjects.items()]
-    lineup = []
-    for s in states:
-        if s["front"] and s["target"]:
-            lo, hi = s["target"]
-            lineup.append({"id": s["id"], "title": s["title"], "image": s["front"], "lo": lo, "hi": hi,
-                           "mid": round((lo + hi) / 2, 3), "measured": s["measured"],
-                           "approved": s["pack_approved"] or s["step"] == 7})
-    lineup.sort(key=lambda x: x["measured"] or x["mid"])
+    # the concept-art (Meshy) cards: only subjects that have a pack, so the 32 checklist rows
+    # with nothing made yet do not each show an empty card
+    meshy = [st for st in (subject_state(sid, v["title"], v["ticked"], heights, spend) for sid, v in subjects.items())
+             if st["images"]]
     out_credits = credits()
     out_credits["spent"] = spend_total
     return {
         "demo": DEMO,
         "sections": [{k: s[k] for k in ("num", "title", "done", "total", "items")} for s in checklist],
-        "subjects": states,
-        "lineup": lineup,
+        "races": race_progress.race_states(),
+        "worker": race_progress.worker_status(),
+        "race_steps": [label for _key, label in race_progress.STEPS],
+        "subjects": meshy,
         "bible": style_bible(),
         "credits": out_credits,
         "steps": STEP_NAMES,
@@ -400,7 +396,8 @@ def board_state() -> dict:
 
 def safe_image_path(rel: str) -> str | None:
     parts = rel.split("/", 1)
-    roots = {"concept_art": CONCEPT_ROOT, "meshy_downloads": DOWNLOAD_ROOT}
+    roots = {"concept_art": CONCEPT_ROOT, "meshy_downloads": DOWNLOAD_ROOT,
+             "ref_art": race_progress.REF_ART, "board_cache": race_progress.CACHE_DIR}
     if len(parts) != 2 or parts[0] not in roots:
         return None
     root = os.path.realpath(roots[parts[0]])
@@ -462,6 +459,12 @@ class Handler(BaseHTTPRequestHandler):
             action = str(body.get("action", ""))
             if action == "approve_bible":
                 message = approve_bible()
+            elif action in ("approve_step", "undo_step"):
+                rid = str(body.get("race", ""))
+                if not SUBJECT_RE.match(rid) or "/" in rid:
+                    raise ValueError("bad race id")
+                message = do_race_action(rid, str(body.get("sex", "")), str(body.get("step", "")),
+                                         action.split("_")[0], str(body.get("note", "")))
             else:
                 sid = str(body.get("subject", ""))
                 if not SUBJECT_RE.match(sid):
@@ -565,8 +568,11 @@ def build_demo() -> str:
     CONCEPT_ROOT, DOWNLOAD_ROOT = os.path.join(sandbox, "concept_art"), os.path.join(sandbox, "meshy_downloads")
     STYLE_DIR = os.path.join(CONCEPT_ROOT, "_style_bible")
     DEMO = True
+    # the race cards read the real model files (read-only) but keep approvals and renders here
+    race_progress.PROGRESS = os.path.join(sandbox, "progress.json")
+    race_progress.CACHE_DIR = os.path.join(sandbox, "board_cache")
 
-    views = [("1_front", "front"), ("2_side", "side"), ("3_back", "back"), ("4_three_quarter", "three_quarter")]
+    views =[("1_front", "front"), ("2_side", "side"), ("3_back", "back"), ("4_three_quarter", "three_quarter")]
     thumbs = [("thumb_front", "front"), ("thumb_right", "side"), ("thumb_back", "back"), ("thumb_left", "side")]
     day = 86400
     now = time.time()
@@ -670,7 +676,8 @@ def main() -> None:
         sys.exit("No free port; is the board already open?")
     url = f"http://127.0.0.1:{port}/"
     print(f"Art Board running at {url}  (close this window to stop it)", flush=True)
-    webbrowser.open(url)
+    if "--no-browser" not in sys.argv[1:]:
+        webbrowser.open(url)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -813,19 +820,45 @@ input.note:focus,textarea:focus{outline:none;border-color:var(--line2)}
 padding:10px 18px;border-radius:8px;font:14px var(--sans);display:none;box-shadow:0 0 24px rgba(224,150,80,.25);z-index:8}
 #zoom{position:fixed;inset:0;background:rgba(4,4,8,.9);display:none;align-items:center;justify-content:center;z-index:9}
 #zoom img{max-width:94vw;max-height:94vh;border:1px solid var(--line2);box-shadow:0 0 60px rgba(224,150,80,.2)}
-@media (max-width:640px){header,main{padding-left:16px;padding-right:16px}.sec .name{flex-basis:140px}}
+.race .rhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.packthumb{height:70px;border-radius:4px;border:1px solid var(--line2);cursor:zoom-in;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.sexline{display:flex;gap:14px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.sexmain{flex:1;min-width:0}
+.sexname{font:600 11px var(--sans);letter-spacing:2px;text-transform:uppercase;color:var(--gold)}
+.track{position:relative;display:grid;grid-template-columns:repeat(7,1fr);margin:8px 0 6px}
+.track::before{content:"";position:absolute;left:7%;right:7%;top:5px;height:1px;background:var(--line2)}
+.stp{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;font:10px var(--sans);color:var(--dim);text-align:center}
+.dot.approved{background:var(--gold);border-color:var(--gold)}
+.dot.ready{background:var(--ember);border-color:var(--gold2);box-shadow:0 0 10px 2px rgba(226,115,77,.6)}
+.dot.changed{background:#d9a441;border-color:#f0c060;box-shadow:0 0 8px rgba(240,192,96,.5)}
+.stp.cur{color:var(--gold2)}
+.status.you{color:var(--gold2)}.status.todo{color:#cfc6b3}
+.srow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:3px 0;font:12.5px var(--sans)}
+.slabel{color:var(--dim);font-size:11px;min-width:62px}
+.render{height:130px;align-self:flex-end;cursor:zoom-in;filter:drop-shadow(0 0 10px rgba(0,0,0,.6))}
+.later{display:flex;flex-wrap:wrap;gap:8px}
+.later .chip{cursor:default}
+.figs img{box-shadow:none;filter:drop-shadow(0 0 12px rgba(0,0,0,.7))}
+@media (max-width:640px){header,main{padding-left:16px;padding-right:16px}.sec .name{flex-basis:140px}
+.sexline{flex-direction:column}.render{align-self:center}}
 @media (prefers-reduced-motion:reduce){.card.you{animation:none}*{transition:none!important}}
 </style></head><body>
-<header><span class="sun"></span><h1>Project Dawn Art Board</h1><span id="credits" class="chip">Credits: ...</span>
-<span id="spent" class="chip">Spent on art: ...</span><span id="trip" class="chip">Tripwire: ...</span>
-<span id="overall" class="chip">...</span><span id="demochip"></span></header>
+<header><span class="sun"></span><h1>Project Dawn Art Board</h1><span id="ingame" class="chip">...</span>
+<span id="overall" class="chip">...</span><span id="worker" class="chip"></span>
+<span id="credits" class="chip">Credits: ...</span><span id="spent" class="chip">Spent on art: ...</span>
+<span id="trip" class="chip">Tripwire: ...</span><span id="demochip"></span></header>
 <main>
 <div id="demo"></div>
-<div id="bible"></div>
 <h2>Your turn</h2><div id="yours" class="cards"></div>
 <h2>In progress</h2><div id="progress" class="cards"></div>
 <h2>Lineup</h2><div id="lineup"></div>
+<div id="donewrap"></div>
+<h2>Not started</h2><div id="notstarted"></div>
 <h2>Checklist</h2><div id="sections"></div>
+<h2>Meshy and concept art</h2>
+<details class="sec" id="meshysec"><summary><span class="name">Shelved: the style bible and the Meshy cards</span>
+<span class="count" id="meshycount"></span></summary><div class="rows"><div id="bible"></div>
+<div id="meshycards" class="cards" style="margin-top:16px"></div></div></details>
 </main>
 <div id="toast"></div><div id="zoom" onclick="this.style.display='none'"><img id="zoomimg" alt=""></div>
 <script>
@@ -889,29 +922,58 @@ function bible(b){
  <div class="summary">${esc(b.summary||"")}</div>${imgs(b.images)}
  ${b.prompt_template?`<div class="label">Prompt template</div><pre>${esc(b.prompt_template)}</pre><button class="mini" onclick="copy('bible')">Copy template</button>`:""}
  ${b.status!=="approved"?`<div class="btns"><button class="go" onclick="post({action:'approve_bible'})">Approve style bible</button></div>`:""}</div>`}
-function lineup(list){
- if(!list.length)return `<div class="empty">No packs yet. Each pack's front view appears here at its race's height.</div>`;
- const max=Math.max(...list.map(s=>Math.max(s.hi,s.measured||0))),H=300,L=50;
+const STATE={approved:"approved",ready:"ready for your approval",changed:"changed since you approved",missing:"not yet"};
+const SHORT={pack:"Pack",body:"Body",export:"Export",uv:"UV",texture:"Texture",rig:"Rig",ingame:"In game"};
+function raceAct(race,sex,step,action){
+ if(action==="undo"&&!confirm("Undo this approval?"))return;
+ const note=(document.getElementById("note-"+race)||{}).value||"";
+ post({action:action+"_step",race,sex,step,note})}
+function sexLine(c,s){
+ const track=s.steps.map(r=>`<div class="stp ${r.key===s.current?"cur":""}" title="${esc(r.label)}: ${STATE[r.state]}${r.note?' ("'+esc(r.note)+'")':""}">
+  <div class="dot ${r.state}"></div>${SHORT[r.key]}</div>`).join("");
+ const cur=s.steps.find(r=>r.key===s.current);
+ const rows=s.steps.filter(r=>r.facts.length).map(r=>`<div class="srow"><span class="slabel">${esc(SHORT[r.key])}</span>${
+  r.facts.map(f=>`<span class="fact ${f.kind}">${esc(f.text)}</span>`).join("")}</div>`).join("");
+ const btns=[];
+ if(cur&&(cur.state==="ready"||cur.state==="changed"))
+  btns.push(`<button class="go" onclick="raceAct('${c.id}','${s.sex}','${cur.key}','approve')">Approve: ${esc(cur.label)}</button>`);
+ if(s.undo){const u=s.steps.find(r=>r.key===s.undo);
+  btns.push(`<button class="mini back" onclick="raceAct('${c.id}','${s.sex}','${s.undo}','undo')">Undo: ${esc(u.label)}</button>`)}
+ const render=s.render?`<img class="render" src="${url("board_cache/"+s.render)}" onclick="zoom('${url("board_cache/"+s.render)}')" title="Front view of the export">`:"";
+ return `<div class="sexline"><div class="sexmain"><div class="sexname">${s.sex==="male"?"Male":"Female"}</div>
+  <div class="track">${track}</div><div class="status ${s.who}">${esc(s.status)}</div>${rows}
+  ${btns.length?`<div class="btns">${btns.join("")}</div>`:""}</div>${render}</div>`}
+function raceCard(c){
+ const you=c.sexes.some(s=>s.who==="you");
+ const pack=c.pack?`<img class="packthumb" src="${url("ref_art/"+c.pack)}" onclick="zoom('${url("ref_art/"+c.pack)}')" title="${esc(c.pack)}">`:"";
+ return `<div class="card race ${you?"you":""}"><div class="who">${you?"Your turn":""}</div>
+  <div class="rhead"><div><h3>${esc(c.name)}</h3><div class="sid">${c.lo.toFixed(2)} to ${c.hi.toFixed(2)} m${c.checking?" &middot; reading the .blend...":""}</div></div>${pack}</div>
+  ${c.sexes.map(s=>sexLine(c,s)).join("")}
+  <input class="note" id="note-${c.id}" placeholder="Optional note to keep with an approval">${history(c)}</div>`}
+function lineup(races){
+ const list=[];races.forEach(c=>c.sexes.forEach(s=>{if(s.render&&s.height)list.push({name:c.name,sex:s.sex,img:"board_cache/"+s.render,h:s.height,lo:c.lo,hi:c.hi,done:s.done})}));
+ if(!list.length)return `<div class="empty">No exports yet. Each exported model appears here, rendered at its measured height.</div>`;
+ list.sort((a,b)=>a.h-b.h);
+ const max=Math.max(...list.map(s=>s.h)),H=300,L=50;
  let r="";for(let m=0.5;m<=max+0.001;m+=0.5)r+=`<div class="rline" style="bottom:${L+m/max*H}px"><span>${m.toFixed(1)} m</span></div>`;
- const figs=list.map(s=>{const h=s.measured||s.mid;return `<div class="fig ${s.approved?"":"draft"}">
-  <img src="${url(s.image)}" style="height:${h/max*H}px" onclick="zoom('${url(s.image)}')" title="${esc(s.title)}">
-  <div class="fl">${esc(s.title)}</div><div class="fh">${h.toFixed(2)} m${s.measured?"":" (target)"}</div></div>`}).join("");
- const w=60+list.length*110;
+ const figs=list.map(s=>`<div class="fig"><img src="${url(s.img)}" style="height:${s.h/max*H}px" onclick="zoom('${url(s.img)}')" title="${esc(s.name)}, ${s.sex}">
+  <div class="fl">${esc(s.name)} ${s.sex==="male"?"&#9794;":"&#9792;"}</div><div class="fh">${s.h.toFixed(2)} m</div></div>`).join("");
+ const w=60+list.length*120;
  return `<div class="lineup"><div class="stage" style="height:${H+L+20}px"><div style="position:relative;height:100%;min-width:${w}px">${r}<div class="figs">${figs}</div></div></div>
- <div class="hint">Front views at height: measured where Claude has measured the model, otherwise the middle of the race's range in creature_heights.md.
- Dimmed means the pack is not approved yet. Crop packs tight to the figure for a true comparison.</div></div>`}
+ <div class="hint">Every export, rendered from the front and drawn at its measured height: the check that keeps sixteen races in proportion.</div></div>`}
 function sections(list,bySid){
  return list.map(s=>{const pct=s.total?Math.round(100*s.done/s.total):0;
   const rows=s.items.map(i=>{const st=i.subject&&bySid[i.subject];
    return `<div class="row"><span class="box ${i.done?"on":""}"></span>
    <span>${esc(i.text)}</span>${i.group?`<span class="grp">${esc(i.group)}</span>`:""}
-   ${st&&!i.done&&st.step>2?`<span class="pill">step ${st.step}</span>`:""}</div>`}).join("");
+   ${st&&!i.done&&st.pill?`<span class="pill">${esc(st.pill)}</span>`:""}</div>`}).join("");
   return `<details class="sec" data-n="${s.num}" ${openSecs.has(s.num)?"open":""} ontoggle="t(this)">
   <summary><span class="name">${s.num}. ${esc(s.title)}</span><span class="bar"><span class="fill" style="width:${pct}%;display:block"></span></span>
   <span class="count">${s.done} / ${s.total}</span></summary><div class="rows">${rows}</div></details>`}).join("")}
 function t(el){const n=+el.dataset.n;el.open?openSecs.add(n):openSecs.delete(n)}
 async function load(force){
- const a=document.activeElement;if(!force&&a&&["INPUT","TEXTAREA","SELECT"].includes(a.tagName))return;
+ const a=document.activeElement;
+ if(!force&&a&&["INPUT","TEXTAREA","SELECT"].includes(a.tagName)){clearTimeout(TIMER);TIMER=setTimeout(load,5000);return}
  const d=await (await fetch("/api/state")).json();STEPS=d.steps;
  const c=d.credits;
  document.getElementById("credits").textContent=c.balance==null?"Credits: not checked yet":`Credits: ${Number(c.balance).toLocaleString()}`+
@@ -922,17 +984,35 @@ async function load(force){
  else{te_.className="chip ok";te_.textContent="Tripwire: clear"}
  const done=d.sections.reduce((x,s)=>x+s.done,0),tot=d.sections.reduce((x,s)=>x+s.total,0);
  document.getElementById("overall").textContent=`Checklist: ${done} / ${tot}`;
+ const lines=d.races.flatMap(c=>c.sexes);
+ document.getElementById("ingame").textContent=`Bodies in the game: ${lines.filter(s=>s.done).length} / ${lines.length}`;
+ const w=d.worker,wc=document.getElementById("worker");
+ if(!w.blender){wc.className="chip bad";wc.textContent="Blender not found: set PD_BLENDER"}
+ else if(w.busy||w.waiting){wc.className="chip";wc.textContent=`Blender: ${w.busy||"starting"}${w.waiting>1?` (${w.waiting-1} more waiting)`:""}`}
+ else if(w.error){wc.className="chip bad";wc.textContent="Blender: "+w.error}
+ else{wc.className="chip ok";wc.textContent="Blender: idle"}
  document.getElementById("demochip").outerHTML=d.demo?`<span id="demochip" class="chip demochip">DEMO</span>`:`<span id="demochip"></span>`;
- document.getElementById("demo").innerHTML=d.demo?`<div class="demo">Demo: sample subjects with placeholder figures, in a throwaway folder. Every button works here and changes nothing real.</div>`:"";
+ document.getElementById("demo").innerHTML=d.demo?`<div class="demo">Demo: the race cards read your real model files, but approvals, checklist ticks and renders go to a throwaway folder, and the Meshy cards are samples. Every button works here and changes nothing real.</div>`:"";
+ const st=c=>c.sexes.every(s=>s.done)?"done":c.sexes.some(s=>s.who==="you")?"you":
+  c.sexes.some(s=>s.steps.some(r=>r.state!=="missing"))?"progress":"later";
+ const group=k=>d.races.filter(c=>st(c)===k);
+ const yours=group("you"),prog=group("progress"),fin=group("done"),later=group("later");
+ document.getElementById("yours").innerHTML=yours.length?yours.map(raceCard).join(""):`<div class="empty">Nothing waiting on you.</div>`;
+ document.getElementById("progress").innerHTML=prog.length?prog.map(raceCard).join(""):`<div class="empty">Nothing else in progress.</div>`;
+ document.getElementById("donewrap").innerHTML=fin.length?`<h2>Done</h2><div class="cards">${fin.map(raceCard).join("")}</div>`:"";
+ document.getElementById("notstarted").innerHTML=later.length?`<div class="later">${later.map(c=>`<span class="chip" title="${esc(c.sexes[0].status)}">${esc(c.name)}</span>`).join("")}</div>
+  <div class="hint">Nothing found for these yet. A race moves up once its ModelPack sheet is in F:/Projects/ref_art.</div>`:`<div class="empty">Every race has started.</div>`;
+ document.getElementById("lineup").innerHTML=lineup(d.races);
+ // checklist pills: where each race/sex row stands (the race workflow wins over an old Meshy card)
+ const by={};d.subjects.forEach(s=>{if(s.step>2)by[s.id]={pill:"Meshy step "+s.step}});
+ d.races.forEach(c=>c.sexes.forEach(s=>{const cur=s.steps.find(r=>r.key===s.current);
+  if(cur&&s.steps.some(r=>r.state!=="missing"))by[c.id+"/"+s.sex]={pill:"at: "+cur.label}}));
+ document.getElementById("sections").innerHTML=sections(d.sections,by);
  document.getElementById("bible").innerHTML=bible(d.bible);
- const by={};d.subjects.forEach(s=>by[s.id]=s);
- const yours=d.subjects.filter(s=>s.who==="you"&&s.actions.length&&s.step<7);
- const prog=d.subjects.filter(s=>!(s.who==="you"&&s.actions.length)&&s.step>2&&s.step<7);
- document.getElementById("yours").innerHTML=yours.length?yours.map(card).join(""):`<div class="empty">Nothing waiting on you.</div>`;
- document.getElementById("progress").innerHTML=prog.length?prog.map(card).join(""):`<div class="empty">Nothing in progress yet. Save a pack into Project_Dawn_Source/concept_art/&lt;race&gt;/&lt;male|female&gt;/ to start one.</div>`;
- document.getElementById("lineup").innerHTML=lineup(d.lineup);
- document.getElementById("sections").innerHTML=sections(d.sections,by)}
-load(true);setInterval(load,15000);
+ document.getElementById("meshycards").innerHTML=d.subjects.length?d.subjects.map(card).join(""):`<div class="empty">No concept-art cards.</div>`;
+ document.getElementById("meshycount").textContent=`${d.subjects.length} cards`;
+ clearTimeout(TIMER);TIMER=setTimeout(load,(w.busy||w.waiting)?4000:15000)}
+let TIMER=null;load(true);
 </script></body></html>"""
 
 

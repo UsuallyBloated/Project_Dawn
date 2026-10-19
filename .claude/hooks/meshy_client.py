@@ -142,6 +142,20 @@ def write_status(balance) -> None:
         json.dump({"balance": balance, "checked_at": time.time()}, f)
 
 
+def refresh_status() -> str:
+    """Re-read the balance after credits may have moved (user, 2026-10-15), so the Art Board
+    never shows a stale number. Free; a failure only leaves the old number and is never retried
+    as anything paid. Returns a short note for the tool's answer, or ''."""
+    try:
+        balance = api("GET", "/balance").get("balance")
+    except Exception:
+        return ""
+    if not isinstance(balance, (int, float)):
+        return ""
+    write_status(balance)
+    return f" Balance now {balance} credits."
+
+
 def check_tripwire(task_id: str, task: dict) -> str:
     """Record what a task really cost, and set the tripwire if it cost more than we
     expected. Returns a warning or ''."""
@@ -207,7 +221,7 @@ def create_task(tool: str, task_type: str, args: dict, body: dict, subject: str 
     if subject:
         ledger[task_id]["subject"] = subject
     save_ledger(ledger)
-    return f"Task created: {task_id} ({task_type}), expected cost {cost} credits."
+    return f"Task created: {task_id} ({task_type}), expected cost {cost} credits." + refresh_status()
 
 
 # ---------------------------------------------------------- validation
@@ -307,6 +321,8 @@ def t_get_task_status(args: dict) -> str:
         warning = check_tripwire(task_id, task)
         if warning:
             text += "\n" + warning
+    if task.get("status") in ("SUCCEEDED", "FAILED", "CANCELED"):
+        text += refresh_status()  # a finished task may settle or refund credits late
     return text
 
 
