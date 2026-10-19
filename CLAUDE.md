@@ -1870,6 +1870,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   so the server applies a song's effect once on cast and nothing sustains it; heal songs do a raw
   `set_hp` (HP-bar bounce, no buff-window entry). Make them server-authoritative + weaving-aware +
   buff-window-visible. A real subsystem, not a fix. Design note: `docs/design/bard_song_rework.md`.
+- [ ] **Dwarf racial ability: Stone Skin** *(user idea 2026-10-19, instead of making Dwarves
+  permanently stone; "go ahead with stone skin")*. Active: the skin turns to granite, a large
+  cut to physical damage taken and no knockback, paid for by being rooted in place, on a long
+  cooldown (starting knobs 50%, 10 s, 10 min). Shape follows Lineage II's Ultimate Defense (the
+  user's comparison: huge defence, unable to move); EQ's Monk Stonestance and WoW's Stoneform
+  are the nearer-but-costless cousins. Written up in `docs/design/race_stats.md` under Dwarf,
+  with sources in the 2026-10-19 session note. **Open (user):** whether it also cuts magic
+  damage. **Before it can be built:** no racial ability exists on the server yet (all of
+  `race_stats.md`'s are design only; Troll regen is the one race perk that shipped), so Stone
+  Skin is the first and needs a server-side home: a race-gated intent, a server cooldown, a
+  self buff carrying the cut and the root, and the no-stacking rule with Guard and Dark Bond.
+  **Exploit lens:** never a client-side effect, or a modified client gives any race a free
+  damage cut; the server checks the race on every use.
 - [ ] **Two-handed damage arc (cleave)** — large 2H weapons (axes/polearms) hit multiple
   enemies in a frontal cone on auto-attack, giving 2H its own identity vs. dual-wield.
   Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it
@@ -2090,6 +2103,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (humanoid / beast / undead / ...), the hook EQ keys loot by creature and WoW keys both loot
   and spell eligibility on (its charm takes only humanoids and beasts). Content and data;
   sequenced behind (b).
+  **DECIDED 2026-10-19 (user): the table format for (b) and (d) uses cascading rarity tiers**
+  (from candlesan's short "Making an RPG with Loot? Let me save you some time."). Each roll
+  tries the table's tiers rarest first, each at its own fixed chance; the first that hits makes
+  a weighted pick from that tier's own list. Materials sit in the bottom tier, so adding one
+  never moves a rare rate. Why: today's tables are one weighted pool with an empty bucket
+  (`loot.rs::roll_for_mob`), where every entry's chance depends on every other (a Fresh Wolf
+  Pelt is 1/8.5, about 11.8%, and one new 2.0 entry drops it to about 9.5%); harmless while the
+  tables hold only materials, wrong once gear arrives. Named rares already have fixed chances
+  (`named_mobs.toml` `drop_chance`). **Decide when building:** what a tier that hits with an
+  empty list does (after a hotfix disables its last item): drop nothing, or fall through, which
+  quietly makes the lower tiers more common. Rolls stay server-side; a fixed rate per tier is
+  directly testable, like the 400-roll collar test.
 - [ ] **Character creation follow-ups** *(scattered: race expansion memory 2026-06, the CHA
   memory, `item_weight_proposal.md` §Findings, `classes.md`; audit 2026-09-29)*. (a) The three
   drafted races (Aerathi, Vesperin, Sylphari) exist as docs only (`race_expansion_brainstorm.md`

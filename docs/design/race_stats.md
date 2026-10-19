@@ -100,6 +100,20 @@
 - **Stonecunning** — +10 to detecting traps, assessing structural stability, and identifying crafted item quality
 - **Sturdy Frame** — Knockback effects reduced by 60%; cannot be stunned by non-boss abilities
 - **Forge-Rite** — +10 starting skill in Smithing; crafted metal items have +5 to quality floor
+- **Stone Skin** *(active; PROPOSED 2026-10-19, not built)* — the Dwarf's skin turns to granite:
+  a large cut to physical damage taken and no knockback for a short time, paid for by being
+  **rooted in place** while it lasts, on a long cooldown. A stand-your-ground button, not a free
+  defence ("Dwarves do not bend"). Starting numbers, all tuning knobs: 50% less physical damage,
+  10 s, 10 min cooldown. **Open:** whether it also cuts magic damage. Precedent: Lineage II's
+  Knight skill Ultimate Defense (huge physical and magic defence for 30 s, unable to move, in
+  the Interlude and Epilogue versions); EverQuest's Monk Stonestance (60% less melee damage,
+  12 s, 6 min reuse, no cost) and Warrior Defensive (paid for with 55% less damage dealt);
+  World of Warcraft's Dwarf Stoneform (8 s, bleed, poison and disease immunity, +10% armour,
+  3 min in Classic). Rules for the build: it does **not stack** with other damage cuts (the
+  Warrior's Guard, the Shadow Knight's Dark Bond): the strongest one applies, the rule attack
+  slows already follow. The race, the cooldown, the root and the cut are all the server's;
+  the client only shows the granite tint. Considered: folding Sturdy Frame's knockback half
+  into it.
 
 **Starting skill bonuses:** +10 Smithing; +5 Mining; +5 Defense
 
