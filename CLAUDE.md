@@ -1601,6 +1601,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (a Human Warrior at 1, 20 and 60). Full suite green (276 unit, 98 integration). *(History:
   the 2026-10-14 build took one point per four levels and halved regen, sized on a wrong claim
   about the stat scale; the user caught it the same evening.)*
+  **Server half DEPLOYED 2026-10-19** (R720 boot line `build="33c7e28" dev_cmds=false`, no
+  migration); the landing at a quarter HP with no mana, the two chat lines and the
+  stat cut are live on the 10-13 export; the sheet and the buff-bar countdown wait for the Oct 22 export.
 - [x] **Respawn at bind / Soul Binder NPC + a real death state** — **DONE + playtested 2026-08-13**
   (proof: after die/respawn/logout the character's `pos` equals `bind_x/z` to every decimal, where a
   fallback would have written 0/0). What exists is in systems_overview → "Respawn, bind points, and
@@ -1880,6 +1883,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   client can only set through the Sit intent, so a client that lies about standing simply
   forgoes the seated regen; a client that ignores the stand keeps drawing itself seated but is
   standing to the server and gets no seated regen and no seated rule.
+  **Server half DEPLOYED 2026-10-19** (R720 boot line `build="33c7e28" dev_cmds=false`, no
+  migration); `seated_combat_checklist.md` §1 and §2 are runnable now on the 10-13
+  export; the body standing on a hit (§3) waits for the Oct 22 export.
 - [x] **Named mobs lost enrage + guaranteed drops** — **DONE + playtested 2026-08-21**
   (server `393cc64`, `named_mobs_checklist.md`). What exists is in systems_overview → Combat.
   **They were never placed in the world**, which the old wording missed: no scene or spawner ever
@@ -2461,6 +2467,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   no-trade item flag" item). Tests: a unit test on the count and the per-class levels; an
   integration test where a Magician 1 conjures one bread and is told, and a Magician 35
   conjures four water; a headless probe of the client's data and the two item resources.
+  **Server half DEPLOYED 2026-10-19** (R720 boot line `build="33c7e28" dev_cmds=false`, no
+  migration); the spells stay unreachable until the Oct 22 export, since the 10-13
+  client knows neither the spells nor the items.
 - [ ] **Exporter drift** *(the "Known drift" note names `tools/export_spells.gd` as stale; the
   2026-07-10 session flagged the `items.toml` exporter emitting `weapon_delay` /
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both

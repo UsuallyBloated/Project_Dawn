@@ -1097,3 +1097,13 @@ checklist = "relogin_countdown_checklist.md"
 waits_on = ["o4"]
 todo = "Camp / kick return-to-lobby flow + live relogin countdown"
 done_when = "Every row filled."
+
+[[row]]
+id = "o11"
+week = "w3"
+lane = "operate"
+day = "Mon Oct 19"
+what = "Redeploy the R720 at 33c7e28 (the cast arms consuming the pre-flight, seated combat, res-sickness to the P99 design, Summon Food and Drink). No migration. Seated combat and res-sickness go live on the testers' current client; the summon spells wait for the Oct 22 export."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+done_when = "The boot line shows build=33c7e28 and dev_cmds=false."
