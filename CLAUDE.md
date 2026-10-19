@@ -569,6 +569,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   2026-09-29)*. `ItemData` carries no binding flag; the two account-shared bank slots and the
   trade window both traditionally reject bound items. One flag on `ItemData` + `items.toml`,
   refusals in the bank quick-transfer and `TradeOfferItem`, with a chat line.
+  **DECIDED 2026-10-19 (user): conjured food and water are NO RENT.** Confirmed meaning (EQ's
+  "Temporary" tag, which P99 shows on Summoned: Black Bread): the item is destroyed once the
+  character has been logged out for 30 minutes, not at the instant of logout, so a quick relog
+  or a crash keeps it (Allakhazam's EQ item-tag reference; no classic-only source found that
+  differs). Built with this flag.
 - [ ] **Pet persistence across logout: a design call** *(server_design.md open question 2;
   audit 2026-09-29)*. Today the warder auto-summons on every EnterWorld and conjured pets
   simply vanish, which is a de-facto answer nobody made on purpose. Confirm or change it when
@@ -804,6 +809,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (`inspect_range_gm_audit_ban_checklist.md` §6).
 
 ### Security / exploits
+- [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
+  the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
+  Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying
+  client-made Hit/Miss/Evade broadcasts (only the Test Panel sends them; since the 10-14
+  stand-on-hit client change a forged one would stand another player, cancelling seated regen
+  and `/camp`; not live until the Oct 22 export); (2) movement speed decided by the server (a
+  modified client runs 1.5x; Spirit of Wolf counts twice for an honest one; mounts and carry
+  weight need server models); (3) heal and nuke stat bonuses and casting-skill multipliers on
+  the server; (4) the melee miss roll and weapon-skill damage on the server; (5) memorized
+  spell gems tracked by the server (a wire message); (6) active skills, Bard songs, alignment
+  and fall damage as their own builds (the first three have entries already).
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
@@ -1482,6 +1498,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Design note, flagged not decided:** heals now share the nuke's 25 m reach because spells
   have no range field; say so if heals should reach further (a per-spell range is the real
   answer, with the content pass).
+  **DECIDED 2026-10-19 (user): per-spell ranges, "we should do this for sure", on the
+  Monsters and Memories baseline.** Research (the M&M wiki, three pages re-checked by hand):
+  every single-target spell there lists 30 m (nukes, DoTs, heals, buffs on others, snares,
+  roots, slows, mez, stun, charm, fear, lifetaps, debuffs, dispels, bind, resurrection); only
+  shapes differ (group spells 30 m to the target plus a 15 to 20 m radius, point-blank AoE a
+  10 m radius, one 15 m cone). Build: a real `range` field per spell on both sides, every
+  single-target spell defaulting to 30 m (hostile goes from 25 m to 30 m), an AoE radius kept
+  separate from the range, the tooltip showing the spell's own number.
 - [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
   ticked on the integration test** (server `f58b796`,
   `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
@@ -1908,6 +1932,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   owner: port the WIS term server-side or delete it client-side, and make `spells.toml` and
   `spell_definitions.gd` agree per rank. Also gate consumable-heal prediction the same way the
   self-heal gate works (masked today only because food heals are 0).
+  **DECIDED 2026-10-19 (user): the WIS bonus moves to the server**, with the standing rule
+  "Events happening on the client are a no-go." Re-read the same day: the rank mismatch is
+  stale (both sides carry "Mending" 25 and "Mending Rk. II" 38), and the drift is wider than
+  heals: nukes add `INT x 0.5` on the client only, and the casting-skill multipliers too. Fix 3
+  of the client-authority audit (Security, "Client-decided outcomes").
 - [ ] **Regen model and race trade-off follow-ups** *(`regen_model.md` §Deferred + §Open tuning,
   `race_xp_regen_tradeoffs_plan.md` slices 1 and 3; audit 2026-09-29 confirmed no race XP
   multiplier exists in `progression.rs`)*. Open: the pool-size formulas (STA to max HP, the
@@ -1921,6 +1950,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   use it at somewhere between 13 and 20"; today `dual_wield` is an ordinary weapon skill with
   a per-class cap and no level gate; audit 2026-09-29)*. Design call on the level, then a
   server-side gate on the off-hand swing plus a client "you cannot dual wield yet" refusal.
+  **DECIDED 2026-10-19 (user), ordered by the class caps already in
+  `weapon_skill_definitions.gd`, Rangers earliest at the user's wish:** level 13 Ranger, Rogue;
+  15 Warrior, Witch Hunter, Bard; 20 Shadow Knight, Beast Master; **Monk born with it (level
+  1)**, as in classic EQ (P99 wiki: Monk 1, Rogue and Warrior 13, Ranger and Bard 17; Paladin
+  and Shadow Knight never). Monk's `dual_wield` cap is 0 today and becomes 250 (EQ's Monk had
+  the highest). The build must let a Monk's empty off-hand swing a fist, which the server
+  refuses for everyone today (the 2026-07-29 swing-limit review closed a forged fist stream
+  that way), so the opening is Monk-only and server-decided. Paladin, the casters and the
+  priests stay at none.
 - [ ] **Facing and view angle** *(user 2026-05-05: "currently doesn't seem like any PC or NPC has
   a view angle. Everything has to face the direction of their combat target"; audit
   2026-09-29)*. No facing model exists: mobs snap to their target and remote players show
@@ -2482,6 +2520,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   no-trade item flag" item). Tests: a unit test on the count and the per-class levels; an
   integration test where a Magician 1 conjures one bread and is told, and a Magician 35
   conjures four water; a headless probe of the client's data and the two item resources.
+  **DECIDED 2026-10-19 (user): +1 item per level after the class learns the spell, cap 10**
+  (was +1 per ten levels, cap 4): a Magician conjures 10 per cast from level 10. Safe because
+  conjured food cannot be sold and becomes NO RENT (the no-drop flag item).
   **Server half DEPLOYED 2026-10-19** (R720 boot line `build="33c7e28" dev_cmds=false`, no
   migration); the spells stay unreachable until the Oct 22 export, since the 10-13
   client knows neither the spells nor the items.
