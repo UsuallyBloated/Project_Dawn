@@ -2141,6 +2141,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   entity / `RemoteEnemy` not actually despawned), so "cleared" enemies may still be there. Dev-tool
   bug (`test_panel.gd::_despawn_all_enemies`); likely needs the despawn to route through the server
   like `DevSpawnMob` does, not a client-only removal.
+  **BUILT 2026-10-19, pending the Oct 22 bump and the playtest** (on `feat/jump-relay` in both
+  repos, server `9500051`, client `827de57`, so it rides the jump relay into the merge;
+  `despawn_all_enemies_checklist.md`, 13 rows, on that branch). A new `DevDespawnEnemies`
+  appended to `ClientWorldMsg` under the unshipped PD_W0028, gated and audited exactly like
+  `DevSpawnMob` (a plain account's request is ignored and writes no row). The server removes
+  every UNOWNED enemy in the GM's AOI neighbourhood (the set the client button used to hide):
+  pets and charmed mobs stay; no XP, loot or corpse; loot bags and player corpses are a
+  separate map and stay; the camp slot is freed as the body sweep frees it, so camp mobs
+  respawn on their timer. The GM is told "Despawned N enemies." The Test Panel calls the
+  DLL's `send_dev_despawn_enemies` by name (an older wire layer costs the button, not the
+  panel) and keeps the local free for the offline Test Room; `check_wire_layer.gd` lists the
+  send. Tests: an integration test (the plain request does nothing; the GM's despawns two
+  dummies for a bystander, leaves the bystander's warder, reports the count, writes one
+  audit row; a Smite at a removed id is refused) that fails on a no-op despawn, and a
+  headless probe of both button paths that fails on the old button.
 
 ### UI polish
 - [ ] **In-game UI layout is "pretty busted"** *(user, machine day 2026-09-22, on the fresh

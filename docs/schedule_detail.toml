@@ -1107,3 +1107,29 @@ what = "Redeploy the R720 at 33c7e28 (the cast arms consuming the pre-flight, se
 who = "user at a desk, Claude writes the commands"
 hours = 0.5
 done_when = "The boot line shows build=33c7e28 and dev_cmds=false."
+
+[[row]]
+id = "b21"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Despawn All Enemies for real: the Test Panel button asks the server, which removes every enemy in the GM's view (pets and charmed mobs stay, nothing is paid, camp mobs come back on their timer) instead of only hiding them on one screen. Built on the jump-relay branch, so it rides the Oct 22 bump."
+who = "Claude unattended"
+days = 0.5
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when despawn_all_enemies_checklist.md is filled."
+todo = "Test Panel \"Despawn All Enemies\" leaves enemies invisible, not gone"
+
+[[row]]
+id = "v28"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Despawn All Enemies: spawned mobs and a nearby camp vanish for you and a second seat, the chat line gives the count, the camp refills on its timer; pets, a charmed mob and an unlooted corpse stay; a fight 300 m away carries on; admin_report shows the row."
+who = "user at a desk, GM account"
+hours = 0.5
+needs = ["second seat (two-boxing works)", "the Oct 22 export with the rebuilt wire layer"]
+checklist = "despawn_all_enemies_checklist.md"
+checklist_branch = "feat/jump-relay"
+waits_on = ["b21", "o4"]
+todo = "Test Panel \"Despawn All Enemies\" leaves enemies invisible, not gone"
+done_when = "Every row filled."

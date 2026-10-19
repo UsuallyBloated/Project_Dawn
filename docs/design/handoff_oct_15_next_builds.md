@@ -144,7 +144,15 @@ The playtests of every checklist in `CHECKLIST_RUN_ORDER.md` wait on the redeplo
 (client `fc0042f` + `1159a79`, server `33c7e28`; session note 2026-10-15 §4 and §5; planner
 b19/v26, b20/v27). 4.3 is DEFERRED FAR OUT by the user (2026-10-16); do not build it. The
 deferral covers that operator tool only: the user was explicit the same day that development
-stays vigilant for hacks, dupes and cheats in every build (rule 3 above is unchanged). Next is 4.4. Next planner ids: `b21`, `v28`.
+stays vigilant for hacks, dupes and cheats in every build (rule 3 above is unchanged).
+
+**Progress (2026-10-19, Opus):** the R720 runs `33c7e28` (redeployed the same day; planner
+o11). 4.4 is BUILT on `feat/jump-relay` (server `9500051`, client `827de57`; session note
+2026-10-19 §3; planner b21/v28), so the jump branch now carries it into the Oct 22 merge.
+A trial merge of that branch into the deploy branch conflicts in two expected places: the
+server's `world_two_clients.rs` end of file (both sides append tests) and the client's
+`check_wire_layer.gd` `SIGNALS` line; keep both sides of each. Next is 4.5, which needs the
+user's answers before any build. Next planner ids: `b22`, `v29`.
 
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
