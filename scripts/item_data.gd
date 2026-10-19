@@ -81,6 +81,11 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 # the primary weight source today.
 @export var weight: float = 0.0
 
+# NO RENT (EverQuest's TEMPORARY tag, user 2026-10-19): the server destroys the
+# item once its owner has been logged out for thirty minutes. Conjured food and
+# water. The server's items.toml carries the same flag (lockstep-checked).
+@export var no_rent: bool = false
+
 # ── Save / load (Tier 2) ──────────────────────────────────────────────────────
 
 # Serialize to a dict for JSON. Items loaded from a `.tres` file are saved as
@@ -120,6 +125,7 @@ func _to_snapshot() -> Dictionary:
 		"proc_damage_type": int(proc_damage_type), "proc_name": proc_name,
 		"vendor_price": vendor_price,
 		"weight": weight,
+		"no_rent": no_rent,
 	}
 
 static func from_save_dict(d: Dictionary) -> ItemData:
@@ -178,4 +184,5 @@ static func from_save_dict(d: Dictionary) -> ItemData:
 	item.proc_name          = snap.get("proc_name", "")
 	item.vendor_price       = snap.get("vendor_price", 0)
 	item.weight             = snap.get("weight", 0.0)
+	item.no_rent            = snap.get("no_rent", false)
 	return item

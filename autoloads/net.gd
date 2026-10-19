@@ -197,6 +197,10 @@ signal world_entity_replaced(old_id: int, new_id: int)
 # fullness, the cap, and the drain per real second right now (0 while dead).
 # Owner-only on the server; the HUD's hunger panel draws it.
 signal world_hunger(hunger_secs: float, thirst_secs: float, cap_secs: float, drain_per_sec: float)
+# The memorized spell bar as the server holds it (index = gem, "" = empty);
+# `seeded` false means the server holds none yet and SpellBar offers its own
+# once. Client-authority audit fix 5: the server's bar decides what may be cast.
+signal world_spell_gems(gems: PackedStringArray, seeded: bool)
 # A food or drink was right-clicked in a bag or the inventory (the hand-eat
 # is on its way to the server). The hunger panel flashes a full bar, since
 # the server will refuse with EQ's "you would explode" line.
@@ -367,6 +371,14 @@ func _ready() -> void:
 		DebugLog.error("Net: gdext_net.dll predates the jump relay (no player_jumped "
 			+ "signal); other players' jumps will read as slides. Rebuild the DLL with "
 			+ "addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs the server-held spell bar, not the
+	# client (the bar then stays this machine's, and the server refuses casts
+	# of spells it never saw memorized).
+	if has_signal("spell_gems"):
+		connect("spell_gems", _on_spell_gems)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates the server-held spell bar (no spell_gems "
+			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
@@ -1276,6 +1288,23 @@ func _on_hunger_update(hunger_secs: float, thirst_secs: float, cap_secs: float, 
 
 func _on_player_jumped(id: int) -> void:
 	world_player_jumped.emit(id)
+
+func _on_spell_gems(gems: PackedStringArray, seeded: bool) -> void:
+	world_spell_gems.emit(gems, seeded)
+
+# The spell bar's sends, by name (see _on_spell_gems): false when not in the
+# world or when the DLL predates them.
+func memorize_start(gem: int, spell_name: String) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_memorize_start") 			and bool(call("send_memorize_start", gem, spell_name))
+
+func memorize_finish() -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_memorize_finish") 			and bool(call("send_memorize_finish"))
+
+func forget_spell(gem: int) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_forget_spell") 			and bool(call("send_forget_spell", gem))
+
+func seed_spell_gems(gems: PackedStringArray) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_seed_spell_gems") 			and bool(call("send_seed_spell_gems", gems))
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)

@@ -170,6 +170,10 @@ func make_tooltip() -> Array:
 	return [panel, label]
 
 func _append_stat_lines(item: ItemData, lines: Array) -> void:
+	# EverQuest showed the tag at the top of the item: it vanishes thirty
+	# minutes after its owner logs out.
+	if item.no_rent:
+		lines.append("NO RENT")
 	if item.type == ItemData.Type.WEAPON:
 		lines.append("Damage: %d–%d   Delay: %.1fs" % [
 			item.weapon_damage_min, item.weapon_damage_max, item.weapon_delay])

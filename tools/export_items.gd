@@ -81,6 +81,8 @@ const FIELD_MAP := {
 	"vendor_price":        "vendor_price",
 	# Carry weight: the server owns encumbrance (movement speed, stamina regen)
 	"weight":              "weight",
+	# NO RENT: the server destroys it 30 minutes after its owner logs out
+	"no_rent":             "no_rent",
 }
 
 # Emit order — keeps the TOML stable across runs. Path, name,
@@ -101,6 +103,7 @@ const EMIT_ORDER := [
 	"gem_slots",
 	"vendor_price",
 	"weight",
+	"no_rent",
 ]
 
 const ALWAYS_EMIT := ["path", "name", "item_type", "stack_size"]

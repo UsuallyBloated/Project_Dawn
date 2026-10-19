@@ -46,6 +46,31 @@ func _ready() -> void:
 	Spells.spells_changed.connect(_on_spells_changed)
 	PlayerStats.level_changed.connect(_on_level_changed)
 	Net.app_connected.connect(_on_app_connected)
+	Net.world_spell_gems.connect(_on_server_spell_gems)
+
+# Online the SERVER holds the bar (client-authority audit fix 5): it refuses a
+# cast of a spell in no gem. Its SpellGems arrives on entering the world and
+# after every change, and this bar adopts it. A character the server has never
+# held a bar for (everyone before the change) offers this machine's bar once;
+# the server keeps what a memorize would allow and answers with the result.
+var _seed_offered: bool = false
+var _adopted_once: bool = false
+
+func _on_server_spell_gems(gems: PackedStringArray, seeded: bool) -> void:
+	if not seeded and not _seed_offered and slots.any(func(s): return s != ""):
+		_seed_offered = true
+		Net.seed_spell_gems(PackedStringArray(slots))
+		return
+	for i in SLOT_COUNT:
+		var name: String = gems[i] if i < gems.size() else ""
+		if slots[i] == name:
+			continue
+		if _adopted_once and name != "":
+			CombatLog.add_line("You memorize %s into slot %d." % [name, i + 1], CombatLog.MsgType.INFO)
+		slots[i] = name
+		slot_changed.emit(i)
+	_adopted_once = true
+	_save_timer.start()
 
 # A character logged into the world: swap to that character's memorized
 # bar. Flush any pending save first so the debounce timer can't write the
@@ -62,6 +87,8 @@ func _on_app_connected(player_id: int) -> void:
 		_save_timer.stop()
 		_save()
 	_char_key = key
+	_seed_offered = false
+	_adopted_once = false
 	_init_slots()
 	if not FileAccess.file_exists(_save_path()) and FileAccess.file_exists(LEGACY_SAVE_PATH):
 		# First login since the split: seed from the old global file so the
@@ -113,6 +140,9 @@ func unlock_level_for_slot(slot: int) -> int:
 
 func clear_slot(slot: int) -> void:
 	set_slot(slot, "")
+	# Online the server holds the bar: tell it the gem is empty too.
+	if Net.is_launcher_mode():
+		Net.forget_spell(slot)
 
 func get_spell(slot: int) -> SpellData:
 	var n := get_slot(slot)

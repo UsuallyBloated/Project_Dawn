@@ -13,3 +13,4 @@ vendor_price = 0
 is_food = true
 food_duration = 2880.0
 weight = 0.1
+no_rent = true

@@ -14,8 +14,9 @@ extends SceneTree
 # Exit code 1 when anything is missing, 0 when the DLL carries it all.
 # Add a name here whenever Net gains another by-name lookup.
 
-const SIGNALS: Array[String] = ["time_of_day", "kick_retry_after", "entity_replaced", "hunger_update", "player_jumped"]
-const METHODS: Array[String] = ["rtt_ms", "packet_loss", "send_dev_despawn_enemies"]
+const SIGNALS: Array[String] = ["time_of_day", "kick_retry_after", "entity_replaced", "hunger_update", "player_jumped", "spell_gems"]
+const METHODS: Array[String] = ["rtt_ms", "packet_loss", "send_dev_despawn_enemies",
+	"send_memorize_start", "send_memorize_finish", "send_forget_spell", "send_seed_spell_gems"]
 
 
 func _init() -> void:
