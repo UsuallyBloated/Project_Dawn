@@ -113,6 +113,12 @@ func cast_spell(spell: SpellData) -> bool:
 		var me := get_tree().get_first_node_in_group("player")
 		if me != null and me.has_method("stand"):
 			me.stand()
+	# The song being sung, sung again, is stopped: online the server pulses
+	# it, so stopping is a message (instant, no bar), and it says so in chat.
+	if spell.is_song and Net.is_launcher_mode() and BardSongs.get_active_song() == spell:
+		if Net.stop_song():
+			BardSongs.stop_singing()
+		return false
 	if _cooldowns.is_active(spell.spell_name) and not no_cooldowns:
 		spell_failed.emit("Spell is on cooldown.")
 		return false
@@ -240,6 +246,11 @@ func cast_by_index(index: int) -> bool:
 
 func is_casting() -> bool:
 	return _casting != null
+
+# A song is sung on the move (Selos' is a running song), so the movement
+# cancel in player.gd leaves a song's bar alone; the server's gate does too.
+func casting_is_song() -> bool:
+	return _casting != null and _casting.is_song
 
 func cancel_cast() -> void:
 	if _casting == null:
@@ -471,6 +482,8 @@ func _apply_spell(spell: SpellData) -> void:
 
 	if spell.is_song:
 		BardSongs.activate_song(spell)
+	else:
+		BardSongs.on_non_song_cast()
 
 	if spell.target_type in [SpellData.TargetType.ENEMY, SpellData.TargetType.AOE]:
 		BuffManager.break_stealth()

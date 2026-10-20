@@ -411,7 +411,7 @@ func _physics_process(delta: float) -> void:
 	# refuses the cast AFTER the mana was optimistically spent. Cancelling here
 	# refunds instantly (Spells.cancel_cast) and matches what the corrected
 	# server comment says the ideal client does.
-	if Spells.is_casting() and not chat_focused and (mouse_run or _autorun or
+	if Spells.is_casting() and not Spells.casting_is_song() and not chat_focused and (mouse_run or _autorun or
 			Input.is_action_pressed("move_forward") or
 			Input.is_action_pressed("move_left") or
 			Input.is_action_pressed("move_backward") or

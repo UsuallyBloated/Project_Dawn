@@ -477,6 +477,14 @@ func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedF
 				-res_sickness_cut(base["constitution"]), 0.0, 0.0, rem_sick, RES_SICKNESS_NAME)
 			continue
 		var rem: float = durations[idx] if idx < durations.size() else 0.0
+		# A Bard song's pulse the server put on us: the song's effects from
+		# its definition, scaled by level as the server scales them, timed by
+		# the server (the subtractive pass above keeps their remaining in step).
+		var song: SpellData = Spells.get_spell_by_name(nm)
+		if song != null and song.is_song:
+			BardSongs.apply_song_buffs(song, rem)
+			changed = true
+			continue
 		# A skill's buff the server put on us (Evade, Hide, Holy Shield):
 		# shown from the skill definition, timed by the server.
 		var skill: SkillData = Skills.get_skill_by_name(nm)

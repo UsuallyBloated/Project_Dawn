@@ -1325,6 +1325,11 @@ func use_skill(skill_name: String, target_id: int) -> bool:
 func _on_skill_fail(skill_name: String, reason: String) -> void:
 	world_skill_fail.emit(skill_name, reason)
 
+# Stop the song being sung (the Bard song rework): the server pulses the
+# song, so ending it is this message. By name: an older DLL costs the stop.
+func stop_song() -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_stop_song") 			and bool(call("send_stop_song"))
+
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)
 

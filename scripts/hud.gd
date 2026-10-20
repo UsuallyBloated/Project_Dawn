@@ -1504,6 +1504,17 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line(SenseHeading.query(_player.rotation.y), CombatLog.MsgType.INFO)
 		return
 
+	if lower == "/stopsong":
+		# EQ's /stopsong: end the song being sung at once. Online the server
+		# pulses the song, so it is told (and says so); the lingering
+		# effects run out on their own.
+		if Net.is_launcher_mode():
+			if Net.stop_song():
+				BardSongs.stop_singing()
+		else:
+			BardSongs.stop_singing()
+		return
+
 	if lower == "/loc" or lower == "/location":
 		# EQ-style position print (docs/design/location_command.md). Printed
 		# x, y, z — NOT EQ's Y-first — so the line pastes straight into
