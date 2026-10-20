@@ -468,7 +468,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `jumping` flag can then only make you *look* silly, not move you. Don't let the flag become an
   input to position.
   **BUILT 2026-10-14 (the cosmetic version), pending the Oct 22 bump** (on `feat/jump-relay` in
-  both repos, server `%s`, client `%s`, branched from `feat/trade-window` like the hunger window
+  both repos, server `4975e4d`, client `82cf979` (the shas were `%s` placeholders until
+  2026-10-19), branched from `feat/trade-window` like the hunger window
   so it rides the same `PD_W0028`; awaits the trade session's merge, which was offline when it was
   built; `remote_jump_checklist.md`, 9 rows, on the branch). (a) `player.gd` latches a jump and
   sends it on the next Move's `jumping` flag, once. (b) The Move handler reads the flag:
@@ -1143,7 +1144,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   client had already spent. The user can confirm which skill was on the bar.
   **SERVER-SIDE ACTIVE SKILLS BUILT 2026-10-19, pending the Oct 22 bump and the playtest**
   (client-authority audit item 6, the first of its four; user: "GO!!!"; `feat/server-speed`
-  in both repos; `active_skills_checklist.md`, 20 rows). `UseSkill` carries the skill's name
+  in both repos; `active_skills_checklist.md`, 23 rows). `UseSkill` carries the skill's name
   under the unshipped PD_W0028 (it was a never-sent `skill_id`), and the server owns all of
   it: `data/active_skills.toml` (every one of the client's 32 skills; `active_skills.rs`;
   `tools/check_active_skill_lockstep.gd` exits 1 on any difference either side), the class
@@ -1155,8 +1156,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   but damage does not wake it; "Stunned" on its frame; on a player, no move, swing, cast or
   skill); **Evade** and **Primal Instinct** deflect every melee swing for 5 s (fanned as an
   Evade); **Holy Shield** is a 60-point absorb; **Hide** keeps idle mobs from noticing the
-  user (a mob already provoked still finds them, and the first swing, skill or hostile cast
-  ends it); **Feign Death** rolls 80% on the server, a success wipes the user from every
+  user (a mob already provoked still finds them; moving, the first swing, a damage skill or
+  a hostile cast ends it); **Feign Death** rolls 80% on the server, a success wipes the user from every
   mob's hate and holds them unnoticed until they move (standing ends it, as in EQ; two
   minutes at most); **Warder's Fury** is the hit plus `/pet attack`; **Truesight Strike**
   never misses and ignores Evade. A refusal (unknown, not your class, stunned, on cooldown,
@@ -1175,6 +1176,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   every one failing on the previous server, which had no `UseSkill` handler at all. A
   headless probe covers the client half. **Hosting-branch note:** add `UseSkill` to the
   per-connection intent budgets when `feat/public-hosting` merges.
+  **Review pass the same night, 12 findings, all fixed** (session note §9): the skill's
+  target refusals were a char-id oracle (three lines told absent, unflagged and far apart;
+  presence, liveness and reach share one line now, the 10-02 rule, and the plain Attack's
+  "Unable to attack <name>" names only a target in reach); one `UseSkill` per user per tick
+  (the CastSpell rule; every copy in a forged datagram was answered); **Hide ends on
+  movement** (its 30 s on a 10 s cooldown was a free walk through every camp; classic EQ's
+  Hide held only while you stood still, and a later Sneak skill is the EQ answer if walking
+  hidden is wanted); a Hide while hidden and a Holy Shield while its pool holds are refused
+  ("You are already hidden.", "Your shield still holds.": a re-press used to refill the pool
+  for 10 stamina); a stun refuses a CastStart and ends a running cast outright (a bar begun
+  under the stun and released after it went through); the stamina spend rides the regen fan
+  alone (it was fanned twice); a skill-backed success line goes through `send_system_line`,
+  not `send_refusal`; the helpers sit where rustdoc attaches their own comments. Tests
+  strengthened: Backstab's bound skips a crit (a crit alone could reach it), Feign Death
+  tries fresh monks until a success so the hold path is always exercised, Hide covers the
+  step and the re-use refusal, and the harness heartbeats through long waits (a 10.3 s silent
+  wait had read as a drop at the server's 10 s timeout).
 - [x] **Right-click is the world-interact verb** — **DONE + playtested 2026-08-24** (client
   `fa2ff04`, all 13 rows of `right_click_interact_checklist.md`). One mouse grammar everywhere:
   right-click (tap) interacts — NPC talk/vendor/bank, corpse + bag loot, veins, stations,
