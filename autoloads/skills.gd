@@ -9,13 +9,6 @@ var _cooldowns: CooldownTracker
 var available: Array[SkillData] = []
 var no_cooldowns: bool = false
 
-# The last skill sent to the server and when: a SkillFail for it arriving
-# within REFUSAL_WINDOW_MSEC means that use never happened, so the cooldown
-# drawn for it is cleared (the spell bar's rule, spells.gd).
-const REFUSAL_WINDOW_MSEC := 1500
-var _sent_skill_name: String = ""
-var _sent_at_msec: int = 0
-
 func _ready() -> void:
 	SkillDefinitions.validate()
 	_cooldowns = CooldownTracker.new()
@@ -95,7 +88,7 @@ func use_skill(skill: SkillData) -> bool:
 
 # The online path: send the skill by name and let the server answer. The
 # server's Hit / Miss / StaminaUpdate / BuffSnapshot show the outcome; a
-# SkillFail inside REFUSAL_WINDOW_MSEC hands the cooldown back.
+# SkillFail hands the cooldown back.
 func _use_skill_online(skill: SkillData) -> bool:
 	var target_id := 0
 	if skill.target_type == SkillData.TargetType.ENEMY:
@@ -112,19 +105,18 @@ func _use_skill_online(skill: SkillData) -> bool:
 		CombatLog.add_line("%s isn't available online yet." % skill.skill_name, CombatLog.MsgType.INFO)
 		return false
 	_cooldowns.start(skill.skill_name, skill.cooldown)
-	_sent_skill_name = skill.skill_name
-	_sent_at_msec = Time.get_ticks_msec()
 	if skill.target_type == SkillData.TargetType.ENEMY:
 		BuffManager.break_stealth()
 	skill_used.emit(skill)
 	return true
 
+# The server sends a SkillFail only for a UseSkill it refused, naming the
+# skill, so the cooldown drawn for that skill is simply cleared (two skills
+# sent close together each get their own answer).
 func _on_server_skill_refused(skill_name: String, reason: String) -> void:
 	if reason != "":
 		CombatLog.add_line(reason, CombatLog.MsgType.INFO)
-	if skill_name == _sent_skill_name and Time.get_ticks_msec() - _sent_at_msec <= REFUSAL_WINDOW_MSEC:
-		_cooldowns.clear(skill_name)
-	_sent_skill_name = ""
+	_cooldowns.clear(skill_name)
 
 func get_skill_by_name(skill_name: String) -> SkillData:
 	return _all_skills.get(skill_name)
