@@ -11,10 +11,12 @@ Those who survive this navigation tend to develop a particular toughness, not th
 ## Physical Description
 | Sex | Weight | Build | Notes |
 |---|---|---|---|
-| Male | 330 to 450 lbs | Heavy brow, broader jaw, more prominent vestigial tusks | Tusk visibility is the clearest sex indicator; skin tone greener on average |
-| Female | 270 to 380 lbs | Slightly softer jaw, tusks often absent or minimal | Human heritage shows more strongly in the face; still towers over most other races |
+| Male | 300 to 410 lbs | Heavy brow, broader jaw, more prominent vestigial tusks | Tusk visibility is the clearest sex indicator; skin tone greener on average |
+| Female | 245 to 345 lbs | Slightly softer jaw, tusks often absent or minimal | Human heritage shows more strongly in the face; still towers over most other races |
 
 Height: see [creature_heights.md](../../reference/creature_heights.md), the one home for race heights (the Blender height chart shows each race at the middle of its range).
+
+Weights rebalanced 2026-10-20 (user) so a Half-Ogre is lighter for its size than a full Ogre: at the middle of each range, weight over height cubed is 37 for the Half-Ogre (355 lb at 2.13 m) and 41 for the Ogre (680 lb at 2.55 m). The old weights (330 to 450, 270 to 380) made the Half-Ogre the bulkier of the two, which is why its model sheets drew a shorter Ogre.
 
 Half-Ogres are large: substantially larger than the biggest Humans, shorter and lighter than full Ogres. The Ogre heritage shows in the bone structure: heavy brow, wide jaw, broad hands, the characteristic slight forward hunch of the shoulders. Skin tones are human-range but often shifted toward grey-green. Tusks are present in males more often than females; when present they are smaller than Ogre tusks, sometimes only vestigial. The Human heritage softens the features enough that expression is substantially more readable than a full Ogre's.
 

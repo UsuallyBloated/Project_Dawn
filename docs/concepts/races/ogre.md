@@ -11,10 +11,12 @@ What Ogres offer to a party is simple: they absorb punishment that would kill an
 ## Physical Description
 | Sex | Weight | Build | Notes |
 |---|---|---|---|
-| Male | 520 to 700 lbs | Massively broad, thick-necked, sloped forehead | Tusks curve upward more prominently; deeper brow ridge |
-| Female | 420 to 600 lbs | Slightly narrower skull, same brutal mass | Tusks shorter but broader; often faster than males despite the size |
+| Male | 580 to 780 lbs | Massively broad, thick-necked, sloped forehead | Tusks curve upward more prominently; deeper brow ridge |
+| Female | 470 to 670 lbs | Slightly narrower skull, same brutal mass | Tusks shorter but broader; often faster than males despite the size |
 
 Height: see [creature_heights.md](../../reference/creature_heights.md), the one home for race heights (the Blender height chart shows each race at the middle of its range).
+
+Weights rebalanced 2026-10-20 (user) so the Ogre is denser for its size than the Half-Ogre: at the middle of each range, weight over height cubed is 41 for the Ogre (680 lb at 2.55 m) and 37 for the Half-Ogre (355 lb at 2.13 m). The old weights were 520 to 700 and 420 to 600.
 
 Ogres are enormous and built with a density that makes their weight hard to guess from appearance alone. Skin tones range from grey-green to a deep forest green, sometimes mottled, rarely uniform. Eyes are small relative to the skull, often dark brown or black, and set beneath a prominent brow ridge that puts the face in permanent partial shadow. Tusks protrude from the lower jaw; in males they curve up, in females they tend outward. Ogres rarely cut their tusks, and the state of the tusks (cracked, carved, adorned) carries tribal meaning.
 
