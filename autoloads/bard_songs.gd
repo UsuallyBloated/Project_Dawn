@@ -10,14 +10,16 @@ extends Node
 #
 # A song's strength scales with the bard's level (user, 2026-10-20): a
 # fraction of the listed value when first learned, climbing to the full value
-# at FULL_AT_LEVEL. The data carries the level-50 values. The three constants
-# mirror the server's world/mod.rs SONG_* knobs; keep them in step by hand.
+# at FULL_AT_LEVEL. The fraction is Selo's own (EQ's Selo's Accelerando ran
+# +20% when learned and +65% at 50; 20/65). The data carries the level-50
+# values. The four constants mirror the server's world/mod.rs SONG_* knobs;
+# keep them in step by hand.
 
 signal songs_changed
 
 const PULSE_INTERVAL := 6.0
 const LINGER := 12.0
-const SCALE_AT_LEARN := 0.4
+const SCALE_AT_LEARN := 0.31
 const FULL_AT_LEVEL := 50
 
 var _active_song: SpellData = null
