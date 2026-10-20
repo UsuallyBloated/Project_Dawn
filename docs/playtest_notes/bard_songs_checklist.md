@@ -4,19 +4,21 @@ Bard songs run on the server now, by classic EQ's rules (user decisions 2026-10-
 takes 3 s to sing and costs nothing; the server pulses the one song being sung every 6 s and
 each pulse's effect lingers 12 s; a new song replaces the current one while the old one's
 effect lingers (twisting); re-singing the active song, `/stopsong`, any other cast or death
-ends it; a song is sung on the move. Every song's strength scales with level on EQ's Selo's
-curve: 0.31 of its listed value when first learned (Selo's +20 of +65), the full value at 50.
-Mana Weave is P99's mana song (6 mana per 6 s pulse). **Needs the Oct 22 bump** (both sides
-together: songs changed shape in the data, and the DLL carries the stop).
+ends it; a song is sung on the move. Every song's strength scales with level: 0.4 of its
+listed value when first learned, the full value at 50, except Selos', which runs EQ's Selo's own
+curve (+20% when learned to +65% at 50). Poet's Mending, Wanderer's Chord and Mana Weave are
+matched to their P99 counterparts (Hymn of Restoration, Anthem de Arms, the mana song).
+**Needs the Oct 22 bump** (both sides together: songs changed shape in the data, and the DLL
+carries the stop).
 
 | Song (level) | Effect at 50 | At its learn level | Where to look |
 |---|---|---|---|
 | Selos' Melody (1) | +65% run speed (EQ's) | +20% | the buff bar's speed icon; the run itself |
-| Poet's Mending (4) | 8 HP a pulse (a heal-over-time) | about 2.5 | the HoT icon; HP climbing |
-| Wanderer's Chord (6) | +12% haste | about 4% | the haste icon; swing pace |
-| Anthem of the Hunt (8) | +12% accuracy, +8% crit | about 4% / 2.5% | the stat icon |
-| Mana Weave (10) | 1 mana a second (6 a pulse) | about 0.3 | the mana regen icon; mana climbing |
-| Aria of Dismay (16) | 8% attack slow on the target | about 2.5% | "Slowed" on the target frame |
+| Poet's Mending (4) | 11 HP a pulse (a heal-over-time) | about 4 | the HoT icon; HP climbing |
+| Wanderer's Chord (6) | +10% haste | about 4% | the haste icon; swing pace |
+| Anthem of the Hunt (8) | +12% accuracy, +8% crit | about 5% / 3% | the stat icon |
+| Mana Weave (10) | 1 mana a second (6 a pulse) | about 0.4 | the mana regen icon; mana climbing |
+| Aria of Dismay (16) | 8% attack slow on the target | about 3% | "Slowed" on the target frame |
 
 Diagnostics: `grep "song started\|song stopped" server.log`; the buff bar on your own screen is
 the server's snapshot, so an icon that stays is the server's doing.

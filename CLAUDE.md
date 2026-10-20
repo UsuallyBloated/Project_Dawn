@@ -2033,14 +2033,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   level, Selo's +20% at 5 to +65% at 50): a song runs at `SONG_SCALE_AT_LEARN` of its
   listed effect at the level the class learns it, climbing to the full effect at
   `SONG_FULL_AT_LEVEL` (50); the data carries the level-50 values; both knobs are mirrored in
-  `bard_songs.gd`. **The fraction is Selo's own, 0.31 (20/65), and Selos' Melody is EQ's +65%
-  at 50** (user, the same day: "our scaling should match Selos Melody scaling"; it was 0.4 and
-  +35% for an hour), so a level 1 bard runs +20%, faster than Spirit of Wolf only from the 30s. **Mana Weave cut to P99's mana song** (user: "adjust ours to what the P99
+  `bard_songs.gd`. **Selos' Melody alone carries EQ's Selo's curve** (user, the same day: "our
+  speed spell should match the scaling of the EQ Selos'", after a first reading had put every
+  song on it for an hour): a per-song `song_scale_at_learn` (0.3077, 20/65; 0 means the
+  global 0.4) and `move_speed_mult` 1.65, so a level 1 bard runs +20% and a level 50 +65%,
+  faster than Spirit of Wolf only from the 30s. **Poet's Mending and Wanderer's Chord were
+  matched to their P99 counterparts the same day** (user: "go ahead with matching"): 11 a
+  pulse at 50 (Hymn of Restoration's line, about 4 when learned at 4) and +10% haste
+  (Anthem de Arms); Aria of Dismay (your 8%) and Anthem of the Hunt (no counterpart) on hold. **Mana Weave cut to P99's mana song** (user: "adjust ours to what the P99
   numbers are"): 6 mana per 6 s pulse (1.0 a second), down from 12 a second, twelve times
   EQ's; EQ gave it to the group and not the bard, so when group songs come, follow that. The
-  other five checked against P99 and found at or under it (Selos' +35% ceiling vs EQ's +65%,
-  since raised to EQ's; Poet's 8 vs Hymn of Restoration's 13 at 60; Aria 8% vs Largo's 15 to
-  35%). The client sends
+  other five checked against P99 and found at or under it (Selos' +35% ceiling vs EQ's +65%;
+  Poet's 8 vs Hymn of Restoration's 13 at 60; Wanderer's +12% vs Anthem de Arms' +10%; Aria 8%
+  vs Largo's 15 to 35%); three of them matched to EQ's later the same day, below. The client sends
   and shows: no local pulse online, the buff bar follows the server's snapshot through
   `BardSongs.apply_song_buffs` (scaled the same way), the spell lockstep check no longer
   excuses songs (zero drift, 158 client, 142 server). **Not built, flagged:** instruments and
