@@ -584,6 +584,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   with "NO RENT". Test: 31 minutes away loses the conjured bread, 10 minutes keeps it, an
   ordinary loaf is never touched, logout stamps the time. **The no-drop / no-trade binding flag
   this entry is about is still open**; NO RENT was the part decided.
+  **Rule DECIDED 2026-10-19 (user):** no-drop / no-trade is for items made only for a quest,
+  with no other use (not a tradeskill ingredient, not usable like a potion); which items, not
+  yet decided. **Checked the same day: nothing qualifies today.** Quests count kills only, so
+  no quest-only item exists (the one quest item, the Hunter's Medal, is a reward worn at the
+  neck). The flag waits on the first fetch or delivery quest (Quest and loot content plumbing,
+  item (a)), and gets built with it.
 - [ ] **Pet persistence across logout: a design call** *(server_design.md open question 2;
   audit 2026-09-29)*. Today the warder auto-summons on every EnterWorld and conjured pets
   simply vanish, which is a de-facto answer nobody made on purpose. Confirm or change it when
