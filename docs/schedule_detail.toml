@@ -799,6 +799,17 @@ by = 2026-11-08
 blocks = "Nothing."
 done_when = "One line in CLAUDE.md saying which."
 
+[[row]]
+id = "d9"
+week = "w3"
+lane = "decide"
+day = "by Sun Oct 25"
+what = "The EQ parity audit's eight recommendations (docs/design/eq_parity_audit.md, section 8): the inflation is on the player's side at levels 1 to 10 and almost nowhere else. Worst first: EQ's hit point and mana formula (a level 1 Warrior at 32 HP instead of 200), the level 1 to 10 spells reshaped to EQ's lines, the regeneration buffs to P99's figures and levels, Haste to 30%, low-level mob hit points toward P99's, the rest left alone; whether a second pass on mana costs and cast times is wanted."
+who = "user"
+by = 2026-10-25
+blocks = "The data edits (a build row once decided). Not the Oct 22 bump: the audit changes numbers, not the wire, so it can ship on any later redeploy and export."
+done_when = "Each of the eight answered on the To-Do entry (Combat / weapons, EQ parity)."
+
 # ---------------------------------------------------------------------------------------
 # After the door opens: undated, per the planner's answer. Status for each lives in the To-Do.
 
@@ -1233,7 +1244,7 @@ id = "b28"
 week = "w3"
 lane = "build"
 day = "Oct 20"
-what = "Bard songs on the server (audit item 6): a 3 s sing, free, pulsed by the server every 6 s with a 12 s linger, one song at a time, twisting by replacement, the heal song a heal-over-time, /stopsong; every song scales with level (0.4 of its effect when learned to full at 50); Mana Weave cut to P99's number. On feat/server-speed, so it rides Oct 22."
+what = "Bard songs on the server (audit item 6): a 3 s sing, free, pulsed by the server every 6 s with a 12 s linger, one song at a time, twisting by replacement, the heal song a heal-over-time, /stopsong; every song scales with level (0.4 of its effect when learned to full at 50; Selos' on EQ's own curve, +20% to +65%); Mana Weave, Poet's Mending and Wanderer's Chord matched to P99's numbers. On feat/server-speed, so it rides Oct 22."
 who = "Claude unattended"
 days = 0.5
 done_when = "The server suite and the client probe pass and both halves are pushed. Done only when bard_songs_checklist.md is filled."
@@ -1244,7 +1255,7 @@ id = "v31"
 week = "w3"
 lane = "verify"
 day = "Fri Oct 23 to Sun Oct 25"
-what = "Bard songs: a 3 s sing costing nothing, the icon refreshing every 6 s while sung, four songs twisted and all up, a dropped one running out 12 s later, re-clicking or /stopsong ending a song at once, a nuke ending it, a sing surviving a run, a level 1 Selos' at about +14% and a level 50 at +35%, Mana Weave climbing about 6 a pulse at 50, Aria's slow refreshed on the target."
+what = "Bard songs: a 3 s sing costing nothing, the icon refreshing every 6 s while sung, four songs twisted and all up, a dropped one running out 12 s later, re-clicking or /stopsong ending a song at once, a nuke ending it, a sing surviving a run, a level 1 Selos' at about +20% and a level 50 at +65% (EQ's own curve), Poet's Mending a heal-over-time, Mana Weave climbing about 6 a pulse at 50, Aria's slow refreshed on the target."
 who = "user at a desk, GM account"
 hours = 0.75
 needs = ["second seat (two-boxing works)", "the Oct 22 export"]

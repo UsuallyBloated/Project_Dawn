@@ -2141,6 +2141,34 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   stale (both sides carry "Mending" 25 and "Mending Rk. II" 38), and the drift is wider than
   heals: nukes add `INT x 0.5` on the client only, and the casting-skill multipliers too. Fix 3
   of the client-authority audit (Security, "Client-decided outcomes").
+- [ ] **EQ parity: the inflation pass** *(user, 2026-10-20, after the Bard song pass found Mana
+  Weave at twelve times P99's: "A lot of our spells, skills, effects, etc are pretty over
+  inflated"; baseline P99, scope and format settled the same day; **research DONE 2026-10-20,
+  `docs/design/eq_parity_audit.md`, nothing built, the user's calls pending on §8**)*. Every
+  server spell (142), the 16 client-only ones, the 32 active skills, the mobs, the weapons, the
+  player pools, regen and XP set against their P99 counterparts (PQDI's class lists for the
+  level-scaled spell figures, the P99 wiki and forums for mobs and weapons, EQEmu's source for
+  the pool and skill formulas), as ratios at the same level. **The finding: the inflation is on
+  the player's side at levels 1 to 10 and almost nowhere else.** Player pools at level 1 are 5
+  to 10x EQ's (a Human Warrior 200 HP against 32; a Wizard 210 mana against 22) while the
+  per-level gains are EQ's, so level 50 lands in line for melee and priests (casters' HP under);
+  level 1 to 10 nukes and heals are 4 to 6x (Smite 35 against Strike 7; Healing Light 60 against
+  Minor Healing 10; Ice Spear 50 against Frost Bolt 5 to 7) and in line from 12 to 20 (Meteor
+  130 against Force Shock 171); the regeneration buffs are 6 to 12x and 12 to 33 levels early
+  (Clarity 8 mana a second at 14 against 4 a tick at 29; Regrowth 5 HP a second at 1 against
+  Regeneration 5 a tick at 34); Haste 50% against 30%. **Already EQ's:** mob damage per hit (the
+  2 x level + 2 rule to the point), the HP and mana regen tables, the XP curve, the weapon bands,
+  the stat buffs, shields, absorbs, roots, mez, snare and speed; mob hit points sit 1.5 to 3x
+  above at levels 1 to 6. **Recommendations, worst first (§8, the user's calls):** (1) EQ's pool
+  formula outright (`5 + level x factor / 10 + STA x level x factor / 3000`, mana `22.5 x
+  level`), the one change that fixes the feel of level 1 to 10 by itself; (2) the level 1 to 10
+  spells reshaped to EQ's lines per the class tables, the 12+ spells left alone; (3) the regen
+  buffs to P99's per-tick figures and levels; (4) Haste to 30%; (5) low-level mob HP toward
+  P99's, after the pools move; (6) leave alone everything already EQ's and the user's own calls
+  (Slow and Torpor under EQ, Aria 8%, conjured food x10, the 25/50/75 res tiers, the spell
+  formula "for now"); (7) a second pass on mana costs and cast times (not in PQDI's lists) and
+  mid-level mob HP if wanted. All data edits on both sides, held by the lockstep checks; no new
+  knobs. Planner row d9.
 - [ ] **Regen model and race trade-off follow-ups** *(`regen_model.md` §Deferred + §Open tuning,
   `race_xp_regen_tradeoffs_plan.md` slices 1 and 3; audit 2026-09-29 confirmed no race XP
   multiplier exists in `progression.rs`)*. Open: the pool-size formulas (STA to max HP, the

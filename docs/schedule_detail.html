@@ -132,7 +132,7 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Oct 20<span class="stat-sub">repo 6b586b5</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Oct 20<span class="stat-sub">repo 8ef1d5a</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">29.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
 <div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">57.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
@@ -500,6 +500,16 @@
 <td class="done">Every tester told (a note here saying who).</td>
 </tr>
 <tr>
+<td class="id">d9</td>
+<td><span class="chip decide">Decide</span></td>
+<td class="what"><span class="day">by Sun Oct 25</span>The EQ parity audit&#x27;s eight recommendations (docs/design/eq_parity_audit.md, section 8): the inflation is on the player&#x27;s side at levels 1 to 10 and almost nowhere else. Worst first: EQ&#x27;s hit point and mana formula (a level 1 Warrior at 32 HP instead of 200), the level 1 to 10 spells reshaped to EQ&#x27;s lines, the regeneration buffs to P99&#x27;s figures and levels, Haste to 30%, low-level mob hit points toward P99&#x27;s, the rest left alone; whether a second pass on mana costs and cast times is wanted.<span class="blocks"><b>Blocks:</b> The data edits (a build row once decided). Not the Oct 22 bump: the audit changes numbers, not the wire, so it can ship on any later redeploy and export.</span></td>
+<td>user</td>
+<td class="needs">nothing</td>
+<td class="time">by Sun Oct 25</td>
+<td class="id"></td>
+<td class="done">Each of the eight answered on the To-Do entry (Combat / weapons, EQ parity).</td>
+</tr>
+<tr>
 <td class="id">b4</td>
 <td><span class="chip build">Build</span></td>
 <td class="what"><span class="day">Oct 19 to 20</span>Spell batch step 4: the global cooldown. After any spell, all your spells lock briefly; the server refuses a cast started inside the lockout; the hotbar greys every gem; Bard songs exempt.</td>
@@ -602,7 +612,7 @@
 <tr>
 <td class="id">b28</td>
 <td><span class="chip build">Build</span></td>
-<td class="what"><span class="day">Oct 20</span>Bard songs on the server (audit item 6): a 3 s sing, free, pulsed by the server every 6 s with a 12 s linger, one song at a time, twisting by replacement, the heal song a heal-over-time, /stopsong; every song scales with level (0.4 of its effect when learned to full at 50); Mana Weave cut to P99&#x27;s number. On feat/server-speed, so it rides Oct 22.</td>
+<td class="what"><span class="day">Oct 20</span>Bard songs on the server (audit item 6): a 3 s sing, free, pulsed by the server every 6 s with a 12 s linger, one song at a time, twisting by replacement, the heal song a heal-over-time, /stopsong; every song scales with level (0.4 of its effect when learned to full at 50; Selos&#x27; on EQ&#x27;s own curve, +20% to +65%); Mana Weave, Poet&#x27;s Mending and Wanderer&#x27;s Chord matched to P99&#x27;s numbers. On feat/server-speed, so it rides Oct 22.</td>
 <td>Claude unattended</td>
 <td class="needs">nothing</td>
 <td class="time">0.5 Claude days</td>
@@ -842,7 +852,7 @@
 <tr>
 <td class="id">v31</td>
 <td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>Bard songs: a 3 s sing costing nothing, the icon refreshing every 6 s while sung, four songs twisted and all up, a dropped one running out 12 s later, re-clicking or /stopsong ending a song at once, a nuke ending it, a sing surviving a run, a level 1 Selos&#x27; at about +14% and a level 50 at +35%, Mana Weave climbing about 6 a pulse at 50, Aria&#x27;s slow refreshed on the target.</td>
+<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>Bard songs: a 3 s sing costing nothing, the icon refreshing every 6 s while sung, four songs twisted and all up, a dropped one running out 12 s later, re-clicking or /stopsong ending a song at once, a nuke ending it, a sing surviving a run, a level 1 Selos&#x27; at about +20% and a level 50 at +65% (EQ&#x27;s own curve), Poet&#x27;s Mending a heal-over-time, Mana Weave climbing about 6 a pulse at 50, Aria&#x27;s slow refreshed on the target.</td>
 <td>user at a desk, GM account</td>
 <td class="needs"><ul><li>checklist bard_songs_checklist.md: 16 rows to run, 1 of them in a two-seat section</li><li>second seat (two-boxing works)</li><li>the Oct 22 export</li></ul></td>
 <td class="time">0.75 h</td>
@@ -1042,6 +1052,7 @@
 <div class="scroll"><table><thead><tr><th>By</th><th>Decision</th><th>Who</th><th>Blocks</th></tr></thead><tbody>
 <tr><td class="time">Sun Oct 11</td><td class="what">Fix the rehearsal date (Saturday October 31 proposed). All four friends rehearse (user, 2026-10-07): dusty_avo, nakdeyes, zanath, delta; the user tells them on October 8. Ask them to accept the Tailscale share this month so the network part is done long before the build arrives.</td><td>user and planner</td><td class="needs">Every people row.</td></tr>
 <tr><td class="time">Mon Oct 19</td><td class="what">The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client is refused at login from that evening (the host raises the minimum client version), a week ahead, and sending the new zip within the hour.</td><td>user (the phone is fine)</td><td class="needs">Nothing now; the date is set. The telling is the people half.</td></tr>
+<tr><td class="time">Sun Oct 25</td><td class="what">The EQ parity audit&#x27;s eight recommendations (docs/design/eq_parity_audit.md, section 8): the inflation is on the player&#x27;s side at levels 1 to 10 and almost nowhere else. Worst first: EQ&#x27;s hit point and mana formula (a level 1 Warrior at 32 HP instead of 200), the level 1 to 10 spells reshaped to EQ&#x27;s lines, the regeneration buffs to P99&#x27;s figures and levels, Haste to 30%, low-level mob hit points toward P99&#x27;s, the rest left alone; whether a second pass on mana costs and cast times is wanted.</td><td>user</td><td class="needs">The data edits (a build row once decided). Not the Oct 22 bump: the audit changes numbers, not the wire, so it can ship on any later redeploy and export.</td></tr>
 <tr><td class="time">Sun Nov 1</td><td class="what">Trade range: keep 10 m or tighten it. Flagged as far when decided; the first trade sitting is the evidence.</td><td>user (the phone is fine)</td><td class="needs">Nothing. A one-constant change if it moves.</td></tr>
 <tr><td class="time">Sun Nov 8</td><td class="what">Phase 5&#x27;s four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in.</td><td>user and planner</td><td class="needs">The &quot;after the door opens&quot; list below becoming a dated plan.</td></tr>
 <tr><td class="time">Sun Nov 8</td><td class="what">docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it.</td><td>user</td><td class="needs">Nothing.</td></tr>
@@ -1097,5 +1108,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-20 at repo 6b586b5</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-20 at repo 8ef1d5a</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

@@ -194,6 +194,13 @@ is decided and not designed (its own To-Do entry). Still client-only from item 6
 fall damage. A standing rule from the day: flag any number far above P99's. Next planner ids:
 `b29`, `v32`.
 
+**Progress (2026-10-20, evening):** the EQ parity audit is written
+(`docs/design/eq_parity_audit.md`; session note 2026-10-20 §5; To-Do "EQ parity: the inflation
+pass" under Combat / weapons; planner d9): research only, eight recommendations awaiting the
+user's calls, the first EQ's pool formula. Nothing built from it; the edits are data on both
+sides and need no bump. The alignment build waits on the user's three calls (scope, seeding,
+the 0.7/0.4 penalty). Next planner ids: `b29`, `v32`, `d10`.
+
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
 What is known: name labels are `Label3D` nodes named `NameLabel`.
