@@ -98,6 +98,7 @@ Parsed in `scripts/hud.gd::_handle_chat_input`. Press Enter to open chat, type t
 |---|---|
 | `/inspect` | Inspect your current player target's equipment (a right-click on the player does the same). Works within 20 m; further away you get "You are too far away to inspect X." (the server has its own 30 m backstop). |
 | `/sense`, `/sense heading` | Sense heading (direction readout, fuzzy below max skill). |
+| `/stopsong` | Stop the Bard song being sung at once (EQ's command). Online the server pulses the song, so this tells it; the lingering effects run out on their own. Re-clicking the song being sung does the same. Since 2026-10-20. |
 | `/loc` (or `/location`) | Your position as `x, y, z` to one decimal (paste-ready for `zone_camps.toml` / `npcs.toml`), coordinates only; which way you face is `/sense`. Free for everyone, works while dead. Compass: +Z is north, +X is east. |
 | `/track` | Tracking (ranger-style). |
 | `/languages` | List languages you know. |

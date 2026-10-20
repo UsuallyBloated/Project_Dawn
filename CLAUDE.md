@@ -217,8 +217,10 @@ Keep the main model for design, code, and any exploit or verification work.
   server on 10-08 — see the To-Do "Client-only spell backlog". **Check it with
   `tools/check_spell_lockstep.gd`** (see `docs/reference/commands.md`): it compares every
   field the server carries and exits 1 on drift. On 2026-10-05 the 133 shared spells showed
-  ZERO drift. One deliberate exception is built into the check: Bard songs carry 0 damage
-  and 0 heal on the server because their pulses are still client-side.
+  ZERO drift. *(The check used to excuse Bard songs' damage and heal fields because their
+  pulses were client-side; since the song rework of 2026-10-20 the server carries every song
+  field and the exception is gone. Recounted then: 158 client, 142 server, 16 client-only,
+  zero drift.)*
   `tools/export_spells.gd` (Godot editor) is the intended regen path but is stale.
 - *(Closed 2026-06-22: leveling used to be client-local and provisional. The corpse epic's
   Slice 0 moved XP + leveling server-side — `world/progression.rs::award_xp` is the single
@@ -1193,6 +1195,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   tries fresh monks until a success so the hold path is always exercised, Hide covers the
   step and the re-use refusal, and the harness heartbeats through long waits (a 10.3 s silent
   wait had read as a drop at the server's 10 s timeout).
+  **DECIDED 2026-10-20 (user): Hide ending on movement stands ("Good choice"), and a Sneak
+  skill will be built** (EQ's: the rogue moves at a walk while sneaking, unseen from behind;
+  with Hide it is the classic move-while-hidden pair). Not designed yet: its own entry below.
+- [ ] **Sneak skill (Rogue)** *(user 2026-10-20, with the Hide decision)*. The skill that lets
+  a hidden rogue move: in classic EQ, Sneak alone makes the rogue invisible to mobs facing
+  away and walks them at a reduced speed; Sneak and Hide together let them move unseen. Needs
+  a design pass on the server side (a Sneak buff that `end_on_move` spares, a speed multiplier
+  while it holds, and whether facing matters, which needs the facing model this project does
+  not have); a new entry in both skill tables and the lockstep check. Not a friends-build
+  need; sequenced after the remaining client-only systems (Bard songs, alignment).
 - [x] **Right-click is the world-interact verb** — **DONE + playtested 2026-08-24** (client
   `fa2ff04`, all 13 rows of `right_click_interact_checklist.md`). One mouse grammar everywhere:
   right-click (tap) interacts — NPC talk/vendor/bank, corpse + bag loot, veins, stations,
@@ -1999,6 +2011,48 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   so the server applies a song's effect once on cast and nothing sustains it; heal songs do a raw
   `set_hp` (HP-bar bounce, no buff-window entry). Make them server-authoritative + weaving-aware +
   buff-window-visible. A real subsystem, not a fix. Design note: `docs/design/bard_song_rework.md`.
+  **DECIDED 2026-10-20 (user) and BUILT the same day, pending the Oct 22 bump and the playtest**
+  (`feat/server-speed`, server `6afcf6a`, client `e1be328`; `bard_songs_checklist.md`, 16 rows;
+  the research in session note 2026-10-20 §2: P99's rules, a 3 s sing, a 6 s pulse, 12 to 18 s
+  of linger, one song at a time, four songs the practical twist). Classic EQ's model: **a song
+  takes 3 s to sing** (the song's `cast_time`, so the existing cast-time gate enforces it, which
+  makes twisting a skill and an instant four-song cycle a forgery), **costs nothing** (user:
+  "Please stick with this", clarified: EQ's were free, not cheap; mana stays the cost of the
+  bard's real spells), and the **server pulses the one active song every 6 s**
+  (`SONG_PULSE_SECS`), each pulse's effect **lingering 12 s** (`SONG_LINGER_SECS`, the low end
+  of EQ's range, so four songs hold and a fifth drops) as the ordinary buffs, refreshed by name:
+  the heal song is a heal-over-time of its per-pulse heal spread over the pulse (the Slice 0
+  ask, buff-window visible, no bounce), speed, haste, mana regen and accuracy/crit go through
+  the buffs the server had. A new song replaces the current one while the old one's effect
+  lingers (twisting); re-singing the active song, the new `StopSong` intent (`/stopsong`, or
+  re-clicking the song), any non-song cast and death end it; **movement never does** (the cast
+  movement gate and the client's cancel-on-move both pass songs). Aria of Dismay pulses its
+  slow on the bard's current target while it is a live mob in reach, skips a pulse out of
+  reach and stops when the target dies or goes. **Every song scales with level** (user: "a
+  level 1 character should not be as capable as a level 10 character"; EQ scaled each song by
+  level, Selo's +20% at 5 to +65% at 50): a song runs at `SONG_SCALE_AT_LEARN` (0.4) of its
+  listed effect at the level the class learns it, climbing to the full effect at
+  `SONG_FULL_AT_LEVEL` (50); the data carries the level-50 values; both knobs are mirrored in
+  `bard_songs.gd`. **Mana Weave cut to P99's mana song** (user: "adjust ours to what the P99
+  numbers are"): 6 mana per 6 s pulse (1.0 a second), down from 12 a second, twelve times
+  EQ's; EQ gave it to the group and not the bard, so when group songs come, follow that. The
+  other five checked against P99 and found at or under it (Selos' +35% ceiling vs EQ's +65%;
+  Poet's 8 vs Hymn of Restoration's 13 at 60; Aria 8% vs Largo's 15 to 35%). The client sends
+  and shows: no local pulse online, the buff bar follows the server's snapshot through
+  `BardSongs.apply_song_buffs` (scaled the same way), the spell lockstep check no longer
+  excuses songs (zero drift, 158 client, 142 server). **Not built, flagged:** instruments and
+  the singing skill; group-wide songs (ours are self-only); a PvP target under Aria (the song
+  stops on one); a singing pose for peers. Tests: unit (the scale at the learn level, 25 and
+  50; the pulse effects of Selos', Poet's and Mana Weave; every song a 3 s sing and free) and
+  four integration (a forged instant release refused, the first pulse's 12 s linger, the
+  refresh at 6 s, the stop and the effect running out 12 s after the last pulse, read off the
+  clock; two songs twisted and both up, the active song re-sung stops it, a nuke ends it; a
+  sing on the move through fifteen metres, and a level 1 bard's Selos' measured at 0.285 m a
+  tick, 1.14x, where the flat data gave 1.35x), every one failing on the previous server; the
+  GCD song test rewritten for the sing time; a headless probe for the client half.
+  **Harness lessons:** the position channel clogs through a long wait and a later speed
+  measurement reads the stale positions it kept (the heartbeating pumps drain it now), and a
+  timing assertion reads the clock, not the windows' nominal lengths.
 - [ ] **Dwarf racial ability: Stone Skin** *(user idea 2026-10-19, instead of making Dwarves
   permanently stone; "go ahead with stone skin")*. Active: the skin turns to granite, a large
   cut to physical damage taken and no knockback, paid for by being rooted in place, on a long

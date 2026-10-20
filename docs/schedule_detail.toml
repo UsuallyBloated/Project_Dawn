@@ -1227,3 +1227,28 @@ checklist = "active_skills_checklist.md"
 waits_on = ["b27", "o4"]
 todo = "Active skills partly do not work online, and three abort with silent runtime errors"
 done_when = "Every row filled."
+
+[[row]]
+id = "b28"
+week = "w3"
+lane = "build"
+day = "Oct 20"
+what = "Bard songs on the server (audit item 6): a 3 s sing, free, pulsed by the server every 6 s with a 12 s linger, one song at a time, twisting by replacement, the heal song a heal-over-time, /stopsong; every song scales with level (0.4 of its effect when learned to full at 50); Mana Weave cut to P99's number. On feat/server-speed, so it rides Oct 22."
+who = "Claude unattended"
+days = 0.5
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when bard_songs_checklist.md is filled."
+todo = "Bard song rework"
+
+[[row]]
+id = "v31"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Bard songs: a 3 s sing costing nothing, the icon refreshing every 6 s while sung, four songs twisted and all up, a dropped one running out 12 s later, re-clicking or /stopsong ending a song at once, a nuke ending it, a sing surviving a run, a level 1 Selos' at about +14% and a level 50 at +35%, Mana Weave climbing about 6 a pulse at 50, Aria's slow refreshed on the target."
+who = "user at a desk, GM account"
+hours = 0.75
+needs = ["second seat (two-boxing works)", "the Oct 22 export"]
+checklist = "bard_songs_checklist.md"
+waits_on = ["b28", "o4"]
+todo = "Bard song rework"
+done_when = "Every row filled."

@@ -187,6 +187,13 @@ part; session note section 9; planner b27 and v30; `active_skills_checklist.md`)
 fall damage. `UseSkill` joins the intent-budget note for `feat/public-hosting`. Next planner
 ids: `b28`, `v31`.
 
+**Progress (2026-10-20):** Bard songs are on the server (audit item 6's second part; session
+note 2026-10-20 §2; planner b28 and v31; `bard_songs_checklist.md`), on `feat/server-speed`,
+riding Oct 22. `StopSong` joins the intent-budget note for `feat/public-hosting`. A Sneak skill
+is decided and not designed (its own To-Do entry). Still client-only from item 6: alignment,
+fall damage. A standing rule from the day: flag any number far above P99's. Next planner ids:
+`b29`, `v32`.
+
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
 What is known: name labels are `Label3D` nodes named `NameLabel`.
