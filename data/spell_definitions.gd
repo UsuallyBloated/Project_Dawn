@@ -345,14 +345,16 @@ const ALL: Array = [
 	# ── Bard (new) ────────────────────────────────────────────────────────────────
 	# Bard songs (the rework of 2026-10-20, classic EQ's rules): a 3 s sing,
 	# free, pulsed by the server every 6 s with each effect lingering 12 s;
-	# the listed effect is the level-50 value and a song runs at 0.31 of it when
-	# first learned (BardSongs.song_scale; EQ's Selo's +20% to +65% shape, every
-	# song on it). Mana Weave is P99's mana song: 6 mana per 6 s tick (1.0 a
-	# second), down from 12 a second. Selos' is EQ's +65% at 50.
-	{"name": "Selos' Melody",    "desc": "An upbeat melody that quickens the pace of all who hear it. Song: sung for 3 seconds, then pulses every 6 seconds while sung.", "mana_cost": 0.0, "cast_time": 3.0, "cooldown": 0.5, "base_damage": 0.0, "damage_type": "ARCANE", "target_type": "SELF", "heal_amount": 0.0, "move_speed_mult": 1.65, "move_speed_duration": 12.0, "is_song": true, "classes": ["Bard"]},
+	# the listed effect is the level-50 value and a song runs at 0.4 of it when
+	# first learned (BardSongs.song_scale), except Selos', which carries EQ's
+	# Selo's own curve (+20% when learned of +65% at 50: song_scale_at_learn
+	# 0.3077). Poet's Mending and Wanderer's Chord are matched to EQ's Hymn of
+	# Restoration (about 11 a tick at 50) and Anthem de Arms (+10%); Mana Weave
+	# to P99's mana song, 6 per 6 s tick (1.0 a second), down from 12 a second.
+	{"name": "Selos' Melody",    "desc": "An upbeat melody that quickens the pace of all who hear it. Song: sung for 3 seconds, then pulses every 6 seconds while sung.", "mana_cost": 0.0, "cast_time": 3.0, "cooldown": 0.5, "base_damage": 0.0, "damage_type": "ARCANE", "target_type": "SELF", "heal_amount": 0.0, "move_speed_mult": 1.65, "move_speed_duration": 12.0, "song_scale_at_learn": 0.3077, "is_song": true, "classes": ["Bard"]},
 	{"name": "Anthem of the Hunt","desc": "A rousing hunting hymn that sharpens the eyes and steadies the hand. Song: pulses accuracy and crit chance every 6 seconds.", "mana_cost": 0.0, "cast_time": 3.0, "cooldown": 0.5, "base_damage": 0.0, "damage_type": "SPIRIT", "target_type": "SELF", "heal_amount": 0.0, "accuracy_buff": 0.12, "crit_buff": 0.08, "is_song": true, "min_level": 8, "classes": ["Bard"]},
-	{"name": "Poet's Mending",   "desc": "A gentle ballad that soothes wounds and restores vitality. Song: pulses a minor heal every 6 seconds.", "mana_cost": 0.0, "cast_time": 3.0, "cooldown": 0.5, "base_damage": 0.0, "damage_type": "SPIRIT", "target_type": "SELF", "heal_amount": 8.0, "is_song": true, "min_level": 4, "classes": ["Bard"]},
-	{"name": "Wanderer's Chord", "desc": "A traveler's tune that sharpens reflexes and lightens footfalls. Song: pulses a minor haste effect every 6 seconds.", "mana_cost": 0.0, "cast_time": 3.0, "cooldown": 0.5, "base_damage": 0.0, "damage_type": "SPIRIT", "target_type": "SELF", "heal_amount": 0.0, "haste_amount": 0.12, "is_song": true, "min_level": 6, "classes": ["Bard"]},
+	{"name": "Poet's Mending",   "desc": "A gentle ballad that soothes wounds and restores vitality. Song: pulses a minor heal every 6 seconds.", "mana_cost": 0.0, "cast_time": 3.0, "cooldown": 0.5, "base_damage": 0.0, "damage_type": "SPIRIT", "target_type": "SELF", "heal_amount": 11.0, "is_song": true, "min_level": 4, "classes": ["Bard"]},
+	{"name": "Wanderer's Chord", "desc": "A traveler's tune that sharpens reflexes and lightens footfalls. Song: pulses a minor haste effect every 6 seconds.", "mana_cost": 0.0, "cast_time": 3.0, "cooldown": 0.5, "base_damage": 0.0, "damage_type": "SPIRIT", "target_type": "SELF", "heal_amount": 0.0, "haste_amount": 0.10, "is_song": true, "min_level": 6, "classes": ["Bard"]},
 	{"name": "Mana Weave",       "desc": "A subtle harmonic that draws mana from the air itself. Song: pulses mana regeneration every 6 seconds.", "mana_cost": 0.0, "cast_time": 3.0, "cooldown": 0.5, "base_damage": 0.0, "damage_type": "ARCANE", "target_type": "SELF", "heal_amount": 0.0, "mp_regen_hps": 1.0, "is_song": true, "min_level": 10, "classes": ["Bard"]},
 	{"name": "Aria of Dismay",   "desc": "A discordant melody that saps the fighting spirit of the current target. Song: pulses an attack slow on your target every 6 seconds.", "mana_cost": 0.0, "cast_time": 3.0, "cooldown": 0.5, "base_damage": 0.0, "damage_type": "ARCANE", "target_type": "ENEMY", "heal_amount": 0.0, "attack_slow_amount": 0.08, "attack_slow_duration": 12.0, "is_song": true, "min_level": 16, "classes": ["Bard"]},
 

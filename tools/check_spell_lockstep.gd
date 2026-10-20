@@ -26,7 +26,7 @@ const EPSILON := 0.001
 # Keys either side may leave out, meaning the same default on both: compared
 # even when only one side writes them, so a range set on one side only is
 # drift and not silence.
-const DEFAULTED_KEYS: Dictionary = {"range": 0.0}
+const DEFAULTED_KEYS: Dictionary = {"range": 0.0, "song_scale_at_learn": 0.0}
 
 func _initialize() -> void:
 	var toml_path := DEFAULT_SERVER_TOML

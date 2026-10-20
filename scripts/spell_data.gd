@@ -74,6 +74,10 @@ enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, S
 @export var aoe_radius: float = 0.0
 # Song: route through BardSongs twist system instead of standard effect handling.
 @export var is_song: bool = false
+# A song's own start fraction (its share of the listed level-50 effect when
+# first learned); 0 means BardSongs.SCALE_AT_LEARN. Selos' carries EQ's
+# Selo's curve (0.3077, +20% of +65%).
+@export var song_scale_at_learn: float = 0.0
 @export var allowed_classes: Array[String] = []
 # Minimum character level required to have this spell available.
 @export var min_level: int = 1

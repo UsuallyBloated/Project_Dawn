@@ -664,6 +664,7 @@ func _load_spells() -> void:
 		s.damage_shield_amount   = d.get("damage_shield_amount", 0.0)
 		s.damage_shield_duration = d.get("damage_shield_duration", 0.0)
 		s.is_song             = d.get("is_song", false)
+		s.song_scale_at_learn = d.get("song_scale_at_learn", 0.0)
 		s.min_level           = d.get("min_level", 1)
 		s.class_min_levels    = d.get("class_min_levels", {})
 		s.summon_item         = d.get("summon_item", "")

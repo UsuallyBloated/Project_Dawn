@@ -10,16 +10,17 @@ extends Node
 #
 # A song's strength scales with the bard's level (user, 2026-10-20): a
 # fraction of the listed value when first learned, climbing to the full value
-# at FULL_AT_LEVEL. The fraction is Selo's own (EQ's Selo's Accelerando ran
-# +20% when learned and +65% at 50; 20/65). The data carries the level-50
-# values. The four constants mirror the server's world/mod.rs SONG_* knobs;
-# keep them in step by hand.
+# at FULL_AT_LEVEL. The fraction is the song's own `song_scale_at_learn` when
+# it has one (Selos' carries EQ's Selo's curve, +20% when learned of +65% at
+# 50) and SCALE_AT_LEARN otherwise. The data carries the level-50 values. The
+# four constants mirror the server's world/mod.rs SONG_* knobs; keep them in
+# step by hand.
 
 signal songs_changed
 
 const PULSE_INTERVAL := 6.0
 const LINGER := 12.0
-const SCALE_AT_LEARN := 0.31
+const SCALE_AT_LEARN := 0.4
 const FULL_AT_LEVEL := 50
 
 var _active_song: SpellData = null
@@ -30,14 +31,20 @@ func _ready() -> void:
 	ZoneLoader.zone_changed.connect(func(_z): stop_singing())
 
 # The fraction of a song's listed effect a bard of `level` gets, the song
-# first learned at `learn_level`: SCALE_AT_LEARN there, 1.0 from
-# FULL_AT_LEVEL on, linear between (the server's songs::song_scale).
-static func song_scale(level: int, learn_level: int) -> float:
+# first learned at `learn_level`: `at_learn` there, 1.0 from FULL_AT_LEVEL on,
+# linear between (the server's songs::song_scale).
+static func song_scale(level: int, learn_level: int, at_learn: float = SCALE_AT_LEARN) -> float:
 	var full: int = maxi(FULL_AT_LEVEL, learn_level + 1)
 	if level >= full:
 		return 1.0
 	var t: float = float(maxi(level - learn_level, 0)) / float(full - learn_level)
-	return SCALE_AT_LEARN + (1.0 - SCALE_AT_LEARN) * t
+	return at_learn + (1.0 - at_learn) * t
+
+# The scale for `spell` on the local player: its own start fraction when it
+# has one, the global otherwise (the server's songs::scale_at_learn).
+static func scale_for(spell: SpellData) -> float:
+	var at_learn: float = spell.song_scale_at_learn if spell.song_scale_at_learn > 0.0 else SCALE_AT_LEARN
+	return song_scale(PlayerStats.level, spell.required_level(PlayerStats.player_class), at_learn)
 
 func stop_singing() -> void:
 	if _active_song == null:
@@ -86,7 +93,7 @@ func get_active_song() -> SpellData:
 # same buckets, so the buff bar shows them either way. The heal is a
 # heal-over-time of the per-pulse heal spread over the pulse.
 func apply_song_buffs(spell: SpellData, remaining: float) -> void:
-	var s := song_scale(PlayerStats.level, spell.required_level(PlayerStats.player_class))
+	var s := scale_for(spell)
 	if spell.heal_amount > 0.0:
 		BuffManager.add_hot(spell.heal_amount * s / PULSE_INTERVAL, remaining, spell.spell_name)
 	if spell.move_speed_mult > 1.0:
@@ -102,5 +109,4 @@ func apply_song_buffs(spell: SpellData, remaining: float) -> void:
 func _pulse(spell: SpellData) -> void:
 	apply_song_buffs(spell, LINGER)
 	if spell.attack_slow_amount > 0.0 and Combat.has_valid_target():
-		var s := song_scale(PlayerStats.level, spell.required_level(PlayerStats.player_class))
-		Combat.current_target.apply_attack_slow(spell.attack_slow_amount * s, LINGER)
+		Combat.current_target.apply_attack_slow(spell.attack_slow_amount * scale_for(spell), LINGER)
