@@ -886,7 +886,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   unchanged. **Hosting-branch note:** add the four spell-bar intents to the per-connection
   intent budgets when `feat/public-hosting` merges (a refused one answers with the bar). **The
   client-authority list's fixes 1 to 5 are all built;** item 6 (active skills, Bard songs,
-  alignment, fall damage) stays as their own builds.
+  alignment, fall damage) stays as their own builds. **Item 6's active skills BUILT
+  2026-10-19** (the "Active skills partly do not work online" entry has it); Bard songs,
+  alignment and fall damage remain.
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
@@ -1139,6 +1141,40 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   client-driven second Attack inside 1.25 s is an active damage skill fired mid-cycle: this
   gap in play, not a limiter false positive. Each one cost the stamina and the cooldown the
   client had already spent. The user can confirm which skill was on the bar.
+  **SERVER-SIDE ACTIVE SKILLS BUILT 2026-10-19, pending the Oct 22 bump and the playtest**
+  (client-authority audit item 6, the first of its four; user: "GO!!!"; `feat/server-speed`
+  in both repos; `active_skills_checklist.md`, 20 rows). `UseSkill` carries the skill's name
+  under the unshipped PD_W0028 (it was a never-sent `skill_id`), and the server owns all of
+  it: `data/active_skills.toml` (every one of the client's 32 skills; `active_skills.rs`;
+  `tools/check_active_skill_lockstep.gd` exits 1 on any difference either side), the class
+  gate, a per-skill cooldown (`COOLDOWN_GRACE` 250 ms, the global cooldown's reasoning), the
+  stamina (charged and fanned at once, so a group-mate's panel moves with it), and the swing:
+  the ordinary main-hand roll times the skill's multiplier (Backstab x3 is real now), outside
+  the auto-attack limiter, so a skill fired mid-cycle is no longer dropped. Effects, all
+  server-side: **Shield Bash** stuns the mob for 3 s (a new `CcKind::Stun`, frozen like mez
+  but damage does not wake it; "Stunned" on its frame; on a player, no move, swing, cast or
+  skill); **Evade** and **Primal Instinct** deflect every melee swing for 5 s (fanned as an
+  Evade); **Holy Shield** is a 60-point absorb; **Hide** keeps idle mobs from noticing the
+  user (a mob already provoked still finds them, and the first swing, skill or hostile cast
+  ends it); **Feign Death** rolls 80% on the server, a success wipes the user from every
+  mob's hate and holds them unnoticed until they move (standing ends it, as in EQ; two
+  minutes at most); **Warder's Fury** is the hit plus `/pet attack`; **Truesight Strike**
+  never misses and ignores Evade. A refusal (unknown, not your class, stunned, on cooldown,
+  too tired, no target, too far, dead) costs nothing and answers with a private `SkillFail`
+  so the client drops the cooldown it drew. The client sends and shows: no stamina spent,
+  no local effect, the buff bar follows the server's snapshot (Evade, Hide and the shield
+  reconstructed from the skill definition, cleared when the server drops them). **Not
+  built:** the four alignment variants (Paladin_Fallen, Shadow Knight_Redeemed) are refused
+  for everyone until alignment is server-side; a stunned player's own bar shows nothing (the
+  name reaches peers' frames); Feign Death ends the user's DoTs with their hate (an
+  FD-and-DoT farm would otherwise pay from safety). Tests: unit (the table, the cooldown
+  grace, the FD roll, a hidden player unseen by the idle scan yet found by threat, a stunned
+  mob neither moving nor swinging) and seven integration tests (Backstab tripled, charged
+  and refused on cooldown, class and stamina; the stun; feign death told and held until a
+  move; hide until the first swing; evade; the shield; a guarding warder sent by the skill),
+  every one failing on the previous server, which had no `UseSkill` handler at all. A
+  headless probe covers the client half. **Hosting-branch note:** add `UseSkill` to the
+  per-connection intent budgets when `feat/public-hosting` merges.
 - [x] **Right-click is the world-interact verb** — **DONE + playtested 2026-08-24** (client
   `fa2ff04`, all 13 rows of `right_click_interact_checklist.md`). One mouse grammar everywhere:
   right-click (tap) interacts — NPC talk/vendor/bank, corpse + bag loot, veins, stations,

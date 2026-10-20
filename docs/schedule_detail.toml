@@ -1202,3 +1202,28 @@ who = "Claude unattended"
 days = 1
 done_when = "The server suite and the client probe pass and both halves are pushed. Done only when client_authority_fixes_checklist.md sections 7 and 8 are filled."
 todo = "Client-decided outcomes (audit 2026-10-19)"
+
+[[row]]
+id = "b27"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Active skills on the server (audit item 6): Backstab and the other damage skills multiply a real swing, the stamina and cooldowns are the server's, and Shield Bash, Evade, Holy Shield, Hide, Feign Death and Warder's Fury do what they say online. On feat/server-speed, so it rides Oct 22."
+who = "Claude unattended"
+days = 1
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when active_skills_checklist.md is filled."
+todo = "Active skills partly do not work online, and three abort with silent runtime errors"
+
+[[row]]
+id = "v30"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Active skills: Backstab lands about three times a swing and costs 20 stamina at once (a partner sees it); a second use is refused on cooldown; Shield Bash holds a mob for 3 s; Evade deflects every swing for 5 s; Holy Shield absorbs 60; Hide walks up to an idle mob unnoticed until the first swing; Feign Death drops the mobs until you move; Warder's Fury sends a guarding warder."
+who = "user at a desk, GM account"
+hours = 1
+needs = ["second seat (two-boxing works)", "the Oct 22 export"]
+checklist = "active_skills_checklist.md"
+waits_on = ["b27", "o4"]
+todo = "Active skills partly do not work online, and three abort with silent runtime errors"
+done_when = "Every row filled."

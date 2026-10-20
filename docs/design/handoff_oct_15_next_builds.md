@@ -181,6 +181,12 @@ built**; the decided builds are done except the no-drop / no-trade binding flag 
 (an older binary cannot boot on a migrated `world.db`). When `feat/public-hosting` merges, add
 the four spell-bar intents to its per-connection intent budgets. Next planner ids: `b27`, `v30`.
 
+**Progress (2026-10-19, later still):** active skills are on the server (audit item 6's first
+part; session note section 9; planner b27 and v30; `active_skills_checklist.md`), on
+`feat/server-speed`, riding Oct 22. Still client-only from that item: Bard songs, alignment,
+fall damage. `UseSkill` joins the intent-budget note for `feat/public-hosting`. Next planner
+ids: `b28`, `v31`.
+
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
 What is known: name labels are `Label3D` nodes named `NameLabel`.
