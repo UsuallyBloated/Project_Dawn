@@ -2030,14 +2030,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   slow on the bard's current target while it is a live mob in reach, skips a pulse out of
   reach and stops when the target dies or goes. **Every song scales with level** (user: "a
   level 1 character should not be as capable as a level 10 character"; EQ scaled each song by
-  level, Selo's +20% at 5 to +65% at 50): a song runs at `SONG_SCALE_AT_LEARN` (0.4) of its
+  level, Selo's +20% at 5 to +65% at 50): a song runs at `SONG_SCALE_AT_LEARN` of its
   listed effect at the level the class learns it, climbing to the full effect at
   `SONG_FULL_AT_LEVEL` (50); the data carries the level-50 values; both knobs are mirrored in
-  `bard_songs.gd`. **Mana Weave cut to P99's mana song** (user: "adjust ours to what the P99
+  `bard_songs.gd`. **The fraction is Selo's own, 0.31 (20/65), and Selos' Melody is EQ's +65%
+  at 50** (user, the same day: "our scaling should match Selos Melody scaling"; it was 0.4 and
+  +35% for an hour), so a level 1 bard runs +20%, faster than Spirit of Wolf only from the 30s. **Mana Weave cut to P99's mana song** (user: "adjust ours to what the P99
   numbers are"): 6 mana per 6 s pulse (1.0 a second), down from 12 a second, twelve times
   EQ's; EQ gave it to the group and not the bard, so when group songs come, follow that. The
-  other five checked against P99 and found at or under it (Selos' +35% ceiling vs EQ's +65%;
-  Poet's 8 vs Hymn of Restoration's 13 at 60; Aria 8% vs Largo's 15 to 35%). The client sends
+  other five checked against P99 and found at or under it (Selos' +35% ceiling vs EQ's +65%,
+  since raised to EQ's; Poet's 8 vs Hymn of Restoration's 13 at 60; Aria 8% vs Largo's 15 to
+  35%). The client sends
   and shows: no local pulse online, the buff bar follows the server's snapshot through
   `BardSongs.apply_song_buffs` (scaled the same way), the spell lockstep check no longer
   excuses songs (zero drift, 158 client, 142 server). **Not built, flagged:** instruments and
@@ -2047,8 +2050,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   four integration (a forged instant release refused, the first pulse's 12 s linger, the
   refresh at 6 s, the stop and the effect running out 12 s after the last pulse, read off the
   clock; two songs twisted and both up, the active song re-sung stops it, a nuke ends it; a
-  sing on the move through fifteen metres, and a level 1 bard's Selos' measured at 0.285 m a
-  tick, 1.14x, where the flat data gave 1.35x), every one failing on the previous server; the
+  sing on the move through fifteen metres, and a level 1 bard's Selos' measured at 0.300 m a
+  tick, 1.2x, where the flat data would give 1.65x), every one failing on the previous server; the
   GCD song test rewritten for the sing time; a headless probe for the client half.
   **Harness lessons:** the position channel clogs through a long wait and a later speed
   measurement reads the stale positions it kept (the heartbeating pumps drain it now), and a
