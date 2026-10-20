@@ -448,6 +448,15 @@ func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedF
 		_lich_mp_regen = 0.0
 		lich_form_changed.emit(false)
 		changed = true
+	# Skill-backed buffs (Evade, Hide, Holy Shield and their kin) are the
+	# server's online: an Evade or a Hide it no longer lists is over here too
+	# (the first swing ended the hide before the local timer did).
+	if _evade_boost_remaining > 0.0 and not _snapshot_has_skill_effect(server_remaining, SkillData.EffectType.EVADE_BOOST):
+		_evade_boost_remaining = 0.0
+		changed = true
+	if _stealth_remaining > 0.0 and not _snapshot_has_skill_effect(server_remaining, SkillData.EffectType.STEALTH):
+		break_stealth()
+		changed = true
 	# Additive reconcile: a buff in the server's snapshot that we don't
 	# track locally is one another player cast on us (ALLY buff routing).
 	# Reconstruct it from the spell definition so our PlayerStats + buff
@@ -467,14 +476,46 @@ func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedF
 				-res_sickness_cut(base["intelligence"]), -res_sickness_cut(base["wisdom"]),
 				-res_sickness_cut(base["constitution"]), 0.0, 0.0, rem_sick, RES_SICKNESS_NAME)
 			continue
+		var rem: float = durations[idx] if idx < durations.size() else 0.0
+		# A skill's buff the server put on us (Evade, Hide, Holy Shield):
+		# shown from the skill definition, timed by the server.
+		var skill: SkillData = Skills.get_skill_by_name(nm)
+		if skill != null:
+			match skill.effect_type:
+				SkillData.EffectType.EVADE_BOOST:
+					if not is_evade_boosted():
+						add_evade_boost(rem)
+						changed = true
+					else:
+						_evade_boost_remaining = rem
+				SkillData.EffectType.STEALTH:
+					if not is_stealthed():
+						add_stealth(rem, nm)
+						changed = true
+					else:
+						_stealth_remaining = rem
+				SkillData.EffectType.ABSORB_SHIELD:
+					if _absorb_hp <= 0.0:
+						add_absorb(skill.absorb_amount, nm)
+						changed = true
+				_:
+					pass
+			continue
 		var spell: SpellData = Spells.get_spell_by_name(nm)
 		if spell == null:
 			continue
-		var rem: float = durations[idx] if idx < durations.size() else 0.0
 		if _reconstruct_buff_from_spell(spell, rem):
 			changed = true
 	if changed:
 		buffs_changed.emit()
+
+# Whether any name in the server's snapshot is a skill with `effect`.
+func _snapshot_has_skill_effect(server_remaining: Dictionary, effect: SkillData.EffectType) -> bool:
+	for nm in server_remaining:
+		var skill: SkillData = Skills.get_skill_by_name(nm)
+		if skill != null and skill.effect_type == effect:
+			return true
+	return false
 
 # True if `nm` is already represented in one of our spell-backed buff
 # buckets — guards the additive reconcile against re-adding a buff we cast

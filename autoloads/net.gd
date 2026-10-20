@@ -58,6 +58,9 @@ signal world_stamina_update(id: int, stamina: float, maximum: float)
 signal world_cast_start(caster: int, spell_name: String, duration: float)
 signal world_cast_complete(caster: int, spell_name: String)
 signal world_cast_fail(caster: int, reason: String)
+# The server refused one of our active skills (client-authority audit item 6):
+# the skill's name, so Skills drops the cooldown it started, and the reason.
+signal world_skill_fail(skill_name: String, reason: String)
 # Track 4 sub-task 3 buff snapshot — names/durations are parallel arrays.
 signal world_buff_snapshot(
 	target: int,
@@ -378,6 +381,13 @@ func _ready() -> void:
 		connect("spell_gems", _on_spell_gems)
 	else:
 		DebugLog.error("Net: gdext_net.dll predates the server-held spell bar (no spell_gems "
+			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs active skills online (Skills refuses
+	# them with a line when the send is missing), not the client.
+	if has_signal("skill_fail"):
+		connect("skill_fail", _on_skill_fail)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates server-side active skills (no skill_fail "
 			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
@@ -1305,6 +1315,15 @@ func forget_spell(gem: int) -> bool:
 
 func seed_spell_gems(gems: PackedStringArray) -> bool:
 	return _state == State.CONNECTED_APP and has_method("send_seed_spell_gems") 			and bool(call("send_seed_spell_gems", gems))
+
+# An active skill, by name (see _on_skill_fail): the server owns the stamina,
+# the cooldown, the swing and the effect. `target_id` 0 for a SELF skill.
+# False when not in the world or when the DLL predates the send.
+func use_skill(skill_name: String, target_id: int) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_use_skill") 			and bool(call("send_use_skill", skill_name, target_id))
+
+func _on_skill_fail(skill_name: String, reason: String) -> void:
+	world_skill_fail.emit(skill_name, reason)
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)

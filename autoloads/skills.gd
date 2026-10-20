@@ -9,6 +9,13 @@ var _cooldowns: CooldownTracker
 var available: Array[SkillData] = []
 var no_cooldowns: bool = false
 
+# The last skill sent to the server and when: a SkillFail for it arriving
+# within REFUSAL_WINDOW_MSEC means that use never happened, so the cooldown
+# drawn for it is cleared (the spell bar's rule, spells.gd).
+const REFUSAL_WINDOW_MSEC := 1500
+var _sent_skill_name: String = ""
+var _sent_at_msec: int = 0
+
 func _ready() -> void:
 	SkillDefinitions.validate()
 	_cooldowns = CooldownTracker.new()
@@ -16,6 +23,9 @@ func _ready() -> void:
 	_load_skills()
 	PlayerStats.level_changed.connect(_on_level_changed)
 	Alignment.alignment_changed.connect(_on_alignment_changed)
+	# Deferred: Net is a later autoload than Skills, so it does not exist yet
+	# while this _ready runs.
+	(func() -> void: Net.world_skill_fail.connect(_on_server_skill_refused)).call_deferred()
 
 func _process(delta: float) -> void:
 	_cooldowns.tick(delta)
@@ -40,24 +50,6 @@ func use_skill(skill: SkillData) -> bool:
 	if Combat.is_player_seated():
 		CombatLog.add_line("You cannot use skills while sitting.", CombatLog.MsgType.INFO)
 		return false
-	# Effects the server cannot honor yet refuse honestly ONLINE, before any
-	# stamina or cooldown is paid. Found by the 2026-08-24 dead-intents audit:
-	# STUN and FEIGN_DEATH called methods that exist only on the local Enemy
-	# (which launcher mode never spawns), aborting with a silent runtime error
-	# AFTER the cost was spent; EVADE/ABSORB/STEALTH "worked" but were pure
-	# decoration, consumed only by receive_player_damage, which server-dealt
-	# damage never calls. An honest refusal beats a placebo — the tradeskill
-	# rule. Pure damage skills (Backstab etc.) stay usable: they land as normal
-	# server swings (the discarded multiplier is server work, tracked).
-	if Net.is_launcher_mode():
-		match skill.effect_type:
-			SkillData.EffectType.STUN, SkillData.EffectType.FEIGN_DEATH, 			SkillData.EffectType.EVADE_BOOST, SkillData.EffectType.ABSORB_SHIELD, 			SkillData.EffectType.STEALTH:
-				CombatLog.add_line(
-					"%s isn't available online yet." % skill.skill_name,
-					CombatLog.MsgType.INFO)
-				return false
-			_:
-				pass
 	if _cooldowns.is_active(skill.skill_name) and not no_cooldowns:
 		return false
 	if PlayerStats.stamina < skill.stamina_cost:
@@ -65,6 +57,12 @@ func use_skill(skill: SkillData) -> bool:
 	if skill.target_type == SkillData.TargetType.ENEMY:
 		if not Combat.has_valid_target():
 			return false
+	# Online the server owns the skill (client-authority audit item 6): the
+	# stamina, the cooldown, the swing times the multiplier, and the effect.
+	# The checks above are an honest pre-flight; the cooldown below is drawn
+	# optimistically and handed back on a SkillFail (the server stamped none).
+	if Net.is_launcher_mode():
+		return _use_skill_online(skill)
 
 	PlayerStats.set_stamina(PlayerStats.stamina - skill.stamina_cost)
 	_cooldowns.start(skill.skill_name, skill.cooldown)
@@ -94,6 +92,42 @@ func use_skill(skill: SkillData) -> bool:
 
 	skill_used.emit(skill)
 	return true
+
+# The online path: send the skill by name and let the server answer. The
+# server's Hit / Miss / StaminaUpdate / BuffSnapshot show the outcome; a
+# SkillFail inside REFUSAL_WINDOW_MSEC hands the cooldown back.
+func _use_skill_online(skill: SkillData) -> bool:
+	var target_id := 0
+	if skill.target_type == SkillData.TargetType.ENEMY:
+		var t: Node = Combat.current_target
+		if t is RemoteEnemy:
+			target_id = (t as RemoteEnemy).enemy_id
+		elif t is RemotePlayer:
+			target_id = (t as RemotePlayer).char_id
+		elif t is RemotePet:
+			target_id = (t as RemotePet).pet_id
+		if target_id == 0:
+			return false
+	if not Net.use_skill(skill.skill_name, target_id):
+		CombatLog.add_line("%s isn't available online yet." % skill.skill_name, CombatLog.MsgType.INFO)
+		return false
+	_cooldowns.start(skill.skill_name, skill.cooldown)
+	_sent_skill_name = skill.skill_name
+	_sent_at_msec = Time.get_ticks_msec()
+	if skill.target_type == SkillData.TargetType.ENEMY:
+		BuffManager.break_stealth()
+	skill_used.emit(skill)
+	return true
+
+func _on_server_skill_refused(skill_name: String, reason: String) -> void:
+	if reason != "":
+		CombatLog.add_line(reason, CombatLog.MsgType.INFO)
+	if skill_name == _sent_skill_name and Time.get_ticks_msec() - _sent_at_msec <= REFUSAL_WINDOW_MSEC:
+		_cooldowns.clear(skill_name)
+	_sent_skill_name = ""
+
+func get_skill_by_name(skill_name: String) -> SkillData:
+	return _all_skills.get(skill_name)
 
 func _do_feign_death() -> void:
 	var success_chance := 0.80
