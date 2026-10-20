@@ -8,7 +8,8 @@ docs/design/meshy_asset_pipeline.md.
 
 Safety built in, on top of the hook:
   * paid calls check the live balance and the price tripwire first, and never retry;
-  * uploads only from the concept art folder, downloads only into one folder;
+  * uploads only from the concept art folder (and, as 2D references only, the ref_art
+    folder of model sheets), downloads only into one folder;
   * the key (read by meshy_key.py) is sent only to Meshy's API, never to a download
     host, and never appears in anything this server returns.
 """
@@ -38,12 +39,27 @@ REPO_ROOT = os.path.dirname(os.path.dirname(HOOK_DIR))
 SOURCE_ROOT = os.path.join(os.path.dirname(REPO_ROOT), "Project_Dawn_Source")
 UPLOAD_ROOT = os.path.join(SOURCE_ROOT, "concept_art")
 DOWNLOAD_ROOT = os.path.join(SOURCE_ROOT, "meshy_downloads")
+# The model sheets the bodies are built from (F:\Projects\ref_art). 2D reference images may be
+# uploaded from here as well as from concept_art; 3D inputs still come from concept_art only.
+REF_ART_ROOT = os.path.join(os.path.dirname(REPO_ROOT), "ref_art")
+REFERENCE_ROOTS = (UPLOAD_ROOT, REF_ART_ROOT)
 
 TASK_LEDGER = os.path.join(HOOK_DIR, "meshy_task_ledger.json")
 TRIPWIRE = os.path.join(HOOK_DIR, "meshy_tripwire.json")
 STATUS_CACHE = os.path.join(HOOK_DIR, "meshy_status.json")
 
-TASK_TYPES = ("multi-image-to-3d", "remesh", "rigging")
+IMAGE_TASK_TYPES = ("text-to-image", "image-to-image")
+TASK_TYPES = ("multi-image-to-3d", "remesh", "rigging") + IMAGE_TASK_TYPES
+
+# 2D generation (user, 2026-10-20). Pinned by name like AI_MODEL: nano-banana is the model the
+# May model sheets came from. Prices per image from docs.meshy.ai text-to-image and
+# image-to-image, read 2026-10-20; nano-banana-pro needs a Pro plan. The GPT image models are
+# deliberately not offered.
+IMAGE_MODEL_PRICES = {"nano-banana": 3, "nano-banana-pro": 9}
+IMAGE_MODEL_DEFAULT = "nano-banana"
+ASPECT_RATIOS = ("16:9", "1:1", "9:16", "4:3", "3:4")
+MAX_REFERENCE_IMAGES = 5
+MAX_PROMPT_CHARS = 4000  # our own sanity cap, not a documented Meshy limit
 IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
 MAX_IMAGE_BYTES = 20 * 1024 * 1024
 MAX_DOWNLOAD_BYTES = 500 * 1024 * 1024
@@ -74,6 +90,8 @@ def expected_cost(tool: str, args: dict) -> int:
         return cost
     if tool in ("meshy_remesh", "meshy_rig"):
         return 5
+    if tool in ("meshy_text_to_image", "meshy_image_to_image"):
+        return IMAGE_MODEL_PRICES[image_model(args)]
     raise MeshyError(f"no price on file for {tool}")
 
 
@@ -200,7 +218,10 @@ def subject_of(image_path: str) -> str | None:
     return rel if re.match(r"^[a-z0-9][a-z0-9_]*(?:/[a-z0-9_]+)*$", rel) else None
 
 
-def create_task(tool: str, task_type: str, args: dict, body: dict, subject: str | None = None) -> str:
+def create_task(tool: str, task_type: str, args: dict, body: dict, subject: str | None = None,
+                record: dict | None = None) -> str:
+    """record: what to keep in the ledger beside the cost, so the Art Board can show how a
+    result was made (an image task's prompt, model and reference file names). No secrets."""
     cost = guard_paid_call(tool, args)
     unsure = (f" It may or may not have created a charged task. Run meshy_list_tasks for "
               f"{task_type} before trying again; do not resend blindly.")
@@ -220,6 +241,8 @@ def create_task(tool: str, task_type: str, args: dict, body: dict, subject: str 
     ledger[task_id] = {"type": task_type, "expected": cost, "created": time.strftime("%Y-%m-%d %H:%M:%S")}
     if subject:
         ledger[task_id]["subject"] = subject
+    if record:
+        ledger[task_id].update(record)
     save_ledger(ledger)
     return f"Task created: {task_id} ({task_type}), expected cost {cost} credits." + refresh_status()
 
@@ -240,15 +263,18 @@ def need_task_id(args: dict, key: str = "task_id") -> str:
     return t
 
 
-def image_data_uri(path: str) -> str:
-    real = os.path.realpath(path)
-    root = os.path.realpath(UPLOAD_ROOT)
+def _inside(real: str, root: str) -> bool:
+    root = os.path.realpath(root)
     try:
-        inside = os.path.commonpath([real, root]) == root
+        return os.path.commonpath([real, root]) == root
     except ValueError:  # a different drive
-        inside = False
-    if not inside:
-        raise MeshyError(f"images may only be uploaded from {UPLOAD_ROOT}")
+        return False
+
+
+def image_data_uri(path: str, roots: tuple = (UPLOAD_ROOT,)) -> str:
+    real = os.path.realpath(path)
+    if not any(_inside(real, root) for root in roots):
+        raise MeshyError("images may only be uploaded from " + " or ".join(roots))
     ext = os.path.splitext(real)[1].lower()
     if ext not in IMAGE_TYPES:
         raise MeshyError(f"{os.path.basename(real)}: only PNG, JPG and WebP images are accepted")
@@ -266,6 +292,27 @@ def pick(args: dict, key: str, allowed: tuple, default):
     if value not in allowed:
         raise MeshyError(f"{key} must be one of {', '.join(map(str, allowed))}")
     return value
+
+
+def image_model(args: dict) -> str:
+    return pick(args, "ai_model", tuple(IMAGE_MODEL_PRICES), IMAGE_MODEL_DEFAULT)
+
+
+def need_prompt(args: dict) -> str:
+    prompt = args.get("prompt", "")
+    if not isinstance(prompt, str) or not prompt.strip():
+        raise MeshyError("prompt must be a non-empty string")
+    if len(prompt) > MAX_PROMPT_CHARS:
+        raise MeshyError(f"prompt is over our {MAX_PROMPT_CHARS}-character cap")
+    return prompt.strip()
+
+
+def need_subject(args: dict) -> str:
+    """What the image is of, for the ledger and the download folder, e.g. half_ogre."""
+    subject = str(args.get("subject", ""))
+    if not FOLDER_RE.match(subject):
+        raise MeshyError("subject must be lower case letters, digits, _ or -, e.g. half_ogre or blacksmithing")
+    return subject
 
 
 # Low-poly budget (user, 2026-10-15): a character's bare body is 2,000 triangles as the game
@@ -309,6 +356,8 @@ def summarize(task_id: str, task: dict) -> dict:
         out["model_formats"] = sorted(k for k, v in task["model_urls"].items() if v)
     if isinstance(task.get("result"), dict):
         out["rig_outputs"] = sorted(k for k, v in task["result"].items() if v)
+    if isinstance(task.get("image_urls"), list):
+        out["images"] = sum(1 for u in task["image_urls"] if u)
     out["has_thumbnails"] = bool(task.get("thumbnail_url") or task.get("thumbnail_urls"))
     return out
 
@@ -349,7 +398,11 @@ def t_download_model(args: dict) -> str:
     dest_dir = os.path.join(DOWNLOAD_ROOT, folder, task_id)
     os.makedirs(dest_dir, exist_ok=True)
     urls = {}
-    if task_type == "rigging":
+    if task_type in IMAGE_TASK_TYPES:
+        for i, url in enumerate(task.get("image_urls") or [], start=1):
+            if url:
+                urls[f"image_{i}.png"] = url
+    elif task_type == "rigging":
         res = task.get("result") or {}
         for fmt in wanted:
             if res.get(f"rigged_character_{fmt}_url"):
@@ -358,7 +411,7 @@ def t_download_model(args: dict) -> str:
         for fmt in wanted:
             if (task.get("model_urls") or {}).get(fmt):
                 urls[f"model.{fmt}"] = task["model_urls"][fmt]
-    if args.get("include_thumbnails", True):
+    if args.get("include_thumbnails", True) and task_type not in IMAGE_TASK_TYPES:
         if task.get("thumbnail_url"):
             urls["thumb_front.png"] = task["thumbnail_url"]
         views = task.get("thumbnail_urls")
@@ -421,6 +474,59 @@ def parent_subject(task_id: str) -> str | None:
     return load_ledger().get(task_id, {}).get("subject")
 
 
+def t_text_to_image(args: dict) -> str:
+    body = {
+        "ai_model": image_model(args),
+        "prompt": need_prompt(args),
+        "aspect_ratio": pick(args, "aspect_ratio", ASPECT_RATIOS, "16:9"),
+    }
+    return create_task("meshy_text_to_image", "text-to-image", args, body, need_subject(args),
+                       image_record(body))
+
+
+def image_record(body: dict, references: list | None = None, parent: str | None = None) -> dict:
+    """The ledger's note of how an image was made: never the uploaded image data itself."""
+    rec = {"prompt": body["prompt"], "ai_model": body["ai_model"], "aspect_ratio": body["aspect_ratio"]}
+    if references:
+        rec["references"] = [os.path.basename(p) for p in references]
+    if parent:
+        rec["input_task_id"] = parent
+    return rec
+
+
+def t_image_to_image(args: dict) -> str:
+    """An image steered by 1 to 5 reference images (an approved model sheet, for the style), or by
+    every output of one of our own earlier image tasks."""
+    body = {
+        "ai_model": image_model(args),
+        "prompt": need_prompt(args),
+        "aspect_ratio": pick(args, "aspect_ratio", ASPECT_RATIOS, "16:9"),
+    }
+    parent, paths = args.get("input_task_id"), args.get("reference_image_paths")
+    if parent and paths:
+        raise MeshyError("give reference_image_paths or input_task_id, not both")
+    if parent:
+        parent = need_task_id(args, "input_task_id")
+        if load_ledger().get(parent, {}).get("type") not in IMAGE_TASK_TYPES:
+            raise MeshyError("input_task_id must be one of our own text-to-image or image-to-image tasks")
+        body["input_task_id"] = parent
+    else:
+        if not isinstance(paths, list) or not 1 <= len(paths) <= MAX_REFERENCE_IMAGES:
+            raise MeshyError(f"reference_image_paths must list 1 to {MAX_REFERENCE_IMAGES} images "
+                             "from ref_art or concept_art")
+        body["reference_image_urls"] = [image_data_uri(p, REFERENCE_ROOTS) for p in paths]
+    return create_task("meshy_image_to_image", "image-to-image", args, body, need_subject(args),
+                       image_record(body, None if parent else paths, parent))
+
+
+_IMAGE_COMMON = {
+    "subject": {"type": "string", "description": "lower case, e.g. half_ogre or blacksmithing"},
+    "prompt": {"type": "string"},
+    "ai_model": {"type": "string", "enum": list(IMAGE_MODEL_PRICES)},
+    "aspect_ratio": {"type": "string", "enum": list(ASPECT_RATIOS)},
+}
+
+
 def _task_args(extra: dict | None = None) -> dict:
     props = {"task_type": {"type": "string", "enum": list(TASK_TYPES)},
              "task_id": {"type": "string"}}
@@ -440,7 +546,8 @@ TOOLS = {
                              "page_size": {"type": "integer", "minimum": 1, "maximum": 50}},
                           "required": ["task_type"]}),
     "meshy_download_model": (t_download_model, "Free. Saves a finished task's files and preview images "
-                             "into Project_Dawn_Source/meshy_downloads/<folder>/<task_id>/.",
+                             "(or, for an image task, its images as image_N.png) into "
+                             "Project_Dawn_Source/meshy_downloads/<folder>/<task_id>/.",
                              _task_args({"folder": {"type": "string"},
                                          "formats": {"type": "array", "items": {"type": "string",
                                                      "enum": ["glb", "fbx", "obj"]}},
@@ -470,6 +577,18 @@ TOOLS = {
                       "input_task_id": {"type": "string"},
                       "height_meters": {"type": "number"}},
                    "required": ["input_task_id"]}),
+    "meshy_text_to_image": (t_text_to_image, "PAID: 3 credits on nano-banana (9 on nano-banana-pro). "
+                            "One 2D image from a prompt, 16:9 by default.",
+                            {"type": "object", "properties": dict(_IMAGE_COMMON),
+                             "required": ["subject", "prompt"]}),
+    "meshy_image_to_image": (t_image_to_image, "PAID: 3 credits on nano-banana (9 on nano-banana-pro). "
+                             "One 2D image steered by 1 to 5 reference images from ref_art or concept_art "
+                             "(e.g. an approved model sheet for the style), or by an earlier image task.",
+                             {"type": "object", "properties": dict(_IMAGE_COMMON, **{
+                                 "reference_image_paths": {"type": "array", "items": {"type": "string"},
+                                                           "minItems": 1, "maxItems": MAX_REFERENCE_IMAGES},
+                                 "input_task_id": {"type": "string"}}),
+                              "required": ["subject", "prompt"]}),
 }
 
 

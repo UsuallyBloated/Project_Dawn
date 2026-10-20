@@ -11,13 +11,16 @@ approvals and the checklist (the model files are only read). It shows:
     never keeps a second copy),
   * a lineup of the exported models rendered and drawn at their measured heights,
   * progress for every section of the art checklist,
+  * model sheets made with Meshy's 2D tools (sheets.py): each candidate on its race's card,
+    or under "Other sheets" for anything that is not a race, with the prompt, model and
+    reference images that made it; "Use this" puts it in ref_art as the ModelPack sheet,
   * the shelved Meshy loop, kept whole: credits as last seen by the Meshy client, credits
     spent, the price tripwire, the style bible and the concept-art cards (pack images,
     prompts, Claude's review, Meshy's previews, Approve / Re-roll / Sign off).
 
 It never calls Meshy and never touches the API key: a button only records your decision
-(progress.json for the races, review.json for the concept-art cards) and ticks checklist
-rows. Standard library only; listens on 127.0.0.1 alone, and every change needs the page's
+(progress.json for the races, review.json for the concept-art cards, sheets.json for the
+generated sheets), ticks checklist rows, and copies a sheet you chose into ref_art. Standard library only; listens on 127.0.0.1 alone, and every change needs the page's
 own random token, so no other website can click the buttons for you.
 """
 
@@ -39,6 +42,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 import race_progress
+import sheets
 
 BOARD_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(BOARD_DIR))
@@ -241,7 +245,7 @@ def subject_state(sid: str, title: str, ticked: bool, heights: dict | None = Non
     if ticked or review.get("signed_off_at"):
         state.update(step=7, status="Done and in the game.", who="")
     elif not images:
-        state.update(step=2, status="Waiting for the pack: make it in Grok or Gemini and save it here.",
+        state.update(step=2, status="Waiting for the pack: generate it with Meshy (ask Claude) or save one here.",
                      who="you")
     elif not fresh:
         state.update(step=3, status="Pack is in. Waiting for Claude's review (ask Claude).", who="claude")
@@ -379,10 +383,20 @@ def board_state() -> dict:
              if st["images"]]
     out_credits = credits()
     out_credits["spent"] = spend_total
+    sheets.DOWNLOAD_ROOT, sheets.TASK_LEDGER = DOWNLOAD_ROOT, TASK_LEDGER
+    cands = sheets.candidates()
+    races = race_progress.race_states()
+    for c in races:
+        c["candidates"] = cands.get(c["id"], [])
+        c["spend"] = spend.get(c["id"])
+    others = sheets.other_sheets({c["id"] for c in races}, cands)
+    for o in others:
+        o["spend"] = spend.get(o["id"])
     return {
         "demo": DEMO,
         "sections": [{k: s[k] for k in ("num", "title", "done", "total", "items")} for s in checklist],
-        "races": race_progress.race_states(),
+        "races": races,
+        "others": others,
         "worker": race_progress.worker_status(),
         "race_steps": [label for _key, label in race_progress.STEPS],
         "subjects": meshy,
@@ -459,6 +473,14 @@ class Handler(BaseHTTPRequestHandler):
             action = str(body.get("action", ""))
             if action == "approve_bible":
                 message = approve_bible()
+            elif action in ("use_sheet", "discard_sheet", "restore_sheet"):
+                sheets.DOWNLOAD_ROOT, sheets.TASK_LEDGER = DOWNLOAD_ROOT, TASK_LEDGER
+                rel = str(body.get("path", ""))
+                if action == "use_sheet":
+                    names = {rid: name for rid, name, _lo, _hi in race_progress.read_races()}
+                    message = sheets.use(rel, names)
+                else:
+                    message = sheets.set_state(rel, "discarded" if action == "discard_sheet" else "new")
             elif action in ("approve_step", "undo_step"):
                 rid = str(body.get("race", ""))
                 if not SUBJECT_RE.match(rid) or "/" in rid:
@@ -642,6 +664,38 @@ def build_demo() -> str:
             review["history"].append({"at": now - day / 4, "event": "Signed off", "note": ""})
             tick_checklist(sid)
         save_review(sid, review)
+
+    # generated model sheets: a copy of the real ref_art sheets to replace, two Half-Ogre
+    # candidates (one already in use) and an "Other sheets" subject with a fresh candidate
+    sandbox_ref = os.path.join(sandbox, "ref_art")
+    os.makedirs(sandbox_ref, exist_ok=True)
+    if os.path.isdir(race_progress.REF_ART):
+        for n in os.listdir(race_progress.REF_ART):
+            if race_progress.PACK_RE.match(n) and os.path.isfile(os.path.join(race_progress.REF_ART, n)):
+                shutil.copy2(os.path.join(race_progress.REF_ART, n), os.path.join(sandbox_ref, n))
+    race_progress.REF_ART = sandbox_ref
+    sheets.DECISIONS = os.path.join(sandbox, "sheets.json")
+    sheet_prompt = ("Fantasy character model sheet, 16:9, titled \"{t} Male & Female 2D Model Pack\", "
+                    "matching the attached sheet's layout and rendering exactly...")
+    image_tasks = [
+        ("demo-img-halfogre-01", "half_ogre", "image-to-image", ["ModelPack_Ogre.png"], 2 * day,
+         lambda: figure_png("ogre", "front", w=300, h=170)),
+        ("demo-img-halfogre-02", "half_ogre", "image-to-image", ["ModelPack_Ogre.png"], day,
+         lambda: figure_png("ogre", "three_quarter", w=300, h=170)),
+        ("demo-img-blacksmithing-01", "blacksmithing", "text-to-image", [], day / 3,
+         lambda: palette_png(300, 170)),
+    ]
+    for task, subject, kind, refs, age, make in image_tasks:
+        d = os.path.join(DOWNLOAD_ROOT, subject, task)
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, "image_1.png"), "wb") as f:
+            f.write(make())
+        ledger[task] = {"type": kind, "expected": 3, "consumed": 3, "subject": subject,
+                        "created": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now - age)),
+                        "prompt": sheet_prompt.format(t=subject.replace("_", "-").title()),
+                        "ai_model": "nano-banana", "aspect_ratio": "16:9", "references": refs}
+    save_json(sheets.DECISIONS, {f"meshy_downloads/half_ogre/demo-img-halfogre-01/image_1.png":
+                                 {"state": "discarded", "subject": "half_ogre", "at": now - day}})
     save_json(TASK_LEDGER, ledger)
     save_json(STATUS_CACHE, {"balance": 3513 - sum(e["consumed"] for e in ledger.values()), "checked_at": now - 600})
 
@@ -837,6 +891,17 @@ padding:10px 18px;border-radius:8px;font:14px var(--sans);display:none;box-shado
 .slabel{color:var(--dim);font-size:11px;min-width:62px}
 .render{height:130px;align-self:flex-end;cursor:zoom-in;filter:drop-shadow(0 0 10px rgba(0,0,0,.6))}
 .later{display:flex;flex-wrap:wrap;gap:8px}
+.cands{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.cand{display:flex;gap:12px;padding:10px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.025)}
+.cand.used{border-color:rgba(111,194,138,.6);background:rgba(111,194,138,.07)}
+.cand.discarded{opacity:.45}
+.cand img{height:110px;border-radius:4px;border:1px solid var(--line2);background:#000;cursor:zoom-in;flex:none}
+.cand .cmeta{flex:1;min-width:0;font:12.5px var(--sans);color:var(--dim)}
+.cand .cmeta b{color:var(--text);font-weight:600}
+.cand .btns{margin-top:8px}
+.cand details summary{cursor:pointer;margin-top:6px}
+.badge{display:inline-block;padding:1px 8px;border-radius:10px;font:600 11px var(--sans);margin-right:6px;
+border:1px solid var(--line2);color:var(--gold2)}.badge.used{border-color:rgba(111,194,138,.6);color:#a8e6bd}
 .later .chip{cursor:default}
 .figs img{box-shadow:none;filter:drop-shadow(0 0 12px rgba(0,0,0,.7))}
 @media (max-width:640px){header,main{padding-left:16px;padding-right:16px}.sec .name{flex-basis:140px}
@@ -854,6 +919,7 @@ padding:10px 18px;border-radius:8px;font:14px var(--sans);display:none;box-shado
 <h2>Lineup</h2><div id="lineup"></div>
 <div id="donewrap"></div>
 <h2>Not started</h2><div id="notstarted"></div>
+<h2>Other sheets</h2><div id="others" class="cards"></div>
 <h2>Checklist</h2><div id="sections"></div>
 <h2>Meshy and concept art</h2>
 <details class="sec" id="meshysec"><summary><span class="name">Shelved: the style bible and the Meshy cards</span>
@@ -943,12 +1009,41 @@ function sexLine(c,s){
  return `<div class="sexline"><div class="sexmain"><div class="sexname">${s.sex==="male"?"Male":"Female"}</div>
   <div class="track">${track}</div><div class="status ${s.who}">${esc(s.status)}</div>${rows}
   ${btns.length?`<div class="btns">${btns.join("")}</div>`:""}</div>${render}</div>`}
+let showDiscarded=new Set();
+function sheetAct(path,action,name){
+ if(action==="use_sheet"&&!confirm(`Make this the ${name} sheet in ref_art? A sheet already there moves to ref_art/_replaced.`))return;
+ post({action,path})}
+function sheetCands(owner,name,tasks){
+ const all=tasks.flatMap(t=>t.images.length?t.images.map(i=>({t,i})):[{t,i:null}]);
+ if(!all.length)return "";
+ const hidden=all.filter(x=>x.i&&x.i.state==="discarded").length,show=showDiscarded.has(owner);
+ const rows=all.filter(x=>show||!x.i||x.i.state!=="discarded").map(({t,i})=>{
+  const key="s:"+t.task;TEXTS[key]=t.prompt||"";
+  const meta=`<div><b>${esc(t.created)}</b> &middot; ${esc(t.ai_model||"?")} &middot; ${t.credits??"?"} credits${t.estimated?" (estimate)":""}
+   &middot; ${t.type==="image-to-image"?(t.references.length?"from "+esc(t.references.join(", ")):"from task "+esc(t.input_task_id)):"from text"}</div>
+   ${t.prompt?`<details><summary>Prompt</summary><pre>${esc(t.prompt)}</pre><button class="mini" onclick="copy('${key}')">Copy prompt</button></details>`:""}`;
+  if(!i)return `<div class="cand"><div class="cmeta"><span class="badge">Not downloaded</span>Made, not saved yet: ask Claude to download task ${esc(t.task)}.${meta}</div></div>`;
+  const p=esc(i.path),badge=i.state==="used"?`<span class="badge used">In use</span>`:i.state==="new"?`<span class="badge">New</span>`:`<span class="badge">Discarded</span>`;
+  const btns=i.state==="discarded"?`<button class="mini" onclick="sheetAct('${p}','restore_sheet')">Restore</button>`:
+   `${i.state!=="used"?`<button class="mini go" onclick="sheetAct('${p}','use_sheet','${esc(name)}')">Use this</button>`:""}
+    ${i.state!=="used"?`<button class="mini back" onclick="sheetAct('${p}','discard_sheet')">Discard</button>`:""}`;
+  return `<div class="cand ${i.state}"><img src="${url(i.path)}" loading="lazy" onclick="zoom('${url(i.path)}')" title="${p}">
+   <div class="cmeta">${badge}${meta}<div class="btns">${btns}</div></div></div>`}).join("");
+ const tog=hidden?`<button class="mini" onclick="showDiscarded.${show?"delete":"add"}('${esc(owner)}');load(true)">${show?"Hide":"Show"} ${hidden} discarded</button>`:"";
+ return `<div class="label">Generated sheets</div><div class="cands">${rows}</div>${tog}`}
+function spendFact(x){return x.spend?`<div class="facts"><span class="fact">Credits used: ${x.spend.credits}${x.spend.estimated?" (estimate)":""}</span></div>`:""}
+function otherCard(o){
+ const pack=o.pack?`<img class="packthumb" src="${url("ref_art/"+o.pack)}" onclick="zoom('${url("ref_art/"+o.pack)}')" title="${esc(o.pack)}">`:"";
+ const fresh=o.candidates.some(t=>t.images.some(i=>i.state==="new"));
+ return `<div class="card race ${fresh?"you":""}"><div class="who">${fresh?"Your turn":""}</div>
+  <div class="rhead"><div><h3>${esc(o.name)}</h3><div class="sid">${o.pack?esc(o.pack):"no sheet in ref_art yet"}</div></div>${pack}</div>
+  ${spendFact(o)}${sheetCands(o.id,o.name,o.candidates)}</div>`}
 function raceCard(c){
  const you=c.sexes.some(s=>s.who==="you");
  const pack=c.pack?`<img class="packthumb" src="${url("ref_art/"+c.pack)}" onclick="zoom('${url("ref_art/"+c.pack)}')" title="${esc(c.pack)}">`:"";
  return `<div class="card race ${you?"you":""}"><div class="who">${you?"Your turn":""}</div>
   <div class="rhead"><div><h3>${esc(c.name)}</h3><div class="sid">${c.lo.toFixed(2)} to ${c.hi.toFixed(2)} m${c.checking?" &middot; reading the .blend...":""}</div></div>${pack}</div>
-  ${c.sexes.map(s=>sexLine(c,s)).join("")}
+  ${spendFact(c)}${c.sexes.map(s=>sexLine(c,s)).join("")}${sheetCands(c.id,c.name.replace(/[^A-Za-z0-9]/g,""),c.candidates)}
   <input class="note" id="note-${c.id}" placeholder="Optional note to keep with an approval">${history(c)}</div>`}
 function lineup(races){
  const list=[];races.forEach(c=>c.sexes.forEach(s=>{if(s.render&&s.height)list.push({name:c.name,sex:s.sex,img:"board_cache/"+s.render,h:s.height,lo:c.lo,hi:c.hi,done:s.done})}));
@@ -993,16 +1088,19 @@ async function load(force){
  else{wc.className="chip ok";wc.textContent="Blender: idle"}
  document.getElementById("demochip").outerHTML=d.demo?`<span id="demochip" class="chip demochip">DEMO</span>`:`<span id="demochip"></span>`;
  document.getElementById("demo").innerHTML=d.demo?`<div class="demo">Demo: the race cards read your real model files, but approvals, checklist ticks and renders go to a throwaway folder, and the Meshy cards are samples. Every button works here and changes nothing real.</div>`:"";
- const st=c=>c.sexes.every(s=>s.done)?"done":c.sexes.some(s=>s.who==="you")?"you":
-  c.sexes.some(s=>s.steps.some(r=>r.state!=="missing"))?"progress":"later";
+ const fresh=c=>(c.candidates||[]).some(t=>t.images.some(i=>i.state==="new"));
+ const st=c=>c.sexes.every(s=>s.done)?"done":(c.sexes.some(s=>s.who==="you")||fresh(c))?"you":
+  (c.sexes.some(s=>s.steps.some(r=>r.state!=="missing"))||(c.candidates||[]).length)?"progress":"later";
  const group=k=>d.races.filter(c=>st(c)===k);
  const yours=group("you"),prog=group("progress"),fin=group("done"),later=group("later");
  document.getElementById("yours").innerHTML=yours.length?yours.map(raceCard).join(""):`<div class="empty">Nothing waiting on you.</div>`;
  document.getElementById("progress").innerHTML=prog.length?prog.map(raceCard).join(""):`<div class="empty">Nothing else in progress.</div>`;
  document.getElementById("donewrap").innerHTML=fin.length?`<h2>Done</h2><div class="cards">${fin.map(raceCard).join("")}</div>`:"";
  document.getElementById("notstarted").innerHTML=later.length?`<div class="later">${later.map(c=>`<span class="chip" title="${esc(c.sexes[0].status)}">${esc(c.name)}</span>`).join("")}</div>
-  <div class="hint">Nothing found for these yet. A race moves up once its ModelPack sheet is in F:/Projects/ref_art.</div>`:`<div class="empty">Every race has started.</div>`;
+  <div class="hint">Nothing found for these yet. A race moves up once its ModelPack sheet is in F:/Projects/ref_art, or Meshy has made a candidate sheet for it.</div>`:`<div class="empty">Every race has started.</div>`;
  document.getElementById("lineup").innerHTML=lineup(d.races);
+ document.getElementById("others").innerHTML=d.others.length?d.others.map(otherCard).join(""):
+  `<div class="empty">No other sheets. Props, stations and mobs appear here once a ModelPack sheet or a Meshy candidate exists for them.</div>`;
  // checklist pills: where each race/sex row stands (the race workflow wins over an old Meshy card)
  const by={};d.subjects.forEach(s=>{if(s.step>2)by[s.id]={pill:"Meshy step "+s.step}});
  d.races.forEach(c=>c.sexes.forEach(s=>{const cur=s.steps.find(r=>r.key===s.current);

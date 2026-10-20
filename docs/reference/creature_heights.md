@@ -1,6 +1,6 @@
 # Creature Heights & Model Reference
 
-**Last Updated:** 2026-05-05  
+**Last Updated:** 2026-10-20  
 **Purpose:** Canonical height reference for building character models, scaling proportions, and NPC/mob dimensions.
 
 ---
@@ -11,20 +11,20 @@ All heights in **meters** (M); proportions assume Godot's default humanoid scale
 
 | Race | Height (M) | Notes | Proportions |
 |---|---|---|---|
-| **Fae** | 0.60–0.85 | Impossibly small | Delicate, fairy-like, large eyes |
+| **Fae** | 0.60–0.85 | Impossibly small | Delicate, fairy-like, large eyes; moth wings, drawn extended on the model sheet (user, 2026-10-20) |
 | **Gnome** | 0.90–1.05 | Child-sized, wiry (the approved base body, 2026-10-15; a wiry-to-stout build slider is an idea, see the CLAUDE.md To-Do on changing appearance) | Short legs, large head |
 | **Halfling** | 0.95–1.10 | Compact, delicate | Proportion similar to Gnome but slimmer |
-| **Kobold** | 1.00–1.20 | Dog-faced, wiry | Hunched posture, bat ears, tail (cosmetic) |
+| **Kobold** | 1.00–1.20 | Dog-faced, wiry | Hunched posture, bat ears, tail (cosmetic), digitigrade feet on the mesh (user, 2026-10-20) |
 | **Dwarf** | 1.20–1.35 | Blocky, massive shoulders | Barrel chest, thick limbs, small head |
 | **Wood Elf** | 1.43–1.57 | Lean, athletic; shorter than the other elves (user, 2026-10-14: 1.50 m on the height chart) | Muscular calves, defined shoulders |
 | **Elf** | 1.60–1.75 | Graceful, slender | Longer limbs, lighter frame |
 | **Dark Elf** | 1.65–1.80 | Sinuous, angular | Lithe, prominent cheekbones |
 | **Half-Elf** | 1.65–1.80 | Human-like with elven features | Blend of both parents |
 | **Human** | 1.70–1.85 | Baseline humanoid | Balanced |
-| **Felhari** | 1.75–1.95 | Feline, athletic | Digitigrade legs (in animations), feline face |
-| **Kel`varath** | 1.85–2.10 | Lizardfolk, scaled | Reptilian posture, tail (cosmetic, non-collision) |
+| **Felhari** | 1.75–1.95 | Feline, athletic | Digitigrade legs and feet on the mesh itself (user, 2026-10-20; this used to say "in animations"), feline face |
+| **Kel`varath** | 1.85–2.10 | Lizardfolk, scaled | Reptilian posture, tail (cosmetic, non-collision; proposed 2026-10-20, awaiting the user's yes: ends about calf height and stays clear of the ground, so it never clips terrain when walking or sitting) |
 | **Half-Ogre** | 2.00–2.25 | Ogre-human hybrid | Massive but less brutish than pure Ogre |
-| **Minotaur** | 2.20–2.50 | Bull-headed, muscular | Barrel chest, hooved feet, thick horns |
+| **Minotaur** | 2.20–2.50 | Bull-headed, muscular | Barrel chest, hooved feet, thick horns, a bovine tail (user, 2026-10-20) |
 | **Troll** | 2.30–2.60 | Savage, hunched | Disproportionately long arms, jutting brow |
 | **Ogre** | 2.40–2.70 | Brutish giant | Massive shoulders, long arms, thick neck |
 

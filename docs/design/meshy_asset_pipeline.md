@@ -8,6 +8,21 @@
 > the client and the spend hook stay in place for whenever Meshy is picked up again (the user
 > may use it for 2D model packs); nothing here is the active plan. The session notes of 2026-10-15 and 2026-10-16 have
 > the detail.
+>
+> **2D generation through the client (user, 2026-10-20: "change our design to allow for 2D
+> generation like we had for 3D").** Model sheets are now made through Meshy's API, under the
+> same spend gate as 3D: `meshy_text_to_image` (a sheet from a prompt) and `meshy_image_to_image`
+> (a sheet steered by 1 to 5 reference images, such as an approved race sheet for the style, or
+> by an earlier image task). Both are pinned to `nano-banana`, the model the May sheets came from
+> (3 credits an image; `nano-banana-pro`, 9 credits and a Pro plan, on request; the GPT image
+> models are not offered), 16:9 by default. References upload only from `F:\Projects\ref_art`
+> and `concept_art`; results download to `meshy_downloads/<subject>/<task>/image_N.png`, and the
+> user decides what is copied into `ref_art` as `ModelPack_<Race>.png`. Every call is a paid
+> call: the gate checks the live balance and asks the user (its ceilings, 9 and 12, were already
+> on file), the client checks the balance and the tripwire again, and a task that costs more
+> than its model's price sets the tripwire. The rules for what goes on a sheet are the style
+> bible's section 9 (`Project_Dawn_Source/concept_art/_style_bible/style_bible.md`). Prices and
+> fields read from docs.meshy.ai's text-to-image and image-to-image pages on 2026-10-20.
 
 How we plan to use Meshy (meshy.ai) to produce 3D models for Project Dawn, starting
 with 2D reference packs that lock the aesthetic before any credits go into 3D.

@@ -34,6 +34,16 @@ approval.
 
 ## Notes
 
+- **The model pack is one sheet per race**, both sexes, callouts and gear panels, in the layout of
+  the five sheets the first bodies were built from; the figures on it follow the style bible's
+  base-body rule. The rules for the remaining races' sheets are the bible's section 9
+  (`Project_Dawn_Source/concept_art/_style_bible/style_bible.md`, amended 2026-10-20).
+- **Generated sheets (2026-10-20).** A sheet made with Meshy's 2D tools appears on its race's card
+  under "Generated sheets" once downloaded (any other subject, e.g. Blacksmithing, under "Other
+  sheets"), with the prompt, model, credits and reference images that made it. **Use this** copies
+  it into `ref_art` as `ModelPack_<Name>`, moving a sheet it replaces to `ref_art/_replaced/` with a
+  timestamp, so an approved pack step turns "changed"; **Discard** only hides it. Logic in
+  `tools/art_board/sheets.py`; decisions in `Project_Dawn_Source/art_board/sheets.json`.
 - **One export per sex.** `race_model.gd` mounts one model per race today, so only the male line
   can reach "In game" until it learns to choose a model by sex.
 - **Facing.** Export facing Blender's Front view; `race_model.gd` turns every model to the game's
