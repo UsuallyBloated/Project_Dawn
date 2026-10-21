@@ -371,7 +371,81 @@ one until the stacking versions in the 20s and 30s. A deliberate deviation, reco
 **Knobs this creates:** none new; the changes are data on both sides. The pools formula's class
 factor table becomes a constant table in `char_data.rs` mirrored in `character_data.gd`.
 
-## 9. Sources
+## 9. Decisions and the build (2026-10-20)
+
+**The user's calls, the same day: "yes to all"** on the five recommendations, then three on
+the spell formula when the build plan was laid out: **"If the INT and WIS bonus is not P99
+accurate, then we can discard it"** (it goes); **"casting-skill multiplier should follow p99
+rules"** (on P99 the casting skills never scaled an effect; a low skill made the spell
+fizzle, so the multipliers go and a fizzle comes in); **"INT-base spell crit should be added
+even though its not classic"** (the crit stays).
+
+**Built on `feat/server-speed` in both repos, riding the Oct 22 bump** (server `0b60460`,
+client `92c1442`; `eq_parity_checklist.md`, 36 rows; 310 unit and 129 integration tests green,
+the client's pool probe and the spell lockstep check at zero drift; session note 2026-10-20 §7
+has what the build taught):
+
+1. **Pools:** EQ's formulas replace `BASE_HP + class bonus + CON x 5 + per-level gains`
+   (`char_data::base_hp` / `base_mana` / `hp_level_factor`, mirrored in
+   `CharacterData.base_hp` / `base_mana`): `5 + level x factor / 10 + CON x level x factor /
+   3000` with EQEmu's class factors (our classes on the EQ class each is shaped after:
+   Sorcerer and Blood Mage the casters', Beast Master the Beastlord's, Witch Hunter the
+   Ranger's) and EQ's classic mana (`22.5 x level` at a stat of 100), both in EQEmu's integer
+   arithmetic so the two sides agree to the point. Our CON, INT and WIS stand in for EQ's
+   STA, INT and WIS: they start near 20 and 30 where EQ's started near 75, so the stat term
+   is small at level 1 and the level term carries the curve. A Human Warrior is 28 at 1 and
+   1,886 at 50 (EQ: 32 and 1,692); a Wizard 17 HP and 17 mana at 1. The pure melee keep a
+   token 20 mana so no bar divides by zero. The per-level HP and mana gains are gone from
+   both gain tables (stat and stamina gains stay); a level change recomputes the pools from
+   the formula, up and down. Existing characters recompute at login with current HP and
+   mana clamped (the clamp was already there).
+2. **Spells:** the level 1 to 10 rows (about forty-five on both sides, listed in the
+   checklist's table and the session note), each to EQ's counterpart at its level, EQ's
+   line interpolated where EQ had no spell there (Greater Heal 50 at 8; Fireball 12 at 1
+   between Burst of Flame and Burn). The 12+ spells kept their numbers. **Their mana costs
+   went with them**, which §8 had left to a second pass: with EQ's pools a level 1 caster
+   holds about 16 mana and our level 1 spells cost 15 to 35, so the first test run showed
+   nobody at level 1 could cast at all. Each changed spell took its EQ counterpart's cost
+   from the PQDI spell pages (Strike 12, Minor Healing 10, Burst of Flame 7, Shock of Frost
+   8, Frost Bolt 10, Shock of Fire 15, Burn 15, Shock of Ice 30, Fire Bolt and Flame Bolt
+   40, Lifetap 9, Lifespike 18, Furor 20, Light Healing 25, Chaotic Feedback 45), about one
+   mana per point of effect at these levels, the same line where EQ had no counterpart.
+   Two level 1 utilities a 16-mana caster could not have cast at all, Rune and Bind
+   Affinity, went to 10. Cast times are still ours (most level 1 nukes are instant; EQ's
+   took 1.1 to 1.8 s), the second pass that remains.
+3. **Regen buffs:** Breeze to level 16 at 2 a tick, Clarity to 29 at 4, Regrowth to 34 at 5
+   (Rk. II to 44 at 10, EQ's Chloroplast), Lich Form kept at 20 at 4 a tick (EQ's Allure of
+   Death, the level 20 rank), Healing Wave's HoT dropped (its direct heal to 20). **EQ's
+   durations and costs came with the rates** (the PQDI pages): a 2-a-tick Breeze over our
+   old 30 s would have returned 10 mana for its 20, a net loss; EQ's lasts 27 minutes for
+   35 mana (540 back), Clarity 27 minutes for 75, Regeneration up to 20.5 minutes for 100,
+   Chloroplast 200, Quickness up to 11 minutes for 80. Breeze and Clarity run 1620 s,
+   Regrowth and Rk. II 1230 s, Haste 660 s, at those costs (ours are flat where EQ's grew
+   with level, so the top of each range). Lich Form stays a free toggle: EQ's lich line
+   drained hit points for the mana (Allure of Death 8 HP a tick for 4 mana), which ours does
+   not model, flagged below.
+4. **Haste** 30%.
+5. **Mobs:** levels 1 to 9 on a ramp toward P99's (level 1 25 to 16, level 6 116 to 80, level
+   9 188 to 160), 10 and up unchanged; the pet stat curve moved with the camp ladder.
+6. **The formula:** `spell_power::empower` and the client's INT, WIS and casting-skill terms
+   deleted; a spell does its listed number; the INT crit stays.
+7. **Fizzles:** EQEmu's `Client::CheckFizzle` as `cast_gate::fizzle_chance` (par `5 x spell
+   level - 10`, at most 235, plus the level, against skill plus level; a hundred points of
+   the casting stat move it one percent, a Bard's CHA against 110; base ten percent, 1 to
+   95), rolled by the server at a timed cast's CastStart and an instant cast's CastSpell,
+   after the target checks and before the mana. A fizzle refuses the cast with EQ's "Your
+   spell fizzles!", burns a quarter of the mana (EQEmu's rule; classic charged for a fizzle
+   too, "reduced and capped" in June 1999 per P99's patch notes), starts the gem's refresh
+   (the global cooldown; P99's spell pages list a 2.25 s "fizzle time") and trains nothing.
+   Songs never fizzle: EQ rolled them on the singing skill, which does not exist yet.
+
+**Flagged, not built:** cast times (the second pass; the mana half is done above); mid-level
+mob HP; the alignment multiplier on the client (the alignment build); a fizzle's "%1's spell
+fizzles!" to bystanders; per-spell `base_difficulty` (EQ's extra fizzle weight on hard
+spells; ours is 0); Lich Form's hit point drain (EQ's lich line paid HP for the mana; ours
+regenerates for free, so at 4 a tick it is a permanent Breeze for a level 20 Necromancer).
+
+## 10. Sources
 
 - PQDI class spell lists, read 2026-10-20: Cleric `pqdi.cc/list-spells/2`, Paladin 3, Ranger
   4, Shadow Knight 5, Druid 6, Bard 8, Shaman 10, Necromancer 11, Wizard 12, Magician 13,

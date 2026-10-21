@@ -1263,3 +1263,28 @@ checklist = "bard_songs_checklist.md"
 waits_on = ["b28", "o4"]
 todo = "Bard song rework"
 done_when = "Every row filled."
+
+[[row]]
+id = "b29"
+week = "w3"
+lane = "build"
+day = "Oct 20"
+what = "The EQ parity pass (the user's yes to all five, plus the formula calls): EQ's hit point and mana formula on both sides (a level 1 Warrior 28 HP, not 200), the level 1 to 10 spells at EQ's numbers and EQ's mana costs (a level 1 caster holds about 16 mana), the regeneration buffs at P99's figures, levels, durations and costs, Haste 30% for 11 minutes, the low-level mobs' hit points toward P99's; a spell does its listed number (the INT and WIS bonuses and the casting-skill multipliers removed, the crit kept) and the casting skills decide fizzles instead, rolled by the server at the cast's start. On feat/server-speed, so it rides Oct 22."
+who = "Claude unattended"
+days = 1
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when eq_parity_checklist.md is filled."
+todo = "EQ parity: the inflation pass"
+
+[[row]]
+id = "v32"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "EQ parity: a new Human Warrior reads 28 HP and a Wizard 17 HP and 17 mana on the creation preview and in the world; the Level Up tool moves the maxes by the formula; Smite lands 7 and Healing Light heals 10 with nothing added; a fresh caster fizzles about one cast in ten, each fizzle costing a quarter of the mana and two seconds of gem refresh; Breeze and Regrowth are gone from the low-level books; Haste reads 30%; a Decrepit Skeleton has 16 HP and a level 1 Warrior fighting two wolves at once is in real danger."
+who = "user at a desk, GM account"
+hours = 1
+needs = ["the Oct 22 export"]
+checklist = "eq_parity_checklist.md"
+waits_on = ["b29", "o4"]
+todo = "EQ parity: the inflation pass"
+done_when = "Every row filled."

@@ -2169,6 +2169,53 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   formula "for now"); (7) a second pass on mana costs and cast times (not in PQDI's lists) and
   mid-level mob HP if wanted. All data edits on both sides, held by the lockstep checks; no new
   knobs. Planner row d9.
+  **DECIDED 2026-10-20 (user): "yes to all"** five, then three calls on the spell formula when
+  the build plan was laid out: the INT and WIS bonuses go ("If the INT and WIS bonus is not P99
+  accurate, then we can discard it"), the casting skills follow P99's rules (where they never
+  scaled an effect but decided whether a cast FIZZLED), and the INT spell crit stays ("even
+  though its not classic"). **BUILT 2026-10-20, pending the Oct 22 bump and the playtest**
+  (`feat/server-speed` in both repos, server `0b60460`, client `92c1442`;
+  `eq_parity_checklist.md`, 36 rows; the audit's §9 has every number). (1) EQ's pool formula
+  on both sides (`char_data::base_hp` / `base_mana` / `hp_level_factor`, mirrored in
+  `CharacterData`; EQEmu's integer arithmetic so the sheet shows the server's number; our
+  CON, INT and WIS in EQ's stats' place; a Human Warrior 28 HP at 1 and 1,886 at 50, a Wizard
+  17 HP and 17 mana; the pure melee keep a token 20 mana; the per-level HP and mana gains are
+  gone from both gain tables and a level change recomputes, up and down; existing characters
+  recompute at login with current values clamped). (2) The level 1 to 10 spells at EQ's
+  numbers AND EQ's mana costs: the costs were the audit's "second pass", but the first test
+  run showed that with 16 mana at level 1 and 15-to-35-mana spells nobody could cast, so each
+  changed spell took its PQDI counterpart's cost (Strike 12, Minor Healing 10, Burst of Flame
+  7, Fire Bolt 40, about one mana a point); Rune and Bind Affinity to 10 for the same reason.
+  (3) The regen buffs at P99's rates, levels, durations and costs (Breeze 16, 2 a tick for 27
+  min at 35; Clarity 29, 4 a tick at 75; Regrowth 34, 5 a tick for 20.5 min at 100, Rk. II 44
+  at 200; Haste 30% for 11 min at 80; Lich Form at 4 a tick; Healing Wave's HoT dropped),
+  because a 2-a-tick Breeze over the old 30 s would have been a net loss. (4) The mobs at
+  levels 1 to 9 toward P99's (16 at 1, 80 at 6, 160 at 9), the pet curve with them. (5)
+  `spell_power::empower` and the client's three terms deleted; a spell does its listed
+  number; the crit stays. (6) **Fizzles**: EQEmu's `CheckFizzle` as `cast_gate::fizzle_chance`
+  (par `5 x spell level - 10`, at most 235, plus the level, against skill plus level; a Bard's
+  CHA against 110; base 10%, clamped 1 to 95), rolled by the server at a timed cast's
+  CastStart and an instant cast's CastSpell, after the target checks and before the mana: a
+  fizzle answers "Your spell fizzles!" (the client prints EQ's line as is), burns a quarter of
+  the mana (EQEmu's rule; classic charged for a fizzle too, "reduced and capped" in June 1999
+  per P99's patch notes), starts the gem's refresh (the global cooldown; P99's pages list a
+  2.25 s "fizzle time") and trains nothing; songs never fizzle (no singing skill yet).
+  **`Config::fizzles`**, always on for a running server with no env var, exists only so the
+  integration harness can turn the roll off (a 10% coin flip on every single-cast test) and
+  back on for the one test about it. **Exploit lens:** every roll and every number is the
+  server's; a forged CastStart that fizzles costs the forger mana and the refresh; a client
+  that skips CastStart fails the cast-time gate as before. Tests: unit (the pools at both
+  ends against EQEmu's formula, the fizzle formula at par, under, over, the stat term, the
+  Bard, both clamps, the quarter mana; the pet curve anchors) and integration (`a_heal_is_its_
+  listed_number`, the DoT test on the new numbers, `a_cast_can_fizzle_on_a_low_casting_skill`:
+  a level 16 Magician with no evocation fizzles Fireball Rk. III at its start, loses 10.5 of
+  42, is refused inside the refresh, and fizzles the instant Frost Bolt Rk. III from its
+  CastSpell); every test that pinned an old number moved (310 unit, 129 integration green);
+  the client probe (the formula's anchors, a level 1 to 5 to 3 round trip through
+  `apply_server_level`) and the spell lockstep check (zero drift, 142 shared). **Flagged, not
+  built:** cast times (most level 1 nukes are instant; EQ's took 1.1 to 1.8 s); mid-level mob
+  HP; Lich Form's hit point drain (EQ's lich line paid HP for the mana; ours is a free Breeze
+  at 20); a fizzle's line to bystanders; per-spell `base_difficulty`.
 - [ ] **Regen model and race trade-off follow-ups** *(`regen_model.md` §Deferred + §Open tuning,
   `race_xp_regen_tradeoffs_plan.md` slices 1 and 3; audit 2026-09-29 confirmed no race XP
   multiplier exists in `progression.rs`)*. Open: the pool-size formulas (STA to max HP, the

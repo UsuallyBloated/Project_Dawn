@@ -201,6 +201,14 @@ user's calls, the first EQ's pool formula. Nothing built from it; the edits are 
 sides and need no bump. The alignment build waits on the user's three calls (scope, seeding,
 the 0.7/0.4 penalty). Next planner ids: `b29`, `v32`, `d10`.
 
+**Progress (2026-10-20, night):** the user said "yes to all" and the parity pass is BUILT on
+`feat/server-speed` in both repos (audit doc §9; session note 2026-10-20, the EQ parity
+section; planner b29 and v32; `eq_parity_checklist.md`): EQ's pool formula on both sides,
+the level 1 to 10 spells and the regen buffs at EQ's numbers and levels, Haste 30%, the
+low-level mob HP, the spell formula down to the listed number plus the crit, and fizzles
+rolled by the server. Riding Oct 22 with everything else on the branch. The alignment build
+still waits on the user's three calls. Next planner ids: `b30`, `v33`, `d10`.
+
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
 What is known: name labels are `Label3D` nodes named `NameLabel`.

@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Oct 20<span class="stat-sub">repo 8ef1d5a</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Oct 20<span class="stat-sub">repo b683c34</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">29.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">57.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">30.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">58.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -486,7 +486,7 @@
 <section>
 <h2><span class="week-head"><span>One evening when every client changes</span><span class="when">W3 &middot; October 19 to 25</span></span></h2>
 <p class="lede">Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the four friends receive their first zip from this build and never need another.</p>
-<div class="week-meta"><span>the user's time: 27.25 h</span><span>Claude build days: 11</span></div>
+<div class="week-meta"><span>the user's time: 28.25 h</span><span>Claude build days: 12</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -618,6 +618,16 @@
 <td class="time">0.5 Claude days</td>
 <td class="id"></td>
 <td class="done">The server suite and the client probe pass and both halves are pushed. Done only when bard_songs_checklist.md is filled.<span class="ref">To-Do entry: <code>Bard song rework</code></span></td>
+</tr>
+<tr>
+<td class="id">b29</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 20</span>The EQ parity pass (the user&#x27;s yes to all five, plus the formula calls): EQ&#x27;s hit point and mana formula on both sides (a level 1 Warrior 28 HP, not 200), the level 1 to 10 spells at EQ&#x27;s numbers and EQ&#x27;s mana costs (a level 1 caster holds about 16 mana), the regeneration buffs at P99&#x27;s figures, levels, durations and costs, Haste 30% for 11 minutes, the low-level mobs&#x27; hit points toward P99&#x27;s; a spell does its listed number (the INT and WIS bonuses and the casting-skill multipliers removed, the crit kept) and the casting skills decide fizzles instead, rolled by the server at the cast&#x27;s start. On feat/server-speed, so it rides Oct 22.</td>
+<td>Claude unattended</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">The server suite and the client probe pass and both halves are pushed. Done only when eq_parity_checklist.md is filled.<span class="ref">To-Do entry: <code>EQ parity: the inflation pass</code></span></td>
 </tr>
 <tr>
 <td class="id">o4</td>
@@ -858,6 +868,16 @@
 <td class="time">0.75 h</td>
 <td class="id">b28, o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/bard_songs_checklist.md"><code>bard_songs_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Bard song rework</code></span></td>
+</tr>
+<tr>
+<td class="id">v32</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>EQ parity: a new Human Warrior reads 28 HP and a Wizard 17 HP and 17 mana on the creation preview and in the world; the Level Up tool moves the maxes by the formula; Smite lands 7 and Healing Light heals 10 with nothing added; a fresh caster fizzles about one cast in ten, each fizzle costing a quarter of the mana and two seconds of gem refresh; Breeze and Regrowth are gone from the low-level books; Haste reads 30%; a Decrepit Skeleton has 16 HP and a level 1 Warrior fighting two wolves at once is in real danger.</td>
+<td>user at a desk, GM account</td>
+<td class="needs"><ul><li>checklist eq_parity_checklist.md: 39 rows to run</li><li>the Oct 22 export</li></ul></td>
+<td class="time">1 h</td>
+<td class="id">b29, o4</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/eq_parity_checklist.md"><code>eq_parity_checklist.md</code></a></span><span class="ref">To-Do entry: <code>EQ parity: the inflation pass</code></span></td>
 </tr>
 <tr>
 <td class="id">p2</td>
@@ -1108,5 +1128,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-20 at repo 8ef1d5a</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-20 at repo b683c34</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>
