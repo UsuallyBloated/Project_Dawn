@@ -335,9 +335,6 @@ func _apply_spell(spell: SpellData) -> void:
 		_gcd_remaining = GLOBAL_COOLDOWN_SECS
 		global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
 	var effectiveness := _get_alignment_effectiveness(PlayerStats.player_class)
-	var dmg_mult    := CastingSkills.get_damage_mult(spell.discipline)
-	var dur_mult    := CastingSkills.get_duration_mult(spell.discipline)
-	var absorb_mult := CastingSkills.get_absorb_mult(spell.discipline)
 	# ALLY beneficial spells cast on a remote recipient (peer OR pet) are
 	# applied by the server, which fans the authoritative result back; skip
 	# the local mutation so we don't double-apply or buff the caster instead
@@ -345,12 +342,12 @@ func _apply_spell(spell: SpellData) -> void:
 	var ally_remote := _ally_target_is_remote(spell)
 
 	if spell.target_type == SpellData.TargetType.ENEMY:
-		Combat.deal_spell_damage(int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness * dmg_mult), spell.damage_type)
+		Combat.deal_spell_damage(int(spell.base_damage * effectiveness), spell.damage_type)
 
 	if spell.target_type == SpellData.TargetType.AOE:
 		Combat.deal_aoe_spell_damage(
 			spell.aoe_radius,
-			int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness * dmg_mult),
+			int(spell.base_damage * effectiveness),
 			spell.damage_type)
 
 	if spell.target_type == SpellData.TargetType.PET_SUMMON:
@@ -360,12 +357,12 @@ func _apply_spell(spell: SpellData) -> void:
 		PetManager.charm_current_target(spell.duration)
 
 	if spell.target_type == SpellData.TargetType.PET_HEAL:
-		WarderAI.heal_warder(spell.heal_amount + PlayerStats.wisdom * 0.3)
+		WarderAI.heal_warder(spell.heal_amount)
 
 	# In launcher mode the server applies the self-heal and the hp-cost
 	# authoritatively and fans HealthUpdate; applying them locally too makes the
-	# HP bar jump to a client-predicted value (the local heal adds WIS + alignment
-	# effectiveness the server's flat heal omits) and then snap back down a
+	# HP bar jump to a client-predicted value (the local heal adds the alignment
+	# effectiveness the server does not model yet) and then snap back down a
 	# HealthUpdate later — the "bouncing" health bar. Skip the local self-HP
 	# writes in launcher mode, matching regen.gd and the HoT tick; Test Room
 	# (no server) keeps the instant local effect.
@@ -373,7 +370,7 @@ func _apply_spell(spell: SpellData) -> void:
 
 	if spell.heal_amount > 0.0 and spell.target_type != SpellData.TargetType.PET_HEAL:
 		if not ally_remote and not server_owns_hp:
-			var heal := (spell.heal_amount + PlayerStats.wisdom * 0.3) * effectiveness
+			var heal := spell.heal_amount * effectiveness
 			PlayerStats.set_hp(PlayerStats.hp + heal)
 
 	if spell.hp_cost > 0.0 and not server_owns_hp:
@@ -386,17 +383,17 @@ func _apply_spell(spell: SpellData) -> void:
 		# the local BuffManager DoT on the local enemy node.
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and not Net.is_launcher_mode() and not (Combat.current_target is RemotePlayer or Combat.current_target is RemotePet):
 			BuffManager.add_dot(Combat.current_target, spell.dot_dps * effectiveness,
-				spell.dot_duration * dur_mult, spell.spell_name)
+				spell.dot_duration, spell.spell_name)
 
 	if spell.hot_hps > 0.0 and spell.hot_duration > 0.0:
 		if not ally_remote:
-			BuffManager.add_hot(spell.hot_hps * effectiveness, spell.hot_duration * dur_mult, spell.spell_name)
+			BuffManager.add_hot(spell.hot_hps * effectiveness, spell.hot_duration, spell.spell_name)
 
 	if spell.absorb_amount > 0.0 and not ally_remote:
-		BuffManager.add_absorb(spell.absorb_amount * effectiveness * absorb_mult, spell.spell_name)
+		BuffManager.add_absorb(spell.absorb_amount * effectiveness, spell.spell_name)
 
 	if spell.damage_shield_amount > 0.0 and spell.damage_shield_duration > 0.0 and not ally_remote:
-		BuffManager.add_damage_shield(spell.damage_shield_amount * effectiveness, spell.damage_shield_duration * dur_mult, spell.spell_name)
+		BuffManager.add_damage_shield(spell.damage_shield_amount * effectiveness, spell.damage_shield_duration, spell.spell_name)
 
 	# Track 6 sub-task 3b: CC / snare / silence / dispel only fire on
 	# enemy NPC targets that expose the matching methods. RemotePlayer
@@ -405,26 +402,26 @@ func _apply_spell(spell: SpellData) -> void:
 	# while documenting the gap.
 	if spell.cc_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("mesmerize"):
-			Combat.current_target.mesmerize(spell.cc_duration * dur_mult)
+			Combat.current_target.mesmerize(spell.cc_duration)
 
 	if spell.root_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("root"):
-			Combat.current_target.root(spell.root_duration * dur_mult)
+			Combat.current_target.root(spell.root_duration)
 
 	if spell.slow_amount > 0.0 and spell.slow_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("snare"):
-			Combat.current_target.snare(spell.slow_amount, spell.slow_duration * dur_mult)
+			Combat.current_target.snare(spell.slow_amount, spell.slow_duration)
 
 	if spell.attack_slow_amount > 0.0 and spell.attack_slow_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("apply_attack_slow"):
-			Combat.current_target.apply_attack_slow(spell.attack_slow_amount, spell.attack_slow_duration * dur_mult)
+			Combat.current_target.apply_attack_slow(spell.attack_slow_amount, spell.attack_slow_duration)
 
 	if spell.primary_stat_buff_duration > 0.0 and not ally_remote:
 		BuffManager.add_primary_stat_buff(
 			spell.str_buff, spell.agi_buff, spell.int_buff,
 			spell.wis_buff, spell.con_buff,
 			spell.max_hp_buff, spell.max_mp_buff,
-			spell.primary_stat_buff_duration * dur_mult, spell.spell_name)
+			spell.primary_stat_buff_duration, spell.spell_name)
 
 	# Online the server binds and ports (spell batch step 2): its Teleport and
 	# its chat line are the result, so nothing runs here (Gate used to reload
@@ -438,19 +435,19 @@ func _apply_spell(spell: SpellData) -> void:
 
 	if not spell.is_song:
 		if spell.move_speed_mult > 0.0 and spell.move_speed_duration > 0.0 and not ally_remote:
-			BuffManager.add_speed_buff(spell.move_speed_mult, spell.move_speed_duration * dur_mult, spell.spell_name)
+			BuffManager.add_speed_buff(spell.move_speed_mult, spell.move_speed_duration, spell.spell_name)
 
 		if spell.mp_regen_hps > 0.0 and spell.mp_regen_duration > 0.0 and not ally_remote:
-			BuffManager.add_mp_regen_buff(spell.mp_regen_hps * effectiveness, spell.mp_regen_duration * dur_mult, spell.spell_name)
+			BuffManager.add_mp_regen_buff(spell.mp_regen_hps * effectiveness, spell.mp_regen_duration, spell.spell_name)
 
 		if spell.haste_amount > 0.0 and spell.haste_duration > 0.0 and not ally_remote:
-			BuffManager.add_haste_buff(spell.haste_amount, spell.haste_duration * dur_mult, spell.spell_name)
+			BuffManager.add_haste_buff(spell.haste_amount, spell.haste_duration, spell.spell_name)
 
 		if (spell.accuracy_buff > 0.0 or spell.crit_buff > 0.0) and not ally_remote:
-			BuffManager.add_stat_buff(spell.accuracy_buff, spell.crit_buff, spell.stat_buff_duration * dur_mult, spell.spell_name)
+			BuffManager.add_stat_buff(spell.accuracy_buff, spell.crit_buff, spell.stat_buff_duration, spell.spell_name)
 
 	if spell.is_stealth:
-		BuffManager.add_stealth(spell.stealth_duration * dur_mult, spell.spell_name)
+		BuffManager.add_stealth(spell.stealth_duration, spell.spell_name)
 
 	if spell.is_dispel:
 		if Combat.has_valid_target() and Combat.current_target.has_method("strip_one_buff"):
@@ -462,7 +459,7 @@ func _apply_spell(spell: SpellData) -> void:
 
 	if spell.silence_duration > 0.0:
 		if Combat.has_valid_target() and Combat.current_target.has_method("silence"):
-			Combat.current_target.silence(spell.silence_duration * dur_mult)
+			Combat.current_target.silence(spell.silence_duration)
 
 	if spell.is_lich_form:
 		BuffManager.toggle_lich_form(spell.lich_mp_regen)
@@ -473,12 +470,12 @@ func _apply_spell(spell: SpellData) -> void:
 		# via CastSpell). Caster still gets the mana, but the damage
 		# applies through the server's spell handler.
 		if Combat.has_valid_target() and Combat.current_target.has_method("take_damage"):
-			var drained := minf(spell.mana_drain * effectiveness * dmg_mult, Combat.current_target.hp)
+			var drained := minf(spell.mana_drain * effectiveness, Combat.current_target.hp)
 			Combat.current_target.take_damage(int(drained))
 			PlayerStats.set_mp(PlayerStats.mp + drained)
 			CombatLog.add_line("You drain %d life from %s into mana." % [int(drained), Combat.current_target.mob_name], CombatLog.MsgType.INFO)
 		elif Combat.has_valid_target():
-			PlayerStats.set_mp(PlayerStats.mp + spell.mana_drain * effectiveness * dmg_mult)
+			PlayerStats.set_mp(PlayerStats.mp + spell.mana_drain * effectiveness)
 
 	if spell.is_song:
 		BardSongs.activate_song(spell)

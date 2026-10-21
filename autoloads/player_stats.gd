@@ -105,22 +105,21 @@ func intrinsic_character(race_id: String, cls: String, lvl: int) -> Dictionary:
 		for k: String in CharacterData.RACE_DATA[race_id]["bonuses"]:
 			stats[k] += CharacterData.RACE_DATA[race_id]["bonuses"][k]
 	var cd: Dictionary = CharacterData.CLASS_DATA.get(cls,
-		{"bonuses": {}, "hp_bonus": 0.0, "mp_bonus": 0.0, "stamina_bonus": 0.0})
+		{"bonuses": {}, "stamina_bonus": 0.0})
 	for k: String in cd["bonuses"]:
 		stats[k] += cd["bonuses"][k]
-	var con_hp_bonus: float = (stats["constitution"] - 10) * 5.0
-	var new_max_hp := maxf(50.0, CharacterData.BASE_HP + cd["hp_bonus"] + con_hp_bonus)
-	var new_max_mp := maxf(20.0, CharacterData.BASE_MP + cd["mp_bonus"])
 	var new_max_st := maxf(20.0, CharacterData.BASE_ST + cd["stamina_bonus"])
 	var gains: Dictionary = CharacterData.CLASS_LEVEL_GAINS.get(cls, CharacterData.CLASS_LEVEL_GAINS["_default"])
 	for _i in lvl - 1:
-		var con_before: int = stats["constitution"]
 		for stat in gains["stats"]:
 			stats[stat] += gains["stats"][stat]
-		new_max_hp += gains["max_hp"]
-		new_max_mp += gains["max_mp"]
 		new_max_st += gains["max_stamina"]
-		new_max_hp += (stats["constitution"] - con_before) * 5.0
+	# Hit points and mana are EQ's formulas over the level and the grown stats
+	# (CharacterData.base_hp / base_mana, the server's char_data.rs), not a sum
+	# of per-level gains, so a level change recomputes them.
+	var new_max_hp := float(CharacterData.base_hp(cls, lvl, stats["constitution"]))
+	var mana: int = CharacterData.base_mana(cls, lvl, stats["intelligence"], stats["wisdom"])
+	var new_max_mp := float(mana) if mana > 0 else CharacterData.MIN_MANA
 	return {"stats": stats, "max_hp": new_max_hp, "max_mp": new_max_mp, "max_stamina": new_max_st}
 
 func apply_character(race_id: String, cls: String, lvl: int) -> void:
@@ -205,53 +204,37 @@ func gain_xp(amount: int, source: String = "kill") -> void:
 		xp = xp_to_next
 	xp_changed.emit(xp, xp_to_next)
 
-# Apply one level's intrinsic gains to BOTH the public live stats and the
-# gear-free `_base_` snapshot, so equipment deltas layered on top survive.
-# Shared by the local-only `_level_up` and the server-mirror `apply_server_level`.
-# Does NOT touch level / xp / current resources.
-func _apply_level_gain() -> void:
-	var con_before := constitution
-	var g: Dictionary = CharacterData.CLASS_LEVEL_GAINS.get(player_class, CharacterData.CLASS_LEVEL_GAINS["_default"])
-	for stat in g["stats"]:
-		var delta: int = g["stats"][stat]
+# Apply the intrinsic (gear-free, buff-free) difference between two levels to
+# BOTH the public live stats and the gear-free `_base_` snapshot, so equipment
+# deltas layered on top survive. The mirror of the server's
+# `progression::apply_intrinsic_delta`: both read the whole character at each
+# level (`intrinsic_character`) and add only the difference, so the pools follow
+# EQ's formulas up AND down (a death penalty can drop a level). Shared by the
+# local-only `_level_up` and the server-mirror `apply_server_level`. Does NOT
+# touch level / xp / current resources.
+func _apply_level_delta(from_level: int, to_level: int) -> void:
+	var before := intrinsic_character(race, player_class, from_level)
+	var after := intrinsic_character(race, player_class, to_level)
+	for stat in CharacterData.STAT_KEYS:
+		var delta: int = after["stats"][stat] - before["stats"][stat]
 		self[stat] += delta
 		set("_base_" + stat, get("_base_" + stat) + delta)
-	max_hp           += g["max_hp"]
-	max_mp           += g["max_mp"]
-	max_stamina      += g["max_stamina"]
-	_base_max_hp     += g["max_hp"]
-	_base_max_mp     += g["max_mp"]
-	_base_max_stamina+= g["max_stamina"]
-	var con_delta := (constitution - con_before) * 5.0
-	max_hp           += con_delta
-	_base_max_hp     += con_delta
-
-# Reverse of `_apply_level_gain` — subtract one level's intrinsic gains. Used
-# when the server reports a de-level (a death penalty can drop a level). The
-# con-based HP bonus is derived from the gain table so it mirrors the gain
-# exactly regardless of the current constitution.
-func _apply_level_loss() -> void:
-	var g: Dictionary = CharacterData.CLASS_LEVEL_GAINS.get(player_class, CharacterData.CLASS_LEVEL_GAINS["_default"])
-	var con_delta := float(g["stats"].get("constitution", 0)) * 5.0
-	max_hp           -= con_delta
-	_base_max_hp     -= con_delta
-	for stat in g["stats"]:
-		var delta: int = g["stats"][stat]
-		self[stat] -= delta
-		set("_base_" + stat, get("_base_" + stat) - delta)
-	max_hp           -= g["max_hp"]
-	max_mp           -= g["max_mp"]
-	max_stamina      -= g["max_stamina"]
-	_base_max_hp     -= g["max_hp"]
-	_base_max_mp     -= g["max_mp"]
-	_base_max_stamina-= g["max_stamina"]
+	var hp_delta: float = after["max_hp"] - before["max_hp"]
+	var mp_delta: float = after["max_mp"] - before["max_mp"]
+	var st_delta: float = after["max_stamina"] - before["max_stamina"]
+	max_hp           += hp_delta
+	max_mp           += mp_delta
+	max_stamina      += st_delta
+	_base_max_hp     += hp_delta
+	_base_max_mp     += mp_delta
+	_base_max_stamina+= st_delta
 
 # Local-only level-up (Test Room / no server). In launcher mode the server
 # drives leveling via `apply_server_level`, so this is not called there.
 func _level_up() -> void:
 	level += 1
 	xp_to_next = band_for(level)
-	_apply_level_gain()
+	_apply_level_delta(level - 1, level)
 	set_hp(max_hp)
 	set_mp(max_mp)
 	set_stamina(max_stamina)
@@ -298,12 +281,8 @@ func band_for(level_in: int) -> int:
 # deltas; the server's HealthUpdate stays the backstop. Does NOT heal: the
 # server owns current hp/mp/stamina (which arrive via the resource updates).
 func apply_server_level(new_level: int, new_xp: int, new_xp_to_next: int) -> void:
-	var steps := new_level - level
-	for _i in absi(steps):
-		if steps > 0:
-			_apply_level_gain()
-		else:
-			_apply_level_loss()
+	if new_level != level:
+		_apply_level_delta(level, new_level)
 	level = new_level
 	xp = new_xp
 	xp_to_next = new_xp_to_next

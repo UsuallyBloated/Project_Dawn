@@ -220,7 +220,11 @@ func _on_cast_fail(caster: int, reason: String) -> void:
 		# player knows why nothing happened. If the cast had already
 		# completed here, undo the cooldown started for it (the server
 		# stamped none); if a cast bar is still running, cancel it.
-		if reason != "":
+		# EQ's own fizzle line stands alone, as it did there; any other
+		# refusal is prefixed so the player knows a cast was refused.
+		if reason == "Your spell fizzles!":
+			CombatLog.add_line(reason, CombatLog.MsgType.INFO)
+		elif reason != "":
 			CombatLog.add_line("Cast failed: %s" % reason, CombatLog.MsgType.INFO)
 		Spells.on_server_cast_refused()
 		Spells.cancel_cast()
