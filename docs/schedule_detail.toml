@@ -810,6 +810,17 @@ by = 2026-10-25
 blocks = "The data edits (a build row once decided). Not the Oct 22 bump: the audit changes numbers, not the wire, so it can ship on any later redeploy and export."
 done_when = "Each of the eight answered on the To-Do entry (Combat / weapons, EQ parity)."
 
+[[row]]
+id = "d10"
+week = "w5"
+lane = "decide"
+day = "by Sun Nov 8"
+what = "The factions and alignment design's nine decisions (docs/design/factions_and_alignment.md, section 6): the first six factions and the hit rule, who gets a kill's hits (the XP rule or EQ's hate list), the nine level thresholds, the v1 refusals (vendors at Dubious, quest givers at Apprehensive), alignment seeded from the class start, the Paladin and Shadow Knight off-side penalty kept on the server, no starting standings by race in v1, the mob and quest values, no GM freeze."
+who = "user"
+by = 2026-11-08
+blocks = "The factions build (a migration and a bump), on the after-the-door strip."
+done_when = "Each of the nine answered on the Faction system To-Do entry."
+
 # ---------------------------------------------------------------------------------------
 # After the door opens: undated, per the planner's answer. Status for each lives in the To-Do.
 

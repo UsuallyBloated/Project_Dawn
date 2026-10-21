@@ -206,8 +206,13 @@ the 0.7/0.4 penalty). Next planner ids: `b29`, `v32`, `d10`.
 section; planner b29 and v32; `eq_parity_checklist.md`): EQ's pool formula on both sides,
 the level 1 to 10 spells and the regen buffs at EQ's numbers and levels, Haste 30%, the
 low-level mob HP, the spell formula down to the listed number plus the crit, and fizzles
-rolled by the server. Riding Oct 22 with everything else on the branch. The alignment build
-still waits on the user's three calls. Next planner ids: `b30`, `v33`, `d10`.
+rolled by the server. Riding Oct 22 with everything else on the branch.
+
+**Progress (2026-10-20, late):** the alignment build became the factions design
+(`docs/design/factions_and_alignment.md`; session note §8; the "Faction system" To-Do entry;
+planner d10): the user wants kills and quests to be the whole of it and spells at 0.001% of
+their mana cost; nine decisions wait on the user, nothing built, after the door by the
+schedule. Next planner ids: `b30`, `v33`, `d11`.
 
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 

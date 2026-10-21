@@ -890,8 +890,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   intent budgets when `feat/public-hosting` merges (a refused one answers with the bar). **The
   client-authority list's fixes 1 to 5 are all built;** item 6 (active skills, Bard songs,
   alignment, fall damage) stays as their own builds. **Item 6's active skills BUILT
-  2026-10-19** (the "Active skills partly do not work online" entry has it); Bard songs,
-  alignment and fall damage remain.
+  2026-10-19** (the "Active skills partly do not work online" entry has it); **Bard songs
+  BUILT 2026-10-20** (the "Bard song rework" entry); **alignment DESIGNED 2026-10-20** as
+  part of the factions design (the "Faction system" entry, `factions_and_alignment.md`,
+  decisions pending); fall damage remains.
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
@@ -2434,6 +2436,29 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   attack NPCs and suffer the consequences (evil races farming reputation by killing good
   merchants/guards/villagers, good races by killing bad guards); ask the user for the
   reputation rules before designing.
+  **DESIGNED 2026-10-20: `docs/design/factions_and_alignment.md`**, nine decisions waiting on
+  the user (§6), nothing built. The user's direction, the same day, turned the alignment
+  build into this: "I think casting spells should have a pretty miniscule effect in the over
+  all... We need factions: Killing mobs and running quests are the big two", and the
+  equation: **"spells: .001% of their spell cost."** Researched: EQEmu's faction code (a
+  kill's hits go to every player on the mob's hate list, each NPC's hit table negated for
+  quests, standing capped per faction, nine levels at 1100 / 750 / 500 / 100 / 0 / -100 /
+  -500 / -750, no charisma term, merchants con Dubious at worst), P99's table and rules
+  (vendors refuse at Dubious, quests need Indifferent, kill-on-sight at Threatening), SWG's
+  two systems (GCW points from kills and missions, spent at a recruiter; every other faction a
+  -5000 to 5000 standing moved by killing its enemies). The design: `factions.toml` (six to
+  start: the town, the Watch, gnolls, bandits, the restless dead, wildlife, with ally and
+  enemy links), a `faction` on every mob and NPC, a kill paying `-hit` to its faction and
+  `+hit / 2` to each enemy (`hit = 4 + level`, named x3, derived from the links instead of a
+  table per mob), quests with explicit `faction_hits`, standing persisted and clamped at
+  2000, a `Consider` intent for the con line, vendors refusing at Dubious and quest givers at
+  Apprehensive; and **alignment server-owned**: a float score moved by kills (per-mob tiers
+  from `events.md`), quests (`alignment_delta`) and spells at a hundred-thousandth of their
+  mana, the momentum rule, seeded once from the class start, feeding the prestige-class
+  gates and the 0.7 / 0.4 off-side penalty on the server, the client told by
+  `AlignmentUpdate`. Migration 0016 and a bump. Ten-point exploit ledger. Three slices:
+  the system; guards that fight and attackable NPCs (the user's 2026-05-05 framing);
+  SWG's joinable faction with spendable standing. After the door by the schedule.
 - [x] **Time of day is per-client; make it server-driven** — **DONE + playtested 2026-10-09**
   (`time_of_day_checklist.md`, every row PASS including §2's two seats: the clocks agreed to the
   minute and through a full day, dusk came together, the sky carried on across a relaunch and a
