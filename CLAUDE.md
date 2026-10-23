@@ -870,8 +870,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   its fix disabled. Accepted residual: a character whose corpse save failed (the database
   already failing) and who leaves before the retry is saved without its corpse. **The redeploy
   INTO this build is not clean** (the old binary is the one stopped): everyone logs out first.
-  **Later phases (planned, not built):** 2 the `tick.rs` split, right after the Oct 22 bump merges (user
-  decision); 3 guardrails (lints, CI, `cargo deny`/`audit`, a fuzz target, panic
+  **Phase 3, guardrails, the part that leaves `tick.rs` alone, BUILT 2026-10-23** (server
+  `01fd0ae` + review fixes `3f7c23a` on the deploy branch, merged into `feat/server-speed`;
+  client `tools/check_all.ps1`; no playtest surface, tooling and tests). On-demand CI (user
+  call: on demand, private-repo minutes; actions pinned by SHA, read-only, `--locked`): the
+  suite and `cargo-deny` block, rustfmt and clippy report only until the reformat after the
+  split. The advisory database matched against `Cargo.lock` found three real advisories,
+  fixed by updating `tokio` 1.54.1, `anyhow` 1.0.104 and `event-listener` 5.4.2; two accepted
+  in `deny.toml` with reasons (`bincode` unmaintained, the wire format; `rsa`, never
+  compiled). The client decoder has a 16 KiB limit (trailing bytes still ignored, the
+  append-a-field rule) and a throttled warning; `.env` loads before the runtime;
+  `NetcodeKey` never prints; `#![forbid(unsafe_code)]` on three crates; property tests on
+  coin arithmetic, inventory moves (base, bags, cursor; a planted merge dupe is caught) and
+  the decoder. `check_all.ps1`'s first run found the dev box's wire-layer DLL missing
+  `kick_retry_after`: the Oct 22 export must rebuild it. Not done: `cargo-fuzz` (needs a
+  nightly toolchain outside `F:\Projects`), the lints turn-on and panic containment (after
+  the split). The user chose to leave the PR rule on the deploy branch as it is (pushes
+  bypass it). **Later phases (planned, not built):** 2 the `tick.rs` split, right after the
+  Oct 22 bump merges (user decision); 3's remainder (lints, the reformat, panic
   containment); 4 the client/server line (fall damage on the server then `DeathBroadcast`
   gone, user decision; swing pacing on real haste; cast relays; intent budgets; a stats
   message; the ~20 unchecked lockstep pairs; wire hygiene); 5 remove the offline client code

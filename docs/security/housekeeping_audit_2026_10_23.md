@@ -62,14 +62,17 @@ before the retry is saved without its corpse (reachable only while the database 
 | F9 | `AuthError` is the error type for world persistence; inventory and trade errors are `&'static str`. |
 | F12 | `world_two_clients.rs` holds the harness and 140+ tests in one file; `world_smoke.rs` copies the harness. |
 
-### Phase 3: guardrails (`rust-build-cargo`, `devops-github-workflows`, `rust-testing`)
-| Id | Finding |
-|---|---|
-| F13 | No `[workspace.lints]`, clippy config, CI, `deny.toml` or `cargo audit`. Clippy's `string_slice` would have caught H1. |
-| F2 / C1 | No panic containment: any panic in message handling or the tick takes the whole server down (H1 was one such path). Consider containment per message as well as the lints. |
-| F10 / L3 | The `.env` loader's `set_var` SAFETY comment says it runs before the runtime; it runs inside `#[tokio::main]`. |
-| L1 | `Config` derives `Debug` and holds the netcode private key. |
-| F11 | No fuzz target for `decode_client` (untrusted bytes, no size limit, trailing bytes ignored); no property tests for inventory moves or coin exchange. |
+### Phase 3: guardrails (`rust-build-cargo`, `devops-github-workflows`, `rust-testing`): PART BUILT 2026-10-23
+Server `01fd0ae` + review fixes `3f7c23a` on the deploy branch, merged into `feat/server-speed`.
+
+| Id | Finding | Status |
+|---|---|---|
+| F13 | No CI, `deny.toml` or `cargo audit`. | FIXED: on-demand CI (suite and cargo-deny blocking; rustfmt and clippy report only), actions pinned by SHA. The first advisory match found tokio, anyhow and event-listener advisories, fixed by updates; bincode (unmaintained) and rsa (never compiled) accepted with reasons. |
+| F13 | No `[workspace.lints]`; 981 rustfmt diffs. | OPEN: after the `tick.rs` split, with the one-time reformat. |
+| F2 / C1 | No panic containment. | OPEN: after the split. |
+| F10 / L3 | `set_var` ran inside the runtime. | FIXED: `.env` loads in a synchronous `main` before the runtime. `#![forbid(unsafe_code)]` on protocol, shared and the server library. |
+| L1 | `Config` printed the netcode key in `Debug`. | FIXED: `NetcodeKey` newtype with a redacting `Debug`. |
+| F11 | No fuzzing or property tests; the decoder had no size limit. | FIXED in part: a 16 KiB decode limit and a throttled decode warning; property tests on the decoder (random and mutated bytes), coin arithmetic and inventory moves. `cargo-fuzz` not added (needs a nightly toolchain installed outside `F:\Projects`). |
 
 ### Phase 4: the client/server line (`dist-consistency`, `security-software`)
 | Id | Finding |
