@@ -2219,11 +2219,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   built:** cast times (most level 1 nukes are instant; EQ's took 1.1 to 1.8 s); mid-level mob
   HP; Lich Form's hit point drain (EQ's lich line paid HP for the mana; ours is a free Breeze
   at 20); a fizzle's line to bystanders; per-spell `base_difficulty`.
-  **Found 2026-10-23: `pet_pulls_aggro_via_threat_reaggro` fails on `feat/server-speed`**
-  (checked on a clean tree, before the factions build; it times out waiting for the mob to
-  retarget onto the pet). Most likely this pass's smaller pools and mob hit points ending the
-  fight before the pet's threat passes the owner's. Root-cause it before the Oct 22 merge; the
-  project's rule is that every failure is real.
+  **Three integration tests this pass made timing-dependent, FIXED 2026-10-23** (server
+  `b25a19d`; the suite then ran 134 of 134 six full runs in a row). (1)
+  `pet_pulls_aggro_via_threat_reaggro` failed every time: the camp's Decrepit Skeleton has
+  16 HP now and the pet killed it before its threat could pass the owner's; the test fights its
+  own 500 HP dev spawn and still fails with the 1.3x switch rule broken. (2)
+  `owner_keeps_seeing_a_pet_parked_two_cells_away` failed about one full run in four: the
+  owner's walk ended 7.4 m from a Cave Bat, a level 6 Necromancer can now die to it, and a
+  dead owner leaves the AI's target list so the pet stood still; the walk moved to a row clear
+  of every camp. (3) `a_cast_can_fizzle_on_a_low_casting_skill` read the regen fan's
+  full-mana update instead of the fizzle's when one landed first; it reads the update after
+  the fizzle line. All three were test faults; the server was right.
 - [ ] **Regen model and race trade-off follow-ups** *(`regen_model.md` §Deferred + §Open tuning,
   `race_xp_regen_tradeoffs_plan.md` slices 1 and 3; audit 2026-09-29 confirmed no race XP
   multiplier exists in `progression.rs`)*. Open: the pool-size formulas (STA to max HP, the

@@ -223,8 +223,8 @@ audited). Build-ready, on the after-the-door strip; nothing built. Next planner 
 **Progress (2026-10-23, later):** factions and alignment slice 1 BUILT (server `5efd45d` +
 `30c270a`, client `22ebde7`; planner b30 and v33; `factions_checklist.md`; the plan it
 followed is `handoff_factions_2026_10_23.md`). Rides the Oct 22 bump with migration 0016.
-`pet_pulls_aggro_via_threat_reaggro` fails on `feat/server-speed` before and after it; fix it
-before the merge. Next planner ids: `b31`, `v34`, `d11`.
+The three tests the parity pass had made timing-dependent are fixed (server `b25a19d`); the
+suite ran 134 of 134 six full runs in a row, so the branch is clean for the merge. Next planner ids: `b31`, `v34`, `d11`.
 
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
