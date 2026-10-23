@@ -42,7 +42,9 @@ approval.
   under "Generated sheets" once downloaded (any other subject, e.g. Blacksmithing, under "Other
   sheets"), with the prompt, model, credits and reference images that made it. **Use this** copies
   it into `ref_art` as `ModelPack_<Name>`, moving a sheet it replaces to `ref_art/_replaced/` with a
-  timestamp, so an approved pack step turns "changed"; **Discard** only hides it. Logic in
+  timestamp, so an approved pack step turns "changed"; **Discard** moves it to
+  `Project_Dawn_Source/discarded/<race>/<task>/` (one folder per race, user 2026-10-23) and **Restore**
+  moves it back. Logic in
   `tools/art_board/sheets.py`; decisions in `Project_Dawn_Source/art_board/sheets.json`.
 - **One export per sex.** `race_model.gd` mounts one model per race today, so only the male line
   can reach "In game" until it learns to choose a model by sex.

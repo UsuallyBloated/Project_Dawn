@@ -54,6 +54,7 @@ TASK_LEDGER = os.path.join(HOOK_DIR, "meshy_task_ledger.json")
 SOURCE_ROOT = os.path.join(os.path.dirname(REPO_ROOT), "Project_Dawn_Source")
 CONCEPT_ROOT = os.path.join(SOURCE_ROOT, "concept_art")
 DOWNLOAD_ROOT = os.path.join(SOURCE_ROOT, "meshy_downloads")
+DISCARD_ROOT = os.path.join(SOURCE_ROOT, "discarded")  # one folder per race (user, 2026-10-23)
 STYLE_DIR = os.path.join(CONCEPT_ROOT, "_style_bible")
 DEMO = False
 
@@ -383,7 +384,8 @@ def board_state() -> dict:
              if st["images"]]
     out_credits = credits()
     out_credits["spent"] = spend_total
-    sheets.DOWNLOAD_ROOT, sheets.TASK_LEDGER = DOWNLOAD_ROOT, TASK_LEDGER
+    sheets.DOWNLOAD_ROOT, sheets.DISCARD_ROOT, sheets.TASK_LEDGER = DOWNLOAD_ROOT, DISCARD_ROOT, TASK_LEDGER
+    sheets.sweep_discards()
     cands = sheets.candidates()
     races = race_progress.race_states()
     for c in races:
@@ -410,7 +412,7 @@ def board_state() -> dict:
 
 def safe_image_path(rel: str) -> str | None:
     parts = rel.split("/", 1)
-    roots = {"concept_art": CONCEPT_ROOT, "meshy_downloads": DOWNLOAD_ROOT,
+    roots = {"concept_art": CONCEPT_ROOT, "meshy_downloads": DOWNLOAD_ROOT, "discarded": DISCARD_ROOT,
              "ref_art": race_progress.REF_ART, "board_cache": race_progress.CACHE_DIR}
     if len(parts) != 2 or parts[0] not in roots:
         return None
@@ -474,7 +476,7 @@ class Handler(BaseHTTPRequestHandler):
             if action == "approve_bible":
                 message = approve_bible()
             elif action in ("use_sheet", "discard_sheet", "restore_sheet"):
-                sheets.DOWNLOAD_ROOT, sheets.TASK_LEDGER = DOWNLOAD_ROOT, TASK_LEDGER
+                sheets.DOWNLOAD_ROOT, sheets.DISCARD_ROOT, sheets.TASK_LEDGER = DOWNLOAD_ROOT, DISCARD_ROOT, TASK_LEDGER
                 rel = str(body.get("path", ""))
                 if action == "use_sheet":
                     names = {rid: name for rid, name, _lo, _hi in race_progress.read_races()}
@@ -580,7 +582,7 @@ def palette_png(w: int = 300, h: int = 80) -> bytes:
 
 def build_demo() -> str:
     """Fill a throwaway folder with sample subjects at every step, and point the board at it."""
-    global CHECKLIST, STATUS_CACHE, TRIPWIRE, TASK_LEDGER, CONCEPT_ROOT, DOWNLOAD_ROOT, STYLE_DIR, DEMO
+    global CHECKLIST, STATUS_CACHE, TRIPWIRE, TASK_LEDGER, CONCEPT_ROOT, DOWNLOAD_ROOT, DISCARD_ROOT, STYLE_DIR, DEMO
     sandbox = tempfile.mkdtemp(prefix="art_board_demo_")
     real_checklist = CHECKLIST
     CHECKLIST = os.path.join(sandbox, "art_assets_checklist.md")
@@ -588,6 +590,7 @@ def build_demo() -> str:
     STATUS_CACHE, TRIPWIRE = os.path.join(sandbox, "status.json"), os.path.join(sandbox, "tripwire.json")
     TASK_LEDGER = os.path.join(sandbox, "task_ledger.json")
     CONCEPT_ROOT, DOWNLOAD_ROOT = os.path.join(sandbox, "concept_art"), os.path.join(sandbox, "meshy_downloads")
+    DISCARD_ROOT = os.path.join(sandbox, "discarded")
     STYLE_DIR = os.path.join(CONCEPT_ROOT, "_style_bible")
     DEMO = True
     # the race cards read the real model files (read-only) but keep approvals and renders here
@@ -694,7 +697,7 @@ def build_demo() -> str:
                         "created": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now - age)),
                         "prompt": sheet_prompt.format(t=subject.replace("_", "-").title()),
                         "ai_model": "nano-banana", "aspect_ratio": "16:9", "references": refs}
-    save_json(sheets.DECISIONS, {f"meshy_downloads/half_ogre/demo-img-halfogre-01/image_1.png":
+    save_json(sheets.DECISIONS, {"demo-img-halfogre-01/image_1.png":
                                  {"state": "discarded", "subject": "half_ogre", "at": now - day}})
     save_json(TASK_LEDGER, ledger)
     save_json(STATUS_CACHE, {"balance": 3513 - sum(e["consumed"] for e in ledger.values()), "checked_at": now - 600})
