@@ -81,8 +81,11 @@ Three things to know before touching it:
   after being committed **and pushed**. The host tracks `fix/xp-leveling-overflow`, not the
   default branch. (A stale deploy on 2026-08-08 was running a six-week-old `main` with none of
   the Phase 1 exploit gates in it; the only symptom was a missing field in one log line.)
-- **There is no graceful shutdown.** `systemctl restart` discards up to 60 s of position, HP,
-  XP, inventory and coins for everyone online. Get people to log out first.
+- **Graceful shutdown arrives with build `6c2bc45` (built 2026-10-23, not yet deployed).** From
+  that build on, `systemctl stop`/`restart` saves everyone and tells them before closing (see
+  `server_operations.md`, "Stopping safely"); before it, a restart discards up to 60 s of
+  position, HP, XP, inventory and coins for everyone online. Either way, get people to log out
+  first: it costs nothing, and a crash is never clean.
 
 ### Shipping a change to the R720
 
@@ -847,9 +850,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   with a price, named drops included; each vendor's stock now lives in `npcs.toml` too, and
   on `feat/server-speed` the vendor must also serve the buyer on faction. H6: a failed
   corpse save skipped the corpse for good; it retries next tick. Eleven tests, each failing
-  on the unfixed code. **Later phases (planned, not built):** 1 durability (graceful
-  shutdown, the logout-save retry, XP inside the corpse and quest transactions, a dead world
-  task exiting the process); 2 the `tick.rs` split, right after the Oct 22 bump merges (user
+  on the unfixed code. **Phase 1, durability, BUILT 2026-10-23, pending the redeploy and the
+  playtest** (server `b36904e` + review fixes `6c2bc45` on the deploy branch, merged into
+  `feat/server-speed` as `a7a318f`; `phase1_durability_checklist.md`; server-only, no export;
+  user calls: build on the deploy branch, the EQ-flavoured restart line). A stop or restart
+  (SIGTERM, Ctrl-C, a closed console on Windows) now saves everyone first (failed saves
+  retried for 12 s), then tells each player "The world is being restarted. Your progress has
+  been saved; please log in again in a minute." (or that their last moments could not be
+  saved), and exits non-zero if anyone was not saved; a second signal quits at once. One save
+  path, `persistence::flush_connection`, for the checkpoint, logout, the retry queue and
+  shutdown. A logout save that fails is retried every second and the account's relogin is
+  refused until it lands (given up after 2 minutes with an error, to the last saved state).
+  XP is written inside the corpse, quest-completion and resurrection transactions (a crash
+  used to return a death's XP while its corpse kept the refund, and lose a quest's or a
+  resurrection's XP). A failing world loop now ends the process. Five tests, each failing with
+  its fix disabled. Accepted residual: a character whose corpse save failed (the database
+  already failing) and who leaves before the retry is saved without its corpse. **The redeploy
+  INTO this build is not clean** (the old binary is the one stopped): everyone logs out first.
+  **Later phases (planned, not built):** 2 the `tick.rs` split, right after the Oct 22 bump merges (user
   decision); 3 guardrails (lints, CI, `cargo deny`/`audit`, a fuzz target, panic
   containment); 4 the client/server line (fall damage on the server then `DeathBroadcast`
   gone, user decision; swing pacing on real haste; cast relays; intent budgets; a stats

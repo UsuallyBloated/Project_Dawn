@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Oct 23<span class="stat-sub">repo c10c342</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Oct 23<span class="stat-sub">repo 6c5974c</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">32.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">61.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">33.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">62.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -486,7 +486,7 @@
 <section>
 <h2><span class="week-head"><span>One evening when every client changes</span><span class="when">W3 &middot; October 19 to 25</span></span></h2>
 <p class="lede">Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the four friends receive their first zip from this build and never need another.</p>
-<div class="week-meta"><span>the user's time: 30.75 h</span><span>Claude build days: 14</span></div>
+<div class="week-meta"><span>the user's time: 32.25 h</span><span>Claude build days: 15</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -650,6 +650,16 @@
 <td class="done">Both suites green on the deploy branch and on feat/server-speed, each new test failing on the old code. Done only when hotfix_crash_and_dupes_checklist.md is filled.<span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
 </tr>
 <tr>
+<td class="id">b32</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 23</span>Housekeeping Phase 1, durability: a server restart now saves everyone and tells them before closing (it used to throw away up to a minute of everyone&#x27;s progress); a logout whose save fails is retried instead of lost; experience is saved together with the death, quest or resurrection that changed it. Server only, on the deploy branch, so it rides any redeploy.</td>
+<td>Claude unattended</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">Both suites green on the deploy branch and on feat/server-speed, each new test failing with its fix disabled. Done only when phase1_durability_checklist.md is filled.<span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
+</tr>
+<tr>
 <td class="id">o4</td>
 <td><span class="chip operate">Operate</span><span class="chip ms">Trade live</span></td>
 <td class="what"><span class="day">Thu Oct 22, the bump day</span>Stop the server, redeploy the merged build, add PROJECTDAWN_MIN_CLIENT_VERSION=0.2.0 to /opt/projectdawn/.env before starting it (without it, old clients still log in and simply have no trade), export the client from the merged commit with the rebuilt wire layer, zip, send to every tester, log in once to smoke it. The one evening everyone changes clients.</td>
@@ -698,6 +708,16 @@
 <td class="time">0.5 h</td>
 <td class="id">b31</td>
 <td class="done">The boot line shows build=3d938ca and dev_cmds=false.<span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
+</tr>
+<tr>
+<td class="id">o13</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Fri Oct 23 or later, everyone logged out</span>Redeploy the R720 at 6c2bc45 (Phase 1). This one restart is still the old kind, because the old program is the one being stopped, so everyone logs out first. Every restart after it saves everyone. No migration, no export.</td>
+<td>user at a desk, Claude writes the commands</td>
+<td class="needs"><ul><li>everyone logged out</li></ul></td>
+<td class="time">0.5 h</td>
+<td class="id">b32</td>
+<td class="done">The boot line shows build=6c2bc45 and dev_cmds=false.<span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
 </tr>
 <tr>
 <td class="id">v12</td>
@@ -928,6 +948,16 @@
 <td class="time">1 h</td>
 <td class="id">o12</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/hotfix_crash_and_dupes_checklist.md"><code>hotfix_crash_and_dupes_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
+</tr>
+<tr>
+<td class="id">v35</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">after the Phase 1 redeploy</span>Phase 1: restart the server with two players online and both are told their progress was saved, and both log back in exactly where they were with what they held; a death, a quest turn-in and a resurrection each keep their experience across a restart.</td>
+<td>user at a desk with a second account</td>
+<td class="needs"><ul><li>checklist phase1_durability_checklist.md: 11 rows to run</li><li>the Phase 1 redeploy (o13)</li><li>permission to restart the server three or four times during the sitting</li></ul></td>
+<td class="time">1 h</td>
+<td class="id">o13</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/phase1_durability_checklist.md"><code>phase1_durability_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
 </tr>
 <tr>
 <td class="id">p2</td>
@@ -1189,5 +1219,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-23 at repo c10c342</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-23 at repo 6c5974c</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

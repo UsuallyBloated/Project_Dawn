@@ -1364,3 +1364,41 @@ checklist = "hotfix_crash_and_dupes_checklist.md"
 waits_on = ["o12"]
 todo = "Housekeeping audit 2026-10-23"
 done_when = "Every row filled."
+
+[[row]]
+id = "b32"
+week = "w3"
+lane = "build"
+day = "Oct 23"
+what = "Housekeeping Phase 1, durability: a server restart now saves everyone and tells them before closing (it used to throw away up to a minute of everyone's progress); a logout whose save fails is retried instead of lost; experience is saved together with the death, quest or resurrection that changed it. Server only, on the deploy branch, so it rides any redeploy."
+who = "Claude unattended"
+days = 1
+done_when = "Both suites green on the deploy branch and on feat/server-speed, each new test failing with its fix disabled. Done only when phase1_durability_checklist.md is filled."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "o13"
+week = "w3"
+lane = "operate"
+day = "Fri Oct 23 or later, everyone logged out"
+what = "Redeploy the R720 at 6c2bc45 (Phase 1). This one restart is still the old kind, because the old program is the one being stopped, so everyone logs out first. Every restart after it saves everyone. No migration, no export."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+needs = ["everyone logged out"]
+waits_on = ["b32"]
+done_when = "The boot line shows build=6c2bc45 and dev_cmds=false."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v35"
+week = "w3"
+lane = "verify"
+day = "after the Phase 1 redeploy"
+what = "Phase 1: restart the server with two players online and both are told their progress was saved, and both log back in exactly where they were with what they held; a death, a quest turn-in and a resurrection each keep their experience across a restart."
+who = "user at a desk with a second account"
+hours = 1
+needs = ["the Phase 1 redeploy (o13)", "permission to restart the server three or four times during the sitting"]
+checklist = "phase1_durability_checklist.md"
+waits_on = ["o13"]
+todo = "Housekeeping audit 2026-10-23"
+done_when = "Every row filled."

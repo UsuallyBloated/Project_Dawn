@@ -36,13 +36,21 @@ never a copy), as unsaved kill loot always could.
 
 ## 2. Open findings, by plan phase
 
-### Phase 1: durability (`dist-failure-resilience`, `dist-transactions`)
-| Id | Finding | Evidence (feat/server-speed, 2026-10-23) |
+### Phase 1: durability (`dist-failure-resilience`, `dist-transactions`): FIXED
+Server `b36904e` + review fixes `6c2bc45` on the deploy branch, merged into `feat/server-speed`
+as `a7a318f`. Checklist: `docs/playtest_notes/phase1_durability_checklist.md`.
+
+| Id | Finding | Status |
 |---|---|---|
-| M1 | No SIGTERM/Ctrl-C handling; `KickCode::Restart` is never sent; a restart loses up to 60 s for everyone. | `main.rs` `try_join!`; `scripts/projectdawn.service` |
-| M2 | The logout save removes the connection first; a failed save is logged and dropped, never retried. | `reap_connection` |
-| M3 | XP is outside its transactions: the death penalty stays in memory while the corpse's `lost_xp` commits (a crash returns the XP and a res refunds it again); quest completion commits while its XP waits. | `progression.rs`, `save_corpse`, quest turn-in |
-| M8 | A `tick::run` error is logged and the world task ends `Ok`; auth keeps minting tokens for a dead world. | `world/mod.rs` `serve_with_socket` |
+| M1 | No SIGTERM/Ctrl-C handling; `KickCode::Restart` never sent; a restart lost up to 60 s for everyone. | FIXED: a stop signal saves everyone first (12 s retry budget), then tells each player the true line, then closes; non-zero exit if anyone was not saved; a second signal quits at once; Windows console close and shutdown included. |
+| M2 | The logout save removed the connection first and dropped a failed save. | FIXED: a retry queue (every second), relogin refused until it lands, given up after 2 minutes to the last saved state. |
+| M3 | XP outside its transactions (death, quest turn-in; the resurrection refund too, found while fixing). | FIXED: `db::XpProgress` written inside the corpse, quest-completion and resurrected-flag transactions. |
+| M8 | A `tick::run` error was logged and auth kept running. | FIXED: the error returns through `world::serve` and ends the process. |
+
+One save path now: `persistence::flush_connection` (position, resources, stores, skills,
+faction standings on `feat/server-speed`, quests), used by the checkpoint, logout, the retry
+queue and shutdown. Accepted residual: a character whose corpse save failed and who leaves
+before the retry is saved without its corpse (reachable only while the database fails writes).
 
 ### Phase 2: structure (`rust-traits-api`, `rust-testing`)
 | Id | Finding |
@@ -102,7 +110,7 @@ wire crates pinned; coin and XP arithmetic saturating; good unit coverage in inv
 AOI and protocol.
 
 ## 4. The plan
-Phase 0 (this hotfix), then Phase 1 durability, then the Phase 2 split right after the Oct 22
+Phase 0 (the hotfix, deployed 2026-10-23), then Phase 1 durability (built 2026-10-23), then the Phase 2 split right after the Oct 22
 bump merges (user decision, 2026-10-23), with Phase 3's CI and fuzzing alongside, then Phases
 4 to 6. Running alongside other work: Phase 0 and Phase 6's auth items are independent; Phases
 1, 2 and most of 4 and 5 touch the same files as feature branches and wait for them.
