@@ -837,7 +837,7 @@ text = "Trade slice 2: handing items to NPCs."
 text = "Beast Master taming (the decided destination for the class), replacing the interim owner-derived pet levels."
 
 [[after]]
-text = "Factions and alignment, slice 1 (docs/design/factions_and_alignment.md, all nine decisions made 2026-10-23): six factions with ally and enemy links, a kill's hits to the mob's hate list and quests' explicit hits, standing persisted and conned, vendors refusing at Dubious and quest givers at Apprehensive, alignment server-owned with the spell equation, the GM's faction sliders in the Test Panel; a migration and a bump, about two to three Claude days. Then guards that fight and attackable NPCs."
+text = "Factions and alignment, slice 2 (docs/design/factions_and_alignment.md; slice 1 is built, rows b30 and v33): guards that fight and NPCs players can attack, with the standing that costs. Then slice 3, SWG's joinable faction with spendable standing."
 
 [[after]]
 text = "The spells still blocked: seven prestige-class spells, seven ports to zones that do not exist, Exsanguinate, Camouflage, Warder's Mend."
@@ -1301,4 +1301,29 @@ needs = ["the Oct 22 export"]
 checklist = "eq_parity_checklist.md"
 waits_on = ["b29", "o4"]
 todo = "EQ parity: the inflation pass"
+done_when = "Every row filled."
+
+[[row]]
+id = "b30"
+week = "w3"
+lane = "build"
+day = "Oct 23"
+what = "Factions and alignment, slice 1: six factions; a kill's hits to everyone the mob hated and quests' explicit hits; standing kept per character and conned at EQ's nine levels; merchants and the banker refuse at Dubious, quest givers at Apprehensive; alignment kept by the server (kills, quests, spells at 0.001% of their mana) and deciding the Paladin and Shadow Knight prestige kits; /con, /factions and the GM's faction sliders. On feat/server-speed with a migration, so it rides the Oct 22 bump."
+who = "Claude unattended"
+days = 1
+done_when = "Both halves pushed and the server suite, the client probe and the lockstep checks pass. Done only when factions_checklist.md is filled."
+todo = "Faction system"
+
+[[row]]
+id = "v33"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Factions: /con on Brom and on mobs of every colour; kills move the right factions on every client the mob hated; a quest turn-in pays the Watch and the town; the GM sliders take Brom to Apprehensive (no quests) and Dubious (no trade, no bank) and back; a Paladin set to Evil gets the Fallen kit; standings survive a relog and a restart."
+who = "user at a desk, GM account and a second account"
+hours = 1
+needs = ["the Oct 22 export"]
+checklist = "factions_checklist.md"
+waits_on = ["b30", "o4"]
+todo = "Faction system"
 done_when = "Every row filled."

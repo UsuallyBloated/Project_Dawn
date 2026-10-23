@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Oct 23<span class="stat-sub">repo e77aff1</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Oct 23<span class="stat-sub">repo 9d83441</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">30.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">58.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">31.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">59.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -486,7 +486,7 @@
 <section>
 <h2><span class="week-head"><span>One evening when every client changes</span><span class="when">W3 &middot; October 19 to 25</span></span></h2>
 <p class="lede">Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the four friends receive their first zip from this build and never need another.</p>
-<div class="week-meta"><span>the user's time: 28.25 h</span><span>Claude build days: 12</span></div>
+<div class="week-meta"><span>the user's time: 29.25 h</span><span>Claude build days: 13</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -628,6 +628,16 @@
 <td class="time">1 Claude day</td>
 <td class="id"></td>
 <td class="done">The server suite and the client probe pass and both halves are pushed. Done only when eq_parity_checklist.md is filled.<span class="ref">To-Do entry: <code>EQ parity: the inflation pass</code></span></td>
+</tr>
+<tr>
+<td class="id">b30</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 23</span>Factions and alignment, slice 1: six factions; a kill&#x27;s hits to everyone the mob hated and quests&#x27; explicit hits; standing kept per character and conned at EQ&#x27;s nine levels; merchants and the banker refuse at Dubious, quest givers at Apprehensive; alignment kept by the server (kills, quests, spells at 0.001% of their mana) and deciding the Paladin and Shadow Knight prestige kits; /con, /factions and the GM&#x27;s faction sliders. On feat/server-speed with a migration, so it rides the Oct 22 bump.</td>
+<td>Claude unattended</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">Both halves pushed and the server suite, the client probe and the lockstep checks pass. Done only when factions_checklist.md is filled.<span class="ref">To-Do entry: <code>Faction system</code></span></td>
 </tr>
 <tr>
 <td class="id">o4</td>
@@ -880,6 +890,16 @@
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/eq_parity_checklist.md"><code>eq_parity_checklist.md</code></a></span><span class="ref">To-Do entry: <code>EQ parity: the inflation pass</code></span></td>
 </tr>
 <tr>
+<td class="id">v33</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>Factions: /con on Brom and on mobs of every colour; kills move the right factions on every client the mob hated; a quest turn-in pays the Watch and the town; the GM sliders take Brom to Apprehensive (no quests) and Dubious (no trade, no bank) and back; a Paladin set to Evil gets the Fallen kit; standings survive a relog and a restart.</td>
+<td>user at a desk, GM account and a second account</td>
+<td class="needs"><ul><li>checklist factions_checklist.md: 37 rows to run</li><li>the Oct 22 export</li></ul></td>
+<td class="time">1 h</td>
+<td class="id">b30, o4</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/factions_checklist.md"><code>factions_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Faction system</code></span></td>
+</tr>
+<tr>
 <td class="id">p2</td>
 <td><span class="chip people">People</span></td>
 <td class="what"><span class="day">Oct 22 to 25</span>Onboard the four friends with the bump-day zip (inviting_a_player.md steps 3 to 5: the bundle, wait for them to register, confirm no GM tag). Their first client is the one they keep. Half an hour each.</td>
@@ -1108,7 +1128,7 @@
 </tbody></table></div></section>
 <section><h2>After the door opens</h2>
 <p class="lede">Undated by the planner's choice. Status for each lives in the To-Do; phase 5's four decisions come first.</p>
-<ul class="plain"><li>Phase 5&#x27;s own plan (docs/design/phase5_plan.md) with four decisions open. Parts of its security and big-world tracks are already built (the NaN guard, the password reset tool, the silent-refusals closeout, the idle-creature network fix, creatures appearing when they walk into view, /loc), so the document needs a refresh when the decisions land.</li><li>The server height model (design first, from docs/session_notes/handoff_server_height_model.md), then terrain tooling and the first zone with real hills. The capability the large world waits on.</li><li>Trade slice 2: handing items to NPCs.</li><li>Beast Master taming (the decided destination for the class), replacing the interim owner-derived pet levels.</li><li>Factions and alignment, slice 1 (docs/design/factions_and_alignment.md, all nine decisions made 2026-10-23): six factions with ally and enemy links, a kill&#x27;s hits to the mob&#x27;s hate list and quests&#x27; explicit hits, standing persisted and conned, vendors refusing at Dubious and quest givers at Apprehensive, alignment server-owned with the spell equation, the GM&#x27;s faction sliders in the Test Panel; a migration and a bump, about two to three Claude days. Then guards that fight and attackable NPCs.</li><li>The spells still blocked: seven prestige-class spells, seven ports to zones that do not exist, Exsanguinate, Camouflage, Warder&#x27;s Mend.</li><li>The Bard song rework; sound (the friends build ships silent by decision); the UI theming pass, the one most visible to a new player.</li><li>Public-host hardening, mandatory only if the server is ever reachable beyond Tailscale.</li><li>Ending a password-reset account&#x27;s session that is already in the world (needs a migration). Far out by the user&#x27;s call on October 16 (this operator tool only; vigilance against hacks, dupes and cheats in every build is unchanged); the ban kick already exists for real trouble.</li><li>The multi-zone epic, with the procedural dungeon as its first customer.</li></ul>
+<ul class="plain"><li>Phase 5&#x27;s own plan (docs/design/phase5_plan.md) with four decisions open. Parts of its security and big-world tracks are already built (the NaN guard, the password reset tool, the silent-refusals closeout, the idle-creature network fix, creatures appearing when they walk into view, /loc), so the document needs a refresh when the decisions land.</li><li>The server height model (design first, from docs/session_notes/handoff_server_height_model.md), then terrain tooling and the first zone with real hills. The capability the large world waits on.</li><li>Trade slice 2: handing items to NPCs.</li><li>Beast Master taming (the decided destination for the class), replacing the interim owner-derived pet levels.</li><li>Factions and alignment, slice 2 (docs/design/factions_and_alignment.md; slice 1 is built, rows b30 and v33): guards that fight and NPCs players can attack, with the standing that costs. Then slice 3, SWG&#x27;s joinable faction with spendable standing.</li><li>The spells still blocked: seven prestige-class spells, seven ports to zones that do not exist, Exsanguinate, Camouflage, Warder&#x27;s Mend.</li><li>The Bard song rework; sound (the friends build ships silent by decision); the UI theming pass, the one most visible to a new player.</li><li>Public-host hardening, mandatory only if the server is ever reachable beyond Tailscale.</li><li>Ending a password-reset account&#x27;s session that is already in the world (needs a migration). Far out by the user&#x27;s call on October 16 (this operator tool only; vigilance against hacks, dupes and cheats in every build is unchanged); the ban kick already exists for real trouble.</li><li>The multi-zone epic, with the procedural dungeon as its first customer.</li></ul>
 </section>
 <section><h2>Risks</h2>
 <div class="scroll"><table><thead><tr><th>Risk</th><th>Impact</th><th>Mitigation</th></tr></thead><tbody>
@@ -1139,5 +1159,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-23 at repo e77aff1</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-23 at repo 9d83441</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

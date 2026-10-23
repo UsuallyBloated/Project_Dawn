@@ -279,6 +279,11 @@ refusal lines ride the existing System chat line. No client decides anything.
 
 ### 4.7 Slices
 
+**Slice 1 BUILT 2026-10-23** (server `5efd45d` + `30c270a`, client `22ebde7`;
+`docs/playtest_notes/factions_checklist.md`; the To-Do's "Faction system" entry has what
+exists and the calls made in the build). Not built from the list below: the faction on the
+character sheet and the dialogue header.
+
 - **Slice 1 (server and client, one bump):** `factions.toml` with the race-and-class start
   table read from day one (empty in v1), the mob and NPC fields, hits on kills (to the hate
   list) and quests, standing persisted, the con line and `Consider`, vendor and quest-giver

@@ -893,7 +893,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   2026-10-19** (the "Active skills partly do not work online" entry has it); **Bard songs
   BUILT 2026-10-20** (the "Bard song rework" entry); **alignment DESIGNED 2026-10-20** as
   part of the factions design (the "Faction system" entry, `factions_and_alignment.md`,
-  decisions pending); fall damage remains.
+  decisions pending); **alignment BUILT 2026-10-23** with factions slice 1 (that entry);
+  fall damage remains.
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
@@ -2218,6 +2219,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   built:** cast times (most level 1 nukes are instant; EQ's took 1.1 to 1.8 s); mid-level mob
   HP; Lich Form's hit point drain (EQ's lich line paid HP for the mana; ours is a free Breeze
   at 20); a fizzle's line to bystanders; per-spell `base_difficulty`.
+  **Found 2026-10-23: `pet_pulls_aggro_via_threat_reaggro` fails on `feat/server-speed`**
+  (checked on a clean tree, before the factions build; it times out waiting for the mob to
+  retarget onto the pet). Most likely this pass's smaller pools and mob hit points ending the
+  fight before the pet's threat passes the owner's. Root-cause it before the Oct 22 merge; the
+  project's rule is that every failure is real.
 - [ ] **Regen model and race trade-off follow-ups** *(`regen_model.md` §Deferred + §Open tuning,
   `race_xp_regen_tradeoffs_plan.md` slices 1 and 3; audit 2026-09-29 confirmed no race XP
   multiplier exists in `progression.rs`)*. Open: the pool-size formulas (STA to max HP, the
@@ -2473,6 +2479,54 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `#factionassociation`, a delta; EQ Live's Guide robes were identification with small stats,
   the powers being the account flag, so a "Breastplate of Indifference" is a later cosmetic).
   Planner d10 answered; the build sits on the after-the-door strip.
+  **SLICE 1 BUILT 2026-10-23, pending the Oct 22 bump and the playtest** (user: "Lets rock
+  and roll!"; `feat/server-speed`, server `5efd45d` + `30c270a`, client `22ebde7`;
+  `factions_checklist.md`, 37 rows; migration `0016_factions_and_alignment.sql`, forward-only,
+  ships in the merged build). Server: `data/factions.toml` (six factions, ally and enemy
+  links, empty race and class start tables read from day one), a `faction` and `alignment`
+  tier on every camp mob and NPC, `faction_hits` and `alignment_delta` on all nine quests;
+  `world/factions.rs` and `world/alignment.rs`; a kill pays `-(4 + level)` (x3 named) to its
+  faction and half of it to each enemy, to everyone on the mob's hate list (its damage and
+  threat maps together, so a missed swing or a healer it hated counts), and the kill's
+  alignment move goes to the top damager; quest turn-in pays its explicit hits and delta;
+  standing per character in `character_factions`, clamped at 2000, conned at EQEmu's nine
+  levels, sent as `FactionUpdate`; merchants and the banker refuse at Dubious or worse ("X will
+  not deal with you."), quest givers at Apprehensive or worse, at accept and turn-in ("X has
+  nothing to say to you."), the soul binder never; alignment held by the server
+  (`alignment_score`, existing since 0001 and never written, plus `alignment_seeded`), seeded
+  once from the class start, moved by kills, quests and every cast (0.001% of its mana, the
+  user's equation, through the momentum rule), sent as `AlignmentUpdate` on a 0.01 move or a
+  tier crossing; the prestige class decided by the server at the cast, memorize and skill gates
+  (a Paladin at Evil casts the Fallen kit and loses the Paladin's), the seven prestige spells on
+  the server with the client's numbers (spell lockstep 149 shared, 9 client-only, zero drift);
+  the 0.7 / 0.4 off-side penalty applied as a penalised copy of the spell. Wire, under PD_W0028:
+  `Consider` (an NPC by id or display name, a mob by entity id; EQ's faction phrase plus one
+  level phrase per colour, the colour bands from the P99 wiki's Consider page; anything else
+  gets "You cannot consider that.") and the GM-only, audited `DevSetFaction` (the GM's own
+  standing, set to an absolute value), `FactionUpdate`, `AlignmentUpdate`; the DLL's signals and
+  sends. Client: `Alignment` follows the server (the class seed applies only until the server
+  speaks, so a class re-apply no longer resets it; the first server score re-runs the kits);
+  `/con` (`/consider`) and `/factions`; the Test Panel's FACTIONS (GM) sliders; its normal
+  mobs renamed to camp names, so a dev spawn (named or not) carries its camp's faction;
+  `data/faction_definitions.gd` held by `tools/check_faction_lockstep.gd`. Tests: unit (the
+  table, hits, levels, the con bands, the penalty copy, momentum, a dev spawn's camp faction)
+  and five integration tests, each failing on the previous server (a kill pays the hate list
+  and moves the killer's alignment; a quest pays its hits and a shunned Brom refuses, the
+  standing surviving a relog; a plain account's slider is a silent no-op and Consider names no
+  standing; a Paladin at Evil casts the Fallen kit and not the Paladin's; a Neutral Paladin
+  casts at 0.7); `tools/probe_factions.gd`, 17 checks. Suite: 324 unit, 133 of 134
+  integration; the one failure, `pet_pulls_aggro_via_threat_reaggro`, fails on the branch
+  without this build too (filed under the EQ parity entry). **Calls made in the build, for the
+  user to overrule:** the hate list is damage plus threat; the alignment move goes to the top
+  damager, not the group; the con line is two sentences, not EQ's double-dash join, with one
+  level phrase per colour (the P99 page varies them by level band above 6); `/con` names an
+  NPC by its display name (the client holds no server ids for NPCs); the quest-accept gate
+  uses the quest's turn-in NPC as its giver; the GM slider sets the standing NPCs see.
+  **Not built, flagged:** the faction on the character sheet and a dialogue header (the
+  design's slice 1 named both; `/factions` is the readout for now); a per-tick budget on
+  `Consider` (add `Consider` and `DevSetFaction` to the intent budgets when
+  `feat/public-hosting` merges); a GM tool for alignment (the checklist sets it by hand in
+  SQLite); coloured con lines; conning players.
 - [x] **Time of day is per-client; make it server-driven** — **DONE + playtested 2026-10-09**
   (`time_of_day_checklist.md`, every row PASS including §2's two seats: the clocks agreed to the
   minute and through a full day, dusk came together, the sky carried on across a relaunch and a
@@ -2536,6 +2590,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   headless probe of both button paths that fails on the old button.
 
 ### UI polish
+- [ ] **The consider command (`/con`)** *(user, 2026-10-23, on seeing the P99 Consider page:
+  "This is 1000% a mechanic we need in Project Dawn. Please add it to the list.")*. **First
+  piece BUILT 2026-10-23 with factions slice 1, pending the bump and the playtest**
+  (`factions_checklist.md` §2): `/con` (or `/consider`) on the target asks the server, which
+  answers with EQ's faction phrase from the player's standing ("Brom regards you
+  indifferently.") and, for a mob, one level phrase per con colour (white "Looks like an even
+  fight.", yellow one or two above "Looks like quite a gamble.", red three or more above "What
+  would you like your tombstone to say?", blue "Looks like you would have the upper hand.",
+  green "Looks like a reasonably safe opponent."), blue reaching 3 levels below at levels 1 to
+  12, 4 at 13 to 17, then one more every four levels (15 at 58), the colour ranges the P99 wiki's
+  Consider page calls accurate. **Open:** the page's per-band wording (its phrases change with
+  the player's level band); coloured con lines in chat; a keybind; conning players; and a
+  design call on whether the con colour decides XP as EQ's light blue and green did.
 - [ ] **In-game UI layout is "pretty busted"** *(user, machine day 2026-09-22, on the fresh
   1280x720 startup window)*. No specifics captured yet — needs a screenshot pass naming which
   windows/anchors misbehave at which sizes. Belongs to the deferred cohesive UI theming/polish
