@@ -81,10 +81,10 @@ Three things to know before touching it:
   after being committed **and pushed**. The host tracks `fix/xp-leveling-overflow`, not the
   default branch. (A stale deploy on 2026-08-08 was running a six-week-old `main` with none of
   the Phase 1 exploit gates in it; the only symptom was a missing field in one log line.)
-- **Graceful shutdown arrives with build `6c2bc45` (built 2026-10-23, not yet deployed).** From
-  that build on, `systemctl stop`/`restart` saves everyone and tells them before closing (see
-  `server_operations.md`, "Stopping safely"); before it, a restart discards up to 60 s of
-  position, HP, XP, inventory and coins for everyone online. Either way, get people to log out
+- **Shutdown is graceful since build `6c2bc45` (deployed 2026-10-23 21:48 UTC).**
+  `systemctl stop`/`restart` saves everyone and tells them before closing (see
+  `server_operations.md`, "Stopping safely"); an older build discarded up to 60 s of
+  position, HP, XP, inventory and coins for everyone online. Still get people to log out
   first: it costs nothing, and a crash is never clean.
 
 ### Shipping a change to the R720
@@ -850,8 +850,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   with a price, named drops included; each vendor's stock now lives in `npcs.toml` too, and
   on `feat/server-speed` the vendor must also serve the buyer on faction. H6: a failed
   corpse save skipped the corpse for good; it retries next tick. Eleven tests, each failing
-  on the unfixed code. **Phase 1, durability, BUILT 2026-10-23, pending the redeploy and the
-  playtest** (server `b36904e` + review fixes `6c2bc45` on the deploy branch, merged into
+  on the unfixed code. **Phase 1, durability, BUILT and DEPLOYED 2026-10-23** (R720 boot line
+  `build="6c2bc45" dev_cmds=false`, 21:48 UTC), **pending the playtest** (server `b36904e` +
+  review fixes `6c2bc45` on the deploy branch, merged into
   `feat/server-speed` as `a7a318f`; `phase1_durability_checklist.md`; server-only, no export;
   user calls: build on the deploy branch, the EQ-flavoured restart line). A stop or restart
   (SIGTERM, Ctrl-C, a closed console on Windows) now saves everyone first (failed saves
