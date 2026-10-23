@@ -1402,3 +1402,14 @@ checklist = "phase1_durability_checklist.md"
 waits_on = ["o13"]
 todo = "Housekeeping audit 2026-10-23"
 done_when = "Every row filled."
+
+[[row]]
+id = "b33"
+week = "w3"
+lane = "build"
+day = "Oct 23"
+what = "Housekeeping Phase 3, the part that leaves the big world file alone: a server check that runs on demand on GitHub (tests plus a scan of every library the server uses for known security problems, which found and fixed three), a cap on how large a client message may claim to be, the server's secret key kept out of every log, and automated tests that hunt for duplicated coins and items. Tooling only: nothing changes for players."
+who = "Claude unattended"
+days = 1
+done_when = "Both suites green on the deploy branch and on feat/server-speed; tools/check_all.ps1 runs every client check."
+todo = "Housekeeping audit 2026-10-23"
