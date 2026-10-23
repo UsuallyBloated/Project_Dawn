@@ -17,32 +17,32 @@ Diagnostics: the journal (`journalctl -u projectdawn -n 40 --no-pager`). A clean
 service shows a non-zero exit.
 
 ## Setup
-- [ ] R720 redeployed with everyone logged out; boot line checked (`dev_cmds=false`, new
+- [x] R720 redeployed with everyone logged out; boot line checked (`dev_cmds=false`, new
   `build=`). notes:
-- [ ] Two players online (two-boxing works). notes:
+- [x] Two players online (two-boxing works). notes:
 
 ## 1 — A restart saves everyone and says so
-- [ ] **Player A walks somewhere new and buys or loots an item; within a minute, run
+- [x] **Player A walks somewhere new and buys or loots an item; within a minute, run
   `sudo systemctl restart projectdawn`** → both players see "The world is being restarted.
   Your progress has been saved; please log in again in a minute." notes:
-- [ ] **Both log back in** → A stands where they were and holds the item; B is where they
+- [x] **Both log back in** → A stands where they were and holds the item; B is where they
   were. notes:
-- [ ] **Read the journal** → `world closed saved=2 unsaved=0` (or the count online), then a
+- [x] **Read the journal** → `world closed saved=2 unsaved=0` (or the count online), then a
   clean start. notes:
 
 ## 2 — XP is saved with what changed it
-- [ ] **A character level 6 or higher dies, and within a minute the server is restarted** →
+- [x] **A character level 6 or higher dies, and within a minute the server is restarted** →
   after relogging the character is still at the lower XP (the death's loss did not come back).
   notes:
-- [ ] **Turn in a quest, then restart within a minute** → after relogging the quest's XP is
+- [x] **Turn in a quest, then restart within a minute** → after relogging the quest's XP is
   still there and the quest is still done. notes:
-- [ ] **A Cleric resurrects a corpse, the owner accepts, then restart within a minute** →
+- [x] **A Cleric resurrects a corpse, the owner accepts, then restart within a minute** →
   after relogging the refunded XP is still there. notes:
 
 ## 3 — Regression: ordinary play unchanged
-- [ ] **Log out and back in normally** → everything as left, and the relogin is immediate.
+- [x] **Log out and back in normally** → everything as left, and the relogin is immediate.
   notes:
-- [ ] **Play a few minutes with kills, loot, a bank trip** → nothing odd; no
+- [x] **Play a few minutes with kills, loot, a bank trip** → nothing odd; no
   `logout save incomplete` or `shutdown save incomplete` lines in the journal. notes:
 
 > Not reproducible by hand, covered by tests instead: a logout whose save fails waits in a

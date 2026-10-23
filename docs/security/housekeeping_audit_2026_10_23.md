@@ -36,7 +36,7 @@ never a copy), as unsaved kill loot always could.
 
 ## 2. Open findings, by plan phase
 
-### Phase 1: durability (`dist-failure-resilience`, `dist-transactions`): FIXED
+### Phase 1: durability (`dist-failure-resilience`, `dist-transactions`): FIXED, deployed and playtested 2026-10-23
 Server `b36904e` + review fixes `6c2bc45` on the deploy branch, merged into `feat/server-speed`
 as `a7a318f`. Checklist: `docs/playtest_notes/phase1_durability_checklist.md`.
 

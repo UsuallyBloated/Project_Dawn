@@ -850,8 +850,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   with a price, named drops included; each vendor's stock now lives in `npcs.toml` too, and
   on `feat/server-speed` the vendor must also serve the buyer on faction. H6: a failed
   corpse save skipped the corpse for good; it retries next tick. Eleven tests, each failing
-  on the unfixed code. **Phase 1, durability, BUILT and DEPLOYED 2026-10-23** (R720 boot line
-  `build="6c2bc45" dev_cmds=false`, 21:48 UTC), **pending the playtest** (server `b36904e` +
+  on the unfixed code. **Phase 1, durability, DONE + playtested 2026-10-23**
+  (`phase1_durability_checklist.md`: all ten required rows pass, the optional dev-box row not
+  run; what exists is in systems_overview, "Saving and shutdown"). Deployed the same evening
+  (R720 boot line `build="6c2bc45" dev_cmds=false`, 21:48 UTC) (server `b36904e` +
   review fixes `6c2bc45` on the deploy branch, merged into
   `feat/server-speed` as `a7a318f`; `phase1_durability_checklist.md`; server-only, no export;
   user calls: build on the deploy branch, the EQ-flavoured restart line). A stop or restart

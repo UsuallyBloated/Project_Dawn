@@ -801,7 +801,7 @@ Where you wake up after dying is server-authoritative (2026-08-12, playtested 08
 - **Setting a bind.** `ClientWorldMsg::BindAtCurrentLocation` (a variant that sat dormant with no
   sender AND no handler until now) captures *the player's* current position, not the NPC's. It is
   refused while dead, so a corpse cannot bind where it fell. Persisted immediately rather than on
-  the 60 s checkpoint, since there is no graceful shutdown to flush it.
+  the 60 s checkpoint, since a crash (unlike a clean stop) saves nothing.
 - **Sister Maelis**, Soul Binder, stands at the town spawn. She reuses the dialogue NPC and window
   via a `bind_soul` response action rather than bespoke UI.
 - **Death lock.** `Move` is refused server-side while `death_processed`, and the client stops
@@ -965,10 +965,24 @@ nightly at 04:00 via `/etc/cron.d/projectdawn-backup`, writing `sqlite3 .backup`
 the dev box pulls those into Google Drive, putting one copy outside the building. Verified by
 restoring a backup and reading a character out of it, not just by the files existing.
 
-**Known operational gaps.** No kick, no ban, no shutdown warning; `accounts.is_banned` is read
-at login but nothing writes it. No SIGTERM handler, so a stop or restart discards up to 60 s of
-position, HP, XP, inventory and coins for everyone online. The database is not in WAL mode
-despite comments claiming otherwise.
+**Saving and shutdown** (housekeeping audit Phase 1, playtested 2026-10-23,
+`phase1_durability_checklist.md`). Every save of a character goes through one function,
+`persistence::flush_connection` (position, resources, the item and coin stores in one
+transaction, skills, faction standings, quests; each part clears its flag only when it lands),
+used by the 60 s checkpoint, logout, a retry queue and shutdown. A stop signal (SIGTERM from
+`systemctl stop`/`restart`, Ctrl-C, a closed console on Windows) saves everyone first, retrying
+failures for 12 s inside systemd's 20 s, then tells each player "The world is being restarted.
+Your progress has been saved; please log in again in a minute." (or that their last moments
+could not be saved), closes every connection and exits; non-zero if anyone was left unsaved;
+a second signal quits at once. A logout whose save fails waits in a retry queue (every
+second) and its account's relogin is refused until it lands, given up after 2 minutes to the
+last saved state. XP is written inside the transaction that records why it changed (the
+corpse, the quest completion, the resurrected flag). A failing world loop ends the process so
+systemd restarts it. A crash still loses up to the last 60 s.
+
+**Known operational gaps.** No shutdown warning ahead of time (a timed "restarting in 5
+minutes" is not built). The database is not in WAL mode despite comments claiming otherwise.
+(Kicking and banning exist since 2026-10-01/02: the `admin_account` bin and the ban sweep.)
 
 **Operator docs.** `docs/deployment/server_operations.md` (run, update, recover, triage),
 `docs/deployment/inviting_a_player.md` (onboarding checklist),
