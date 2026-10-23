@@ -830,8 +830,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 ### Security / exploits
 - [ ] **Housekeeping audit 2026-10-23: the hotfix (Phase 0) and the later phases** *(the
   user asked for the code to be compared with the kodr-skills standards; findings and every
-  id: `docs/security/housekeeping_audit_2026_10_23.md`)*. **Phase 0 BUILT 2026-10-23,
-  pending the R720 redeploy and the playtest** (server `6f18a5e` + review fixes `3d938ca` on
+  id: `docs/security/housekeeping_audit_2026_10_23.md`)*. **Phase 0 BUILT and DEPLOYED
+  2026-10-23** (R720 boot line `build="3d938ca" dev_cmds=false`, 19:52 UTC), **pending the
+  playtest** (server `6f18a5e` + review fixes `3d938ca` on
   the deploy branch, merged into `feat/server-speed` as `019bfb3`; client
   `tools/check_vendor_lockstep.gd`; `hotfix_crash_and_dupes_checklist.md`; server-only, no
   export). H1: one chat line with an accented letter at byte 512 crashed the whole server
