@@ -214,6 +214,12 @@ planner d10): the user wants kills and quests to be the whole of it and spells a
 their mana cost; nine decisions wait on the user, nothing built, after the door by the
 schedule. Next planner ids: `b30`, `v33`, `d11`.
 
+**Progress (2026-10-23):** all nine factions decisions made (the design's §6; session note
+2026-10-23 §1; the "Faction system" To-Do entry): hits to EQ's hate list, EQEmu's thresholds,
+the start table built and empty, a GM faction panel in slice 1 (`DevSetFaction`, GM-only,
+audited). Build-ready, on the after-the-door strip; nothing built. Next planner ids: `b30`,
+`v33`, `d11`.
+
 ### 4.1 Nameplates visible through walls (client only; the user said "fix before ship")
 
 What is known: name labels are `Label3D` nodes named `NameLabel`.

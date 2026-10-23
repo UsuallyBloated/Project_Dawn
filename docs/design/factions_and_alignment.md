@@ -172,11 +172,11 @@ A quest carries `faction_hits = { greyveil_town = 25, greyveil_watch = 10 }` in
 quest's standing is content and should read as content). Default when absent: +20 to the
 turn-in NPC's faction.
 
-**Who gets a kill's hits** is decision 2. The two honest answers: EQ's (every player on the
-mob's hate list, which `Entity::aggro` already is) or ours for XP (the creditor and their
-group members who are online, alive and within the 200 m share range). Recommendation: the
-XP rule, so standing and experience come from one eligibility and a healer who never touched
-the mob is not left out, with EQ's hate-list rule noted as the alternative.
+**Who gets a kill's hits** was decision 2, and the user chose **EQ's rule: every player on
+the mob's hate list** (`Entity::aggro`, which the server already keeps), no group or range
+test ("EQ's hate list is the way", 2026-10-23). A healer who never touched the mob gets
+nothing, as on P99; a puller who tagged it and ran gets the hit from across the zone, as on
+P99. The alternative, the XP eligibility rule, is recorded here only as the road not taken.
 
 ### 4.3 Standing and the con
 
@@ -259,8 +259,9 @@ refusal lines ride the existing System chat line. No client decides anything.
 3. **A client cannot set its standing or its alignment**: both are the server's, the client's
    `modify_alignment` and its own effectiveness multiplier are retired, and the prestige class
    gates key on the server's `effective_class`.
-4. **Kill credit** for hits follows the XP rule (or the hate list, decision 2): a corpse, a
-   town-sitter 200 m away, or a player who never touched the mob gets nothing.
+4. **Kill credit** for hits is the mob's hate list (decision 2, EQ's rule): a player who never
+   touched the mob gets nothing, however close or grouped; a player who did gets the hit
+   wherever they stand, which is EQ's own puller rule and no gain over a kill.
 5. **Pets** credit the owner; **a charmed mob** gives no hits when it dies and credits the
    charmer for its kills, as XP does.
 6. **No standing oracle:** `Consider` works only on a target in reach; an absent, far or
@@ -271,20 +272,37 @@ refusal lines ride the existing System chat line. No client decides anything.
    start exactly once, then the column holds the number).
 9. **Vendor refusal** at Dubious is only a wall once NPCs can be attacked (slice 2); until
    then no player can reach Dubious with the town, since nothing in the world lowers it.
-10. **GM freeze** (EQ's): a GM's standing does not move, so a GM playtest cannot be told
-    apart from a player's by its faction lines; decision 9 says whether we want that.
+10. **No GM freeze** (decision 9): a GM's standing moves like anyone's, so a GM playtest
+    shows the real lines; the GM's faction sliders are a dev command, GM-only, audited, and
+    move only the GM's own standing, so no player can be handed a standing by it and no
+    plain account can reach it.
 
 ### 4.7 Slices
 
-- **Slice 1 (server and client, one bump):** `factions.toml`, the mob and NPC fields, hits on
-  kills and quests, standing persisted, the con line and `Consider`, vendor and quest-giver
+- **Slice 1 (server and client, one bump):** `factions.toml` with the race-and-class start
+  table read from day one (empty in v1), the mob and NPC fields, hits on kills (to the hate
+  list) and quests, standing persisted, the con line and `Consider`, vendor and quest-giver
   refusals; alignment server-owned with kills, quests and the spell equation, the seed, the
   class gates and the off-side penalty, `AlignmentUpdate`; the client's sheet and dialogue
-  header, `/con`. Tests: unit (the hit derivation, the clamp, the nine levels, the momentum
-  rule, the spell equation, the seed-once rule) and integration (a gnoll kill moves two
-  factions by the right amounts for the right people, a quest turn-in pays its hits, a vendor
-  refuses a Dubious character, a Paladin driven to Evil casts a Fallen spell and a plain
-  Paladin cannot, `Consider` on a far target gets the generic line).
+  header, `/con`; **the GM's faction panel** in the Test Panel (user, 2026-10-23: "GMs will
+  need tools to test the factions. Probably a tool with sliders that allows the GM to adjust
+  only their own faction with any of the listed factions"): one slider per faction, setting
+  the GM's own standing to an absolute value through a new `DevSetFaction { faction_id,
+  standing }` intent, GM-only and audited like every dev command, the server clamping to the
+  faction's range, and no GM freeze on ordinary hits (decision 9). EQEmu's own GM tools for
+  comparison: `#faction review` (a targeted player's standing with every faction), `#faction
+  reset` (back to base), `#faction view` (an NPC's primary faction) and `#factionassociation
+  <faction> <amount>` (a delta on the GM's own or a targeted player's standing); EQ Live's
+  Guides wore marked robes (the Sage Robe of Tranquility and its kin, +100 HP, 40 AC), but
+  the powers came from the account flag and commands, not the clothes, so a "Breastplate of
+  Indifference" stays a cosmetic for later (it would need the no-drop flag and a GM-only item
+  gate). Tests: unit (the hit derivation, the clamp, the nine levels, the momentum rule, the
+  spell equation, the seed-once rule, the start table) and integration (a gnoll kill moves
+  two factions by the right amounts for everyone on its hate list and nobody else, a quest
+  turn-in pays its hits, a vendor refuses a Dubious character, a Paladin driven to Evil casts
+  a Fallen spell and a plain Paladin cannot, `Consider` on a far target gets the generic
+  line, a plain account's `DevSetFaction` does nothing and a GM's moves only their own
+  standing and writes one audit row).
 - **Slice 2 (content and server):** guards as combat NPCs with the Watch's faction (attack on
   sight at Threatening and below), attackable town NPCs with the consequences the user asked
   for (a kill hits the town and the Watch; the evil-race reputation farm then has a cost),
@@ -298,27 +316,46 @@ Not a friends-build item: the schedule has it on the after-the-door strip, and s
 about two to three days with a migration and a bump. If the user wants it before Nov 8 it
 competes with the alignment-free items already queued; the recommendation is after.
 
-## 6. Decisions for the user
+## 6. Decisions for the user (ALL NINE DECIDED 2026-10-23)
 
 1. **The first faction set** (§4.1's six) and the derived hit rule (`-hit` to the mob's
    faction, `+hit / 2` to its enemies, `hit = 4 + level`, named x3). Recommendation: yes.
-2. **Who gets a kill's hits.** Recommendation: the XP eligibility rule (the creditor and the
-   alive, in-range group), not EQ's hate list.
+   **DECIDED: yes** ("Your recommendations looked great for 1 and 8. Good to go.").
+2. **Who gets a kill's hits.** Recommendation was the XP eligibility rule. **DECIDED: EQ's
+   hate list** ("EQ's hate list is the way"); §4.2 and the ledger follow it.
 3. **The level thresholds.** Recommendation: EQEmu's rule defaults (1100 / 750 / 500 / 100 /
-   0 / -100 / -500 / -750), since P99's own two pages disagree.
+   0 / -100 / -500 / -750), since P99's own two pages disagree. **DECIDED: EQEmu's** ("I think
+   we can trust EQEmu"). What P99's pages say, for the record: the Faction page's table runs
+   Ally 1051 to 2000, Warmly 701 to 1050, Kindly 451 to 700, Amiable 51 to 450, Indifferent
+   -49 to 50, Apprehensive -50 to -449, Dubious -450 to -699, Threatening -700 to -1049,
+   Scowls -1050 to -2000; its Game Mechanics page puts Apprehensive at -101 to -500 and
+   Scowls below -801; both are player estimates from counting kills, and a forum thread on
+   the table calls it "not so correct". The edges differ from EQEmu's by 50 to 100 points
+   either way; nothing in play hinges on them.
 4. **v1 consequences.** Recommendation: vendors and the banker refuse at Dubious, quest givers
    at Apprehensive, the soul binder always serves, guards' attack waits for slice 2, prices
-   untouched.
+   untouched. **DECIDED: as recommended** ("This sounds good").
 5. **Alignment seeding.** Recommendation: the class start on first load, written once.
+   **DECIDED: yes** ("this is great").
 6. **The off-side penalty** (0.7 at Neutral, 0.4 at Bad for a Paladin; the Shadow Knight
-   mirrored). Recommendation: keep, moved to the server.
+   mirrored). Recommendation: keep, moved to the server. **DECIDED: keep.**
 7. **Starting standings by race.** Recommendation: none in v1 (everyone Indifferent with the
-   town); the table is there for the content pass.
+   town); the table is there for the content pass. **DECIDED: everyone Indifferent, and the
+   system built now** ("Everyone indifferent is important right now. But can we build the
+   system for this?"): the per-faction race-and-class start table is read from day one and
+   ships empty; filling it is a content edit, no code.
 8. **The content values**: mob alignment tiers (undead +20, gnolls and bandits +10, wildlife
    0, The Undying +50) and the nine quests' `alignment_delta` (+20 to +40) and `faction_hits`
    (+25 town, +10 Watch, more for the named hunts). Recommendation: as proposed; the
-   playtest tunes them.
+   playtest tunes them. **DECIDED: as proposed.**
 9. **The GM freeze.** Recommendation: no freeze (a GM playtest should show the real lines).
+   **DECIDED: no freeze, and a GM tool** ("GMs will need tools to test the factions. Probably
+   a tool with sliders that allows the GM to adjust only their own faction with any of the
+   listed factions"): the Test Panel's faction sliders in slice 1 (§4.7), the server-side
+   `DevSetFaction` behind them, GM-only and audited. The user also asked whether EQ gave its
+   GMs their abilities through gear ("a breastplate of indifference or some shit"): EQ Live's
+   Guides wore marked robes, but the powers were the account flag and commands (EQEmu's
+   `#faction` and `#factionassociation` are the faction ones); a GM cosmetic can follow later.
 
 ## 7. Sources
 

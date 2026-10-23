@@ -2459,6 +2459,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `AlignmentUpdate`. Migration 0016 and a bump. Ten-point exploit ledger. Three slices:
   the system; guards that fight and attackable NPCs (the user's 2026-05-05 framing);
   SWG's joinable faction with spendable standing. After the door by the schedule.
+  **ALL NINE DECIDED 2026-10-23 (user), recorded in the design's §6; build-ready, not
+  built:** the six factions and the derived hit rule; **a kill's hits go to EQ's hate list**
+  ("EQ's hate list is the way"), not the XP group; EQEmu's thresholds ("I think we can trust
+  EQEmu"; P99's two pages are player estimates 50 to 100 points either side); vendors and
+  the banker refuse at Dubious, quest givers at Apprehensive, the soul binder always serves;
+  alignment seeded from the class start once; the 0.7 / 0.4 off-side penalty kept, on the
+  server; everyone Indifferent in v1 **with the race-and-class start table built and empty**
+  ("can we build the system for this?"); the content values as proposed; no GM freeze, and
+  **a GM faction tool**: sliders in the Test Panel setting the GM's OWN standing with each
+  faction to an absolute value through a `DevSetFaction` intent, GM-only and audited like
+  every dev command (EQEmu's own are `#faction review / reset / view` and
+  `#factionassociation`, a delta; EQ Live's Guide robes were identification with small stats,
+  the powers being the account flag, so a "Breastplate of Indifference" is a later cosmetic).
+  Planner d10 answered; the build sits on the after-the-door strip.
 - [x] **Time of day is per-client; make it server-driven** — **DONE + playtested 2026-10-09**
   (`time_of_day_checklist.md`, every row PASS including §2's two seats: the clocks agreed to the
   minute and through a full day, dusk came together, the sky carried on across a relaunch and a
