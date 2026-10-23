@@ -1327,3 +1327,40 @@ checklist = "factions_checklist.md"
 waits_on = ["b30", "o4"]
 todo = "Faction system"
 done_when = "Every row filled."
+
+[[row]]
+id = "b31"
+week = "w3"
+lane = "build"
+day = "Oct 23"
+what = "Hotfix from the housekeeping audit: one chat line could crash the whole server; a dropped item could end up with two players after a restart; quest rewards, deaths, corpse loot and trades saved the bags without the bank; a failed load at login could wipe a character's bags or bank; vendors sold any priced item, rare drops included. All fixed on the deploy branch, server only, so it rides any redeploy."
+who = "Claude unattended"
+days = 1
+done_when = "Both suites green on the deploy branch and on feat/server-speed, each new test failing on the old code. Done only when hotfix_crash_and_dupes_checklist.md is filled."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "o12"
+week = "w3"
+lane = "operate"
+day = "Fri Oct 23, as soon as convenient"
+what = "Redeploy the R720 at 3d938ca (the hotfix). No migration, no export: the testers' current client works. Ask anyone online to log out first."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+waits_on = ["b31"]
+done_when = "The boot line shows build=3d938ca and dev_cmds=false."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v34"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Hotfix: a long chat line with an accented letter leaves the server running; a dropped and picked-up item stays with one player across a restart, and a regrabbed drop is not lost; a bank withdrawal followed by a quest turn-in or a death stays in one place across a restart; every item on Brom's list still sells."
+who = "user at a desk with a second account"
+hours = 1
+needs = ["the hotfix redeploy (o12)", "permission to restart the server twice during the sitting"]
+checklist = "hotfix_crash_and_dupes_checklist.md"
+waits_on = ["o12"]
+todo = "Housekeeping audit 2026-10-23"
+done_when = "Every row filled."

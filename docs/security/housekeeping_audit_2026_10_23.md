@@ -1,0 +1,108 @@
+# Housekeeping audit — 2026-10-23
+
+Both repos compared against the kodr-skills standards (installed 2026-10-23 at
+`F:\Projects\kodr-skills`, junctioned into `.claude/skills/`): the `rust-*` skills for the
+server's code, the `dist-*` and `security-software` skills for reliability and security, and
+`dist-consistency` for the client/server line. Three read-only audits ran against
+`feat/server-speed` in both repos; every high-severity claim was then re-read by hand in the
+source before it was acted on. The plan that sequences the fixes is summarised in §4.
+
+Status words: **FIXED** (built, tested, pending the redeploy and the playtest), **OPEN**
+(planned, not built), **NOTED** (recorded, no action planned).
+
+## 1. Phase 0: the hotfix (server only, deploy branch)
+
+Server `6f18a5e` + review fixes `3d938ca` on `fix/xp-leveling-overflow`; merged forward into
+`feat/server-speed` as `019bfb3`. Checklist: `docs/playtest_notes/hotfix_crash_and_dupes_checklist.md`.
+
+| Id | Finding | Status |
+|---|---|---|
+| H1 | **Remote crash.** Chat was cut with `text[..512]`; a multibyte character at byte 512 panicked the tick task, the process exited (`world::serve` awaits the task, `main` `try_join!`s it) and systemd restarted it, costing everyone up to 60 s. Live on the R720 since the chat cap was written. | FIXED: `truncate_at_char_boundary`; the only byte-slice of a `String` in the workspace. |
+| H2 | **Dupe across a restart.** A drop only marked the inventory dirty and spawned an in-memory bag; a picker saved at logout plus a restart before the dropper's checkpoint left the item with both. Any routine `systemctl restart` opened it; H1 made it on-demand. | FIXED: the dropper is saved before the bag exists (once per dropper per tick, `MAX_DROPS_PER_TICK` = 4); whoever loots a bag is saved once per tick. |
+| H3 | **Partial immediate saves.** The quest reward saved the inventory alone; corpse loot, corpse creation and (on `feat/server-speed`) the trade commit rewrote inventory and wallet but not the vaults. An unsaved bank withdrawal then sat in the bags and the vault after a crash. | FIXED: `persistence::persist_dirty_stores` (one transaction, flags cleared on commit) for the quest reward; a pre-flush before corpse loot, death and the trade commit. |
+| H4 | **Wipe on a failed load.** A failed inventory, skill, vault (and on `feat/server-speed` spell-bar or logout-time) read at login defaulted to empty and play went on; the next save wrote the empties over the real rows. | FIXED: any failed load refuses the login with a reliable kick. |
+| H5 | **Any priced item for sale.** `BuyItem` sold every item with a `vendor_price` at any vendor in reach (171 of 174 items, named drops included); stock lists existed only on the client. | FIXED (interim): `npcs.toml` carries each vendor's `stock`; only an item a vendor in reach stocks (and, on `feat/server-speed`, who serves the buyer on faction) is for sale. `tools/check_vendor_lockstep.gd` compares the lists. The real `vendor_id` waits on a protocol bump (Phase 4). |
+| H6 | A failed `save_corpse` (or the new pre-flush) skipped the corpse for good: no strip, no corpse, the death penalty bypassed. | FIXED: `corpse_pending` is set again, so the corpse retries next tick. |
+
+Tests (each fails on the unfixed code): the server keeps serving after the long line; a drop
+leaves the saved inventory at once; a picked-up drop is in the picker's saved inventory at
+once; a burst of six drops in one datagram applies four; a death after an unsaved withdrawal
+leaves the loaf in one place; a traded withdrawal leaves the giver's vault; an undecodable
+row refuses the login and stays untouched; an unstocked named drop is refused while bread
+sells. Unit tests for the char-boundary cut and the stock table.
+
+Accepted trade-off: a crash with a dropped bag still on the ground loses that item (a loss,
+never a copy), as unsaved kill loot always could.
+
+## 2. Open findings, by plan phase
+
+### Phase 1: durability (`dist-failure-resilience`, `dist-transactions`)
+| Id | Finding | Evidence (feat/server-speed, 2026-10-23) |
+|---|---|---|
+| M1 | No SIGTERM/Ctrl-C handling; `KickCode::Restart` is never sent; a restart loses up to 60 s for everyone. | `main.rs` `try_join!`; `scripts/projectdawn.service` |
+| M2 | The logout save removes the connection first; a failed save is logged and dropped, never retried. | `reap_connection` |
+| M3 | XP is outside its transactions: the death penalty stays in memory while the corpse's `lost_xp` commits (a crash returns the XP and a res refunds it again); quest completion commits while its XP waits. | `progression.rs`, `save_corpse`, quest turn-in |
+| M8 | A `tick::run` error is logged and the world task ends `Ok`; auth keeps minting tokens for a dead world. | `world/mod.rs` `serve_with_socket` |
+
+### Phase 2: structure (`rust-traits-api`, `rust-testing`)
+| Id | Finding |
+|---|---|
+| F5 | `tick.rs` is ~12,900 lines; `tick::run` is one ~10,400-line function routing ~59 `Outcome` variants into ~34 local queues. Seams: a `World` struct, one module per phase. |
+| F6 | Duplicated helpers: 17 hand-rolled `peek_at` delta fans, the in-world recipient list built three times a tick, buff-snapshot fans that hand-roll bincode, auth `serve_bound` duplicating `serve`'s accept loop. |
+| F7 | Ids are raw integers whose kind is a numeric range; 34 ad hoc range tests in `tick.rs`, two of which disagree; 128 `as ClientId` / `as u64` casts. |
+| F8 | `Coins` with public signed fields is decoded straight from client messages; three hand checks stand between a forged negative and theft. |
+| F9 | `AuthError` is the error type for world persistence; inventory and trade errors are `&'static str`. |
+| F12 | `world_two_clients.rs` holds the harness and 140+ tests in one file; `world_smoke.rs` copies the harness. |
+
+### Phase 3: guardrails (`rust-build-cargo`, `devops-github-workflows`, `rust-testing`)
+| Id | Finding |
+|---|---|
+| F13 | No `[workspace.lints]`, clippy config, CI, `deny.toml` or `cargo audit`. Clippy's `string_slice` would have caught H1. |
+| F2 / C1 | No panic containment: any panic in message handling or the tick takes the whole server down (H1 was one such path). Consider containment per message as well as the lints. |
+| F10 / L3 | The `.env` loader's `set_var` SAFETY comment says it runs before the runtime; it runs inside `#[tokio::main]`. |
+| L1 | `Config` derives `Debug` and holds the netcode private key. |
+| F11 | No fuzz target for `decode_client` (untrusted bytes, no size limit, trailing bytes ignored); no property tests for inventory moves or coin exchange. |
+
+### Phase 4: the client/server line (`dist-consistency`, `security-software`)
+| Id | Finding |
+|---|---|
+| B1 | `DeathBroadcast` kills any player on demand (a free teleport home below level 5); it exists for client-side fall damage. User decision: model falls on the server, then remove it. |
+| B2 | The swing-rate limit assumes everyone is at maximum haste (`MAX_MODELED_HASTE`); the server tracks Haste now. |
+| B3 | Cast relays repeat the client's `duration`, `spell_name` and fail `reason` to every player, unchecked (`duration` not finite-checked). |
+| M4 | No per-intent rate budget for chat, trade, inventory, buy/sell, bank, loot, invites, inspect on this branch (`feat/public-hosting` has two budgets). |
+| B4 | About 20 client/server pairs of the same data or rule have no lockstep check (stat blocks and level gains, XP curve, res-sickness cut, skill caps, dual-wield levels, day length, encumbrance, hunger threshold, song scaling, spell-bar rules, the spell school map). Many could be sent by the server instead. |
+| B5 | `PvpToggle` is ungated (needs the user's call with the PvP flagging design). |
+| B6 | Wire hygiene: 8 client intents with no sender and no handler, 9 server messages never sent, fields the server ignores (`Attack.weapon_path`, `AcceptQuest.giver_id`, `EquipUpdate`). |
+
+### Phase 5: the offline client code (user decision: remove)
+About 3,500 lines exist only for the offline/Test Room path (the ENet `Network` layer, local
+`Enemy`/`Pet`/`Loot`, `transformations.gd`, `SaveManager`, which also saves to disk during
+online play) plus ~95 `is_launcher_mode()` branches. Dependants to repoint first: the Test
+Panel, `tools/check_nameplates.gd`, `tools/currency_smoke.gd`.
+
+### Phase 6: observability and security polish (`dist-observability`, `security-software`)
+| Id | Finding |
+|---|---|
+| M9 | No tick timing, metrics or spans; the player id appears under four field names; decode failures log without a client id. |
+| M7 / F3 | The 20 Hz loop awaits SQLite inline (about eight reads per connect, the checkpoint writes connections one after another). |
+| M6 / F4 | Argon2 runs on runtime threads; no WebSocket handshake timeout, connection cap or size limit; no password maximum (part of this is on `feat/public-hosting`). |
+| L2 | Session tokens stored raw; expired sessions never purged; the ban check runs before the password check. |
+| L6 / L7 | Auth listens on `0.0.0.0` over `ws://`; backups are nightly and on the same host. |
+| L8 | No characters-per-account cap. |
+
+## 3. Already matching the standards (do not redo)
+Single-connection saves atomic with flags cleared on commit; trade and corpse loot committed in
+one transaction with in-memory rollback and deferred client messages; repeated intents
+(quest turn-in, res accept, memorize finish, spell-bar seed, loot, respawn) cannot apply twice;
+negative coin amounts rejected; non-finite Move and spawn floats rejected; dev/GM commands
+gated, budgeted and refused if they cannot be audited; session tokens from `OsRng`; Argon2id;
+login timing equalised for unknown users; per-IP login and register limits; no string-built
+SQL; netcode in Secure mode with signed account and GM flags; `Cargo.lock` committed and the
+wire crates pinned; coin and XP arithmetic saturating; good unit coverage in inventory, entity,
+AOI and protocol.
+
+## 4. The plan
+Phase 0 (this hotfix), then Phase 1 durability, then the Phase 2 split right after the Oct 22
+bump merges (user decision, 2026-10-23), with Phase 3's CI and fuzzing alongside, then Phases
+4 to 6. Running alongside other work: Phase 0 and Phase 6's auth items are independent; Phases
+1, 2 and most of 4 and 5 touch the same files as feature branches and wait for them.

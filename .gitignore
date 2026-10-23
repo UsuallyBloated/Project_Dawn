@@ -25,3 +25,14 @@ addons/gdext_net/*.dll
 addons/gdext_net/*.so
 addons/gdext_net/*.dylib
 addons/gdext_net/*.pdb
+
+# kodr-skills: an outside skill library (F:\Projects\kodr-skills), junctioned
+# into .claude/skills. Ignored by family prefix so a skill of our own still commits.
+.claude/skills/ai-*/
+.claude/skills/blockchain-*/
+.claude/skills/cs-*/
+.claude/skills/dist-*/
+.claude/skills/rust-*/
+.claude/skills/devops-github-workflows/
+.claude/skills/security-software/
+.claude/skills/typesafe-ai/

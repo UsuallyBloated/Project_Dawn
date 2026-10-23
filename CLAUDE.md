@@ -828,6 +828,32 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (`inspect_range_gm_audit_ban_checklist.md` §6).
 
 ### Security / exploits
+- [ ] **Housekeeping audit 2026-10-23: the hotfix (Phase 0) and the later phases** *(the
+  user asked for the code to be compared with the kodr-skills standards; findings and every
+  id: `docs/security/housekeeping_audit_2026_10_23.md`)*. **Phase 0 BUILT 2026-10-23,
+  pending the R720 redeploy and the playtest** (server `6f18a5e` + review fixes `3d938ca` on
+  the deploy branch, merged into `feat/server-speed` as `019bfb3`; client
+  `tools/check_vendor_lockstep.gd`; `hotfix_crash_and_dupes_checklist.md`; server-only, no
+  export). H1: one chat line with an accented letter at byte 512 crashed the whole server
+  (a byte slice in the tick task); cut on a char boundary now. H2: a drop waited for the
+  60 s checkpoint, so a restart after someone picked it up and logged out left the item with
+  both; drops are saved at once (one commit per dropper per tick, at most four drops a tick)
+  and so are pickups. H3: immediate saves wrote one store alone (the quest reward the bags
+  only; corpse loot, death and the trade commit the bags and wallet but not the vaults), so a
+  crash after an unsaved bank withdrawal left the item in two places; every store is written
+  together now. H4: a failed read at login played on with empty stores and the next save
+  wiped them (a whole account bank); the login is refused instead. H5: vendors sold any item
+  with a price, named drops included; each vendor's stock now lives in `npcs.toml` too, and
+  on `feat/server-speed` the vendor must also serve the buyer on faction. H6: a failed
+  corpse save skipped the corpse for good; it retries next tick. Eleven tests, each failing
+  on the unfixed code. **Later phases (planned, not built):** 1 durability (graceful
+  shutdown, the logout-save retry, XP inside the corpse and quest transactions, a dead world
+  task exiting the process); 2 the `tick.rs` split, right after the Oct 22 bump merges (user
+  decision); 3 guardrails (lints, CI, `cargo deny`/`audit`, a fuzz target, panic
+  containment); 4 the client/server line (fall damage on the server then `DeathBroadcast`
+  gone, user decision; swing pacing on real haste; cast relays; intent budgets; a stats
+  message; the ~20 unchecked lockstep pairs; wire hygiene); 5 remove the offline client code
+  (user decision); 6 observability and auth polish.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
   Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying
