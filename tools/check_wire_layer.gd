@@ -15,10 +15,10 @@ extends SceneTree
 # Add a name here whenever Net gains another by-name lookup.
 
 const SIGNALS: Array[String] = ["time_of_day", "kick_retry_after", "entity_replaced", "hunger_update", "player_jumped", "spell_gems",
-	"skill_fail"]
+	"skill_fail", "faction_update", "alignment_update"]
 const METHODS: Array[String] = ["rtt_ms", "packet_loss", "send_dev_despawn_enemies",
 	"send_memorize_start", "send_memorize_finish", "send_forget_spell", "send_seed_spell_gems", "send_use_skill",
-	"send_stop_song"]
+	"send_stop_song", "send_consider", "send_dev_set_faction"]
 
 
 func _init() -> void:

@@ -167,7 +167,7 @@ func apply_character(race_id: String, cls: String, lvl: int) -> void:
 	_base_max_hp        = max_hp
 	_base_max_mp        = max_mp
 	_base_max_stamina   = max_stamina
-	Alignment.set_alignment(CharacterData.CLASS_STARTING_ALIGNMENT.get(cls, 0))
+	Alignment.seed_class_start(CharacterData.CLASS_STARTING_ALIGNMENT.get(cls, 0))
 	set_hp(new_max_hp)
 	set_mp(new_max_mp)
 	set_stamina(new_max_st)

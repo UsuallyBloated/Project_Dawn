@@ -1504,6 +1504,44 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line(SenseHeading.query(_player.rotation.y), CombatLog.MsgType.INFO)
 		return
 
+	if lower == "/con" or lower == "/consider":
+		# EQ's consider (factions, 2026-10-23): the server answers with how the
+		# target's faction regards you and, for a mob, how its level reads
+		# against yours. An NPC is named by its display name (the client holds
+		# no server ids for NPCs; the server resolves the name), a mob by its
+		# entity id. The server decides everything; this only asks.
+		if not Net.is_launcher_mode() or not Net.is_app_ready():
+			CombatLog.add_line("There is nothing to consider offline.", CombatLog.MsgType.INFO)
+			return
+		var con_target = Combat.current_target
+		if not is_instance_valid(con_target):
+			CombatLog.add_line("You must target something to consider it.", CombatLog.MsgType.INFO)
+			return
+		var npc_name := _npc_display_name(con_target)
+		var entity_id := 0 if npc_name != "" else Combat.target_server_id(con_target)
+		if npc_name == "" and entity_id == 0:
+			CombatLog.add_line("You cannot consider that.", CombatLog.MsgType.INFO)
+			return
+		if not Net.consider(npc_name, entity_id):
+			CombatLog.add_line(
+				"This build's gdext_net.dll predates /con (rebuild it with addons/gdext_net/build.ps1).",
+				CombatLog.MsgType.INFO)
+		return
+
+	if lower == "/factions":
+		# Every standing the server has told us: only the factions a kill, a
+		# quest or the GM panel has moved; the rest sit at Indifferent.
+		if Alignment.factions.is_empty():
+			CombatLog.add_line("You have moved no faction's standing yet.", CombatLog.MsgType.INFO)
+			return
+		var ids: Array = Alignment.factions.keys()
+		ids.sort()
+		for id in ids:
+			var f: Dictionary = Alignment.factions[id]
+			CombatLog.add_line("%s: %d (%s)" % [f["name"], roundi(f["standing"]),
+				Alignment.faction_level_name(int(f["level"]))], CombatLog.MsgType.INFO)
+		return
+
 	if lower == "/stopsong":
 		# EQ's /stopsong: end the song being sung at once. Online the server
 		# pulses the song, so it is told (and says so); the lingering
@@ -1828,3 +1866,16 @@ func _handle_chat_input(text: String) -> void:
 		return
 
 	CombatLog.add_line("Unknown command: %s" % text, CombatLog.MsgType.INFO)
+
+# The display name an NPC node carries, for /con (the client holds no server
+# ids for NPCs). `npc_name` first: the vendor and banker labels carry a role
+# after a dash that npcs.toml does not, so that part is trimmed.
+func _npc_display_name(node) -> String:
+	if not is_instance_valid(node):
+		return ""
+	for key in ["npc_name", "vendor_name", "banker_name"]:
+		if key in node and String(node.get(key)) != "":
+			var n := String(node.get(key))
+			var dash := n.find(" — ")
+			return n.substr(0, dash) if dash >= 0 else n
+	return ""

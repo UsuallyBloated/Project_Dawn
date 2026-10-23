@@ -2,17 +2,20 @@ extends CanvasLayer
 
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 
+# Named as the camps name them, so a dev spawn carries the camp mob's faction
+# and alignment on the server (zones::faction_of_camp_mob) and a GM can test a
+# kill's faction hits on it. The numbers are the panel's own.
 const NORMAL_MOBS := [
-	{"name":"Rat",       "level":1, "max_hp":18.0,  "base_damage":3,  "xp_reward":10, "move_speed":3.2, "aggro_range":6.0},
-	{"name":"Bandit",    "level":3, "max_hp":60.0,  "base_damage":8,  "xp_reward":30, "move_speed":3.0, "aggro_range":8.0},
+	{"name":"Plague Rat",        "level":1, "max_hp":18.0,  "base_damage":3,  "xp_reward":10, "move_speed":3.2, "aggro_range":6.0},
+	{"name":"Bandit Scout",      "level":3, "max_hp":60.0,  "base_damage":8,  "xp_reward":30, "move_speed":3.0, "aggro_range":8.0},
 	# "Grey Wolf", not "Wolf": the Beast Master warder template is keyed on the
 	# exact name "Wolf" (server pet_templates::is_warder_template), so a spawned
 	# bare "Wolf" that got charmed would arm the free warder-respawn loop for any
 	# class. "Grey Wolf" still ticks "kill Wolf" quests + the wolf loot table via
 	# the bidirectional substring matchers.
-	{"name":"Grey Wolf", "level":2, "max_hp":45.0,  "base_damage":6,  "xp_reward":20, "move_speed":4.0, "aggro_range":10.0},
-	{"name":"Skeleton",  "level":4, "max_hp":55.0,  "base_damage":9,  "xp_reward":35, "move_speed":2.8, "aggro_range":7.0},
-	{"name":"Gnoll",     "level":5, "max_hp":80.0,  "base_damage":12, "xp_reward":45, "move_speed":3.2, "aggro_range":9.0},
+	{"name":"Grey Wolf",         "level":2, "max_hp":45.0,  "base_damage":6,  "xp_reward":20, "move_speed":4.0, "aggro_range":10.0},
+	{"name":"Decrepit Skeleton", "level":4, "max_hp":55.0,  "base_damage":9,  "xp_reward":35, "move_speed":2.8, "aggro_range":7.0},
+	{"name":"Gnoll Raider",      "level":5, "max_hp":80.0,  "base_damage":12, "xp_reward":45, "move_speed":3.2, "aggro_range":9.0},
 ]
 
 const ZONES := [
@@ -45,6 +48,10 @@ var _sec_zone: VBoxContainer
 var _sec_enemy: VBoxContainer
 var _sec_stats: VBoxContainer
 var _sec_combat: VBoxContainer
+var _sec_factions: VBoxContainer
+# The GM faction panel: a label and a slider per faction id.
+var _faction_labels: Dictionary = {}
+var _faction_sliders: Dictionary = {}
 
 # Gear section — item picker
 var _item_filter: LineEdit
@@ -144,6 +151,7 @@ func _build_ui() -> void:
 	_sec_enemy     = _make_section("ENEMY SPAWN")
 	_sec_stats     = _make_section("STATS OVERRIDE")
 	_sec_combat    = _make_section("COMBAT FLAGS")
+	_sec_factions  = _make_section("FACTIONS (GM)")
 	_build_character_section()
 	_build_resources_section()
 	_build_gear_section()
@@ -152,6 +160,7 @@ func _build_ui() -> void:
 	_build_enemy_section()
 	_build_stats_section()
 	_build_combat_section()
+	_build_factions_section()
 
 func _make_section(title: String, start_open: bool = false) -> VBoxContainer:
 	var header_btn := Button.new()
@@ -639,6 +648,53 @@ func _resolve_peer_target():
 		CombatLog.add_line("Test Panel: target is not a remote player.", CombatLog.MsgType.INFO)
 		return null
 	return t
+
+# The GM faction panel (user, 2026-10-23): one slider per faction, setting
+# the GM's OWN standing with it to an absolute value through DevSetFaction,
+# which is GM-only and audited on the server (a plain account's request is
+# ignored there). The labels follow the server's FactionUpdate, so the panel
+# shows the true standing after every kill and quest too. Online only: the
+# offline Test Room has no factions.
+func _build_factions_section() -> void:
+	_sec_factions.add_child(_make_label("Your standing (GM only, online)"))
+	for f in FactionDefinitions.ALL:
+		var id: String = f["id"]
+		var lbl := _make_label("%s: 0 (Indifferent)" % f["name"])
+		_sec_factions.add_child(lbl)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 4)
+		var slider := HSlider.new()
+		slider.min_value = -2000
+		slider.max_value = 2000
+		slider.step = 10
+		slider.value = 0
+		slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		slider.focus_mode = Control.FOCUS_NONE
+		row.add_child(slider)
+		var set_btn := _make_btn("Set", C_BORDER)
+		set_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
+		set_btn.custom_minimum_size.x = 40
+		set_btn.pressed.connect(_set_faction.bind(id, slider))
+		row.add_child(set_btn)
+		_sec_factions.add_child(row)
+		_faction_labels[id] = lbl
+		_faction_sliders[id] = slider
+	Alignment.faction_changed.connect(_on_faction_changed)
+
+func _set_faction(id: String, slider: HSlider) -> void:
+	if not (Net.is_launcher_mode() and Net.is_app_ready()):
+		CombatLog.add_line("TestPanel: factions exist online only.", CombatLog.MsgType.INFO)
+		return
+	if not Net.dev_set_faction(id, slider.value):
+		CombatLog.add_line("TestPanel: this build's wire layer cannot set factions.",
+			CombatLog.MsgType.INFO)
+
+func _on_faction_changed(id: String, faction_name: String, standing: float, level: int) -> void:
+	if _faction_labels.has(id):
+		_faction_labels[id].text = "%s: %d (%s)" % [faction_name, roundi(standing),
+			Alignment.faction_level_name(level)]
+	if _faction_sliders.has(id):
+		_faction_sliders[id].set_value_no_signal(standing)
 
 func _make_label(t: String) -> Label:
 	var lbl := Label.new()

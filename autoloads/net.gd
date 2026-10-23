@@ -61,6 +61,14 @@ signal world_cast_fail(caster: int, reason: String)
 # The server refused one of our active skills (client-authority audit item 6):
 # the skill's name, so Skills drops the cooldown it started, and the reason.
 signal world_skill_fail(skill_name: String, reason: String)
+# Factions and alignment (2026-10-23): one of our standings as the server
+# holds it (the number the faction's NPCs see and its con level, 0 Scowls to
+# 8 Ally), on entering the world, after every change and after a GM set; and
+# our alignment score, on entering and whenever it has moved a hundredth of a
+# point or crossed a tier. Alignment FOLLOWS these; nothing on the client
+# moves either.
+signal world_faction_update(faction_id: String, name: String, standing: float, level: int)
+signal world_alignment_update(score: float)
 # Track 4 sub-task 3 buff snapshot — names/durations are parallel arrays.
 signal world_buff_snapshot(
 	target: int,
@@ -388,6 +396,18 @@ func _ready() -> void:
 		connect("skill_fail", _on_skill_fail)
 	else:
 		DebugLog.error("Net: gdext_net.dll predates server-side active skills (no skill_fail "
+			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs factions and the server's alignment
+	# on screen (the standings and the score never arrive), not the client.
+	if has_signal("faction_update"):
+		connect("faction_update", _on_faction_update)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates factions (no faction_update "
+			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
+	if has_signal("alignment_update"):
+		connect("alignment_update", _on_alignment_update)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates server alignment (no alignment_update "
 			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
@@ -1329,6 +1349,26 @@ func _on_skill_fail(skill_name: String, reason: String) -> void:
 # song, so ending it is this message. By name: an older DLL costs the stop.
 func stop_song() -> bool:
 	return _state == State.CONNECTED_APP and has_method("send_stop_song") 			and bool(call("send_stop_song"))
+
+func _on_faction_update(faction_id: String, faction_name: String, standing: float, level: int) -> void:
+	world_faction_update.emit(faction_id, faction_name, standing, level)
+
+func _on_alignment_update(score: float) -> void:
+	world_alignment_update.emit(score)
+
+# Consider an NPC (by its display name; "" for none) or a mob (by entity id;
+# 0 for none): the server answers with EQ's con line on the System channel.
+# By name: an older DLL costs the command, not the client.
+func consider(npc_name: String, target_id: int) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_consider") \
+			and bool(call("send_consider", npc_name, target_id))
+
+# The GM faction panel's slider: our OWN standing with one faction, set to an
+# absolute value. GM-only and audited on the server; a plain account's
+# request is ignored there, so the client never pretends it worked.
+func dev_set_faction(faction_id: String, standing: float) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_dev_set_faction") \
+			and bool(call("send_dev_set_faction", faction_id, standing))
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)
