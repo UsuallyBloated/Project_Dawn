@@ -620,7 +620,7 @@ func _hide_res_prompt() -> void:
 		_res_prompt.visible = false
 
 # Camp slice B — the countdown elapsed: log out cleanly, exactly like the Options
-# "Quit Game" button (SaveManager.save -> Net.leave_session -> quit). The server's
+# "Quit Game" button (Net.leave_session -> quit; the server saves). The server's
 # camp window has elapsed too, so this clean Disconnect reaps the body and frees
 # the account to relog at once. Completion is client-driven because there is no
 # in-game return-to-lobby flow yet; a finished camp exits to desktop, the same end
@@ -629,7 +629,6 @@ func _complete_camp() -> void:
 	_camp_active = false
 	if _camp_label != null:
 		_camp_label.visible = false
-	SaveManager.save()
 	Net.leave_session()
 	get_tree().quit()
 
