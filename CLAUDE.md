@@ -892,6 +892,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   gone, user decision; swing pacing on real haste; cast relays; intent budgets; a stats
   message; the ~20 unchecked lockstep pairs; wire hygiene); 5 remove the offline client code
   (user decision); 6 observability and auth polish.
+  **Phase 5 step 1 BUILT 2026-10-23, pending the Oct 22 export and the playtest** (client
+  `95354b3` on `feat/server-speed`; `offline_save_online_checklist.md`): `SaveManager.save()`
+  refuses online, so an online character no longer lands in the Test Room's `character.save`
+  (it was written on every level-up, zone load, Quit Game and finished camp, and the Test Room
+  loaded it as its own); probe `tools/probe_save_manager_online.gd` fails on the old code.
+  **Phase 4's fall damage DESIGNED 2026-10-23: `docs/design/server_fall_damage.md`**, five
+  decisions waiting on the user (§7). Found while verifying: **online, falls have never hurt an
+  ordinary player** (the fall goes through `DamageSelf`, a dev command; the client prints the
+  hit, the server ignores it; a GM's falls apply and are each audited as a GM action), so
+  `DeathBroadcast` has no honest online sender except the Test Panel's Trigger Death, and B1
+  can close now (gate it as a dev command, slice 0) without waiting for the height model,
+  which slice 1, the server simulating the fall, does need. That reverses the agreed order,
+  so it is decision 1.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
   Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying

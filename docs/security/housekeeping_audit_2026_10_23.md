@@ -77,7 +77,7 @@ Server `01fd0ae` + review fixes `3f7c23a` on the deploy branch, merged into `fea
 ### Phase 4: the client/server line (`dist-consistency`, `security-software`)
 | Id | Finding |
 |---|---|
-| B1 | `DeathBroadcast` kills any player on demand (a free teleport home below level 5); it exists for client-side fall damage. User decision: model falls on the server, then remove it. |
+| B1 | `DeathBroadcast` kills any player on demand (a free teleport home below level 5); it exists for client-side fall damage. User decision: model falls on the server, then remove it. **Designed 2026-10-23** (`docs/design/server_fall_damage.md`): online a fall never reached the server for an ordinary player (it goes through the dev-gated `DamageSelf`), so `DeathBroadcast`'s only honest sender is the Test Panel's Trigger Death; the design proposes gating it as a dev command now (slice 0) and the fall model with the height model (slice 1). Five decisions wait on the user. |
 | B2 | The swing-rate limit assumes everyone is at maximum haste (`MAX_MODELED_HASTE`); the server tracks Haste now. |
 | B3 | Cast relays repeat the client's `duration`, `spell_name` and fail `reason` to every player, unchecked (`duration` not finite-checked). |
 | M4 | No per-intent rate budget for chat, trade, inventory, buy/sell, bank, loot, invites, inspect on this branch (`feat/public-hosting` has two budgets). |
@@ -86,6 +86,14 @@ Server `01fd0ae` + review fixes `3f7c23a` on the deploy branch, merged into `fea
 | B6 | Wire hygiene: 8 client intents with no sender and no handler, 9 server messages never sent, fields the server ignores (`Attack.weapon_path`, `AcceptQuest.giver_id`, `EquipUpdate`). |
 
 ### Phase 5: the offline client code (user decision: remove)
+**Step 1 FIXED 2026-10-23** (client `95354b3` on `feat/server-speed`, rides the Oct 22 export;
+`offline_save_online_checklist.md`): `SaveManager.save()` refuses online, so an online
+character is no longer written to the Test Room's `character.save` on level-up, zone load, Quit
+Game or a finished camp. The dev box's save held "Splenda", a level 10 Shadow Knight written at
+16:25 that day, where the Test Room's default is Chortle; that is consistent with the leak
+(not proven: a headless run could also have written it). Probe
+`tools/probe_save_manager_online.gd` fails on the previous code.
+
 About 3,500 lines exist only for the offline/Test Room path (the ENet `Network` layer, local
 `Enemy`/`Pet`/`Loot`, `transformations.gd`, `SaveManager`, which also saves to disk during
 online play) plus ~95 `is_launcher_mode()` branches. Dependants to repoint first: the Test

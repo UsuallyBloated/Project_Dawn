@@ -1413,3 +1413,39 @@ who = "Claude unattended"
 days = 1
 done_when = "Both suites green on the deploy branch and on feat/server-speed; tools/check_all.ps1 runs every client check."
 todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "b34"
+week = "w3"
+lane = "build"
+day = "Oct 23, overnight"
+what = "Housekeeping Phase 5, step 1: online play stops writing the character to the offline Test Room's save file (the server is the save). Plus the design for fall damage on the server (no code): it found that falls already do nothing to ordinary players online, and that the instant-death message can be closed now without waiting for hills."
+who = "Claude unattended"
+days = 0.5
+done_when = "The probe passes and fails on the old code; docs/design/server_fall_damage.md written with its decisions marked."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v36"
+week = "w4"
+lane = "verify"
+day = "after the Oct 22 export reaches testers"
+what = "Online play leaves the offline save alone: log in, level up, quit, finish a /camp, and the save file's date never changes."
+who = "user at a desk"
+hours = 0.25
+needs = ["the Oct 22 export"]
+checklist = "offline_save_online_checklist.md"
+waits_on = ["b34"]
+todo = "Housekeeping audit 2026-10-23"
+done_when = "Every row filled."
+
+[[row]]
+id = "d11"
+week = "w4"
+lane = "decide"
+day = "by Sun Nov 8 (the first is best answered before the bump's redeploy)"
+what = "Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later."
+who = "user"
+by = 2026-11-08
+blocks = "Slice 0 (one server handler now, the Test Panel's death button with the export); slice 1 waits on the server height model."
+done_when = "Each of the five answered on the Housekeeping audit To-Do entry."

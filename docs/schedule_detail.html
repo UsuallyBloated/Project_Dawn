@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Oct 23<span class="stat-sub">repo 3760f8e</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Oct 23<span class="stat-sub">repo bd5ce06</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">34.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">62.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">34.75 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">63 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -486,7 +486,7 @@
 <section>
 <h2><span class="week-head"><span>One evening when every client changes</span><span class="when">W3 &middot; October 19 to 25</span></span></h2>
 <p class="lede">Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the four friends receive their first zip from this build and never need another.</p>
-<div class="week-meta"><span>the user's time: 32.25 h</span><span>Claude build days: 16</span></div>
+<div class="week-meta"><span>the user's time: 32.25 h</span><span>Claude build days: 16.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -668,6 +668,16 @@
 <td class="time">1 Claude day</td>
 <td class="id"></td>
 <td class="done">Both suites green on the deploy branch and on feat/server-speed; tools/check_all.ps1 runs every client check.<span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
+</tr>
+<tr>
+<td class="id">b34</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Oct 23, overnight</span>Housekeeping Phase 5, step 1: online play stops writing the character to the offline Test Room&#x27;s save file (the server is the save). Plus the design for fall damage on the server (no code): it found that falls already do nothing to ordinary players online, and that the instant-death message can be closed now without waiting for hills.</td>
+<td>Claude unattended</td>
+<td class="needs">nothing</td>
+<td class="time">0.5 Claude days</td>
+<td class="id"></td>
+<td class="done">The probe passes and fails on the old code; docs/design/server_fall_damage.md written with its decisions marked.<span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
 </tr>
 <tr>
 <td class="id">o4</td>
@@ -984,7 +994,7 @@
 <section>
 <h2><span class="week-head"><span>Prove it with four friends</span><span class="when">W4 &middot; October 26 to November 1</span></span></h2>
 <p class="lede">Fixes from the week-3 sittings, a fresh-character sweep on the exact build the friends hold, and the rehearsal on Saturday. Whatever it finds is the fifth week&#x27;s work.</p>
-<div class="week-meta"><span>the user's time: 6.5 h</span><span>Claude build days: 2</span></div>
+<div class="week-meta"><span>the user's time: 6.75 h</span><span>Claude build days: 2</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -996,6 +1006,16 @@
 <td class="time">by Sun Nov 1</td>
 <td class="id"></td>
 <td class="done">The answer recorded in docs/design/trade_window.md section 6.</td>
+</tr>
+<tr>
+<td class="id">d11</td>
+<td><span class="chip decide">Decide</span></td>
+<td class="what"><span class="day">by Sun Nov 8 (the first is best answered before the bump&#x27;s redeploy)</span>Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later.<span class="blocks"><b>Blocks:</b> Slice 0 (one server handler now, the Test Panel&#x27;s death button with the export); slice 1 waits on the server height model.</span></td>
+<td>user</td>
+<td class="needs">nothing</td>
+<td class="time">by Sun Nov 8</td>
+<td class="id"></td>
+<td class="done">Each of the five answered on the Housekeeping audit To-Do entry.</td>
 </tr>
 <tr>
 <td class="id">b7</td>
@@ -1046,6 +1066,16 @@
 <td class="time">1 h</td>
 <td class="id">o5</td>
 <td class="done">Findings filed in the To-Do; no new ERROR lines in the server log.</td>
+</tr>
+<tr>
+<td class="id">v36</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">after the Oct 22 export reaches testers</span>Online play leaves the offline save alone: log in, level up, quit, finish a /camp, and the save file&#x27;s date never changes.</td>
+<td>user at a desk</td>
+<td class="needs"><ul><li>checklist offline_save_online_checklist.md: 6 rows to run</li><li>the Oct 22 export</li></ul></td>
+<td class="time">0.25 h</td>
+<td class="id">b34</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/offline_save_online_checklist.md"><code>offline_save_online_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
 </tr>
 <tr>
 <td class="id">p3</td>
@@ -1177,6 +1207,7 @@
 <tr><td class="time">Sun Nov 8</td><td class="what">Phase 5&#x27;s four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in.</td><td>user and planner</td><td class="needs">The &quot;after the door opens&quot; list below becoming a dated plan.</td></tr>
 <tr><td class="time">Sun Nov 8</td><td class="what">docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it.</td><td>user</td><td class="needs">Nothing.</td></tr>
 <tr><td class="time">Sun Nov 8</td><td class="what">The factions and alignment design&#x27;s nine decisions (docs/design/factions_and_alignment.md, section 6): the first six factions and the hit rule, who gets a kill&#x27;s hits (the XP rule or EQ&#x27;s hate list), the nine level thresholds, the v1 refusals (vendors at Dubious, quest givers at Apprehensive), alignment seeded from the class start, the Paladin and Shadow Knight off-side penalty kept on the server, no starting standings by race in v1, the mob and quest values, no GM freeze.</td><td>user</td><td class="needs">The factions build (a migration and a bump), on the after-the-door strip.</td></tr>
+<tr><td class="time">Sun Nov 8</td><td class="what">Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later.</td><td>user</td><td class="needs">Slice 0 (one server handler now, the Test Panel&#x27;s death button with the export); slice 1 waits on the server height model.</td></tr>
 </tbody></table></div></section>
 <section><h2>Open rows this plan does not schedule</h2>
 <p class="lede">Read from the checklist folder when this page was generated. A recent one (touched in the last 30 days) needs a row above or a reason. An older one is a candidate for the week-5 triage, which decides whether it is retired, superseded, or worth a re-run.</p>
@@ -1229,5 +1260,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-23 at repo 3760f8e</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-23 at repo bd5ce06</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>
