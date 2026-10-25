@@ -553,6 +553,11 @@ func _on_world_position(id: int, pos: Vector3, _vel: Vector3, _yaw: float, seque
 func _on_land() -> void:
 	if _peak_fall_speed <= FALL_DAMAGE_THRESHOLD:
 		return
+	# Online a fall is the server's to judge (docs/design/server_fall_damage.md);
+	# until it simulates falls, a fall online does nothing. The old path sent a
+	# dev DamageSelf the server ignored for everyone but GMs.
+	if Net.is_launcher_mode():
+		return
 	# TODO: skip if BuffManager has levitate/feather fall active
 	var dmg := maxi(1, int((_peak_fall_speed - FALL_DAMAGE_THRESHOLD) * FALL_DAMAGE_MULT))
 	Combat.receive_player_damage(dmg, null, "Fall")

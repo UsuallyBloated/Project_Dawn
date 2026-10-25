@@ -625,11 +625,6 @@ func broadcast_evade(target: int) -> void:
 		return
 	send_evade_broadcast(target)
 
-func broadcast_death() -> void:
-	if _state != State.CONNECTED_APP:
-		return
-	send_death_broadcast()
-
 # PD_W0018 — raw XP grant. DEV-ONLY server-side as of PD_W0023 (needs
 # PD_DEV_CMDS, like Full Heal): kept for the Test Panel leveling buttons.
 # Real quest turn-ins go through complete_quest below.

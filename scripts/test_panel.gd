@@ -798,6 +798,12 @@ func _full_heal() -> void:
 	PlayerStats.set_stamina(PlayerStats.max_stamina)
 
 func _trigger_death() -> void:
+	# Launcher: the server owns HP and every death, so this asks it for a dev
+	# DamageSelf of the whole bar (GM-gated and audited); its death sweep kills
+	# and the HealthUpdate(0) drives PlayerDeath here. Offline it is local.
+	if Net.is_launcher_mode():
+		Net.broadcast_damage_self(int(ceil(PlayerStats.max_hp)) + 1)
+		return
 	PlayerStats.set_hp(0.0)
 
 # Slice 0 test aid — push xp through the server's leveling path via the raw
