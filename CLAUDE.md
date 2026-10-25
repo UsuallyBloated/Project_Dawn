@@ -933,6 +933,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   make the account a GM); online a fall computes nothing, Trigger Death sends a dev
   `DamageSelf` of the whole bar, and no `DeathBroadcast` follows a death (probe
   `tools/probe_fall_and_death_online.gd`). Slice 1 waits on the server height model.
+  **The Oct 22 bump PREPARED 2026-10-25** on `bump/oct22` (both repos' merges ready: the
+  server's is a fast-forward, the client's merged with no conflicts; every check green with a
+  DLL built from `feat/server-speed`). **Phase 4's lockstep item (B4) mostly BUILT the same
+  day** on that branch: `check_constant_lockstep`, `check_skill_table_lockstep`,
+  `check_character_lockstep`, `check_discipline_lockstep` (tooling, no playtest surface).
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
   Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying
