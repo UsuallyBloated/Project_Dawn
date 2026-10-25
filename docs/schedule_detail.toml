@@ -1449,3 +1449,41 @@ who = "user"
 by = 2026-11-08
 blocks = "Slice 0 (one server handler now, the Test Panel's death button with the export); slice 1 waits on the server height model."
 done_when = "Each of the five answered on the Housekeeping audit To-Do entry."
+
+[[row]]
+id = "b35"
+week = "w3"
+lane = "build"
+day = "Oct 24"
+what = "Fall damage slice 0: the instant-death message becomes a GM command (a player can no longer kill themselves on demand for a free trip home), online falls stop pretending to hurt, and the Test Panel's death button goes through the server."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both server suites green; the new test fails on the old handler; the client probe passes."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "o14"
+week = "w4"
+lane = "operate"
+day = "the next redeploy, everyone logged out or not (shutdown is graceful since 6c2bc45)"
+what = "Redeploy the R720 at 779a033 (fall damage slice 0's server half). No migration, no export needed for the server half."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+needs = ["a quiet moment"]
+waits_on = ["b35"]
+done_when = "The boot line shows build=779a033 (or later) and dev_cmds=false."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v37"
+week = "w4"
+lane = "verify"
+day = "after the redeploy (section 1) and the Oct 22 export (section 2)"
+what = "Fall damage slice 0: a GM's Test Panel death still works and is recorded, ordinary deaths are unchanged, and online a big fall shows no damage."
+who = "user at a desk with a GM and a plain account"
+hours = 0.5
+needs = ["the redeploy (o14)", "the Oct 22 export for section 2"]
+checklist = "fall_damage_slice0_checklist.md"
+waits_on = ["o14"]
+todo = "Housekeeping audit 2026-10-23"
+done_when = "Every row filled."
