@@ -1487,3 +1487,14 @@ checklist = "fall_damage_slice0_checklist.md"
 waits_on = ["o14"]
 todo = "Housekeeping audit 2026-10-23"
 done_when = "Every row filled."
+
+[[row]]
+id = "b36"
+week = "w3"
+lane = "build"
+day = "Oct 25"
+what = "The Oct 22 bump prepared on its own branch (the client merge done with no conflicts and every check green; the server side is already a straight fast-forward), plus four automated checks that the client and the server agree on about forty more shared numbers and tables."
+who = "Claude unattended"
+days = 0.5
+done_when = "bump/oct22 pushed with every check passing against feat/server-speed's data."
+todo = "Housekeeping audit 2026-10-23"
