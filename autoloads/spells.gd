@@ -20,18 +20,12 @@ var no_cooldowns: bool = false
 # Seconds left on the global cooldown (0 when none runs).
 var _gcd_remaining: float = 0.0
 
-# How far a targeted spell reaches, in metres. One metre inside the server's
-# RANGED_ATTACK_RANGE (25 m), which is the authority: this check only spares an
-# honest player a wasted cast bar, and the margin keeps position interpolation
-# from turning a cast the client allowed into a server refusal.
-const SPELL_RANGE := 24.0
-# Friendly spells (heals and buffs on another player or a pet) reach further:
-# one metre inside the server's FRIENDLY_SPELL_RANGE (30 m), decided 2026-10-05.
-const FRIENDLY_SPELL_RANGE := 29.0
-# A resurrection's reach to the corpse: the server's RES_CAST_RANGE (30 m). The
-# client runs no check of its own for it (the server reports the refusal);
-# the number is here for the tooltip.
-const CORPSE_SPELL_RANGE := 30.0
+# Each spell reaches its own range (SpellData.reach(), 30 m unless the spell
+# names one; the server's Spell::reach is the authority). The client's own
+# check sits this far inside it: it only spares an honest player a wasted cast
+# bar, and the margin keeps position interpolation from turning a cast the
+# client allowed into a server refusal.
+const REACH_MARGIN := 1.0
 # The global cooldown (decided 2026-10-05): after any cast no spell may start
 # for this long, Bard songs excepted (twisting is casting songs back to back).
 # The server's GLOBAL_COOLDOWN is a quarter second shorter (2.0 s), so an
@@ -98,20 +92,13 @@ func _get_alignment_effectiveness(player_class: String) -> float:
 	return 1.0
 
 # The reach a spell's tooltip shows, or "" for a spell with no target to reach
-# (self, group-wide, a port, a bind, a summon). All spells of a kind share one
-# reach today (the server has no per-spell range), so this is the kind's
-# number: hostile 24 m, friendly 29 m (to another player or a pet; on yourself
-# there is nothing to reach), a corpse 30 m.
+# (self, group-wide, a port, a bind, a summon): the spell's own reach.
 func spell_range_text(spell: SpellData) -> String:
 	match spell.target_type:
-		SpellData.TargetType.ENEMY, SpellData.TargetType.PET_CHARM:
-			return "%.0f m" % SPELL_RANGE
+		SpellData.TargetType.ENEMY, SpellData.TargetType.PET_CHARM, 		SpellData.TargetType.PET_HEAL, SpellData.TargetType.CORPSE:
+			return "%.0f m" % spell.reach()
 		SpellData.TargetType.ALLY:
-			return "%.0f m to others" % FRIENDLY_SPELL_RANGE
-		SpellData.TargetType.PET_HEAL:
-			return "%.0f m" % FRIENDLY_SPELL_RANGE
-		SpellData.TargetType.CORPSE:
-			return "%.0f m" % CORPSE_SPELL_RANGE
+			return "%.0f m to others" % spell.reach()
 	return ""
 
 func cast_spell(spell: SpellData) -> bool:
@@ -126,6 +113,12 @@ func cast_spell(spell: SpellData) -> bool:
 		var me := get_tree().get_first_node_in_group("player")
 		if me != null and me.has_method("stand"):
 			me.stand()
+	# The song being sung, sung again, is stopped: online the server pulses
+	# it, so stopping is a message (instant, no bar), and it says so in chat.
+	if spell.is_song and Net.is_launcher_mode() and BardSongs.get_active_song() == spell:
+		if Net.stop_song():
+			BardSongs.stop_singing()
+		return false
 	if _cooldowns.is_active(spell.spell_name) and not no_cooldowns:
 		spell_failed.emit("Spell is on cooldown.")
 		return false
@@ -254,6 +247,11 @@ func cast_by_index(index: int) -> bool:
 func is_casting() -> bool:
 	return _casting != null
 
+# A song is sung on the move (Selos' is a running song), so the movement
+# cancel in player.gd leaves a song's bar alone; the server's gate does too.
+func casting_is_song() -> bool:
+	return _casting != null and _casting.is_song
+
 func cancel_cast() -> void:
 	if _casting == null:
 		return
@@ -337,9 +335,6 @@ func _apply_spell(spell: SpellData) -> void:
 		_gcd_remaining = GLOBAL_COOLDOWN_SECS
 		global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
 	var effectiveness := _get_alignment_effectiveness(PlayerStats.player_class)
-	var dmg_mult    := CastingSkills.get_damage_mult(spell.discipline)
-	var dur_mult    := CastingSkills.get_duration_mult(spell.discipline)
-	var absorb_mult := CastingSkills.get_absorb_mult(spell.discipline)
 	# ALLY beneficial spells cast on a remote recipient (peer OR pet) are
 	# applied by the server, which fans the authoritative result back; skip
 	# the local mutation so we don't double-apply or buff the caster instead
@@ -347,12 +342,12 @@ func _apply_spell(spell: SpellData) -> void:
 	var ally_remote := _ally_target_is_remote(spell)
 
 	if spell.target_type == SpellData.TargetType.ENEMY:
-		Combat.deal_spell_damage(int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness * dmg_mult), spell.damage_type)
+		Combat.deal_spell_damage(int(spell.base_damage * effectiveness), spell.damage_type)
 
 	if spell.target_type == SpellData.TargetType.AOE:
 		Combat.deal_aoe_spell_damage(
 			spell.aoe_radius,
-			int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness * dmg_mult),
+			int(spell.base_damage * effectiveness),
 			spell.damage_type)
 
 	if spell.target_type == SpellData.TargetType.PET_SUMMON:
@@ -362,12 +357,12 @@ func _apply_spell(spell: SpellData) -> void:
 		PetManager.charm_current_target(spell.duration)
 
 	if spell.target_type == SpellData.TargetType.PET_HEAL:
-		WarderAI.heal_warder(spell.heal_amount + PlayerStats.wisdom * 0.3)
+		WarderAI.heal_warder(spell.heal_amount)
 
 	# In launcher mode the server applies the self-heal and the hp-cost
 	# authoritatively and fans HealthUpdate; applying them locally too makes the
-	# HP bar jump to a client-predicted value (the local heal adds WIS + alignment
-	# effectiveness the server's flat heal omits) and then snap back down a
+	# HP bar jump to a client-predicted value (the local heal adds the alignment
+	# effectiveness the server does not model yet) and then snap back down a
 	# HealthUpdate later — the "bouncing" health bar. Skip the local self-HP
 	# writes in launcher mode, matching regen.gd and the HoT tick; Test Room
 	# (no server) keeps the instant local effect.
@@ -375,7 +370,7 @@ func _apply_spell(spell: SpellData) -> void:
 
 	if spell.heal_amount > 0.0 and spell.target_type != SpellData.TargetType.PET_HEAL:
 		if not ally_remote and not server_owns_hp:
-			var heal := (spell.heal_amount + PlayerStats.wisdom * 0.3) * effectiveness
+			var heal := spell.heal_amount * effectiveness
 			PlayerStats.set_hp(PlayerStats.hp + heal)
 
 	if spell.hp_cost > 0.0 and not server_owns_hp:
@@ -388,17 +383,17 @@ func _apply_spell(spell: SpellData) -> void:
 		# the local BuffManager DoT on the local enemy node.
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and not Net.is_launcher_mode() and not (Combat.current_target is RemotePlayer or Combat.current_target is RemotePet):
 			BuffManager.add_dot(Combat.current_target, spell.dot_dps * effectiveness,
-				spell.dot_duration * dur_mult, spell.spell_name)
+				spell.dot_duration, spell.spell_name)
 
 	if spell.hot_hps > 0.0 and spell.hot_duration > 0.0:
 		if not ally_remote:
-			BuffManager.add_hot(spell.hot_hps * effectiveness, spell.hot_duration * dur_mult, spell.spell_name)
+			BuffManager.add_hot(spell.hot_hps * effectiveness, spell.hot_duration, spell.spell_name)
 
 	if spell.absorb_amount > 0.0 and not ally_remote:
-		BuffManager.add_absorb(spell.absorb_amount * effectiveness * absorb_mult, spell.spell_name)
+		BuffManager.add_absorb(spell.absorb_amount * effectiveness, spell.spell_name)
 
 	if spell.damage_shield_amount > 0.0 and spell.damage_shield_duration > 0.0 and not ally_remote:
-		BuffManager.add_damage_shield(spell.damage_shield_amount * effectiveness, spell.damage_shield_duration * dur_mult, spell.spell_name)
+		BuffManager.add_damage_shield(spell.damage_shield_amount * effectiveness, spell.damage_shield_duration, spell.spell_name)
 
 	# Track 6 sub-task 3b: CC / snare / silence / dispel only fire on
 	# enemy NPC targets that expose the matching methods. RemotePlayer
@@ -407,26 +402,26 @@ func _apply_spell(spell: SpellData) -> void:
 	# while documenting the gap.
 	if spell.cc_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("mesmerize"):
-			Combat.current_target.mesmerize(spell.cc_duration * dur_mult)
+			Combat.current_target.mesmerize(spell.cc_duration)
 
 	if spell.root_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("root"):
-			Combat.current_target.root(spell.root_duration * dur_mult)
+			Combat.current_target.root(spell.root_duration)
 
 	if spell.slow_amount > 0.0 and spell.slow_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("snare"):
-			Combat.current_target.snare(spell.slow_amount, spell.slow_duration * dur_mult)
+			Combat.current_target.snare(spell.slow_amount, spell.slow_duration)
 
 	if spell.attack_slow_amount > 0.0 and spell.attack_slow_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("apply_attack_slow"):
-			Combat.current_target.apply_attack_slow(spell.attack_slow_amount, spell.attack_slow_duration * dur_mult)
+			Combat.current_target.apply_attack_slow(spell.attack_slow_amount, spell.attack_slow_duration)
 
 	if spell.primary_stat_buff_duration > 0.0 and not ally_remote:
 		BuffManager.add_primary_stat_buff(
 			spell.str_buff, spell.agi_buff, spell.int_buff,
 			spell.wis_buff, spell.con_buff,
 			spell.max_hp_buff, spell.max_mp_buff,
-			spell.primary_stat_buff_duration * dur_mult, spell.spell_name)
+			spell.primary_stat_buff_duration, spell.spell_name)
 
 	# Online the server binds and ports (spell batch step 2): its Teleport and
 	# its chat line are the result, so nothing runs here (Gate used to reload
@@ -440,19 +435,19 @@ func _apply_spell(spell: SpellData) -> void:
 
 	if not spell.is_song:
 		if spell.move_speed_mult > 0.0 and spell.move_speed_duration > 0.0 and not ally_remote:
-			BuffManager.add_speed_buff(spell.move_speed_mult, spell.move_speed_duration * dur_mult, spell.spell_name)
+			BuffManager.add_speed_buff(spell.move_speed_mult, spell.move_speed_duration, spell.spell_name)
 
 		if spell.mp_regen_hps > 0.0 and spell.mp_regen_duration > 0.0 and not ally_remote:
-			BuffManager.add_mp_regen_buff(spell.mp_regen_hps * effectiveness, spell.mp_regen_duration * dur_mult, spell.spell_name)
+			BuffManager.add_mp_regen_buff(spell.mp_regen_hps * effectiveness, spell.mp_regen_duration, spell.spell_name)
 
 		if spell.haste_amount > 0.0 and spell.haste_duration > 0.0 and not ally_remote:
-			BuffManager.add_haste_buff(spell.haste_amount, spell.haste_duration * dur_mult, spell.spell_name)
+			BuffManager.add_haste_buff(spell.haste_amount, spell.haste_duration, spell.spell_name)
 
 		if (spell.accuracy_buff > 0.0 or spell.crit_buff > 0.0) and not ally_remote:
-			BuffManager.add_stat_buff(spell.accuracy_buff, spell.crit_buff, spell.stat_buff_duration * dur_mult, spell.spell_name)
+			BuffManager.add_stat_buff(spell.accuracy_buff, spell.crit_buff, spell.stat_buff_duration, spell.spell_name)
 
 	if spell.is_stealth:
-		BuffManager.add_stealth(spell.stealth_duration * dur_mult, spell.spell_name)
+		BuffManager.add_stealth(spell.stealth_duration, spell.spell_name)
 
 	if spell.is_dispel:
 		if Combat.has_valid_target() and Combat.current_target.has_method("strip_one_buff"):
@@ -464,7 +459,7 @@ func _apply_spell(spell: SpellData) -> void:
 
 	if spell.silence_duration > 0.0:
 		if Combat.has_valid_target() and Combat.current_target.has_method("silence"):
-			Combat.current_target.silence(spell.silence_duration * dur_mult)
+			Combat.current_target.silence(spell.silence_duration)
 
 	if spell.is_lich_form:
 		BuffManager.toggle_lich_form(spell.lich_mp_regen)
@@ -475,15 +470,17 @@ func _apply_spell(spell: SpellData) -> void:
 		# via CastSpell). Caster still gets the mana, but the damage
 		# applies through the server's spell handler.
 		if Combat.has_valid_target() and Combat.current_target.has_method("take_damage"):
-			var drained := minf(spell.mana_drain * effectiveness * dmg_mult, Combat.current_target.hp)
+			var drained := minf(spell.mana_drain * effectiveness, Combat.current_target.hp)
 			Combat.current_target.take_damage(int(drained))
 			PlayerStats.set_mp(PlayerStats.mp + drained)
 			CombatLog.add_line("You drain %d life from %s into mana." % [int(drained), Combat.current_target.mob_name], CombatLog.MsgType.INFO)
 		elif Combat.has_valid_target():
-			PlayerStats.set_mp(PlayerStats.mp + spell.mana_drain * effectiveness * dmg_mult)
+			PlayerStats.set_mp(PlayerStats.mp + spell.mana_drain * effectiveness)
 
 	if spell.is_song:
 		BardSongs.activate_song(spell)
+	else:
+		BardSongs.on_non_song_cast()
 
 	if spell.target_type in [SpellData.TargetType.ENEMY, SpellData.TargetType.AOE]:
 		BuffManager.break_stealth()
@@ -526,8 +523,8 @@ func _cast_target_id(spell: SpellData) -> int:
 		return (t as RemotePet).pet_id
 	return 0
 
-# True when `spell` needs a target within SPELL_RANGE and the current target
-# is further than that. Only the cases the server range-checks: an ENEMY or
+# True when `spell` needs a target within its reach (less REACH_MARGIN) and
+# the current target is further than that. Only the cases the server range-checks: an ENEMY or
 # PET_CHARM spell on its target, and an ALLY spell aimed at another player or a
 # pet (an ALLY spell with anything else targeted falls back to the caster, so
 # it has no reach to check).
@@ -543,8 +540,7 @@ func _target_out_of_reach(spell: SpellData) -> bool:
 	var me := get_tree().get_first_node_in_group("player") as Node3D
 	if me == null:
 		return false
-	var reach := FRIENDLY_SPELL_RANGE if spell.target_type == SpellData.TargetType.ALLY else SPELL_RANGE
-	return me.global_position.distance_to((t as Node3D).global_position) > reach
+	return me.global_position.distance_to((t as Node3D).global_position) > spell.reach() - REACH_MARGIN
 
 # Launcher mode: the server refused a cast that had ALREADY completed here
 # (target out of reach or gone, a spell the server has no effect for). It took
@@ -665,10 +661,12 @@ func _load_spells() -> void:
 		s.damage_shield_amount   = d.get("damage_shield_amount", 0.0)
 		s.damage_shield_duration = d.get("damage_shield_duration", 0.0)
 		s.is_song             = d.get("is_song", false)
+		s.song_scale_at_learn = d.get("song_scale_at_learn", 0.0)
 		s.min_level           = d.get("min_level", 1)
 		s.class_min_levels    = d.get("class_min_levels", {})
 		s.summon_item         = d.get("summon_item", "")
 		s.summon_max          = int(d.get("summon_max", 0))
+		s.range               = float(d.get("range", 0.0))
 		s.str_buff                  = d.get("str_buff", 0)
 		s.agi_buff                  = d.get("agi_buff", 0)
 		s.int_buff                  = d.get("int_buff", 0)

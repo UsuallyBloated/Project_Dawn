@@ -1,25 +1,52 @@
 extends Node
 
-# Bard Song Twist mechanic.
-# Only one song "plays" at a time — casting a new song replaces the active one.
-# The active song pulses its effect every PULSE_INTERVAL seconds.
-# Its buff lingers for PULSE_INTERVAL + 0.5s so effects stay active even after
-# the song stops, until the next expected pulse would have fired.
-# Twist: by rapidly cycling 3-4 songs the player can keep all of their lingering
-# buffs active simultaneously — the defining high-skill Bard mechanic.
+# Bard songs (the rework of 2026-10-20, classic EQ's rules): one song is sung
+# at a time, a 3 s sing, free; it pulses every PULSE_INTERVAL and each pulse's
+# effect lingers LINGER after it. Twisting is cycling songs on those sings so
+# several linger at once. Online the SERVER holds the active song and pulses it
+# (the buffs arrive through BuffManager's snapshot reconcile, which calls
+# apply_song_buffs); this node only remembers which song is sung, for the
+# toggle and the UI. Offline (the Test Room) it pulses locally.
+#
+# A song's strength scales with the bard's level (user, 2026-10-20): a
+# fraction of the listed value when first learned, climbing to the full value
+# at FULL_AT_LEVEL. The fraction is the song's own `song_scale_at_learn` when
+# it has one (Selos' carries EQ's Selo's curve, +20% when learned of +65% at
+# 50) and SCALE_AT_LEARN otherwise. The data carries the level-50 values. The
+# four constants mirror the server's world/mod.rs SONG_* knobs; keep them in
+# step by hand.
 
 signal songs_changed
 
-const PULSE_INTERVAL := 3.0
+const PULSE_INTERVAL := 6.0
+const LINGER := 12.0
+const SCALE_AT_LEARN := 0.4
+const FULL_AT_LEVEL := 50
 
 var _active_song: SpellData = null
 var _pulse_timer: float = 0.0
 
 func _ready() -> void:
-	PlayerDeath.player_died.connect(_stop)
-	ZoneLoader.zone_changed.connect(func(_z): _stop())
+	PlayerDeath.player_died.connect(stop_singing)
+	ZoneLoader.zone_changed.connect(func(_z): stop_singing())
 
-func _stop() -> void:
+# The fraction of a song's listed effect a bard of `level` gets, the song
+# first learned at `learn_level`: `at_learn` there, 1.0 from FULL_AT_LEVEL on,
+# linear between (the server's songs::song_scale).
+static func song_scale(level: int, learn_level: int, at_learn: float = SCALE_AT_LEARN) -> float:
+	var full: int = maxi(FULL_AT_LEVEL, learn_level + 1)
+	if level >= full:
+		return 1.0
+	var t: float = float(maxi(level - learn_level, 0)) / float(full - learn_level)
+	return at_learn + (1.0 - at_learn) * t
+
+# The scale for `spell` on the local player: its own start fraction when it
+# has one, the global otherwise (the server's songs::scale_at_learn).
+static func scale_for(spell: SpellData) -> float:
+	var at_learn: float = spell.song_scale_at_learn if spell.song_scale_at_learn > 0.0 else SCALE_AT_LEARN
+	return song_scale(PlayerStats.level, spell.required_level(PlayerStats.player_class), at_learn)
+
+func stop_singing() -> void:
 	if _active_song == null:
 		return
 	_active_song = null
@@ -27,51 +54,59 @@ func _stop() -> void:
 	songs_changed.emit()
 
 func _process(delta: float) -> void:
-	if _active_song == null:
+	if _active_song == null or Net.is_launcher_mode():
 		return
 	_pulse_timer += delta
 	if _pulse_timer >= PULSE_INTERVAL:
 		_pulse_timer -= PULSE_INTERVAL
 		_pulse(_active_song)
 
+# A song's cast landed. Online the server has started (or, sung again,
+# stopped) it and says so in chat; here only the bookkeeping. Offline the
+# local pulse runs and the lines are printed here.
 func activate_song(spell: SpellData) -> void:
 	if _active_song != null and _active_song.spell_name == spell.spell_name:
-		# Re-cast of the same song: toggle off
 		_active_song = null
 		_pulse_timer = 0.0
 		songs_changed.emit()
-		CombatLog.add_line("You stop singing %s." % spell.spell_name, CombatLog.MsgType.INFO)
+		if not Net.is_launcher_mode():
+			CombatLog.add_line("You stop singing %s." % spell.spell_name, CombatLog.MsgType.INFO)
 		return
-
 	_active_song = spell
 	_pulse_timer = 0.0
-	_pulse(spell)  # Immediate first pulse on activation
 	songs_changed.emit()
+	if Net.is_launcher_mode():
+		return
+	_pulse(spell)
 	CombatLog.add_line("You begin singing %s." % spell.spell_name, CombatLog.MsgType.INFO)
+
+# Any non-song cast stops the song (EQ's rule); online the server does the
+# same and says so.
+func on_non_song_cast() -> void:
+	stop_singing()
 
 func get_active_song() -> SpellData:
 	return _active_song
 
-func _pulse(spell: SpellData) -> void:
-	var linger := PULSE_INTERVAL + 0.5
-
+# Put one pulse's effects on the local player for `remaining` seconds, scaled
+# by level: the buffs the server applies (and fans in its snapshot), in the
+# same buckets, so the buff bar shows them either way. The heal is a
+# heal-over-time of the per-pulse heal spread over the pulse.
+func apply_song_buffs(spell: SpellData, remaining: float) -> void:
+	var s := scale_for(spell)
 	if spell.heal_amount > 0.0:
-		PlayerStats.set_hp(PlayerStats.hp + spell.heal_amount)
-
-	if spell.move_speed_mult > 0.0:
-		BuffManager.add_speed_buff(spell.move_speed_mult, linger, spell.spell_name)
-
+		BuffManager.add_hot(spell.heal_amount * s / PULSE_INTERVAL, remaining, spell.spell_name)
+	if spell.move_speed_mult > 1.0:
+		BuffManager.add_speed_buff(1.0 + (spell.move_speed_mult - 1.0) * s, remaining, spell.spell_name)
 	if spell.mp_regen_hps > 0.0:
-		BuffManager.add_mp_regen_buff(spell.mp_regen_hps, linger, spell.spell_name)
-
+		BuffManager.add_mp_regen_buff(spell.mp_regen_hps * s, remaining, spell.spell_name)
 	if spell.haste_amount > 0.0:
-		BuffManager.add_haste_buff(spell.haste_amount, linger, spell.spell_name)
-
-	if spell.absorb_amount > 0.0:
-		BuffManager.add_absorb(spell.absorb_amount, spell.spell_name)
-
+		BuffManager.add_haste_buff(spell.haste_amount * s, remaining, spell.spell_name)
 	if spell.accuracy_buff > 0.0 or spell.crit_buff > 0.0:
-		BuffManager.add_stat_buff(spell.accuracy_buff, spell.crit_buff, linger, spell.spell_name)
+		BuffManager.add_stat_buff(spell.accuracy_buff * s, spell.crit_buff * s, remaining, spell.spell_name)
 
+# The offline pulse: the buffs, and the ENEMY song's slow on the target.
+func _pulse(spell: SpellData) -> void:
+	apply_song_buffs(spell, LINGER)
 	if spell.attack_slow_amount > 0.0 and Combat.has_valid_target():
-		Combat.current_target.apply_attack_slow(spell.attack_slow_amount, linger)
+		Combat.current_target.apply_attack_slow(spell.attack_slow_amount * scale_for(spell), LINGER)

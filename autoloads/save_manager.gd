@@ -5,6 +5,11 @@ extends Node
 # Alignment, QuestManager, the three passive skill trackers, Inventory, and
 # Equipment. Buffs / cooldowns / pet state are transient and not persisted.
 #
+# This file is the offline Test Room's save only. Online, the server holds the
+# character and this file must not be written: `save()` refuses in launcher
+# mode, so an online character never lands in character.save and is never
+# loaded back into the Test Room as its offline character.
+#
 # Auto-save fires on level-up and zone change. SaveManager owns window-close:
 # the X button is wired as a hard self-kill (OS.kill on our own PID) so it
 # simulates a crash and drives the server's linkdead path, NOT a clean logout.
@@ -60,6 +65,9 @@ func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
 func save() -> bool:
+	# Online the server is the save; see the file header.
+	if Net.is_launcher_mode():
+		return false
 	# Skip if no character has ever been applied (e.g. fresh launch on lobby).
 	if PlayerStats.player_name == "" or PlayerStats.race == "" or PlayerStats.player_class == "":
 		return false

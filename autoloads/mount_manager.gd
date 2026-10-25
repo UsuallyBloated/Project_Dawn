@@ -40,6 +40,12 @@ func summon(item: ItemData) -> bool:
 	if item == null or not item.is_mount:
 		CombatLog.add_line("You can't ride that.", CombatLog.MsgType.INFO)
 		return false
+	# Online the server decides movement speed and has no mount model yet, so a
+	# mount would only move you on your own screen (and rubber-band back). Refuse
+	# honestly, as the tradeskills do, until the server rides it.
+	if Net.is_launcher_mode():
+		CombatLog.add_line("Mounts are not available online yet.", CombatLog.MsgType.INFO)
+		return false
 	if is_mounted():
 		# Re-summoning the same whistle is a no-op; a different whistle
 		# swaps mounts.

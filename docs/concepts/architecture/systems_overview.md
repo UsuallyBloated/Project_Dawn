@@ -368,11 +368,17 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   ~45% from the starter anchors, ore 0.25 / ingot 0.1 with mithril/adamantite lore
   exceptions, universal 0.1 floor so nothing weighs 0; coverage check:
   `tools/item_weight_audit.gd`, run headless with `--script`). Over capacity:
-  movement slows linearly to a 0.25 floor (applied after the mount mult in
-  `player.gd`) and stamina regen halves (stops at 2× capacity, in `regen.gd`);
-  "You are encumbered!" CombatLog line on threshold crossings. Client-side v1 — the
-  server's movement clamp picks up the slowdown via the scaled direction vector; no
-  server-side weight model yet.
+  movement slows linearly to a 0.25 floor and stamina regen halves (stops at 2×
+  capacity); "You are encumbered!" CombatLog line on threshold crossings. **The server
+  owns both penalties** (`world/encumbrance.rs`, from the 2026-10-19 client-authority
+  audit): `items.toml` carries each item's `weight` (compared by
+  `tools/check_item_lockstep.gd`), the server weighs coins and every carried and worn
+  stack against 10 + STR, and applies the result to its own movement speed
+  (`RUN_SPEED` 5 m/s x speed buffs x snare x load) and stamina regen. The client's
+  `Encumbrance` predicts the movement half with the same constants so local movement
+  agrees. Before, the client scaled its Move vector by its own speed against a 7.5 m/s
+  ceiling, so a modified client ran 1.5x and the stamina half ran nowhere at all.
+  Mounts are refused online until the server has a mount model.
 - **Currency & encumbrance visibility UI (2026-06-12):** the wallet renders in the
   inventory window (gold line above the trash slot — raw per-tier stacks via
   `Currency.format_coins`, live on `PlayerStats.coins_changed`) as well as the vendor

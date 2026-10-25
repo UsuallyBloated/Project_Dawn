@@ -10,6 +10,9 @@ const _HudCastBar           := preload("res://scripts/hud_cast_bar.gd")
 const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
 const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
 const _HudPetPanel          := preload("res://scripts/hud_pet_panel.gd")
+const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
+# The hunger window sits this far below the player's information bar.
+const HUNGER_PANEL_GAP := 4.0
 const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
 # Dev Test Panel, mounted on demand by `/testpanel` (world.gd also mounts it at
 # world entry for GMs and the Test Room).
@@ -19,6 +22,7 @@ const _SpellBookScript      := preload("res://scripts/spell_book.gd")
 const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
 const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
 const _InspectWindowScript  := preload("res://scripts/inspect_window.gd")
+const _TradeWindowScript    := preload("res://scripts/trade_window.gd")
 const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 
 @onready var health_bar: ProgressBar = $Panel/VBoxContainer/HPRow/HealthBar
@@ -85,11 +89,13 @@ var _bank_window: Panel = null
 
 var _group_panel = null
 var _pet_panel = null
+var _hunger_panel: Control = null
 var _track_window: TrackWindow = null
 var _spell_book: Panel = null
 var _quest_journal: Panel = null
 var _dialogue_window: Panel = null
 var _inspect_window: InspectWindow = null
+var _trade_window: TradeWindow = null
 var _debug_console: DebugConsole = null
 var _target_hp_label: Label = null
 var _target_mp_label: Label = null
@@ -206,6 +212,13 @@ func _build_components() -> void:
 	_pet_panel = _HudPetPanel.new()
 	add_child(_pet_panel)
 
+	# The hunger window (food design section 8), by default directly below
+	# the player's information bar and as wide as it. Placed deferred, once
+	# the bar's containers have their final size (the XP row grows it).
+	_hunger_panel = _HudHungerPanelScene.instantiate()
+	add_child(_hunger_panel)
+	_place_hunger_panel.call_deferred()
+
 	_track_window = _TrackWindowScript.new()
 	add_child(_track_window)
 
@@ -229,6 +242,13 @@ func _build_components() -> void:
 	_inspect_window.visibility_changed.connect(_on_window_visibility_changed.bind(_inspect_window))
 	Targeting.inspect_requested.connect(_inspect_player)
 
+	# PD_W0028 — the trade window opens itself on `world_trade_opened` (a
+	# holding-click on a player) and closes on `world_trade_closed`. Mounted
+	# here so it survives with the HUD; it drives its own visibility.
+	_trade_window = _TradeWindowScript.new()
+	add_child(_trade_window)
+	_trade_window.visibility_changed.connect(_on_window_visibility_changed.bind(_trade_window))
+
 	# In-game DebugLog tail. Independent of the user-data debug.log
 	# file (which gets corrupted when two clients share the same
 	# Godot user dir), so this stays useful in multi-client testing.
@@ -242,6 +262,11 @@ func _build_components() -> void:
 
 	_group_panel.layout_changed.connect(_reposition_pet_panel)
 	_reposition_pet_panel()
+
+func _place_hunger_panel() -> void:
+	var info: Control = $Panel
+	_hunger_panel.position = Vector2(info.position.x, info.position.y + info.size.y + HUNGER_PANEL_GAP)
+	_hunger_panel.size.x = info.size.x
 
 func _reposition_pet_panel() -> void:
 	if _pet_panel == null or _group_panel == null:
@@ -595,7 +620,7 @@ func _hide_res_prompt() -> void:
 		_res_prompt.visible = false
 
 # Camp slice B — the countdown elapsed: log out cleanly, exactly like the Options
-# "Quit Game" button (SaveManager.save -> Net.leave_session -> quit). The server's
+# "Quit Game" button (Net.leave_session -> quit; the server saves). The server's
 # camp window has elapsed too, so this clean Disconnect reaps the body and frees
 # the account to relog at once. Completion is client-driven because there is no
 # in-game return-to-lobby flow yet; a finished camp exits to desktop, the same end
@@ -604,7 +629,6 @@ func _complete_camp() -> void:
 	_camp_active = false
 	if _camp_label != null:
 		_camp_label.visible = false
-	SaveManager.save()
 	Net.leave_session()
 	get_tree().quit()
 
@@ -805,8 +829,8 @@ func _show_self_target() -> void:
 	if _tot_frame != null:
 		_tot_frame.visible = false
 
-# The same straight-line distance the cast range check uses (Spells.SPELL_RANGE
-# compares global positions), so the number on the frame is the number the gate
+# The same straight-line distance the cast range check uses (each spell's
+# reach, compared between global positions), so the number on the frame is the number the gate
 # judges. Blank for a self-target or when either end is missing.
 func _refresh_target_distance() -> void:
 	if not target_frame.visible:
@@ -1479,6 +1503,55 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line(SenseHeading.query(_player.rotation.y), CombatLog.MsgType.INFO)
 		return
 
+	if lower == "/con" or lower == "/consider":
+		# EQ's consider (factions, 2026-10-23): the server answers with how the
+		# target's faction regards you and, for a mob, how its level reads
+		# against yours. An NPC is named by its display name (the client holds
+		# no server ids for NPCs; the server resolves the name), a mob by its
+		# entity id. The server decides everything; this only asks.
+		if not Net.is_launcher_mode() or not Net.is_app_ready():
+			CombatLog.add_line("There is nothing to consider offline.", CombatLog.MsgType.INFO)
+			return
+		var con_target = Combat.current_target
+		if not is_instance_valid(con_target):
+			CombatLog.add_line("You must target something to consider it.", CombatLog.MsgType.INFO)
+			return
+		var npc_name := _npc_display_name(con_target)
+		var entity_id := 0 if npc_name != "" else Combat.target_server_id(con_target)
+		if npc_name == "" and entity_id == 0:
+			CombatLog.add_line("You cannot consider that.", CombatLog.MsgType.INFO)
+			return
+		if not Net.consider(npc_name, entity_id):
+			CombatLog.add_line(
+				"This build's gdext_net.dll predates /con (rebuild it with addons/gdext_net/build.ps1).",
+				CombatLog.MsgType.INFO)
+		return
+
+	if lower == "/factions":
+		# Every standing the server has told us: only the factions a kill, a
+		# quest or the GM panel has moved; the rest sit at Indifferent.
+		if Alignment.factions.is_empty():
+			CombatLog.add_line("You have moved no faction's standing yet.", CombatLog.MsgType.INFO)
+			return
+		var ids: Array = Alignment.factions.keys()
+		ids.sort()
+		for id in ids:
+			var f: Dictionary = Alignment.factions[id]
+			CombatLog.add_line("%s: %d (%s)" % [f["name"], roundi(f["standing"]),
+				Alignment.faction_level_name(int(f["level"]))], CombatLog.MsgType.INFO)
+		return
+
+	if lower == "/stopsong":
+		# EQ's /stopsong: end the song being sung at once. Online the server
+		# pulses the song, so it is told (and says so); the lingering
+		# effects run out on their own.
+		if Net.is_launcher_mode():
+			if Net.stop_song():
+				BardSongs.stop_singing()
+		else:
+			BardSongs.stop_singing()
+		return
+
 	if lower == "/loc" or lower == "/location":
 		# EQ-style position print (docs/design/location_command.md). Printed
 		# x, y, z — NOT EQ's Y-first — so the line pastes straight into
@@ -1792,3 +1865,16 @@ func _handle_chat_input(text: String) -> void:
 		return
 
 	CombatLog.add_line("Unknown command: %s" % text, CombatLog.MsgType.INFO)
+
+# The display name an NPC node carries, for /con (the client holds no server
+# ids for NPCs). `npc_name` first: the vendor and banker labels carry a role
+# after a dash that npcs.toml does not, so that part is trimmed.
+func _npc_display_name(node) -> String:
+	if not is_instance_valid(node):
+		return ""
+	for key in ["npc_name", "vendor_name", "banker_name"]:
+		if key in node and String(node.get(key)) != "":
+			var n := String(node.get(key))
+			var dash := n.find(" — ")
+			return n.substr(0, dash) if dash >= 0 else n
+	return ""

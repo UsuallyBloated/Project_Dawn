@@ -49,6 +49,7 @@ func _ready() -> void:
 	Net.world_miss.connect(_on_miss)
 	Net.world_evade.connect(_on_evade)
 	Net.world_entity_died.connect(_on_entity_died)
+	Net.world_player_jumped.connect(_on_player_jumped)
 	Net.world_damage_shield_trigger.connect(_on_damage_shield_trigger)
 	# Track 22.H — peer target broadcast routes through the same
 	# shared EntityTarget signal RemoteEnemyManager uses. We filter
@@ -219,7 +220,11 @@ func _on_cast_fail(caster: int, reason: String) -> void:
 		# player knows why nothing happened. If the cast had already
 		# completed here, undo the cooldown started for it (the server
 		# stamped none); if a cast bar is still running, cancel it.
-		if reason != "":
+		# EQ's own fizzle line stands alone, as it did there; any other
+		# refusal is prefixed so the player knows a cast was refused.
+		if reason == "Your spell fizzles!":
+			CombatLog.add_line(reason, CombatLog.MsgType.INFO)
+		elif reason != "":
 			CombatLog.add_line("Cast failed: %s" % reason, CombatLog.MsgType.INFO)
 		Spells.on_server_cast_refused()
 		Spells.cancel_cast()
@@ -414,15 +419,37 @@ func _on_miss(attacker: int, target: int) -> void:
 		# matters most in PvP. Mirrors _on_hit's attacker-name resolution.
 		CombatLog.add_line("%s misses you." % _attacker_display_name(attacker), CombatLog.MsgType.DAMAGE_IN)
 		return
-	var rp = _by_id.get(target)
-	if rp != null and is_instance_valid(rp):
-		DamageNumbers.spawn_miss(rp.global_position)
+	# A miss on anyone else: draw it on them, whatever kind they are. Online
+	# the server rolls every melee miss (combat.rs), so this is also where your
+	# own misses come back, mob or player, with their "You miss X." line.
+	var node := _entity_node(target)
+	if node != null:
+		DamageNumbers.spawn_miss((node as Node3D).global_position)
+	if attacker == Net.get_player_id():
+		Combat.player_missed_enemy.emit(_attacker_display_name(target))
+
+# The scene node for an entity id, by partition: a pet, a mob, or a player.
+# Null when the id is not in view.
+func _entity_node(id: int) -> Node:
+	var node: Node = null
+	if id >= RemotePetManager.PET_ID_BASE:
+		node = RemotePetManager.get_pet(id)
+	elif id >= RemoteEnemyManager.ENEMY_ID_BASE:
+		node = RemoteEnemyManager.get_enemy(id)
+	else:
+		node = _by_id.get(id)
+	return node if node != null and is_instance_valid(node) else null
 
 # Resolve an attacker id to a combat-log name. Mirrors the enemy-vs-peer
 # split in _on_hit: enemy ids (>= ENEMY_ID_BASE) read the mob name, peer
 # ids read the RemotePlayer name; same fallbacks ("Something" / "another
 # player") so incoming-miss lines read like incoming-hit lines.
 func _attacker_display_name(attacker: int) -> String:
+	if attacker >= RemotePetManager.PET_ID_BASE:
+		var pet: Node = RemotePetManager.get_pet(attacker)
+		if pet != null and is_instance_valid(pet):
+			return pet.pet_name
+		return "Something"
 	if attacker >= RemoteEnemyManager.ENEMY_ID_BASE:
 		var en: Node = RemoteEnemyManager.get_enemy(attacker)
 		if en != null and is_instance_valid(en):
@@ -442,6 +469,16 @@ func _on_entity_died(id: int) -> void:
 	var rp = _by_id.get(id)
 	if rp != null and is_instance_valid(rp):
 		rp.apply_death()
+
+# The jump relay: a peer we can see began a jump. The server never sends us
+# our own (the local body already jumped for real), so no self check is
+# needed, but it costs nothing.
+func _on_player_jumped(id: int) -> void:
+	if id == Net.get_player_id():
+		return
+	var rp = _by_id.get(id)
+	if rp != null and is_instance_valid(rp):
+		rp.play_jump()
 
 # Track 22.H — peer target broadcast. EntityTarget is shared with
 # enemy AI; filter by id partition (< ENEMY_ID_BASE = player) so

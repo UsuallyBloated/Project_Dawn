@@ -74,6 +74,10 @@ enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, S
 @export var aoe_radius: float = 0.0
 # Song: route through BardSongs twist system instead of standard effect handling.
 @export var is_song: bool = false
+# A song's own start fraction (its share of the listed level-50 effect when
+# first learned); 0 means BardSongs.SCALE_AT_LEARN. Selos' carries EQ's
+# Selo's curve (0.3077, +20% of +65%).
+@export var song_scale_at_learn: float = 0.0
 @export var allowed_classes: Array[String] = []
 # Minimum character level required to have this spell available.
 @export var min_level: int = 1
@@ -87,6 +91,16 @@ enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, S
 # class's level, one more per ten levels).
 @export var summon_item: String = ""
 @export var summon_max: int = 0
+# How far this spell reaches its target, metres; 0 means DEFAULT_SPELL_RANGE
+# (use reach()). Per-spell since 2026-10-19, on Monsters and Memories' 30 m
+# baseline for every single-target spell; the server's Spell::reach is the
+# authority and the two are compared by tools/check_spell_lockstep.gd.
+@export var range: float = 0.0
+
+const DEFAULT_SPELL_RANGE := 30.0
+
+func reach() -> float:
+	return range if range > 0.0 else DEFAULT_SPELL_RANGE
 
 func required_level(cls: String) -> int:
 	return int(class_min_levels.get(cls, min_level))

@@ -323,11 +323,13 @@ func _refresh_stats() -> void:
 			lbl.add_theme_color_override("font_color", C_NEUTRAL)
 
 	if selected_class != "":
+		# EQ's level 1 pools from the previewed stats (CharacterData.base_hp /
+		# base_mana, the server's formula), so the preview is what the server
+		# will hold at birth.
 		var cd: Dictionary = CharacterData.CLASS_DATA[selected_class]
-		var con_total: int = totals["constitution"]
-		var con_hp_bonus: float = (con_total - 10) * 5.0
-		_res_labels["hp"].text = str(int(max(50.0, CharacterData.BASE_HP + cd["hp_bonus"] + con_hp_bonus)))
-		_res_labels["mp"].text = str(int(max(20.0, CharacterData.BASE_MP + cd["mp_bonus"])))
+		_res_labels["hp"].text = str(CharacterData.base_hp(selected_class, 1, totals["constitution"]))
+		var mana: int = CharacterData.base_mana(selected_class, 1, totals["intelligence"], totals["wisdom"])
+		_res_labels["mp"].text = str(mana if mana > 0 else int(CharacterData.MIN_MANA))
 		_res_labels["st"].text = str(int(max(20.0, CharacterData.BASE_ST + cd["stamina_bonus"])))
 	else:
 		for k in _res_labels:

@@ -44,14 +44,12 @@ const SERVER_SNAP_THRESHOLD := 1.0  # metres
 # feel at 60 fps, but stays stable when frame rate dips).
 const SERVER_LERP_RATE := 17.3
 
-# Must match MAX_MOVE_SPEED in server crates/projectdawn-server/src/world/mod.rs.
-# The server reads Move.direction as a unit vector and integrates `direction *
-# MAX_MOVE_SPEED * dt` per tick, so we scale outgoing direction by
-# (current_speed / SERVER_MAX_MOVE_SPEED) to make server-side movement match
-# whatever the client is locally predicting (base 5 m/s, crouch 2.5, with
-# speed-buff multipliers). Server clamps direction length to 1.0, so any
-# buff pushing local speed above the cap gets capped on the wire too.
-const SERVER_MAX_MOVE_SPEED := 7.5
+# Online the server decides how fast you move: its RUN_SPEED (the same 5 m/s
+# as SPEED) times the speed buffs, snare and encumbrance it applies itself
+# (crates/projectdawn-server/src/world/mod.rs, RUN_SPEED). A Move's direction
+# says only which way and how much of a run: full length to run, half to
+# crouch. The local prediction below applies the same buffs and encumbrance so
+# the two agree; it never tells the server a speed.
 
 # Throttle Move sends to the server's 20 Hz tick rate. The server applies a
 # fixed TICK_DT (50ms) of integration per accepted Move, so sending faster
@@ -59,6 +57,12 @@ const SERVER_MAX_MOVE_SPEED := 7.5
 # server_tick_rate). At 60 fps unthrottled that runs the server 3× ahead of
 # the client and looks like rubber-banding. 50ms == one server tick.
 const MOVE_SEND_INTERVAL := 0.05
+
+# A jump begun since the last Move went out. Latched here because Moves are
+# throttled to the server tick: the jump rides the NEXT Move's `jumping`
+# flag, once, however many frames pass before it is sent. The server relays
+# it to the players who can see us as a one-shot and moves nobody for it.
+var _jump_pending := false
 
 enum PlayerState { STANDING, CROUCHING, SITTING }
 
@@ -407,7 +411,7 @@ func _physics_process(delta: float) -> void:
 	# refuses the cast AFTER the mana was optimistically spent. Cancelling here
 	# refunds instantly (Spells.cancel_cast) and matches what the corrected
 	# server comment says the ideal client does.
-	if Spells.is_casting() and not chat_focused and (mouse_run or _autorun or
+	if Spells.is_casting() and not Spells.casting_is_song() and not chat_focused and (mouse_run or _autorun or
 			Input.is_action_pressed("move_forward") or
 			Input.is_action_pressed("move_left") or
 			Input.is_action_pressed("move_backward") or
@@ -440,6 +444,7 @@ func _physics_process(delta: float) -> void:
 		_peak_fall_speed = 0.0
 		if not chat_focused and Input.is_action_pressed("jump") and state != PlayerState.SITTING:
 			velocity.y = JUMP_VELOCITY
+			_jump_pending = true
 		else:
 			velocity.y = maxf(velocity.y, 0.0)
 	else:
@@ -498,11 +503,11 @@ func _physics_process(delta: float) -> void:
 		_move_send_accum += delta
 		if _move_send_accum >= MOVE_SEND_INTERVAL:
 			_move_send_accum -= MOVE_SEND_INTERVAL
-			# Scale unit direction to (current_speed / SERVER_MAX_MOVE_SPEED) so
-			# the server's `direction * MAX_MOVE_SPEED` integration produces
-			# current_speed.
-			var server_dir := direction * (current_speed / SERVER_MAX_MOVE_SPEED)
-			Net.send_movement(server_dir, false)
+			# Which way, and how much of a run (a crouch is half); the speed
+			# is the server's. The jump flag goes once per jump.
+			var server_dir := direction * (base_speed / SPEED)
+			Net.send_movement(server_dir, _jump_pending)
+			_jump_pending = false
 
 	move_and_slide()
 
@@ -547,6 +552,11 @@ func _on_world_position(id: int, pos: Vector3, _vel: Vector3, _yaw: float, seque
 
 func _on_land() -> void:
 	if _peak_fall_speed <= FALL_DAMAGE_THRESHOLD:
+		return
+	# Online a fall is the server's to judge (docs/design/server_fall_damage.md);
+	# until it simulates falls, a fall online does nothing. The old path sent a
+	# dev DamageSelf the server ignored for everyone but GMs.
+	if Net.is_launcher_mode():
 		return
 	# TODO: skip if BuffManager has levitate/feather fall active
 	var dmg := maxi(1, int((_peak_fall_speed - FALL_DAMAGE_THRESHOLD) * FALL_DAMAGE_MULT))

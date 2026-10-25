@@ -126,6 +126,10 @@ func commit(slot: int) -> bool:
 	_commit_mana_cost = candidate.mana_cost * MEMORIZE_COST_FACTOR
 	_commit_start_pos = _player.global_position
 	memorize_started.emit(_commit_spell, MEMORIZE_CAST_TIME)
+	# Online the server holds the bar (client-authority audit fix 5): it
+	# starts its own clock now and decides at the finish.
+	if Net.is_launcher_mode():
+		Net.memorize_start(slot, _commit_spell.spell_name)
 	return true
 
 func is_committing() -> bool:
@@ -166,12 +170,18 @@ func _finish_commit() -> void:
 		return
 	var spell := _commit_spell
 	var slot := _commit_slot
-	PlayerStats.set_mp(PlayerStats.mp - _commit_mana_cost)
-	SpellBar.set_slot(slot, spell.spell_name)
-	CombatLog.add_line(
-		"You memorize %s into slot %d." % [spell.spell_name, slot + 1],
-		CombatLog.MsgType.INFO,
-	)
+	if Net.is_launcher_mode():
+		# The server fills the gem (or refuses with a line) and charges the
+		# mana; its SpellGems and ManaUpdate are what change here, and
+		# SpellBar says "You memorize" when the gem actually fills.
+		Net.memorize_finish()
+	else:
+		PlayerStats.set_mp(PlayerStats.mp - _commit_mana_cost)
+		SpellBar.set_slot(slot, spell.spell_name)
+		CombatLog.add_line(
+			"You memorize %s into slot %d." % [spell.spell_name, slot + 1],
+			CombatLog.MsgType.INFO,
+		)
 	_committing = false
 	_commit_spell = null
 	_commit_slot = -1

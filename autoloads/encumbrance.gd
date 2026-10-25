@@ -1,9 +1,14 @@
-# Encumbrance — carry weight vs. STR-driven capacity, and the movement /
-# stamina-regen penalties for exceeding it. Weight comes from coins (the
-# designed driver: every coin weighs the same regardless of tier, so a copper
-# hoard is heavy — see docs/concepts/world/currency.md), inventory items, and
-# worn equipment. Pure consumer: reads Inventory / Equipment / PlayerStats and
-# recomputes on their change signals; never mutates them.
+# Encumbrance — carry weight vs. STR-driven capacity. Weight comes from coins
+# (the designed driver: every coin weighs the same regardless of tier, so a
+# copper hoard is heavy — see docs/concepts/world/currency.md), inventory
+# items, and worn equipment. Pure consumer: reads Inventory / Equipment /
+# PlayerStats and recomputes on their change signals; never mutates them.
+#
+# Online the SERVER owns encumbrance (crates/projectdawn-server/src/world/
+# encumbrance.rs): it slows your movement and your stamina regen. This copy
+# predicts the movement penalty so local movement matches the server's, and
+# drives the "You are encumbered!" line. Its constants and arithmetic are kept
+# in lockstep with the server's by hand: change one, change the other.
 extends Node
 
 signal encumbrance_changed(weight: float, capacity: float)
@@ -24,8 +29,8 @@ const CAPACITY_PER_STR := 1.0
 const SPEED_PENALTY_RATE := 0.6
 const MIN_SPEED_MULT := 0.25
 
-# Stamina regen: halved while encumbered, stopped entirely at double capacity.
-const ENCUMBERED_ST_REGEN_MULT := 0.5
+# At this multiple of capacity the server stops stamina regen entirely (it
+# halves it while merely encumbered); the HUD and the sheet show "overloaded".
 const OVERLOADED_RATIO := 2.0
 
 var total_weight: float = 0.0
@@ -54,15 +59,6 @@ func get_speed_mult() -> float:
 		return 1.0
 	var ratio := total_weight / capacity
 	return clampf(1.0 - SPEED_PENALTY_RATE * (ratio - 1.0), MIN_SPEED_MULT, 1.0)
-
-
-# Multiplier for stamina regen; regen.gd applies it each tick.
-func get_stamina_regen_mult() -> float:
-	if capacity <= 0.0 or total_weight <= capacity:
-		return 1.0
-	if total_weight >= capacity * OVERLOADED_RATIO:
-		return 0.0
-	return ENCUMBERED_ST_REGEN_MULT
 
 
 func _on_equipment_changed(_slot: String, _item) -> void:

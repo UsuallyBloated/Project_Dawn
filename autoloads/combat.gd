@@ -106,6 +106,11 @@ func set_target(node) -> void:
 		_auto_attack_timer.stop()
 		_offhand_timer.stop()
 	target_changed.emit(current_target)
+	# Tell the server, so the players who can see us draw our target in
+	# their target-of-target frame. 0 means no target (and is all a Test
+	# Room target has).
+	if Net.is_launcher_mode():
+		Net.broadcast_set_target(target_server_id(current_target))
 
 func _target_display_name(node) -> String:
 	if node == null:
@@ -123,21 +128,16 @@ func _target_display_name(node) -> String:
 		if pn != null and String(pn) != "":
 			return String(pn)
 	return ""
-	# Track 22.H — broadcast the new target id to the server so peers
-	# can render target-of-target for the local player. Extracts the
-	# id from whichever node type the target is (RemoteEnemy /
-	# RemotePlayer / RemotePet). Solo / Test Room targets have no
-	# server id and broadcast 0 (no-op for peers since there are none).
-	if Net.is_launcher_mode():
-		var tid: int = 0
-		if is_instance_valid(current_target):
-			if "enemy_id" in current_target:
-				tid = current_target.enemy_id
-			elif "char_id" in current_target:
-				tid = current_target.char_id
-			elif "pet_id" in current_target:
-				tid = current_target.pet_id
-		Net.broadcast_set_target(tid)
+
+# The server entity id behind a target node (RemoteEnemy / RemotePlayer /
+# RemotePet), or 0 for none or a node with no server id (Test Room).
+func target_server_id(node) -> int:
+	if not is_instance_valid(node):
+		return 0
+	for key in ["enemy_id", "char_id", "pet_id"]:
+		if key in node:
+			return int(node.get(key))
+	return 0
 
 func toggle_auto_attack() -> void:
 	is_auto_attacking = not is_auto_attacking
@@ -173,10 +173,28 @@ func _sync_auto_attack_timer() -> void:
 		_offhand_timer.stop()
 
 func _is_dual_wielding() -> bool:
+	if not can_dual_wield():
+		return false
 	var oh: ItemData = Equipment.equipped.get("offhand")
-	return oh != null and oh.type == ItemData.Type.WEAPON
+	if oh != null:
+		return oh.type == ItemData.Type.WEAPON
+	# A Monk fights with both fists: with both hands empty the off hand punches.
+	return PlayerStats.player_class == "Monk" and Equipment.equipped.get("weapon") == null
 
-func _on_equipment_changed(slot: String, _item) -> void:
+# Dual wield is earned at a class's level (WeaponSkillDefinitions.DUAL_WIELD_LEVELS,
+# the server's rule too); a class not listed never dual wields.
+func can_dual_wield() -> bool:
+	var at: int = WeaponSkillDefinitions.DUAL_WIELD_LEVELS.get(PlayerStats.player_class, 0)
+	return at > 0 and PlayerStats.level >= at
+
+func _on_equipment_changed(slot: String, item) -> void:
+	# An off-hand weapon before its time: say when it will swing.
+	if slot == "offhand" and item is ItemData and item.type == ItemData.Type.WEAPON and not can_dual_wield():
+		var at: int = WeaponSkillDefinitions.DUAL_WIELD_LEVELS.get(PlayerStats.player_class, 0)
+		if at > 0:
+			CombatLog.add_line("You will be able to dual wield at level %d." % at, CombatLog.MsgType.INFO)
+		else:
+			CombatLog.add_line("Your class cannot dual wield.", CombatLog.MsgType.INFO)
 	if slot not in ["weapon", "offhand"] or current_target == null:
 		return
 	# Dual-wield onset/offset honors the auto-attack toggle. Re-syncing
@@ -226,12 +244,16 @@ func _on_auto_attack() -> void:
 		return
 	var skill_name := _get_weapon_skill_name()
 	WeaponSkills.try_advance(skill_name)
-	var miss_chance := maxf(0.0, WeaponSkills.get_miss_chance(skill_name) - BuffManager.get_accuracy_bonus())
-	if randf() < miss_chance:
-		player_missed_enemy.emit(current_target.mob_name)
-		DamageNumbers.spawn_miss(current_target.global_position)
-		_update_attack_interval()
-		return
+	# Online the server rolls the miss (combat.rs): every swing goes out, and a
+	# miss comes back as a Miss (RemotePlayerManager draws it). Offline the
+	# local roll stands.
+	if not Net.is_launcher_mode():
+		var miss_chance := maxf(0.0, WeaponSkills.get_miss_chance(skill_name) - BuffManager.get_accuracy_bonus())
+		if randf() < miss_chance:
+			player_missed_enemy.emit(current_target.mob_name)
+			DamageNumbers.spawn_miss(current_target.global_position)
+			_update_attack_interval()
+			return
 	deal_damage_to_target(calc_damage())
 	if is_ranged_weapon and is_instance_valid(current_target):
 		_spawn_arrow_fx(current_target.global_position)
@@ -266,16 +288,19 @@ func _on_offhand_attack() -> void:
 	if dist > MELEE_RANGE:
 		_update_offhand_interval()
 		return
+	# A Monk's bare off hand is hand_to_hand, as on the server (combat.rs).
 	var oh: ItemData = Equipment.equipped.get("offhand")
-	var skill_name := oh.weapon_skill if oh.weapon_skill != "" else "1h_slashing"
+	var skill_name := "hand_to_hand" if oh == null or oh.weapon_skill == "" else oh.weapon_skill
 	WeaponSkills.try_advance(skill_name)
 	WeaponSkills.try_advance("dual_wield")
-	var miss_chance := minf(0.95, WeaponSkills.get_miss_chance(skill_name) + DUAL_WIELD_MISS_PENALTY - BuffManager.get_accuracy_bonus())
-	if randf() < miss_chance:
-		player_missed_enemy.emit(current_target.mob_name)
-		DamageNumbers.spawn_miss(current_target.global_position)
-		_update_offhand_interval()
-		return
+	# Online the server rolls the off-hand miss too (see _on_auto_attack).
+	if not Net.is_launcher_mode():
+		var miss_chance := minf(0.95, WeaponSkills.get_miss_chance(skill_name) + DUAL_WIELD_MISS_PENALTY - BuffManager.get_accuracy_bonus())
+		if randf() < miss_chance:
+			player_missed_enemy.emit(current_target.mob_name)
+			DamageNumbers.spawn_miss(current_target.global_position)
+			_update_offhand_interval()
+			return
 	deal_damage_to_target(calc_offhand_damage(), NetProtocol.DamageType.PHYSICAL, true)
 	# Procs are server-authoritative now (see the main-hand note in _on_auto_attack).
 	_update_offhand_interval()
@@ -290,7 +315,7 @@ func calc_offhand_damage() -> int:
 	else:
 		base = randi_range(1, 4) + str_bonus
 	base = int(base * OFFHAND_DAMAGE_MULT)
-	var skill_name := oh.weapon_skill if oh != null and oh.weapon_skill != "" else "1h_slashing"
+	var skill_name := "hand_to_hand" if oh == null or oh.weapon_skill == "" else oh.weapon_skill
 	var skill_mult := WeaponSkills.get_damage_multiplier(skill_name)
 	var crit_chance := clampf((PlayerStats.dexterity - 10) * CRIT_PER_DEX * 0.6 + BuffManager.get_crit_bonus() * 0.6, 0.0, SPELL_CRIT_MAX)
 	_last_crit = randf() < crit_chance

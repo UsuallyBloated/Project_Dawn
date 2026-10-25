@@ -37,11 +37,11 @@ func _die() -> void:
 	# it in world::progression (5% of the level band, cascading de-level, floor
 	# at level 5) and reports it back via XpGained (plus a LevelUp if you
 	# de-leveled), which the client mirrors. No local loss computed here.
-	# Track 4 sub-task 5 / Track 6: notify the server. The server zeroes
-	# its own conn.hp and fans HealthUpdate(0) + EntityDied so peer
-	# RemotePlayer bars drop and the fall-over animation plays. _respawn()
-	# below sends the matching Respawn intent once the delay elapses.
-	Net.broadcast_death()
+	# Online the server already knows: HP only reaches zero on the server, and
+	# its death sweep has run the death (penalty, corpse, EntityDied to peers)
+	# before this client hears HealthUpdate(0). No DeathBroadcast is sent; the
+	# server treats that message as a GM command now. _respawn() below sends
+	# the Respawn intent once the delay elapses.
 	player_died.emit()
 	get_tree().create_timer(RESPAWN_DELAY).timeout.connect(_respawn)
 

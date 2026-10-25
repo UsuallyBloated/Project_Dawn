@@ -763,9 +763,27 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   test list, and a PD_W0028 wire sketch (protocol bump, gdext rebuild, both-sides deploy).
   All four §6 calls DECIDED 2026-09-19 (user): 8 slots per side, instant open, 10 m range for
   now (user flags it as far; tuning candidate after the first playtest), NPC give stays slice 2
-  WITH a standing instruction to pull it forward if slice 1 leaves it nearly free. Build-ready;
-  queued behind the phase 4 deploy/playtest and the bags + dead-XP batch. Until built, entity
-  clicks while holding target only.
+  WITH a standing instruction to pull it forward if slice 1 leaves it nearly free.
+  **Slice 1 BUILT 2026-09-29 on the `feat/trade-window` side branch, pending playtest**
+  (server `a67839a` + gdext/client; `trade_window_checklist.md`; protocol bumped PD_W0028, both
+  sides deploy TOGETHER). Escrow by locking: `world/trade.rs` holds the session (one per player,
+  offer references not copies, every-edit-clears-both-accepts); the tick apply block does the
+  commit (re-validate liveness/range/coin-coverage/offered-count/both-receiver-capacity, then
+  the in-memory swap, `db::commit_trade` one transaction across both characters, revert on
+  failure, deltas deferred until commit); locked slots refuse Move/Split/Drop/Destroy/Equip/
+  Unequip/Sell/BankStore with a chat line. The exploit ledger shipped as integration tests
+  (atomic commit, bait-and-switch, escrow lock, self-trade, overdraft). Client: `trade_window.gd`
+  (server-driven, holds no state), the holding-click-a-player trigger in `targeting.gd`, Net
+  signal wiring. Kept on the side branch until a desk day merges it with a fresh export, so a
+  casual R720 pull never bricks the testers' client. **Still slice 2:** NPC give (one-sided).
+  **Pre-merge review 2026-10-12 found one real hole, FIXED on the branch** (server `bac726e`):
+  the lock covered only the offered slot, but a full bag moves with its contents (09-27), so
+  after the partner accepted, a player could swap the pouch HOLDING the offer with another
+  pouch; the reference then named the other pouch's item, the commit checked only the count,
+  and the partner's window never refreshed. Now an offer inside a bag locks the bag, an
+  offered empty bag cannot be filled, the commit verifies the item as well as the count, and a
+  trade request no longer tells absent from too-far (an is-online check by id). Test
+  `trade_locks_the_bag_holding_an_offered_item`; three new rows in `trade_window_checklist.md`.
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and

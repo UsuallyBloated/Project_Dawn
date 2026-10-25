@@ -20,6 +20,18 @@ const DISPLAY: Dictionary = {
 	"dual_wield":   "Dual Wield",
 }
 
+# The level at which a class may first swing its off hand (user, 2026-10-19:
+# Rangers earliest, the cap table's order after that; Monks are born with it,
+# fighting with both fists). A class not listed never dual wields. Kept in
+# lockstep by hand with `skills::dual_wield_level` on the server, which refuses
+# an off-hand swing before it.
+const DUAL_WIELD_LEVELS: Dictionary = {
+	"Monk": 1,
+	"Ranger": 13, "Rogue": 13,
+	"Warrior": 15, "Witch Hunter": 15, "Bard": 15,
+	"Shadow Knight": 20, "Beast Master": 20,
+}
+
 # Max skill value at level MAX_LEVEL per class. 0 = class cannot train this skill.
 const CLASS_CAPS: Dictionary = {
 	"Warrior":       {"1h_slashing": 250, "2h_slashing": 250, "1h_blunt": 250, "2h_blunt": 250, "piercing": 250, "hand_to_hand": 100, "archery":  75, "defense": 250, "dodge": 200, "dual_wield": 200},
@@ -37,7 +49,7 @@ const CLASS_CAPS: Dictionary = {
 	"Shadow Knight": {"1h_slashing": 225, "2h_slashing": 225, "1h_blunt": 225, "2h_blunt": 225, "piercing": 150, "hand_to_hand":  75, "archery":  50, "defense": 225, "dodge": 175, "dual_wield": 150},
 	"Bard":          {"1h_slashing": 200, "2h_slashing": 150, "1h_blunt": 175, "2h_blunt": 150, "piercing": 200, "hand_to_hand": 100, "archery":  75, "defense": 175, "dodge": 200, "dual_wield": 175},
 	"Ranger":        {"1h_slashing": 225, "2h_slashing": 225, "1h_blunt": 175, "2h_blunt": 175, "piercing": 225, "hand_to_hand": 100, "archery": 250, "defense": 200, "dodge": 225, "dual_wield": 225},
-	"Monk":          {"1h_slashing":  50, "2h_slashing":   0, "1h_blunt": 200, "2h_blunt": 100, "piercing":   0, "hand_to_hand": 250, "archery":   0, "defense": 250, "dodge": 250, "dual_wield":   0},
+	"Monk":          {"1h_slashing":  50, "2h_slashing":   0, "1h_blunt": 200, "2h_blunt": 100, "piercing":   0, "hand_to_hand": 250, "archery":   0, "defense": 250, "dodge": 250, "dual_wield": 250},
 	"Witch Hunter":  {"1h_slashing": 200, "2h_slashing": 150, "1h_blunt": 100, "2h_blunt":   0, "piercing": 225, "hand_to_hand": 125, "archery": 150, "defense": 200, "dodge": 200, "dual_wield": 200},
 	"Beast Master":  {"1h_slashing": 150, "2h_slashing": 100, "1h_blunt": 150, "2h_blunt": 100, "piercing": 125, "hand_to_hand": 200, "archery": 100, "defense": 200, "dodge": 175, "dual_wield": 150},
 }

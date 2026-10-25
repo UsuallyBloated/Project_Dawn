@@ -58,6 +58,17 @@ signal world_stamina_update(id: int, stamina: float, maximum: float)
 signal world_cast_start(caster: int, spell_name: String, duration: float)
 signal world_cast_complete(caster: int, spell_name: String)
 signal world_cast_fail(caster: int, reason: String)
+# The server refused one of our active skills (client-authority audit item 6):
+# the skill's name, so Skills drops the cooldown it started, and the reason.
+signal world_skill_fail(skill_name: String, reason: String)
+# Factions and alignment (2026-10-23): one of our standings as the server
+# holds it (the number the faction's NPCs see and its con level, 0 Scowls to
+# 8 Ally), on entering the world, after every change and after a GM set; and
+# our alignment score, on entering and whenever it has moved a hundredth of a
+# point or crossed a tier. Alignment FOLLOWS these; nothing on the client
+# moves either.
+signal world_faction_update(faction_id: String, name: String, standing: float, level: int)
+signal world_alignment_update(score: float)
 # Track 4 sub-task 3 buff snapshot — names/durations are parallel arrays.
 signal world_buff_snapshot(
 	target: int,
@@ -70,6 +81,13 @@ signal world_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: 
 # <amount>"). Damage is already applied server-side; this drives the client's
 # proc number + elemental flash + combat-log line.
 signal world_proc_triggered(attacker: int, target: int, proc_name: String, amount: int, crit: bool, dmg_type: int)
+# PD_W0028 — the trade window (docs/design/trade_window.md). Re-emitted from
+# the gdext signals for TradeWindow to render. `slots`/`counts` are parallel
+# arrays, TRADE_SLOTS long; an empty path is an empty window slot.
+signal world_trade_opened(partner_id: int, partner_name: String)
+signal world_trade_offer_update(mine: bool, item_paths: PackedStringArray, counts: PackedInt32Array, platinum: int, gold: int, silver: int, copper: int)
+signal world_trade_accept_state(you: bool, them: bool)
+signal world_trade_closed(committed: bool, reason: String)
 signal world_miss(attacker: int, target: int)
 signal world_evade(attacker: int, target: int)
 # Track 4 sub-task 5 — peer's HP hit zero. Receiver plays death anim;
@@ -182,6 +200,26 @@ signal world_teleport(pos: Vector3)
 # The server's world clock: the hour in [0, 24), sent as we enter the world and
 # about once a minute after. TimeOfDay follows it so every player shares a sky.
 signal world_time_of_day(hour: float)
+# PD_W0028: the entity just spawned as `new_id` is the creature that was
+# `old_id` (a charm landing or ending). Emitted after its spawn signal, so the
+# new node exists. Targeting uses it to keep the target across the change.
+signal world_entity_replaced(old_id: int, new_id: int)
+# The hunger window: the local player's food and water counters in seconds of
+# fullness, the cap, and the drain per real second right now (0 while dead).
+# Owner-only on the server; the HUD's hunger panel draws it.
+signal world_hunger(hunger_secs: float, thirst_secs: float, cap_secs: float, drain_per_sec: float)
+# The memorized spell bar as the server holds it (index = gem, "" = empty);
+# `seeded` false means the server holds none yet and SpellBar offers its own
+# once. Client-authority audit fix 5: the server's bar decides what may be cast.
+signal world_spell_gems(gems: PackedStringArray, seeded: bool)
+# A food or drink was right-clicked in a bag or the inventory (the hand-eat
+# is on its way to the server). The hunger panel flashes a full bar, since
+# the server will refuse with EQ's "you would explode" line.
+signal hand_eat_requested(is_food: bool, is_drink: bool)
+# A player you can see began a jump (never your own): the server's one-shot
+# for the rising edge of their Move's `jumping` flag. RemotePlayerManager
+# plays a hop on that body; nothing about position rides on it.
+signal world_player_jumped(id: int)
 # Track 5 sub-task 4 — private confirmation that the local player's
 # LootItem / LootAll intent landed. Carries one stack the looter just
 # claimed; the GDScript handler loads `item_path` → ItemData and adds
@@ -291,6 +329,10 @@ func _ready() -> void:
 	buff_snapshot.connect(_on_buff_snapshot)
 	hit.connect(_on_hit)
 	proc_triggered.connect(_on_proc_triggered)
+	trade_opened.connect(_on_trade_opened)
+	trade_offer_update.connect(_on_trade_offer_update)
+	trade_accept_state.connect(_on_trade_accept_state)
+	trade_closed.connect(_on_trade_closed)
 	miss.connect(_on_miss)
 	evade.connect(_on_evade)
 	entity_died.connect(_on_entity_died)
@@ -318,6 +360,55 @@ func _ready() -> void:
 	else:
 		DebugLog.error("Net: gdext_net.dll predates the world clock (no time_of_day signal). "
 			+ "The sky will run on a local clock; rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name for the same reason. A DLL built before this signal still
+	# connects (the protocol id comes from the server's connect token; only
+	# the auth min_client_version refuses a client) and still decodes the
+	# spawns, so it costs only the charm re-target.
+	if has_signal("entity_replaced"):
+		connect("entity_replaced", _on_entity_replaced)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates entity_replaced. A charm will drop "
+			+ "your target; rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs the hunger window, not the client.
+	if has_signal("hunger_update"):
+		connect("hunger_update", _on_hunger_update)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates the hunger window (no hunger_update "
+			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs the remote hop, not the client.
+	if has_signal("player_jumped"):
+		connect("player_jumped", _on_player_jumped)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates the jump relay (no player_jumped "
+			+ "signal); other players' jumps will read as slides. Rebuild the DLL with "
+			+ "addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs the server-held spell bar, not the
+	# client (the bar then stays this machine's, and the server refuses casts
+	# of spells it never saw memorized).
+	if has_signal("spell_gems"):
+		connect("spell_gems", _on_spell_gems)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates the server-held spell bar (no spell_gems "
+			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs active skills online (Skills refuses
+	# them with a line when the send is missing), not the client.
+	if has_signal("skill_fail"):
+		connect("skill_fail", _on_skill_fail)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates server-side active skills (no skill_fail "
+			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
+	# By name as well: an older DLL costs factions and the server's alignment
+	# on screen (the standings and the score never arrive), not the client.
+	if has_signal("faction_update"):
+		connect("faction_update", _on_faction_update)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates factions (no faction_update "
+			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
+	if has_signal("alignment_update"):
+		connect("alignment_update", _on_alignment_update)
+	else:
+		DebugLog.error("Net: gdext_net.dll predates server alignment (no alignment_update "
+			+ "signal); rebuild the DLL with addons/gdext_net/build.ps1.")
 	loot_granted.connect(_on_loot_granted)
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
@@ -534,11 +625,6 @@ func broadcast_evade(target: int) -> void:
 		return
 	send_evade_broadcast(target)
 
-func broadcast_death() -> void:
-	if _state != State.CONNECTED_APP:
-		return
-	send_death_broadcast()
-
 # PD_W0018 — raw XP grant. DEV-ONLY server-side as of PD_W0023 (needs
 # PD_DEV_CMDS, like Full Heal): kept for the Test Panel leveling buttons.
 # Real quest turn-ins go through complete_quest below.
@@ -686,6 +772,37 @@ func broadcast_loot_to_cursor(bag_id: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_loot_to_cursor(bag_id)
+
+# ── PD_W0028 — the trade window (docs/design/trade_window.md). ──
+func broadcast_trade_request(target_id: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_request(target_id)
+
+func broadcast_trade_offer_item(window_slot: int, from_location: String, from_slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_offer_item(window_slot, from_location, from_slot)
+
+func broadcast_trade_retrieve_item(window_slot: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_retrieve_item(window_slot)
+
+func broadcast_trade_offer_coins(platinum: int, gold: int, silver: int, copper: int) -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_offer_coins(platinum, gold, silver, copper)
+
+func broadcast_trade_accept() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_accept()
+
+func broadcast_trade_cancel() -> void:
+	if _state != State.CONNECTED_APP:
+		return
+	send_trade_cancel()
 
 # Track 13.2.b — split `count` items off the src stack into dst. Dst
 # must be empty or hold the same item_path; the server rejects
@@ -1077,6 +1194,18 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
 func _on_proc_triggered(attacker: int, target: int, proc_name: String, amount: int, crit: bool, dmg_type: int) -> void:
 	world_proc_triggered.emit(attacker, target, proc_name, amount, crit, dmg_type)
 
+func _on_trade_opened(partner_id: int, partner_name: String) -> void:
+	world_trade_opened.emit(partner_id, partner_name)
+
+func _on_trade_offer_update(mine: bool, item_paths: PackedStringArray, counts: PackedInt32Array, platinum: int, gold: int, silver: int, copper: int) -> void:
+	world_trade_offer_update.emit(mine, item_paths, counts, platinum, gold, silver, copper)
+
+func _on_trade_accept_state(you: bool, them: bool) -> void:
+	world_trade_accept_state.emit(you, them)
+
+func _on_trade_closed(committed: bool, reason: String) -> void:
+	world_trade_closed.emit(committed, reason)
+
 func _on_miss(attacker: int, target: int) -> void:
 	world_miss.emit(attacker, target)
 
@@ -1175,6 +1304,66 @@ func _on_teleport(pos: Vector3) -> void:
 
 func _on_time_of_day(hour: float) -> void:
 	world_time_of_day.emit(hour)
+
+func _on_entity_replaced(old_id: int, new_id: int) -> void:
+	world_entity_replaced.emit(old_id, new_id)
+
+func _on_hunger_update(hunger_secs: float, thirst_secs: float, cap_secs: float, drain_per_sec: float) -> void:
+	world_hunger.emit(hunger_secs, thirst_secs, cap_secs, drain_per_sec)
+
+func _on_player_jumped(id: int) -> void:
+	world_player_jumped.emit(id)
+
+func _on_spell_gems(gems: PackedStringArray, seeded: bool) -> void:
+	world_spell_gems.emit(gems, seeded)
+
+# The spell bar's sends, by name (see _on_spell_gems): false when not in the
+# world or when the DLL predates them.
+func memorize_start(gem: int, spell_name: String) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_memorize_start") 			and bool(call("send_memorize_start", gem, spell_name))
+
+func memorize_finish() -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_memorize_finish") 			and bool(call("send_memorize_finish"))
+
+func forget_spell(gem: int) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_forget_spell") 			and bool(call("send_forget_spell", gem))
+
+func seed_spell_gems(gems: PackedStringArray) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_seed_spell_gems") 			and bool(call("send_seed_spell_gems", gems))
+
+# An active skill, by name (see _on_skill_fail): the server owns the stamina,
+# the cooldown, the swing and the effect. `target_id` 0 for a SELF skill.
+# False when not in the world or when the DLL predates the send.
+func use_skill(skill_name: String, target_id: int) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_use_skill") 			and bool(call("send_use_skill", skill_name, target_id))
+
+func _on_skill_fail(skill_name: String, reason: String) -> void:
+	world_skill_fail.emit(skill_name, reason)
+
+# Stop the song being sung (the Bard song rework): the server pulses the
+# song, so ending it is this message. By name: an older DLL costs the stop.
+func stop_song() -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_stop_song") 			and bool(call("send_stop_song"))
+
+func _on_faction_update(faction_id: String, faction_name: String, standing: float, level: int) -> void:
+	world_faction_update.emit(faction_id, faction_name, standing, level)
+
+func _on_alignment_update(score: float) -> void:
+	world_alignment_update.emit(score)
+
+# Consider an NPC (by its display name; "" for none) or a mob (by entity id;
+# 0 for none): the server answers with EQ's con line on the System channel.
+# By name: an older DLL costs the command, not the client.
+func consider(npc_name: String, target_id: int) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_consider") \
+			and bool(call("send_consider", npc_name, target_id))
+
+# The GM faction panel's slider: our OWN standing with one faction, set to an
+# absolute value. GM-only and audited on the server; a plain account's
+# request is ignored there, so the client never pretends it worked.
+func dev_set_faction(faction_id: String, standing: float) -> bool:
+	return _state == State.CONNECTED_APP and has_method("send_dev_set_faction") \
+			and bool(call("send_dev_set_faction", faction_id, standing))
 
 func _on_loot_granted(item_path: String, count: int) -> void:
 	world_loot_granted.emit(item_path, count)
