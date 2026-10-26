@@ -2748,8 +2748,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Client only. Not built; queued after the current checklist.
 - [ ] **"You cannot do that while dead." flooded the chat** *(fall damage checklist,
   2026-10-26: eight lines after Trigger Death)*. The dead-state gate answered every off-list
-  message once each and logged nothing, so the sender could not be named. **BUILT 2026-10-26,
-  pending the redeploy and the playtest** (server `8127a70`; `dead_gate_checklist.md`): the
+  message once each and logged nothing, so the sender could not be named. **BUILT and DEPLOYED 2026-10-26
+  (R720 boot line `build="8127a70" dev_cmds=false`, 17:47 UTC), pending the playtest** (server
+  `8127a70`; `dead_gate_checklist.md`): the
   line is said once per death (`dead_refusal_told`, cleared on Respawn); `SetTarget` is
   allowed while dead; every refusal is logged by message name (first at info, the rest at
   debug). Test `the_dead_are_told_once_per_death` fails on the old gate.
