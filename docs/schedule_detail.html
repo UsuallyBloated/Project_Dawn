@@ -132,7 +132,7 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Sun Oct 25<span class="stat-sub">repo d3917c6</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Oct 26<span class="stat-sub">repo fdc0197</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">35.75 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
 <div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">64 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
@@ -984,7 +984,7 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>Hotfix: a long chat line with an accented letter leaves the server running; a dropped and picked-up item stays with one player across a restart, and a regrabbed drop is not lost; a bank withdrawal followed by a quest turn-in or a death stays in one place across a restart; every item on Brom&#x27;s list still sells.</td>
 <td>user at a desk with a second account</td>
-<td class="needs"><ul><li>checklist hotfix_crash_and_dupes_checklist.md: 13 rows to run</li><li>the hotfix redeploy (o12)</li><li>permission to restart the server twice during the sitting</li></ul></td>
+<td class="needs"><ul><li>checklist hotfix_crash_and_dupes_checklist.md: 0 rows to run</li><li>the hotfix redeploy (o12)</li><li>permission to restart the server twice during the sitting</li></ul></td>
 <td class="time">1 h</td>
 <td class="id">o12</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/hotfix_crash_and_dupes_checklist.md"><code>hotfix_crash_and_dupes_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
@@ -1252,6 +1252,7 @@
 <section><h2>Open rows this plan does not schedule</h2>
 <p class="lede">Read from the checklist folder when this page was generated. A recent one (touched in the last 30 days) needs a row above or a reason. An older one is a candidate for the week-5 triage, which decides whether it is retired, superseded, or worth a re-run.</p>
 <div class="scroll"><table><thead><tr><th>Last touched</th><th>Open</th><th>Passed</th><th>Skipped</th><th>Checklist</th></tr></thead><tbody>
+<tr><td class="time">2026-10-25 <span class="chip tent">recent</span></td><td class="time">18</td><td class="time">0</td><td class="time">0</td><td><a href="playtest_notes/chat_channel_checklist.md"><code>chat_channel_checklist.md</code></a></td></tr>
 <tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">15</td><td class="time">0</td><td><a href="playtest_notes/banker_slice1_checklist.md"><code>banker_slice1_checklist.md</code></a></td></tr>
 <tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">3</td><td class="time">0</td><td class="time">15</td><td><a href="playtest_notes/camp_checklist.md"><code>camp_checklist.md</code></a></td></tr>
 <tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">1</td><td class="time">19</td><td class="time">1</td><td><a href="playtest_notes/dev_panel_modernization_checklist.md"><code>dev_panel_modernization_checklist.md</code></a></td></tr>
@@ -1300,5 +1301,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-25 at repo d3917c6</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-26 at repo fdc0197</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

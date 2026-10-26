@@ -14,6 +14,9 @@ Status words: **FIXED** (built, tested, pending the redeploy and the playtest), 
 
 Server `6f18a5e` + review fixes `3d938ca` on `fix/xp-leveling-overflow`; merged forward into
 `feat/server-speed` as `019bfb3`. Checklist: `docs/playtest_notes/hotfix_crash_and_dupes_checklist.md`.
+**Playtested 2026-10-26, every row passing** on `062ca07`; H3 proven with a hard kill (SIGKILL)
+15 s after a withdrawal and an item-paying quest turn-in, past the last checkpoint: the item
+left the vault, the reward stayed, nothing duplicated.
 
 | Id | Finding | Status |
 |---|---|---|

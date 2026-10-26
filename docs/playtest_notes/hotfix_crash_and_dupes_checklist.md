@@ -41,13 +41,20 @@ names `seller` and `vendor_type`), `BuyItem rejected — no merchant in reach st
 
 ## 3 — Saves move items together
 > **2026-10-26:** items go into the vault by **right-clicking them in your bags with the bank
-> window open**; dragging onto the vault does nothing yet (its own To-Do entry). The two rows
-> below were skipped for that reason and are still to run.
+> window open**; dragging onto the vault does nothing yet (its own To-Do entry).
+>
+> **How §3 was proven (2026-10-26).** Since Phase 1, a `systemctl restart` saves everyone
+> before it closes, so a restart can no longer show this fix. It was shown with a hard kill
+> instead: Fresh Wolf Pelt withdrawn at 16:20:53, `restless_bones` turned in at 16:20:59
+> (Leather Cap), `sudo systemctl kill -s KILL projectdawn` at 16:21:14, with the last 60 s
+> checkpoint at 16:20:38 (the timer starts at boot). After the relog the pelt was in the bags
+> and not in the vault, and the Leather Cap was held: the quest reward's save wrote every
+> store together. Nothing else could have saved them.
 
-- [-] **Withdraw an item from the banker, then turn in a quest that pays an item, then
+- [x] **Withdraw an item from the banker, then turn in a quest that pays an item, then
   restart within a minute** → the withdrawn item is in the bags and not back in the vault.
   notes:  Players cannot place items in the bank. (Dragged onto the vault, which is not built; right-click deposits.)
-- [-] **Withdraw an item from the banker, die (any way), restart within a minute** → the
+- [x] **Withdraw an item from the banker, die (any way), restart within a minute** → the
   item is on the corpse and not back in the vault. notes:
 
 ## 4 — Vendor stock
@@ -62,7 +69,7 @@ names `seller` and `vendor_type`), `BuyItem rejected — no merchant in reach st
 > `a_priced_item_no_merchant_stocks_cannot_be_bought` is its evidence.
 
 ## 5 — Regression: ordinary play unchanged
-- [-] **Loot several kills, drop and pick up items, bank and withdraw, buy and sell** → no
+- [x] **Loot several kills, drop and pick up items, bank and withdraw, buy and sell** → no
   refusals, no lag spikes, nothing vanishes. notes: The bank is not allowing the players to deposit items.  I also feel like there is a slight lag, but i could be crazy.
 - [x] **Log out and back in** → bags, bank and coins exactly as left. notes:
 
@@ -71,4 +78,4 @@ names `seller` and `vendor_type`), `BuyItem rejected — no merchant in reach st
 -  Game crashed while i was moving items around the inventory.
 -  We need to take a look at the Item Log that Monsters and Memories uses.  
 
--  
+-  Clicking on the bank UI window I'm pretty sure the clicks are going THROUGH the window and effecting the windows/interface below the bank window.  Does this make sense?

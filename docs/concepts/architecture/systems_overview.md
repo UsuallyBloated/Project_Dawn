@@ -986,6 +986,20 @@ last saved state. XP is written inside the transaction that records why it chang
 corpse, the quest completion, the resurrected flag). A failing world loop ends the process so
 systemd restarts it. A crash still loses up to the last 60 s.
 
+**The immediate saves** (housekeeping audit Phase 0, playtested 2026-10-26,
+`hotfix_crash_and_dupes_checklist.md`). Some changes cannot wait for the checkpoint, because
+a crash between the change and the next save would leave an item in two places or none: a
+ground drop saves the dropper before the bag exists (at most four drops a tick), and whoever
+loots a bag is saved that tick; a quest reward, a death, corpse loot and a trade first write
+every dirty store of every character involved in one transaction
+(`persistence::persist_dirty_stores`), so an unsaved bank withdrawal can never be saved in
+the bags while the vault still holds it. A failed read of any store at login refuses the
+login ("The server could not load your character.") rather than playing on with empty stores
+that the next save would write over. A failed corpse save retries next tick. Chat is cut at
+512 bytes on a character boundary (an accented letter at the cut used to crash the server).
+Vendors sell only what a vendor in reach stocks (`stock` in `npcs.toml`, checked against the
+client by `tools/check_vendor_lockstep.gd`) and, since factions, only to a buyer they serve.
+
 **Known operational gaps.** No shutdown warning ahead of time (a timed "restarting in 5
 minutes" is not built). The database is not in WAL mode despite comments claiming otherwise.
 (Kicking and banning exist since 2026-10-01/02: the `admin_account` bin and the ban sweep.)
