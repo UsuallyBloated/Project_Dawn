@@ -26,6 +26,7 @@ func _initialize() -> void:
 func _run() -> void:
 	_rules()
 	_window()
+	_macros()
 	print("")
 	print("%d failed" % _fails if _fails > 0 else "all passed")
 	quit(1 if _fails > 0 else 0)
@@ -119,3 +120,21 @@ func _window() -> void:
 
 	w.queue_free()
 	w2.queue_free()
+
+# A social macro's lines go to the real chat handler (CombatLog.chat_submitted,
+# which hud.gd answers) instead of being printed locally as "[Say] ...".
+func _macros() -> void:
+	var log = root.get_node("/root/CombatLog")
+	var hotkeys = root.get_node("/root/SocialHotkeys")
+	var submitted: Array[String] = []
+	var local_lines: Array[String] = []
+	log.chat_submitted.connect(func(t: String) -> void: submitted.append(t))
+	log.line_added.connect(func(t: String, _ty: int) -> void: local_lines.append(t))
+	hotkeys._execute_social({"lines": ["/say hello", "  ", "/sit", "/shout %n here"], "library_id": ""})
+	var me: String = root.get_node("/root/PlayerStats").player_name
+	_check(submitted == ["/say hello", "/sit", "/shout %s here" % me], "a macro's lines reach the chat handler in order, blanks skipped, %n filled")
+	var printed_locally := false
+	for t in local_lines:
+		if t.begins_with("[Say") or t.begins_with("[Shout") or t == "You sit down.":
+			printed_locally = true
+	_check(not printed_locally, "a macro no longer prints its lines locally instead of sending them")

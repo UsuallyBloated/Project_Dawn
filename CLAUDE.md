@@ -2725,11 +2725,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   probe `tools/probe_chat_channel.gd` (31 checks). The tell reply checklist's rows now expect
   the `[Tell: Name]` label.
 - [ ] **Social macros never send chat** *(found 2026-10-26 while building the sticky channel)*.
-  `SocialHotkeys._execute_command` prints `/say`, `/shout`, `/group` and `/tell` lines locally
-  as `[Say] text` and sends nothing; `/sit` and `/stand` print a line without sitting. A macro
-  online is decoration. Fix shape: route each macro line through the real chat handler
-  (`CombatLog.chat_submitted`, which now normalizes channel commands), keeping only `/lang` and
-  `/languages` local. Client only; not built.
+  `SocialHotkeys._execute_command` printed `/say`, `/shout`, `/group` and `/tell` lines locally
+  as `[Say] text` and sent nothing; `/sit` and `/stand` printed a line without sitting. A macro
+  online was decoration. **FIXED 2026-10-26 (user: "fix the problem"), pending the next export
+  and the playtest** (`chat_channel_checklist.md` §5): each macro line goes through the real
+  chat handler (`CombatLog.chat_submitted`), exactly as if typed; the hud already handled
+  `/lang` and `/languages`. `/attack`, which the old code faked by re-setting the target, was
+  not added as a command (user: not needed; the Q keybind toggles auto-attack). Probe
+  `tools/probe_chat_channel.gd` gained two checks, both failing on the old code.
 - [ ] **The consider command (`/con`)** *(user, 2026-10-23, on seeing the P99 Consider page:
   "This is 1000% a mechanic we need in Project Dawn. Please add it to the list.")*. **First
   piece BUILT 2026-10-23 with factions slice 1, pending the bump and the playtest**

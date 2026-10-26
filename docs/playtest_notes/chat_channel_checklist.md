@@ -46,3 +46,15 @@ default channel set, it was only echoed on your own screen and nobody heard it).
 - [ ] **TAB on an empty line after receiving a tell** → `[Tell: <sender>]` (the tell reply
   checklist's rows, updated for the label). notes:
 - [ ] **Group chat (`/g hi` while grouped)** → the group member sees it as group chat. notes:
+
+## 5 — Social macros send for real
+Macros used to print their lines on your own screen as `[Say] hello` and send nothing (a
+macro's `/sit` printed "You sit down." without sitting). Each line now runs exactly as if typed.
+- [ ] **Make a social with `/say hello from a macro`, put it on the hotbar, press it** → the
+  partner hears "hello from a macro". notes:
+- [ ] **A social with `/sit`** → you actually sit. notes:
+- [ ] **A social with two lines (`/shout ready` and `/t <partner> go`)** → the partner gets a
+  shout and then a tell. notes:
+- [ ] **Pressing a say macro while your chat line is on `[Shout]`** → the macro's line is a
+  say; your chat line stays on `[Shout]`. notes:
+

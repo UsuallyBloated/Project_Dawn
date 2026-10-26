@@ -289,53 +289,12 @@ func _execute_social(sd: Dictionary) -> void:
 		cmd = cmd.replace("%t", target_name).replace("%n", char_name)
 		_execute_command(cmd)
 
+# Each macro line runs exactly as if typed into the chat line: hud.gd's
+# handler sends chat on its channel, runs commands (/sit, /lang, /loc) and
+# collapses channel commands. Macros used to print their lines locally and
+# send nothing, so a macro's /say was heard by nobody.
 func _execute_command(cmd: String) -> void:
-	if cmd.begins_with("/lang "):
-		var lang := cmd.substr(6).strip_edges()
-		if lang not in LanguageDefinitions.LANGUAGES:
-			CombatLog.add_line("Unknown language: %s" % lang, CombatLog.MsgType.INFO)
-		elif Languages.get_skill(lang) == 0:
-			CombatLog.add_line("You do not know that language.", CombatLog.MsgType.INFO)
-		else:
-			Languages.set_active_language(lang)
-			CombatLog.add_line("You will now speak in %s." % lang, CombatLog.MsgType.INFO)
-	elif cmd == "/languages":
-		CombatLog.add_line("Your languages:", CombatLog.MsgType.INFO)
-		for lang in LanguageDefinitions.LANGUAGES:
-			var skill := Languages.get_skill(lang)
-			if skill > 0:
-				var marker := " *" if lang == Languages.active_language else ""
-				CombatLog.add_line("  %s: %d/100%s" % [lang, skill, marker], CombatLog.MsgType.INFO)
-	elif cmd.begins_with("/say "):
-		CombatLog.add_line("[Say%s] %s" % [_lang_tag(), cmd.substr(5)], CombatLog.MsgType.INFO)
-	elif cmd.begins_with("/yell "):
-		CombatLog.add_line("[Yell%s] %s" % [_lang_tag(), cmd.substr(6)], CombatLog.MsgType.INFO)
-	elif cmd.begins_with("/shout "):
-		CombatLog.add_line("[Shout%s] %s" % [_lang_tag(), cmd.substr(7)], CombatLog.MsgType.INFO)
-	elif cmd.begins_with("/group "):
-		CombatLog.add_line("[Group%s] %s" % [_lang_tag(), cmd.substr(7)], CombatLog.MsgType.INFO)
-	elif cmd.begins_with("/tell "):
-		var rest := cmd.substr(6)
-		var sep := rest.find(" ")
-		if sep > 0:
-			var to := rest.left(sep)
-			var msg := rest.substr(sep + 1)
-			CombatLog.add_line("[Tell -> %s] %s" % [to, msg], CombatLog.MsgType.INFO)
-	elif cmd == "/sit":
-		CombatLog.add_line("You sit down.", CombatLog.MsgType.INFO)
-	elif cmd == "/stand":
-		CombatLog.add_line("You stand up.", CombatLog.MsgType.INFO)
-	elif cmd == "/attack":
-		if is_instance_valid(Combat.current_target):
-			Combat.set_target(Combat.current_target)
-	elif cmd.begins_with("/"):
-		CombatLog.add_line(cmd, CombatLog.MsgType.INFO)
-	else:
-		CombatLog.add_line("[Say%s] %s" % [_lang_tag(), cmd], CombatLog.MsgType.INFO)
-
-func _lang_tag() -> String:
-	var lang := Languages.active_language
-	return "" if lang == "Common" else " (%s)" % lang
+	CombatLog.chat_submitted.emit(cmd)
 
 # ── Persistence ───────────────────────────────────────────────────────
 # 2026-08-26 — keyed per character. One global file used to hold every
