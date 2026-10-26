@@ -1376,8 +1376,11 @@ func _inspect_player(rp: RemotePlayer) -> void:
 func _handle_chat_input(text: String) -> void:
 	var my_name := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
 
-	if not text.begins_with("/"):
-		CombatLog.add_line("%s says, '%s'" % [my_name, text], CombatLog.MsgType.SAY)
+	# One canonical form for every line (ChatChannel): plain text is a /say,
+	# and stacked channel commands collapse to the last, so "/say /say hi"
+	# says "hi" and a channel command never reaches anyone inside a message.
+	text = ChatChannel.normalize(text, CombatLog.last_tell_sender())
+	if text == "":
 		return
 
 	var lower := text.to_lower()

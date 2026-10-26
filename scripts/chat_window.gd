@@ -41,14 +41,13 @@ const FONT_SIZE_MIN      := 9
 const FONT_SIZE_MAX      := 21
 const FONT_ALPHA_MIN     := 10
 
-# Channel keys for the "default channel" dropdown. Empty string means
-# the input field has no default — typed text is submitted as-is and
-# falls through to the hud's command parser (which treats no-prefix as
-# a /say). Other values match the slash-command verb used by
-# `hud.gd._handle_chat_input`.
+# Channel keys for the "default channel" dropdown: the channel the chat line
+# starts on (and returns to when the setting changes). Empty string means Say.
+# The line itself is sticky (ChatChannel): typing `/shout ` moves it to Shout
+# until another channel command moves it again.
 const CHANNEL_KEYS: Array[String] = ["", "say", "shout", "ooc", "group"]
 const CHANNEL_LABELS: Dictionary = {
-	"":      "Default (passthrough)",
+	"":      "Default (Say)",
 	"say":   "Say",
 	"shout": "Shout",
 	"ooc":   "OOC",
@@ -82,9 +81,12 @@ var filters: Dictionary = {}
 var bg_alpha: int = BG_ALPHA_DEFAULT
 var font_alpha: int = FONT_ALPHA_DEFAULT
 var font_size: int = FONT_SIZE_DEFAULT
-# Slash-command verb auto-prepended in `_on_chat_text_submitted` when the
-# user types a line that doesn't begin with `/`. Empty = no default.
+# The channel the chat line starts on (CHANNEL_KEYS; empty = Say).
 var default_channel: String = ""
+# The chat line's current channel and, for a tell, who it goes to. Sticky:
+# kept across lines until a channel command (typed, pasted or TAB) moves it.
+var _line_channel: String = ChatChannel.SAY
+var _line_target: String = ""
 
 # Tab-docking group ID. 0 sentinel = "not assigned yet" (manager sets
 # it on creation). Windows sharing a group_id render as tabs in the
@@ -103,6 +105,7 @@ var _scroll: ScrollContainer = null
 var _msg_vbox: VBoxContainer = null
 var _back_btn: Button = null
 var _chat_input: LineEdit = null
+var _channel_label: Label = null
 var _auto_scroll: bool = true
 
 # Drag tracking for tab buttons. A tab Button receives mouse-down,
@@ -252,9 +255,24 @@ func _build_chat_input() -> void:
 	_chat_input.offset_bottom = -2
 	_chat_input.visible = false
 	_chat_input.text_submitted.connect(_on_chat_text_submitted)
-	_chat_input.focus_exited.connect(func(): _chat_input.visible = false)
+	_chat_input.text_changed.connect(_on_chat_input_text_changed)
+	_chat_input.focus_exited.connect(func(): _set_input_visible(false))
 	_chat_input.gui_input.connect(_on_chat_input_gui_input)
 	add_child(_chat_input)
+
+	# The line's channel, shown to the left of the text while typing.
+	_channel_label = Label.new()
+	_channel_label.anchor_left = 0.0; _channel_label.anchor_right = 0.0
+	_channel_label.anchor_top = 1.0; _channel_label.anchor_bottom = 1.0
+	_channel_label.offset_left = 6
+	_channel_label.offset_top = -(INPUT_BAR_H + 2)
+	_channel_label.offset_bottom = -2
+	_channel_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_channel_label.add_theme_font_size_override("font_size", LINE_FONT_SZ)
+	_channel_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_channel_label.visible = false
+	add_child(_channel_label)
+	_set_line_channel(_default_line_channel(), "")
 
 # TAB in the chat line walks the tell reply targets (EQ) and never leaves the
 # line: left to the engine, TAB moves keyboard focus to the next control, which
@@ -266,45 +284,104 @@ func _on_chat_input_gui_input(event: InputEvent) -> void:
 	_chat_input.accept_event()
 	if event.echo:
 		return
-	var cycled := CombatLog.cycle_tell_text(_chat_input.text)
-	if cycled != _chat_input.text:
-		_chat_input.text = cycled
-		_chat_input.caret_column = cycled.length()
+	# The tell cycler works on a full "/tell <name> <message>" line; the line
+	# here holds only the message, with the name in the channel.
+	var current := _chat_input.text
+	if _line_channel == ChatChannel.TELL:
+		current = "/tell %s %s" % [_line_target, _chat_input.text]
+	var cycled := CombatLog.cycle_tell_text(current)
+	if cycled != current:
+		_apply_typed(cycled)
 
 func _apply_input_placeholder() -> void:
 	if _chat_input == null:
 		return
-	if default_channel == "":
-		_chat_input.placeholder_text = "Press Enter to type..."
-	else:
-		_chat_input.placeholder_text = "[%s] Press Enter to type..." % \
-				CHANNEL_LABELS.get(default_channel, default_channel.capitalize())
+	_chat_input.placeholder_text = "Press Enter to type..."
 
-## Open the chat line, optionally already holding `prefill` (a bare `/r` opens
-## it on "/tell <name> ") with the caret at the end.
+func _default_line_channel() -> String:
+	return default_channel if default_channel != "" else ChatChannel.SAY
+
+## Move the chat line to a channel and show it beside the text.
+func _set_line_channel(channel: String, target: String) -> void:
+	_line_channel = channel
+	_line_target = target
+	if _channel_label == null:
+		return
+	_channel_label.text = "[%s]" % ChatChannel.label_for(channel, target)
+	_channel_label.add_theme_color_override("font_color", _color_for(_msg_type_for_channel(channel)))
+	var width := _channel_label.get_minimum_size().x
+	_chat_input.offset_left = 6 + width + 4
+
+func _msg_type_for_channel(channel: String) -> int:
+	match channel:
+		ChatChannel.SHOUT: return CombatLog.MsgType.SHOUT
+		ChatChannel.OOC:   return CombatLog.MsgType.OOC
+		ChatChannel.GROUP: return CombatLog.MsgType.GROUP_CHAT
+		ChatChannel.TELL:  return CombatLog.MsgType.TELL_OUT
+	return CombatLog.MsgType.SAY
+
+func _set_input_visible(on: bool) -> void:
+	if _chat_input != null:
+		_chat_input.visible = on
+	if _channel_label != null:
+		_channel_label.visible = on
+
+## A channel command typed (or pasted) at the start of the line switches the
+## line and leaves the text. Setting `text` from code emits no text_changed,
+## so the rewrite below does not re-enter.
+func _on_chat_input_text_changed(new_text: String) -> void:
+	_apply_typed(new_text)
+
+## Put `new_text` on the line, first eating any channel command at its start.
+func _apply_typed(new_text: String) -> void:
+	var r := ChatChannel.consume(new_text, _line_channel, _line_target,
+			CombatLog.last_tell_sender(), false)
+	if not r["consumed"]:
+		if _chat_input.text != new_text:
+			_chat_input.text = new_text
+			_chat_input.caret_column = new_text.length()
+		return
+	var remaining := String(r["text"])
+	var removed := new_text.length() - remaining.length()
+	var caret := maxi(_chat_input.caret_column - removed, 0)
+	if _chat_input.text != new_text:
+		caret = remaining.length()
+	_set_line_channel(r["channel"], r["target"])
+	_chat_input.text = remaining
+	_chat_input.caret_column = mini(caret, remaining.length())
+
+## Open the chat line, optionally already holding `prefill` (a bare `/r`
+## opens it on "/tell <name> ", which becomes the Tell channel) with the
+## caret at the end.
 func show_input(prefill: String = "") -> void:
 	if _chat_input == null:
 		return
-	_chat_input.visible = true
-	_chat_input.text = prefill
+	_set_input_visible(true)
+	_chat_input.text = ""
 	_chat_input.grab_focus()
-	_chat_input.caret_column = prefill.length()
+	if prefill != "":
+		_apply_typed(prefill)
+	_chat_input.caret_column = _chat_input.text.length()
 
 func is_input_focused() -> bool:
 	return _chat_input != null and _chat_input.has_focus()
 
+## Send the line on its channel. A channel command left on the line (typed
+## with no space before Enter: "/shout") switches the channel and sends
+## nothing; any other command ("/sit", "/loc") passes through as typed.
 func _on_chat_text_submitted(text: String) -> void:
-	_chat_input.visible = false
+	_set_input_visible(false)
 	_chat_input.text = ""
-	var trimmed := text.strip_edges()
-	if trimmed.is_empty():
+	var r := ChatChannel.consume(text, _line_channel, _line_target,
+			CombatLog.last_tell_sender(), true)
+	_set_line_channel(r["channel"], r["target"])
+	var body := String(r["text"]).strip_edges()
+	if body.is_empty():
 		return
-	# Apply the window's default channel when the user types raw text.
-	# Lines already prefixed with `/` are passed through so a user can
-	# always override (e.g. /tell <name> ... from a Say-default window).
-	if default_channel != "" and not trimmed.begins_with("/"):
-		trimmed = "/%s %s" % [default_channel, trimmed]
-	text_submitted.emit(window_id, trimmed)
+	if body.begins_with("/"):
+		text_submitted.emit(window_id, body)
+		return
+	text_submitted.emit(window_id, ChatChannel.command_for(_line_channel, _line_target, body))
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
@@ -371,7 +448,10 @@ func set_display_settings(d: Dictionary) -> void:
 	font_alpha = clampi(int(d.get("font_alpha", font_alpha)), FONT_ALPHA_MIN, 100)
 	font_size = clampi(int(d.get("font_size", font_size)), FONT_SIZE_MIN, FONT_SIZE_MAX)
 	var ch := String(d.get("default_channel", default_channel))
-	default_channel = ch if ch in CHANNEL_KEYS else ""
+	var new_default := ch if ch in CHANNEL_KEYS else ""
+	if new_default != default_channel:
+		default_channel = new_default
+		_set_line_channel(_default_line_channel(), "")
 	apply_display_settings()
 
 # ── Group / tab state (driven by ChatWindowManager) ──────────────────────────
@@ -417,8 +497,7 @@ func _set_grouped(members: Array, active_id: int) -> void:
 		# clicking that tab swaps activity over. Lines keep accumulating
 		# into the hidden vbox so the history is preserved on return.
 		visible = false
-		if _chat_input != null:
-			_chat_input.visible = false
+		_set_input_visible(false)
 		if _back_btn != null:
 			_back_btn.visible = false
 
