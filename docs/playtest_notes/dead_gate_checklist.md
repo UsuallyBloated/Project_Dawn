@@ -27,11 +27,11 @@ announced "You use Slash." while the server refused them. Now the client sends n
 `EquipUpdate` (the server works out armor itself), and skills, spells and switching
 auto-attack on are refused on the client while dead, before anything is sent, announced or put
 on cooldown, with the line said once per death.
-- [ ] **Trigger Death and do nothing** → no "You cannot do that while dead." line at all.
+- [x] **Trigger Death and do nothing** → no "You cannot do that while dead." line at all.
   notes:
-- [ ] **Die, then press hotbar skills, cast a spell, press the auto-attack key** → the line
+- [x] **Die, then press hotbar skills, cast a spell, press the auto-attack key** → the line
   appears once; no "You use ..." or "You cast ..." lines; no hotbar cooldowns start. notes:
-- [ ] **Read the journal** → no `refused while dead` line for that death (nothing reached the
-  server). notes:
-- [ ] **Respawn and equip or unequip a piece of armor** → the character sheet's armor changes as
+- [x] **Read the journal** → no `refused while dead` line for that death (nothing reached the
+  server). notes: Only the two §1 `EquipUpdate` lines (21:35:59, 21:37:31); nothing since.
+- [x] **Respawn and equip or unequip a piece of armor** → the character sheet's armor changes as
   before (the server works it out). notes:

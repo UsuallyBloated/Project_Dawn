@@ -2746,20 +2746,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   where `hud.gd` builds the echo, so a long social macro line echoes exactly what is sent; a
   lockstep pair (`MAX_CHAT_LEN` against the client constant) for `check_constant_lockstep.gd`.
   Client only. Not built; queued after the current checklist.
-- [ ] **"You cannot do that while dead." flooded the chat** *(fall damage checklist,
-  2026-10-26: eight lines after Trigger Death)*. The dead-state gate answered every off-list
-  message once each and logged nothing, so the sender could not be named. **BUILT and DEPLOYED 2026-10-26
-  (R720 boot line `build="8127a70" dev_cmds=false`, 17:47 UTC), pending the playtest** (server
-  `8127a70`; `dead_gate_checklist.md`, §1 passing 2026-10-26). **§1 named the cause:** the
-  refused message was `EquipUpdate`, one per gear slot as a death strips the gear (the eight
-  lines), a message the server already ignored. **Client half BUILT the same day, pending the
-  next export** (user: "there are no testers on older clients", so no server change): the
-  client sends no `EquipUpdate`; skills, spells and switching auto-attack on are refused
-  locally while dead (`PlayerDeath.refuse_if_dead`, the line once per death), so nothing is
-  announced or put on cooldown; probe `tools/probe_dead_actions.gd`; checklist §2: the
-  line is said once per death (`dead_refusal_told`, cleared on Respawn); `SetTarget` is
-  allowed while dead; every refusal is logged by message name (first at info, the rest at
-  debug). Test `the_dead_are_told_once_per_death` fails on the old gate.
+- [x] **"You cannot do that while dead." flooded the chat** — **DONE + playtested 2026-10-26**
+  (`dead_gate_checklist.md`, every row passing: server `8127a70` and client `6ddeddc`). The
+  flood was the client's `EquipUpdate`, one per gear slot as a death strips the gear, which the
+  server already ignored; the client no longer sends it, refuses skills, spells and auto-attack
+  locally while dead, and the server's gate says its line once per death, lets targeting
+  through and logs each refusal by name. What exists is in systems_overview, "Respawn, bind
+  points, and the death lock".
 - [ ] **Clicks pass through UI windows to what is behind them** *(hotfix checklist notes,
   2026-10-26: "Clicking on the bank UI window... the clicks are going THROUGH the window and
   effecting the windows/interface below")*. **Scope (user): every UI window, not only the

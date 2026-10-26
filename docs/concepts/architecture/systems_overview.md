@@ -810,6 +810,16 @@ Where you wake up after dying is server-authoritative (2026-08-12, playtested 08
   the 60 s checkpoint, since a crash (unlike a clean stop) saves nothing.
 - **Sister Maelis**, Soul Binder, stands at the town spawn. She reuses the dialogue NPC and window
   via a `bind_soul` response action rather than bespoke UI.
+- **The dead-state gate** (playtested 2026-10-26, `dead_gate_checklist.md`). While
+  `death_processed`, the server accepts only a short list of messages (movement, chat, respawn,
+  a res accept, targeting, group management, lifecycle traffic, a few GM tools) and refuses the
+  rest with "You cannot do that while dead.", said once per death
+  (`PerConnection::dead_refusal_told`, cleared on Respawn); each refusal is logged by its
+  message name (`refused while dead refused="..."`), the first per death at info. The client
+  refuses skills, spells and switching auto-attack on while dead before sending anything
+  (`PlayerDeath.refuse_if_dead`, the same line once per death), so nothing is announced or put
+  on cooldown, and it sends no `EquipUpdate` (the server derives armor from the equipment it
+  holds).
 - **Death lock.** `Move` is refused server-side while `death_processed`, and the client stops
   predicting/sending in `player.gd::_physics_process`. Both halves are needed: the server alone left
   the corpse twitching as local prediction was repeatedly overridden.
