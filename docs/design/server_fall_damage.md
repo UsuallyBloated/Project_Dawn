@@ -175,8 +175,9 @@ Phase 4 lockstep item, B4).
 share of max HP with the safe drop near 2 m; absorb shields do not soak a fall; GMs take falls
 with no audit row; Safe Fall later as its own entry. **Slice 0 BUILT the same day** (server
 `779a033` on the deploy branch, merged into `feat/server-speed` as `062ca07`; client `99f649b`
-on `feat/server-speed`; `fall_damage_slice0_checklist.md`). Slice 1 waits on the server height
-model, and its constants (the percentage slope against a ~2 m safe drop) are set with it.
+on `feat/server-speed`; `fall_damage_slice0_checklist.md`), **playtested 2026-10-26**. Slice 1
+waits on the server height model, and its constants (the percentage slope against a ~2 m safe
+drop) are set with it; its fling tool for testing is a server-side GM command, built with it.
 
 1. **Slice 0 now?** It reverses the agreed order (falls first, then `DeathBroadcast`), because
    the reason for that order turned out not to hold online. Recommended: yes, the server half on

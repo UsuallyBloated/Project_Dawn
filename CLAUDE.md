@@ -933,9 +933,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   which slice 1, the server simulating the fall, does need. That reverses the agreed order,
   so it is decision 1. **ALL FIVE DECIDED 2026-10-24 (user): "follow your recommendations"**
   (slice 0 now; a share of max HP, safe drop near 2 m; shields do not soak a fall; GMs take
-  falls, no audit row; Safe Fall later). **Slice 0 BUILT 2026-10-24; server half DEPLOYED 2026-10-25**
-  (R720 boot line `build="779a033" dev_cmds=false`, 19:34 UTC); **pending the Oct 22 export
-  and the playtest** (server `779a033` on the deploy branch, merged into
+  falls, no audit row; Safe Fall later). **Slice 0 DONE + playtested 2026-10-26**
+  (`fall_damage_slice0_checklist.md`: Trigger Death kills the GM and is audited, mob deaths and
+  respawns unchanged for a GM and a plain account; the jump row skipped, no high point online,
+  the probe covering it; what exists is in systems_overview, "Respawn, bind points, and the
+  death lock"). Server half deployed 2026-10-25 (R720 boot line `build="779a033"
+  dev_cmds=false`, 19:34 UTC) (server `779a033` on the deploy branch, merged into
   `feat/server-speed` as `062ca07`; client `99f649b` on `feat/server-speed`;
   `fall_damage_slice0_checklist.md`): `DeathBroadcast` is a dev command (test
   `death_broadcast_is_a_dev_command` fails on the old handler; the eight tests that kill with it

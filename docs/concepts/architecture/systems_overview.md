@@ -813,6 +813,15 @@ Where you wake up after dying is server-authoritative (2026-08-12, playtested 08
 - **Death lock.** `Move` is refused server-side while `death_processed`, and the client stops
   predicting/sending in `player.gd::_physics_process`. Both halves are needed: the server alone left
   the corpse twitching as local prediction was repeatedly overridden.
+- **Deaths are the server's alone** (fall damage slice 0, playtested 2026-10-26,
+  `fall_damage_slice0_checklist.md`). HP only reaches zero on the server, and its death sweep
+  runs the death (penalty, corpse, `EntityDied`) before the client hears. `DeathBroadcast` is a
+  GM command (`dev_cmd_allowed`, audited as `death_broadcast`) and the client no longer sends it:
+  ungated, it was an instant death on demand (a free trip home and a hate wipe). The Test
+  Panel's Trigger Death sends a dev `DamageSelf` of the whole bar. **Online a fall does
+  nothing** until the server simulates falls (slice 1, waiting on the height model;
+  `docs/design/server_fall_damage.md`): the old client damage went through a GM-only command,
+  so for ordinary players it never applied.
 - **Aggro breaks on death.** Dead players are excluded from the enemy-AI target list and wiped from
   every enemy's aggro/threat table, so mobs disengage and leash home instead of beating the corpse.
   `wipe_hate` is the one helper (shared with the port arm below) and fans `EntityTarget None` for
