@@ -933,7 +933,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   make the account a GM); online a fall computes nothing, Trigger Death sends a dev
   `DamageSelf` of the whole bar, and no `DeathBroadcast` follows a death (probe
   `tools/probe_fall_and_death_online.gd`). Slice 1 waits on the server height model.
-  **The Oct 22 bump PREPARED 2026-10-25** on `bump/oct22` (both repos' merges ready: the
+  **The Oct 22 bump MERGED AND DEPLOYED 2026-10-25** (both deploy branches fast-forwarded:
+  server `062ca07`, client `19f4ca3`; R720 boot line `build="062ca07" dev_cmds=false`,
+  2026-10-26 00:27 UTC) **on a fresh world** (user: no accounts or characters carry over; the
+  old `world.db` retired as `world.db.retired-2026-10-25` beside a backup snapshot, the new one
+  built by every migration on boot). Every checklist written "pending the Oct 22 bump" is
+  runnable once testers hold the export from `19f4ca3`. Prepared earlier the same day
+  on `bump/oct22` (both repos' merges ready: the
   server's is a fast-forward, the client's merged with no conflicts; every check green with a
   DLL built from `feat/server-speed`). **Phase 4's lockstep item (B4) mostly BUILT the same
   day** on that branch: `check_constant_lockstep`, `check_skill_table_lockstep`,
