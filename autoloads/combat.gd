@@ -140,6 +140,9 @@ func target_server_id(node) -> int:
 	return 0
 
 func toggle_auto_attack() -> void:
+	# Switching it on is refused while dead; switching it off never is.
+	if not is_auto_attacking and PlayerDeath.refuse_if_dead():
+		return
 	is_auto_attacking = not is_auto_attacking
 	auto_attack_toggled.emit(is_auto_attacking)
 	_sync_auto_attack_timer()

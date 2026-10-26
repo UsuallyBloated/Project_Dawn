@@ -6,6 +6,8 @@ signal player_respawned
 const RESPAWN_DELAY := 5.0
 
 var is_dead: bool = false
+# Said "You cannot do that while dead." during this death already.
+var _told_dead: bool = false
 var _respawn_position: Vector3 = Vector3.ZERO
 var _player: Node3D = null
 
@@ -26,8 +28,20 @@ func _on_hp_changed(current: float, _max: float) -> void:
 		return
 	_die()
 
+## For actions the dead cannot take (a skill, a spell, auto-attack): true
+## while dead, so the caller refuses before anything is sent, announced or put
+## on cooldown. Says the line once per death, as the server's gate does.
+func refuse_if_dead() -> bool:
+	if not is_dead:
+		return false
+	if not _told_dead:
+		CombatLog.add_line("You cannot do that while dead.", CombatLog.MsgType.INFO)
+		_told_dead = true
+	return true
+
 func _die() -> void:
 	is_dead = true
+	_told_dead = false
 	Combat.set_target(null)
 	# Track 22.C — death dismounts (the killing blow's receive_player_damage
 	# also dismounts, but death from a non-damage path — fall, scripted

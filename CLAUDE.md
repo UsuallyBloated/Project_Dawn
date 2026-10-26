@@ -2750,7 +2750,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   2026-10-26: eight lines after Trigger Death)*. The dead-state gate answered every off-list
   message once each and logged nothing, so the sender could not be named. **BUILT and DEPLOYED 2026-10-26
   (R720 boot line `build="8127a70" dev_cmds=false`, 17:47 UTC), pending the playtest** (server
-  `8127a70`; `dead_gate_checklist.md`): the
+  `8127a70`; `dead_gate_checklist.md`, §1 passing 2026-10-26). **§1 named the cause:** the
+  refused message was `EquipUpdate`, one per gear slot as a death strips the gear (the eight
+  lines), a message the server already ignored. **Client half BUILT the same day, pending the
+  next export** (user: "there are no testers on older clients", so no server change): the
+  client sends no `EquipUpdate`; skills, spells and switching auto-attack on are refused
+  locally while dead (`PlayerDeath.refuse_if_dead`, the line once per death), so nothing is
+  announced or put on cooldown; probe `tools/probe_dead_actions.gd`; checklist §2: the
   line is said once per death (`dead_refusal_told`, cleared on Respawn); `SetTarget` is
   allowed while dead; every refusal is logged by message name (first at info, the rest at
   debug). Test `the_dead_are_told_once_per_death` fails on the old gate.

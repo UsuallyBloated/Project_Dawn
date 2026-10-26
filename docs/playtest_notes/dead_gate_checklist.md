@@ -9,14 +9,29 @@ Diagnostics: `journalctl -u projectdawn | grep "refused while dead"` shows the f
 message of each death by name (`refused="Sit"`, `refused="UseSkill"`, ...).
 
 ## Setup
-- [ ] R720 redeployed; boot line shows `build="8127a70"` and `dev_cmds=false`. notes:
+- [x] R720 redeployed; boot line shows `build="8127a70"` and `dev_cmds=false`. notes:
 
 ## 1 — One line per death
-- [ ] **GM: Test Panel, Trigger Death, then press hotbar keys, sit, and click things during the
+- [x] **GM: Test Panel, Trigger Death, then press hotbar keys, sit, and click things during the
   5 s before respawn** → "You cannot do that while dead." appears once at most. notes:
-- [ ] **Left-click other players, mobs and your corpse while dead** → each becomes your target;
+- [x] **Left-click other players, mobs and your corpse while dead** → each becomes your target;
   no line for it. notes:
-- [ ] **Respawn, die again, press a hotbar key while dead** → the line appears once again (a
-  new death is told afresh). notes:
-- [ ] **Read the journal** → one `refused while dead` line per death, naming the message.
+- [x] **Respawn, die again, press a hotbar key while dead** → the line appears once again (a
+  new death is told afresh). notes:  Hot bar skills appear in chat as normal.  screen shot attached.
+- [x] **Read the journal** → one `refused while dead` line per death, naming the message.
+  notes: Both deaths' refused message was `EquipUpdate`: the client sent one per gear slot as the death stripped the gear (eight slots, the eight lines first seen), a message the server already ignored.
+
+## 2 — Client half (the next export: client `EquipUpdate` removed, dead guards)
+The line came from an automatic message, not from anything the player did, and skills
+announced "You use Slash." while the server refused them. Now the client sends no
+`EquipUpdate` (the server works out armor itself), and skills, spells and switching
+auto-attack on are refused on the client while dead, before anything is sent, announced or put
+on cooldown, with the line said once per death.
+- [ ] **Trigger Death and do nothing** → no "You cannot do that while dead." line at all.
   notes:
+- [ ] **Die, then press hotbar skills, cast a spell, press the auto-attack key** → the line
+  appears once; no "You use ..." or "You cast ..." lines; no hotbar cooldowns start. notes:
+- [ ] **Read the journal** → no `refused while dead` line for that death (nothing reached the
+  server). notes:
+- [ ] **Respawn and equip or unequip a piece of armor** → the character sheet's armor changes as
+  before (the server works it out). notes:

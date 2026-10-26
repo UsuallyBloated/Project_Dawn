@@ -23,13 +23,10 @@ func _ready() -> void:
 	# MP regen buff, Lich Form toggle, expiration). BuffManager
 	# .buffs_changed still fires for client-side HUD updates; we just
 	# don't send the snapshot upstream anymore.
-	# Track 6 sub-task 3: armor sync. Server reads conn.equipped_armor in
-	# the damage formula and applies AC/(AC+100) reduction. Send on every
-	# equipment_changed (which covers all equip / unequip / swap paths
-	# in Equipment); BuffManager.buffs_changed also gets fired when AGI
-	# buffs land, but those don't change Equipment's armor sum — server
-	# computes the AGI bonus from PerConnection.agility itself.
-	Equipment.equipment_changed.connect(_on_equipment_changed)
+	# No armor sync: the server works out armor from the equipment it
+	# holds, and ignored the client's EquipUpdate. Sending it on every gear
+	# change (eight at once when a death strips the gear) also drew the
+	# dead-state gate's refusal for nothing (playtest 2026-10-26).
 
 # ── Cast lifecycle ──────────────────────────────────────────────────
 
@@ -67,13 +64,3 @@ func _on_casting_cancelled() -> void:
 # Net.broadcast_buff_snapshot wrapper stays for now but is unused;
 # sub-task 4b removes the wire variant entirely.)
 
-# ── Equipment / armor sync (Track 6 sub-task 3) ────────────────────
-
-func _on_equipment_changed(_slot: String, _item) -> void:
-	if not Net.is_app_ready():
-		return
-	# Send the total armor class (sum across equipped pieces + AGI/4).
-	# Server's damage formula uses AC/(AC+100). Stays in lockstep with
-	# the client's Combat.receive_player_damage so floating numbers
-	# match bar drops within the predictive-vs-authoritative window.
-	Net.broadcast_equip_update(Equipment.get_armor_class())

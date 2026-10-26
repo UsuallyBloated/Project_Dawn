@@ -675,15 +675,6 @@ func broadcast_bind_at_current_location() -> void:
 		return
 	send_bind_at_current_location()
 
-# Track 6 sub-task 3: armor sync. Fires on Equipment.equipment_changed
-# so the server's incoming-damage formula applies the same AC reduction
-# the client uses. Cheaty (client picks the number) but matches Track
-# 6's transitional trust model.
-func broadcast_equip_update(armor: int) -> void:
-	if _state != State.CONNECTED_APP:
-		return
-	send_equip_update(armor)
-
 # Local mirror of the server's per-connection pvp_override_on. The
 # client tracks its own state so cast / attack code can pre-reject
 # offensive actions vs. peers / peer-pets before sending an intent the

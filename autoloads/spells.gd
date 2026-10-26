@@ -102,6 +102,8 @@ func spell_range_text(spell: SpellData) -> String:
 	return ""
 
 func cast_spell(spell: SpellData) -> bool:
+	if PlayerDeath.refuse_if_dead():
+		return false
 	if _casting != null:
 		return false
 	# Casting stands a seated caster, as it does on the server (spell batch
