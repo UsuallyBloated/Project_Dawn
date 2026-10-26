@@ -2739,6 +2739,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   where `hud.gd` builds the echo, so a long social macro line echoes exactly what is sent; a
   lockstep pair (`MAX_CHAT_LEN` against the client constant) for `check_constant_lockstep.gd`.
   Client only. Not built; queued after the current checklist.
+- [ ] **Clicks pass through UI windows to what is behind them** *(hotfix checklist notes,
+  2026-10-26: "Clicking on the bank UI window... the clicks are going THROUGH the window and
+  effecting the windows/interface below")*. **Scope (user): every UI window, not only the
+  bank.** A click on any part of an open window, background included, must stop at that window:
+  never reach a window under it, the HUD, or the world (a world click while holding an item is
+  a ground drop, so a pass-through click can drop an item). Likely cause: window backgrounds
+  or containers with `mouse_filter` IGNORE or PASS. Build: audit every window scene and
+  imperatively built panel (bank, inventory, bags, vendor, character, book, quest journal,
+  dialogue, trade, loot, options, chat, group, pet, test panel), fix each, and add a headless
+  check that instantiates every window and fails if a click on its background would pass
+  through, so a new window cannot regress it. Client only. Not built.
 - [ ] **Client crashed moving items in the inventory** *(hotfix checklist, 2026-10-26)*. A
   native crash, not a script error: Godot's engine log for the session reads "Program crashed
   with signal 11" with no symbols (the export carries none). The server's last line for that
