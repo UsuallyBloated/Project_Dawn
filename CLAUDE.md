@@ -2712,6 +2712,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   headless probe of both button paths that fails on the old button.
 
 ### UI polish
+- [ ] **Sticky chat channel, WoW style** *(user 2026-10-26, during the hotfix checklist: "This is
+  how chat works in most games. This is critical for us to iron out."; sticky chosen over EQ's
+  one-shot)*. **BUILT 2026-10-26, pending the next export and the playtest** (client `75586db`;
+  `chat_channel_checklist.md`). The chat line always has a channel, shown beside the text
+  (`[Say]`, `[Shout]`, `[OOC]`, `[Group]`, `[Tell: Bob]`); a channel command at the start
+  (`/say /s /shout /sh /ooc /g /group /gsay /tell Name /t Name /r`) switches the line the moment
+  its space is typed and leaves the text, however many are stacked or pasted (`/say /say hi`
+  used to send "/say hi"); the channel sticks until another command moves it; other commands
+  run as typed. Also fixed: plain text with no default channel was echoed on the sender's
+  screen and never sent. Rules in `scripts/chat_channel.gd`; `hud.gd` normalizes every line;
+  probe `tools/probe_chat_channel.gd` (31 checks). The tell reply checklist's rows now expect
+  the `[Tell: Name]` label.
+- [ ] **Social macros never send chat** *(found 2026-10-26 while building the sticky channel)*.
+  `SocialHotkeys._execute_command` prints `/say`, `/shout`, `/group` and `/tell` lines locally
+  as `[Say] text` and sends nothing; `/sit` and `/stand` print a line without sitting. A macro
+  online is decoration. Fix shape: route each macro line through the real chat handler
+  (`CombatLog.chat_submitted`, which now normalizes channel commands), keeping only `/lang` and
+  `/languages` local. Client only; not built.
 - [ ] **The consider command (`/con`)** *(user, 2026-10-23, on seeing the P99 Consider page:
   "This is 1000% a mechanic we need in Project Dawn. Please add it to the list.")*. **First
   piece BUILT 2026-10-23 with factions slice 1, pending the bump and the playtest**
