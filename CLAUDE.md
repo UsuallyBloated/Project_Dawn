@@ -2724,6 +2724,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   screen and never sent. Rules in `scripts/chat_channel.gd`; `hud.gd` normalizes every line;
   probe `tools/probe_chat_channel.gd` (31 checks). The tell reply checklist's rows now expect
   the `[Tell: Name]` label.
+- [ ] **The chat box must match what every player sees** *(user 2026-10-26, after the hotfix
+  checklist's chat row: the sender's echo showed the whole fox line while the partner saw it cut
+  at "jumps ov")*. The server cuts a chat line at 512 bytes (`MAX_CHAT_LEN`, `handlers.rs`); the
+  client's chat box has no limit, so a long line shows in full to its sender and cut to everyone
+  else. Build: cap the chat box at the server's limit **in UTF-8 bytes, not characters** (an
+  accented letter is 2 bytes, an emoji 4; a character cap would still let a line full of them
+  overflow), refusing input past the cap on a whole-character boundary; apply the same cap
+  where `hud.gd` builds the echo, so a long social macro line echoes exactly what is sent; a
+  lockstep pair (`MAX_CHAT_LEN` against the client constant) for `check_constant_lockstep.gd`.
+  Client only. Not built; queued after the current checklist.
 - [ ] **Social macros never send chat** *(found 2026-10-26 while building the sticky channel)*.
   `SocialHotkeys._execute_command` printed `/say`, `/shout`, `/group` and `/tell` lines locally
   as `[Say] text` and sent nothing; `/sit` and `/stand` printed a line without sitting. A macro
