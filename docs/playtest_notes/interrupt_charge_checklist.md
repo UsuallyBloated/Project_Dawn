@@ -7,7 +7,7 @@ redeploy with `4303459` or later**; the client testers hold already settles the 
 server's `ManaUpdate`. Old client builds show the refund for one frame, then the true value.
 
 The numbers: `charge = mana_cost x (seconds into the bar / the spell's cast time)`, rounded
-in the chat line. Bind Affinity (30 mana, 3 s) interrupted at 1.5 s costs 15; Gate (50 mana,
+in the chat line. Bind Affinity (10 mana since the EQ parity pass, 3 s) interrupted at 1.5 s costs 5; Gate (50 mana,
 5 s) interrupted at 4 s costs 40. The server's cast time is used, never the client's bar.
 
 `server.log` anchors: `cast interrupted by incoming damage caster=.. spell=.. mana_charged=..`

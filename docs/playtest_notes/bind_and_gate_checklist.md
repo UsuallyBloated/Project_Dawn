@@ -9,7 +9,7 @@ makes Gate reload the whole world scene on the old client, so run this sheet aft
 
 | Spell | Who | Cost | Cast | Cooldown | Goes to |
 |---|---|---|---|---|---|
-| Bind Affinity | ten classes, level 1 | 30 mana | 3 s | none | sets the bind where the bound player stands |
+| Bind Affinity | ten classes, level 1 | 10 mana (was 30 before the EQ parity pass) | 3 s | none | sets the bind where the bound player stands |
 | Gate | the same ten (Wizard, Druid, Cleric, Shaman, Necromancer, Magician, Sorcerer, Enchanter, Blood Mage, Bard), level 8 | 50 mana | 5 s | 300 s | your bind |
 | Succor | Druid, Wizard, level 12 | 80 mana | 3 s | 60 s | the town square |
 | Evacuate | Druid, level 16 | 120 mana | 5 s | 60 s | the town square, with your group in 30 m |

@@ -15,8 +15,12 @@ kills work on the old client too).
 
 | Spell | Who | Direct | DoT | Ticks of | Cost |
 |---|---|---|---|---|---|
-| Entangle | Druid 6 | 10 | 5/s for 18 s (90) | 15 every 3 s | 18 mana, instant, 18 s cooldown |
-| Dark Decay | Necromancer 10 | 20 | 7/s for 24 s (168) | 21 every 3 s | 40 mana, 2 s cast, 24 s cooldown |
+| Entangle | Druid 6 | 5 | 1/s for 18 s (18) | 3 every 3 s | 18 mana, instant, 18 s cooldown |
+| Dark Decay | Necromancer 10 | 10 | 2.5/s for 24 s (60) | 8 every 3 s (7.5 rounded) | 40 mana, 2 s cast, 24 s cooldown |
+
+*(Damage figures updated 2026-10-26 for the EQ parity pass; costs, cast times and cooldowns
+unchanged. Casts can now fizzle on a low casting skill: "Your spell fizzles!" costs a quarter of
+the mana.)*
 
 `server.log` anchors: `enemy killed by a damage-over-time tick`, `kill credit granted`,
 `loot bag spawned (kill)`. Each tick fans a Hit (the floating number) and the caster's own
@@ -29,7 +33,7 @@ or Level Up a fresh character (Entangle at 6, Dark Decay at 10).
 - [ ] A Druid 6+ with Entangle on the bar (a Necromancer 10+ with Dark Decay for the long one)
 
 ## 1 — The DoT ticks and shows
-- [ ] **Entangle a mob and watch it** → the direct hit lands at once, then a floating number every three seconds; chat shows "Entangle for 15" each tick; the server log has no `unknown spell` line. notes:
+- [ ] **Entangle a mob and watch it** → the direct hit lands at once, then a floating number every three seconds; chat shows "Entangle for 3" each tick; the server log has no `unknown spell` line *(updated 2026-10-26: was 15, the EQ parity pass; Entangle is now 1 a second, a 3-point tick)*. notes:
 - [ ] **Watch the target frame** → an "Entangle" icon with a countdown appears on the mob and leaves when the DoT ends. notes:
 - [ ] **Re-cast Entangle while the first still runs (after its 18 s cooldown, so cast a second mob first, or use Dark Decay)** → the DoT refreshes to a full duration; it never stacks (one icon, one tick every three seconds). notes:
 - [ ] **Entangle a mob that is standing idle, then stand still** → the mob turns on you from the tick alone (a tick is damage, and damage is aggro). notes:
@@ -53,7 +57,7 @@ or Level Up a fresh character (Entangle at 6, Dark Decay at 10).
 - [ ] **Second seat, both /pvp on: kill the other player's warder (or a charmed mob) by any means** → no XP (as before) and now NO loot bag and no coin either; it used to drop a wolf's table every free respawn. notes:
 
 ## 6 — PvP (second seat, both /pvp on)
-- [ ] **Entangle a flagged player** → their bar drops 15 every three seconds, you see "Entangle for 15", they see the hit; it ends on time. notes:
+- [ ] **Entangle a flagged player** → their bar drops 3 every three seconds, you see "Entangle for 3", they see the hit; it ends on time *(updated 2026-10-26: was 15, the EQ parity pass)*. notes:
 
 ## 7 — Regression: nearby behavior unchanged
 - [ ] **Direct-damage spells, melee kills, pet kills** → XP, credit and loot as before (the kill step is shared now; nothing should have changed). notes:
