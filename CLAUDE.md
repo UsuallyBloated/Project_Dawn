@@ -570,6 +570,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `cursor_slot_and_reequip.md` §Open questions; audit 2026-09-29)*. Deposit-from-cursor and
   sell-from-cursor were deferred ("place it first"). `SlotRef` has no cursor variant, so both
   are small wire additions plus the `destroy_at`-style guard for a held full bag.
+  **Raised by play 2026-10-26** (the hotfix checklist's §3): the tester dragged items onto the
+  vault and nothing happened (the drop sends nothing; only right-click with the bank open
+  deposits), concluded the bank could not take items, and could not run §3. Drag-and-drop is
+  what a player reaches for first, so this is a usability gap, not a corner case. Queued
+  next to the chat box cap.
 - [ ] **No-drop / no-trade item flag** *(flagged in `inventory_interaction_grammar.md` §8 and by
   the trade design's ledger, which explicitly has no rule "until itemization grows one"; audit
   2026-09-29)*. `ItemData` carries no binding flag; the two account-shared bank slots and the
@@ -2734,6 +2739,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   where `hud.gd` builds the echo, so a long social macro line echoes exactly what is sent; a
   lockstep pair (`MAX_CHAT_LEN` against the client constant) for `check_constant_lockstep.gd`.
   Client only. Not built; queued after the current checklist.
+- [ ] **Client crashed moving items in the inventory** *(hotfix checklist, 2026-10-26)*. A
+  native crash, not a script error: Godot's engine log for the session reads "Program crashed
+  with signal 11" with no symbols (the export carries none). The server's last line for that
+  client was `UnequipItem applied ... equip_slot=0` (the main hand to the cursor) at 15:31:01
+  UTC; nothing followed, and the heartbeat timeout linkdead it at 15:31:11. Needs repro
+  steps, ideally run with `builds/ProjectDawn.console.exe`, which prints the engine's last
+  lines before a crash. Not yet reproduced.
+- [ ] **Research: the Monsters and Memories item log** *(user, 2026-10-26, hotfix checklist
+  notes: "We need to take a look at the Item Log that Monsters and Memories uses.")*. Find out
+  what M&M's item log shows and to whom before proposing anything; a design note first.
 - [ ] **Social macros never send chat** *(found 2026-10-26 while building the sticky channel)*.
   `SocialHotkeys._execute_command` printed `/say`, `/shout`, `/group` and `/tell` lines locally
   as `[Say] text` and sent nothing; `/sit` and `/stand` printed a line without sitting. A macro

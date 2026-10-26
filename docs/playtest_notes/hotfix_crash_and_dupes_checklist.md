@@ -20,36 +20,40 @@ names `seller` and `vendor_type`), `BuyItem rejected — no merchant in reach st
 `quest completed`, `corpse created`. Any `panicked at` line in the journal is a fail.
 
 ## Setup
-- [ ] R720 redeployed (stop, copy, start), boot line checked: `dev_cmds=false` and the new
+- [x] R720 redeployed (stop, copy, start), boot line checked: `dev_cmds=false` and the new
   `build=` sha. notes:
-- [ ] Two players online in town, near each other. notes:
+- [x] Two players online in town, near each other. notes:
 
 ## 1 — The chat crash is gone
-- [ ] **Paste a long line into /say: about 520 characters with an accented letter (é, ü)
+- [x] **Paste a long line into /say: about 520 characters with an accented letter (é, ü)
   near the end** → it shows cut short; the server keeps running; both players can still chat
   and move. notes:
-- [ ] **Check the journal** (`journalctl -u projectdawn -n 50 --no-pager`) → no `panicked at`
+- [x] **Check the journal** (`journalctl -u projectdawn -n 50 --no-pager`) → no `panicked at`
   line and no restart. notes:
 
 ## 2 — Drops cannot be duplicated across a restart
-- [ ] **Player A drops a stack; player B picks it up** → B holds it, A does not. notes:
-- [ ] **Within a minute, restart the server** (`sudo systemctl restart projectdawn`; warn
+- [x] **Player A drops a stack; player B picks it up** → B holds it, A does not. notes:
+- [x] **Within a minute, restart the server** (`sudo systemctl restart projectdawn`; warn
   both players first) → after both log back in, the item is with B only, not with both.
   notes:
-- [ ] **A drops a stack and picks it straight back up, then restart within a minute** → A
+- [x] **A drops a stack and picks it straight back up, then restart within a minute** → A
   still has it after the restart (it is not lost). notes:
 
 ## 3 — Saves move items together
-- [ ] **Withdraw an item from the banker, then turn in a quest that pays an item, then
+> **2026-10-26:** items go into the vault by **right-clicking them in your bags with the bank
+> window open**; dragging onto the vault does nothing yet (its own To-Do entry). The two rows
+> below were skipped for that reason and are still to run.
+
+- [-] **Withdraw an item from the banker, then turn in a quest that pays an item, then
   restart within a minute** → the withdrawn item is in the bags and not back in the vault.
-  notes:
-- [ ] **Withdraw an item from the banker, die (any way), restart within a minute** → the
+  notes:  Players cannot place items in the bank. (Dragged onto the vault, which is not built; right-click deposits.)
+- [-] **Withdraw an item from the banker, die (any way), restart within a minute** → the
   item is on the corpse and not back in the vault. notes:
 
 ## 4 — Vendor stock
-- [ ] **Buy bread from Brom, a sword from Hadrik, a potion from Elara** → each sells as
+- [x] **Buy bread from Brom, a sword from Hadrik, a potion from Elara** → each sells as
   before. notes:
-- [ ] **Buy every item on Brom's list once** (the full Provisioner stock) → each one sells;
+- [x] **Buy every item on Brom's list once** (the full Provisioner stock) → each one sells;
   a `BuyItem rejected — no merchant in reach stocks it` line for any of them means the two
   stock lists disagree (run `tools/check_vendor_lockstep.gd`). notes:
 
@@ -58,9 +62,13 @@ names `seller` and `vendor_type`), `BuyItem rejected — no merchant in reach st
 > `a_priced_item_no_merchant_stocks_cannot_be_bought` is its evidence.
 
 ## 5 — Regression: ordinary play unchanged
-- [ ] **Loot several kills, drop and pick up items, bank and withdraw, buy and sell** → no
-  refusals, no lag spikes, nothing vanishes. notes:
-- [ ] **Log out and back in** → bags, bank and coins exactly as left. notes:
+- [-] **Loot several kills, drop and pick up items, bank and withdraw, buy and sell** → no
+  refusals, no lag spikes, nothing vanishes. notes: The bank is not allowing the players to deposit items.  I also feel like there is a slight lag, but i could be crazy.
+- [x] **Log out and back in** → bags, bank and coins exactly as left. notes:
 
 ## Notes / observations
--
+
+-  Game crashed while i was moving items around the inventory.
+-  We need to take a look at the Item Log that Monsters and Memories uses.  
+
+-  
