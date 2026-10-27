@@ -453,7 +453,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   clean logout, zero RPC-flood lines. Two follow-on findings, tracked separately: member rows
   are BLANK until the first resource update (own item below), and a skill's stamina cost is
   invisible to the partner (client-local spend — folded into the active-skills item).
-- [ ] **Remote players never show a jump** *(reported 2026-08-14)*. Player 1 jumps; player 2 sees
+- [x] **Remote players never show a jump** — **DONE + playtested 2026-10-27** (the user, after
+  the day's two-seat sittings on the bumped server and export: "the jump relay works. I can see
+  other players jumping."; `remote_jump_checklist.md` §1's headline row, the rest of its rows
+  covered by the integration test; what exists is in systems_overview, Networking, "The jump
+  relay"). *(Original entry:)* *(reported 2026-08-14)*. Player 1 jumps; player 2 sees
   them slide along the ground. Nothing about a jump crosses the wire, and it's dropped in three
   separate places: (a) **the client never reports it** — `scripts/player.gd:489` (was :444) is the only caller
   of `Net.send_movement()` and hardcodes `jumping = false`, even though `net.gd:374` and the gdext

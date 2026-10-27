@@ -787,6 +787,15 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   its panel and every `/pet` command from any distance (the test parks one two cells away;
   the playtest walked past 300 m). Not a leak: the owner learns only their own pet's
   position.
+- **The jump relay (both sides, 2026-10-14, playtested 2026-10-27):** the first piece of a
+  remote animation-state channel. `player.gd` latches a jump and sends it on its next Move's
+  `jumping` flag, once; the server relays only the rising edge, at most once per
+  `JUMP_RELAY_MIN_INTERVAL` (500 ms), as a `PlayerJumped { id }` to the players within the
+  say channel's reach of the jumper (50 m since 2026-10-27), never the jumper; each of their
+  clients plays the hop (`RemotePlayer.play_jump`, the same arc as the local jump, 1.2 m in
+  0.7 s) as an offset on the visual and the nameplate, never on the interpolated position.
+  Nothing reads the flag into position: Y stays the server's zero, so a forged flag can only
+  make a player look silly. A relayed jump stands the player; a corpse does not hop.
 - `Network` / `Net` — connection + wire message routing.
 - `SaveManager` — writes nothing online (playtested 2026-10-26,
   `offline_save_online_checklist.md`): `save()` returns at once in launcher mode, because the

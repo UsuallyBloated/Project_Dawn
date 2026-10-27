@@ -21,7 +21,7 @@ build predates the relay.
 
 ## 1 — The hop
 
-- [ ] **B watches A; A jumps once, standing still** → B sees A's body rise and land in place, the nameplate riding with it; A's position on B's screen does not slide or snap. notes:
+- [x] **B watches A; A jumps once, standing still** → B sees A's body rise and land in place, the nameplate riding with it; A's position on B's screen does not slide or snap. notes: User, 2026-10-27, in chat after the two-seat sittings on the `0e58643` server and the day's export: "the jump relay works. I can see other players jumping." The remaining rows (the burst cap, the corpse, the 120 m view edge) are the integration test's and were not run by hand.
 - [ ] **A jumps while running** → B sees the hop during the run; A keeps moving along the ground underneath it. notes:
 - [ ] **A jumps repeatedly as fast as the key allows** → B sees a hop for each real jump (one per landing, about every 0.7 s), never more than two a second. notes:
 - [ ] **A sits, then presses jump** → A does not jump (sitting blocks it); B sees nothing. notes:
