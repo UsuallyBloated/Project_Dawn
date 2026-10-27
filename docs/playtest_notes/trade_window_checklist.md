@@ -15,6 +15,9 @@ a single atomic commit. Design + the exploit ledger this list follows:
 
 - [ ] **Hold an item, left-click the other player** → both windows open instantly,
       each titled with the partner's name; the click also targeted them. notes:
+- [ ] **Look at where it opened, then drag it by its background** (client `0ae26a6`, next
+      export) → it opens in the middle of the screen and moves with the mouse like the bank
+      window; it used to open off the top-left corner and could not be moved. notes:
 - [ ] **Click one of YOUR slots while holding** → the item leaves the cursor into
       the window slot; the partner's side shows it (name + count). notes:
 - [ ] **Type coin into your fields** → the partner sees "Coin: Np Ng Ns Nc". notes:

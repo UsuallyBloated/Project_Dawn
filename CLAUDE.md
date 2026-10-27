@@ -789,6 +789,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   offered empty bag cannot be filled, the commit verifies the item as well as the count, and a
   trade request no longer tells absent from too-far (an is-online check by id). Test
   `trade_locks_the_bag_holding_an_offered_item`; three new rows in `trade_window_checklist.md`.
+  **Placement fixed 2026-10-26, pending the next export** (client `0ae26a6`; user, in play: "the
+  trade window needs to spawn in the middle of the screen... too far in the top left corner to
+  move or use"): it opened at (-280, -180), off the top-left corner (its centering set `position`
+  inside the HUD, measured from the screen's corner), and as a plain Panel it could not be
+  dragged. Centered offsets now, as the dialogue window does, and a `DraggablePanel`; probe
+  `tools/probe_trade_window_place.gd` fails on the old code; one checklist row.
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
