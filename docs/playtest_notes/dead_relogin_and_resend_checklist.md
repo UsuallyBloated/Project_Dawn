@@ -15,7 +15,7 @@ resent. Needs a redeploy with `645606a` or later (`6a09aa1` carried the renet ca
 
 ## Setup
 - [ ] Server on the R720 from `645606a` or later (boot line `build=`). notes:
-- [ ] A character of level 5 or higher (below the floor there is no XP penalty to double). notes:
+- [x] A character of level 5 or higher (below the floor there is no XP penalty to double). notes:
 
 ## 1 — Leaving dead
 - [x] **Die to a mob, note the XP and level, then close the game with the window X while still dead** → the body lingers and reaps; nothing else happens. notes:
@@ -41,7 +41,7 @@ placeholder to the level's 122, cosmetic, and gone in the next export.
   screen shows, and Bun respawns at the bind about 5 s later; then §1's last two rows (one
   corpse, loot it). notes: Boot line `build="3f09fbd" dev_cmds=false`; §1's last two rows passed
   on it (2026-10-26).
-- [ ] **Log in on the next export** → no "You were healed for N health." line at login; a real
+- [x] **Log in on the next export** → no "You were healed for N health." line at login; a real
   heal (a spell, a respawn) still prints one. notes:
 
 ## Notes / observations

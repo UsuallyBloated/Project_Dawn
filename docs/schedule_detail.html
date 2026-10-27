@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Oct 26<span class="stat-sub">repo 8b378b6</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Oct 27<span class="stat-sub">repo 376b23a</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">35.75 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">64 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">61.5 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -486,7 +486,7 @@
 <section>
 <h2><span class="week-head"><span>One evening when every client changes</span><span class="when">W3 &middot; October 19 to 25</span></span></h2>
 <p class="lede">Thursday is the bump day: the trade window and the spell work reach the server and the client together. After it, old clients stop connecting, so the four friends receive their first zip from this build and never need another.</p>
-<div class="week-meta"><span>the user's time: 32.25 h</span><span>Claude build days: 17.5</span></div>
+<div class="week-meta"><span>the user's time: 29.25 h</span><span>Claude build days: 17.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -760,16 +760,6 @@
 <td class="done">The boot line shows build=6c2bc45 and dev_cmds=false.<span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
 </tr>
 <tr>
-<td class="id">v12</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>The trade window: offer, accept, every edit clears both accepts, nothing leaves a bag until the commit, the ten exploit cases refuse.</td>
-<td>user at a desk</td>
-<td class="needs"><ul><li>checklist trade_window_checklist.md (on branch feat/trade-window until the merge): 21 rows to run</li><li>second seat (two-boxing works)</li></ul></td>
-<td class="time">2.5 h</td>
-<td class="id">o4</td>
-<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/trade_window_checklist.md"><code>trade_window_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Trade window</code></span></td>
-</tr>
-<tr>
 <td class="id">v12b</td>
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>A charm keeps your target: the mob stays targeted when it becomes a pet and again when the charm ends and it turns hostile, as in EQ.</td>
@@ -808,16 +798,6 @@
 <td class="time">0.5 h</td>
 <td class="id">o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/global_cooldown_checklist.md"><code>global_cooldown_checklist.md</code></a></span><span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
-</tr>
-<tr>
-<td class="id">v18</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what">After the bump-day redeploy: leave dead with the window X, log back in, same XP and one corpse (the double death the 2026-10-12 review found); the lossy-link row only if a hotspot is handy.</td>
-<td>user, one seat</td>
-<td class="needs"><ul><li>checklist dead_relogin_and_resend_checklist.md: 3 rows to run</li></ul></td>
-<td class="time">0.5 h</td>
-<td class="id">o4</td>
-<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/dead_relogin_and_resend_checklist.md"><code>dead_relogin_and_resend_checklist.md</code></a></span><span class="ref">To-Do entry: <code>A dead character died again on relogin, and lost reliable packets were never resent</code></span></td>
 </tr>
 <tr class="tent">
 <td class="id">vh5</td>
@@ -1014,7 +994,7 @@
 <section>
 <h2><span class="week-head"><span>Prove it with four friends</span><span class="when">W4 &middot; October 26 to November 1</span></span></h2>
 <p class="lede">Fixes from the week-3 sittings, a fresh-character sweep on the exact build the friends hold, and the rehearsal on Saturday. Whatever it finds is the fifth week&#x27;s work.</p>
-<div class="week-meta"><span>the user's time: 7.75 h</span><span>Claude build days: 2</span></div>
+<div class="week-meta"><span>the user's time: 8.25 h</span><span>Claude build days: 2</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -1078,6 +1058,16 @@
 <td class="done">The boot line shows build=779a033 (or later) and dev_cmds=false.<span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
 </tr>
 <tr>
+<td class="id">v12</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Tue Oct 27</span>The trade window: offer, accept, every edit clears both accepts, nothing leaves a bag until the commit, the ten exploit cases refuse.</td>
+<td>user at a desk</td>
+<td class="needs"><ul><li>checklist trade_window_checklist.md: 0 rows to run</li><li>second seat (two-boxing works)</li></ul></td>
+<td class="time"></td>
+<td class="id">o4</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/trade_window_checklist.md"><code>trade_window_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Trade window</code></span></td>
+</tr>
+<tr>
 <td class="id">v15</td>
 <td><span class="chip verify">Verify</span></td>
 <td class="what">Damage over time&#x27;s checklist: ticks show, a DoT kill pays once, a creature walking home sheds its DoTs, dying or porting ends yours, the target frame shows the debuffs, a Thorns kill pays.</td>
@@ -1086,6 +1076,16 @@
 <td class="time">1.5 h</td>
 <td class="id">o5</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/damage_over_time_checklist.md"><code>damage_over_time_checklist.md</code></a></span><span class="ref">To-Do entry: <code>The spell batch (decisions of 2026-10-05; plan APPROVED 2026-10-07)</code></span></td>
+</tr>
+<tr>
+<td class="id">v18</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Tue Oct 27</span>After the bump-day redeploy: leave dead with the window X, log back in, same XP and one corpse (the double death the 2026-10-12 review found); the lossy-link row only if a hotspot is handy.</td>
+<td>user, one seat</td>
+<td class="needs"><ul><li>checklist dead_relogin_and_resend_checklist.md: 1 rows to run</li></ul></td>
+<td class="time">0.5 h</td>
+<td class="id">o4</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/dead_relogin_and_resend_checklist.md"><code>dead_relogin_and_resend_checklist.md</code></a></span><span class="ref">To-Do entry: <code>A dead character died again on relogin, and lost reliable packets were never resent</code></span></td>
 </tr>
 <tr>
 <td class="id">v16</td>
@@ -1252,7 +1252,7 @@
 <section><h2>Open rows this plan does not schedule</h2>
 <p class="lede">Read from the checklist folder when this page was generated. A recent one (touched in the last 30 days) needs a row above or a reason. An older one is a candidate for the week-5 triage, which decides whether it is retired, superseded, or worth a re-run.</p>
 <div class="scroll"><table><thead><tr><th>Last touched</th><th>Open</th><th>Passed</th><th>Skipped</th><th>Checklist</th></tr></thead><tbody>
-<tr><td class="time">2026-10-26 <span class="chip tent">recent</span></td><td class="time">5</td><td class="time">17</td><td class="time">0</td><td><a href="playtest_notes/chat_channel_checklist.md"><code>chat_channel_checklist.md</code></a></td></tr>
+<tr><td class="time">2026-10-27 <span class="chip tent">recent</span></td><td class="time">1</td><td class="time">21</td><td class="time">0</td><td><a href="playtest_notes/chat_channel_checklist.md"><code>chat_channel_checklist.md</code></a></td></tr>
 <tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">2</td><td class="time">15</td><td class="time">0</td><td><a href="playtest_notes/banker_slice1_checklist.md"><code>banker_slice1_checklist.md</code></a></td></tr>
 <tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">3</td><td class="time">0</td><td class="time">15</td><td><a href="playtest_notes/camp_checklist.md"><code>camp_checklist.md</code></a></td></tr>
 <tr><td class="time">2026-10-12 <span class="chip tent">recent</span></td><td class="time">1</td><td class="time">19</td><td class="time">1</td><td><a href="playtest_notes/dev_panel_modernization_checklist.md"><code>dev_panel_modernization_checklist.md</code></a></td></tr>
@@ -1301,5 +1301,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-26 at repo 8b378b6</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-27 at repo 376b23a</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

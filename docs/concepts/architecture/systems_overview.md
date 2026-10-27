@@ -482,6 +482,32 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     coin + reject feedback flow through `RemoteLootBagManager`. XP split is unchanged
     (still distance-agnostic — a deliberate asymmetry vs coin's proximity gate).
 
+- **Trade window** (player to player; design `docs/design/trade_window.md`; built 2026-09-29
+  under PD_W0028, playtested 2026-10-27, `trade_window_checklist.md`, every row). Hold an item
+  and left-click a player within 10 m: the click targets them and both windows open at the
+  centre of the screen (a `DraggablePanel`), eight slots a side plus the four coin fields.
+  **Escrow by locking.** `world/trade.rs` holds one session per player, and an offer is a
+  reference to a slot in the owner's real inventory, never a copy: an offer from the cursor is
+  parked into an empty inventory slot first (no merging, so the offer stays one discrete
+  stack), an offered slot refuses Move / Split / Drop / Destroy / Equip / Unequip / Sell /
+  BankStore with "That item is offered in a trade.", an offer inside a pouch locks the pouch,
+  and an offered empty bag cannot be filled. Every edit clears both accepts. The commit (in the
+  tick's apply block) re-checks liveness, range, coin coverage, the offered count AND item, and
+  both receivers' capacity through the real placer (`can_accept`, `merge_capped`), swaps in
+  memory, writes both characters in one transaction (`db::commit_trade`) and reverts on
+  failure; the deltas go out only after the commit. An offered stack that changes under its
+  owner (a merge from loot or a purchase) is dropped from the offer with "An item you offered
+  changed..." and "Their offer changed..." Walking past 10 m, dying or leaving closes the
+  session for both with a reason and frees every lock. Refused: trading yourself, a partner
+  already trading, a coin overdraft ("You don't have that much coin."), a receiver who cannot
+  hold the goods ("Your bags cannot hold their offer." / "Their bags cannot hold your offer."),
+  a request to anyone not in reach ("There is no one here to trade with.", the same line for
+  absent). Food offered in a trade is never auto-eaten (the tick passes the trade lock to
+  `hunger::first_in_slot_order`; a loaf on the cursor is not eaten either, the cursor not being
+  in the inventory). The client window (`scripts/trade_window.gd`) holds no state and renders
+  the server's offer updates. The exploit ledger of the design is the integration test list
+  (atomic commit, bait-and-switch, the escrow lock, the bag lock, a changed offer, self-trade,
+  overdraft, the auto-eat skip). Still open: giving to an NPC (slice 2).
 - **Banker NPC — slice 1 / coins (2026-06-17, server-authoritative, wire PD_W0015):** a town
   NPC (**Thalia Mourne**) giving **zero-weight coin storage** + **tier exchange** — the relief
   valve for the four-tier coin-weight system. Design: `docs/concepts/world/currency.md`.

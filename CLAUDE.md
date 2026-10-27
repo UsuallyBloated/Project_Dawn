@@ -759,7 +759,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   unaddressable from the wire, the placer never fills a held bag, and destroying/dropping
   a held full bag refuses rather than orphaning contents. Client mirrors bag_255 into a
   cursor-bag store that Encumbrance weighs.
-- [ ] **Trade window** *(requested 2026-08-28 with the cursor work: "a click that lands on an
+- [x] **Trade window** — **Slice 1 DONE + playtested 2026-10-27** (`trade_window_checklist.md`,
+  every row passing on two seats; the journal shows item swaps, coin-only gifts, an eight-stack
+  trade, the walk-away and cancel closes, a relog straight after a commit, and a famished
+  character whose offered bread stayed uneaten through an open trade, then ate the loaf the
+  partner handed over the moment the commit placed it. The window opens centred and drags. What
+  exists is in systems_overview, Items, "Trade window". Slice 2, giving to an NPC, is its own
+  entry below.) *(Original entry:)* *(requested 2026-08-28 with the cursor work: "a click that lands on an
   entity (enemy, NPC, player) still targets but ALSO opens a trade window. EQ works like
   this")*. **DESIGNED 2026-09-19: `docs/design/trade_window.md`** — escrow by locking (offered
   items never leave the owner's inventory until a single-transaction commit, so a crash loses
@@ -795,6 +801,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   inside the HUD, measured from the screen's corner), and as a plain Panel it could not be
   dragged. Centered offsets now, as the dialogue window does, and a `DraggablePanel`; probe
   `tools/probe_trade_window_place.gd` fails on the old code; one checklist row.
+- [ ] **Trade slice 2: giving to an NPC** *(the trade design's slice 2,
+  `docs/design/trade_window.md`; split out of the trade entry when slice 1 ticked on
+  2026-10-27)*. The one-sided variant (hand an item to an NPC, as EQ's quest turn-ins do) plus
+  whatever quest-item consumption exists by then. The 2026-09-19 standing instruction was to pull
+  it forward if slice 1 left it nearly free; my read is that it did not (slice 1 is a session
+  between two players with two accepts and two inventories, and an NPC has none of those, so the
+  give is its own handler with its own refusals). Pairs with the first fetch or delivery quest
+  (Quest and loot content plumbing, item (a)) and the no-drop flag. Also from the sitting's
+  notes: the only way to open a trade is a click on the player while holding an item, so a
+  coin-only trade means lifting any item first; a trigger for coin on the cursor or a `/trade`
+  command would close that, a small client ask if wanted.
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
@@ -1871,7 +1888,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   corpse looted; what exists is in systems_overview, "Respawn, bind points, and the death
   lock"). **Open for (b) only:** the resend has had no lossy-link test (§2 skipped, no lossy
   link to hand); it matters once players connect over the internet. The §4 row for the silent
-  login reset waits for the next export.
+  login reset passed 2026-10-27 on the new export (no heal line at login; a real heal still
+  prints one), so (a) is closed on both sides.
   *(both found 2026-10-12 by the review of the hosting branch; both older than it; **BUILT
   the same day on the deploy branch, pending redeploy + playtest**: server `6a09aa1` +
   `645606a`, `dead_relogin_and_resend_checklist.md`)*. (a) `from_spawn` set `death_processed: false`

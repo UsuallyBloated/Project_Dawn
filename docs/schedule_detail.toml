@@ -453,14 +453,13 @@ todo = "Trade window"
 
 [[row]]
 id = "v12"
-week = "w3"
+week = "w4"
 lane = "verify"
-day = "Fri Oct 23 to Sun Oct 25"
+day = "Tue Oct 27"
 what = "The trade window: offer, accept, every edit clears both accepts, nothing leaves a bag until the commit, the ten exploit cases refuse."
 who = "user at a desk"
 needs = ["second seat (two-boxing works)"]
 checklist = "trade_window_checklist.md"
-checklist_branch = "feat/trade-window"
 waits_on = ["o4"]
 todo = "Trade window"
 done_when = "Every row filled."
@@ -574,8 +573,9 @@ todo = "Public-host hardening checklist (mandatory before any exposure beyond Ta
 
 [[row]]
 id = "v18"
-week = "w3"
+week = "w4"
 lane = "verify"
+day = "Tue Oct 27"
 what = "After the bump-day redeploy: leave dead with the window X, log back in, same XP and one corpse (the double death the 2026-10-12 review found); the lossy-link row only if a hotspot is handy."
 who = "user, one seat"
 hours = 0.5
