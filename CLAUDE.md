@@ -1808,6 +1808,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   holds every spell inside it). `check_spell_lockstep.gd` compares `range` even when only one
   side writes it (a planted one-sided range is caught). Test: `a_nuke_reaches_thirty_metres`
   (a Smite at about 28 m lands, at 33 m is refused; fails at the old 25 m).
+  **The full 30 m, BUILT 2026-10-27, pending the redeploy, the export and the playtest**
+  (server `CAST_REACH_SLACK`, client `spells.gd`; `equip_gates_and_fizzle_checklist.md` §4;
+  user, on the checklist: "Smite max range is 30m, but i cant cast on an enemy that is 30m
+  away"). The client checked one metre inside the reach (`REACH_MARGIN`), so the tooltip said
+  30 m and the cast refused at 29. Now the client checks the full reach and the server's
+  pre-flight allows one metre past it (31 m), so a cast made at the edge is not refused for
+  the distance the target moved between the two checks; a modified client gains that metre
+  and nothing else. The leash floor's unit test holds every spell's reach plus the slack under
+  35 m. `a_nuke_reaches_thirty_metres` gained a step: a Smite at 30.5 m lands (refused on the
+  previous server), at 33 m still refused.
 - [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
   ticked on the integration test** (server `f58b796`,
   `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
@@ -2410,6 +2420,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   of every camp. (3) `a_cast_can_fizzle_on_a_low_casting_skill` read the regen fan's
   full-mana update instead of the fizzle's when one landed first; it reads the update after
   the fizzle line. All three were test faults; the server was right.
+  **A fizzle now keeps the gems greyed, BUILT 2026-10-27, pending the export and the playtest**
+  (client `spells.gd` / `remote_player_manager.gd`; `equip_gates_and_fizzle_checklist.md` §3).
+  Found in the 2026-10-27 journal: `CastSpell fizzled ... Smite` at 20:48:09.757, then
+  `rejected — inside the global cooldown remaining_ms=200` at 20:48:11.557. The server starts
+  the gem's refresh on a fizzle, but the client treated the fizzle line as a refusal and
+  CLEARED its global cooldown, so the gems never greyed and the next click met the server's
+  "You cannot cast again yet.". `Spells.on_server_fizzle` keeps (an instant cast) or starts (a
+  timed one, fizzled at its CastStart) the 2.25 s cooldown, drops the spell's own (the server
+  stamps none on a fizzle) and cancels a running bar with its mana back for the ManaUpdate to
+  settle; an ordinary refusal still clears everything. `tools/probe_fizzle_cooldown.gd` (7
+  checks, 2 failing on the old code).
 - [ ] **Regen model and race trade-off follow-ups** *(`regen_model.md` §Deferred + §Open tuning,
   `race_xp_regen_tradeoffs_plan.md` slices 1 and 3; audit 2026-09-29 confirmed no race XP
   multiplier exists in `progression.rs`)*. Open: the pool-size formulas (STA to max HP, the
@@ -2442,6 +2463,39 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   15; a bare-handed Monk 1's answered), failing on the previous code. The dual wield skill
   itself still changes nothing about the swing (as on the client); a later pass could tie the
   off hand's chance to swing to it, as EQ did.
+  **The equip itself is refused since 2026-10-27, pending the redeploy, the export and the
+  playtest** (user, on a Cleric wearing two clubs on the R720: the class "should be restricted
+  from dual wield"; server + client the same day; `equip_gates_and_fizzle_checklist.md` §1).
+  The 10-19 build let the weapon go on and refused only the swing; EQ refused the equip
+  (Allakhazam's 2003 comments on caster daggers: "will not equip in the secondary melee slot",
+  "any item with damage and delay can't equip in the secondary slot of any non-dual-wielding
+  class"; EQEmu's server trusts the client for it and skips the secondary slot in auto-loot
+  when `CanThisClassDualWield()` is false). Now `skills::equip_refusal` runs before
+  `equip_from_location`: a weapon into slot 1 before the class can dual wield is refused with
+  "Your class cannot dual wield." or "You will be able to dual wield at level N."; the client
+  asks the same question first (`Equipment.equip_refusal`), so an honest player gets the line
+  with no round trip and the server line (`EquipItem refused — the class cannot use it`) marks
+  a modified client. `Equipment.can_dual_wield` now reads the level rule (it read the skill's
+  score, which let a Warrior 1's second sword auto-pick the off hand). Gear worn before the
+  rule stays worn; the swing gate still keeps that off hand idle.
+- [ ] **Class-restricted equipping (EQ's rule)** *(user 2026-10-27, on the fix 4 checklist row:
+  "Why dont we restrict access to weapons instead of weakening the use of non-optimal
+  weapons?")*. **BUILT the same day, pending the redeploy, the export and the playtest**
+  (`equip_gates_and_fizzle_checklist.md` §2). The 10-19 miss model let any class wear any
+  weapon and miss 80% with one it never trains; EQ's item flags refused the equip ("Your class,
+  deity and/or race may not equip that item"). The same `skills::equip_refusal` refuses a
+  weapon whose skill the class never trains ("Your class cannot wield that.": a Cleric's sword)
+  and armor of a kind it never trains ("Your class cannot wear that.": a Wizard's chain boots,
+  a Monk's leather), read off the cap tables both sides already hold in lockstep
+  (`check_skill_table_lockstep.gd`); a cap of 0 is the flag. The client refuses first with the
+  same lines. The 80% miss and half damage stay as the backstop for gear worn before the rule
+  (it is not stripped). Tests: a unit test on the gate and an integration test (a Cleric's
+  off-hand club and sword refused with their lines and no paperdoll delta, its main-hand club
+  worn; a Monk's off-hand club worn and its leather vest refused), failing on the previous
+  server at the first line; `tools/probe_equip_gates.gd` for the client (13 checks, the old
+  code sent every one). Not changed: race or deity restrictions (none exist), shields (the
+  shield skill has no items yet), the Test Panel's loadouts (`/give` places in the bags; the
+  gate applies at the equip).
 - [ ] **Facing and view angle** *(user 2026-05-05: "currently doesn't seem like any PC or NPC has
   a view angle. Everything has to face the direction of their combat target"; audit
   2026-09-29)*. No facing model exists: mobs snap to their target and remote players show

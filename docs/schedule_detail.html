@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Oct 27<span class="stat-sub">repo 376b23a</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Oct 27<span class="stat-sub">repo 82ddcb4</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">35.75 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">61.5 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">36.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">62 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -914,7 +914,7 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>Client-authority fixes and the October 19 decisions: a GM&#x27;s Test Panel hits still show; running, crouching, Spirit of Wolf and snares feel right with no rubber-banding; an overloaded character crawls; a mount whistle refuses; nukes and heals land bigger, crits show, DoT ticks are unchanged; misses come from the server; the off hand swings only from the class&#x27;s level (Monks from 1); spells reach 30 m; the spell bar survives the first login and memorizing works; conjured food vanishes after thirty minutes logged out; a note on whether low-level nukes now feel too strong.</td>
 <td>user at a desk, GM account</td>
-<td class="needs"><ul><li>checklist client_authority_fixes_checklist.md: 33 rows to run</li><li>second seat (two-boxing works)</li><li>the Oct 22 export</li></ul></td>
+<td class="needs"><ul><li>checklist client_authority_fixes_checklist.md: 8 rows to run</li><li>second seat (two-boxing works)</li><li>the Oct 22 export</li></ul></td>
 <td class="time">2 h</td>
 <td class="id">b22, b23, o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/client_authority_fixes_checklist.md"><code>client_authority_fixes_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Client-decided outcomes (audit 2026-10-19)</code></span></td>
@@ -994,7 +994,7 @@
 <section>
 <h2><span class="week-head"><span>Prove it with four friends</span><span class="when">W4 &middot; October 26 to November 1</span></span></h2>
 <p class="lede">Fixes from the week-3 sittings, a fresh-character sweep on the exact build the friends hold, and the rehearsal on Saturday. Whatever it finds is the fifth week&#x27;s work.</p>
-<div class="week-meta"><span>the user's time: 8.25 h</span><span>Claude build days: 2</span></div>
+<div class="week-meta"><span>the user's time: 8.75 h</span><span>Claude build days: 2.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -1026,6 +1026,16 @@
 <td class="time">2 Claude days</td>
 <td class="id">v12, v13, v14</td>
 <td class="done">Each fix has its own checklist row or To-Do line; nothing ticked.</td>
+</tr>
+<tr>
+<td class="id">b37</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Tue Oct 27</span>EQ&#x27;s equip rule on both sides (a weapon goes into the off hand only when the class can dual wield; weapons and armor the class never trains are refused at the equip), a fizzle keeping the spell gems greyed, and a targeted spell cast at its full 30 m (the server allows a metre of slack).</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">0.5 Claude days</td>
+<td class="id"></td>
+<td class="done">Pushed on both deploy branches with the tests and probes green.<span class="ref">To-Do entry: <code>Class-restricted equipping (EQ&#x27;s rule)</code></span></td>
 </tr>
 <tr>
 <td class="id">o5</td>
@@ -1116,6 +1126,16 @@
 <td class="time">0.5 h</td>
 <td class="id">o14</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/fall_damage_slice0_checklist.md"><code>fall_damage_slice0_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
+</tr>
+<tr>
+<td class="id">v38</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">after the next redeploy and export</span>Equip gates: a Cleric&#x27;s second club and its sword refused, a Wizard&#x27;s chain boots refused, a Monk&#x27;s off-hand club worn; a fizzle greys the gems; Smite lands at a full 30 m.</td>
+<td>user at a desk with a GM account</td>
+<td class="needs"><ul><li>checklist equip_gates_and_fizzle_checklist.md: 28 rows to run</li><li>the redeploy</li><li>the next export</li></ul></td>
+<td class="time">0.5 h</td>
+<td class="id">b37</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/equip_gates_and_fizzle_checklist.md"><code>equip_gates_and_fizzle_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Class-restricted equipping (EQ&#x27;s rule)</code></span></td>
 </tr>
 <tr>
 <td class="id">p3</td>
@@ -1301,5 +1321,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-27 at repo 376b23a</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-27 at repo 82ddcb4</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

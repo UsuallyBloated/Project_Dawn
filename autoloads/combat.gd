@@ -190,14 +190,7 @@ func can_dual_wield() -> bool:
 	var at: int = WeaponSkillDefinitions.DUAL_WIELD_LEVELS.get(PlayerStats.player_class, 0)
 	return at > 0 and PlayerStats.level >= at
 
-func _on_equipment_changed(slot: String, item) -> void:
-	# An off-hand weapon before its time: say when it will swing.
-	if slot == "offhand" and item is ItemData and item.type == ItemData.Type.WEAPON and not can_dual_wield():
-		var at: int = WeaponSkillDefinitions.DUAL_WIELD_LEVELS.get(PlayerStats.player_class, 0)
-		if at > 0:
-			CombatLog.add_line("You will be able to dual wield at level %d." % at, CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("Your class cannot dual wield.", CombatLog.MsgType.INFO)
+func _on_equipment_changed(slot: String, _item) -> void:
 	if slot not in ["weapon", "offhand"] or current_target == null:
 		return
 	# Dual-wield onset/offset honors the auto-attack toggle. Re-syncing
@@ -634,9 +627,4 @@ func spawn_impact_light(pos: Vector3, color: Color) -> void:
 	tw.tween_callback(light.queue_free)
 
 func _get_weapon_skill_name() -> String:
-	var weapon: ItemData = Equipment.equipped.get("weapon")
-	if weapon == null:
-		return "hand_to_hand"
-	if weapon.weapon_skill != "":
-		return weapon.weapon_skill
-	return WeaponItemTable.get_skill(weapon.item_name)
+	return WeaponSkills.skill_key_for(Equipment.equipped.get("weapon"))

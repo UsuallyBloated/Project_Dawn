@@ -57,8 +57,33 @@ func apply_remote_snapshot_clear() -> void:
 			equipped[s] = null
 			equipment_changed.emit(s, null)
 
+# Dual wield is earned at a class's level (Combat.can_dual_wield, the server's
+# rule): it decides where a second one-hander lands and whether an off-hand
+# weapon goes on at all.
 func can_dual_wield() -> bool:
-	return WeaponSkills.get_current("dual_wield") > 0
+	return Combat.can_dual_wield()
+
+# Why this class may not wear `item` in `slot_name`, or "" when it may: the
+# server's rule (`skills::equip_refusal`), asked here first so an honest
+# player gets the line without a round trip. EQ's rule, since 2026-10-27: a
+# weapon of a type the class never trains, armor of a kind it never trains,
+# and a weapon in the off hand before the class can dual wield are refused at
+# the equip, not worn badly.
+func equip_refusal(item: ItemData, slot_name: String) -> String:
+	if item == null:
+		return ""
+	if item.type == ItemData.Type.WEAPON:
+		if not WeaponSkills.class_trains(WeaponSkills.skill_key_for(item)):
+			return "Your class cannot wield that."
+		if slot_name == "offhand" and not can_dual_wield():
+			var at: int = WeaponSkillDefinitions.DUAL_WIELD_LEVELS.get(PlayerStats.player_class, 0)
+			if at > 0:
+				return "You will be able to dual wield at level %d." % at
+			return "Your class cannot dual wield."
+		return ""
+	if item.armor_type != "" and ArmorSkills.get_cap(item.armor_type) <= 0:
+		return "Your class cannot wear that."
+	return ""
 
 func equip(item: ItemData) -> void:
 	var slot := _resolve_slot(item)
@@ -109,6 +134,10 @@ func request_equip_from(src_location: String, src_slot: int, item: ItemData, tar
 		return false
 	var equip_slot_idx: int = SLOTS.find(slot_name)
 	if equip_slot_idx < 0:
+		return false
+	var refusal := equip_refusal(item, slot_name)
+	if refusal != "":
+		CombatLog.add_line(refusal, CombatLog.MsgType.INFO)
 		return false
 
 	if Net.is_launcher_mode():

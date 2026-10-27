@@ -34,6 +34,21 @@ func initialize(player_class: String, level: int) -> void:
 func get_cap(skill_name: String) -> int:
 	return WeaponSkillDefinitions.get_cap(_player_class, skill_name, _level)
 
+# The weapon skill an item trains and is judged by: its own `weapon_skill`,
+# the name table's answer for a runtime item without one, or hand_to_hand
+# (the server's `combat::weapon_skill_key`).
+func skill_key_for(item: ItemData) -> String:
+	if item == null:
+		return "hand_to_hand"
+	if item.weapon_skill != "":
+		return item.weapon_skill
+	return WeaponItemTable.get_skill(item.item_name)
+
+# Whether this class ever trains the skill: the equip gate's question. A cap
+# of 0 at any level means the class never does.
+func class_trains(skill_name: String) -> bool:
+	return get_cap(skill_name) > 0
+
 # 0.05–0.35 miss chance scaling from skill vs cap. Unusable weapon type = 80% miss.
 func get_miss_chance(skill_name: String) -> float:
 	if _player_class == "":

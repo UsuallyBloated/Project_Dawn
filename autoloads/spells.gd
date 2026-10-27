@@ -21,11 +21,10 @@ var no_cooldowns: bool = false
 var _gcd_remaining: float = 0.0
 
 # Each spell reaches its own range (SpellData.reach(), 30 m unless the spell
-# names one; the server's Spell::reach is the authority). The client's own
-# check sits this far inside it: it only spares an honest player a wasted cast
-# bar, and the margin keeps position interpolation from turning a cast the
-# client allowed into a server refusal.
-const REACH_MARGIN := 1.0
+# names one; the server's Spell::reach is the authority). The client checks
+# the full reach, the number the tooltip shows; the server allows a metre past
+# it (its CAST_REACH_SLACK), so a cast made at the edge is not refused for the
+# distance the target moved between the two checks.
 # The global cooldown (decided 2026-10-05): after any cast no spell may start
 # for this long, Bard songs excepted (twisting is casting songs back to back).
 # The server's GLOBAL_COOLDOWN is a quarter second shorter (2.0 s), so an
@@ -525,8 +524,8 @@ func _cast_target_id(spell: SpellData) -> int:
 		return (t as RemotePet).pet_id
 	return 0
 
-# True when `spell` needs a target within its reach (less REACH_MARGIN) and
-# the current target is further than that. Only the cases the server range-checks: an ENEMY or
+# True when `spell` needs a target within its reach and the current target is
+# further than that. Only the cases the server range-checks: an ENEMY or
 # PET_CHARM spell on its target, and an ALLY spell aimed at another player or a
 # pet (an ALLY spell with anything else targeted falls back to the caster, so
 # it has no reach to check).
@@ -542,7 +541,7 @@ func _target_out_of_reach(spell: SpellData) -> bool:
 	var me := get_tree().get_first_node_in_group("player") as Node3D
 	if me == null:
 		return false
-	return me.global_position.distance_to((t as Node3D).global_position) > spell.reach() - REACH_MARGIN
+	return me.global_position.distance_to((t as Node3D).global_position) > spell.reach()
 
 # Launcher mode: the server refused a cast that had ALREADY completed here
 # (target out of reach or gone, a spell the server has no effect for). It took
@@ -559,6 +558,23 @@ func on_server_cast_refused() -> void:
 		_gcd_remaining = 0.0
 		global_cooldown_updated.emit(0.0, GLOBAL_COOLDOWN_SECS)
 	_sent_spell_name = ""
+
+# Launcher mode: the server FIZZLED the cast (EQ's roll, at the start of a
+# timed cast or the release of an instant one). Unlike a refusal, a fizzle
+# starts the gem's refresh on the server, so the global cooldown runs here too
+# and every gem greys for it; it used to be cleared with the refusal's, and the
+# next click met the server's "You cannot cast again yet." (seen in the journal
+# 2026-10-27). The spell's own cooldown is dropped as for a refusal, since the
+# server stamps none on a fizzle, and a running bar is cancelled (its mana
+# comes back here; the server's ManaUpdate then settles the quarter it burned).
+func on_server_fizzle() -> void:
+	if _sent_spell_name != "":
+		_cooldowns.clear(_sent_spell_name)
+		_sent_spell_name = ""
+	cancel_cast()
+	if not no_cooldowns:
+		_gcd_remaining = GLOBAL_COOLDOWN_SECS
+		global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
 
 # True when an ALLY-target spell is being cast on a remote recipient (peer
 # or pet) the server — not the client — applies it to. The caster skips its

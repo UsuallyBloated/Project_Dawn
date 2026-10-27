@@ -1498,3 +1498,28 @@ who = "Claude unattended"
 days = 0.5
 done_when = "bump/oct22 pushed with every check passing against feat/server-speed's data."
 todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "b37"
+week = "w4"
+lane = "build"
+day = "Tue Oct 27"
+what = "EQ's equip rule on both sides (a weapon goes into the off hand only when the class can dual wield; weapons and armor the class never trains are refused at the equip), a fizzle keeping the spell gems greyed, and a targeted spell cast at its full 30 m (the server allows a metre of slack)."
+who = "Claude"
+days = 0.5
+done_when = "Pushed on both deploy branches with the tests and probes green."
+todo = "Class-restricted equipping (EQ's rule)"
+
+[[row]]
+id = "v38"
+week = "w4"
+lane = "verify"
+day = "after the next redeploy and export"
+what = "Equip gates: a Cleric's second club and its sword refused, a Wizard's chain boots refused, a Monk's off-hand club worn; a fizzle greys the gems; Smite lands at a full 30 m."
+who = "user at a desk with a GM account"
+hours = 0.5
+needs = ["the redeploy", "the next export"]
+checklist = "equip_gates_and_fizzle_checklist.md"
+waits_on = ["b37"]
+todo = "Class-restricted equipping (EQ's rule)"
+done_when = "Every row filled."
