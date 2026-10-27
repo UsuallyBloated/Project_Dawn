@@ -1,4 +1,4 @@
-extends Panel
+extends DraggablePanel
 class_name TradeWindow
 
 # PD_W0028 — the trade window (docs/design/trade_window.md).
@@ -34,11 +34,15 @@ var _my_coins_confirmed: Array[int] = [0, 0, 0, 0]
 
 func _ready() -> void:
 	custom_minimum_size = Vector2(560, 360)
-	# Centered on screen: with center anchors the position is the offset
-	# from the midpoint, so back it up by half the size (same as the HUD's
-	# other centered panels).
+	# Centered on screen: anchored at the midpoint, offset half the size each
+	# way (as the dialogue window and quest journal do). Setting `position`
+	# here instead put it at (-280, -180): this runs inside the HUD, so
+	# `position` is measured from the screen's corner, not the anchor.
 	set_anchors_preset(Control.PRESET_CENTER)
-	position = -custom_minimum_size / 2.0
+	offset_left = -custom_minimum_size.x / 2.0
+	offset_top = -custom_minimum_size.y / 2.0
+	offset_right = custom_minimum_size.x / 2.0
+	offset_bottom = custom_minimum_size.y / 2.0
 	_build()
 	visible = false
 	Net.world_trade_opened.connect(_on_trade_opened)
