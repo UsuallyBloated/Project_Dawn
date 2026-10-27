@@ -738,7 +738,10 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   the playtest walked past 300 m). Not a leak: the owner learns only their own pet's
   position.
 - `Network` / `Net` — connection + wire message routing.
-- `SaveManager` — owns window-close. Two distinct exits (see the disconnect-lifecycle entry
+- `SaveManager` — writes nothing online (playtested 2026-10-26,
+  `offline_save_online_checklist.md`): `save()` returns at once in launcher mode, because the
+  server is the save, so an online character never lands in the offline Test Room's
+  `character.save`. It also owns window-close. Two distinct exits (see the disconnect-lifecycle entry
   below): **Quit Game** is a clean save + app-layer `Disconnect`; the **window X button** is a
   hard self-kill that drives the server's linkdead path. (Watch the Godot-4 `_notification`-on-
   close save pitfall noted in past audits — close is handled via the root window's

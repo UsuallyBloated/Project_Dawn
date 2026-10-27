@@ -919,7 +919,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   gone, user decision; swing pacing on real haste; cast relays; intent budgets; a stats
   message; the ~20 unchecked lockstep pairs; wire hygiene); 5 remove the offline client code
   (user decision); 6 observability and auth polish.
-  **Phase 5 step 1 BUILT 2026-10-23, pending the Oct 22 export and the playtest** (client
+  **Phase 5 step 1 DONE + playtested 2026-10-26** (`offline_save_online_checklist.md`: a
+  level-up, Quit Game and a finished `/camp` left `character.save` at its 10/23 date; the
+  optional Test Room row skipped, since Phase 5 removes the offline code; what exists is in
+  systems_overview, `SaveManager`) (client
   `95354b3` on `feat/server-speed`; `offline_save_online_checklist.md`): `SaveManager.save()`
   refuses online, so an online character no longer lands in the Test Room's `character.save`
   (it was written on every level-up, zone load, Quit Game and finished camp, and the Test Room

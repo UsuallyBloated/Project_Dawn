@@ -11,17 +11,20 @@ The file lives at `%APPDATA%\Godot\app_userdata\Project_Dawn\character.save`. No
 Knight, written at 16:25 that afternoon, not the Test Room's default Chortle.)
 
 ## Setup
-- [ ] Running the Oct 22 export (login screen bottom right shows its build). notes:
-- [ ] Note `character.save`'s Date modified (or that it does not exist). notes:
+- [x] Running the Oct 22 export (login screen bottom right shows its build). notes:
+- [x] Note `character.save`'s Date modified (or that it does not exist). notes: screen shot attached.  
 
 ## 1 — Online play writes nothing
-- [ ] **Log in online, level up once** (Test Panel Level Up, as a GM) → `character.save`'s
+- [x] **Log in online, level up once** (Test Panel Level Up, as a GM) → `character.save`'s
   Date modified does not change. notes:
-- [ ] **Quit with Options, Quit Game** → still unchanged; on relogging, the character is as
+- [x] **Quit with Options, Quit Game** → still unchanged; on relogging, the character is as
   the server kept it (nothing lost). notes:
-- [ ] **Log in, `/camp`, let the countdown finish** → the game closes as before; the file is
+- [x] **Log in, `/camp`, let the countdown finish** → the game closes as before; the file is
   still unchanged. notes:
 
 ## 2 — Regression: the Test Room still saves
-- [ ] **Optional (dev box only): launch the editor, Test Room, level up** → `character.save`'s
-  Date modified moves (the offline save still works). notes:
+- [-] **Optional (dev box only): launch the editor, Test Room, level up** → `character.save`'s
+  Date modified moves (the offline save still works). notes:  is this offline? (Yes: the Test
+  Room is the offline mode. Skipped by choice, since Phase 5 removes the offline code and its
+  save. Confirmed separately on 2026-10-26: the file still read 10/23/2026 4:25:01 PM after
+  §1, and `character.save.bak` 4:22:16 PM the same day, so nothing online rotated it.)
