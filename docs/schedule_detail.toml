@@ -1523,3 +1523,28 @@ checklist = "equip_gates_and_fizzle_checklist.md"
 waits_on = ["b37"]
 todo = "Class-restricted equipping (EQ's rule)"
 done_when = "Every row filled."
+
+[[row]]
+id = "b38"
+week = "w4"
+lane = "build"
+day = "Tue Oct 27"
+what = "A /say carries 50 m from the speaker (the user's number) instead of the speaker's whole 120 m-cell neighbourhood; the eating emote and the jump relay reach the same 50 m. Server only."
+who = "Claude"
+hours = 1
+done_when = "Pushed on the server's deploy branch with the test green."
+todo = "`/say` reaches far too far"
+
+[[row]]
+id = "v39"
+week = "w4"
+lane = "verify"
+day = "after the next redeploy"
+what = "Two seats 40 m apart hear each other's /say, 60 m apart do not (a /shout still arrives); the eating emote and a jump follow the same reach."
+who = "user at a desk, two seats"
+hours = 0.25
+needs = ["the redeploy", "second seat (two-boxing works)"]
+checklist = "say_range_checklist.md"
+waits_on = ["b38"]
+todo = "`/say` reaches far too far"
+done_when = "Every row filled."

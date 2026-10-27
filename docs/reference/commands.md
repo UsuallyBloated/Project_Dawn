@@ -95,7 +95,7 @@ Parsed in `scripts/hud.gd::_handle_chat_input`. Press Enter to open chat, type t
 ### Chat channels
 | Command | Effect |
 |---|---|
-| `/say <msg>` (`/s`) | Local say. |
+| `/say <msg>` (`/s`) | Local say: everyone within 50 m of you. |
 | `/shout <msg>` (`/sh`) | Shout. |
 | `/ooc <msg>` | Out-of-character channel. |
 | `/tell <name> <msg>` (`/t`) | Private tell. The recipient sees it in their Tells (In) channel. |

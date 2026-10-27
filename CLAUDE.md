@@ -2881,7 +2881,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (`EntityList::ChannelMessage`, `Distance(...) < 200`), and hailing or saying to an NPC needs
   **15 units** (`RuleI(Range, Say)`). Build shape: a fixed distance from the speaker in place of
   the AOI cells, the same distance the hunger emote and the jump relay use for "the room".
-  **Waits on the user's number** (metres). Server only.
+  **DECIDED 2026-10-27 (user): 50 m. BUILT the same evening, pending the redeploy and the
+  playtest** (`say_range_checklist.md`, 7 rows; server only, no export). `SAY_RANGE` (50 m,
+  `world/mod.rs`) and one helper, `tick::say_recipients` (every in-world player within it,
+  never the speaker, keep-only-when-in-range), used by the Say fan, the eating emote and the
+  jump relay in place of the three copies of the AOI-neighbourhood filter. Test
+  `a_say_carries_fifty_metres_and_no_further` (a listener at 40 m hears, walked to 60 m hears
+  nothing while a shout still arrives), failing on the previous server at the 60 m assertion.
 - [ ] **Other players never turn** *(user 2026-10-27, `chat_channel_checklist.md` notes: "Dip
   does not see Bun's character models spinning, or looking in different directions.")*.
   Verified in the server: `Move` carries a direction and no facing, and nothing on the server
