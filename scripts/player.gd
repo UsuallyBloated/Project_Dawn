@@ -504,9 +504,10 @@ func _physics_process(delta: float) -> void:
 		if _move_send_accum >= MOVE_SEND_INTERVAL:
 			_move_send_accum -= MOVE_SEND_INTERVAL
 			# Which way, and how much of a run (a crouch is half); the speed
-			# is the server's. The jump flag goes once per jump.
+			# is the server's. The jump flag goes once per jump. The body's
+			# yaw rides along so other players see this one turn.
 			var server_dir := direction * (base_speed / SPEED)
-			Net.send_movement(server_dir, _jump_pending)
+			Net.send_movement(server_dir, _jump_pending, rotation.y)
 			_jump_pending = false
 
 	move_and_slide()

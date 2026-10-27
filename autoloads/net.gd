@@ -504,12 +504,13 @@ func is_gm() -> bool:
 	return _is_gm
 
 # Send a Move intent. Server clamps the direction to unit length. Sequence
-# is auto-incremented; out-of-order packets are dropped server-side.
-func send_movement(direction: Vector3, jumping: bool = false) -> void:
+# is auto-incremented; out-of-order packets are dropped server-side. `yaw` is
+# the body's facing (PD_W0029), which the server relays to peers as sent.
+func send_movement(direction: Vector3, jumping: bool = false, yaw: float = 0.0) -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	_move_sequence += 1
-	send_move(_move_sequence, direction, jumping)
+	send_move(_move_sequence, direction, jumping, yaw)
 
 # Track 6: Sit / Stand intents — server uses them to scale regen rates
 # server-side. Movement auto-stands on either side, so a dropped Stand
