@@ -1017,8 +1017,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   seated 2 s at half the mana, forget free; **memorizing is free since 2026-10-26** (user: "spells
   will be memorized for no cost of mana. Casting the spell is where the cost of mana comes in.";
   server `c81dca9`, client `1927872`, test `memorizing_takes_two_seated_seconds_and_no_mana` and
-  probe `tools/probe_memorize_free.gd`, both failing on the old code; needs the redeploy and the
-  next export; `client_authority_fixes_checklist.md` §7's row updated)) and refuses a cast of a spell in no gem before
+  probe `tools/probe_memorize_free.gd`, both failing on the old code; server DEPLOYED 2026-10-27
+  02:46 UTC, boot line `build="c81dca9" dev_cmds=false`; the client half rides the next export; `client_authority_fixes_checklist.md` §7's row updated)) and refuses a cast of a spell in no gem before
   anything is spent. New intents `MemorizeStart` / `MemorizeFinish` / `ForgetSpell` /
   `SeedSpellGems` and a `SpellGems` snapshot, under PD_W0028; the DLL's four sends and
   `spell_gems` signal, wired by name. **Existing bars** lived only on players' machines, so a
