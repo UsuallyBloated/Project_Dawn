@@ -2882,7 +2882,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **15 units** (`RuleI(Range, Say)`). Build shape: a fixed distance from the speaker in place of
   the AOI cells, the same distance the hunger emote and the jump relay use for "the room".
   **DECIDED 2026-10-27 (user): 50 m. BUILT the same evening, pending the redeploy and the
-  playtest** (server `2157fd9`; `say_range_checklist.md`, 7 rows; server only, no export). `SAY_RANGE` (50 m,
+  playtest** (server `2157fd9`; `say_range_checklist.md`, 7 rows; server only, no export).
+  **DEPLOYED 2026-10-27 22:51 UTC** (R720 boot line `build="2157fd9" dev_cmds=false`, nobody
+  online at the stop). `SAY_RANGE` (50 m,
   `world/mod.rs`) and one helper, `tick::say_recipients` (every in-world player within it,
   never the speaker, keep-only-when-in-range), used by the Say fan, the eating emote and the
   jump relay in place of the three copies of the AOI-neighbourhood filter. Test
