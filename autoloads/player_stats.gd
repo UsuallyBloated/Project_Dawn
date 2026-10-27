@@ -7,6 +7,10 @@ signal level_changed(new_level: int)
 signal xp_changed(current_xp: int, xp_to_next: int)
 signal xp_gained(amount: int, source: String)
 signal healed(amount: int)
+# apply_character set the bars to a fresh character's full pools. A reset,
+# not a heal: emitted before hp_changed so listeners rebase instead of
+# announcing the jump (online the server's real values follow).
+signal resources_reset
 signal stats_changed
 signal character_applied
 signal coins_changed(platinum: int, gold: int, silver: int, copper: int)
@@ -168,9 +172,16 @@ func apply_character(race_id: String, cls: String, lvl: int) -> void:
 	_base_max_mp        = max_mp
 	_base_max_stamina   = max_stamina
 	Alignment.seed_class_start(CharacterData.CLASS_STARTING_ALIGNMENT.get(cls, 0))
-	set_hp(new_max_hp)
-	set_mp(new_max_mp)
-	set_stamina(new_max_st)
+	# Assigned directly, not through set_hp: a login or a dev re-apply going
+	# from the placeholder 100 HP to the level's 122 is not a heal, and set_hp
+	# would print "You were healed for 22 health." and float a heal number.
+	hp = new_max_hp
+	mp = new_max_mp
+	stamina = new_max_st
+	resources_reset.emit()
+	hp_changed.emit(hp, max_hp)
+	mp_changed.emit(mp, max_mp)
+	stamina_changed.emit(stamina, max_stamina)
 	# Re-layer any gear currently on the paperdoll onto the freshly-reset base.
 	# apply_character does an ABSOLUTE reset to the gear-free base (snapshotted
 	# into `_base_*` above), so on a relog / dev re-apply that runs WHILE gear is

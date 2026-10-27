@@ -138,6 +138,8 @@ func _connect_signals() -> void:
 			add_line("You have reached level %d!" % lvl, MsgType.LEVEL_UP)
 		_last_logged_level = lvl)
 	PlayerStats.hp_changed.connect(_on_player_hp_changed)
+	# A character reset is not a heal: rebase without a line.
+	PlayerStats.resources_reset.connect(func() -> void: _last_hp = PlayerStats.hp)
 	# XP gain announce — text only, no number per playtest feedback.
 	# Source distinguishes quest turn-ins from kill credit:
 	#   - "quest" → "You received experience."
