@@ -742,8 +742,8 @@ func _on_spell_clicked(event: InputEvent, index: int) -> void:
 	var mb := event as InputEventMouseButton
 	if mb.button_index == MOUSE_BUTTON_LEFT:
 		# Track 17.1 — with a memorize candidate held, left-click on
-		# a spell-bar slot starts a memorize cast (2 s, half-cost MP);
-		# Memorize.commit handles the sit / move / mana checks and
+		# a spell-bar slot starts a memorize cast (2 s, no mana);
+		# Memorize.commit handles the sit / move checks and
 		# writes the slot only on completion. Without a candidate,
 		# left-click casts the already-memorized spell.
 		if Memorize.candidate != null:

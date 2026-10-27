@@ -43,7 +43,6 @@ const PAIRS := [
 	["world/spell_gems.rs", "MIN_GEMS",                "res://autoloads/spell_bar.gd",     "MIN_SLOTS",              "eq"],
 	["world/spell_gems.rs", "LEVELS_PER_EXTRA_GEM",    "res://autoloads/spell_bar.gd",     "SLOTS_PER_LEVEL_TIER",   "eq"],
 	["world/spell_gems.rs", "MEMORIZE_SECS",           "res://autoloads/memorize.gd",      "MEMORIZE_CAST_TIME",     "eq"],
-	["world/spell_gems.rs", "MEMORIZE_COST_FACTOR",    "res://autoloads/memorize.gd",      "MEMORIZE_COST_FACTOR",   "eq"],
 	["world/mod.rs",        "SONG_PULSE_SECS",         "res://autoloads/bard_songs.gd",    "PULSE_INTERVAL",         "eq"],
 	["world/mod.rs",        "SONG_LINGER_SECS",        "res://autoloads/bard_songs.gd",    "LINGER",                 "eq"],
 	["world/mod.rs",        "SONG_SCALE_AT_LEARN",     "res://autoloads/bard_songs.gd",    "SCALE_AT_LEARN",         "eq"],

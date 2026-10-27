@@ -5,12 +5,12 @@ extends Node
 # hotkey bar (which becomes the assignment target on click). Both read
 # `candidate` and listen for `candidate_changed`.
 #
-# Track 17.1 — memorize is no longer free. Slot assignment now goes
-# through `commit(slot)`, which starts a 2 s memorize cast (visualised
-# by the existing HUD cast bar), debits half the spell's mana cost on
-# completion, and aborts on stand / movement / candidate-clear. The
-# spell only lands in the bar when the cast completes — no half-paid
-# assignments.
+# Slot assignment goes through `commit(slot)`, which starts a 2 s
+# memorize cast (visualised by the existing HUD cast bar) and aborts on
+# stand / movement / candidate-clear. The spell only lands in the bar
+# when the cast completes. Memorizing costs no mana, as in EQ: the mana
+# is paid when the spell is cast (it used to cost half the spell's mana,
+# removed 2026-10-26 on both sides).
 
 signal candidate_changed(spell)  # SpellData or null when cleared
 signal memorize_started(spell: SpellData, duration: float)
@@ -19,7 +19,6 @@ signal memorize_cancelled(reason: String)
 signal memorize_completed(spell: SpellData, slot: int)
 
 const MEMORIZE_CAST_TIME := 2.0
-const MEMORIZE_COST_FACTOR := 0.5
 # Allowed slack between the click-time position and the position at
 # any tick during the cast. Sub-metre because sitting characters don't
 # move except via stand → walk; if the player crosses 0.5 m the
@@ -34,7 +33,6 @@ var _commit_spell: SpellData = null
 var _commit_slot: int = -1
 var _commit_elapsed: float = 0.0
 var _commit_start_pos: Vector3 = Vector3.ZERO
-var _commit_mana_cost: float = 0.0
 
 # Track 16.1 — clear the candidate when the player stops sitting.
 # Standing breaks the memorize gesture (the rule is sit + book click +
@@ -92,7 +90,7 @@ func clear() -> void:
 
 func can_commit(slot: int) -> Dictionary:
 	# Returns { ok: bool, reason: String }. Lets the caller surface a
-	# specific message ("not enough mana" vs "slot is locked").
+	# specific message ("slot is locked" vs "must be sitting").
 	if candidate == null:
 		return {"ok": false, "reason": "No spell selected."}
 	if not SpellBar.is_slot_unlocked(slot):
@@ -102,9 +100,6 @@ func can_commit(slot: int) -> Dictionary:
 		_player = _find_local_player()
 	if _player == null or _player.state != PlayerCharacter.PlayerState.SITTING:
 		return {"ok": false, "reason": "You must be sitting to memorize spells."}
-	var cost := candidate.mana_cost * MEMORIZE_COST_FACTOR
-	if PlayerStats.mp < cost:
-		return {"ok": false, "reason": "Not enough mana to memorize."}
 	return {"ok": true, "reason": ""}
 
 func commit(slot: int) -> bool:
@@ -123,7 +118,6 @@ func commit(slot: int) -> bool:
 	_commit_spell = candidate
 	_commit_slot = slot
 	_commit_elapsed = 0.0
-	_commit_mana_cost = candidate.mana_cost * MEMORIZE_COST_FACTOR
 	_commit_start_pos = _player.global_position
 	memorize_started.emit(_commit_spell, MEMORIZE_CAST_TIME)
 	# Online the server holds the bar (client-authority audit fix 5): it
@@ -162,21 +156,14 @@ func _tick_commit(delta: float) -> void:
 		_finish_commit()
 
 func _finish_commit() -> void:
-	# Final mana check — the player could have drained MP elsewhere
-	# during the cast (proc damage shield, etc). If they're now short,
-	# fail rather than overdraw.
-	if PlayerStats.mp < _commit_mana_cost:
-		_cancel_commit("not enough mana")
-		return
 	var spell := _commit_spell
 	var slot := _commit_slot
 	if Net.is_launcher_mode():
-		# The server fills the gem (or refuses with a line) and charges the
-		# mana; its SpellGems and ManaUpdate are what change here, and
-		# SpellBar says "You memorize" when the gem actually fills.
+		# The server fills the gem (or refuses with a line); its SpellGems is
+		# what changes here, and SpellBar says "You memorize" when the gem
+		# actually fills.
 		Net.memorize_finish()
 	else:
-		PlayerStats.set_mp(PlayerStats.mp - _commit_mana_cost)
 		SpellBar.set_slot(slot, spell.spell_name)
 		CombatLog.add_line(
 			"You memorize %s into slot %d." % [spell.spell_name, slot + 1],
