@@ -2793,7 +2793,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `MAX_CHAT_CHARS` replaces its 512-byte cut (still never a byte slice, the H1 crash). Lockstep
   pair `MAX_CHAT_CHARS` / `ChatChannel.MAX_CHARS`. Tests: the chat crash test checks the
   listener gets exactly 250 characters (fails on the old cut); unit tests on accents and emoji;
-  six probe checks.
+  six probe checks. **Server DEPLOYED 2026-10-27 15:49 UTC** (boot line `build="0cf170d"
+  dev_cmds=false`); the client half rides the export from `ce75b0e` or later.
 - [ ] **`/say` reaches far too far** *(user 2026-10-27, `chat_channel_checklist.md` notes: "The
   range for /say should me much shorter. This should be considered to be at the volume of a
   conversation.")*. Today a say goes to every player in the speaker's 3x3 AOI neighbourhood of
