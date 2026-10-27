@@ -248,6 +248,8 @@ func _build_back_button() -> void:
 
 func _build_chat_input() -> void:
 	_chat_input = LineEdit.new()
+	# Typing stops at the message cap, so what you type is what everyone sees.
+	_chat_input.max_length = ChatChannel.MAX_CHARS
 	_chat_input.anchor_left = 0.0; _chat_input.anchor_right = 1.0
 	_chat_input.anchor_top = 1.0; _chat_input.anchor_bottom = 1.0
 	_chat_input.offset_left = 6; _chat_input.offset_right = -6

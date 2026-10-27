@@ -27,6 +27,13 @@ const REPLY_COMMANDS := ["/reply", "/r"]
 
 const LABELS := {SAY: "Say", SHOUT: "Shout", OOC: "OOC", GROUP: "Group", TELL: "Tell"}
 
+# The most characters a chat message carries, the server's `MAX_CHAT_CHARS`
+# (kept in lockstep by tools/check_constant_lockstep.gd). The chat line stops
+# typing at it and `normalize` cuts every message to it, macros included, so
+# the line a sender sees is the line everyone else sees (user, 2026-10-26;
+# EQ II's chat box took about 250). Counted in characters on both sides.
+const MAX_CHARS := 250
+
 ## Eats every channel command at the start of `text`, last one winning.
 ## Returns {channel, target, text, consumed}. While typing (`at_end` false) a
 ## command counts only once its space is typed and a tell only once the name's
@@ -85,14 +92,15 @@ static func command_for(channel: String, target: String, body: String) -> String
 	return "/say " + body
 
 ## A submitted line in its one canonical form: plain text is a say; stacked
-## channel commands collapse to the last; a channel command with nothing to
-## say returns "" (nothing to send); any other command passes through as typed.
+## channel commands collapse to the last; a message is cut to MAX_CHARS; a
+## channel command with nothing to say returns "" (nothing to send); any other
+## command passes through as typed.
 static func normalize(text: String, reply_to: String) -> String:
 	var t := text.strip_edges()
 	if t == "":
 		return ""
 	if not t.begins_with("/"):
-		return "/say " + t
+		return "/say " + t.left(MAX_CHARS)
 	var r := consume(t, "", "", reply_to, true)
 	if not r["consumed"]:
 		return t
@@ -101,7 +109,7 @@ static func normalize(text: String, reply_to: String) -> String:
 		return ""
 	if body.begins_with("/"):
 		return body
-	return command_for(r["channel"], r["target"], body)
+	return command_for(r["channel"], r["target"], body.left(MAX_CHARS))
 
 ## What the chat line shows for its channel: "Say", "Tell: Bob".
 static func label_for(channel: String, target: String) -> String:

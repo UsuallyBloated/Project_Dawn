@@ -27,6 +27,7 @@ func _run() -> void:
 	_rules()
 	_window()
 	_macros()
+	_cap()
 	print("")
 	print("%d failed" % _fails if _fails > 0 else "all passed")
 	quit(1 if _fails > 0 else 0)
@@ -138,3 +139,21 @@ func _macros() -> void:
 		if t.begins_with("[Say") or t.begins_with("[Shout") or t == "You sit down.":
 			printed_locally = true
 	_check(not printed_locally, "a macro no longer prints its lines locally instead of sending them")
+
+# The 250-character cap (2026-10-26): every message is cut to the server's
+# MAX_CHAT_CHARS, counted in characters, so the sender's echo is what everyone
+# else sees; the chat line stops typing there.
+func _cap() -> void:
+	var cap: int = ChatChannel.MAX_CHARS
+	_check(cap == 250, "the cap is 250 characters")
+	var long := "a".repeat(300)
+	_check(ChatChannel.normalize(long, "") == "/say " + "a".repeat(250), "plain text is cut to 250")
+	_check(ChatChannel.normalize("/shout " + long, "") == "/shout " + "a".repeat(250), "a shout is cut to 250")
+	_check(ChatChannel.normalize("/t Bob " + long, "") == "/tell Bob " + "a".repeat(250), "a tell's message is cut to 250, the name kept")
+	var accents := "é".repeat(300)
+	_check(ChatChannel.normalize("/say " + accents, "") == "/say " + "é".repeat(250), "an accented letter counts as one character")
+	_check(ChatChannel.normalize("/say " + "a".repeat(250), "") == "/say " + "a".repeat(250), "exactly 250 is untouched")
+	var w = load("res://scripts/chat_window.gd").new()
+	root.add_child(w)
+	_check(w._chat_input.max_length == cap, "the chat line stops typing at 250 (max_length %d)" % w._chat_input.max_length)
+	w.queue_free()
