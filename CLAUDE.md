@@ -1808,16 +1808,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   holds every spell inside it). `check_spell_lockstep.gd` compares `range` even when only one
   side writes it (a planted one-sided range is caught). Test: `a_nuke_reaches_thirty_metres`
   (a Smite at about 28 m lands, at 33 m is refused; fails at the old 25 m).
-  **The full 30 m, BUILT 2026-10-27, pending the redeploy, the export and the playtest**
-  (server `CAST_REACH_SLACK`, client `spells.gd`; `equip_gates_and_fizzle_checklist.md` §4;
-  user, on the checklist: "Smite max range is 30m, but i cant cast on an enemy that is 30m
-  away"). The client checked one metre inside the reach (`REACH_MARGIN`), so the tooltip said
-  30 m and the cast refused at 29. Now the client checks the full reach and the server's
-  pre-flight allows one metre past it (31 m), so a cast made at the edge is not refused for
-  the distance the target moved between the two checks; a modified client gains that metre
-  and nothing else. The leash floor's unit test holds every spell's reach plus the slack under
-  35 m. `a_nuke_reaches_thirty_metres` gained a step: a Smite at 30.5 m lands (refused on the
-  previous server), at 33 m still refused.
+  **The full 30 m, BUILT 2026-10-27, pending the export and the playtest** (client
+  `spells.gd`; `equip_gates_and_fizzle_checklist.md` §4; user, on the checklist: "Smite max
+  range is 30m, but i cant cast on an enemy that is 30m away"). The client checked one metre
+  inside the reach (`REACH_MARGIN`), so the tooltip said 30 m and the cast refused at 29. Now
+  the client checks the full reach, the server's exact number; a metre of server slack was
+  built and taken out the same hour (user: "if the max range of the spell is 30m then the
+  spell is out of range at 30.1m"), so a target that walks out between the client's check
+  and the server's costs a free refusal and nothing else. `a_nuke_reaches_thirty_metres`
+  now refuses just past 30 (it checked at 33).
 - [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
   ticked on the integration test** (server `f58b796`,
   `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own

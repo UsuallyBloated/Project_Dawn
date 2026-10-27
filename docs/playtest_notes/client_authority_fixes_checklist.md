@@ -50,7 +50,7 @@ crits show as crit hits in the combat log; carry weight shows on the character s
 ## 6 — Each spell's own reach (Oct 22 build)
 - [x] **Nuke a mob from about 28 m** → it lands (it used to be refused past 24 m). notes:
 - [x] **From about 32 m** → refused, mana kept. notes:
-- [x] **Hover any targeted spell** → the tooltip ends `Range: 30 m` (`30 m to others` on a heal or buff). notes: Smite max range is 30m, but i cant cast on an enemy that is 30m away. (The client checked a metre inside the reach. Fixed 2026-10-27: the client checks the full 30 m and the server allows a metre past it; `equip_gates_and_fizzle_checklist.md` §4.)
+- [x] **Hover any targeted spell** → the tooltip ends `Range: 30 m` (`30 m to others` on a heal or buff). notes: Smite max range is 30m, but i cant cast on an enemy that is 30m away. (The client checked a metre inside the reach. Fixed 2026-10-27: the client checks the full 30 m, the server's exact number; `equip_gates_and_fizzle_checklist.md` §4.)
 - [x] **Pull a mob from 30 m and run** → it follows a little further than before before giving up (the leash floor moved to 35 m). notes:Smite max range is 30m, but i cant cast on an enemy that is 30m away.
 
 ## 7 — The server holds your spell bar (Oct 22 build)

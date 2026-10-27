@@ -5,17 +5,18 @@ Four small builds from the 2026-10-27 sitting (`client_authority_fixes_checklist
 Cleric wore two clubs on the R720); (2) a weapon of a type the class never trains, or armor of
 a kind it never trains, is refused at the equip instead of worn badly; (3) a fizzle keeps the
 gems greyed for the refresh (the next click used to meet "You cannot cast again yet."); (4) a
-targeted spell casts at its full listed range (the client stopped a metre short).
+targeted spell casts at its full listed range (the client stopped a metre short; the server's
+30 m is exact, out of range at 30.1).
 
 **Needs the redeploy (server `build=` on the boot line) AND the next export.** The server half
-of (1), (2) and (4) works against the old client, but the old client still refuses at 29 m and
+of (1) and (2) works against the old client, but the old client still refuses at 29 m and
 clears the cooldown on a fizzle.
 
 | Thing | Where | Notes |
 |---|---|---|
 | The equip refusals | chat, then `server.log` `EquipItem refused — the class cannot use it` | the server line fires only for a client that skipped its own check |
 | The fizzle | chat "Your spell fizzles!", the greyed gems | `server.log` `CastStart fizzled` / `CastSpell fizzled` |
-| The reach | the spell tooltip's `Range: 30 m` | `server.log` `CastSpell refused — target pre-flight` with `too far away` only past 31 m |
+| The reach | the spell tooltip's `Range: 30 m` | `server.log` `CastSpell refused — target pre-flight` with `too far away` only past 30 m |
 
 ## Setup
 - [ ] Server on the R720 from this build (boot line `build=`, `dev_cmds=false`). notes:
@@ -48,8 +49,9 @@ clears the cooldown on a fizzle.
 
 ## 4 — A spell casts at its full range
 - [ ] **Hover Smite** → `Range: 30 m`. notes:
-- [ ] **Stand 30 m from a mob (the `/loc` of the two) and cast** → it lands (the old client refused at 29). notes:
-- [ ] **Back off to about 32 m and cast** → "Your target is too far away." from the client, no bar, no mana. notes:
+- [ ] **Stand 29.5 m from a mob (the `/loc` of the two) and cast** → it lands (the old client refused at 29). notes:
+- [ ] **Back off to about 31 m and cast** → "Your target is too far away." from the client, no bar, no mana. notes:
+- [ ] **Start a 3 s cast at 29 m and have the partner walk the mob out past 30 before it lands** → "Cast failed: That target is too far away.", mana untouched (the server's reach is exact). notes:
 - [ ] **A heal on a partner at 30 m** → lands. notes:
 
 ## 5 — Regression

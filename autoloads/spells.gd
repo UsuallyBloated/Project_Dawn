@@ -22,9 +22,9 @@ var _gcd_remaining: float = 0.0
 
 # Each spell reaches its own range (SpellData.reach(), 30 m unless the spell
 # names one; the server's Spell::reach is the authority). The client checks
-# the full reach, the number the tooltip shows; the server allows a metre past
-# it (its CAST_REACH_SLACK), so a cast made at the edge is not refused for the
-# distance the target moved between the two checks.
+# the full reach, the number the tooltip shows, and so does the server: a 30 m
+# spell is out of range at 30.1 (user, 2026-10-27). A target that walks out
+# between the two checks costs a refusal and nothing else.
 # The global cooldown (decided 2026-10-05): after any cast no spell may start
 # for this long, Bard songs excepted (twisting is casting songs back to back).
 # The server's GLOBAL_COOLDOWN is a quarter second shorter (2.0 s), so an
