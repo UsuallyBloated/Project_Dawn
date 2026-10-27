@@ -718,6 +718,12 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   other commands run as typed. The rules live in `scripts/chat_channel.gd`, and `hud.gd` runs
   every submitted line through `ChatChannel.normalize` (plain text is a say). **Social macros**
   send each line through the same handler (`CombatLog.chat_submitted`), exactly as if typed.
+  **A chat line is at most 250 characters** (user's call, 2026-10-27; playtested the same day,
+  `chat_channel_checklist.md` §6), counted the same way on both sides so every screen shows the
+  same line: the chat line's `max_length` stops typing and pasting at `ChatChannel.MAX_CHARS`,
+  `normalize` cuts every message to it (macros included, so the echo is what is sent), and the
+  server's `MAX_CHAT_CHARS` (`handlers.rs`, a lockstep pair) cuts a forged client's line by
+  character, never by byte.
 - **Settings:** keybinds, UI panel positions, and chat prefs persist to disk via
   `GameSettings`.
 

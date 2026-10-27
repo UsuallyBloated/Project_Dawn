@@ -2772,7 +2772,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   screen and never sent. Rules in `scripts/chat_channel.gd`; `hud.gd` normalizes every line;
   probe `tools/probe_chat_channel.gd` (31 checks). The tell reply checklist's rows now expect
   the `[Tell: Name]` label.
-- [ ] **The chat box must match what every player sees** *(user 2026-10-26, after the hotfix
+- [x] **The chat box must match what every player sees** — **DONE + playtested 2026-10-27**
+  (`chat_channel_checklist.md` §6, all four rows passing on two seats: the pasted fox line
+  stopped at character 250 and both screens ended at "6-The quick bro", a macro's long line and a
+  line of é the same on both, the journal clean through it; what exists is in systems_overview,
+  "Multi-window chat"). *(Original entry:)* *(user 2026-10-26, after the hotfix
   checklist's chat row: the sender's echo showed the whole fox line while the partner saw it cut
   at "jumps ov")*. The server cuts a chat line at 512 bytes (`MAX_CHAT_LEN`, `handlers.rs`); the
   client's chat box has no limit, so a long line shows in full to its sender and cut to everyone

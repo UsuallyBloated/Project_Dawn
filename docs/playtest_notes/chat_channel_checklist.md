@@ -61,13 +61,13 @@ macro's `/sit` printed "You sit down." without sitting). Each line now runs exac
 ## 6 — The 250-character cap (server `0cf170d`, client `8b378b6`)
 The sender saw the whole fox line while the partner saw it cut at "jumps ov" (§3). Chat now stops
 at 250 characters on both sides, counted the same way, so what you type is what everyone sees.
-- [ ] **Paste the fox line into the chat line** → the line stops taking text at 250 characters
+- [x] **Paste the fox line into the chat line** → the line stops taking text at 250 characters
   (the paste is cut; the line holds no more). notes:
-- [ ] **Press Enter** → your own chat shows exactly what the partner's shows, ending at the same
+- [x] **Press Enter** → your own chat shows exactly what the partner's shows, ending at the same
   word. notes:
-- [ ] **A social macro with a line longer than 250** → you and the partner see the same cut
+- [x] **A social macro with a line longer than 250** → you and the partner see the same cut
   line. notes:
-- [ ] **A line of accented letters (é) or emoji** → stops at 250 of them, and both screens agree.
+- [x] **A line of accented letters (é) or emoji** → stops at 250 of them, and both screens agree.
   notes:
 
 NOTES:
