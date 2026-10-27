@@ -2910,8 +2910,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `MovementInfo` with `MSG_MOVE_SET_FACING` for a turn in place; neither derives it from
   movement or polices it). Cost here: one number on each 20 Hz Move (about 80 bytes a second
   upstream per player), copied into the `yaw` the Position fan already carries; no extra
-  packets, no latency change. Not built; a bump-day item (protocol, DLL, export), to be built
-  on a side branch when asked.
+  packets, no latency change. **BUILT the same night on `feat/facing` in both repos, pending
+  the next bump day and the playtest** (user: "Build it."; server `496b689`, client `a282334`;
+  `remote_facing_checklist.md`, 12 rows, on the branch). PD_W0029: `Move` gains a trailing `yaw` (the client's `rotation.y`,
+  the body the right-drag turns; `send_move` in the DLL and `Net.send_movement` carry it); the
+  handler drops a non-finite one whole and stores the rest wrapped into (-PI, PI]; the
+  `Position` fan, `EntitySpawn` and the checkpoint already carried `conn.yaw`, so the facing
+  reaches every watcher, survives a relog, and the Test Panel's spawn lands in front of the
+  real facing. A rooted player may still turn. Test `a_players_facing_reaches_the_watcher`
+  (sees 1.25, keeps it through a NaN Move, sees 4.0 wrapped), failing with the yaw ignored.
+  Both sides deploy together; the export comes from the merged branch with the rebuilt DLL.
 - [x] **"You cannot do that while dead." flooded the chat** — **DONE + playtested 2026-10-26**
   (`dead_gate_checklist.md`, every row passing: server `8127a70` and client `6ddeddc`). The
   flood was the client's `EquipUpdate`, one per gear slot as a death strips the gear, which the

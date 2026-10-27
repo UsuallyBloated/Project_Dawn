@@ -1548,3 +1548,28 @@ checklist = "say_range_checklist.md"
 waits_on = ["b38"]
 todo = "`/say` reaches far too far"
 done_when = "Every row filled."
+
+[[row]]
+id = "b39"
+week = "w4"
+lane = "build"
+day = "Tue Oct 27"
+what = "Other players turn: the client sends its facing with every movement packet (the way EQ and WoW do it) and the server relays it in the position stream it already sends. A protocol bump on both sides, built on feat/facing for the next bump day."
+who = "Claude"
+hours = 2
+done_when = "Pushed on feat/facing in both repos with the test green and the DLL rebuilt."
+todo = "Other players never turn"
+
+[[row]]
+id = "v40"
+week = "w5"
+lane = "verify"
+day = "the next bump day (server and export together)"
+what = "Two seats: one turns in place, strafes and backs up while the other watches the body turn; the facing survives a relog."
+who = "user at a desk, two seats"
+hours = 0.25
+needs = ["the next bump redeploy", "the bump export", "second seat (two-boxing works)"]
+checklist = "remote_facing_checklist.md"
+waits_on = ["b39"]
+todo = "Other players never turn"
+done_when = "Every row filled."
