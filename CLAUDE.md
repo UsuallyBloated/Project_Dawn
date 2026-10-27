@@ -2494,7 +2494,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   server at the first line; `tools/probe_equip_gates.gd` for the client (13 checks, the old
   code sent every one). Not changed: race or deity restrictions (none exist), shields (the
   shield skill has no items yet), the Test Panel's loadouts (`/give` places in the bags; the
-  gate applies at the equip).
+  gate applies at the equip). **Server DEPLOYED 2026-10-27 22:22 UTC** (R720 boot line
+  `build="0e58643" dev_cmds=false`; nobody online at the stop, `saved=0 unsaved=0`); the
+  client half waits for the export from `31c3393` or later.
 - [ ] **Facing and view angle** *(user 2026-05-05: "currently doesn't seem like any PC or NPC has
   a view angle. Everything has to face the direction of their combat target"; audit
   2026-09-29)*. No facing model exists: mobs snap to their target and remote players show
