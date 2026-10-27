@@ -2900,7 +2900,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   backstab-from-behind rule or Sneak, the server must judge it) or (b) the server faces each
   player along its movement (no wire change, but turning in place, strafing and walking
   backwards would show wrong). Recommended (a), riding the next bump. Pairs with "Facing and
-  view angle" and the remote animation channel. **Waits on the user's call.**
+  view angle" and the remote animation channel. **DECIDED 2026-10-27 (user): (a)**, after a
+  look at what EQ and WoW do (both: the client reports its heading with every movement
+  packet, EQ's as a 12-bit `heading` plus `delta_heading`, WoW's as the orientation in
+  `MovementInfo` with `MSG_MOVE_SET_FACING` for a turn in place; neither derives it from
+  movement or polices it). Cost here: one number on each 20 Hz Move (about 80 bytes a second
+  upstream per player), copied into the `yaw` the Position fan already carries; no extra
+  packets, no latency change. Not built; a bump-day item (protocol, DLL, export), to be built
+  on a side branch when asked.
 - [x] **"You cannot do that while dead." flooded the chat** — **DONE + playtested 2026-10-26**
   (`dead_gate_checklist.md`, every row passing: server `8127a70` and client `6ddeddc`). The
   flood was the client's `EquipUpdate`, one per gear slot as a death strips the gear, which the
