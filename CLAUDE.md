@@ -1856,6 +1856,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   gate — the decision covered XP shares, and range-gating journal ticks would silently change
   quest play; say the word if journal ticks should be range-gated too.
 - [ ] **A dead character died again on relogin, and lost reliable packets were never resent**
+  **(a) DONE + playtested 2026-10-26** (`dead_relogin_and_resend_checklist.md` §1 and §4 on
+  `3f09fbd`: one death and one corpse across the relogin, the death screen and the respawn, the
+  corpse looted; what exists is in systems_overview, "Respawn, bind points, and the death
+  lock"). **Open for (b) only:** the resend has had no lossy-link test (§2 skipped, no lossy
+  link to hand); it matters once players connect over the internet. The §4 row for the silent
+  login reset waits for the next export.
   *(both found 2026-10-12 by the review of the hosting branch; both older than it; **BUILT
   the same day on the deploy branch, pending redeploy + playtest**: server `6a09aa1` +
   `645606a`, `dead_relogin_and_resend_checklist.md`)*. (a) `from_spawn` set `death_processed: false`

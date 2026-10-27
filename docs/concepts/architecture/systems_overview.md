@@ -823,6 +823,14 @@ Where you wake up after dying is server-authoritative (2026-08-12, playtested 08
   (`PlayerDeath.refuse_if_dead`, the same line once per death), so nothing is announced or put
   on cooldown, and it sends no `EquipUpdate` (the server derives armor from the equipment it
   holds).
+- **Leaving dead, coming back dead** (playtested 2026-10-26,
+  `dead_relogin_and_resend_checklist.md`). A character that leaves at 0 HP (a crash, the window
+  X, a restart) loads with `death_processed` already set (`from_spawn`: `spawn.hp <= 0.0`), so
+  the death sweep does not kill it a second time (no second XP penalty, no second corpse). On
+  entering the world every player is sent their own HP, mana and stamina once, whatever the
+  regen fan last sent: the fan sends only what changed, so a dead character with full pools
+  used to hear nothing, and its client never learned it was dead or respawned. Told HP 0, the
+  client runs the death screen and its respawn as after any death.
 - **Death lock.** `Move` is refused server-side while `death_processed`, and the client stops
   predicting/sending in `player.gd::_physics_process`. Both halves are needed: the server alone left
   the corpse twitching as local prediction was repeatedly overridden.
