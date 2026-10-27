@@ -55,7 +55,7 @@ crits show as crit hits in the combat log; carry weight shows on the character s
 
 ## 7 — The server holds your spell bar (Oct 22 build)
 - [ ] **First login on the new build** → your bar is exactly as it was (the server takes it over once). notes:
-- [ ] **Sit, open the book, memorize a spell into an empty gem** → the two-second bar runs, then "You memorize X into slot N." and half the spell's mana is gone. notes:
+- [ ] **Sit, open the book, memorize a spell into an empty gem** → the two-second bar runs, then "You memorize X into slot N." and your mana is untouched (memorizing is free since 2026-10-26, server `c81dca9`; it used to take half the spell's mana). notes:
 - [ ] **Start a memorize and stand up before it finishes** → it stops and the gem stays as it was. notes:
 - [ ] **Clear a gem (right-click it), relog** → the gem is still empty after the relog; a memorized spell is still there. notes:
 

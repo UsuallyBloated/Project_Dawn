@@ -1014,7 +1014,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   playtest** (`feat/server-speed`, server `ea9ff32`, client `817c786`; checklist §7; migration
   `0015_spell_gems_and_logout_time.sql`, forward-only, ships in the merged build). The server
   holds the bar (`spell_gems.rs`, the client's rules: ten gems, `3 + level/5` open, memorize
-  seated 2 s at half the mana, forget free) and refuses a cast of a spell in no gem before
+  seated 2 s at half the mana, forget free; **memorizing is free since 2026-10-26** (user: "spells
+  will be memorized for no cost of mana. Casting the spell is where the cost of mana comes in.";
+  server `c81dca9`, client `1927872`, test `memorizing_takes_two_seated_seconds_and_no_mana` and
+  probe `tools/probe_memorize_free.gd`, both failing on the old code; needs the redeploy and the
+  next export; `client_authority_fixes_checklist.md` §7's row updated)) and refuses a cast of a spell in no gem before
   anything is spent. New intents `MemorizeStart` / `MemorizeFinish` / `ForgetSpell` /
   `SeedSpellGems` and a `SpellGems` snapshot, under PD_W0028; the DLL's four sends and
   `spell_gems` signal, wired by name. **Existing bars** lived only on players' machines, so a
@@ -1953,7 +1957,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `respawn_bind_checklist.md`. Deliberately NOT included: post-respawn invulnerability (a safe
   respawn location should make it unnecessary — revisit if the playtest says otherwise).
   Original evidence: `docs/playtest_notes/first_external_tester_2026_08_11.md`.
-- [ ] **Corpse auto-re-equip on loot** — looting your own corpse returns gear to your bags; you
+- [x] **Corpse auto-re-equip on loot** — **DONE + playtested 2026-10-26**
+  (`corpse_reequip_checklist.md`: every row passing but the pre-feature corpse, which cannot
+  exist on the fresh world; the journal shows eight Loot All runs each putting 8 worn pieces back,
+  one across a server restart, and a resurrected corpse looted the same way. What exists is in
+  systems_overview, "Death, corpses & resurrection".) *(Original entry:)* Looting your own corpse returns gear to your bags; you
   re-equip by hand. A clean version needs the corpse to remember each item's equip-slot
   provenance. **Now slice 2 of the cursor-slot epic** (user-committed 2026-08-27; design:
   `docs/design/cursor_slot_and_reequip.md`) — the cursor slot is the overflow home that makes

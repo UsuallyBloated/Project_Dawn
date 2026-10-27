@@ -330,8 +330,16 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   `Teleport`ed to the corpse and refunded that percentage of **that death's actual lost xp**
   (captured on `Corpse.lost_xp` — the ACTUAL amount removed, not nominal, which closes a
   level-5-floor over-refund exploit). One res per corpse (persisted `resurrected` flag).
-- **Not built:** **res-sickness** (specced for Slice 3, dropped from v1), corpse auto-re-equip
-  on loot, and per-creature corpse models/scale. (Respawn-at-bind and the Soul Binder shipped
+- **Corpse auto-re-equip** (playtested 2026-10-26, `corpse_reequip_checklist.md`; server
+  `d598ad6` + `5986f26`, migration `0014`). A corpse row remembers the equip slot each worn item
+  died in. Looting your own corpse (Loot All or one item) puts a worn item back on that slot when
+  the slot is empty and still takes it; anything else goes to your bags (a slot you have filled
+  since is never displaced; a held cursor item and carried bags come back to the bags). Worn
+  gear needs no bag room; what does not fit stays on the corpse with "Your bags are full: N items
+  stay on your corpse." and keeps its slot for a later loot. The same holds after a resurrection
+  and across a server restart. Log: `corpse loot put worn gear back on ... reequipped=N`.
+- **Not built:** per-creature corpse models/scale. (Res-sickness is built and awaits its
+  playtest; see the To-Do.) (Respawn-at-bind and the Soul Binder shipped
   2026-08-12; Bind Affinity and Gate joined them server-side 2026-10-08. See "Respawn, bind
   points, and the death lock".)
 
@@ -694,7 +702,9 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   misses, XP gains; billboard `Label3D` that faces the camera; per-category toggles in
   Options → Interface.
 - **Spell book** (view known spells, memorize workflow) and **Hotbar** (signal-driven from
-  `spell_cooldown_updated` / `skill_cooldown_updated`). Memorize is gated through `SpellBar`.
+  `spell_cooldown_updated` / `skill_cooldown_updated`). Memorize is gated through `SpellBar`;
+  online the server holds the bar (`world/spell_gems.rs`). Memorizing takes two seated seconds and
+  no mana, as in EQ (the mana is paid at the cast; free since 2026-10-26).
 - **Multi-window chat:** `CombatLog` is a pure broker emitting `line_added(text, type)`;
   `ChatWindowManager` owns N `ChatWindow` instances (each a `DraggablePanel`). Per-window
   filters (by `MsgType`), display settings (bg/font alpha, font size, default channel), and
