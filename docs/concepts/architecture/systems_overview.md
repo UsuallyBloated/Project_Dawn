@@ -710,6 +710,14 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   filters (by `MsgType`), display settings (bg/font alpha, font size, default channel), and
   tab docking (`group_id` groups windows; drag to dock/undock). Layout persists through
   `GameSettings.chat_windows`.
+  **The chat line's channel is sticky, WoW style** (playtested 2026-10-27,
+  `chat_channel_checklist.md`): the line always has a channel, shown beside it (`[Say]`,
+  `[Shout]`, `[OOC]`, `[Group]`, `[Tell: Bob]`); a channel command at the start (`/say /s /shout
+  /sh /ooc /g /group /gsay /tell /t /r`) switches it the moment its space is typed and leaves the
+  text, however many are stacked or pasted; the channel stays until another command moves it;
+  other commands run as typed. The rules live in `scripts/chat_channel.gd`, and `hud.gd` runs
+  every submitted line through `ChatChannel.normalize` (plain text is a say). **Social macros**
+  send each line through the same handler (`CombatLog.chat_submitted`), exactly as if typed.
 - **Settings:** keybinds, UI panel positions, and chat prefs persist to disk via
   `GameSettings`.
 

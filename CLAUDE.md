@@ -2758,7 +2758,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   headless probe of both button paths that fails on the old button.
 
 ### UI polish
-- [ ] **Sticky chat channel, WoW style** *(user 2026-10-26, during the hotfix checklist: "This is
+- [x] **Sticky chat channel, WoW style** — **DONE + playtested 2026-10-27**
+  (`chat_channel_checklist.md` §1 to §4, every row passing on two seats; what exists is in
+  systems_overview, "Multi-window chat"). *(Original entry:)* *(user 2026-10-26, during the hotfix checklist: "This is
   how chat works in most games. This is critical for us to iron out."; sticky chosen over EQ's
   one-shot)*. **BUILT 2026-10-26, pending the next export and the playtest** (client `75586db`;
   `chat_channel_checklist.md`). The chat line always has a channel, shown beside the text
@@ -2780,6 +2782,39 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   where `hud.gd` builds the echo, so a long social macro line echoes exactly what is sent; a
   lockstep pair (`MAX_CHAT_LEN` against the client constant) for `check_constant_lockstep.gd`.
   Client only. Not built; queued after the current checklist.
+  **DECIDED 2026-10-27 (user, on `chat_channel_checklist.md` §3): 250 characters**, the cap
+  typed and pasted ("players arent allowed to type more than that"); EQ II's chat box took about
+  250 (the ACT FAQ); no documented figure for the original EQ was found. **BUILT the same night,
+  pending the redeploy, the next export and the playtest** (server `0cf170d`, client `8b378b6`;
+  `chat_channel_checklist.md` §6). Counted in characters on both sides, not bytes, so the two
+  can never disagree (a Godot String's length and Rust's `chars()` both count Unicode scalar
+  values): the chat line's `max_length` stops typing at 250, `ChatChannel.normalize` cuts every
+  message to it (typed lines and macros, so the echo is what is sent), and the server's
+  `MAX_CHAT_CHARS` replaces its 512-byte cut (still never a byte slice, the H1 crash). Lockstep
+  pair `MAX_CHAT_CHARS` / `ChatChannel.MAX_CHARS`. Tests: the chat crash test checks the
+  listener gets exactly 250 characters (fails on the old cut); unit tests on accents and emoji;
+  six probe checks.
+- [ ] **`/say` reaches far too far** *(user 2026-10-27, `chat_channel_checklist.md` notes: "The
+  range for /say should me much shorter. This should be considered to be at the volume of a
+  conversation.")*. Today a say goes to every player in the speaker's 3x3 AOI neighbourhood of
+  120 m cells (`tick.rs`, the chat fan's Say arm): anyone from about 120 to 240 m away hears it,
+  and the reach changes with where the speaker stands in the cell. EQEmulator (read in its
+  source, 2026-10-27): a player's say reaches other players within **200 units**
+  (`EntityList::ChannelMessage`, `Distance(...) < 200`), and hailing or saying to an NPC needs
+  **15 units** (`RuleI(Range, Say)`). Build shape: a fixed distance from the speaker in place of
+  the AOI cells, the same distance the hunger emote and the jump relay use for "the room".
+  **Waits on the user's number** (metres). Server only.
+- [ ] **Other players never turn** *(user 2026-10-27, `chat_channel_checklist.md` notes: "Dip
+  does not see Bun's character models spinning, or looking in different directions.")*.
+  Verified in the server: `Move` carries a direction and no facing, and nothing on the server
+  ever sets a player's `yaw` after login, so every Position it fans carries the facing the
+  player logged in with (the same stale yaw also places a GM's dev spawn "in front"). Two
+  shapes: (a) the client sends its facing with each Move (a protocol bump and a DLL rebuild;
+  the server takes any finite value, cosmetic today; if facing ever matters, such as a
+  backstab-from-behind rule or Sneak, the server must judge it) or (b) the server faces each
+  player along its movement (no wire change, but turning in place, strafing and walking
+  backwards would show wrong). Recommended (a), riding the next bump. Pairs with "Facing and
+  view angle" and the remote animation channel. **Waits on the user's call.**
 - [x] **"You cannot do that while dead." flooded the chat** — **DONE + playtested 2026-10-26**
   (`dead_gate_checklist.md`, every row passing: server `8127a70` and client `6ddeddc`). The
   flood was the client's `EquipUpdate`, one per gear slot as a death strips the gear, which the
@@ -2808,7 +2843,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Research: the Monsters and Memories item log** *(user, 2026-10-26, hotfix checklist
   notes: "We need to take a look at the Item Log that Monsters and Memories uses.")*. Find out
   what M&M's item log shows and to whom before proposing anything; a design note first.
-- [ ] **Social macros never send chat** *(found 2026-10-26 while building the sticky channel)*.
+- [x] **Social macros never send chat** — **DONE + playtested 2026-10-27**
+  (`chat_channel_checklist.md` §5, every row passing; what exists is in systems_overview,
+  "Multi-window chat"). *(Original entry:)* *(found 2026-10-26 while building the sticky channel)*.
   `SocialHotkeys._execute_command` printed `/say`, `/shout`, `/group` and `/tell` lines locally
   as `[Say] text` and sent nothing; `/sit` and `/stand` printed a line without sitting. A macro
   online was decoration. **FIXED 2026-10-26 (user: "fix the problem"), pending the next export
