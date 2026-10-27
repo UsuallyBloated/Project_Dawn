@@ -1869,6 +1869,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   lost inventory delta, chat line, kick or teleport was never resent. Invisible on a
   lossless tailnet; on the internet it would have read as random desyncs. Called every
   tick now. No client change for either.
+  **(a) passed its first half 2026-10-26 and exposed a third bug, BUILT the same day**
+  (`dead_relogin_and_resend_checklist.md` §1 and §4): the relogin no longer died again (one
+  death line, one corpse), but the character was stuck. The server sent your own HP only when
+  it changed since the last send, so a character who left dead with full mana and stamina was
+  never told it was dead: the client never showed the death screen or respawned, while the
+  server refused every move. Server `3f09fbd` sends a joiner its own HP, mana and stamina once
+  on entering the world (test `a_dead_character_with_full_pools_is_told_it_is_dead`, failing
+  on the old code; the earlier test passed only because its stamina was regenerating); needs
+  the redeploy. The login's "You were healed for 22 health." was the client resetting the bars
+  from a 100 HP placeholder, nothing mechanical; client `4a93d6e` makes the reset silent
+  (probe `tools/probe_login_reset.gd`), next export.
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
