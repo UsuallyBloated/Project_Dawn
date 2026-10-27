@@ -24,15 +24,16 @@ Diagnostics: `server.log` anchors `corpse loot put worn gear back on` (with `ree
 
 ## 2 — One item at a time
 
-- [ ] **Die again, loot only the helm** → it goes on the head, nothing else moves. notes:
-- [ ] **Before looting the chest piece, put a different chest item on from your bags, then loot the old one** → the old chest piece goes to your bags; the one you put on stays worn. notes:
+- [x] **Die again, loot only the helm** → it goes on the head, nothing else moves. notes:
+- [x] **Before looting the chest piece, put a different chest item on from your bags, then loot the old one** → the old chest piece goes to your bags; the one you put on stays worn. notes:  Tested with boots slot instead.
 - [x] **Loot a weapon that was in your main hand** → it goes back in the main hand. notes: Covered by the Loot All runs: the full set includes the weapon, and all 8 pieces went back each time.
 
 ## 3 — Edges
 
-- [ ] **Die, respawn, fill your bags first (buy from a vendor, or loot kills), then Loot All** → worn gear goes back on (it needs no bag room); anything that does not fit stays on the corpse, and chat says "Your bags are full: N items stay on your corpse." Loot again after making room → it comes off. notes:
-- [ ] **Die holding an item on the cursor** → it is on the corpse and comes back into your bags, not onto a slot. notes:
+- [x] **Die, respawn, fill your bags first (buy from a vendor, or loot kills), then Loot All** → worn gear goes back on (it needs no bag room); anything that does not fit stays on the corpse, and chat says "Your bags are full: N items stay on your corpse." Loot again after making room → it comes off. notes:
+- [x] **Die holding an item on the cursor** → it is on the corpse and comes back into your bags, not onto a slot. notes:
 - [-] **A corpse from before the redeploy, if one exists** → loots into the bags as it always did. notes: None exists: a fresh world since 2026-10-25.
-- [ ] **Resurrected corpse** (a Cleric or Paladin res, then loot) → same behaviour; the res is unaffected. notes:
+- [x] **Resurrected corpse** (a Cleric or Paladin res, then loot) → same behaviour; the res is unaffected. notes: The journal, 2026-10-27: Dip (level 1) died at 02:29:59 (`corpse created ... item_stacks=9`); REZZZZ cast Resurrection (Minor), Dip accepted (`refund=0`, a level 1 death costs no XP), then looted: `corpse loot put worn gear back on ... reequipped=8`, `corpse looted empty`.
 
 ## Notes / observations
+- Quick note.  We have a mana cost for memorizing a spell.  This isnt good.  spells will be memorized for no cost of mana.  Casting the spell is where the cost of mana comes in.
