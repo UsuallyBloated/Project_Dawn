@@ -366,9 +366,16 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   off hand only past that level. The server line `EquipItem refused — the class cannot use
   it` marks a client that skipped its own check. The Attack path refuses an off-hand swing
   before the level and an off hand with no weapon in it (a Monk with both hands empty punches
-  with both). Gear worn before a rule stays worn and keeps the 80% miss and half damage. A
-  two-hander beside an off-hand weapon is refused since 2026-10-29 (built, pending its
-  playtest; the To-Do entry has the rule and the lines): the off hand never swings beside one.
+  with both). Gear worn before a rule stays worn and keeps the 80% miss and half damage.
+  **The two-hander rule** (2026-10-29, playtested the same day; the user's call: a two-hander
+  beside an off-hand weapon is an end-game Warrior ability, nobody until then): a two-hander
+  goes in the main hand only ("A two-handed weapon goes in the main hand.") and only while the
+  off hand is empty ("Empty your off hand first."); nothing goes in the off hand beside one
+  ("You cannot hold that with a two-handed weapon."); the player empties the hand by hand
+  (EQ's way; the client no longer unequips it on their behalf); and the off hand never swings
+  beside one: the Attack path's three off-hand gates live in `skills::offhand_swing_refusal`,
+  the client's `Combat._is_dual_wielding` sends none, and both staves carry `is_two_handed`,
+  which a unit test keeps in step with the `2h_` and archery skills.
 - **Augmentation/socketing:** `ItemData.gem_slots`, `socketed_augments`, `Type.AUGMENT`
   (data shape only; combine UI deferred).
 - **Item registry:** `ItemRegistry` autoload; the canonical item table is exported to the
@@ -730,6 +737,13 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 - **HUD core** (`scripts/hud.gd`) split into a `hud_*.gd` family: DeathScreen, CastBar,
   BuffBar, PetPanel, GroupPanel. Includes the always-visible XP bar, target frame with
   actual HP numbers, and a target-of-target frame.
+- **The player's own cast bar** (`scripts/hud_cast_bar.gd`; placed 2026-10-29, playtested
+  the same day, `two_hander_jump_reach_cast_bar_checklist.md`): the spell's name over a bar
+  that fills across the cast time, centred left to right with its centre 110 px below the
+  middle of the screen so it does not cover the target (it sat under the hotbars before, where
+  nobody saw it); shown on `Spells.casting_started`, hidden on a cancel, a fizzle or the cast
+  landing; draggable like the other panels. `tools/probe_cast_bar_place.gd` holds the
+  placement.
 - **Buff/debuff bar:** icons with countdown timers (absorb, HoT, evade, etc.).
 - **`/loc` and the compass** (playtested 2026-10-09, `loc_command_checklist.md`, all five rows):
   `/loc` (or `/location`) prints your position as `x, y, z` to one decimal, paste-ready for
@@ -755,8 +769,8 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   **A `/say` carries 50 m** (`SAY_RANGE` in `world/mod.rs`; playtested 2026-10-29,
   `say_range_checklist.md`): the server's `tick::say_recipients` picks every in-world player
   within it, never the speaker, keep-only-when-in-range, and the eating emote uses the same
-  helper (the jump relay did too until 2026-10-29, when it moved to the jumper's AOI view,
-  built, pending its playtest). A shout and OOC reach everyone in the world, a group line its group, a
+  helper (the jump relay did too until 2026-10-29, when it moved to the jumper's AOI view). A
+  shout and OOC reach everyone in the world, a group line its group, a
   tell its target; hailing an NPC is the NPC gate's own range.
   **The chat line's channel is sticky, WoW style** (playtested 2026-10-27,
   `chat_channel_checklist.md`): the line always has a channel, shown beside it (`[Say]`,
@@ -813,9 +827,10 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   remote animation-state channel. `player.gd` latches a jump and sends it on its next Move's
   `jumping` flag, once; the server relays only the rising edge, at most once per
   `JUMP_RELAY_MIN_INTERVAL` (500 ms), as a `PlayerJumped { id }` to the players within the
-  say channel's reach of the jumper (`say_recipients`, 50 m since 2026-10-27; widened to the
-  jumper's AOI view on 2026-10-29 for the user's jump check, built, pending its playtest),
-  never the jumper; each of their
+  players who can see the jumper (`aoi.entities_visible_from` of the jumper's cell, the
+  Position fan's own set, since 2026-10-29, playtested the same day: the user's "jump check"
+  on someone far off; the say channel's 50 m audience before that), never the jumper; each of
+  their
   clients plays the hop (`RemotePlayer.play_jump`, the same arc as the local jump, 1.2 m in
   0.7 s) as an offset on the visual and the nameplate, never on the interpolated position.
   Nothing reads the flag into position: Y stays the server's zero, so a forged flag can only

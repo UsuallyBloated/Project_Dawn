@@ -495,7 +495,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   past the interval relays again, and the jumper's own Position keeps y = 0); a headless probe
   of the hop (lift along the arc, the apex, an exact landing, no hop on a corpse). The first
   piece of the remote animation-state channel.
-- [ ] **A jump should be seen as far as the body is** *(user 2026-10-29, on
+- [x] **A jump should be seen as far as the body is** — **DONE + playtested 2026-10-29**
+  (`two_hander_jump_reach_cast_bar_checklist.md`, the JUMP rows, two seats: the hop seen from
+  about 100 m and from 40 m, nothing from out of view, no cue of your own, a `/say` and the
+  eating emote still silent at 60 m. What exists is in systems_overview, Networking, "The jump
+  relay".) *(Original entry:)* *(user 2026-10-29, on
   `say_range_checklist.md`'s jump row: "When my friends and i play games like this we use a
   'jump check' when we see someone in the distance but we arent sure if that person is our
   friend or not. I would like for jump to be broadcasted further.")*. The relay has used the
@@ -2550,7 +2554,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   gate applies at the equip). **Server DEPLOYED 2026-10-27 22:22 UTC** (R720 boot line
   `build="0e58643" dev_cmds=false`; nobody online at the stop, `saved=0 unsaved=0`); the
   client half waits for the export from `31c3393` or later.
-- [ ] **A two-hander needs an empty off hand, and the off hand swings beside one today**
+- [x] **A two-hander needs an empty off hand, and the off hand swings beside one today** —
+  **DONE + playtested 2026-10-29** (`two_hander_jump_reach_cast_bar_checklist.md`, every DW2
+  row on a Warrior 15 and a Monk 1: the staff worn with the off hand empty, a club refused
+  beside it, a club swapping in for it, the staff refused beside two clubs and worn once the
+  off hand was emptied by hand, the staff refused for the off hand, one swing stream with the
+  staff and two with two clubs; the Monk the same. The journal has no `EquipItem refused` and
+  no `Attack rejected — off-hand swing` line, so the client refused first every time and sent
+  no off-hand swing beside a two-hander. What exists is in systems_overview, Items,
+  "Equipment". The end-game Warrior ability is its own entry below.) *(Original entry:)*
   *(found 2026-10-29 on the equip sheet's Warrior regression row: a Carved Staff went on with
   a club still in the off hand; user: "We are allowing warriors to equip two handed weapons in
   one hand? Not too sure about this.")*. Verified in both repos: the server has no two-handed
@@ -2594,6 +2606,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   penalty). **Server DEPLOYED 2026-10-29 19:04 UTC** (R720 boot line `build="c7c96f6"
   dev_cmds=false`, nobody online at the stop, `saved=0 unsaved=0`); the client half rides the
   export from `677f292` or later.
+- [ ] **Dual-wielding two-handers as an end-game Warrior ability** *(user 2026-10-29: "being
+  able to dual weild two handers is a fucking crazy damage advantage. Perhaps it could be at a
+  huge sacrifice of gear. But either way, they wont have access until they are near or at
+  level cap")*. The one exception to the two-hander rule above, not designed: the level (near
+  or at the cap), the gear sacrifice, a damage penalty (WoW's Titan's Grip, the top Fury
+  talent, is the shape), how it is earned and switched on, and the server's gate on the equip
+  and the swing (both refuse the pairing for everyone today, so the ability is a server-held
+  flag those two gates read). Not a friends-build item.
 - [ ] **Facing and view angle** *(user 2026-05-05: "currently doesn't seem like any PC or NPC has
   a view angle. Everything has to face the direction of their combat target"; audit
   2026-09-29)*. No facing model exists: mobs snap to their target and remote players show
@@ -3082,8 +3102,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   120 px above the bottom edge at the centre, the band the hotbars occupy (`hotbar.gd` anchors
   its panels to the bottom centre), so whichever draws last hides the other; the fizzle row
   that needed it is `[-]`. **BUILT 2026-10-29 (user: "Yes, please. You can put it in the center
-  for now."), pending the export and the playtest** (`two_hander_jump_reach_cast_bar_checklist.md`,
-  the BAR rows): the bar anchors at the screen's midpoint with offsets (the trade window's
+  for now.") and PLAYTESTED the same day** (`two_hander_jump_reach_cast_bar_checklist.md`, the
+  BAR rows, all six: the bar centred and filling over Healing Light's 1.2 s, clearing on the
+  landing, on ESC and on a fizzle, staying where it is dragged, clear of the inventory and
+  bank windows; what exists is in systems_overview, UI / HUD): the bar anchors at the screen's midpoint with offsets (the trade window's
   idiom), its centre 110 px below the middle so it does not cover the target, draggable as
   before; `tools/probe_cast_bar_place.gd` (10 checks: centred, below the middle, clear of the
   hotbars' band, shown on a cast's start and hidden on its cancel) fails on the old placement.
