@@ -22,7 +22,7 @@ of (1) works against the old client (it would see the refusal lines arrive from 
 | The jump cue | the partner's hop on your screen | nothing is logged for a jump |
 
 ## Setup
-- [ ] Server on the R720 from this build (boot line `build=`, `dev_cmds=false`). notes:
+- [ ] Server on the R720 from this build (boot line `build=`, `dev_cmds=false`). notes: deployed 2026-10-29 19:04 UTC, boot line `build="c7c96f6" dev_cmds=false`, two persisted corpses loaded.
 - [ ] Both seats on the new export (login screen build stamp). notes:
 - [ ] A GM account for the Level Up tool and `/give`: a Carved Staff, two Cracked Wooden Clubs. notes:
 

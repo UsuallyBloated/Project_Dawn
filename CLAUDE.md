@@ -512,7 +512,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   jumper's cell, the Position fan's own set, never the jumper; the say helper serves the say
   and the eating emote alone. The jump integration test gained a watcher at 128 m (in view,
   past the say range) who sees the cue and one two cells away who does not; it fails on the
-  50 m audience at the far watcher.
+  50 m audience at the far watcher. **DEPLOYED 2026-10-29 19:04 UTC** (R720 boot line
+  `build="c7c96f6" dev_cmds=false`); the JUMP rows are runnable now on any client.
 - [x] **Incoming `/tell` RPC** — **STALE ENTRY, CORRECTED 2026-08-26: built 2026-05-28**
   (`195891d`, "Chat wire-up: /say /shout /ooc /tell over the network"). The server fans
   `ChatMessage` to the single Tell target and `combat_log.gd:150` renders "%s tells you" into
@@ -2590,7 +2591,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   seeded wearing both swings the staff and is unanswered on the off hand), failing on the
   previous server at the first refusal; `tools/probe_equip_gates.gd` gained nine checks (22
   now). The end-game ability is its own later design (the level, the gear sacrifice, the
-  penalty).
+  penalty). **Server DEPLOYED 2026-10-29 19:04 UTC** (R720 boot line `build="c7c96f6"
+  dev_cmds=false`, nobody online at the stop, `saved=0 unsaved=0`); the client half rides the
+  export from `677f292` or later.
 - [ ] **Facing and view angle** *(user 2026-05-05: "currently doesn't seem like any PC or NPC has
   a view angle. Everything has to face the direction of their combat target"; audit
   2026-09-29)*. No facing model exists: mobs snap to their target and remote players show
