@@ -1813,7 +1813,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   side writes it (a planted one-sided range is caught). Test: `a_nuke_reaches_thirty_metres`
   (a Smite at about 28 m lands, at 33 m is refused; fails at the old 25 m).
   **The full 30 m, BUILT 2026-10-27, pending the export and the playtest** (client
-  `spells.gd`; `equip_gates_and_fizzle_checklist.md` §4; user, on the checklist: "Smite max
+  `spells.gd`; `equip_gates_and_fizzle_checklist.md`, the RANGE rows; user, on the checklist: "Smite max
   range is 30m, but i cant cast on an enemy that is 30m away"). The client checked one metre
   inside the reach (`REACH_MARGIN`), so the tooltip said 30 m and the cast refused at 29. Now
   the client checks the full reach, the server's exact number; a metre of server slack was
@@ -2424,7 +2424,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   full-mana update instead of the fizzle's when one landed first; it reads the update after
   the fizzle line. All three were test faults; the server was right.
   **A fizzle now keeps the gems greyed, BUILT 2026-10-27, pending the export and the playtest**
-  (client `spells.gd` / `remote_player_manager.gd`; `equip_gates_and_fizzle_checklist.md` §3).
+  (client `spells.gd` / `remote_player_manager.gd`; `equip_gates_and_fizzle_checklist.md`, the FIZZLE rows).
   Found in the 2026-10-27 journal: `CastSpell fizzled ... Smite` at 20:48:09.757, then
   `rejected — inside the global cooldown remaining_ms=200` at 20:48:11.557. The server starts
   the gem's refresh on a fizzle, but the client treated the fizzle line as a refusal and
@@ -2468,7 +2468,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   off hand's chance to swing to it, as EQ did.
   **The equip itself is refused since 2026-10-27, pending the redeploy, the export and the
   playtest** (user, on a Cleric wearing two clubs on the R720: the class "should be restricted
-  from dual wield"; server + client the same day; `equip_gates_and_fizzle_checklist.md` §1).
+  from dual wield"; server + client the same day; `equip_gates_and_fizzle_checklist.md`, the DW rows).
   The 10-19 build let the weapon go on and refused only the swing; EQ refused the equip
   (Allakhazam's 2003 comments on caster daggers: "will not equip in the secondary melee slot",
   "any item with damage and delay can't equip in the secondary slot of any non-dual-wielding
@@ -2484,7 +2484,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Class-restricted equipping (EQ's rule)** *(user 2026-10-27, on the fix 4 checklist row:
   "Why dont we restrict access to weapons instead of weakening the use of non-optimal
   weapons?")*. **BUILT the same day, pending the redeploy, the export and the playtest**
-  (`equip_gates_and_fizzle_checklist.md` §2). The 10-19 miss model let any class wear any
+  (`equip_gates_and_fizzle_checklist.md`, the CLASS rows). The 10-19 miss model let any class wear any
   weapon and miss 80% with one it never trains; EQ's item flags refused the equip ("Your class,
   deity and/or race may not equip that item"). The same `skills::equip_refusal` refuses a
   weapon whose skill the class never trains ("Your class cannot wield that.": a Cleric's sword)

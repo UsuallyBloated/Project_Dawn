@@ -39,18 +39,18 @@ crits show as crit hits in the combat log; carry weight shows on the character s
 ## 4 — Melee misses come from the server (Oct 22 build)
 - [x] **Auto-attack a mob for a minute with a fresh character** → some swings miss ("You miss X." and a MISS over the mob), more often than once skilled; the mob still turns on you after a miss. notes:
 - [x] **A second seat watching** → sees your misses over the mob as well. notes:
-- [-] **Swing a weapon your class cannot use** (a Rogue with a staff, say) → mostly misses, small hits. notes:  Why dont we restrict access to weapons instead of weakening the use of non-optimal weapons.? (Decided 2026-10-27: yes, EQ's rule; the equip is refused on both sides, `equip_gates_and_fizzle_checklist.md` §2; the 80% miss stays as the backstop for gear worn before it.)
+- [-] **Swing a weapon your class cannot use** (a Rogue with a staff, say) → mostly misses, small hits. notes:  Why dont we restrict access to weapons instead of weakening the use of non-optimal weapons.? (Decided 2026-10-27: yes, EQ's rule; the equip is refused on both sides, `equip_gates_and_fizzle_checklist.md`, the CLASS rows; the 80% miss stays as the backstop for gear worn before it.)
 
 ## 5 — Dual wield is earned (Oct 22 build)
 - [x] **A Warrior below 15 with a sword in each hand** → only the main hand swings, and equipping the second said "You will be able to dual wield at level 15." notes:
 - [X] **The same Warrior at 15 (Level Up tool)** → both hands swing. notes:
 - [x] **A Monk at level 1 with empty hands** → both fists swing; with a weapon in the main hand only the main hand swings. notes:
-- [x] **A Cleric with two weapons** → "Your class cannot dual wield." and only the main hand swings. notes: second screen shot shoes cleric was able to equip two weapons even though that class should be restricted from dual weild. (As built on 10-19: the equip went on and only the swing was refused. Changed 2026-10-27 to EQ's rule, the equip itself refused on both sides; `equip_gates_and_fizzle_checklist.md` §1.)
+- [x] **A Cleric with two weapons** → "Your class cannot dual wield." and only the main hand swings. notes: second screen shot shoes cleric was able to equip two weapons even though that class should be restricted from dual weild. (As built on 10-19: the equip went on and only the swing was refused. Changed 2026-10-27 to EQ's rule, the equip itself refused on both sides; `equip_gates_and_fizzle_checklist.md`, the DW rows.)
 
 ## 6 — Each spell's own reach (Oct 22 build)
 - [x] **Nuke a mob from about 28 m** → it lands (it used to be refused past 24 m). notes:
 - [x] **From about 32 m** → refused, mana kept. notes:
-- [x] **Hover any targeted spell** → the tooltip ends `Range: 30 m` (`30 m to others` on a heal or buff). notes: Smite max range is 30m, but i cant cast on an enemy that is 30m away. (The client checked a metre inside the reach. Fixed 2026-10-27: the client checks the full 30 m, the server's exact number; `equip_gates_and_fizzle_checklist.md` §4.)
+- [x] **Hover any targeted spell** → the tooltip ends `Range: 30 m` (`30 m to others` on a heal or buff). notes: Smite max range is 30m, but i cant cast on an enemy that is 30m away. (The client checked a metre inside the reach. Fixed 2026-10-27: the client checks the full 30 m, the server's exact number; `equip_gates_and_fizzle_checklist.md`, the RANGE rows.)
 - [x] **Pull a mob from 30 m and run** → it follows a little further than before before giving up (the leash floor moved to 35 m). notes:Smite max range is 30m, but i cant cast on an enemy that is 30m away.
 
 ## 7 — The server holds your spell bar (Oct 22 build)
