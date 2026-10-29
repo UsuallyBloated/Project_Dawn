@@ -108,9 +108,13 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   the client's `RemoteEnemyManager` routes it to `RemoteEnemy`, which mirrors the pet's buff
   surface, and `hud.gd`'s target frame reads it through the same icon row as a pet's or a
   peer's. Online the client no longer runs its own local DoT on a server mob (`spells.gd`).
-  Reach (2026-10-08): hostile spells 25 m (`RANGED_ATTACK_RANGE`), friendly spells (ALLY
-  heals and buffs, PET_HEAL) 30 m (`FRIENDLY_SPELL_RANGE`); the client checks one metre
-  inside each. One attack slow holds a mob at a time, strongest wins: in `Entity::apply_cc`
+  Reach (per-spell ranges 2026-10-19, the full 30 m 2026-10-27, playtested 2026-10-29):
+  every targeted cast reaches `Spell.range` (0 = 30 m, `reach()`; hostile and friendly alike,
+  also the resurrection's corpse and Evacuate's gather), the server's number exact (out of
+  reach at 30.1) and the client checking the same number before the bar, so a target that
+  walks out during the bar costs a free refusal ("Cast failed: That target is too far
+  away."); the tooltip shows the spell's range; the leash floor is 35 m so no mob can be hit
+  from beyond its own leash. One attack slow holds a mob at a time, strongest wins: in `Entity::apply_cc`
   a stronger slow replaces the holder, an equal one refreshes it, a weaker one is ignored,
   and the pre-flight refuses a weaker one at no cost.
 - **The group share range (2026-10-08, user call of 10-05):** `GROUP_SHARE_RANGE` is 200 m
@@ -350,9 +354,21 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 - **Inventory:** bag slots + item stacks; `add_item()` / `remove_item()` / `stack_all()`
   (the "Stack All" button per bag window calls the latter). Base layout is flat slots with
   bags-as-items.
-- **Equipment:** paperdoll slots, equip/unequip; `can_dual_wield()` gates the off-hand
-  weapon slot; `_resolve_slot()` routes a second weapon to "offhand" when the dual_wield
-  skill > 0.
+- **Equipment:** paperdoll slots, equip/unequip. EQ's equip rule (2026-10-27, playtested
+  2026-10-29; `skills::equip_refusal` on the server, `Equipment.equip_refusal` on the client
+  asking first): a weapon of a type the class never trains ("Your class cannot wield that.")
+  and armor of a kind it never trains ("Your class cannot wear that.") are refused at the
+  equip, read off the cap tables both sides hold in lockstep (a cap of 0 is the flag); a
+  weapon into the off hand needs the class's dual-wield level (`skills::dual_wield_level` /
+  `DUAL_WIELD_LEVELS`: Monk 1; Ranger, Rogue 13; Warrior, Witch Hunter, Bard 15; Shadow
+  Knight, Beast Master 20; the rest never), refused with "You will be able to dual wield at
+  level N." or "Your class cannot dual wield."; `_pick_slot()` routes a second weapon to the
+  off hand only past that level. The server line `EquipItem refused — the class cannot use
+  it` marks a client that skipped its own check. The Attack path refuses an off-hand swing
+  before the level and an off hand with no weapon in it (a Monk with both hands empty punches
+  with both). Gear worn before a rule stays worn and keeps the 80% miss and half damage. Not
+  covered: a two-hander beside an off-hand weapon (the server has no two-handed rule; open
+  To-Do, 2026-10-29).
 - **Augmentation/socketing:** `ItemData.gem_slots`, `socketed_augments`, `Type.AUGMENT`
   (data shape only; combine UI deferred).
 - **Item registry:** `ItemRegistry` autoload; the canonical item table is exported to the

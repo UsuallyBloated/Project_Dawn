@@ -1678,6 +1678,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   server logs a `player link` line per player once a minute, and `tools/check_wire_layer.gd`
   says whether a checkout's DLL carries what `Net` calls by name. Needs the DLL rebuild the
   Oct 22 export already carries; the server half rides the next redeploy.
+  **Found 2026-10-29: that `player link` line reads `rtt_ms=0.0` for every player on every
+  send** (the 10-27 and 10-29 journals, two seats). Cause, read in `tick.rs` and renet 2.0's
+  `remote_connection.rs`: the world loop calls `transport.update` (which hands the clients'
+  acks to renet, each timed against the connection's clock) BEFORE `server.update` (the only
+  call that advances that clock), so an ack that arrives within a tick of its packet measures
+  zero and any RTT is under-read by one tick; renet's documented order is the reverse. Two
+  call swaps (the live loop and the shutdown drain), server only, waiting on the go. `/ping`'s
+  number is the DLL's own renet client, whose loop order is unchecked.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -1812,8 +1820,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   holds every spell inside it). `check_spell_lockstep.gd` compares `range` even when only one
   side writes it (a planted one-sided range is caught). Test: `a_nuke_reaches_thirty_metres`
   (a Smite at about 28 m lands, at 33 m is refused; fails at the old 25 m).
-  **The full 30 m, BUILT 2026-10-27, pending the export and the playtest** (client
-  `spells.gd`; `equip_gates_and_fizzle_checklist.md`, the RANGE rows; user, on the checklist: "Smite max
+  **The full 30 m, BUILT 2026-10-27, PLAYTESTED 2026-10-29** (client `spells.gd`;
+  `equip_gates_and_fizzle_checklist.md`, the RANGE rows, all five passing: the tooltip's 30 m,
+  Smite landing at 29.5 m, the client refusing at about 31 m with no bar and no mana, a
+  Greater Heal on a partner who walked past 30 m during its bar refused by the server's
+  pre-flight with the mana untouched, Healing Light landing on a partner at 30 m. The entry
+  stays open on `inspect_range_gm_audit_ban_checklist.md` §4's never-run rows: charm, PvP and
+  resurrection reach. User, on the 10-27 checklist: "Smite max
   range is 30m, but i cant cast on an enemy that is 30m away"). The client checked one metre
   inside the reach (`REACH_MARGIN`), so the tooltip said 30 m and the cast refused at 29. Now
   the client checks the full reach, the server's exact number; a metre of server slack was
@@ -2423,8 +2436,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   of every camp. (3) `a_cast_can_fizzle_on_a_low_casting_skill` read the regen fan's
   full-mana update instead of the fizzle's when one landed first; it reads the update after
   the fizzle line. All three were test faults; the server was right.
-  **A fizzle now keeps the gems greyed, BUILT 2026-10-27, pending the export and the playtest**
-  (client `spells.gd` / `remote_player_manager.gd`; `equip_gates_and_fizzle_checklist.md`, the FIZZLE rows).
+  **A fizzle now keeps the gems greyed, BUILT 2026-10-27, PLAYTESTED 2026-10-29**
+  (client `spells.gd` / `remote_player_manager.gd`; `equip_gates_and_fizzle_checklist.md`, the
+  FIZZLE rows: six Smite fizzles each greyed every gem; the re-click met the client's own "You
+  cannot cast again yet." and sent nothing, which the user keeps as is; a refused cast greyed
+  nothing; no server cooldown refusal in the journal. The timed-cast row is `[-]`: the server
+  fizzled Healing Light at its CastStart twice, `burned=2.5`, but the player never sees a cast
+  bar of their own, a HUD layout finding filed under the UI layout entry).
   Found in the 2026-10-27 journal: `CastSpell fizzled ... Smite` at 20:48:09.757, then
   `rejected — inside the global cooldown remaining_ms=200` at 20:48:11.557. The server starts
   the gem's refresh on a fizzle, but the client treated the fizzle line as a refusal and
@@ -2443,7 +2461,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Race plan slice 1 (per-race XP rate multiplier applied before the group split, shown in
   character creation) and slice 3 (the other perks, e.g. Ogre stun immunity once CC exists)
   were never built; only slice 2 (Troll regen) shipped.
-- [ ] **Dual wield as an unlockable passive** *(user ask 2026-05-02: "unlocked by those who can
+- [x] **Dual wield as an unlockable passive** — **DONE + playtested 2026-10-29**
+  (`equip_gates_and_fizzle_checklist.md`, the DW rows: a Cleric's club refused at the off-hand
+  slot and a second club swapping the main hand only; a Warrior refused below 15, then worn
+  with both hands swinging after the Level Up to 15; a Monk 1's off hand taking a club; no
+  `EquipItem refused` line in the journal, so the client refused first every time. The
+  pre-rule two-club Cleric row is `[-]` by the user's call: that character is being deleted,
+  and no code goes to grandfathered character state. What exists is in systems_overview,
+  Items, "Equipment".) *(Original entry:)* *(user ask 2026-05-02: "unlocked by those who can
   use it at somewhere between 13 and 20"; today `dual_wield` is an ordinary weapon skill with
   a per-class cap and no level gate; audit 2026-09-29)*. Design call on the level, then a
   server-side gate on the off-hand swing plus a client "you cannot dual wield yet" refusal.
@@ -2481,7 +2506,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   a modified client. `Equipment.can_dual_wield` now reads the level rule (it read the skill's
   score, which let a Warrior 1's second sword auto-pick the off hand). Gear worn before the
   rule stays worn; the swing gate still keeps that off hand idle.
-- [ ] **Class-restricted equipping (EQ's rule)** *(user 2026-10-27, on the fix 4 checklist row:
+- [x] **Class-restricted equipping (EQ's rule)** — **DONE + playtested 2026-10-29**
+  (`equip_gates_and_fizzle_checklist.md`, the CLASS rows: a Cleric's Iron Short Sword refused
+  from the bags and from the cursor, its chain boots worn; a Warrior's sword and chain boots
+  worn; a Monk's leather vest and a Wizard's chain boots refused; no `EquipItem refused` line in
+  the journal. What exists is in systems_overview, Items, "Equipment".) *(Original entry:)*
+  *(user 2026-10-27, on the fix 4 checklist row:
   "Why dont we restrict access to weapons instead of weakening the use of non-optimal
   weapons?")*. **BUILT the same day, pending the redeploy, the export and the playtest**
   (`equip_gates_and_fizzle_checklist.md`, the CLASS rows). The 10-19 miss model let any class wear any
@@ -2501,6 +2531,37 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   gate applies at the equip). **Server DEPLOYED 2026-10-27 22:22 UTC** (R720 boot line
   `build="0e58643" dev_cmds=false`; nobody online at the stop, `saved=0 unsaved=0`); the
   client half waits for the export from `31c3393` or later.
+- [ ] **A two-hander needs an empty off hand, and the off hand swings beside one today**
+  *(found 2026-10-29 on the equip sheet's Warrior regression row: a Carved Staff went on with
+  a club still in the off hand; user: "We are allowing warriors to equip two handed weapons in
+  one hand? Not too sure about this.")*. Verified in both repos: the server has no two-handed
+  rule at all (`is_two_handed` is read nowhere under `world/`); the only rule is a client
+  convenience in `Equipment.request_equip_from`, which sends an UnequipItem for the off hand
+  before a two-hander's EquipItem, keyed on the item's `is_two_handed` flag; and only two
+  items carry the flag (Bonecrusher's War Axe, the Hunter's Shortbow) while the Carved Staff
+  and the Splintered Staff are `2h_blunt` by skill with the flag false on both sides. So a
+  staff goes on beside an off-hand weapon even for an honest client, and the Attack path then
+  swings the off hand (its gates are the dual-wield level and a real off-hand weapon, nothing
+  about the main hand): a Monk 1 (2h_blunt cap 100) or any dual-wielder past its level gets a
+  two-hander's roll plus an off-hand swing; a modified client gets it with the axe too.
+  **DECIDED 2026-10-29 (user): a two-hander with anything in the off hand is an END-GAME
+  WARRIOR ability** ("being able to dual weild two handers is a fucking crazy damage
+  advantage. Perhaps it could be at a huge sacrifice of gear. But either way, they wont have
+  access until they are near or at level cap"; the shape is WoW's Titan's Grip, the top Fury
+  talent, dual two-handers with a damage penalty). **Until that ability exists, nobody. Build
+  shape, waiting on the go:** (1) data: `is_two_handed = true` on every `2h_*` and archery
+  weapon on both sides, a server unit test that a `2h_` skill item without the flag fails,
+  the item lockstep check holding the pair; (2) server: `skills::equip_refusal` reads the
+  other hand, so a two-hander into the main hand while the off hand holds anything, and
+  anything into the off hand while the main hand holds a two-hander, are refused with a line
+  ("Empty your off hand first." / "You cannot hold that with a two-handed weapon."), and the
+  Attack path refuses an off-hand swing while the main hand holds a two-hander (the backstop
+  for gear worn before the rule, like the 80% miss); (3) client: `Equipment.equip_refusal`
+  asks the same question first, and the off-hand-clearing convenience stays in front of the
+  server's refusal. Tests: a Warrior 15 with a staff on has a club refused at the off hand,
+  with a club on has the staff refused at the main hand, and a forged off-hand Attack beside a
+  staff goes unanswered; each failing on the current server. The end-game ability is its own
+  later design (the level, the gear sacrifice, the penalty).
 - [ ] **Facing and view angle** *(user 2026-05-05: "currently doesn't seem like any PC or NPC has
   a view angle. Everything has to face the direction of their combat target"; audit
   2026-09-29)*. No facing model exists: mobs snap to their target and remote players show
@@ -2979,6 +3040,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `scripts/ui_theme.gd`); likely interacts with the canvas_items/expand stretch at non-16:9
   window sizes. Same-day context: the startup window shrink to 1280x720 (login.gd) may have
   surfaced layout sins the old full-screen window hid.
+  **One specific, found 2026-10-29 on the equip sheet: the player's own cast bar never shows**
+  (user: "Player cannot see their own casting bar."). `scripts/hud_cast_bar.gd` is drawn 72 to
+  120 px above the bottom edge at the centre, the band the hotbars occupy (`hotbar.gd` anchors
+  its panels to the bottom centre), so whichever draws last hides the other; the fizzle row
+  that needed it is `[-]`. Fix: move the bar clear of the hotbars (above them, or under the
+  target frame); small, client only, waiting on the go.
 - [ ] **Combine character, equipment, and inventory into one window** *(user ask, twice:
   2026-05-02 "paperdoll, character, inventory combined to one window?" and 2026-05-05
   "Character, Equipment and Inventory to be combined to a single window"; never filed until the
