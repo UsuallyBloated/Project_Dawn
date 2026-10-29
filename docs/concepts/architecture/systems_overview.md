@@ -752,6 +752,12 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   filters (by `MsgType`), display settings (bg/font alpha, font size, default channel), and
   tab docking (`group_id` groups windows; drag to dock/undock). Layout persists through
   `GameSettings.chat_windows`.
+  **A `/say` carries 50 m** (`SAY_RANGE` in `world/mod.rs`; playtested 2026-10-29,
+  `say_range_checklist.md`): the server's `tick::say_recipients` picks every in-world player
+  within it, never the speaker, keep-only-when-in-range, and the eating emote and the jump
+  relay use the same helper (the jump's reach is an open To-Do: a jump should be seen as far
+  as the body is). A shout and OOC reach everyone in the world, a group line its group, a
+  tell its target; hailing an NPC is the NPC gate's own range.
   **The chat line's channel is sticky, WoW style** (playtested 2026-10-27,
   `chat_channel_checklist.md`): the line always has a channel, shown beside it (`[Say]`,
   `[Shout]`, `[OOC]`, `[Group]`, `[Tell: Bob]`); a channel command at the start (`/say /s /shout
@@ -807,7 +813,8 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   remote animation-state channel. `player.gd` latches a jump and sends it on its next Move's
   `jumping` flag, once; the server relays only the rising edge, at most once per
   `JUMP_RELAY_MIN_INTERVAL` (500 ms), as a `PlayerJumped { id }` to the players within the
-  say channel's reach of the jumper (50 m since 2026-10-27), never the jumper; each of their
+  say channel's reach of the jumper (`say_recipients`, 50 m since 2026-10-27; an open To-Do
+  widens it to the AOI view, the user's jump check of 2026-10-29), never the jumper; each of their
   clients plays the hop (`RemotePlayer.play_jump`, the same arc as the local jump, 1.2 m in
   0.7 s) as an offset on the visual and the nameplate, never on the interpolated position.
   Nothing reads the flag into position: Y stays the server's zero, so a forged flag can only

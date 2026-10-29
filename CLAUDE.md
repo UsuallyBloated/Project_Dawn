@@ -495,6 +495,20 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   past the interval relays again, and the jumper's own Position keeps y = 0); a headless probe
   of the hop (lift along the arc, the apex, an exact landing, no hop on a corpse). The first
   piece of the remote animation-state channel.
+- [ ] **A jump should be seen as far as the body is** *(user 2026-10-29, on
+  `say_range_checklist.md`'s jump row: "When my friends and i play games like this we use a
+  'jump check' when we see someone in the distance but we arent sure if that person is our
+  friend or not. I would like for jump to be broadcasted further.")*. The relay has used the
+  say audience since it was built (`tick.rs` step 4b-jump calls `say_recipients`): the 3x3 AOI
+  neighbourhood on 10-14, and 50 m since the say range landed on 10-27, my call that day. A
+  jump is seen, not heard, so the cue should reach everyone the server already sends the
+  jumper's Position to (the players whose cell can see the jumper's, `aoi.can_see`, the
+  Position fan's own test: 120 to 240 m, the whole distance a body is drawn at), never the
+  jumper; the eating emote stays at the say range. The rate stands (one cue per jumper per
+  `JUMP_RELAY_MIN_INTERVAL`, 500 ms), so the wider fan is bounded; cosmetic, no position
+  input. Server only, no export. Test: the jump integration test gains a watcher at about
+  100 m (inside the view, outside 50 m) who gets the cue and one two cells away who does not;
+  fails on the current audience. Waiting on the go.
 - [x] **Incoming `/tell` RPC** — **STALE ENTRY, CORRECTED 2026-08-26: built 2026-05-28**
   (`195891d`, "Chat wire-up: /say /shout /ooc /tell over the network"). The server fans
   `ChatMessage` to the single Tell target and `combat_log.gd:150` renders "%s tells you" into
@@ -2937,7 +2951,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   listener gets exactly 250 characters (fails on the old cut); unit tests on accents and emoji;
   six probe checks. **Server DEPLOYED 2026-10-27 15:49 UTC** (boot line `build="0cf170d"
   dev_cmds=false`); the client half rides the export from `ce75b0e` or later.
-- [ ] **`/say` reaches far too far** *(user 2026-10-27, `chat_channel_checklist.md` notes: "The
+- [x] **`/say` reaches far too far** — **DONE + playtested 2026-10-29** (`say_range_checklist.md`,
+  all seven rows passing on two seats: heard at 40 m and 45 m, nothing at 60 m while a shout
+  arrived, the eating emote and the jump following the same reach, shout, OOC, group, tell and
+  the NPC gate unchanged. What exists is in systems_overview, "Multi-window chat". One ask from
+  the sitting has its own entry under Multiplayer / networking: a jump should be seen as far as
+  the body is.) *(Original entry:)* *(user 2026-10-27, `chat_channel_checklist.md` notes: "The
   range for /say should me much shorter. This should be considered to be at the volume of a
   conversation.")*. Today a say goes to every player in the speaker's 3x3 AOI neighbourhood of
   120 m cells (`tick.rs`, the chat fan's Say arm): anyone from about 120 to 240 m away hears it,
