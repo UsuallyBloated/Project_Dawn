@@ -9,6 +9,7 @@ description = "A smooth hardwood staff carved to a balanced length. Favored by c
 type = 0
 rarity = 0
 stack_size = 1
+is_two_handed = true
 bonus_intelligence = 1
 weapon_damage_min = 4
 weapon_damage_max = 11

@@ -56,6 +56,29 @@ func _run() -> void:
 	_check(eq.equip_refusal(club, "offhand") == "", "at 15 it goes on")
 	_check(eq.equip_refusal(sword, "weapon") == "", "and a Warrior wields a sword")
 
+	# The two-hander rule (2026-10-29): with a club worn in the off hand the
+	# staff is refused for the main hand and nothing is sent; with the staff
+	# worn, the club is refused for the off hand, no off hand swings, and a
+	# club still swaps in for the staff; a staff never sits in the off hand.
+	var staff: ItemData = load("res://data/loot/items/carved_staff.tres")
+	_check(staff.is_two_handed, "the Carved Staff carries the two-handed flag")
+	eq.equipped["weapon"] = club
+	eq.equipped["offhand"] = club
+	_check(eq.equip_refusal(staff, "weapon") == "Empty your off hand first.", "a staff is refused beside an off-hand weapon")
+	_check(not eq.request_equip_from("base", 0, staff, ""), "and the request sends nothing")
+	_check(_lines.has("Empty your off hand first."), "with the line (%s)" % [_lines])
+	eq.equipped["weapon"] = staff
+	eq.equipped["offhand"] = null
+	_check(eq.equip_refusal(club, "offhand") == "You cannot hold that with a two-handed weapon.", "nothing joins a two-hander")
+	_check(eq.equip_refusal(staff, "offhand") == "A two-handed weapon goes in the main hand.", "a two-hander never sits in the off hand")
+	_check(eq.equip_refusal(club, "weapon") == "", "a club swaps in for the staff")
+	_check(not root.get_node("/root/Combat")._is_dual_wielding(), "no off-hand swing beside a two-hander")
+	eq.equipped["weapon"] = club
+	eq.equipped["offhand"] = club
+	_check(root.get_node("/root/Combat")._is_dual_wielding(), "two clubs still dual wield")
+	eq.equipped["weapon"] = null
+	eq.equipped["offhand"] = null
+
 	_become("Monk", 1)
 	_check(eq.equip_refusal(club, "offhand") == "", "a Monk 1's club goes into the off hand")
 	_check(not eq.request_equip_from("base", 1, vest, ""), "a Monk's leather vest is refused")

@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Thu Oct 29<span class="stat-sub">repo 45b8eca</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Thu Oct 29<span class="stat-sub">repo 765be6d</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">36.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">62.5 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">63.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -914,7 +914,7 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">Fri Oct 23 to Sun Oct 25</span>Client-authority fixes and the October 19 decisions: a GM&#x27;s Test Panel hits still show; running, crouching, Spirit of Wolf and snares feel right with no rubber-banding; an overloaded character crawls; a mount whistle refuses; nukes and heals land bigger, crits show, DoT ticks are unchanged; misses come from the server; the off hand swings only from the class&#x27;s level (Monks from 1); spells reach 30 m; the spell bar survives the first login and memorizing works; conjured food vanishes after thirty minutes logged out; a note on whether low-level nukes now feel too strong.</td>
 <td>user at a desk, GM account</td>
-<td class="needs"><ul><li>checklist client_authority_fixes_checklist.md: 8 rows to run</li><li>second seat (two-boxing works)</li><li>the Oct 22 export</li></ul></td>
+<td class="needs"><ul><li>checklist client_authority_fixes_checklist.md: 6 rows to run</li><li>second seat (two-boxing works)</li><li>the Oct 22 export</li></ul></td>
 <td class="time">2 h</td>
 <td class="id">b22, b23, o4</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/client_authority_fixes_checklist.md"><code>client_authority_fixes_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Client-decided outcomes (audit 2026-10-19)</code></span></td>
@@ -1182,7 +1182,7 @@
 <section>
 <h2><span class="week-head"><span>Slack, fixes, and the door</span><span class="when">W5 &middot; November 2 to 8</span></span></h2>
 <p class="lede">Deliberately light. Fixes from the rehearsal, the rest of the group onboarded once the build is final, and Sunday evening. If weeks 1 to 4 run as drawn, this week is mostly empty, which is the point.</p>
-<div class="week-meta"><span>the user's time: 8.5 h</span><span>Claude build days: 2.5</span></div>
+<div class="week-meta"><span>the user's time: 9.25 h</span><span>Claude build days: 2.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -1236,6 +1236,16 @@
 <td class="done">Every checklist in that table carries a dated note at its top saying which.</td>
 </tr>
 <tr>
+<td class="id">b41</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Thu Oct 29</span>Three builds from the day&#x27;s two sittings: EQ&#x27;s two-hander rule on both sides (a two-hander in the main hand only, and only with the off hand empty; nothing in the off hand beside one; the off hand never swings beside one; both staves flagged two-handed), the jump cue reaching everyone who can see the jumper instead of the 50 m say range (the user&#x27;s jump check), and the player&#x27;s own cast bar moved to the centre of the screen from under the hotbars.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">2 h</td>
+<td class="id"></td>
+<td class="done">Pushed on both deploy branches with the tests and probes green.<span class="ref">To-Do entry: <code>A two-hander needs an empty off hand, and the off hand swings beside one today</code></span></td>
+</tr>
+<tr>
 <td class="id">o7</td>
 <td><span class="chip operate">Operate</span></td>
 <td class="what"><span class="day">Wed Nov 4</span>Redeploy with the rehearsal fixes. One export and one re-zip only if a client fix is unavoidable; if so, every friend gets it before any new friend is onboarded.</td>
@@ -1274,6 +1284,16 @@
 <td class="time">0.25 h</td>
 <td class="id">b39</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/remote_facing_checklist.md"><code>remote_facing_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Other players never turn</code></span></td>
+</tr>
+<tr>
+<td class="id">v42</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">after the next redeploy and export</span>A Warrior 15 refused a staff beside a club and a club beside a staff, swinging the staff alone; a Monk the same; a partner&#x27;s jump seen from 100 m and not from out of view; the cast bar centred and clearing on a landing, a cancel and a fizzle.</td>
+<td>user at a desk, two seats for section 3</td>
+<td class="needs"><ul><li>checklist two_hander_jump_reach_cast_bar_checklist.md: 28 rows to run, 6 of them in a two-seat section</li><li>the redeploy</li><li>the next export</li><li>second seat for section 3 (two-boxing works)</li></ul></td>
+<td class="time">0.75 h</td>
+<td class="id">b41</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/two_hander_jump_reach_cast_bar_checklist.md"><code>two_hander_jump_reach_cast_bar_checklist.md</code></a></span><span class="ref">To-Do entry: <code>A two-hander needs an empty off hand, and the off hand swings beside one today</code></span></td>
 </tr>
 <tr>
 <td class="id">p4</td>
@@ -1361,5 +1381,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-29 at repo 45b8eca</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-29 at repo 765be6d</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

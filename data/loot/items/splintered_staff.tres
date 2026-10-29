@@ -9,6 +9,7 @@ description = "A wooden staff cracked near the base, still usable."
 type = 0
 rarity = 0
 stack_size = 1
+is_two_handed = true
 weapon_skill = "2h_blunt"
 bonus_intelligence = 1
 vendor_price = 3

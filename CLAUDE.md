@@ -506,9 +506,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Position fan's own test: 120 to 240 m, the whole distance a body is drawn at), never the
   jumper; the eating emote stays at the say range. The rate stands (one cue per jumper per
   `JUMP_RELAY_MIN_INTERVAL`, 500 ms), so the wider fan is bounded; cosmetic, no position
-  input. Server only, no export. Test: the jump integration test gains a watcher at about
-  100 m (inside the view, outside 50 m) who gets the cue and one two cells away who does not;
-  fails on the current audience. Waiting on the go.
+  input. Server only, no export. **BUILT 2026-10-29 (user: "sounds good"), pending the
+  redeploy and the playtest** (`two_hander_jump_reach_cast_bar_checklist.md`, the JUMP rows):
+  step 4b-jump's recipients are the in-world players in `aoi.entities_visible_from` of the
+  jumper's cell, the Position fan's own set, never the jumper; the say helper serves the say
+  and the eating emote alone. The jump integration test gained a watcher at 128 m (in view,
+  past the say range) who sees the cue and one two cells away who does not; it fails on the
+  50 m audience at the far watcher.
 - [x] **Incoming `/tell` RPC** — **STALE ENTRY, CORRECTED 2026-08-26: built 2026-05-28**
   (`195891d`, "Chat wire-up: /say /shout /ooc /tell over the network"). The server fans
   `ChatMessage` to the single Tell target and `combat_log.gd:150` renders "%s tells you" into
@@ -2562,20 +2566,31 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   WARRIOR ability** ("being able to dual weild two handers is a fucking crazy damage
   advantage. Perhaps it could be at a huge sacrifice of gear. But either way, they wont have
   access until they are near or at level cap"; the shape is WoW's Titan's Grip, the top Fury
-  talent, dual two-handers with a damage penalty). **Until that ability exists, nobody. Build
-  shape, waiting on the go:** (1) data: `is_two_handed = true` on every `2h_*` and archery
-  weapon on both sides, a server unit test that a `2h_` skill item without the flag fails,
-  the item lockstep check holding the pair; (2) server: `skills::equip_refusal` reads the
-  other hand, so a two-hander into the main hand while the off hand holds anything, and
-  anything into the off hand while the main hand holds a two-hander, are refused with a line
-  ("Empty your off hand first." / "You cannot hold that with a two-handed weapon."), and the
-  Attack path refuses an off-hand swing while the main hand holds a two-hander (the backstop
-  for gear worn before the rule, like the 80% miss); (3) client: `Equipment.equip_refusal`
-  asks the same question first, and the off-hand-clearing convenience stays in front of the
-  server's refusal. Tests: a Warrior 15 with a staff on has a club refused at the off hand,
-  with a club on has the staff refused at the main hand, and a forged off-hand Attack beside a
-  staff goes unanswered; each failing on the current server. The end-game ability is its own
-  later design (the level, the gear sacrifice, the penalty).
+  talent, dual two-handers with a damage penalty). **Until that ability exists, nobody.
+  BUILT 2026-10-29 (user: "Sounds good"), pending the redeploy, the export and the playtest**
+  (server + client the same day; `two_hander_jump_reach_cast_bar_checklist.md`, the DW2
+  rows). (1) Data: `is_two_handed = true` on both staves on both sides (the item lockstep
+  check holds the pair), and a server unit test that the flag follows the skill both ways
+  (every `2h_` or archery weapon carries it, nothing else does). (2) Server:
+  `skills::equip_refusal` reads the other hand: a two-hander into the main hand while the off
+  hand holds anything is "Empty your off hand first.", anything into the off hand while the
+  main hand holds a two-hander is "You cannot hold that with a two-handed weapon.", a
+  two-hander into the off hand is "A two-handed weapon goes in the main hand."; the class and
+  dual-wield lines answer first. The Attack path's three off-hand gates (the dual-wield level,
+  a real off-hand weapon or a Monk's two fists, and now never beside a two-handed main hand)
+  live in one `skills::offhand_swing_refusal`, the old two log lines unchanged and a third
+  (`Attack rejected — off-hand swing beside a two-handed weapon`): the backstop for gear worn
+  before the rule and for a modified client. (3) Client: `Equipment.equip_refusal` asks the
+  same questions first; the old convenience that unequipped the off hand on the player's
+  behalf before a two-hander is gone (EQ's way: the player empties the hand), and
+  `Combat._is_dual_wielding` sends no off-hand swing beside a two-hander. Tests: unit (the
+  flag, the gate's six new cases, the swing rule's seven) and the integration test
+  `a_two_hander_needs_an_empty_off_hand` (a Warrior 15 refused the staff beside a club and
+  the club beside the staff, each with its line and no paperdoll delta; a second Warrior 15
+  seeded wearing both swings the staff and is unanswered on the off hand), failing on the
+  previous server at the first refusal; `tools/probe_equip_gates.gd` gained nine checks (22
+  now). The end-game ability is its own later design (the level, the gear sacrifice, the
+  penalty).
 - [ ] **Facing and view angle** *(user 2026-05-05: "currently doesn't seem like any PC or NPC has
   a view angle. Everything has to face the direction of their combat target"; audit
   2026-09-29)*. No facing model exists: mobs snap to their target and remote players show
@@ -3063,8 +3078,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (user: "Player cannot see their own casting bar."). `scripts/hud_cast_bar.gd` is drawn 72 to
   120 px above the bottom edge at the centre, the band the hotbars occupy (`hotbar.gd` anchors
   its panels to the bottom centre), so whichever draws last hides the other; the fizzle row
-  that needed it is `[-]`. Fix: move the bar clear of the hotbars (above them, or under the
-  target frame); small, client only, waiting on the go.
+  that needed it is `[-]`. **BUILT 2026-10-29 (user: "Yes, please. You can put it in the center
+  for now."), pending the export and the playtest** (`two_hander_jump_reach_cast_bar_checklist.md`,
+  the BAR rows): the bar anchors at the screen's midpoint with offsets (the trade window's
+  idiom), its centre 110 px below the middle so it does not cover the target, draggable as
+  before; `tools/probe_cast_bar_place.gd` (10 checks: centred, below the middle, clear of the
+  hotbars' band, shown on a cast's start and hidden on its cancel) fails on the old placement.
 - [ ] **Combine character, equipment, and inventory into one window** *(user ask, twice:
   2026-05-02 "paperdoll, character, inventory combined to one window?" and 2026-05-05
   "Character, Equipment and Inventory to be combined to a single window"; never filed until the

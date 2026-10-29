@@ -1573,3 +1573,28 @@ checklist = "remote_facing_checklist.md"
 waits_on = ["b39"]
 todo = "Other players never turn"
 done_when = "Every row filled."
+
+[[row]]
+id = "b41"
+week = "w5"
+lane = "build"
+day = "Thu Oct 29"
+what = "Three builds from the day's two sittings: EQ's two-hander rule on both sides (a two-hander in the main hand only, and only with the off hand empty; nothing in the off hand beside one; the off hand never swings beside one; both staves flagged two-handed), the jump cue reaching everyone who can see the jumper instead of the 50 m say range (the user's jump check), and the player's own cast bar moved to the centre of the screen from under the hotbars."
+who = "Claude"
+hours = 2
+done_when = "Pushed on both deploy branches with the tests and probes green."
+todo = "A two-hander needs an empty off hand, and the off hand swings beside one today"
+
+[[row]]
+id = "v42"
+week = "w5"
+lane = "verify"
+day = "after the next redeploy and export"
+what = "A Warrior 15 refused a staff beside a club and a club beside a staff, swinging the staff alone; a Monk the same; a partner's jump seen from 100 m and not from out of view; the cast bar centred and clearing on a landing, a cancel and a fizzle."
+who = "user at a desk, two seats for section 3"
+hours = 0.75
+needs = ["the redeploy", "the next export", "second seat for section 3 (two-boxing works)"]
+checklist = "two_hander_jump_reach_cast_bar_checklist.md"
+waits_on = ["b41"]
+todo = "A two-hander needs an empty off hand, and the off hand swings beside one today"
+done_when = "Every row filled."

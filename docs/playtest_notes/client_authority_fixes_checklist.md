@@ -26,15 +26,16 @@ crits show as crit hits in the combat log; carry weight shows on the character s
 - [x] **Run in a straight line** → the same speed as before the change; no rubber-banding. notes:
 - [x] **Crouch and walk** → half speed, smooth. notes:
 - [x] **Cast Spirit of Wolf, run** → faster by about 40%, not double; no rubber-banding. notes:
-- [ ] **Get snared by a mob, run** → slow on your screen without snapping back (if it snaps, note it: the client's own prediction of a snare is the known gap). notes: which enemy snares?
+- [ ] **Two seats, both `/pvp on`: the partner (a Druid or Ranger with Snare) snares you, run** → slow on your screen without snapping back (if it snaps, note it: the client's own prediction of a snare is the known gap). notes: which enemy snares? [Claude, 10-29: none; no mob snares today, so the row is the PvP snare, two seats.]
 - [x] **GM: give yourself a pile of copper until the sheet shows over capacity, run** → slower, and the "You are encumbered!" line; past double capacity, a crawl and no stamina regen. notes:
 - [x] **Right-click a mount whistle** → "Mounts are not available online yet." and you stay on foot. notes:
 
-## 3 — Spell power (next redeploy)
-- [ ] **A caster casts a level 1 nuke at a mob several times** → bigger than before (a 30-damage nuke lands around 45 to 55 for a fresh caster), the numbers vary only by an occasional crit (shown as a crit, 1.5 to 2 times). notes:
-- [ ] **A Cleric heals a hurt partner** → more than the spell's base (Healing Light 60 lands around 67 at level 1); the same number every cast. notes:
-- [ ] **A DoT (Entangle, Dark Decay)** → its ticks are the same size as before; only the direct hit grew. notes:
-- [ ] **Play an evening as a caster** → note whether low-level nukes now feel too strong; the formula is the client's as written, and `docs/design/spell_formula_research.md` has the options if it is. notes:
+## 3 — A spell does its listed number (the parity pass of 2026-10-20 replaced the 10-19 formula)
+*(Rewritten 2026-10-29: the 10-19 build added INT x 0.5 to nukes, WIS x 0.3 to heals and the casting-skill multipliers on the server; the parity pass deleted all three the next day, so a spell lands its listed number and the casting skill decides fizzles instead. The INT crit stays.)*
+- [ ] **A caster casts a level 1 nuke at a mob several times** → its listed number every time (Smite 7), bigger only on an occasional crit (shown as a crit, 1.5 to 2 times), nothing added for INT. notes:
+- [x] **A Cleric heals a hurt partner** → the spell's listed number every cast (Healing Light 10, Greater Heal 50), nothing added for WIS. notes: [Claude, 10-29: the 10-29 journal, `ALLY heal applied ... Healing Light heal=10.0` five times on two targets and `Greater Heal heal=50.0` four times.]
+- [ ] **A DoT (Entangle, Dark Decay)** → the direct hit and every tick are the listed numbers. notes:
+- [ ] **Play an evening as a caster** → note whether the level 1 to 10 numbers feel right at EQ's figures (`docs/design/eq_parity_audit.md` §9 has every one). notes:
 
 ## 4 — Melee misses come from the server (Oct 22 build)
 - [x] **Auto-attack a mob for a minute with a fresh character** → some swings miss ("You miss X." and a MISS over the mob), more often than once skilled; the mob still turns on you after a miss. notes:
@@ -54,7 +55,7 @@ crits show as crit hits in the combat log; carry weight shows on the character s
 - [x] **Pull a mob from 30 m and run** → it follows a little further than before before giving up (the leash floor moved to 35 m). notes:Smite max range is 30m, but i cant cast on an enemy that is 30m away.
 
 ## 7 — The server holds your spell bar (Oct 22 build)
-- [ ] **First login on the new build** → your bar is exactly as it was (the server takes it over once). notes:
+- [-] **First login on the new build** → your bar is exactly as it was (the server takes it over once). notes: [Claude, 10-29: not runnable: the 10-25 fresh world has no character with a bar from before the server held it, so there is nothing to seed; the one-time seed is covered by its integration test.]
 - [x] **Sit, open the book, memorize a spell into an empty gem** → the two-second bar runs, then "You memorize X into slot N." and your mana is untouched (memorizing is free since 2026-10-26, server `c81dca9`; it used to take half the spell's mana). notes:
 - [x] **Start a memorize and stand up before it finishes** → it stops and the gem stays as it was. notes:
 - [x] **Clear a gem (right-click it), relog** → the gem is still empty after the relog; a memorized spell is still there. notes:
