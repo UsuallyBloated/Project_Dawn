@@ -1713,14 +1713,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   zero and any RTT is under-read by one tick; renet's documented order is the reverse. Two
   call swaps (the live loop and the shutdown drain), server only, waiting on the go. `/ping`'s
   number is the DLL's own renet client, whose loop order is unchecked.
-  **BUILT 2026-10-30 (user: "yes"), pending the playtest** (server `088d8f5`,
+  **BUILT 2026-10-30 (user: "yes"), PLAYTESTED the same evening** (server `088d8f5`,
   with the item ledger; `item_ledger_and_rtt_checklist.md` §4): the two calls swapped in the
   live loop and the shutdown drain, renet's README order; an RTT now reads in whole ticks,
   rounded up (50 ms is the floor). The DLL's own client loop was checked the same day and
   already has the documented order, so `/ping` was right all along. No test pins the loop
   order; the journal's `player link` line after the redeploy is the evidence. **DEPLOYED
   2026-10-30 14:38 UTC** (R720 boot line `build="088d8f5" dev_cmds=false`, nobody online at
-  the stop, `saved=0 unsaved=0`); §4 is runnable on any client.
+  the stop, `saved=0 unsaved=0`). **§4 PASSED 2026-10-30 evening** (`item_ledger_and_rtt_checklist.md`
+  §4, two seats over the tailnet: every `player link` line across thirty minutes read
+  `rtt_ms=50.0` for both players, never 0.0, where the 10-29 lines on the old build in the
+  same journal read 0.0; `/ping` still a real number). The zero readout is closed; the entry
+  stays open on its public-host items.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -3152,6 +3156,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   online at the stop, `saved=0 unsaved=0`; migration 0017 applied at the boot, then `ledger
   swept carried=0 deleted=0` and `ledger check mismatches=0`, so the opening rows balance
   against every account's stores on the live world, §1's first row); the sheet is runnable now.
+  **First sitting 2026-10-30 evening: the moves ran, the report did not.** The journal
+  corroborates §2's drop and pickup (a 9-stack), eat, destroy and nine `gm_give` grants and
+  §3's death (7 stacks to the corpse) and Loot All, but `admin_report`, the only reader of the
+  rows and the balance, died on its first run before the ledger cards: `alignment_score` read as
+  `i64`, and the factions build (10-23) made alignment a float every cast moves, which SQLite
+  keeps as a REAL in the 0001 `INTEGER` column; the server's own loader casts it, the report
+  did not, and no run had met a fractional score on this world. Older than the ledger. **FIXED
+  the same evening** (server `851a8cb`, pushed: the report reads the column through the same
+  CAST and prints two decimals; the query has one home, `CHARACTER_QUERY`, so a bin test with
+  a planted 0.37 runs exactly the report's query and fails on the old field; a dry run on a
+  migrated copy of the dev database with 0.37 planted printed both cards). A `git pull` in
+  `/opt/projectdawn/src` and the same command, no restart (a read-only bin). Unexercised on
+  the sheet until the rerun: the report rows and both check cards, the sell (not in the pasted
+  window), the vault withdraw and both coin ops (no journal line for any), a stack trade (the
+  one committed was coin only, 100 platinum). The RTT half (§4) passed and is ticked above.
 - [x] **Social macros never send chat** — **DONE + playtested 2026-10-27**
   (`chat_channel_checklist.md` §5, every row passing; what exists is in systems_overview,
   "Multi-window chat"). *(Original entry:)* *(found 2026-10-26 while building the sticky channel)*.
