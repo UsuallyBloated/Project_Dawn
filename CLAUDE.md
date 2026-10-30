@@ -3092,7 +3092,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (`/code-review`, eight findings, six real and fixed before the commit: the raise reached only
   bare-background clicks; a window opened by key went above the notice; the ESC stack mirrored
   what tree order already said; an ancestor's visibility flip re-raised every window; a bag
-  outlived the inventory it reads; a stale console comment).
+  outlived the inventory it reads; a stale console comment). **EXPORTED 2026-10-30**
+  (`992bc26`, the first command-line export, stamped clean after all 12 checks;
+  `builds/ProjectDawn-alpha-992bc26.zip`): the checklist is runnable once testers hold it.
 - [ ] **Client crashed moving items in the inventory** *(hotfix checklist, 2026-10-26)*. A
   native crash, not a script error: Godot's engine log for the session reads "Program crashed
   with signal 11" with no symbols (the export carries none). The server's last line for that

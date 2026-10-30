@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Thu Oct 29<span class="stat-sub">repo dfdf090</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Oct 30<span class="stat-sub">repo 992bc26</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">36.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">63.75 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">64 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -1182,7 +1182,7 @@
 <section>
 <h2><span class="week-head"><span>Slack, fixes, and the door</span><span class="when">W5 &middot; November 2 to 8</span></span></h2>
 <p class="lede">Deliberately light. Fixes from the rehearsal, the rest of the group onboarded once the build is final, and Sunday evening. If weeks 1 to 4 run as drawn, this week is mostly empty, which is the point.</p>
-<div class="week-meta"><span>the user's time: 9.75 h</span><span>Claude build days: 2.5</span></div>
+<div class="week-meta"><span>the user's time: 10 h</span><span>Claude build days: 2.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -1276,6 +1276,16 @@
 <td class="done">All checks pass.</td>
 </tr>
 <tr>
+<td class="id">o15</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Fri Oct 30, morning</span>Export the client at 992bc26 (the clicks build) from the command line, zip it as builds/ProjectDawn-alpha-992bc26.zip, send it to the testers. The server needs nothing.</td>
+<td>Claude exports and zips, user sends</td>
+<td class="needs">nothing</td>
+<td class="time">0.25 h</td>
+<td class="id">b43</td>
+<td class="done">The export log reads [BuildStamp] stamped 992bc26 and the zip is with the testers.<span class="ref">To-Do entry: <code>Clicks pass through UI windows to what is behind them</code></span></td>
+</tr>
+<tr>
 <td class="id">v17</td>
 <td><span class="chip verify">Verify</span></td>
 <td class="what">Re-run the rows the rehearsal failed, on the fixed build. A reserve.</td>
@@ -1310,9 +1320,9 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">Fri Oct 30</span>The bank opened over the journal takes every click; a click on the journal brings it to the front; a bag and its destroy confirm come to the front over the bank; the console blocks only its panel; a restart dims the whole screen with the notice centred; ESC closes the window clicked last.</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist window_click_blocking_checklist.md: 19 rows to run</li><li>the next export</li></ul></td>
+<td class="needs"><ul><li>checklist window_click_blocking_checklist.md: 20 rows to run</li><li>the 992bc26 export in the testers&#x27; hands (o15)</li></ul></td>
 <td class="time">0.5 h</td>
-<td class="id">b43</td>
+<td class="id">b43, o15</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/window_click_blocking_checklist.md"><code>window_click_blocking_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Clicks pass through UI windows to what is behind them</code></span></td>
 </tr>
 <tr>
@@ -1401,5 +1411,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-29 at repo dfdf090</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-30 at repo 992bc26</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

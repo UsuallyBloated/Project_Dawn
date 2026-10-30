@@ -1611,6 +1611,18 @@ done_when = "Pushed with the check green against the fixed scripts and failing a
 todo = "Clicks pass through UI windows to what is behind them"
 
 [[row]]
+id = "o15"
+week = "w5"
+lane = "operate"
+day = "Fri Oct 30, morning"
+what = "Export the client at 992bc26 (the clicks build) from the command line, zip it as builds/ProjectDawn-alpha-992bc26.zip, send it to the testers. The server needs nothing."
+who = "Claude exports and zips, user sends"
+hours = 0.25
+waits_on = ["b43"]
+done_when = "The export log reads [BuildStamp] stamped 992bc26 and the zip is with the testers."
+todo = "Clicks pass through UI windows to what is behind them"
+
+[[row]]
 id = "v44"
 week = "w5"
 lane = "verify"
@@ -1618,8 +1630,8 @@ day = "Fri Oct 30"
 what = "The bank opened over the journal takes every click; a click on the journal brings it to the front; a bag and its destroy confirm come to the front over the bank; the console blocks only its panel; a restart dims the whole screen with the notice centred; ESC closes the window clicked last."
 who = "user at a desk"
 hours = 0.5
-needs = ["the next export"]
+needs = ["the 992bc26 export in the testers' hands (o15)"]
 checklist = "window_click_blocking_checklist.md"
-waits_on = ["b43"]
+waits_on = ["b43", "o15"]
 todo = "Clicks pass through UI windows to what is behind them"
 done_when = "Every row filled."
