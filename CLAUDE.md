@@ -1713,6 +1713,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   zero and any RTT is under-read by one tick; renet's documented order is the reverse. Two
   call swaps (the live loop and the shutdown drain), server only, waiting on the go. `/ping`'s
   number is the DLL's own renet client, whose loop order is unchecked.
+  **BUILT 2026-10-30 (user: "yes"), pending the redeploy and the playtest** (server `088d8f5`,
+  with the item ledger; `item_ledger_and_rtt_checklist.md` §4): the two calls swapped in the
+  live loop and the shutdown drain, renet's README order; an RTT now reads in whole ticks,
+  rounded up (50 ms is the floor). The DLL's own client loop was checked the same day and
+  already has the documented order, so `/ping` was right all along. No test pins the loop
+  order; the journal's `player link` line after the redeploy is the evidence.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -3118,6 +3124,28 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   move's transaction, read by `admin_report` and a nightly dupe query (recommended, small,
   server only); (B) a `/history` command for the owner, after the door; (C) M&M's full
   client-side feed only if a group asks.
+  **ALL FOUR DECIDED 2026-10-30 (user: "yes"): build A, every server item mutation, the operator
+  first, 30 days kept. BUILT the same morning, pending the redeploy and the playtest** (server
+  `088d8f5` on the deploy branch; `item_ledger_and_rtt_checklist.md`, 15 rows; migration
+  `0017_item_events.sql`, forward-only, runs at the boot before any login; server only, no
+  export). One row per server-made movement of items or coin into or out of a character's
+  holdings, queued on the connection as the move is made and written INSIDE the transaction
+  that persists that character's stores (the flush, the trade commit, the corpse loot, the
+  death strip), cleared only on the commit and rolled back with the in-memory move on a failed
+  persist, so the table and the stores agree at every commit and nothing the client sends is
+  ever a row; internal moves (move, split, equip) write nothing. `delta` is the signed change
+  to the account's holdings (a vault deposit is 0), `copper` the same for coin; the books
+  balance per account, and `db::ledger_mismatches` names every account and item where the rows
+  and the stores disagree. The migration writes an `opening` row per held item. A daily sweep
+  (at boot and every 24 h, its own task) folds rows older than 30 days into carry rows, prunes
+  them, runs the check and logs `ledger swept`, `ledger check mismatches=N` and each mismatch
+  at warn; `admin_report` leads with the check and shows the newest 50 rows. Tests, each
+  failing on the previous server: three on the table (`tests/item_ledger.rs`: a planted stack
+  and a drained wallet are each the one mismatch; the fold keeps the sums; the operator's
+  read) and three integration (a sale, a purchase, a drop and a pickup, balanced, then a
+  planted stack the one mismatch; a trade's rows on both sides; a death and the corpse loot
+  balanced at both ends). The migration dry-run on a copy of the dev database booted to
+  `ledger check mismatches=0`. **Flagged, not built:** `/history` (B) and the group feed (C).
 - [x] **Social macros never send chat** — **DONE + playtested 2026-10-27**
   (`chat_channel_checklist.md` §5, every row passing; what exists is in systems_overview,
   "Multi-window chat"). *(Original entry:)* *(found 2026-10-26 while building the sticky channel)*.

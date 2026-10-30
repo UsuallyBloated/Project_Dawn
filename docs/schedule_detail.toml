@@ -1635,3 +1635,51 @@ checklist = "window_click_blocking_checklist.md"
 waits_on = ["b43", "o15"]
 todo = "Clicks pass through UI windows to what is behind them"
 done_when = "Every row filled."
+
+[[row]]
+id = "b45"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30"
+what = "The item ledger (the user's yes on all four calls): an item_events table (migration 0017) with one row per server-made movement of items or coin into or out of a character's holdings, written inside the transaction that persists the move; opening rows for everything held at the migration; a daily sweep that folds rows older than 30 days into carry rows and runs the conservation check (per account and item, the rows must sum to the stores), logging any mismatch; admin_report shows the check and the newest rows. Server only."
+who = "Claude"
+hours = 5
+done_when = "Pushed with the suite green, the migration dry-run on a copy of the dev database balanced at boot, and three integration tests failing on the previous server."
+todo = "Research: the Monsters and Memories item log"
+
+[[row]]
+id = "b46"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30"
+what = "The RTT readout: the world loop advanced renet's clock after handing it the acks, so every player link line read rtt_ms=0.0; the two calls are in renet's documented order now (the live loop and the shutdown drain), and an RTT reads in whole ticks. Server only."
+who = "Claude"
+hours = 0.25
+done_when = "Pushed; the journal's player link line reads a non-zero rtt_ms after the redeploy."
+todo = "Public-host hardening checklist"
+
+[[row]]
+id = "o16"
+week = "w5"
+lane = "operate"
+day = "Fri Oct 30 or later, nobody online"
+what = "Redeploy the R720 at the ledger build (migration 0017 runs at the boot, before any login). No export."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+waits_on = ["b45", "b46"]
+done_when = "The boot line shows the new build= and dev_cmds=false, then ledger swept and ledger check mismatches=0."
+todo = "Research: the Monsters and Memories item log"
+
+[[row]]
+id = "v47"
+week = "w5"
+lane = "verify"
+day = "Sat Oct 31"
+what = "The migration's opening rows balance at boot; a session's sale, purchase, drop, pickup, destroy, meal, vault moves and GM grants each leave their row in admin_report; a trade and a death with the corpse loot keep the check BALANCED; the player link line reads a real rtt_ms."
+who = "user at a desk, two seats for section 3"
+hours = 0.75
+needs = ["the redeploy (o16)", "second seat for section 3 (two-boxing works)"]
+checklist = "item_ledger_and_rtt_checklist.md"
+waits_on = ["o16"]
+todo = "Research: the Monsters and Memories item log"
+done_when = "Every row filled."

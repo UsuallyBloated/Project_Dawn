@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Oct 30<span class="stat-sub">repo 992bc26</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Oct 30<span class="stat-sub">repo 12afa78</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">36.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">64 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">65.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -1182,7 +1182,7 @@
 <section>
 <h2><span class="week-head"><span>Slack, fixes, and the door</span><span class="when">W5 &middot; November 2 to 8</span></span></h2>
 <p class="lede">Deliberately light. Fixes from the rehearsal, the rest of the group onboarded once the build is final, and Sunday evening. If weeks 1 to 4 run as drawn, this week is mostly empty, which is the point.</p>
-<div class="week-meta"><span>the user's time: 10 h</span><span>Claude build days: 2.5</span></div>
+<div class="week-meta"><span>the user's time: 11.25 h</span><span>Claude build days: 2.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -1256,6 +1256,26 @@
 <td class="done">Pushed with the check green against the fixed scripts and failing against the old ones.<span class="ref">To-Do entry: <code>Clicks pass through UI windows to what is behind them</code></span></td>
 </tr>
 <tr>
+<td class="id">b45</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Fri Oct 30</span>The item ledger (the user&#x27;s yes on all four calls): an item_events table (migration 0017) with one row per server-made movement of items or coin into or out of a character&#x27;s holdings, written inside the transaction that persists the move; opening rows for everything held at the migration; a daily sweep that folds rows older than 30 days into carry rows and runs the conservation check (per account and item, the rows must sum to the stores), logging any mismatch; admin_report shows the check and the newest rows. Server only.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">5 h</td>
+<td class="id"></td>
+<td class="done">Pushed with the suite green, the migration dry-run on a copy of the dev database balanced at boot, and three integration tests failing on the previous server.<span class="ref">To-Do entry: <code>Research: the Monsters and Memories item log</code></span></td>
+</tr>
+<tr>
+<td class="id">b46</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Fri Oct 30</span>The RTT readout: the world loop advanced renet&#x27;s clock after handing it the acks, so every player link line read rtt_ms=0.0; the two calls are in renet&#x27;s documented order now (the live loop and the shutdown drain), and an RTT reads in whole ticks. Server only.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">0.25 h</td>
+<td class="id"></td>
+<td class="done">Pushed; the journal&#x27;s player link line reads a non-zero rtt_ms after the redeploy.<span class="ref">To-Do entry: <code>Public-host hardening checklist</code></span></td>
+</tr>
+<tr>
 <td class="id">o7</td>
 <td><span class="chip operate">Operate</span></td>
 <td class="what"><span class="day">Wed Nov 4</span>Redeploy with the rehearsal fixes. One export and one re-zip only if a client fix is unavoidable; if so, every friend gets it before any new friend is onboarded.</td>
@@ -1284,6 +1304,16 @@
 <td class="time">0.25 h</td>
 <td class="id">b43</td>
 <td class="done">The export log reads [BuildStamp] stamped 992bc26 and the zip is with the testers.<span class="ref">To-Do entry: <code>Clicks pass through UI windows to what is behind them</code></span></td>
+</tr>
+<tr>
+<td class="id">o16</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Fri Oct 30 or later, nobody online</span>Redeploy the R720 at the ledger build (migration 0017 runs at the boot, before any login). No export.</td>
+<td>user at a desk, Claude writes the commands</td>
+<td class="needs">nothing</td>
+<td class="time">0.5 h</td>
+<td class="id">b45, b46</td>
+<td class="done">The boot line shows the new build= and dev_cmds=false, then ledger swept and ledger check mismatches=0.<span class="ref">To-Do entry: <code>Research: the Monsters and Memories item log</code></span></td>
 </tr>
 <tr>
 <td class="id">v17</td>
@@ -1324,6 +1354,16 @@
 <td class="time">0.5 h</td>
 <td class="id">b43, o15</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/window_click_blocking_checklist.md"><code>window_click_blocking_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Clicks pass through UI windows to what is behind them</code></span></td>
+</tr>
+<tr>
+<td class="id">v47</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Sat Oct 31</span>The migration&#x27;s opening rows balance at boot; a session&#x27;s sale, purchase, drop, pickup, destroy, meal, vault moves and GM grants each leave their row in admin_report; a trade and a death with the corpse loot keep the check BALANCED; the player link line reads a real rtt_ms.</td>
+<td>user at a desk, two seats for section 3</td>
+<td class="needs"><ul><li>checklist item_ledger_and_rtt_checklist.md: 16 rows to run, 2 of them in a two-seat section</li><li>the redeploy (o16)</li><li>second seat for section 3 (two-boxing works)</li></ul></td>
+<td class="time">0.75 h</td>
+<td class="id">o16</td>
+<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/item_ledger_and_rtt_checklist.md"><code>item_ledger_and_rtt_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Research: the Monsters and Memories item log</code></span></td>
 </tr>
 <tr>
 <td class="id">p4</td>
@@ -1411,5 +1451,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-30 at repo 992bc26</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-30 at repo 12afa78</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>
