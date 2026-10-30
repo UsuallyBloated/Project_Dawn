@@ -3167,10 +3167,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   CAST and prints two decimals; the query has one home, `CHARACTER_QUERY`, so a bin test with
   a planted 0.37 runs exactly the report's query and fails on the old field; a dry run on a
   migrated copy of the dev database with 0.37 planted printed both cards). A `git pull` in
-  `/opt/projectdawn/src` and the same command, no restart (a read-only bin). Unexercised on
-  the sheet until the rerun: the report rows and both check cards, the sell (not in the pasted
-  window), the vault withdraw and both coin ops (no journal line for any), a stack trade (the
-  one committed was coin only, 100 platinum). The RTT half (§4) passed and is ticked above.
+  `/opt/projectdawn/src` and the same command, no restart (a read-only bin). **The rerun, the
+  same evening, on `851a8cb`: the report ran whole and the books balance.** 112 rows, the check
+  card clean after the death and the loot, and every row the sitting's moves owed is there
+  with the count, delta and detail the sheet asked for: the sell (20:00:47, before the pasted
+  journal began, so it had run), the buy, the 9-stack drop and pickup, the eat, the destroys,
+  the vault deposit (delta 0), eight `gm_give` and the `gm_coins` grant to the copper, the
+  coin trade on both sides naming the other, seven `death` rows and the coins at the death and
+  the same seven back plus the coins at the loot; the two wallets add up by hand. Nothing lost
+  or doubled. **Still unplayed, and the entry waits on them:** the vault withdraw and both
+  bank coin ops (`bank_out`, `bank_coin_in`, `bank_coin_out`; no test plays them either), a
+  stack trade (`trade_out` / `trade_in`; the integration test covers those), then one more
+  report. The RTT half (§4) passed and is ticked above.
 - [x] **Social macros never send chat** — **DONE + playtested 2026-10-27**
   (`chat_channel_checklist.md` §5, every row passing; what exists is in systems_overview,
   "Multi-window chat"). *(Original entry:)* *(found 2026-10-26 while building the sticky channel)*.
