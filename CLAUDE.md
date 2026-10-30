@@ -3066,6 +3066,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Research: the Monsters and Memories item log** *(user, 2026-10-26, hotfix checklist
   notes: "We need to take a look at the Item Log that Monsters and Memories uses.")*. Find out
   what M&M's item log shows and to whom before proposing anything; a design note first.
+  **RESEARCH DONE 2026-10-29: `docs/design/item_log_research.md`, four calls waiting on the
+  user (§6), nothing built.** M&M's "ledger": the server keeps one JSON file per character per
+  day of every item and party action (loot, coin purses, drops, pickups, destroys, both sides
+  of a trade, vendor sales and buys, harvests, level-ups, own deaths), hands it to the client on
+  launch and deletes it on exit (about a week kept); a second "social" file carries only what
+  the group and nearby players looted and the party's membership, never their sales, trades or
+  split amounts; combat is excluded by design and the game says it always will be. No in-game
+  view could be verified; fan tools (a loot splitter, a loot meter, a price book) are its
+  readers. Ours today: thirteen journal lines and the GM-only `gm_actions` table, nothing a
+  player can read back. Proposed: (A) a server-side `item_events` table written inside each
+  move's transaction, read by `admin_report` and a nightly dupe query (recommended, small,
+  server only); (B) a `/history` command for the owner, after the door; (C) M&M's full
+  client-side feed only if a group asks.
 - [x] **Social macros never send chat** — **DONE + playtested 2026-10-27**
   (`chat_channel_checklist.md` §5, every row passing; what exists is in systems_overview,
   "Multi-window chat"). *(Original entry:)* *(found 2026-10-26 while building the sticky channel)*.
