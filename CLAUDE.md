@@ -1713,12 +1713,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   zero and any RTT is under-read by one tick; renet's documented order is the reverse. Two
   call swaps (the live loop and the shutdown drain), server only, waiting on the go. `/ping`'s
   number is the DLL's own renet client, whose loop order is unchecked.
-  **BUILT 2026-10-30 (user: "yes"), pending the redeploy and the playtest** (server `088d8f5`,
+  **BUILT 2026-10-30 (user: "yes"), pending the playtest** (server `088d8f5`,
   with the item ledger; `item_ledger_and_rtt_checklist.md` §4): the two calls swapped in the
   live loop and the shutdown drain, renet's README order; an RTT now reads in whole ticks,
   rounded up (50 ms is the floor). The DLL's own client loop was checked the same day and
   already has the documented order, so `/ping` was right all along. No test pins the loop
-  order; the journal's `player link` line after the redeploy is the evidence.
+  order; the journal's `player link` line after the redeploy is the evidence. **DEPLOYED
+  2026-10-30 14:38 UTC** (R720 boot line `build="088d8f5" dev_cmds=false`, nobody online at
+  the stop, `saved=0 unsaved=0`); §4 is runnable on any client.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -3125,7 +3127,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   server only); (B) a `/history` command for the owner, after the door; (C) M&M's full
   client-side feed only if a group asks.
   **ALL FOUR DECIDED 2026-10-30 (user: "yes"): build A, every server item mutation, the operator
-  first, 30 days kept. BUILT the same morning, pending the redeploy and the playtest** (server
+  first, 30 days kept. BUILT the same morning, pending the playtest** (server
   `088d8f5` on the deploy branch; `item_ledger_and_rtt_checklist.md`, 15 rows; migration
   `0017_item_events.sql`, forward-only, runs at the boot before any login; server only, no
   export). One row per server-made movement of items or coin into or out of a character's
@@ -3146,6 +3148,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   planted stack the one mismatch; a trade's rows on both sides; a death and the corpse loot
   balanced at both ends). The migration dry-run on a copy of the dev database booted to
   `ledger check mismatches=0`. **Flagged, not built:** `/history` (B) and the group feed (C).
+  **DEPLOYED 2026-10-30 14:38 UTC** (R720 boot line `build="088d8f5" dev_cmds=false`, nobody
+  online at the stop, `saved=0 unsaved=0`; migration 0017 applied at the boot, then `ledger
+  swept carried=0 deleted=0` and `ledger check mismatches=0`, so the opening rows balance
+  against every account's stores on the live world, §1's first row); the sheet is runnable now.
 - [x] **Social macros never send chat** — **DONE + playtested 2026-10-27**
   (`chat_channel_checklist.md` §5, every row passing; what exists is in systems_overview,
   "Multi-window chat"). *(Original entry:)* *(found 2026-10-26 while building the sticky channel)*.
