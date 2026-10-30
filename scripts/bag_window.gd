@@ -348,6 +348,9 @@ func _show_destroy_confirm() -> void:
 	_confirm_label.text = 'Destroy\n"%s"?' % inv_win.drag_item.item_name
 	var vp := get_viewport_rect().size
 	_confirm_panel.position = (vp * 0.5) - (_confirm_panel.custom_minimum_size * 0.5)
+	# The confirm is a top-level child of this bag, so its clicks are picked
+	# in the bag's place in the tree: the bag comes to the front first.
+	raise_to_front()
 	_confirm_panel.visible = true
 
 func _confirm_destroy() -> void:

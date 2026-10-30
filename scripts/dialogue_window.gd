@@ -21,7 +21,6 @@ func _build_ui() -> void:
 	offset_top    = -H * 0.5
 	offset_right  =  W * 0.5
 	offset_bottom =  H * 0.5
-	z_index = 25
 
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = UITheme.C_WINDOW_BG

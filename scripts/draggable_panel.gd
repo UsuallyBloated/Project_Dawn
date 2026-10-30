@@ -1,10 +1,23 @@
 extends Panel
 class_name DraggablePanel
 
+# The base of every window: drag by the body, resize by the edges, and the
+# stacking rule. Godot picks the control under the mouse by TREE ORDER and
+# ignores z_index (checked on 4.4.1), so a window raised with z_index draws on
+# top while its clicks go to whatever sits later in the tree: that was the bank
+# window on 2026-10-26. So no window sets z_index; a window moves to the front
+# of its siblings when it opens and when anything in it is pressed, and drawing
+# and picking agree. A visible modal overlay (the disconnect notice, in
+# MODAL_OVERLAY_GROUP) stays above every window regardless.
+# `tools/check_window_click_blocking.gd` holds the rule.
+
+const MODAL_OVERLAY_GROUP := "modal_overlay"
+
 const RESIZE_MARGIN := 6
 const MIN_SIZE := Vector2(120.0, 60.0)
 
 var _dragging := false
+var _last_visible := true   # this window's own `visible`, as last seen
 var _drag_offset := Vector2.ZERO
 var _anchors_reset := false
 
@@ -14,9 +27,35 @@ var _resize_start_mouse := Vector2.ZERO
 var _resize_start_pos := Vector2.ZERO
 var _resize_start_size := Vector2.ZERO
 
+func _init() -> void:
+	visibility_changed.connect(_on_draggable_visibility_changed)
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_MOUSE_EXIT and not _resizing:
 		DisplayServer.cursor_set_shape(DisplayServer.CURSOR_ARROW)
+	elif what == NOTIFICATION_ENTER_TREE:
+		_last_visible = visible
+
+# A window that opens lands on top. The signal also fires when an ancestor
+# shows or hides, which is not this window opening: only a change of its own
+# `visible` counts. Deferred: the signal can fire while the parent is still
+# adding its children, when a move is refused.
+func _on_draggable_visibility_changed() -> void:
+	if visible == _last_visible:
+		return
+	_last_visible = visible
+	if visible and is_inside_tree():
+		raise_to_front.call_deferred()
+
+# To the front of the siblings, which is both the draw order and the order
+# clicks are picked in; a visible modal overlay goes back above it.
+func raise_to_front() -> void:
+	if not is_inside_tree():
+		return
+	move_to_front()
+	for overlay in get_tree().get_nodes_in_group(MODAL_OVERLAY_GROUP):
+		if overlay is CanvasItem and overlay.visible and overlay.get_parent() == get_parent():
+			overlay.move_to_front()
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and not _dragging and not _resizing:
@@ -33,6 +72,13 @@ func _gui_input(event: InputEvent) -> void:
 			_stop_interaction()
 
 func _input(event: InputEvent) -> void:
+	# A press on this window or on anything in it (a button, a cell, the chat
+	# line) brings it to the front. It lives here and not in _gui_input because
+	# a child control takes the press before the window's own input sees it.
+	if event is InputEventMouseButton and event.pressed:
+		var hovered := get_viewport().gui_get_hovered_control()
+		if hovered != null and (hovered == self or is_ancestor_of(hovered)):
+			raise_to_front()
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
 		_stop_interaction()
 		return

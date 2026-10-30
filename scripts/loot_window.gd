@@ -10,6 +10,7 @@ var bag
 var _rows: VBoxContainer
 
 func _init(b) -> void:
+	super()   # a subclass constructor skips the base's unless asked; the stacking hook lives there
 	bag = b
 
 func _ready() -> void:

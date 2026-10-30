@@ -553,7 +553,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   stood in a frozen world with no message, and the 10-02 ban kick's "told why" was not true
   on screen. New `scripts/hud_disconnect_notice.gd`: the screen dims, a "Disconnected" panel
   shows the server's reason (or a plain line when there is none), a relogin hint, and Quit;
-  the same line goes to chat and the debug log. (2) **The live countdown is not client-only.**
+  the same line goes to chat and the debug log. **Found 2026-10-29 by the window click check:
+  the notice was 0 by 0 when shown (its anchors were set inside `_ready`, which keeps the
+  current size), so it dimmed nothing and its panel sat half off the top-left corner; fixed
+  with the clicks build, same export, one row in `window_click_blocking_checklist.md` §4.**
+  (2) **The live countdown is not client-only.**
   The wire carries `reconnect_after_secs` but the DLL drops it (the `kicked` signal passes
   reason and code only), so it needs a wire-layer change and a DLL rebuild, no protocol bump.
   (3) **A real return to character select is a multi-day client job, not a small one:** the
@@ -3056,6 +3060,39 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   dialogue, trade, loot, options, chat, group, pet, test panel), fix each, and add a headless
   check that instantiates every window and fails if a click on its background would pass
   through, so a new window cannot regress it. Client only. Not built.
+  **BUILT 2026-10-29 (night), pending the next export and the playtest** (client only;
+  `window_click_blocking_checklist.md`, 18 rows). **The cause was not a mouse filter.** Every
+  window is a `Panel` and stops clicks on its own rect; what passed through was the STACKING:
+  Godot picks the control under the mouse by tree order and ignores `z_index` (verified on
+  4.4.1 with a two-panel probe), and `hud.gd` raised the bank, vendor, crafting and options
+  windows with `z_index = 20` (the dialogue window 25) while the spell book, journal, inspect,
+  trade and group windows are added to the tree after them. So those four drew on top of
+  whatever was open and the clicks went to the window underneath, the bank over the journal or
+  the trade window being the reported case. Now no window carries `z_index`; a window moves to
+  the front of its siblings when it opens and when anything in it is pressed (`DraggablePanel`,
+  the base of every window, raising from `_input` on the hovered control, since a button or a
+  cell takes a press before the window's own input sees it), so drawing and picking agree and
+  the window on top is the one that gets the click, and ESC closes the highest closable window
+  in the tree instead of a hand-kept stack; bag windows are parented beside the inventory
+  window under the HUD instead of inside it (and die with it), so a bag and its destroy confirm
+  can come to the front over the bank; the debug console follows the rule, and the disconnect
+  notice is a modal overlay every raise puts back on top, swallowing keys while it is up (a
+  shortcut could otherwise open a window under it). **Two more findings from the check:** the
+  disconnect notice was 0 by 0 when shown
+  (`set_anchors_preset` inside `_ready` keeps the current size), so it dimmed nothing and
+  blocked nothing, and fills the screen now; and `LootWindow`'s own constructor skipped the
+  base one (GDScript does not chain `_init` for a subclass that defines its own), so it had no
+  raise-on-show hook. `tools/check_window_click_blocking.gd` runs the real `hud.tscn`, the
+  hotbar, the Test Panel and the chat windows headless over a full-screen sentinel that stands
+  for the world: 26 windows clicked on a 16 px grid (about 10,000 points) with nothing reaching
+  the sentinel, no window root carrying `z_index`, four overlapping pairs where the window
+  opened last gets the overlap and a click on the one beneath brings it to the front, the
+  notice covering a window opened before it and one opened after it, the console blocking only
+  its own panel. It fails on the previous scripts in 16 places. Reviewed the same night
+  (`/code-review`, eight findings, six real and fixed before the commit: the raise reached only
+  bare-background clicks; a window opened by key went above the notice; the ESC stack mirrored
+  what tree order already said; an ancestor's visibility flip re-raised every window; a bag
+  outlived the inventory it reads; a stale console comment).
 - [ ] **Client crashed moving items in the inventory** *(hotfix checklist, 2026-10-26)*. A
   native crash, not a script error: Godot's engine log for the session reads "Program crashed
   with signal 11" with no symbols (the export carries none). The server's last line for that

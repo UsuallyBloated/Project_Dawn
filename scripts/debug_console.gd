@@ -25,12 +25,15 @@ func _ready() -> void:
 	DebugLog.line_emitted.connect(_on_line_emitted)
 
 func _build_ui() -> void:
-	# Fixed pixel-position panel so anchor calc against an unsized
-	# CanvasLayer parent can't make it 0×0 invisible. Upper-left
-	# corner, ~960×540, plenty visible.
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	# The root fills the screen (anchors and offsets both, so it has a real
+	# size under a CanvasLayer parent) and ignores the mouse; the panel itself
+	# is pixel-positioned below (upper-left corner, ~960x540), so it never
+	# depends on the root's size.
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	z_index = 100  # ensure on top of other HUD elements when open
+	# On top of the other HUD elements by tree order (picking ignores z_index):
+	# the console moves to the front when it opens and when its panel is
+	# clicked, the rule every window follows (see DraggablePanel).
 
 	const PANEL_X := 60
 	const PANEL_Y := 60
@@ -48,6 +51,7 @@ func _build_ui() -> void:
 	_bg.color = Color(0.04, 0.04, 0.06, 0.98)
 	_bg.position = Vector2(PANEL_X, PANEL_Y)
 	_bg.size = Vector2(PANEL_W, PANEL_H)
+	_bg.gui_input.connect(_on_panel_input)
 	add_child(_bg)
 
 	var vbox := VBoxContainer.new()
@@ -85,7 +89,12 @@ func _build_ui() -> void:
 func toggle() -> void:
 	visible = not visible
 	if visible:
+		move_to_front()
 		_scroll_to_bottom()
+
+func _on_panel_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		move_to_front()
 
 func _on_line_emitted(text: String, level: String) -> void:
 	# Only auto-snap to bottom if the user is already there. Scrolled
