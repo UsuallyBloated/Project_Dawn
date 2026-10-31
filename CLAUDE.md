@@ -606,6 +606,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   deposits), concluded the bank could not take items, and could not run §3. Drag-and-drop is
   what a player reaches for first, so this is a usability gap, not a corner case. Queued
   next to the chat box cap.
+  **BUILT 2026-10-30 (night; the user's "all three"), pending the next bump day and the
+  playtest** (on `feat/facing` in both repos, server `b3e0790`, client `476c1e7`, so it rides
+  PD_W0029 with the facing; `held_item_bank_and_vendor_checklist.md`, 19 rows). `SlotRef`
+  gains a `Cursor` variant (appended last) so `SellItem` and `UseConsumable` can name what the
+  player holds; the DLL maps the `"cursor"` location to it (rebuilt). The server's sell arm
+  reads the hand, refuses a held bag with contents with the base slot's line, and empties the
+  hand as `destroy_at` does; `BankStoreItem` already took `"cursor"` as a location, so the
+  bank half needed no server change. Client: a left click on any cell of a vault while holding
+  deposits into that vault (a bag is refused up front with the bank's own line, nothing sent);
+  the merchant's SELL list leads with "In hand: <item>", sold from the cursor, and a held item
+  with no vendor value is left off like any other. Tests: an integration test (a stack banked
+  from the hand, back, two sold from the hand, a held pouch with a potion in it refused by
+  both, the ledger balancing) and `tools/probe_held_item_bank_vendor.gd` (17 checks; the old
+  windows cannot run it). Exploit lens: the server verifies the hand, prices from the registry
+  and gates on the banker's and the merchant's reach as for a bag slot; a held item is part of
+  the holdings (the death strip takes it), so nothing moves that could not move from a bag.
+  Not built: a drag gesture onto the vault (the held item follows the mouse, so the click is
+  the drop); eating from the hand has the wire arm and no client affordance.
 - [ ] **No-drop / no-trade item flag** *(flagged in `inventory_interaction_grammar.md` §8 and by
   the trade design's ledger, which explicitly has no rule "until itemization grows one"; audit
   2026-09-29)*. `ItemData` carries no binding flag; the two account-shared bank slots and the
@@ -1084,6 +1102,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   part of the factions design (the "Faction system" entry, `factions_and_alignment.md`,
   decisions pending); **alignment BUILT 2026-10-23** with factions slice 1 (that entry);
   fall damage remains.
+  **Phase 4's swing pacing and cast relays BUILT 2026-10-30 (night), pending the redeploy and
+  the playtest** (server `3c10935` on the deploy branch; `haste_limiter_and_cast_relay_checklist.md`,
+  15 rows; server only, no export). The swing-rate limit assumed everyone fully hasted (a
+  modified client could swing at twice an unhasted honest rate); it reads the player's own
+  Haste buffs now (`PerConnection::haste_total`, the sum, which can only be as lenient as the
+  client's single strongest) and holds a swing to the lesser of the current pacing and the
+  pacing the hand's last accepted swing was judged by (`last_swing_pace`), since the client
+  timed this swing when that one fired: a Haste that runs out, or a slower weapon swapped in,
+  between two swings costs no honest swing, and a forged client gains one swing at the old
+  pacing from either change and nothing more. The gates: fists 1.65 s unhasted (0.65 for
+  everyone before), 1.05 s under the Enchanter's 30%. The cast relays sent peers whatever
+  `spell_name`, `duration` and fail `reason` the client wrote (any string on every screen in
+  view, a bar stretched at will, a non-finite duration never checked); only a spell the server
+  knows is relayed now, under its own name and at its own cast time (the late-joiner seed
+  reads the same number), and a cancel carries one fixed word, `cancelled` (no client shows the
+  relayed reason). Tests: unit (the gate at each haste and the carry-over rule) and two
+  integration tests failing on the previous source (a hasted Enchanter's four swings at 1.3 s
+  all answered and an unhasted Warrior's every second one dropped; B sees Ice Spear's 1.0 s
+  bar against a forged 2.5, a made-up spell reaches nobody, a forged fail reason is not
+  relayed); the attack-paced tests swing at the weapon's own delay; the suite 157 of 157.
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
@@ -1742,7 +1780,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   answered far and absent ids differently, which would have made the gate a char_id to name map
   and an is-online oracle; far, offline and never-existed now get one generic line and the same
   empty result. No line-of-sight half (there is no server collision model; that stays with
-  (b)). (b) and (c) remain open.
+  (b)). (b) remains open. **(c) narrowed 2026-10-30:** its Hit/Miss/Evade relays were gated
+  as dev commands on 10-19, and its cast relays now carry only spells the server knows, at the
+  server's cast time, with a fixed cancel word (the client-decided outcomes entry); what is
+  left of (c) is the rate cap when public, the hosting branch's cosmetic budget.
 - [ ] **GM action audit log** *(deferred "to a fast follow" when `is_gm` shipped 2026-07-17;
   server_design's day-one rule "all GM actions audited"; the `gm_actions` table has existed
   since the auth schema; audit 2026-09-29)*. Write one row per dev/GM command (`/give`, coin
@@ -3176,9 +3217,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   coin trade on both sides naming the other, seven `death` rows and the coins at the death and
   the same seven back plus the coins at the loot; the two wallets add up by hand. Nothing lost
   or doubled. **Still unplayed, and the entry waits on them:** the vault withdraw and both
-  bank coin ops (`bank_out`, `bank_coin_in`, `bank_coin_out`; no test plays them either), a
-  stack trade (`trade_out` / `trade_in`; the integration test covers those), then one more
-  report. The RTT half (§4) passed and is ticked above.
+  bank coin ops (`bank_out`, `bank_coin_in`, `bank_coin_out`; a test plays all five bank kinds
+  since the night of 10-30, `the_ledger_records_the_bank_and_balances`, server `046abb4`, the
+  sheet staying the play evidence), a stack trade (`trade_out` / `trade_in`; the integration
+  test covers those), then one more report. The RTT half (§4) passed and is ticked above.
 - [x] **Social macros never send chat** — **DONE + playtested 2026-10-27**
   (`chat_channel_checklist.md` §5, every row passing; what exists is in systems_overview,
   "Multi-window chat"). *(Original entry:)* *(found 2026-10-26 while building the sticky channel)*.
