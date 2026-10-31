@@ -3233,6 +3233,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   since the night of 10-30, `the_ledger_records_the_bank_and_balances`, server `046abb4`, the
   sheet staying the play evidence), a stack trade (`trade_out` / `trade_in`; the integration
   test covers those), then one more report. The RTT half (§4) passed and is ticked above.
+  **Second sitting 2026-10-31 (two seats, CLARANCE and VIRT): the three asks played**, by the
+  journal: the vault withdrawal five times, a one-gold coin withdrawal twice and a one-gold
+  deposit, two stack trades (one with 1p 1g alongside). Every row of the sheet is marked by
+  the tester. **Ticks on one more `admin_report` paste** (the rows these moves wrote and the
+  card after them are in the report, not the journal); tomorrow's 14:38 UTC `ledger check`
+  line is the balance alone.
 - [x] **Social macros never send chat** — **DONE + playtested 2026-10-27**
   (`chat_channel_checklist.md` §5, every row passing; what exists is in systems_overview,
   "Multi-window chat"). *(Original entry:)* *(found 2026-10-26 while building the sticky channel)*.
