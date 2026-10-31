@@ -1,5 +1,11 @@
 extends DraggablePanel
 
+# Vendor window: buy from a merchant's stock, or sell what is in your bags.
+# Server-authoritative online (BuyItem / SellItem intents; the server prices,
+# charges and fans the deltas; this window describes the request, never the
+# outcome). The SELL list walks the base slots and the bags, and since
+# 2026-10-30 leads with the item in hand, which sells from the cursor.
+
 const W := 520.0
 const H := 440.0
 
@@ -185,6 +191,17 @@ func _populate_list() -> void:
 		# SellItem dispatch. Inventory.all_slots() drops that
 		# context.
 		_sell_items.clear()
+		# The item in hand sells first (EQ's drop-on-the-merchant): it heads
+		# the list, labelled as in hand, and sells from the cursor. A held
+		# item the merchant would not take (no vendor value) is left off like
+		# any other.
+		if Inventory.cursor_slot != null and Inventory.cursor_slot["item"].vendor_price > 0:
+			_sell_items.append({
+				"item": Inventory.cursor_slot["item"],
+				"count": Inventory.cursor_slot["count"],
+				"location": NetProtocol.INV_LOCATION_CURSOR,
+				"slot_idx": 0,
+			})
 		for i in Inventory.BASE_SLOT_COUNT:
 			var base_slot = Inventory.base_slots[i]
 			if base_slot != null and base_slot["item"].vendor_price > 0:
@@ -209,6 +226,8 @@ func _populate_list() -> void:
 			var slot = _sell_items[i]
 			var item: ItemData = slot["item"]
 			var label := item.item_name
+			if slot["location"] == NetProtocol.INV_LOCATION_CURSOR:
+				label = "In hand: " + label
 			if slot["count"] > 1:
 				label += " (%d)" % slot["count"]
 			var btn := _make_list_btn(label, i)

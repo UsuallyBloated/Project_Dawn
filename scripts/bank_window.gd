@@ -7,7 +7,9 @@ extends DraggablePanel
 # CoinsUpdate (wallet) + BankSnapshot (bank) fans to refresh the displays — no
 # optimistic local mutation. Mirrors vendor_window.gd's imperative build +
 # DraggablePanel base. Slice 2 adds the "Items" tab: a 10-slot per-character
-# vault + 2 account-shared slots, with right-click quick-transfer.
+# vault + 2 account-shared slots, with right-click quick-transfer; since
+# 2026-10-30 a click on a vault slot while holding an item deposits what is
+# held (EQ's drop-on-the-banker), into whichever vault was clicked.
 # See docs/concepts/world/currency.md.
 
 const W := 460.0
@@ -28,6 +30,11 @@ var _qty_spin: SpinBox = null
 # Armed by a deposit/withdraw send; the confirming BankSnapshot fan clears the
 # entry spinboxes. A rejected action disarms it so the amounts survive for retry.
 var _pending_clear := false
+
+# A deposit of the held item was asked of the server (`shared` names the
+# vault). The window holds no state about it: the server's cursor delta
+# empties the hand and its vault snapshot repaints the cells.
+signal held_deposit_requested(shared: bool)
 
 # PD_W0016 — Banker slice 2 item-vault UI (the "Items" tab). Cell panels render
 # from BankerManager's cache; the Personal/Shared toggle picks the deposit target.
@@ -262,7 +269,7 @@ func _build_items(parent: VBoxContainer) -> void:
 	_shared_cells = _build_vault_grid(parent, true, BankerManager.ACCOUNT_VAULT_SLOTS)
 
 	var hint := Label.new()
-	hint.text = "Right-click a vault item to withdraw it. With the bank open, right-click an item in your bags to deposit it."
+	hint.text = "Right-click a vault item to withdraw it. With the bank open, right-click an item in your bags to deposit it, or click a vault slot while holding one."
 	hint.add_theme_color_override("font_color", UITheme.C_TEXT)
 	hint.add_theme_font_size_override("font_size", 10)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -348,9 +355,35 @@ func _make_vault_cell(shared: bool, slot: int) -> Panel:
 	return cell
 
 func _on_vault_cell_input(event: InputEvent, shared: bool, slot: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+	if not (event is InputEventMouseButton and event.pressed):
+		return
+	# Holding an item, a left click on any cell of a vault puts the item in
+	# that vault (the cell itself does not matter: the server merges into a
+	# same-item stack first, then takes a free slot).
+	if event.button_index == MOUSE_BUTTON_LEFT and Inventory.cursor_slot != null:
+		deposit_held_into(shared)
+		get_viewport().set_input_as_handled()
+		return
+	if event.button_index == MOUSE_BUTTON_RIGHT:
 		Net.broadcast_bank_withdraw_item(shared, slot)
 		get_viewport().set_input_as_handled()
+
+# Deposit what the cursor holds into the personal (false) or the shared (true)
+# vault. The server places it and its cursor delta empties the hand; the
+# refusals it would send (no banker in reach, a full vault, a bag) arrive as
+# BankRejected, except the bag, which no vault takes and so is refused here
+# with the bank's own line before anything is sent. Returns whether a request
+# went out.
+func deposit_held_into(shared: bool) -> bool:
+	var held = Inventory.cursor_slot
+	if held == null:
+		return false
+	if held["item"].type == ItemData.Type.BAG:
+		CombatLog.add_line("Bags can't go in the bank vault.", CombatLog.MsgType.INFO)
+		return false
+	Net.broadcast_bank_store_item(NetProtocol.INV_LOCATION_CURSOR, 0, shared)
+	held_deposit_requested.emit(shared)
+	return true
 
 func _refresh_vault(shared: bool) -> void:
 	var cells: Array = _shared_cells if shared else _personal_cells
