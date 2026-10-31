@@ -441,7 +441,13 @@ func _apply_spell(spell: SpellData) -> void:
 		if spell.mp_regen_hps > 0.0 and spell.mp_regen_duration > 0.0 and not ally_remote:
 			BuffManager.add_mp_regen_buff(spell.mp_regen_hps * effectiveness, spell.mp_regen_duration, spell.spell_name)
 
-		if spell.haste_amount > 0.0 and spell.haste_duration > 0.0 and not ally_remote:
+		# Online the haste waits for the server's BuffSnapshot (reconstructed
+		# from it like a buff someone else cast): the server paces the swing
+		# limit by the haste IT holds, so a haste applied here at the release
+		# and then refused by the server would have the client swinging faster
+		# than the server allows, every second swing dropped for the buff's
+		# length (the 2026-10-30 review). The Test Room keeps the local apply.
+		if spell.haste_amount > 0.0 and spell.haste_duration > 0.0 and not ally_remote and not Net.is_launcher_mode():
 			BuffManager.add_haste_buff(spell.haste_amount, spell.haste_duration, spell.spell_name)
 
 		if (spell.accuracy_buff > 0.0 or spell.crit_buff > 0.0) and not ally_remote:
