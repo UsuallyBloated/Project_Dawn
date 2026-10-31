@@ -27,7 +27,7 @@ weapon, the haste and the moment.
 
 - [ ] **Bare-handed, auto-attack a camp mob for a minute** → every swing shows a hit number or "You miss"; no rejection line for your char id. notes:
 - [ ] **Wield a slow weapon (`/give Bonecrusher's War Axe`, delay 3.2) and fight a minute** → the same. notes:
-- [ ] **Swap to a fast weapon (a Cracked Wooden Club) mid-fight, then back to the axe, without stopping** → no swing dropped at either swap (the first swing after a swap is judged by the old pacing). notes:
+- [ ] **Swap to a fast weapon (a Cracked Wooden Club) mid-fight, then back to the axe, without stopping** → no swing dropped at either swap. (The server judges each swing by the weapon worn at that swing; the client re-times its swing on a swap from the next export. On the current export a swap to a slower weapon inside its old interval may drop one swing: note it if seen.) notes:
 - [ ] **A Warrior 15 with two clubs** → both hands swing all fight; no rejection line. notes:
 - [ ] **Under haste: an Enchanter 16 casts Haste on itself (or a Bard sings Wanderer's Chord beside you), then swing bare-handed** → the swings come faster and every one is answered; no rejection line. notes:
 - [ ] **Let the haste run out while still swinging** (Wanderer's Chord: `/stopsong`, keep swinging 20 s; the effect ends 12 s after the last pulse) → no rejection line at the edge. notes:

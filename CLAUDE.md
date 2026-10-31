@@ -611,9 +611,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   PD_W0029 with the facing; `held_item_bank_and_vendor_checklist.md`, 19 rows). `SlotRef`
   gains a `Cursor` variant (appended last) so `SellItem` and `UseConsumable` can name what the
   player holds; the DLL maps the `"cursor"` location to it (rebuilt). The server's sell arm
-  reads the hand, refuses a held bag with contents with the base slot's line, and empties the
-  hand as `destroy_at` does; `BankStoreItem` already took `"cursor"` as a location, so the
-  bank half needed no server change. Client: a left click on any cell of a vault while holding
+  reads the hand, refuses a held bag with contents with the base slot's line, and takes the
+  sold count through `destroy_at` (the review folded the three hand-rolled removal arms, base,
+  bag and the new hand, into that one path; server `b3e0790` + the fold); `BankStoreItem`
+  already took `"cursor"` as a location, so the bank half needed no server change. Client: a left click on any cell of a vault while holding
   deposits into that vault (a bag is refused up front with the bank's own line, nothing sent);
   the merchant's SELL list leads with "In hand: <item>", sold from the cursor, and a held item
   with no vendor value is left off like any other. Tests: an integration test (a stack banked
@@ -1103,23 +1104,31 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   decisions pending); **alignment BUILT 2026-10-23** with factions slice 1 (that entry);
   fall damage remains.
   **Phase 4's swing pacing and cast relays BUILT 2026-10-30 (night), pending the redeploy and
-  the playtest** (server `3c10935` on the deploy branch; `haste_limiter_and_cast_relay_checklist.md`,
-  15 rows; server only, no export). The swing-rate limit assumed everyone fully hasted (a
-  modified client could swing at twice an unhasted honest rate); it reads the player's own
-  Haste buffs now (`PerConnection::haste_total`, the sum, which can only be as lenient as the
-  client's single strongest) and holds a swing to the lesser of the current pacing and the
-  pacing the hand's last accepted swing was judged by (`last_swing_pace`), since the client
-  timed this swing when that one fired: a Haste that runs out, or a slower weapon swapped in,
-  between two swings costs no honest swing, and a forged client gains one swing at the old
-  pacing from either change and nothing more. The gates: fists 1.65 s unhasted (0.65 for
-  everyone before), 1.05 s under the Enchanter's 30%. The cast relays sent peers whatever
+  the playtest** (server `3c10935` + review fixes `e8810db` on the deploy branch;
+  `haste_limiter_and_cast_relay_checklist.md`, 15 rows; server only, no export). The
+  swing-rate limit assumed everyone fully hasted (a modified client could swing at twice an
+  unhasted honest rate); it reads the player's own Haste buffs now (`PerConnection::haste_total`,
+  the sum, which can only be as lenient as the client's single strongest) and paces a swing
+  at the greater of the current haste and the haste the hand's last accepted swing was judged
+  at (`last_swing_haste`), since the client timed this swing when that one fired: a Haste
+  that runs out between two swings costs no honest swing, and a forged client gains one swing
+  at the expired haste and nothing more. The weapon never carries (the review caught that a
+  carry of the last swing's whole pacing could be farmed by alternating a dagger and a staff
+  every swing, the staff swung at the dagger's pace for good); the client re-times its swing
+  on a weapon change instead (client `c572f7c`, next export; until it, a swap to a slower
+  weapon inside its old interval may drop one swing). The same review found the client
+  applying a self-cast Haste locally at the release, so a refused release left a phantom
+  haste the limiter would have punished for eleven minutes: a CastSpell refusal now fans the
+  caster's true BuffSnapshot (`e8810db`), and online the client waits for the snapshot
+  instead of applying the haste itself (`c572f7c`). The gates: fists 1.65 s unhasted (0.65
+  for everyone before), 1.05 s under the Enchanter's 30%. The cast relays sent peers whatever
   `spell_name`, `duration` and fail `reason` the client wrote (any string on every screen in
   view, a bar stretched at will, a non-finite duration never checked); only a spell the server
   knows is relayed now, under its own name and at its own cast time (the late-joiner seed
   reads the same number), and a cancel carries one fixed word, `cancelled` (no client shows the
   relayed reason). Tests: unit (the gate at each haste and the carry-over rule) and two
   integration tests failing on the previous source (a hasted Enchanter's four swings at 1.3 s
-  all answered and an unhasted Warrior's every second one dropped; B sees Ice Spear's 1.0 s
+  all answered and an unhasted Warrior's at 0.9 s every second one dropped; B sees Ice Spear's 1.0 s
   bar against a forged 2.5, a made-up spell reaches nobody, a forged fail reason is not
   relayed); the attack-paced tests swing at the weapon's own delay; the suite 157 of 157.
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).

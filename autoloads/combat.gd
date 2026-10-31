@@ -199,8 +199,15 @@ func can_dual_wield() -> bool:
 func _on_equipment_changed(slot: String, _item) -> void:
 	if slot not in ["weapon", "offhand"] or current_target == null:
 		return
-	# Dual-wield onset/offset honors the auto-attack toggle. Re-syncing
-	# both timers keeps the main + offhand cadence consistent.
+	# A weapon change re-times the swing from the change: the restarted
+	# timers run the NEW weapon's interval, so the first swing after a swap
+	# is a full interval of that weapon later, which is what the server's
+	# swing-rate limit holds it to (it reads the weapon worn at each swing
+	# and carries nothing across a swap; 2026-10-30). Dual-wield onset/offset
+	# honors the auto-attack toggle; re-syncing both timers keeps the main +
+	# offhand cadence consistent.
+	_update_attack_interval()
+	_update_offhand_interval()
 	_sync_auto_attack_timer()
 
 func _on_player_died() -> void:
