@@ -1128,6 +1128,31 @@ that the next save would write over. A failed corpse save retries next tick. Cha
 Vendors sell only what a vendor in reach stocks (`stock` in `npcs.toml`, checked against the
 client by `tools/check_vendor_lockstep.gd`) and, since factions, only to a buyer they serve.
 
+**The item ledger** (the Monsters and Memories research, decided 2026-10-30, playtested
+2026-10-30 and 10-31, `item_ledger_and_rtt_checklist.md`; the design and the calls in
+`docs/design/item_log_research.md`). `item_events` (migration 0017) holds one row per
+server-made movement of items or coin into or out of a character's holdings: a sale or a
+purchase (`sell`, `buy`, the merchant in the detail), a drop and a pickup (`drop`, `pickup`,
+the bag id), `destroy`, `eat` and `use` by hand, the vault moves (`bank_in`, `bank_out`, delta
+0: the item stays the account's), the bank coin ops (`bank_coin_in`, `bank_coin_out`,
+`bank_exchange`, copper 0 with the amount or the conversion in the detail), GM grants
+(`gm_give`, `gm_coins`), both sides of a trade (`trade_out`, `trade_in`, `trade_coins`, each
+naming the partner), the death strip (`death`, `death_coins`) and the corpse loot
+(`corpse_loot`, `corpse_coins`, the corpse id), loot bags, quest rewards, conjured items and
+NO RENT removals; `delta` is the signed change to the account's holdings and `copper` the
+same for coin. Rows are queued on the connection as the move is made and written inside the
+transaction that persists that character's stores (the flush, the trade commit, the corpse
+loot, the death strip), cleared only on the commit and rolled back with the in-memory move on
+a failed persist, so the table and the stores agree at every commit and nothing the client
+sends is ever a row; internal moves (move, split, equip) write nothing. The migration wrote an
+`opening` row per held item and per character's coin. A daily sweep (at boot and every 24 h,
+its own task) folds rows older than 30 days into `carry` rows, prunes them and runs the
+conservation check (`db::ledger_mismatches`: per account and item, the rows must sum to the
+stores), logging `ledger swept`, `ledger check mismatches=N` and each mismatch at warn;
+`admin_report` runs the same check on demand and shows the newest 50 rows. A partial GM
+grant records the ask in `gm_actions` and the placed count in the ledger, and the ledger is
+the one that balances. Not built: `/history` for the owner and M&M's group feed.
+
 **Known operational gaps.** No shutdown warning ahead of time (a timed "restarting in 5
 minutes" is not built). The database is not in WAL mode despite comments claiming otherwise.
 (Kicking and banning exist since 2026-10-01/02: the `admin_account` bin and the ban sweep.)

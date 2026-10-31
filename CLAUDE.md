@@ -3167,7 +3167,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   UTC; nothing followed, and the heartbeat timeout linkdead it at 15:31:11. Needs repro
   steps, ideally run with `builds/ProjectDawn.console.exe`, which prints the engine's last
   lines before a crash. Not yet reproduced.
-- [ ] **Research: the Monsters and Memories item log** *(user, 2026-10-26, hotfix checklist
+- [x] **Research: the Monsters and Memories item log** — **DONE + playtested 2026-10-31**
+  (`item_ledger_and_rtt_checklist.md`, every row marked across two sittings, 10-30 and 10-31,
+  with the journal and `admin_report` behind each: the opening rows at the migration, a sale, a
+  purchase, a drop and pickup, destroys, an eat and a potion, five vault moves each way, the
+  bank coin deposit and withdrawal with the copper in the detail, GM grants of items and coin,
+  two stack trades on both sides naming the partner (one with 1p 1g alongside), a death's seven
+  rows and the corpse loot's seven back; the check card balanced after every move of both
+  sittings, 138 rows; the daily sweep ran on its own at 14:38 on 10-31 over the first sitting's
+  rows with zero mismatches; the wallets and holdings add up by hand. What exists is in
+  systems_overview, "The item ledger". `/history` (B) and the group feed (C) stay flagged, not
+  built.) *(Original entry:)* *(user, 2026-10-26, hotfix checklist
   notes: "We need to take a look at the Item Log that Monsters and Memories uses.")*. Find out
   what M&M's item log shows and to whom before proposing anything; a design note first.
   **RESEARCH DONE 2026-10-29: `docs/design/item_log_research.md`, four calls waiting on the
@@ -3236,9 +3246,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Second sitting 2026-10-31 (two seats, CLARANCE and VIRT): the three asks played**, by the
   journal: the vault withdrawal five times, a one-gold coin withdrawal twice and a one-gold
   deposit, two stack trades (one with 1p 1g alongside). Every row of the sheet is marked by
-  the tester. **Ticks on one more `admin_report` paste** (the rows these moves wrote and the
-  card after them are in the report, not the journal); tomorrow's 14:38 UTC `ledger check`
-  line is the balance alone.
+  the tester. **The paste came the same evening: every row and the card balanced (138
+  rows); ticked above, the description in systems_overview, "The item ledger".**
 - [x] **Social macros never send chat** — **DONE + playtested 2026-10-27**
   (`chat_channel_checklist.md` §5, every row passing; what exists is in systems_overview,
   "Multi-window chat"). *(Original entry:)* *(found 2026-10-26 while building the sticky channel)*.
