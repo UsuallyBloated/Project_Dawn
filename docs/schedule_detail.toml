@@ -1514,7 +1514,7 @@ todo = "Class-restricted equipping (EQ's rule)"
 id = "v38"
 week = "w4"
 lane = "verify"
-day = "after the next redeploy and export"
+day = "Thu Oct 29"
 what = "Equip gates: a Cleric's second club and its sword refused, a Wizard's chain boots refused, a Monk's off-hand club worn; a fizzle greys the gems; Smite lands at a full 30 m."
 who = "user at a desk with a GM account"
 hours = 0.5
@@ -1539,7 +1539,7 @@ todo = "`/say` reaches far too far"
 id = "v39"
 week = "w4"
 lane = "verify"
-day = "after the next redeploy"
+day = "Thu Oct 29"
 what = "Two seats 40 m apart hear each other's /say, 60 m apart do not (a /shout still arrives); the eating emote and a jump follow the same reach."
 who = "user at a desk, two seats"
 hours = 0.25
@@ -1547,4 +1547,139 @@ needs = ["the redeploy", "second seat (two-boxing works)"]
 checklist = "say_range_checklist.md"
 waits_on = ["b38"]
 todo = "`/say` reaches far too far"
+done_when = "Every row filled."
+
+[[row]]
+id = "b39"
+week = "w4"
+lane = "build"
+day = "Tue Oct 27"
+what = "Other players turn: the client sends its facing with every movement packet (the way EQ and WoW do it) and the server relays it in the position stream it already sends. A protocol bump on both sides, built on feat/facing for the next bump day."
+who = "Claude"
+hours = 2
+done_when = "Pushed on feat/facing in both repos with the test green and the DLL rebuilt."
+todo = "Other players never turn"
+
+[[row]]
+id = "v40"
+week = "w5"
+lane = "verify"
+day = "the next bump day (server and export together)"
+what = "Two seats: one turns in place, strafes and backs up while the other watches the body turn; the facing survives a relog."
+who = "user at a desk, two seats"
+hours = 0.25
+needs = ["the next bump redeploy", "the bump export", "second seat (two-boxing works)"]
+checklist = "remote_facing_checklist.md"
+waits_on = ["b39"]
+todo = "Other players never turn"
+done_when = "Every row filled."
+
+[[row]]
+id = "b41"
+week = "w5"
+lane = "build"
+day = "Thu Oct 29"
+what = "Three builds from the day's two sittings: EQ's two-hander rule on both sides (a two-hander in the main hand only, and only with the off hand empty; nothing in the off hand beside one; the off hand never swings beside one; both staves flagged two-handed), the jump cue reaching everyone who can see the jumper instead of the 50 m say range (the user's jump check), and the player's own cast bar moved to the centre of the screen from under the hotbars."
+who = "Claude"
+hours = 2
+done_when = "Pushed on both deploy branches with the tests and probes green."
+todo = "A two-hander needs an empty off hand, and the off hand swings beside one today"
+
+[[row]]
+id = "v42"
+week = "w5"
+lane = "verify"
+day = "Thu Oct 29"
+what = "A Warrior 15 refused a staff beside a club and a club beside a staff, swinging the staff alone; a Monk the same; a partner's jump seen from 100 m and not from out of view; the cast bar centred and clearing on a landing, a cancel and a fizzle."
+who = "user at a desk, two seats for section 3"
+hours = 0.75
+needs = ["the redeploy", "the next export", "second seat for section 3 (two-boxing works)"]
+checklist = "two_hander_jump_reach_cast_bar_checklist.md"
+waits_on = ["b41"]
+todo = "A two-hander needs an empty off hand, and the off hand swings beside one today"
+done_when = "Every row filled."
+
+[[row]]
+id = "b43"
+week = "w5"
+lane = "build"
+day = "Thu Oct 29"
+what = "Clicks stop at windows: Godot picks the control under the mouse by tree order and ignores z_index, so the bank, vendor, crafting, options and dialogue windows (raised with z_index) drew on top while the clicks went to the window underneath. No window carries z_index now; a window comes to the front when it opens and when it is clicked; bag windows sit beside the inventory window; the disconnect notice, found 0 by 0, fills the screen. A headless check over the real HUD holds it. Client only."
+who = "Claude"
+hours = 2
+done_when = "Pushed with the check green against the fixed scripts and failing against the old ones."
+todo = "Clicks pass through UI windows to what is behind them"
+
+[[row]]
+id = "o15"
+week = "w5"
+lane = "operate"
+day = "Fri Oct 30, morning"
+what = "Export the client at 992bc26 (the clicks build) from the command line, zip it as builds/ProjectDawn-alpha-992bc26.zip, send it to the testers. The server needs nothing."
+who = "Claude exports and zips, user sends"
+hours = 0.25
+waits_on = ["b43"]
+done_when = "The export log reads [BuildStamp] stamped 992bc26 and the zip is with the testers."
+todo = "Clicks pass through UI windows to what is behind them"
+
+[[row]]
+id = "v44"
+week = "w5"
+lane = "verify"
+day = "Fri Oct 30"
+what = "The bank opened over the journal takes every click; a click on the journal brings it to the front; a bag and its destroy confirm come to the front over the bank; the console blocks only its panel; a restart dims the whole screen with the notice centred; ESC closes the window clicked last."
+who = "user at a desk"
+hours = 0.5
+needs = ["the 992bc26 export in the testers' hands (o15)"]
+checklist = "window_click_blocking_checklist.md"
+waits_on = ["b43", "o15"]
+todo = "Clicks pass through UI windows to what is behind them"
+done_when = "Every row filled."
+
+[[row]]
+id = "b45"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30"
+what = "The item ledger (the user's yes on all four calls): an item_events table (migration 0017) with one row per server-made movement of items or coin into or out of a character's holdings, written inside the transaction that persists the move; opening rows for everything held at the migration; a daily sweep that folds rows older than 30 days into carry rows and runs the conservation check (per account and item, the rows must sum to the stores), logging any mismatch; admin_report shows the check and the newest rows. Server only."
+who = "Claude"
+hours = 5
+done_when = "Pushed with the suite green, the migration dry-run on a copy of the dev database balanced at boot, and three integration tests failing on the previous server."
+todo = "Research: the Monsters and Memories item log"
+
+[[row]]
+id = "b46"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30"
+what = "The RTT readout: the world loop advanced renet's clock after handing it the acks, so every player link line read rtt_ms=0.0; the two calls are in renet's documented order now (the live loop and the shutdown drain), and an RTT reads in whole ticks. Server only."
+who = "Claude"
+hours = 0.25
+done_when = "Pushed; the journal's player link line reads a non-zero rtt_ms after the redeploy."
+todo = "Public-host hardening checklist"
+
+[[row]]
+id = "o16"
+week = "w5"
+lane = "operate"
+day = "Fri Oct 30 or later, nobody online"
+what = "Redeploy the R720 at the ledger build (migration 0017 runs at the boot, before any login). No export."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+waits_on = ["b45", "b46"]
+done_when = "The boot line shows the new build= and dev_cmds=false, then ledger swept and ledger check mismatches=0."
+todo = "Research: the Monsters and Memories item log"
+
+[[row]]
+id = "v47"
+week = "w5"
+lane = "verify"
+day = "Sat Oct 31"
+what = "The migration's opening rows balance at boot; a session's sale, purchase, drop, pickup, destroy, meal, vault moves and GM grants each leave their row in admin_report; a trade and a death with the corpse loot keep the check BALANCED; the player link line reads a real rtt_ms."
+who = "user at a desk, two seats for section 3"
+hours = 0.75
+needs = ["the redeploy (o16)", "second seat for section 3 (two-boxing works)"]
+checklist = "item_ledger_and_rtt_checklist.md"
+waits_on = ["o16"]
+todo = "Research: the Monsters and Memories item log"
 done_when = "Every row filled."

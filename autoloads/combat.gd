@@ -178,11 +178,17 @@ func _sync_auto_attack_timer() -> void:
 func _is_dual_wielding() -> bool:
 	if not can_dual_wield():
 		return false
+	var main_wpn: ItemData = Equipment.equipped.get("weapon")
+	# No off-hand swing beside a two-handed main hand: the server's rule
+	# (`skills::offhand_swing_refusal`); gear worn before 2026-10-29 can
+	# still pair them, and the server would drop every such swing.
+	if main_wpn != null and main_wpn.is_two_handed:
+		return false
 	var oh: ItemData = Equipment.equipped.get("offhand")
 	if oh != null:
 		return oh.type == ItemData.Type.WEAPON
 	# A Monk fights with both fists: with both hands empty the off hand punches.
-	return PlayerStats.player_class == "Monk" and Equipment.equipped.get("weapon") == null
+	return PlayerStats.player_class == "Monk" and main_wpn == null
 
 # Dual wield is earned at a class's level (WeaponSkillDefinitions.DUAL_WIELD_LEVELS,
 # the server's rule too); a class not listed never dual wields.

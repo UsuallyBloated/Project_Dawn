@@ -495,6 +495,29 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   past the interval relays again, and the jumper's own Position keeps y = 0); a headless probe
   of the hop (lift along the arc, the apex, an exact landing, no hop on a corpse). The first
   piece of the remote animation-state channel.
+- [x] **A jump should be seen as far as the body is** — **DONE + playtested 2026-10-29**
+  (`two_hander_jump_reach_cast_bar_checklist.md`, the JUMP rows, two seats: the hop seen from
+  about 100 m and from 40 m, nothing from out of view, no cue of your own, a `/say` and the
+  eating emote still silent at 60 m. What exists is in systems_overview, Networking, "The jump
+  relay".) *(Original entry:)* *(user 2026-10-29, on
+  `say_range_checklist.md`'s jump row: "When my friends and i play games like this we use a
+  'jump check' when we see someone in the distance but we arent sure if that person is our
+  friend or not. I would like for jump to be broadcasted further.")*. The relay has used the
+  say audience since it was built (`tick.rs` step 4b-jump calls `say_recipients`): the 3x3 AOI
+  neighbourhood on 10-14, and 50 m since the say range landed on 10-27, my call that day. A
+  jump is seen, not heard, so the cue should reach everyone the server already sends the
+  jumper's Position to (the players whose cell can see the jumper's, `aoi.can_see`, the
+  Position fan's own test: 120 to 240 m, the whole distance a body is drawn at), never the
+  jumper; the eating emote stays at the say range. The rate stands (one cue per jumper per
+  `JUMP_RELAY_MIN_INTERVAL`, 500 ms), so the wider fan is bounded; cosmetic, no position
+  input. Server only, no export. **BUILT 2026-10-29 (user: "sounds good"), pending the
+  redeploy and the playtest** (`two_hander_jump_reach_cast_bar_checklist.md`, the JUMP rows):
+  step 4b-jump's recipients are the in-world players in `aoi.entities_visible_from` of the
+  jumper's cell, the Position fan's own set, never the jumper; the say helper serves the say
+  and the eating emote alone. The jump integration test gained a watcher at 128 m (in view,
+  past the say range) who sees the cue and one two cells away who does not; it fails on the
+  50 m audience at the far watcher. **DEPLOYED 2026-10-29 19:04 UTC** (R720 boot line
+  `build="c7c96f6" dev_cmds=false`); the JUMP rows are runnable now on any client.
 - [x] **Incoming `/tell` RPC** — **STALE ENTRY, CORRECTED 2026-08-26: built 2026-05-28**
   (`195891d`, "Chat wire-up: /say /shout /ooc /tell over the network"). The server fans
   `ChatMessage` to the single Tell target and `combat_log.gd:150` renders "%s tells you" into
@@ -530,7 +553,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   stood in a frozen world with no message, and the 10-02 ban kick's "told why" was not true
   on screen. New `scripts/hud_disconnect_notice.gd`: the screen dims, a "Disconnected" panel
   shows the server's reason (or a plain line when there is none), a relogin hint, and Quit;
-  the same line goes to chat and the debug log. (2) **The live countdown is not client-only.**
+  the same line goes to chat and the debug log. **Found 2026-10-29 by the window click check:
+  the notice was 0 by 0 when shown (its anchors were set inside `_ready`, which keeps the
+  current size), so it dimmed nothing and its panel sat half off the top-left corner; fixed
+  with the clicks build, same export, one row in `window_click_blocking_checklist.md` §4.**
+  (2) **The live countdown is not client-only.**
   The wire carries `reconnect_after_secs` but the DLL drops it (the `kicked` signal passes
   reason and code only), so it needs a wire-layer change and a DLL rebuild, no protocol bump.
   (3) **A real return to character select is a multi-day client job, not a small one:** the
@@ -1678,6 +1705,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   server logs a `player link` line per player once a minute, and `tools/check_wire_layer.gd`
   says whether a checkout's DLL carries what `Net` calls by name. Needs the DLL rebuild the
   Oct 22 export already carries; the server half rides the next redeploy.
+  **Found 2026-10-29: that `player link` line reads `rtt_ms=0.0` for every player on every
+  send** (the 10-27 and 10-29 journals, two seats). Cause, read in `tick.rs` and renet 2.0's
+  `remote_connection.rs`: the world loop calls `transport.update` (which hands the clients'
+  acks to renet, each timed against the connection's clock) BEFORE `server.update` (the only
+  call that advances that clock), so an ack that arrives within a tick of its packet measures
+  zero and any RTT is under-read by one tick; renet's documented order is the reverse. Two
+  call swaps (the live loop and the shutdown drain), server only, waiting on the go. `/ping`'s
+  number is the DLL's own renet client, whose loop order is unchecked.
+  **BUILT 2026-10-30 (user: "yes"), PLAYTESTED the same evening** (server `088d8f5`,
+  with the item ledger; `item_ledger_and_rtt_checklist.md` §4): the two calls swapped in the
+  live loop and the shutdown drain, renet's README order; an RTT now reads in whole ticks,
+  rounded up (50 ms is the floor). The DLL's own client loop was checked the same day and
+  already has the documented order, so `/ping` was right all along. No test pins the loop
+  order; the journal's `player link` line after the redeploy is the evidence. **DEPLOYED
+  2026-10-30 14:38 UTC** (R720 boot line `build="088d8f5" dev_cmds=false`, nobody online at
+  the stop, `saved=0 unsaved=0`). **§4 PASSED 2026-10-30 evening** (`item_ledger_and_rtt_checklist.md`
+  §4, two seats over the tailnet: every `player link` line across thirty minutes read
+  `rtt_ms=50.0` for both players, never 0.0, where the 10-29 lines on the old build in the
+  same journal read 0.0; `/ping` still a real number). The zero readout is closed; the entry
+  stays open on its public-host items.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -1812,8 +1859,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   holds every spell inside it). `check_spell_lockstep.gd` compares `range` even when only one
   side writes it (a planted one-sided range is caught). Test: `a_nuke_reaches_thirty_metres`
   (a Smite at about 28 m lands, at 33 m is refused; fails at the old 25 m).
-  **The full 30 m, BUILT 2026-10-27, pending the export and the playtest** (client
-  `spells.gd`; `equip_gates_and_fizzle_checklist.md` §4; user, on the checklist: "Smite max
+  **The full 30 m, BUILT 2026-10-27, PLAYTESTED 2026-10-29** (client `spells.gd`;
+  `equip_gates_and_fizzle_checklist.md`, the RANGE rows, all five passing: the tooltip's 30 m,
+  Smite landing at 29.5 m, the client refusing at about 31 m with no bar and no mana, a
+  Greater Heal on a partner who walked past 30 m during its bar refused by the server's
+  pre-flight with the mana untouched, Healing Light landing on a partner at 30 m. The entry
+  stays open on `inspect_range_gm_audit_ban_checklist.md` §4's never-run rows: charm, PvP and
+  resurrection reach. User, on the 10-27 checklist: "Smite max
   range is 30m, but i cant cast on an enemy that is 30m away"). The client checked one metre
   inside the reach (`REACH_MARGIN`), so the tooltip said 30 m and the cast refused at 29. Now
   the client checks the full reach, the server's exact number; a metre of server slack was
@@ -2423,8 +2475,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   of every camp. (3) `a_cast_can_fizzle_on_a_low_casting_skill` read the regen fan's
   full-mana update instead of the fizzle's when one landed first; it reads the update after
   the fizzle line. All three were test faults; the server was right.
-  **A fizzle now keeps the gems greyed, BUILT 2026-10-27, pending the export and the playtest**
-  (client `spells.gd` / `remote_player_manager.gd`; `equip_gates_and_fizzle_checklist.md` §3).
+  **A fizzle now keeps the gems greyed, BUILT 2026-10-27, PLAYTESTED 2026-10-29**
+  (client `spells.gd` / `remote_player_manager.gd`; `equip_gates_and_fizzle_checklist.md`, the
+  FIZZLE rows: six Smite fizzles each greyed every gem; the re-click met the client's own "You
+  cannot cast again yet." and sent nothing, which the user keeps as is; a refused cast greyed
+  nothing; no server cooldown refusal in the journal. The timed-cast row is `[-]`: the server
+  fizzled Healing Light at its CastStart twice, `burned=2.5`, but the player never sees a cast
+  bar of their own, a HUD layout finding filed under the UI layout entry).
   Found in the 2026-10-27 journal: `CastSpell fizzled ... Smite` at 20:48:09.757, then
   `rejected — inside the global cooldown remaining_ms=200` at 20:48:11.557. The server starts
   the gem's refresh on a fizzle, but the client treated the fizzle line as a refusal and
@@ -2443,7 +2500,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Race plan slice 1 (per-race XP rate multiplier applied before the group split, shown in
   character creation) and slice 3 (the other perks, e.g. Ogre stun immunity once CC exists)
   were never built; only slice 2 (Troll regen) shipped.
-- [ ] **Dual wield as an unlockable passive** *(user ask 2026-05-02: "unlocked by those who can
+- [x] **Dual wield as an unlockable passive** — **DONE + playtested 2026-10-29**
+  (`equip_gates_and_fizzle_checklist.md`, the DW rows: a Cleric's club refused at the off-hand
+  slot and a second club swapping the main hand only; a Warrior refused below 15, then worn
+  with both hands swinging after the Level Up to 15; a Monk 1's off hand taking a club; no
+  `EquipItem refused` line in the journal, so the client refused first every time. The
+  pre-rule two-club Cleric row is `[-]` by the user's call: that character is being deleted,
+  and no code goes to grandfathered character state. What exists is in systems_overview,
+  Items, "Equipment".) *(Original entry:)* *(user ask 2026-05-02: "unlocked by those who can
   use it at somewhere between 13 and 20"; today `dual_wield` is an ordinary weapon skill with
   a per-class cap and no level gate; audit 2026-09-29)*. Design call on the level, then a
   server-side gate on the off-hand swing plus a client "you cannot dual wield yet" refusal.
@@ -2468,7 +2532,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   off hand's chance to swing to it, as EQ did.
   **The equip itself is refused since 2026-10-27, pending the redeploy, the export and the
   playtest** (user, on a Cleric wearing two clubs on the R720: the class "should be restricted
-  from dual wield"; server + client the same day; `equip_gates_and_fizzle_checklist.md` §1).
+  from dual wield"; server + client the same day; `equip_gates_and_fizzle_checklist.md`, the DW rows).
   The 10-19 build let the weapon go on and refused only the swing; EQ refused the equip
   (Allakhazam's 2003 comments on caster daggers: "will not equip in the secondary melee slot",
   "any item with damage and delay can't equip in the secondary slot of any non-dual-wielding
@@ -2481,10 +2545,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   a modified client. `Equipment.can_dual_wield` now reads the level rule (it read the skill's
   score, which let a Warrior 1's second sword auto-pick the off hand). Gear worn before the
   rule stays worn; the swing gate still keeps that off hand idle.
-- [ ] **Class-restricted equipping (EQ's rule)** *(user 2026-10-27, on the fix 4 checklist row:
+- [x] **Class-restricted equipping (EQ's rule)** — **DONE + playtested 2026-10-29**
+  (`equip_gates_and_fizzle_checklist.md`, the CLASS rows: a Cleric's Iron Short Sword refused
+  from the bags and from the cursor, its chain boots worn; a Warrior's sword and chain boots
+  worn; a Monk's leather vest and a Wizard's chain boots refused; no `EquipItem refused` line in
+  the journal. What exists is in systems_overview, Items, "Equipment".) *(Original entry:)*
+  *(user 2026-10-27, on the fix 4 checklist row:
   "Why dont we restrict access to weapons instead of weakening the use of non-optimal
   weapons?")*. **BUILT the same day, pending the redeploy, the export and the playtest**
-  (`equip_gates_and_fizzle_checklist.md` §2). The 10-19 miss model let any class wear any
+  (`equip_gates_and_fizzle_checklist.md`, the CLASS rows). The 10-19 miss model let any class wear any
   weapon and miss 80% with one it never trains; EQ's item flags refused the equip ("Your class,
   deity and/or race may not equip that item"). The same `skills::equip_refusal` refuses a
   weapon whose skill the class never trains ("Your class cannot wield that.": a Cleric's sword)
@@ -2501,6 +2570,66 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   gate applies at the equip). **Server DEPLOYED 2026-10-27 22:22 UTC** (R720 boot line
   `build="0e58643" dev_cmds=false`; nobody online at the stop, `saved=0 unsaved=0`); the
   client half waits for the export from `31c3393` or later.
+- [x] **A two-hander needs an empty off hand, and the off hand swings beside one today** —
+  **DONE + playtested 2026-10-29** (`two_hander_jump_reach_cast_bar_checklist.md`, every DW2
+  row on a Warrior 15 and a Monk 1: the staff worn with the off hand empty, a club refused
+  beside it, a club swapping in for it, the staff refused beside two clubs and worn once the
+  off hand was emptied by hand, the staff refused for the off hand, one swing stream with the
+  staff and two with two clubs; the Monk the same. The journal has no `EquipItem refused` and
+  no `Attack rejected — off-hand swing` line, so the client refused first every time and sent
+  no off-hand swing beside a two-hander. What exists is in systems_overview, Items,
+  "Equipment". The end-game Warrior ability is its own entry below.) *(Original entry:)*
+  *(found 2026-10-29 on the equip sheet's Warrior regression row: a Carved Staff went on with
+  a club still in the off hand; user: "We are allowing warriors to equip two handed weapons in
+  one hand? Not too sure about this.")*. Verified in both repos: the server has no two-handed
+  rule at all (`is_two_handed` is read nowhere under `world/`); the only rule is a client
+  convenience in `Equipment.request_equip_from`, which sends an UnequipItem for the off hand
+  before a two-hander's EquipItem, keyed on the item's `is_two_handed` flag; and only two
+  items carry the flag (Bonecrusher's War Axe, the Hunter's Shortbow) while the Carved Staff
+  and the Splintered Staff are `2h_blunt` by skill with the flag false on both sides. So a
+  staff goes on beside an off-hand weapon even for an honest client, and the Attack path then
+  swings the off hand (its gates are the dual-wield level and a real off-hand weapon, nothing
+  about the main hand): a Monk 1 (2h_blunt cap 100) or any dual-wielder past its level gets a
+  two-hander's roll plus an off-hand swing; a modified client gets it with the axe too.
+  **DECIDED 2026-10-29 (user): a two-hander with anything in the off hand is an END-GAME
+  WARRIOR ability** ("being able to dual weild two handers is a fucking crazy damage
+  advantage. Perhaps it could be at a huge sacrifice of gear. But either way, they wont have
+  access until they are near or at level cap"; the shape is WoW's Titan's Grip, the top Fury
+  talent, dual two-handers with a damage penalty). **Until that ability exists, nobody.
+  BUILT 2026-10-29 (user: "Sounds good"), pending the redeploy, the export and the playtest**
+  (server + client the same day; `two_hander_jump_reach_cast_bar_checklist.md`, the DW2
+  rows). (1) Data: `is_two_handed = true` on both staves on both sides (the item lockstep
+  check holds the pair), and a server unit test that the flag follows the skill both ways
+  (every `2h_` or archery weapon carries it, nothing else does). (2) Server:
+  `skills::equip_refusal` reads the other hand: a two-hander into the main hand while the off
+  hand holds anything is "Empty your off hand first.", anything into the off hand while the
+  main hand holds a two-hander is "You cannot hold that with a two-handed weapon.", a
+  two-hander into the off hand is "A two-handed weapon goes in the main hand."; the class and
+  dual-wield lines answer first. The Attack path's three off-hand gates (the dual-wield level,
+  a real off-hand weapon or a Monk's two fists, and now never beside a two-handed main hand)
+  live in one `skills::offhand_swing_refusal`, the old two log lines unchanged and a third
+  (`Attack rejected — off-hand swing beside a two-handed weapon`): the backstop for gear worn
+  before the rule and for a modified client. (3) Client: `Equipment.equip_refusal` asks the
+  same questions first; the old convenience that unequipped the off hand on the player's
+  behalf before a two-hander is gone (EQ's way: the player empties the hand), and
+  `Combat._is_dual_wielding` sends no off-hand swing beside a two-hander. Tests: unit (the
+  flag, the gate's six new cases, the swing rule's seven) and the integration test
+  `a_two_hander_needs_an_empty_off_hand` (a Warrior 15 refused the staff beside a club and
+  the club beside the staff, each with its line and no paperdoll delta; a second Warrior 15
+  seeded wearing both swings the staff and is unanswered on the off hand), failing on the
+  previous server at the first refusal; `tools/probe_equip_gates.gd` gained nine checks (22
+  now). The end-game ability is its own later design (the level, the gear sacrifice, the
+  penalty). **Server DEPLOYED 2026-10-29 19:04 UTC** (R720 boot line `build="c7c96f6"
+  dev_cmds=false`, nobody online at the stop, `saved=0 unsaved=0`); the client half rides the
+  export from `677f292` or later.
+- [ ] **Dual-wielding two-handers as an end-game Warrior ability** *(user 2026-10-29: "being
+  able to dual weild two handers is a fucking crazy damage advantage. Perhaps it could be at a
+  huge sacrifice of gear. But either way, they wont have access until they are near or at
+  level cap")*. The one exception to the two-hander rule above, not designed: the level (near
+  or at the cap), the gear sacrifice, a damage penalty (WoW's Titan's Grip, the top Fury
+  talent, is the shape), how it is earned and switched on, and the server's gate on the equip
+  and the swing (both refuse the pairing for everyone today, so the ability is a server-held
+  flag those two gates read). Not a friends-build item.
 - [ ] **Facing and view angle** *(user 2026-05-05: "currently doesn't seem like any PC or NPC has
   a view angle. Everything has to face the direction of their combat target"; audit
   2026-09-29)*. No facing model exists: mobs snap to their target and remote players show
@@ -2876,7 +3005,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   listener gets exactly 250 characters (fails on the old cut); unit tests on accents and emoji;
   six probe checks. **Server DEPLOYED 2026-10-27 15:49 UTC** (boot line `build="0cf170d"
   dev_cmds=false`); the client half rides the export from `ce75b0e` or later.
-- [ ] **`/say` reaches far too far** *(user 2026-10-27, `chat_channel_checklist.md` notes: "The
+- [x] **`/say` reaches far too far** — **DONE + playtested 2026-10-29** (`say_range_checklist.md`,
+  all seven rows passing on two seats: heard at 40 m and 45 m, nothing at 60 m while a shout
+  arrived, the eating emote and the jump following the same reach, shout, OOC, group, tell and
+  the NPC gate unchanged. What exists is in systems_overview, "Multi-window chat". One ask from
+  the sitting has its own entry under Multiplayer / networking: a jump should be seen as far as
+  the body is.) *(Original entry:)* *(user 2026-10-27, `chat_channel_checklist.md` notes: "The
   range for /say should me much shorter. This should be considered to be at the volume of a
   conversation.")*. Today a say goes to every player in the speaker's 3x3 AOI neighbourhood of
   120 m cells (`tick.rs`, the chat fan's Say arm): anyone from about 120 to 240 m away hears it,
@@ -2910,8 +3044,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `MovementInfo` with `MSG_MOVE_SET_FACING` for a turn in place; neither derives it from
   movement or polices it). Cost here: one number on each 20 Hz Move (about 80 bytes a second
   upstream per player), copied into the `yaw` the Position fan already carries; no extra
-  packets, no latency change. Not built; a bump-day item (protocol, DLL, export), to be built
-  on a side branch when asked.
+  packets, no latency change. **BUILT the same night on `feat/facing` in both repos, pending
+  the next bump day and the playtest** (user: "Build it."; server `496b689`, client `a282334`;
+  `remote_facing_checklist.md`, 12 rows, on the branch). PD_W0029: `Move` gains a trailing `yaw` (the client's `rotation.y`,
+  the body the right-drag turns; `send_move` in the DLL and `Net.send_movement` carry it); the
+  handler drops a non-finite one whole and stores the rest wrapped into (-PI, PI]; the
+  `Position` fan, `EntitySpawn` and the checkpoint already carried `conn.yaw`, so the facing
+  reaches every watcher, survives a relog, and the Test Panel's spawn lands in front of the
+  real facing. A rooted player may still turn. Test `a_players_facing_reaches_the_watcher`
+  (sees 1.25, keeps it through a NaN Move, sees 4.0 wrapped), failing with the yaw ignored.
+  Both sides deploy together; the export comes from the merged branch with the rebuilt DLL.
 - [x] **"You cannot do that while dead." flooded the chat** — **DONE + playtested 2026-10-26**
   (`dead_gate_checklist.md`, every row passing: server `8127a70` and client `6ddeddc`). The
   flood was the client's `EquipUpdate`, one per gear slot as a death strips the gear, which the
@@ -2930,6 +3072,41 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   dialogue, trade, loot, options, chat, group, pet, test panel), fix each, and add a headless
   check that instantiates every window and fails if a click on its background would pass
   through, so a new window cannot regress it. Client only. Not built.
+  **BUILT 2026-10-29 (night), pending the next export and the playtest** (client only;
+  `window_click_blocking_checklist.md`, 18 rows). **The cause was not a mouse filter.** Every
+  window is a `Panel` and stops clicks on its own rect; what passed through was the STACKING:
+  Godot picks the control under the mouse by tree order and ignores `z_index` (verified on
+  4.4.1 with a two-panel probe), and `hud.gd` raised the bank, vendor, crafting and options
+  windows with `z_index = 20` (the dialogue window 25) while the spell book, journal, inspect,
+  trade and group windows are added to the tree after them. So those four drew on top of
+  whatever was open and the clicks went to the window underneath, the bank over the journal or
+  the trade window being the reported case. Now no window carries `z_index`; a window moves to
+  the front of its siblings when it opens and when anything in it is pressed (`DraggablePanel`,
+  the base of every window, raising from `_input` on the hovered control, since a button or a
+  cell takes a press before the window's own input sees it), so drawing and picking agree and
+  the window on top is the one that gets the click, and ESC closes the highest closable window
+  in the tree instead of a hand-kept stack; bag windows are parented beside the inventory
+  window under the HUD instead of inside it (and die with it), so a bag and its destroy confirm
+  can come to the front over the bank; the debug console follows the rule, and the disconnect
+  notice is a modal overlay every raise puts back on top, swallowing keys while it is up (a
+  shortcut could otherwise open a window under it). **Two more findings from the check:** the
+  disconnect notice was 0 by 0 when shown
+  (`set_anchors_preset` inside `_ready` keeps the current size), so it dimmed nothing and
+  blocked nothing, and fills the screen now; and `LootWindow`'s own constructor skipped the
+  base one (GDScript does not chain `_init` for a subclass that defines its own), so it had no
+  raise-on-show hook. `tools/check_window_click_blocking.gd` runs the real `hud.tscn`, the
+  hotbar, the Test Panel and the chat windows headless over a full-screen sentinel that stands
+  for the world: 26 windows clicked on a 16 px grid (about 10,000 points) with nothing reaching
+  the sentinel, no window root carrying `z_index`, four overlapping pairs where the window
+  opened last gets the overlap and a click on the one beneath brings it to the front, the
+  notice covering a window opened before it and one opened after it, the console blocking only
+  its own panel. It fails on the previous scripts in 16 places. Reviewed the same night
+  (`/code-review`, eight findings, six real and fixed before the commit: the raise reached only
+  bare-background clicks; a window opened by key went above the notice; the ESC stack mirrored
+  what tree order already said; an ancestor's visibility flip re-raised every window; a bag
+  outlived the inventory it reads; a stale console comment). **EXPORTED 2026-10-30**
+  (`992bc26`, the first command-line export, stamped clean after all 12 checks;
+  `builds/ProjectDawn-alpha-992bc26.zip`): the checklist is runnable once testers hold it.
 - [ ] **Client crashed moving items in the inventory** *(hotfix checklist, 2026-10-26)*. A
   native crash, not a script error: Godot's engine log for the session reads "Program crashed
   with signal 11" with no symbols (the export carries none). The server's last line for that
@@ -2940,6 +3117,68 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Research: the Monsters and Memories item log** *(user, 2026-10-26, hotfix checklist
   notes: "We need to take a look at the Item Log that Monsters and Memories uses.")*. Find out
   what M&M's item log shows and to whom before proposing anything; a design note first.
+  **RESEARCH DONE 2026-10-29: `docs/design/item_log_research.md`, four calls waiting on the
+  user (§6), nothing built.** M&M's "ledger": the server keeps one JSON file per character per
+  day of every item and party action (loot, coin purses, drops, pickups, destroys, both sides
+  of a trade, vendor sales and buys, harvests, level-ups, own deaths), hands it to the client on
+  launch and deletes it on exit (about a week kept); a second "social" file carries only what
+  the group and nearby players looted and the party's membership, never their sales, trades or
+  split amounts; combat is excluded by design and the game says it always will be. No in-game
+  view could be verified; fan tools (a loot splitter, a loot meter, a price book) are its
+  readers. Ours today: thirteen journal lines and the GM-only `gm_actions` table, nothing a
+  player can read back. Proposed: (A) a server-side `item_events` table written inside each
+  move's transaction, read by `admin_report` and a nightly dupe query (recommended, small,
+  server only); (B) a `/history` command for the owner, after the door; (C) M&M's full
+  client-side feed only if a group asks.
+  **ALL FOUR DECIDED 2026-10-30 (user: "yes"): build A, every server item mutation, the operator
+  first, 30 days kept. BUILT the same morning, pending the playtest** (server
+  `088d8f5` on the deploy branch; `item_ledger_and_rtt_checklist.md`, 15 rows; migration
+  `0017_item_events.sql`, forward-only, runs at the boot before any login; server only, no
+  export). One row per server-made movement of items or coin into or out of a character's
+  holdings, queued on the connection as the move is made and written INSIDE the transaction
+  that persists that character's stores (the flush, the trade commit, the corpse loot, the
+  death strip), cleared only on the commit and rolled back with the in-memory move on a failed
+  persist, so the table and the stores agree at every commit and nothing the client sends is
+  ever a row; internal moves (move, split, equip) write nothing. `delta` is the signed change
+  to the account's holdings (a vault deposit is 0), `copper` the same for coin; the books
+  balance per account, and `db::ledger_mismatches` names every account and item where the rows
+  and the stores disagree. The migration writes an `opening` row per held item. A daily sweep
+  (at boot and every 24 h, its own task) folds rows older than 30 days into carry rows, prunes
+  them, runs the check and logs `ledger swept`, `ledger check mismatches=N` and each mismatch
+  at warn; `admin_report` leads with the check and shows the newest 50 rows. Tests, each
+  failing on the previous server: three on the table (`tests/item_ledger.rs`: a planted stack
+  and a drained wallet are each the one mismatch; the fold keeps the sums; the operator's
+  read) and three integration (a sale, a purchase, a drop and a pickup, balanced, then a
+  planted stack the one mismatch; a trade's rows on both sides; a death and the corpse loot
+  balanced at both ends). The migration dry-run on a copy of the dev database booted to
+  `ledger check mismatches=0`. **Flagged, not built:** `/history` (B) and the group feed (C).
+  **DEPLOYED 2026-10-30 14:38 UTC** (R720 boot line `build="088d8f5" dev_cmds=false`, nobody
+  online at the stop, `saved=0 unsaved=0`; migration 0017 applied at the boot, then `ledger
+  swept carried=0 deleted=0` and `ledger check mismatches=0`, so the opening rows balance
+  against every account's stores on the live world, §1's first row); the sheet is runnable now.
+  **First sitting 2026-10-30 evening: the moves ran, the report did not.** The journal
+  corroborates §2's drop and pickup (a 9-stack), eat, destroy and nine `gm_give` grants and
+  §3's death (7 stacks to the corpse) and Loot All, but `admin_report`, the only reader of the
+  rows and the balance, died on its first run before the ledger cards: `alignment_score` read as
+  `i64`, and the factions build (10-23) made alignment a float every cast moves, which SQLite
+  keeps as a REAL in the 0001 `INTEGER` column; the server's own loader casts it, the report
+  did not, and no run had met a fractional score on this world. Older than the ledger. **FIXED
+  the same evening** (server `851a8cb`, pushed: the report reads the column through the same
+  CAST and prints two decimals; the query has one home, `CHARACTER_QUERY`, so a bin test with
+  a planted 0.37 runs exactly the report's query and fails on the old field; a dry run on a
+  migrated copy of the dev database with 0.37 planted printed both cards). A `git pull` in
+  `/opt/projectdawn/src` and the same command, no restart (a read-only bin). **The rerun, the
+  same evening, on `851a8cb`: the report ran whole and the books balance.** 112 rows, the check
+  card clean after the death and the loot, and every row the sitting's moves owed is there
+  with the count, delta and detail the sheet asked for: the sell (20:00:47, before the pasted
+  journal began, so it had run), the buy, the 9-stack drop and pickup, the eat, the destroys,
+  the vault deposit (delta 0), eight `gm_give` and the `gm_coins` grant to the copper, the
+  coin trade on both sides naming the other, seven `death` rows and the coins at the death and
+  the same seven back plus the coins at the loot; the two wallets add up by hand. Nothing lost
+  or doubled. **Still unplayed, and the entry waits on them:** the vault withdraw and both
+  bank coin ops (`bank_out`, `bank_coin_in`, `bank_coin_out`; no test plays them either), a
+  stack trade (`trade_out` / `trade_in`; the integration test covers those), then one more
+  report. The RTT half (§4) passed and is ticked above.
 - [x] **Social macros never send chat** — **DONE + playtested 2026-10-27**
   (`chat_channel_checklist.md` §5, every row passing; what exists is in systems_overview,
   "Multi-window chat"). *(Original entry:)* *(found 2026-10-26 while building the sticky channel)*.
@@ -2971,6 +3210,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `scripts/ui_theme.gd`); likely interacts with the canvas_items/expand stretch at non-16:9
   window sizes. Same-day context: the startup window shrink to 1280x720 (login.gd) may have
   surfaced layout sins the old full-screen window hid.
+  **One specific, found 2026-10-29 on the equip sheet: the player's own cast bar never shows**
+  (user: "Player cannot see their own casting bar."). `scripts/hud_cast_bar.gd` is drawn 72 to
+  120 px above the bottom edge at the centre, the band the hotbars occupy (`hotbar.gd` anchors
+  its panels to the bottom centre), so whichever draws last hides the other; the fizzle row
+  that needed it is `[-]`. **BUILT 2026-10-29 (user: "Yes, please. You can put it in the center
+  for now.") and PLAYTESTED the same day** (`two_hander_jump_reach_cast_bar_checklist.md`, the
+  BAR rows, all six: the bar centred and filling over Healing Light's 1.2 s, clearing on the
+  landing, on ESC and on a fizzle, staying where it is dragged, clear of the inventory and
+  bank windows; what exists is in systems_overview, UI / HUD): the bar anchors at the screen's midpoint with offsets (the trade window's
+  idiom), its centre 110 px below the middle so it does not cover the target, draggable as
+  before; `tools/probe_cast_bar_place.gd` (10 checks: centred, below the middle, clear of the
+  hotbars' band, shown on a cast's start and hidden on its cancel) fails on the old placement.
 - [ ] **Combine character, equipment, and inventory into one window** *(user ask, twice:
   2026-05-02 "paperdoll, character, inventory combined to one window?" and 2026-05-05
   "Character, Equipment and Inventory to be combined to a single window"; never filed until the

@@ -94,6 +94,12 @@ section of `race_stats.md`.
 ### Bog-stalkers (amphibian)
 - Frog / newt humanoids from the marshland east of the Khala Savannahs.
 - Canonically links to existing Felhari geography as wary neighbors.
+- **Idea (user, 2026-10-22): newt or salamander-folk, "sounds rad, keep that as an idea."**
+  Raised as a possible new race in the line of EQ's Frogloks (swamp frog-folk, made playable in
+  Legacy of Ykesha, 2003) and WoW's Murlocs (coastal fish-frog creatures). Of three looks
+  offered (frog-folk, fish-frog, newt/salamander), the user liked the newt: slimmer than a frog,
+  a long tail, frilled gills at the neck, distinct from the tall Kel`varath lizardfolk and from a
+  scaled Kobold. Not decided: playable or NPC, or whether it takes the Kobold's niche.
 
 ### Canopy-dwellers (non-Avian)
 - Small, reclusive humanoids in deep jungle.

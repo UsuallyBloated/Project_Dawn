@@ -108,9 +108,13 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   the client's `RemoteEnemyManager` routes it to `RemoteEnemy`, which mirrors the pet's buff
   surface, and `hud.gd`'s target frame reads it through the same icon row as a pet's or a
   peer's. Online the client no longer runs its own local DoT on a server mob (`spells.gd`).
-  Reach (2026-10-08): hostile spells 25 m (`RANGED_ATTACK_RANGE`), friendly spells (ALLY
-  heals and buffs, PET_HEAL) 30 m (`FRIENDLY_SPELL_RANGE`); the client checks one metre
-  inside each. One attack slow holds a mob at a time, strongest wins: in `Entity::apply_cc`
+  Reach (per-spell ranges 2026-10-19, the full 30 m 2026-10-27, playtested 2026-10-29):
+  every targeted cast reaches `Spell.range` (0 = 30 m, `reach()`; hostile and friendly alike,
+  also the resurrection's corpse and Evacuate's gather), the server's number exact (out of
+  reach at 30.1) and the client checking the same number before the bar, so a target that
+  walks out during the bar costs a free refusal ("Cast failed: That target is too far
+  away."); the tooltip shows the spell's range; the leash floor is 35 m so no mob can be hit
+  from beyond its own leash. One attack slow holds a mob at a time, strongest wins: in `Entity::apply_cc`
   a stronger slow replaces the holder, an equal one refreshes it, a weaker one is ignored,
   and the pre-flight refuses a weaker one at no cost.
 - **The group share range (2026-10-08, user call of 10-05):** `GROUP_SHARE_RANGE` is 200 m
@@ -350,9 +354,28 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 - **Inventory:** bag slots + item stacks; `add_item()` / `remove_item()` / `stack_all()`
   (the "Stack All" button per bag window calls the latter). Base layout is flat slots with
   bags-as-items.
-- **Equipment:** paperdoll slots, equip/unequip; `can_dual_wield()` gates the off-hand
-  weapon slot; `_resolve_slot()` routes a second weapon to "offhand" when the dual_wield
-  skill > 0.
+- **Equipment:** paperdoll slots, equip/unequip. EQ's equip rule (2026-10-27, playtested
+  2026-10-29; `skills::equip_refusal` on the server, `Equipment.equip_refusal` on the client
+  asking first): a weapon of a type the class never trains ("Your class cannot wield that.")
+  and armor of a kind it never trains ("Your class cannot wear that.") are refused at the
+  equip, read off the cap tables both sides hold in lockstep (a cap of 0 is the flag); a
+  weapon into the off hand needs the class's dual-wield level (`skills::dual_wield_level` /
+  `DUAL_WIELD_LEVELS`: Monk 1; Ranger, Rogue 13; Warrior, Witch Hunter, Bard 15; Shadow
+  Knight, Beast Master 20; the rest never), refused with "You will be able to dual wield at
+  level N." or "Your class cannot dual wield."; `_pick_slot()` routes a second weapon to the
+  off hand only past that level. The server line `EquipItem refused — the class cannot use
+  it` marks a client that skipped its own check. The Attack path refuses an off-hand swing
+  before the level and an off hand with no weapon in it (a Monk with both hands empty punches
+  with both). Gear worn before a rule stays worn and keeps the 80% miss and half damage.
+  **The two-hander rule** (2026-10-29, playtested the same day; the user's call: a two-hander
+  beside an off-hand weapon is an end-game Warrior ability, nobody until then): a two-hander
+  goes in the main hand only ("A two-handed weapon goes in the main hand.") and only while the
+  off hand is empty ("Empty your off hand first."); nothing goes in the off hand beside one
+  ("You cannot hold that with a two-handed weapon."); the player empties the hand by hand
+  (EQ's way; the client no longer unequips it on their behalf); and the off hand never swings
+  beside one: the Attack path's three off-hand gates live in `skills::offhand_swing_refusal`,
+  the client's `Combat._is_dual_wielding` sends none, and both staves carry `is_two_handed`,
+  which a unit test keeps in step with the `2h_` and archery skills.
 - **Augmentation/socketing:** `ItemData.gem_slots`, `socketed_augments`, `Type.AUGMENT`
   (data shape only; combine UI deferred).
 - **Item registry:** `ItemRegistry` autoload; the canonical item table is exported to the
@@ -714,6 +737,13 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 - **HUD core** (`scripts/hud.gd`) split into a `hud_*.gd` family: DeathScreen, CastBar,
   BuffBar, PetPanel, GroupPanel. Includes the always-visible XP bar, target frame with
   actual HP numbers, and a target-of-target frame.
+- **The player's own cast bar** (`scripts/hud_cast_bar.gd`; placed 2026-10-29, playtested
+  the same day, `two_hander_jump_reach_cast_bar_checklist.md`): the spell's name over a bar
+  that fills across the cast time, centred left to right with its centre 110 px below the
+  middle of the screen so it does not cover the target (it sat under the hotbars before, where
+  nobody saw it); shown on `Spells.casting_started`, hidden on a cancel, a fizzle or the cast
+  landing; draggable like the other panels. `tools/probe_cast_bar_place.gd` holds the
+  placement.
 - **Buff/debuff bar:** icons with countdown timers (absorb, HoT, evade, etc.).
 - **`/loc` and the compass** (playtested 2026-10-09, `loc_command_checklist.md`, all five rows):
   `/loc` (or `/location`) prints your position as `x, y, z` to one decimal, paste-ready for
@@ -736,6 +766,12 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   filters (by `MsgType`), display settings (bg/font alpha, font size, default channel), and
   tab docking (`group_id` groups windows; drag to dock/undock). Layout persists through
   `GameSettings.chat_windows`.
+  **A `/say` carries 50 m** (`SAY_RANGE` in `world/mod.rs`; playtested 2026-10-29,
+  `say_range_checklist.md`): the server's `tick::say_recipients` picks every in-world player
+  within it, never the speaker, keep-only-when-in-range, and the eating emote uses the same
+  helper (the jump relay did too until 2026-10-29, when it moved to the jumper's AOI view). A
+  shout and OOC reach everyone in the world, a group line its group, a
+  tell its target; hailing an NPC is the NPC gate's own range.
   **The chat line's channel is sticky, WoW style** (playtested 2026-10-27,
   `chat_channel_checklist.md`): the line always has a channel, shown beside it (`[Say]`,
   `[Shout]`, `[OOC]`, `[Group]`, `[Tell: Bob]`); a channel command at the start (`/say /s /shout
@@ -791,7 +827,10 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   remote animation-state channel. `player.gd` latches a jump and sends it on its next Move's
   `jumping` flag, once; the server relays only the rising edge, at most once per
   `JUMP_RELAY_MIN_INTERVAL` (500 ms), as a `PlayerJumped { id }` to the players within the
-  say channel's reach of the jumper (50 m since 2026-10-27), never the jumper; each of their
+  players who can see the jumper (`aoi.entities_visible_from` of the jumper's cell, the
+  Position fan's own set, since 2026-10-29, playtested the same day: the user's "jump check"
+  on someone far off; the say channel's 50 m audience before that), never the jumper; each of
+  their
   clients plays the hop (`RemotePlayer.play_jump`, the same arc as the local jump, 1.2 m in
   0.7 s) as an offset on the visual and the nameplate, never on the interpolated position.
   Nothing reads the flag into position: Y stays the server's zero, so a forged flag can only

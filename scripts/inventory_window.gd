@@ -413,9 +413,12 @@ func _toggle_bag(base_index: int) -> void:
 		_refresh_cell(base_index)
 
 func _open_bag(base_index: int) -> void:
+	# A bag is a window of its own, so it lives beside this one under the HUD,
+	# not under it: a bag can then come to the front over the bank or the book,
+	# and its destroy confirm with it (picking follows tree order).
 	var win := BagWindow.new()
-	win.top_level = true
-	add_child(win)
+	get_parent().add_child(win)
+	tree_exiting.connect(win.queue_free)   # a bag never outlives the inventory it reads
 	win.init_bag(base_index, self)
 	win.position = global_position + Vector2(size.x + 8, base_index * 12)
 	win.visibility_changed.connect(func(): _refresh_cell(base_index))

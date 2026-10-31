@@ -170,7 +170,7 @@ func _ready() -> void:
 	_sta_label.text = "%d / %d" % [int(PlayerStats.stamina), int(PlayerStats.max_stamina)]
 
 	for w in [character_window, inventory_window, paperdoll_window]:
-		w.visibility_changed.connect(_on_window_visibility_changed.bind(w))
+		_watch_window(w)
 
 	_build_xp_bar()
 	_refresh_player_name_label()
@@ -225,12 +225,12 @@ func _build_components() -> void:
 	_spell_book = _SpellBookScript.new()
 	_spell_book.visible = false
 	add_child(_spell_book)
-	_spell_book.visibility_changed.connect(_on_window_visibility_changed.bind(_spell_book))
+	_watch_window(_spell_book)
 
 	_quest_journal = _QuestJournalScript.new()
 	_quest_journal.visible = false
 	add_child(_quest_journal)
-	_quest_journal.visibility_changed.connect(_on_window_visibility_changed.bind(_quest_journal))
+	_watch_window(_quest_journal)
 
 	_dialogue_window = _DialogueWindowScript.new()
 	_dialogue_window.visible = false
@@ -239,7 +239,7 @@ func _build_components() -> void:
 	_inspect_window = _InspectWindowScript.new()
 	_inspect_window.visible = false
 	add_child(_inspect_window)
-	_inspect_window.visibility_changed.connect(_on_window_visibility_changed.bind(_inspect_window))
+	_watch_window(_inspect_window)
 	Targeting.inspect_requested.connect(_inspect_player)
 
 	# PD_W0028 — the trade window opens itself on `world_trade_opened` (a
@@ -247,7 +247,7 @@ func _build_components() -> void:
 	# here so it survives with the HUD; it drives its own visibility.
 	_trade_window = _TradeWindowScript.new()
 	add_child(_trade_window)
-	_trade_window.visibility_changed.connect(_on_window_visibility_changed.bind(_trade_window))
+	_watch_window(_trade_window)
 
 	# In-game DebugLog tail. Independent of the user-data debug.log
 	# file (which gets corrupted when two clients share the same
@@ -411,18 +411,14 @@ func _refresh_portrait() -> void:
 func _build_options_screen() -> void:
 	_options_screen = _OptionsScreenScript.new()
 	_options_screen.visible = false
-	_options_screen.z_index = 20
 	add_child(_options_screen)
-	_options_screen.visibility_changed.connect(
-		_on_window_visibility_changed.bind(_options_screen))
+	_watch_window(_options_screen)
 
 func _build_crafting_window() -> void:
 	_crafting_window = _CraftingWindowScript.new()
 	_crafting_window.visible = false
-	_crafting_window.z_index = 20
 	add_child(_crafting_window)
-	_crafting_window.visibility_changed.connect(
-		_on_window_visibility_changed.bind(_crafting_window))
+	_watch_window(_crafting_window)
 	# Right-clicking a crafting station requests the window through this signal
 	# (Targeting.interact_at -> StationManager.request_open) — the station can't
 	# reach the HUD's scene tree directly.
@@ -436,10 +432,8 @@ func _build_crafting_window() -> void:
 func _build_vendor_window() -> void:
 	_vendor_window = _VendorWindowScript.new()
 	_vendor_window.visible = false
-	_vendor_window.z_index = 20
 	add_child(_vendor_window)
-	_vendor_window.visibility_changed.connect(
-		_on_window_visibility_changed.bind(_vendor_window))
+	_watch_window(_vendor_window)
 	VendorManager.vendor_opened.connect(func(vname: String, vtype: String) -> void:
 		(_vendor_window as Node).call("open_for", vname, vtype))
 
@@ -448,10 +442,8 @@ func _build_vendor_window() -> void:
 func _build_bank_window() -> void:
 	_bank_window = _BankWindowScript.new()
 	_bank_window.visible = false
-	_bank_window.z_index = 20
 	add_child(_bank_window)
-	_bank_window.visibility_changed.connect(
-		_on_window_visibility_changed.bind(_bank_window))
+	_watch_window(_bank_window)
 	BankerManager.banker_opened.connect(func(bname: String) -> void:
 		(_bank_window as Node).call("open_for", bname))
 
@@ -603,6 +595,7 @@ func _on_world_resurrect_offer(corpse_id: int, caster_name: String, xp_percent: 
 	_res_corpse_id = corpse_id
 	_res_label.text = "%s offers to resurrect you.\nReturn %d%% of the experience that death cost?" % [caster_name, xp_percent]
 	_res_prompt.visible = true
+	_res_prompt.move_to_front()   # above any window a click has raised since
 
 func _on_res_accept_pressed() -> void:
 	if _res_corpse_id >= 0:
@@ -700,8 +693,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				Spells.cancel_cast()
 				CombatLog.add_line("You stop casting.", CombatLog.MsgType.INFO)
 				get_viewport().set_input_as_handled()
-			elif _window_stack.size() > 0:
-				_window_stack.back().visible = false
+			elif _top_window() != null:
+				_top_window().visible = false
 				get_viewport().set_input_as_handled()
 			elif _options_screen != null:
 				_options_screen.visible = !_options_screen.visible
@@ -748,6 +741,21 @@ func _unhandled_input(event: InputEvent) -> void:
 		# (Targeting.interact_at) — one grammar with the inventory, and every
 		# interaction needs the cursor on the object, which the proximity-F
 		# path never did (walk near, mash F was trivially bottable).
+
+# ESC closes the window on top. The windows ESC may close register here; the
+# one on top is the highest in the tree, since DraggablePanel moves a window
+# to the back of its siblings when it opens or is clicked. (They used to be
+# stacked with z_index, which moved only the drawing; the clicks went to the
+# window underneath.)
+func _watch_window(window: Panel) -> void:
+	window.visibility_changed.connect(_on_window_visibility_changed.bind(window))
+
+func _top_window() -> Panel:
+	var top: Panel = null
+	for w in _window_stack:
+		if w.visible and (top == null or w.get_index() > top.get_index()):
+			top = w
+	return top
 
 func _on_window_visibility_changed(window: Panel) -> void:
 	if window.visible:

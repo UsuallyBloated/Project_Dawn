@@ -68,18 +68,30 @@ func can_dual_wield() -> bool:
 # player gets the line without a round trip. EQ's rule, since 2026-10-27: a
 # weapon of a type the class never trains, armor of a kind it never trains,
 # and a weapon in the off hand before the class can dual wield are refused at
-# the equip, not worn badly.
+# the equip, not worn badly. The two-hander rule, since 2026-10-29: a
+# two-hander goes in the main hand only, and only while the off hand is
+# empty; nothing goes in the off hand while the main hand holds one (the
+# user's call: a two-hander beside an off-hand weapon is an end-game Warrior
+# ability, and nobody has it until that ability exists).
 func equip_refusal(item: ItemData, slot_name: String) -> String:
 	if item == null:
 		return ""
 	if item.type == ItemData.Type.WEAPON:
 		if not WeaponSkills.class_trains(WeaponSkills.skill_key_for(item)):
 			return "Your class cannot wield that."
-		if slot_name == "offhand" and not can_dual_wield():
-			var at: int = WeaponSkillDefinitions.DUAL_WIELD_LEVELS.get(PlayerStats.player_class, 0)
-			if at > 0:
-				return "You will be able to dual wield at level %d." % at
-			return "Your class cannot dual wield."
+		if slot_name == "offhand":
+			if item.is_two_handed:
+				return "A two-handed weapon goes in the main hand."
+			if not can_dual_wield():
+				var at: int = WeaponSkillDefinitions.DUAL_WIELD_LEVELS.get(PlayerStats.player_class, 0)
+				if at > 0:
+					return "You will be able to dual wield at level %d." % at
+				return "Your class cannot dual wield."
+			var main_wpn: ItemData = equipped.get("weapon")
+			if main_wpn != null and main_wpn.is_two_handed:
+				return "You cannot hold that with a two-handed weapon."
+		elif slot_name == "weapon" and item.is_two_handed and equipped.get("offhand") != null:
+			return "Empty your off hand first."
 		return ""
 	if item.armor_type != "" and ArmorSkills.get_cap(item.armor_type) <= 0:
 		return "Your class cannot wear that."
@@ -113,8 +125,8 @@ func equip(item: ItemData) -> void:
 # + apply_remote_equip update local state.
 #
 # `src_location` is "base" or "bag_<N>"; `src_slot` is the index inside
-# that location. Returns false if the equip is blocked (no valid slot,
-# 2H swap with full inventory, etc.).
+# that location. Returns false if the equip is blocked (no valid slot, or
+# a refusal from `equip_refusal`, printed as its line).
 func request_equip_from(src_location: String, src_slot: int, item: ItemData, target_slot_hint: String = "") -> bool:
 	# `target_slot_hint` lets the caller force a specific paperdoll
 	# slot — e.g. the paperdoll left-click "drop here" path. Empty
@@ -141,17 +153,10 @@ func request_equip_from(src_location: String, src_slot: int, item: ItemData, tar
 		return false
 
 	if Net.is_launcher_mode():
-		# 2H weapon while offhand is occupied → unequip offhand to a free
-		# base slot first, then equip the 2H. Server processes the two
-		# intents in send order (renet reliable channel).
-		if item.type == ItemData.Type.WEAPON and item.is_two_handed \
-				and equipped.get("offhand") != null:
-			var dst := _first_free_base_slot()
-			if dst < 0:
-				CombatLog.add_line("Inventory full — free a slot to swap weapons.", CombatLog.MsgType.INFO)
-				return false
-			var oh_equip_idx: int = SLOTS.find("offhand")
-			Net.broadcast_unequip_item(oh_equip_idx, NetProtocol.INV_LOCATION_BASE, dst)
+		# A two-hander with a full off hand was refused above ("Empty your
+		# off hand first."), as the server refuses it: EQ's way, never an
+		# unequip sent on the player's behalf. (Until 2026-10-29 this path
+		# unequipped the off hand itself, keyed on a flag both staves lacked.)
 		Net.broadcast_equip_item(src_location, src_slot, equip_slot_idx)
 		return true
 
