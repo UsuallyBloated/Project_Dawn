@@ -1131,6 +1131,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   all answered and an unhasted Warrior's at 0.9 s every second one dropped; B sees Ice Spear's 1.0 s
   bar against a forged 2.5, a made-up spell reaches nobody, a forged fail reason is not
   relayed); the attack-paced tests swing at the weapon's own delay; the suite 157 of 157.
+  **DEPLOYED 2026-10-31 18:23 UTC** (R720 boot line `build="e8810db" dev_cmds=false`, nobody
+  online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0` at the boot); the sheet
+  is runnable on any client (§1's weapon-swap row has the current-export caveat written on it).
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
