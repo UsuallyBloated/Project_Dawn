@@ -1683,3 +1683,76 @@ checklist = "item_ledger_and_rtt_checklist.md"
 waits_on = ["o16"]
 todo = "Research: the Monsters and Memories item log"
 done_when = "Every row filled."
+
+[[row]]
+id = "b47"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30, night"
+what = "The ledger's bank test: the three ledger kinds the sitting left unplayed (the vault withdrawal, the bank coin deposit and withdrawal) had no test; one now plays all five bank rows through the logout flush and checks each row, the stores on both sides of the counter and the balance. Server only; the sheet stays the play evidence."
+who = "Claude"
+hours = 0.5
+done_when = "Pushed with the suite green."
+todo = "Research: the Monsters and Memories item log"
+
+[[row]]
+id = "b48"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30, night"
+what = "Phase 4 of the housekeeping audit, two server-only items: the melee swing-rate limit reads the player's own haste instead of assuming everyone fully hasted (with the last accepted swing's pacing carrying into the next, so a Haste that runs out or a weapon swap costs no honest swing), and the cast relays carry only spells the server knows, at the server's cast time, with a fixed cancel word, instead of whatever the client wrote."
+who = "Claude"
+hours = 3
+done_when = "Pushed on the deploy branch with the suite green and two integration tests failing on the previous source."
+todo = "Client-decided outcomes"
+
+[[row]]
+id = "o17"
+week = "w5"
+lane = "operate"
+day = "Sat Oct 31 or later, nobody online"
+what = "Redeploy the R720 at the swing-limit and cast-relay build. Server only, no export, no migration."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+waits_on = ["b48"]
+done_when = "The boot line shows the new build= and dev_cmds=false."
+todo = "Client-decided outcomes"
+
+[[row]]
+id = "v48"
+week = "w5"
+lane = "verify"
+day = "Sat Oct 31 or Sun Nov 1"
+what = "Honest melee never trips the limiter: bare hands, a slow axe, a weapon swap mid-fight, dual wield, under Haste and as it runs out, a target switch and an auto-attack toggle, with no swing-rate line in the journal; two seats see the other's cast bar at the spell's own length, ending on a cancel, and no bar for a spell the server does not have."
+who = "user at a desk, two seats for section 2"
+hours = 0.75
+needs = ["the redeploy (o17)", "second seat for section 2 (two-boxing works)"]
+checklist = "haste_limiter_and_cast_relay_checklist.md"
+waits_on = ["o17"]
+todo = "Client-decided outcomes"
+done_when = "Every row filled."
+
+[[row]]
+id = "b49"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30, night"
+what = "Held items at the bank and the merchant: a click on a vault slot while holding deposits into that vault (a bag refused up front), and a merchant's SELL list leads with the item in hand, sold from the cursor. A cursor variant on the wire, so it rides PD_W0029 with the facing, on feat/facing in both repos; the DLL rebuilt."
+who = "Claude"
+hours = 3
+done_when = "Pushed on feat/facing in both repos with the suite green, the integration test and the headless probe passing, and the DLL rebuilt."
+todo = "Held-item bank and vendor interactions"
+
+[[row]]
+id = "v49"
+week = "w5"
+lane = "verify"
+day = "the next bump day (server and export together)"
+what = "One seat beside the banker and Brom: a lifted stack lands in the vault clicked (personal or shared), merges into a same-item stack, is refused when the vault is full or the item is a bag; the merchant's list leads with what is in hand and sells from it, a held full pouch refused; the old paths unchanged; the ledger rows and the balance in admin_report."
+who = "user at a desk"
+hours = 0.75
+needs = ["the next bump redeploy", "the bump export", "a Small Pouch with something in it"]
+checklist = "held_item_bank_and_vendor_checklist.md"
+waits_on = ["b49", "b39"]
+todo = "Held-item bank and vendor interactions"
+done_when = "Every row filled."
