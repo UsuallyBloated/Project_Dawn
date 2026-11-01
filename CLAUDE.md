@@ -1134,6 +1134,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **DEPLOYED 2026-10-31 18:23 UTC** (R720 boot line `build="e8810db" dev_cmds=false`, nobody
   online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0` at the boot); the sheet
   is runnable on any client (§1's weapon-swap row has the current-export caveat written on it).
+  **Sheet run 2026-11-01: every row marked, one finding.** One honest swing was dropped at
+  22:07:11 (WAROI, a club, after a Haste had run out between fights). A Godot Timer applies a
+  `wait_time` changed in its own timeout handler one gap late (measured with a headless
+  probe), so the client paces swing N+1 by the interval set at swing N-1, and the server's
+  one-swing haste carry is one swing short. Fix proposed, not built: carry the last two.
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
