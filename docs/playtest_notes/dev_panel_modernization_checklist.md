@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 27 (line numbers as of the triage).
 
+> **Triage 2026-11-01: moved.** The Give Food & Drink row rides `food_and_water_checklist.md`: take that sheet's bread and water through this button (it grants through the same server path as the Bow, Bags and Craft rows, which passed) and mark this row from there.
+
 Three things: (1) the Test Panel now grants items **server-side** (no more client-only ghosts),
 via a new **GEAR** section with a searchable item picker + the moved loadout buttons; (2) `/give`
 (GmCommand) is now **dev-gated** (`is_dev`), closing the exploit-audit's top finding while still

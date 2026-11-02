@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 42, 44 (line numbers as of the triage).
 
+> **Triage 2026-11-01: re-run, three seats.** Rows 46 (C leaves a three-person group) and 48 (A kicks C) are still open; no sheet or test has had three members leave or be kicked. Planner row v52, beside the two-seat group rows.
+
 Covers the five fixes landed in commits `9ab261f` (server) and `27f2549` (Project_Dawn). Re-export Project_Dawn and restart the server with the new build (`PD_W0006` protocol) before running.
 
 ## Setup

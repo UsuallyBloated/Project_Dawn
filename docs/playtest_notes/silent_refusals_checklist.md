@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 31, 64 (line numbers as of the triage).
 
+> **Triage 2026-11-01: retired.** Row 35 needs a forged client: the SELL list leaves out anything with no vendor value (`vendor_window.gd`). Row 68's request was answered 2026-08-24 (the out-of-range refusals log at info) and the cast refusals were rebuilt as a pre-flight on 2026-10-02.
+
 Verifies that when the server refuses an action, it **says so**. Follows the audit prompted by the
 2026-08-21 vendor report ("player can buy from the merchant when their inventory is full, the item
 appears to disappear").

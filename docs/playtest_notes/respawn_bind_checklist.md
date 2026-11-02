@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 61 (line numbers as of the triage).
 
+> **Triage 2026-11-01: retired.** Row 65 needs a forged client: an honest one cannot target while dead (`autoloads/targeting.gd` returns early on `PlayerDeath.is_dead`). The server's refusal is still there (`handlers.rs`, "You can't bind your soul while dead.") and belongs in a server test, not a sitting.
+
 Closes the respawn death-loop: the first external tester died, respawned on the spot beside the
 two mobs that killed her, and died again 20 seconds later. Respawn now moves you.
 
