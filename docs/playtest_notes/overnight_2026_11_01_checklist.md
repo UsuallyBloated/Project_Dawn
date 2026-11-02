@@ -38,7 +38,7 @@ show; §3 is what the client removal changes on screen.
 ## 3 — The client without the offline game (after the export)
 - [ ] **The login screen** → no Offline button. notes:
 - [ ] **The lobby** → the character list and Enter World only (no Solo, Host, Join, Test Room, Test Dungeon or Delete Save). Create a character from it as usual. notes:
-- [ ] **Grouped with the second seat, look at the group panel** → your own row is marked as you on both seats (it used to mark the wrong row online). notes:
+- [ ] **Grouped with the second seat, look at the group panel** → your own row is marked as you on both seats, and the leader sees the kick and leadership controls on the other member's row, not their own (online both used to key on whichever member had character id 1). notes:
 - [ ] **A pet class: summon a pet, attack a mob, watch the console** → the pet fights; no red line on each hit (online it used to error on every mob hit). notes:
 - [ ] **The Test Panel (GM): Spawn Normal, Spawn Named, Despawn All, a GEAR give, Give 1,000 Copper, a faction slider, Take 20 dmg, Full Heal, Trigger Death** → each works as before. The removed buttons (the CHARACTER section, STATS OVERRIDE, ZONE TRAVEL, God Mode, No Cooldowns, Clear All Buffs) are gone. notes:
 - [ ] **Open a bag window** → no Destroy button in it; destroying still works by holding the item over the inventory's trash cell. notes:
