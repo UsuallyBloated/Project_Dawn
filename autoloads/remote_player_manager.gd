@@ -268,12 +268,8 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
 			# Track 6 sub-task 4a fix: server already deducted HP in
 			# sub-task 1's enemy-on-player branch and fans the
 			# authoritative HealthUpdate; calling
-			# Combat.receive_player_damage here would now route through
-			# DamageSelf (sub-task 4a addition) and DOUBLE-APPLY the
-			# damage. Trigger the cast-interrupt side effect directly
-			# instead.
-			Spells.try_interrupt_cast()
-			Combat.player_attacked.emit(attacker_node)
+			# Combat.receive_player_damage here would DOUBLE-APPLY the
+			# damage. The server also owns the cast-interrupt roll.
 			CombatLog.add_line(
 				"%s hits you for %d damage." % [
 					attacker_name if attacker_name != "" else "Something",

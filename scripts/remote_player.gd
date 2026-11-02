@@ -14,7 +14,7 @@ class_name RemotePlayer
 # straddle the render time. That guarantees a smooth path through every
 # server-confirmed position, at the cost of a ~100 ms render delay.
 
-# Mirrors the per-resource signals that enemy.gd emits so hud.gd's existing
+# Mirrors the per-resource signals RemoteEnemy emits so hud.gd's existing
 # target-tracking can subscribe via the same `hp_changed(current, maximum)`
 # pattern without a target-type switch.
 signal hp_changed(current: float, maximum: float)

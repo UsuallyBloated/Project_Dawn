@@ -1,6 +1,6 @@
 class_name NamedMobDefinitions
 
-# Named / boss mob data. Key = named_id string used in EnemySpawner.
+# Named / boss mob data. Key = named_id; the Test Panel spawns them by display name.
 #
 # Fields:
 #   display_name      — shown in nameplate

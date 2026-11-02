@@ -193,15 +193,6 @@ func _connect_signals() -> void:
 	BuffManager.hot_ticked.connect(func(amount, sname):
 		add_line("You recover %d health from %s." % [amount, sname], MsgType.HEAL))
 	PetManager.pet_info.connect(func(text): add_line(text, MsgType.INFO))
-	Combat.enemy_stunned.connect(func(n): add_line("%s is stunned!" % n, MsgType.INFO))
-	Combat.enemy_stun_wore_off.connect(func(n): add_line("The stun on %s wears off." % n, MsgType.INFO))
-	Combat.enemy_rooted.connect(func(n): add_line("%s is rooted!" % n, MsgType.INFO))
-	Combat.enemy_snared.connect(func(n): add_line("%s is snared!" % n, MsgType.INFO))
-	Combat.enemy_slowed.connect(func(n): add_line("%s is slowed!" % n, MsgType.INFO))
-	Combat.enemy_mez_applied.connect(func(n): add_line("%s is mesmerized!" % n, MsgType.INFO))
-	Combat.enemy_mez_broke.connect(func(n): add_line("The mesmerize on %s breaks!" % n, MsgType.INFO))
-	Combat.enemy_charmed_attacked.connect(func(atk, tgt, amt): add_line("%s hits %s for %d." % [atk, tgt, amt], MsgType.DAMAGE_OUT))
-	Combat.enemy_silenced.connect(func(n): add_line("%s is silenced!" % n, MsgType.INFO))
 	Combat.auto_attack_toggled.connect(func(on: bool):
 		add_line("Auto attack is now %s." % ("ON" if on else "OFF"), MsgType.INFO))
 	Net.world_chat_message.connect(_on_remote_chat_message)

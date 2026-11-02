@@ -6,18 +6,14 @@ class_name RemoteEnemy
 # server broadcasts via RemoteEnemyManager.
 #
 # Snapshot-interpolation pattern is identical to RemotePlayer
-# (BUFFER_CAPACITY = 5, INTERP_LAG = 100 ms). The local Enemy class
-# stays untouched for the Test Room single-player flow; only the
-# launcher-mode world.tscn ever instantiates RemoteEnemy.
+# (BUFFER_CAPACITY = 5, INTERP_LAG = 100 ms).
 #
-# Targeting / Combat compatibility: this node mirrors the public
-# interface that `enemy.gd` exposes (is_dead, mob_name, set_targeted,
-# take_damage, get_spell_resist, flash_spell_hit, hp / max_hp,
+# Targeting / Combat compatibility: this node exposes the interface the
+# combat and spell code reaches for on a target (is_dead, mob_name,
+# set_targeted, take_damage, get_spell_resist, flash_spell_hit, hp / max_hp,
 # hp_changed). It joins the `enemies` group so Targeting.click_target
 # and Combat.set_target pick it up without a type switch. `take_damage`
-# is a no-op while sub-task 3 (player → server Attack intent) is
-# unwritten — the existing local-damage path keeps calling it harmlessly
-# and the auto-attack cycle just costs a few timer fires per minute.
+# is a no-op: the server applies every hit.
 
 signal hp_changed(current: float, maximum: float)
 signal target_changed(target_id: int)
@@ -178,9 +174,7 @@ func get_spell_resist(_damage_type: int) -> float:
 
 # ── CC no-op stubs ────────────────────────────────────────────────────────────
 # The spell paths call these directly on Combat.current_target
-# (spells.gd: root/snare/apply_attack_slow/silence), and skills.gd's STUN arm
-# calls stun() — all defined only on the local Enemy, which launcher mode never
-# spawns. Without these stubs the call aborts the WHOLE surrounding function
+# (spells.gd: root/snare/apply_attack_slow/silence). Without these stubs the call aborts the WHOLE surrounding function
 # with a runtime error that never reaches debug.log (engine errors are
 # invisible to DebugLog), so everything after the CC line silently didn't
 # happen. The server has no enemy-CC model yet, so the honest behaviour online
@@ -188,9 +182,6 @@ func get_spell_resist(_damage_type: int) -> float:
 # (damage text, stealth breaks, cast bookkeeping) completes. Same precedent as
 # get_spell_resist above. When server-side enemy CC lands, these become the
 # application points for replicated CC state.
-func stun(_duration: float) -> void:
-	pass
-
 func root(_duration: float) -> void:
 	pass
 
@@ -201,9 +192,6 @@ func apply_attack_slow(_amount: float, _duration: float) -> void:
 	pass
 
 func silence(_duration: float) -> void:
-	pass
-
-func feign_death_deaggro() -> void:
 	pass
 
 func flash_spell_hit(color: Color) -> void:

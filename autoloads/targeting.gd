@@ -111,7 +111,7 @@ func click_target(mouse_pos: Vector2) -> void:
 		if Inventory.cursor_slot != null and Net.is_launcher_mode() \
 				and "char_id" in body and body.char_id >= 0:
 			Net.broadcast_trade_request(body.char_id)
-	elif body.is_in_group("pets") or body.is_in_group("remote_pets"):
+	elif body.is_in_group("remote_pets"):
 		# Targeting own/remote pets is allowed — useful for inspecting
 		# pet HP on the target frame and as a base for buff/heal target
 		# resolution. Combat.can_attack still gates whether a pet is a
@@ -266,13 +266,6 @@ func interact_at(mouse_pos: Vector2) -> bool:
 			CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
 			return true
 		StationManager.request_open()
-		return true
-
-	if obj is Enemy and obj.is_skinnable and obj.state == Enemy.State.DEAD:
-		if dist > INTERACT_RANGE_GATHER:
-			CombatLog.add_line("You are too far away.", CombatLog.MsgType.INFO)
-			return true
-		CombatLog.add_line(obj.try_skin(), CombatLog.MsgType.INFO)
 		return true
 
 	return false
