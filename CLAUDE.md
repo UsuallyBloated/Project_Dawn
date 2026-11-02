@@ -1056,6 +1056,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   pass; two online bugs fell out (the group panel marked the wrong own row; the pet's local
   assist errored on every hit). Both branches merge after `feat/facing` on the next bump day.
   (4) The older checklists triaged a second time (the planner's b9).
+  **The audit's code items finished 2026-11-02** (user: "Lets finish the audit, not fold it
+  into the To-Dos"; server `refactor/tick-split`, seven commits from `1c35cf7` to `8afc96c`,
+  the suite green after each, 352 unit and 163 world tests; they ride the split's bump-day
+  merge, and `overnight_2026_11_01_checklist.md` §2's rerun covers them): **panic containment,
+  the narrow version** (a panic handling one client's message drops that client without saving
+  and discards its tick's requests; the world carries on); one helper per duplicated job (F6);
+  `IdKind` for what an entity id names (F7); `CoinAmount`, so a client's coin amount is checked
+  once at the message (F8); `DbError`, `MoveError` and `TradeError` (F9); log lines name the
+  acting player `char_id`, a `client{char_id, account_id}` span, the client id on decode
+  warnings (M9); fuzzing (F11: a seeded soak of 20,000 random messages through the handler in
+  every `cargo test`, and `cargo-fuzz` targets in `fuzz/` whose coverage-guided run needs
+  Linux). M7 / F3 closed by measurement (worst tick 13.3 ms against 50). User calls the same
+  day: `/pvp` stays a player toggle; B1 slice 1 handed to the fall damage design (noted in the
+  height model handoff); the R720's tailnet-only bind and off-host backup wait. **Left:** the
+  bump-day merges, reformat and lints; B6 wire hygiene and B4's stats message (the next protocol
+  bump); M4, M6 / F4, L2, L8 on `feat/public-hosting`; F7's `CharId` newtype, not done, the
+  user's call. Status per finding: the findings doc's §5.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
   Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying

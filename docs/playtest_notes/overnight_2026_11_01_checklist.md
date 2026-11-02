@@ -25,6 +25,10 @@ show; §3 is what the client removal changes on screen.
 - [x] **Log out and wait two minutes** → no `world health` line while nobody is online. notes:
 
 ## 2 — Ordinary play on the split server (after the bump)
+> [Claude, 11-02: the split branch gained seven more commits on 11-02, the rest of the
+> housekeeping audit (panic containment, merged helpers, id and coin types, error types, log
+> fields, fuzzing; no change to how anything plays), so the rerun of this section after the bump
+> covers them too. The row at the end of this section is new for them.]
 > [Claude, 11-02: the marks below were run on the pre-bump builds, the R720 at `d4f1a2a` (the
 > deploy branch, without the split) and a client exported from `feat/facing` at `f2ed345`
 > (without the offline removal), so they are a regression check of those builds, not of the
@@ -41,6 +45,7 @@ show; §3 is what the client removal changes on screen.
 - [x] **Die, respawn, loot the corpse** → gear goes back on. notes:
 - [x] **/camp one seat, close the other with the window X** → the camp logs out; the other lingers about 30 s, as before. notes:
 - [x] **The journal over the sitting** → no `ERROR` line and no panic. notes:  I forgot to start the log.  Let me know how to handle this.
+- [ ] **Read a few journal lines from the sitting** → a line logged while a player's message is handled starts `client{char_id=N account_id=M}:`, and a buy, sell, bank or loot line names the player `char_id=N` (it said `owner=N` or `caster=N` before 2026-11-02). notes:
 
 ## 3 — The client without the offline game (after the export)
 > [Claude, 11-02: run on the `feat/facing` export (`f2ed345`), which still carries the offline

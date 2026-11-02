@@ -86,10 +86,10 @@ Server `01fd0ae` + review fixes `3f7c23a` on the deploy branch, merged into `fea
 |---|---|---|
 | F13 | No CI, `deny.toml` or `cargo audit`. | FIXED: on-demand CI (suite and cargo-deny blocking; rustfmt and clippy report only), actions pinned by SHA. The first advisory match found tokio, anyhow and event-listener advisories, fixed by updates; bincode (unmaintained) and rsa (never compiled) accepted with reasons. |
 | F13 | No `[workspace.lints]`; 981 rustfmt diffs. | OPEN: after the `tick.rs` split, with the one-time reformat. |
-| F2 / C1 | No panic containment. | OPEN: after the split. |
+| F2 / C1 | No panic containment. | BUILT 2026-11-02 (the narrow version, user's call; server `1c35cf7` on `refactor/tick-split`): a panic while handling one client's message drops that client without saving, discarding everything it sent that tick, and the world carries on. A panic anywhere else still ends the process, on purpose. |
 | F10 / L3 | `set_var` ran inside the runtime. | FIXED: `.env` loads in a synchronous `main` before the runtime. `#![forbid(unsafe_code)]` on protocol, shared and the server library. |
 | L1 | `Config` printed the netcode key in `Debug`. | FIXED: `NetcodeKey` newtype with a redacting `Debug`. |
-| F11 | No fuzzing or property tests; the decoder had no size limit. | FIXED in part: a 16 KiB decode limit and a throttled decode warning; property tests on the decoder (random and mutated bytes), coin arithmetic and inventory moves. `cargo-fuzz` not added (needs a nightly toolchain installed outside `F:\Projects`). |
+| F11 | No fuzzing or property tests; the decoder had no size limit. | FIXED: a 16 KiB decode limit and a throttled decode warning; property tests on the decoder (random and mutated bytes), coin arithmetic and inventory moves. **Fuzzing BUILT 2026-11-02** (server `8afc96c`): a seeded soak of 20,000 random well-formed client messages through the real handler in every `cargo test` (it catches the October chat crash in 0.07 s when that bug is put back), and two `cargo-fuzz` targets in `fuzz/` (README there). The coverage-guided run needs Linux: this Windows box lacks Visual Studio's 64-bit AddressSanitizer runtime, so it waits for the R720 or WSL. |
 
 ### Phase 4: the client/server line (`dist-consistency`, `security-software`)
 | Id | Finding |
@@ -132,8 +132,8 @@ Panel, `tools/check_nameplates.gd`, `tools/currency_smoke.gd`.
 ### Phase 6: observability and security polish (`dist-observability`, `security-software`)
 | Id | Finding |
 |---|---|
-| M9 | No tick timing, metrics or spans; the player id appears under four field names; decode failures log without a client id. **Tick timing FIXED 2026-11-01** (`d4f1a2a`, deploy branch): a once-a-minute `world health` line (each tick's work at the median, the 99th percentile and worst, the ticks over the 50 ms budget, the checkpoint's time), logged while anyone is in the world or when a tick overran. The spans, the one field name and the decode client id stay OPEN. |
-| M7 / F3 | The 20 Hz loop awaits SQLite inline (about eight reads per connect, the checkpoint writes connections one after another). |
+| M9 | No tick timing, metrics or spans; the player id appears under four field names; decode failures log without a client id. **Tick timing FIXED 2026-11-01** (`d4f1a2a`, deploy branch): a once-a-minute `world health` line (each tick's work at the median, the 99th percentile and worst, the ticks over the 50 ms budget, the checkpoint's time), logged while anyone is in the world or when a tick overran. **The rest BUILT 2026-11-02** (server `495a5d4`): one field name, `char_id`, for the player acting on a request (114 lines renamed); a `client{char_id, account_id}` span around each client's message batch; the decode warning names the client. |
+| M7 / F3 | The 20 Hz loop awaits SQLite inline (about eight reads per connect, the checkpoint writes connections one after another). **Measured 2026-11-02, closed:** the `world health` line on the R720 with two players showed the worst tick at 13.3 ms and checkpoints at 3 to 13 ms against the 50 ms budget, `over_budget=0`. Reopen if `over_budget` climbs. |
 | M6 / F4 | Argon2 runs on runtime threads; no WebSocket handshake timeout, connection cap or size limit; no password maximum (part of this is on `feat/public-hosting`). |
 | L2 | Session tokens stored raw; expired sessions never purged; the ban check runs before the password check. |
 | L6 / L7 | Auth listens on `0.0.0.0` over `ws://`; backups are nightly and on the same host. |
@@ -156,12 +156,16 @@ bump merges (user decision, 2026-10-23), with Phase 3's CI and fuzzing alongside
 4 to 6. Running alongside other work: Phase 0 and Phase 6's auth items are independent; Phases
 1, 2 and most of 4 and 5 touch the same files as feature branches and wait for them.
 
-## 5. Where it stands, and how to finish (2026-11-01)
+## 5. Where it stands, and how to finish (2026-11-01, updated 2026-11-02)
 
 **Done or built:** Phases 0 and 1 (playtested); Phase 2's split and test split (F5, F12, on
 `refactor/tick-split`); Phase 3's CI, `cargo-deny`, decode limit, key redaction,
 `forbid(unsafe_code)` and property tests; Phase 4's B1 slice 0, B2, B3 and most of B4; Phase 5
-(on `refactor/remove-offline-code`); Phase 6's tick timing.
+(on `refactor/remove-offline-code`); Phase 6's tick timing. **On 2026-11-02**, on
+`refactor/tick-split` (server, so they ride the same bump-day merge): panic containment (F2 /
+C1), the duplicated helpers (F6), the id-kind enum (F7), the validated coin amount (F8), the
+error types (F9), M9's spans and field name, and fuzzing (F11); M7 / F3 closed by
+measurement.
 
 **Left, and where each belongs.** *(User, 2026-11-02: finish the audit rather than fold its
 leftovers into the To-Do. The homes below say where each piece gets built; the audit stays
@@ -171,17 +175,17 @@ open until they are done, except where a row says the user handed it elsewhere.)
 |---|---|
 | Merge the two branches after `feat/facing` on the next bump day, playtest both | the bump day (`overnight_2026_11_01_checklist.md`) |
 | F13 rest: the one-time `rustfmt` and the `[workspace.lints]` turn-on | the same bump day, after the merges (a reformat now would conflict with every open branch) |
-| F2 / C1 panic containment | a decision first (see below), then a small build |
-| F6 duplicated helpers, F8 a validated coin type, F9 error types, F7 an id-kind enum | one tech-debt To-Do entry, done when the code is next touched (F7 found no live disagreement: the one loose range check is a test assertion) |
+| F2 / C1 panic containment | **BUILT 2026-11-02** (`1c35cf7`), the narrow version; see below |
+| F6 duplicated helpers, F8 a validated coin type, F9 error types, F7 an id-kind enum | **BUILT 2026-11-02** (`31a5dd1`, `fb2756c`, `eb12123`, `4d23a34`). One piece left for the user: F7's `CharId` newtype for the ~128 `as ClientId` / `as u64` casts was not done (wide churn on code the open branches rebase over, and no bug found behind it) |
 | M4 intent budgets, M6 / F4 auth limits, L2 sessions, L8 a characters-per-account cap | `feat/public-hosting`, rebased across the split (several are already there) |
 | L6 / L7 bind auth to the tailnet address, an off-host backup | **deferred 2026-11-02 (user: "we can wait")**; R720 jobs for the user, steps to be written when picked up |
 | B6 wire hygiene and the real `vendor_id` | the next protocol bump |
 | B4's stats message | its own To-Do entry |
 | B5 `PvpToggle` | **decided 2026-11-02 (user): stays a player toggle** until the PvP flagging design tightens it; closed for the audit |
 | B1 slice 1 (falls simulated on the server) | **handed to the fall damage design 2026-11-02 (user)**; closed for the audit. Noted in `docs/session_notes/handoff_server_height_model.md` (invariant 4) so the height model work picks it up |
-| M7 / F3 the database off the loop | measure first: the `world health` line now shows whether the checkpoint or a login stalls a tick |
-| M9 rest (spans, one field name, the decode client id) | the tech-debt entry |
-| `cargo-fuzz` | needs a nightly toolchain installed outside `F:\Projects`; the property tests cover the decoder meanwhile |
+| M7 / F3 the database off the loop | **closed by measurement 2026-11-02** (worst tick 13.3 ms, checkpoints 3 to 13 ms, budget 50 ms); reopen if `over_budget` climbs |
+| M9 rest (spans, one field name, the decode client id) | **BUILT 2026-11-02** (`495a5d4`) |
+| `cargo-fuzz` | **BUILT 2026-11-02** (`8afc96c`; nightly and `cargo-fuzz` installed in the user profile with the user's OK). The soak runs in every `cargo test`; the long coverage-guided run waits for a Linux box (fuzz/README.md) |
 
 **Panic containment, the decision.** Today a panic anywhere in the tick ends the process, and
 systemd restarts it: everyone loses what was not yet saved (since Phase 1, at most the last
@@ -190,4 +194,13 @@ inside a step that touches several players is not safe: the step may have half-a
 and saving or carrying on after it could keep a copy (a dupe) or lose an item. The narrow
 version is safe: a panic while handling one client's message (`intake`, which touches only
 that client) kicks that client without saving it, so its last saved state stands, and the
-world carries on for everyone else. Recommended: the narrow version only.
+world carries on for everyone else. Recommended: the narrow version only. **DECIDED 2026-11-02
+(user): the narrow version. BUILT the same day** (`1c35cf7`): the intake runs each message's
+handler under `catch_unwind`; a client's outcomes are held until its whole batch is handled and
+discarded on a panic (some queued work, the spell bar seed and bind writes, is written by char
+id alone, so dropping the connection would not have been enough); a new step straight after the
+drain reaps the client at once without saving. Test
+`a_panic_handling_one_message_drops_only_its_sender`, through a test-only panic probe
+(`Config::panic_probe`, read by no env var); it fails with the catch removed and with the batch
+routed instead of dropped. Residual, accepted: a player who finds a panic bug can use it to leave
+at once, rolled back to the last save; the panic is logged at error with their character.
