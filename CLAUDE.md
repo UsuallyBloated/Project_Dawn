@@ -1037,8 +1037,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   and how to finish it). (1) **Phase 6's tick timing BUILT** (server `d4f1a2a` on the deploy
   branch, merged into `feat/facing`; unit tests on the window and percentiles): a once-a-minute
   `world health` log line (tick work at the median, 99th percentile and worst, ticks over the
-  50 ms budget, the checkpoint's time) while anyone is online, or when a tick overran; rides
-  the next redeploy. (2) **Phase 2's split BUILT** on server `refactor/tick-split` (from
+  50 ms budget, the checkpoint's time) while anyone is online, or when a tick overran;
+  **DEPLOYED 2026-11-02 16:24 UTC** (R720 boot line `build="d4f1a2a" dev_cmds=false`, nobody
+  online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`), so §1 of the
+  checklist is runnable. (2) **Phase 2's split BUILT** on server `refactor/tick-split` (from
   `feat/facing`, eight commits, the suite green after each: 350 unit, 161 world tests):
   `tick.rs`'s 13,820 lines are `tick/`, `run` about 330 lines calling 23 step modules in the
   order they always ran, `WorldState` and `Intents` in `state.rs`, 5 modules of shared rules;
