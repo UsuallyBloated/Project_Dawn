@@ -16,7 +16,6 @@ var available: Array[SpellData] = []
 var _casting: SpellData = null
 var _cast_timer: float = 0.0
 var _hit_during_cast: bool = false
-var no_cooldowns: bool = false
 # Seconds left on the global cooldown (0 when none runs).
 var _gcd_remaining: float = 0.0
 
@@ -120,12 +119,12 @@ func cast_spell(spell: SpellData) -> bool:
 		if Net.stop_song():
 			BardSongs.stop_singing()
 		return false
-	if _cooldowns.is_active(spell.spell_name) and not no_cooldowns:
+	if _cooldowns.is_active(spell.spell_name):
 		spell_failed.emit("Spell is on cooldown.")
 		return false
 	# The global cooldown: a refusal here costs nothing (no bar, no mana), where
 	# the server's own gate at CastStart would answer with a CastFail.
-	if _gcd_remaining > 0.0 and not spell.is_song and not no_cooldowns:
+	if _gcd_remaining > 0.0 and not spell.is_song:
 		spell_failed.emit("You cannot cast again yet.")
 		return false
 	if PlayerStats.mp < spell.mana_cost:
@@ -332,7 +331,7 @@ func _apply_spell(spell: SpellData) -> void:
 	_cooldowns.start(spell.spell_name, spell.cooldown)
 	# The global cooldown starts as the cast lands (the server stamps its own
 	# when it accepts the CastSpell); a song starts none.
-	if not spell.is_song and not no_cooldowns:
+	if not spell.is_song:
 		_gcd_remaining = GLOBAL_COOLDOWN_SECS
 		global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
 	var effectiveness := _get_alignment_effectiveness(PlayerStats.player_class)
@@ -578,9 +577,8 @@ func on_server_fizzle() -> void:
 		_cooldowns.clear(_sent_spell_name)
 		_sent_spell_name = ""
 	cancel_cast()
-	if not no_cooldowns:
-		_gcd_remaining = GLOBAL_COOLDOWN_SECS
-		global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
+	_gcd_remaining = GLOBAL_COOLDOWN_SECS
+	global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
 
 # True when an ALLY-target spell is being cast on a remote recipient (peer
 # or pet) the server — not the client — applies it to. The caster skips its

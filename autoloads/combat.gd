@@ -44,7 +44,6 @@ var _auto_attack_timer: Timer
 var _offhand_timer: Timer
 var _player: Node3D = null
 var _last_crit: bool = false
-var god_mode: bool = false
 
 func register_player(node: Node3D) -> void:
 	_player = node
@@ -499,8 +498,6 @@ func has_valid_target() -> bool:
 
 func receive_player_damage(amount: int, attacker: Node = null, attacker_name: String = "") -> void:
 	if PlayerDeath.is_dead:
-		return
-	if god_mode:
 		return
 	if attacker != null and is_instance_valid(attacker):
 		player_attacked.emit(attacker)

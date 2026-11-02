@@ -24,8 +24,6 @@ const STAND_HEIGHT = 2.0
 const CROUCH_HEIGHT = 1.0
 const STAND_CAMERA_Y = 1.6
 const CROUCH_CAMERA_Y = 0.7
-const FALL_DAMAGE_THRESHOLD := 9.0  # m/s downward; below this landing is safe
-const FALL_DAMAGE_MULT := 5         # HP lost per m/s above threshold
 
 # Track 2 — server-authoritative movement reconciliation.
 # When a Position broadcast arrives:
@@ -108,8 +106,6 @@ var _view_index := 1
 # no transforms — so the restore lands exactly where the capture happened.
 var _cursor_before_camera: Vector2i = Vector2i.ZERO
 var _heading_train_accum: float = 0.0
-var _was_on_floor: bool = true
-var _peak_fall_speed: float = 0.0
 
 # Track 2 — server-authoritative movement state.
 var _server_pos_target: Vector3 = Vector3.ZERO
@@ -409,13 +405,9 @@ func _physics_process(delta: float) -> void:
 			move_and_slide()
 			return
 
-	var now_on_floor := is_on_floor()
-	if now_on_floor and not _was_on_floor:
-		_on_land()
-	_was_on_floor = now_on_floor
-
-	if now_on_floor:
-		_peak_fall_speed = 0.0
+	# Falls are the server's to judge (docs/design/server_fall_damage.md); the
+	# client computes no fall damage.
+	if is_on_floor():
 		if not chat_focused and Input.is_action_pressed("jump") and state != PlayerState.SITTING:
 			velocity.y = JUMP_VELOCITY
 			_jump_pending = true
@@ -423,7 +415,6 @@ func _physics_process(delta: float) -> void:
 			velocity.y = maxf(velocity.y, 0.0)
 	else:
 		velocity.y += GRAVITY * delta
-		_peak_fall_speed = maxf(_peak_fall_speed, -velocity.y)
 
 	var direction := Vector3.ZERO
 	if not chat_focused:
@@ -489,8 +480,8 @@ func _physics_process(delta: float) -> void:
 	# Track 2 — blend horizontal position toward server truth. Local prediction
 	# (move_and_slide above) and the lerp below run concurrently every frame; the
 	# two equally-valid futures (predicted and authoritative) blend smoothly.
-	# Skipped in local-save mode (Net stays idle, signal never fires, flag stays
-	# false). Y is left untouched — slice 2 server has no Y physics.
+	# Skipped until the first server position arrives. Y is left untouched:
+	# the server has no Y physics.
 	if Net.is_app_ready() and _received_first_pos:
 		var blend := 1.0 - exp(-SERVER_LERP_RATE * delta)
 		var blend_x := lerpf(global_position.x, _server_pos_target.x, blend)
@@ -524,23 +515,6 @@ func _on_world_position(id: int, pos: Vector3, _vel: Vector3, _yaw: float, seque
 		_server_pos_target = global_position
 	else:
 		_server_pos_target = Vector3(pos.x, global_position.y, pos.z)
-
-func _on_land() -> void:
-	if _peak_fall_speed <= FALL_DAMAGE_THRESHOLD:
-		return
-	# Online a fall is the server's to judge (docs/design/server_fall_damage.md);
-	# until it simulates falls, a fall online does nothing. The old path sent a
-	# dev DamageSelf the server ignored for everyone but GMs.
-	if Net.is_launcher_mode():
-		return
-	# TODO: skip if BuffManager has levitate/feather fall active
-	var dmg := maxi(1, int((_peak_fall_speed - FALL_DAMAGE_THRESHOLD) * FALL_DAMAGE_MULT))
-	Combat.receive_player_damage(dmg, null, "Fall")
-	CombatLog.add_line(
-		"You hit the ground hard for %d damage." % dmg,
-		CombatLog.MsgType.DAMAGE_IN)
-	DamageNumbers.spawn_incoming(global_position, dmg)
-
 
 # The soul drifts up: ease the spring arm out and the pitch down over the
 # body. The player can still orbit (EQ let you look around while dead).

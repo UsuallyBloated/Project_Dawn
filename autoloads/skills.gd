@@ -7,7 +7,6 @@ signal skills_changed
 var _all_skills: Dictionary = {}
 var _cooldowns: CooldownTracker
 var available: Array[SkillData] = []
-var no_cooldowns: bool = false
 
 func _ready() -> void:
 	SkillDefinitions.validate()
@@ -45,7 +44,7 @@ func use_skill(skill: SkillData) -> bool:
 	if Combat.is_player_seated():
 		CombatLog.add_line("You cannot use skills while sitting.", CombatLog.MsgType.INFO)
 		return false
-	if _cooldowns.is_active(skill.skill_name) and not no_cooldowns:
+	if _cooldowns.is_active(skill.skill_name):
 		return false
 	if PlayerStats.stamina < skill.stamina_cost:
 		return false
