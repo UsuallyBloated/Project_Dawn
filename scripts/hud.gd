@@ -15,7 +15,7 @@ const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
 const HUNGER_PANEL_GAP := 4.0
 const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
 # Dev Test Panel, mounted on demand by `/testpanel` (world.gd also mounts it at
-# world entry for GMs and the Test Room).
+# world entry for GMs).
 const TEST_PANEL_GD         := preload("res://scripts/test_panel.gd")
 const _TrackWindowScript    := preload("res://scripts/track_window.gd")
 const _SpellBookScript      := preload("res://scripts/spell_book.gd")
@@ -1401,12 +1401,6 @@ func _handle_chat_input(text: String) -> void:
 	if lower == "/camp cancel":
 		Net.broadcast_cancel_camp()
 		return
-	# Track 22.C — manual dismount. Summon is right-click-the-whistle;
-	# this command lets the player step off without using the whistle
-	# again or waiting to take a hit.
-	if lower == "/dismount":
-		MountManager.dismount()
-		return
 	if lower == "/pet follow":
 		PetManager.command_follow()
 		return
@@ -1481,10 +1475,8 @@ func _handle_chat_input(text: String) -> void:
 		if lower.begins_with(prefix):
 			var msg := text.substr(prefix.length())
 			CombatLog.add_line("[Group] %s: %s" % [my_name, msg], CombatLog.MsgType.GROUP_CHAT)
-			# Server fans this to every other group member via the new
-			# Group arm in the chat handler. GroupManager.broadcast_group_chat
-			# uses Godot's RPC system which isn't wired in launcher mode
-			# (no Godot multiplayer peer); that path was the bug.
+			# Server fans this to every other group member via the Group
+			# arm in the chat handler.
 			Net.broadcast_chat(Net.CHAT_CHANNEL_GROUP, msg)
 			return
 
@@ -1702,8 +1694,8 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line(line, CombatLog.MsgType.INFO)
 		return
 
-	# Show/hide the dev Test Panel. It mounts only for the offline Test Room and
-	# for GM accounts (world.gd), but a GM previously had no way to get it OFF the
+	# Show/hide the dev Test Panel. It mounts only for GM accounts (world.gd),
+	# but a GM previously had no way to get it OFF the
 	# screen: it covers a chunk of the viewport and there is no reason to stare at
 	# it while actually playing. A command rather than a keybind, so it costs no
 	# key and is discoverable by typing.
@@ -1768,9 +1760,7 @@ func _handle_chat_input(text: String) -> void:
 		CombatLog.add_line("Dev damage self: %s" % arg, CombatLog.MsgType.INFO)
 		return
 
-	# Track 6 sub-task 5 — group commands (launcher mode). Test Room
-	# single-player can't form groups via these — invites need a real
-	# peer over renet.
+	# Track 6 sub-task 5 — group commands, resolved by the server.
 	if lower == "/invite" or lower.begins_with("/invite "):
 		var target_name := ""
 		if lower.begins_with("/invite "):

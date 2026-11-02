@@ -236,8 +236,6 @@ func _on_auto_attack() -> void:
 		CombatLog.add_line("Target is out of range.", CombatLog.MsgType.INFO)
 		_update_attack_interval()
 		return
-	var skill_name := _get_weapon_skill_name()
-	WeaponSkills.try_advance(skill_name)
 	# The server rolls the miss (combat.rs): every swing goes out, and a miss
 	# comes back as a Miss (RemotePlayerManager draws it).
 	deal_damage_to_target(calc_damage())
@@ -274,11 +272,6 @@ func _on_offhand_attack() -> void:
 	if dist > MELEE_RANGE:
 		_update_offhand_interval()
 		return
-	# A Monk's bare off hand is hand_to_hand, as on the server (combat.rs).
-	var oh: ItemData = Equipment.equipped.get("offhand")
-	var skill_name := "hand_to_hand" if oh == null or oh.weapon_skill == "" else oh.weapon_skill
-	WeaponSkills.try_advance(skill_name)
-	WeaponSkills.try_advance("dual_wield")
 	# The server rolls the off-hand miss too (see _on_auto_attack).
 	deal_damage_to_target(calc_offhand_damage(), NetProtocol.DamageType.PHYSICAL, true)
 	# Procs are server-authoritative now (see the main-hand note in _on_auto_attack).
@@ -441,20 +434,13 @@ func has_valid_target() -> bool:
 func receive_player_damage(amount: int, attacker: Node = null, attacker_name: String = "") -> void:
 	if PlayerDeath.is_dead:
 		return
-	# Track 22.C — any incoming hit dismounts the rider. Classic-EQ
-	# feel; mounts are travel tools, not combat platforms.
-	MountManager.dismount("hit")
 	if BuffManager.is_evade_boosted():
 		player_evaded_attack.emit(attacker_name if attacker_name != "" else "the attack")
-		WeaponSkills.try_advance("dodge")
 		return
 	var evasion_chance := clampf((PlayerStats.agility - 10) * EVASION_PER_AGI, 0.0, EVASION_MAX)
 	if randf() < evasion_chance:
 		player_evaded_attack.emit(attacker_name if attacker_name != "" else "the attack")
-		WeaponSkills.try_advance("dodge")
 		return
-	WeaponSkills.try_advance("defense")
-	ArmorSkills.try_advance_worn(Equipment.equipped)
 	var armor := Equipment.get_armor_class()
 	var reduction := armor / float(armor + ARMOR_DR_DIVISOR)
 	var was_sitting: bool = is_instance_valid(_player) and _player.state == PlayerCharacter.PlayerState.SITTING

@@ -43,12 +43,6 @@ var player_name: String = ""
 var player_class: String = ""
 var race: String = ""
 
-var bind_zone_path: String = ""
-var bind_entry_id: String = "default"
-var bind_zone_name: String = ""
-
-var transformation: String = ""
-
 # Public (live) stats — include race + class + level + currently-equipped gear bonuses.
 # Read these everywhere for combat math, UI, etc.
 var strength: int = 10
@@ -87,11 +81,6 @@ func set_mp(value: float) -> void:
 func set_stamina(value: float) -> void:
 	stamina = clamp(value, 0.0, max_stamina)
 	stamina_changed.emit(stamina, max_stamina)
-
-func set_bind_point(zone_path: String, entry_id: String, zone_name: String) -> void:
-	bind_zone_path = zone_path
-	bind_entry_id  = entry_id
-	bind_zone_name = zone_name
 
 # The intrinsic character: the stats and maxes race, class and level alone
 # give, with no gear and no buffs. Mirror of the server's `char_data::compute`
@@ -198,30 +187,14 @@ func apply_character(race_id: String, cls: String, lvl: int) -> void:
 	stats_changed.emit()
 	character_applied.emit()
 
-# `source` differentiates kill XP from quest turn-ins so the chat
-# broker can render distinct lines ("You gained experience!" vs
-# "You received experience."). Defaults to "kill" so legacy callers
-# don't need updating; quest turn-ins must pass "quest" explicitly.
-func gain_xp(amount: int, source: String = "kill") -> void:
-	xp += amount
-	xp_gained.emit(amount, source)
-	# Cap at MAX_LEVEL and pin the bar full there, mirroring the server's
-	# resolve(). (Local-only / Test Room path; launcher mode is server-driven.)
-	while xp >= xp_to_next and level < MAX_LEVEL:
-		xp -= xp_to_next
-		_level_up()
-	if level >= MAX_LEVEL and xp > xp_to_next:
-		xp = xp_to_next
-	xp_changed.emit(xp, xp_to_next)
-
 # Apply the intrinsic (gear-free, buff-free) difference between two levels to
 # BOTH the public live stats and the gear-free `_base_` snapshot, so equipment
 # deltas layered on top survive. The mirror of the server's
 # `progression::apply_intrinsic_delta`: both read the whole character at each
 # level (`intrinsic_character`) and add only the difference, so the pools follow
-# EQ's formulas up AND down (a death penalty can drop a level). Shared by the
-# local-only `_level_up` and the server-mirror `apply_server_level`. Does NOT
-# touch level / xp / current resources.
+# EQ's formulas up AND down (a death penalty can drop a level). Used by the
+# server-mirror `apply_server_level`. Does NOT touch level / xp / current
+# resources.
 func _apply_level_delta(from_level: int, to_level: int) -> void:
 	var before := intrinsic_character(race, player_class, from_level)
 	var after := intrinsic_character(race, player_class, to_level)
@@ -238,17 +211,6 @@ func _apply_level_delta(from_level: int, to_level: int) -> void:
 	_base_max_hp     += hp_delta
 	_base_max_mp     += mp_delta
 	_base_max_stamina+= st_delta
-
-# Local-only level-up (Test Room / no server). In launcher mode the server
-# drives leveling via `apply_server_level`, so this is not called there.
-func _level_up() -> void:
-	level += 1
-	xp_to_next = band_for(level)
-	_apply_level_delta(level - 1, level)
-	set_hp(max_hp)
-	set_mp(max_mp)
-	set_stamina(max_stamina)
-	level_changed.emit(level)
 
 # EQ-style cubic XP curve — mirror of the Rust `char_data` curve. Total XP to
 # complete level L = L^3 * 1000 * hell_mod(L); the per-level band is the
@@ -284,7 +246,7 @@ func band_for(level_in: int) -> int:
 	var lvl: int = clampi(level_in, 1, MAX_LEVEL)
 	return int(round(_total_xp(lvl) - _total_xp(lvl - 1)))
 
-# Launcher mode (server-authoritative): mirror a level change the server
+# Server-authoritative: mirror a level change the server
 # decided (up on xp gain, DOWN on a death penalty). Applies the matching
 # intrinsic stat deltas locally — the client and server level tables are kept
 # in lockstep — and sets the authoritative level + xp. Max pools move with the
@@ -314,7 +276,7 @@ var _next_xp_source: String = "kill"
 func note_next_xp_source(source: String) -> void:
 	_next_xp_source = source
 
-# Launcher mode: mirror an authoritative xp update from the server (kill /
+# Mirror an authoritative xp update from the server (kill /
 # quest credit, or a death loss with a negative `amount`). Sets the bar to the
 # server's values; a level change itself arrives separately via
 # `apply_server_level`.

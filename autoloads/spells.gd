@@ -382,7 +382,7 @@ func _apply_spell(spell: SpellData) -> void:
 			Combat.current_target.silence(spell.silence_duration)
 
 	if spell.is_lich_form:
-		BuffManager.toggle_lich_form(spell.lich_mp_regen)
+		BuffManager.toggle_lich_form()
 
 	if spell.mana_drain > 0.0:
 		# Mana drain (Exsanguinate) needs take_damage on the target;
@@ -404,9 +404,6 @@ func _apply_spell(spell: SpellData) -> void:
 
 	if spell.target_type in [SpellData.TargetType.ENEMY, SpellData.TargetType.AOE]:
 		BuffManager.break_stealth()
-
-	if spell.discipline != "":
-		CastingSkills.try_advance(spell.discipline)
 
 	spell_cast.emit(spell)
 

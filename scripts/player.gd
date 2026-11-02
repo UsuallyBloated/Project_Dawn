@@ -143,8 +143,6 @@ func _ready() -> void:
 	floor_snap_length = 0.5
 	floor_max_angle = deg_to_rad(55.0)
 	ChatWindowManager.visible = true
-	PlayerDeath.set_respawn_point(global_position)
-	PlayerDeath.register_player(self)
 	PlayerDeath.player_died.connect(_on_death_camera)
 	PlayerDeath.player_respawned.connect(_on_respawn_camera)
 	Targeting.register_camera(camera)
@@ -156,7 +154,6 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	Combat.unregister_player()
 	Regen.unregister_player()
-	PlayerDeath.unregister_player()
 	Targeting.unregister_player()
 
 func _enter_state(new_state: PlayerState) -> void:
@@ -433,13 +430,9 @@ func _physics_process(delta: float) -> void:
 		direction -= transform.basis.z
 
 	var base_speed := CROUCH_SPEED if state == PlayerState.CROUCHING else SPEED
-	# Track 22.C — mount overrides every other speed source. When
-	# mounted, BuffManager.get_speed_mult() is ignored and the mount's
-	# own multiplier applies. MountManager.get_effective_speed_mult
-	# falls through to the BuffManager value when not mounted.
-	# Encumbrance applies after the mount — an overloaded mount is
-	# still overloaded (carry weight vs STR; see autoloads/encumbrance.gd).
-	var current_speed := base_speed * MountManager.get_effective_speed_mult() \
+	# The local prediction of the server's speed: run speed, the speed buff,
+	# then encumbrance (carry weight vs STR; see autoloads/encumbrance.gd).
+	var current_speed := base_speed * BuffManager.get_speed_mult() \
 			* Encumbrance.get_speed_mult()
 	if direction != Vector3.ZERO:
 		direction = direction.normalized()

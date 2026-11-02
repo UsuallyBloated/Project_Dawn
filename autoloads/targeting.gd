@@ -108,8 +108,7 @@ func click_target(mouse_pos: Vector2) -> void:
 		# targets (above) AND asks to trade. Empty-handed clicks target only.
 		# The server does every real check (range, liveness, one session);
 		# a refusal comes back as a chat line.
-		if Inventory.cursor_slot != null and Net.is_launcher_mode() \
-				and "char_id" in body and body.char_id >= 0:
+		if Inventory.cursor_slot != null and "char_id" in body and body.char_id >= 0:
 			Net.broadcast_trade_request(body.char_id)
 	elif body.is_in_group("remote_pets"):
 		# Targeting own/remote pets is allowed — useful for inspecting
@@ -167,7 +166,7 @@ const INTERACT_RANGE_GATHER := 3.0
 # rights, the round-robin turn, coin, the real cursor state.
 func _on_loot_bag_clicked(bag: LootBag) -> void:
 	var is_lone_sack: bool = bag.items.size() == 1 and not bag.has_coins() and bag.creature_name == ""
-	if not is_lone_sack or Inventory.cursor_slot != null or not Net.is_launcher_mode() or bag.bag_id < 0:
+	if not is_lone_sack or Inventory.cursor_slot != null or bag.bag_id < 0:
 		Combat.set_target(bag)
 		return
 	var player := get_tree().get_first_node_in_group("player")

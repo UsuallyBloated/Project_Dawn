@@ -5,8 +5,7 @@ const KIND_WEAPON := 0
 func _ready() -> void:
 	super._ready()
 	# Track 18.1 — server fans skill advances; subscribe to Net and
-	# route the matching kind into our score cache. Solo / Test Room
-	# fall through to the base class's local-roll path.
+	# route the matching kind into our score cache.
 	Net.world_skill_progress_update.connect(_on_skill_progress_update)
 	Net.world_skill_progress_snapshot.connect(_on_skill_progress_snapshot)
 

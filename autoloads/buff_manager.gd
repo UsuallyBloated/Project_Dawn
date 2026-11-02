@@ -6,8 +6,6 @@ signal absorb_applied(amount: int, spell_name: String)
 signal absorb_damaged(absorbed: int, remaining: int)
 signal absorb_broken
 signal evade_boost_applied
-signal food_buff_changed
-signal drink_buff_changed
 signal stealth_changed(active: bool)
 signal lich_form_changed(active: bool)
 signal haste_changed
@@ -17,9 +15,9 @@ signal damage_shield_applied(amount: int, buff_name: String)
 var _absorb_hp: float = 0.0
 # Most recent absorb source name (spell or skill). Used by
 # reconcile_with_server_snapshot to clear the pool when the server
-# strips the absorb buff (e.g. drained to 0 by incoming damage in
-# launcher mode, since the local consume_absorb path isn't taken when
-# damage arrives via HealthUpdate).
+# strips the absorb buff (e.g. drained to 0 by incoming damage, since the
+# local consume_absorb path isn't taken when damage arrives via
+# HealthUpdate).
 var _absorb_source: String = ""
 var _evade_boost_remaining: float = 0.0
 
@@ -27,8 +25,6 @@ var _evade_boost_remaining: float = 0.0
 var _hots: Array = []
 
 # {hp_regen, mp_regen, remaining, buff_name}
-var _food_buff: Dictionary = {}
-var _drink_buff: Dictionary = {}
 
 # {speed_mult, remaining, buff_name}
 var _speed_buff: Dictionary = {}
@@ -49,13 +45,11 @@ var _damage_shield: Dictionary = {}
 var _stealth_remaining: float = 0.0
 # Lich Form
 var _lich_form_active: bool = false
-var _lich_mp_regen: float = 0.0
 
-# Track 6 dispel sync — server is authoritative for buff lifetime in
-# launcher mode. reconcile_with_server_snapshot() drops any locally
-# tracked named buff that no longer appears in the server's snapshot
-# (e.g. after Antimagic Ward / Expose). Local-only buffs (food, drink,
-# stealth, evade) are skipped — the server doesn't track those.
+# Track 6 dispel sync — the server is authoritative for buff lifetime.
+# reconcile_with_server_snapshot() drops any locally tracked named buff that
+# no longer appears in the server's snapshot (e.g. after Antimagic Ward /
+# Expose) and rebuilds the ones it lists that we do not track yet.
 
 func _ready() -> void:
 	PlayerDeath.player_died.connect(clear_all)
@@ -113,40 +107,6 @@ func add_evade_boost(duration: float) -> void:
 func is_evade_boosted() -> bool:
 	return _evade_boost_remaining > 0.0
 
-func add_food_buff(hp_regen: float, mp_regen: float, duration: float, buff_name: String) -> void:
-	_food_buff = {hp_regen = hp_regen, mp_regen = mp_regen, remaining = duration, buff_name = buff_name}
-	food_buff_changed.emit()
-	buffs_changed.emit()
-
-func add_drink_buff(hp_regen: float, mp_regen: float, duration: float, buff_name: String) -> void:
-	_drink_buff = {hp_regen = hp_regen, mp_regen = mp_regen, remaining = duration, buff_name = buff_name}
-	drink_buff_changed.emit()
-	buffs_changed.emit()
-
-func get_food_buff() -> Dictionary:
-	return _food_buff
-
-func get_drink_buff() -> Dictionary:
-	return _drink_buff
-
-func has_food_buff() -> bool:
-	return not _food_buff.is_empty()
-
-func has_drink_buff() -> bool:
-	return not _drink_buff.is_empty()
-
-func get_food_hp_regen() -> float:
-	return _food_buff.get("hp_regen", 0.0)
-
-func get_food_mp_regen() -> float:
-	return _food_buff.get("mp_regen", 0.0)
-
-func get_drink_hp_regen() -> float:
-	return _drink_buff.get("hp_regen", 0.0)
-
-func get_drink_mp_regen() -> float:
-	return _drink_buff.get("mp_regen", 0.0)
-
 func add_speed_buff(speed_mult: float, duration: float, buff_name: String) -> void:
 	_speed_buff = {speed_mult = speed_mult, remaining = duration, buff_name = buff_name}
 	buffs_changed.emit()
@@ -178,9 +138,6 @@ func get_haste_buff() -> Dictionary:
 func add_stat_buff(accuracy: float, crit: float, duration: float, buff_name: String) -> void:
 	_stat_buff = {accuracy = accuracy, crit = crit, remaining = duration, buff_name = buff_name}
 	buffs_changed.emit()
-
-func get_accuracy_bonus() -> float:
-	return _stat_buff.get("accuracy", 0.0)
 
 func get_crit_bonus() -> float:
 	return _stat_buff.get("crit", 0.0)
@@ -262,17 +219,14 @@ func break_stealth() -> void:
 	stealth_changed.emit(false)
 	buffs_changed.emit()
 
-func toggle_lich_form(mp_regen_hps: float) -> void:
+# The form's mana regen is the server's; this is the buff-bar toggle.
+func toggle_lich_form() -> void:
 	_lich_form_active = not _lich_form_active
-	_lich_mp_regen = mp_regen_hps if _lich_form_active else 0.0
 	lich_form_changed.emit(_lich_form_active)
 	buffs_changed.emit()
 
 func is_lich_form() -> bool:
 	return _lich_form_active
-
-func get_lich_mp_regen() -> float:
-	return _lich_mp_regen
 
 # Track 4 sub-task 3 — walk every buff source the local buff bar shows and
 # emit parallel name/duration arrays for over-the-wire snapshot replication.
@@ -290,12 +244,6 @@ func get_snapshot_arrays() -> Dictionary:
 	if _evade_boost_remaining > 0.0:
 		names.append("Evade")
 		durations.append(_evade_boost_remaining)
-	if not _food_buff.is_empty():
-		names.append(_food_buff.get("buff_name", "Food"))
-		durations.append(_food_buff.get("remaining", 0.0))
-	if not _drink_buff.is_empty():
-		names.append(_drink_buff.get("buff_name", "Drink"))
-		durations.append(_drink_buff.get("remaining", 0.0))
 	if not _speed_buff.is_empty():
 		names.append(_speed_buff.get("buff_name", "SoW"))
 		durations.append(_speed_buff.get("remaining", 0.0))
@@ -411,7 +359,7 @@ func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedF
 		else:
 			_damage_shield.remaining = server_remaining[nm]
 	# Absorb: the server drains the pool and strips the buff when it
-	# hits 0. In launcher mode the local _absorb_hp never drains
+	# hits 0. The local _absorb_hp never drains
 	# (damage arrives via HealthUpdate, bypassing local consume_absorb),
 	# so without this clear the "Shield Xhp" icon would linger forever.
 	if _absorb_hp > 0.0 and _absorb_source != "" and not server_remaining.has(_absorb_source):
@@ -421,7 +369,6 @@ func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedF
 		changed = true
 	if _lich_form_active and not server_remaining.has("Lich Form"):
 		_lich_form_active = false
-		_lich_mp_regen = 0.0
 		lich_form_changed.emit(false)
 		changed = true
 	# Skill-backed buffs (Evade, Hide, Holy Shield and their kin) are the
@@ -573,8 +520,6 @@ func clear_all() -> void:
 	_absorb_hp = 0.0
 	_absorb_source = ""
 	_evade_boost_remaining = 0.0
-	_food_buff.clear()
-	_drink_buff.clear()
 	_speed_buff.clear()
 	_mp_regen_buff.clear()
 	_haste_buff.clear()
@@ -593,7 +538,6 @@ func clear_all() -> void:
 	if _lich_form_active:
 		lich_form_changed.emit(false)
 	_lich_form_active = false
-	_lich_mp_regen = 0.0
 	buffs_changed.emit()
 
 func _process(delta: float) -> void:
@@ -628,7 +572,6 @@ func _process(delta: float) -> void:
 			primary_stat_buff_changed.emit()
 			buffs_changed.emit()
 	_tick_hots(delta)
-	_tick_consumable_buffs(delta)
 
 func _tick_timed_buff(buff: Dictionary, delta: float) -> void:
 	if buff.is_empty():
@@ -651,17 +594,3 @@ func _tick_hots(delta: float) -> void:
 			_hots.remove_at(i)
 			buffs_changed.emit()
 		i -= 1
-
-func _tick_consumable_buffs(delta: float) -> void:
-	if not _food_buff.is_empty():
-		_food_buff.remaining -= delta
-		if _food_buff.remaining <= 0.0:
-			_food_buff.clear()
-			food_buff_changed.emit()
-			buffs_changed.emit()
-	if not _drink_buff.is_empty():
-		_drink_buff.remaining -= delta
-		if _drink_buff.remaining <= 0.0:
-			_drink_buff.clear()
-			drink_buff_changed.emit()
-			buffs_changed.emit()
