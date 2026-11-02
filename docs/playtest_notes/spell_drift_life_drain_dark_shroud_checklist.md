@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 25, 27, 30, 31 (line numbers as of the triage).
 
+> **Triage 2026-11-01: re-run, one seat.** Row 29 (Life Drain) is still open, and its numbers changed with the EQ parity pass: 12 damage and a heal of up to 12 (`spells.toml`); planner row v54. Row 34 (Dark Shroud) now does 20, on the same ENEMY arm as the nine ported nukes that passed; optional. Rows 31 and 35 are covered by `tools/check_spell_lockstep.gd` (zero drift, both spells on the server).
+
 Follow-up to the cast-gate playtest, which surfaced that a Blood Mage's **Life Drain** and a Shadow
 Knight's **Dark Shroud** did nothing (mana spent, "You cast X" in chat, no effect). Root cause was
 client/server spell drift: both existed only in the client `spell_definitions.gd`, so the server

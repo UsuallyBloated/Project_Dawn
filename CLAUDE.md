@@ -2712,6 +2712,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   there is a skill for /sense"): it starts at the level-1 cap, so a fresh character always reads
   exact and the skill is invisible until leveling raises the cap; it is also client-local and
   resets every launch (`character_setup.gd` re-initializes it).
+  **(a) PASSED 2026-11-01** (`haste_limiter_and_cast_relay_checklist.md` row 32: a Haste on a
+  Warrior, fought through from 21:53 to 22:01 with no rejection line in the journal), against a
+  limiter that since 2026-10-30 reads the player's real haste instead of assuming the most; the
+  entry stays open for (b), a design call.
 - [ ] **Client-only spell backlog (~32 spells missing from `spells.toml`)** *(quantified
   2026-07-22 from a Life Drain / Dark Shroud playtest; those two are now ported)*. The client's
   `spell_definitions.gd` has 156 spells; the server has 124. A client-only spell is dropped as

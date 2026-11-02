@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 40, 43, 45 (line numbers as of the triage).
 
+> **Triage 2026-11-01: retired.** Rows 44, 47 and 49 are covered by `currency_ui_checklist.md` row 39 (worn gear counts and the weight updates both ways); the numbers are data (`iron_chain_vest.tres` 6.0, `cloth_robe.tres` 2.0) held against `items.toml` by `tools/check_item_lockstep.gd`.
+
 All 169 items now have real carry weight (previously 20). **Client-only — re-export /
 reload Project_Dawn; no server rebuild or restart needed.** (Exception: the Test Panel
 money buttons used in the regression section still need the server running with
