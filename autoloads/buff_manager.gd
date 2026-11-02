@@ -1,14 +1,11 @@
 extends Node
 
 signal buffs_changed
-signal dot_applied(target_name: String, spell_name: String)
 signal hot_applied(spell_name: String)
 signal absorb_applied(amount: int, spell_name: String)
 signal absorb_damaged(absorbed: int, remaining: int)
 signal absorb_broken
 signal evade_boost_applied
-signal dot_ticked(target_name: String, amount: int, spell_name: String)
-signal hot_ticked(amount: int, spell_name: String)
 signal food_buff_changed
 signal drink_buff_changed
 signal stealth_changed(active: bool)
@@ -17,8 +14,6 @@ signal haste_changed
 signal primary_stat_buff_changed
 signal damage_shield_applied(amount: int, buff_name: String)
 
-const TICK_INTERVAL := 3.0
-
 var _absorb_hp: float = 0.0
 # Most recent absorb source name (spell or skill). Used by
 # reconcile_with_server_snapshot to clear the pool when the server
@@ -26,12 +21,9 @@ var _absorb_hp: float = 0.0
 # launcher mode, since the local consume_absorb path isn't taken when
 # damage arrives via HealthUpdate).
 var _absorb_source: String = ""
-var _is_hot_healing: bool = false
 var _evade_boost_remaining: float = 0.0
 
-# {target, dps, remaining, spell_name, tick_acc}
-var _dots: Array = []
-# {hps, remaining, spell_name, tick_acc}
+# {hps, remaining, spell_name}
 var _hots: Array = []
 
 # {hp_regen, mp_regen, remaining, buff_name}
@@ -81,28 +73,12 @@ func get_absorb_hp() -> float:
 func get_evade_remaining() -> float:
 	return _evade_boost_remaining
 
-func is_hot_healing() -> bool:
-	return _is_hot_healing
-
-func add_dot(target, dps: float, duration: float, spell_name: String) -> void:
-	if not is_instance_valid(target) or target.is_dead:
-		return
-	for d in _dots:
-		if d.target == target and d.spell_name == spell_name:
-			d.remaining = duration
-			d.tick_acc = 0.0
-			return
-	_dots.append({target = target, dps = dps, remaining = duration,
-		spell_name = spell_name, tick_acc = 0.0})
-	dot_applied.emit(target.mob_name, spell_name)
-
 func add_hot(hps: float, duration: float, spell_name: String) -> void:
 	for h in _hots:
 		if h.spell_name == spell_name:
 			h.remaining = duration
-			h.tick_acc = 0.0
 			return
-	_hots.append({hps = hps, remaining = duration, spell_name = spell_name, tick_acc = 0.0})
+	_hots.append({hps = hps, remaining = duration, spell_name = spell_name})
 	hot_applied.emit(spell_name)
 	buffs_changed.emit()
 
@@ -593,7 +569,6 @@ func _has_hot(spell_name: String) -> bool:
 	return false
 
 func clear_all() -> void:
-	_dots.clear()
 	_hots.clear()
 	_absorb_hp = 0.0
 	_absorb_source = ""
@@ -652,7 +627,6 @@ func _process(delta: float) -> void:
 		if not pstat_expired.is_empty():
 			primary_stat_buff_changed.emit()
 			buffs_changed.emit()
-	_tick_dots(delta)
 	_tick_hots(delta)
 	_tick_consumable_buffs(delta)
 
@@ -664,53 +638,15 @@ func _tick_timed_buff(buff: Dictionary, delta: float) -> void:
 		buff.clear()
 		buffs_changed.emit()
 
-func _tick_dots(delta: float) -> void:
-	# Track 6 sub-task 4a: server-side DoT application lands in 4b. In
-	# launcher mode skip the damage tick (RemoteEnemy.take_damage is a
-	# no-op, RemotePlayer has none) but still decrement remaining so
-	# the local DoT entry expires on schedule. Test Room single-player
-	# keeps the full local damage tick.
-	var launcher := Net.is_launcher_mode()
-	var i := _dots.size() - 1
-	while i >= 0:
-		var d: Dictionary = _dots[i]
-		if not is_instance_valid(d.target) or d.target.is_dead:
-			_dots.remove_at(i)
-			i -= 1
-			continue
-		d.remaining -= delta
-		if not launcher:
-			d.tick_acc += delta
-			if d.tick_acc >= TICK_INTERVAL:
-				d.tick_acc -= TICK_INTERVAL
-				var dmg := int(d.dps * TICK_INTERVAL)
-				d.target.take_damage(dmg)
-				if is_instance_valid(d.target) and not d.target.is_dead:
-					dot_ticked.emit(d.target.mob_name, dmg, d.spell_name)
-		if d.remaining <= 0.0:
-			_dots.remove_at(i)
-		i -= 1
-
 func _tick_hots(delta: float) -> void:
 	# Track 6 sub-task 4a: server owns HoT application — applies heal
-	# per tick to conn.hp and fans HealthUpdate. Skip the local heal
-	# mutation in launcher mode (would fight the server), but still
-	# decrement remaining so the HUD buff bar duration ticks down and
-	# the entry expires on its own timer.
-	var launcher := Net.is_launcher_mode()
+	# per tick to conn.hp and fans HealthUpdate. Here only the duration
+	# ticks down, so the HUD buff bar counts and the entry expires on its
+	# own timer.
 	var i := _hots.size() - 1
 	while i >= 0:
 		var h: Dictionary = _hots[i]
 		h.remaining -= delta
-		if not launcher:
-			h.tick_acc += delta
-			if h.tick_acc >= TICK_INTERVAL:
-				h.tick_acc -= TICK_INTERVAL
-				var heal: float = h.hps * TICK_INTERVAL
-				_is_hot_healing = true
-				PlayerStats.set_hp(PlayerStats.hp + heal)
-				_is_hot_healing = false
-				hot_ticked.emit(int(heal), h.spell_name)
 		if h.remaining <= 0.0:
 			_hots.remove_at(i)
 			buffs_changed.emit()
