@@ -408,6 +408,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   build step, redeploy, decision or friend session, with owner, needs and dependencies. Dates
   only, never status; every row names the checklist or To-Do entry its status lives in.
 - **What systems exist & how they work** → `docs/concepts/architecture/systems_overview.md`
+- **The rules that must always hold** (an item in one place, a death stands, leaving is no way
+  out, the server decides outcomes, a refusal costs nothing...) → `docs/reference/invariants.md`.
+  Read the matching rules before changing saving, items, death, or anything a client sends; a
+  fix that closes a hole adds its rule or its test there in the same commit.
+  `tools/check_invariants.gd` (in `check_all.ps1`) fails if a rule's named test disappears.
 - **Commands you type** (CLI/cargo tools, server run wrappers, in-game chat commands, keybinds) →
   `docs/reference/commands.md`. Keep it current when a command is added or renamed.
 - **Server / wire protocol / DB / save migration** → `server/docs/server_design.md`
@@ -1059,9 +1064,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **The audit's code items finished 2026-11-02** (user: "Lets finish the audit, not fold it
   into the To-Dos"; server `refactor/tick-split`, seven commits from `1c35cf7` to `8afc96c`,
   the suite green after each, 352 unit and 163 world tests; they ride the split's bump-day
-  merge, and `overnight_2026_11_01_checklist.md` §2's rerun covers them): **panic containment,
-  the narrow version** (a panic handling one client's message drops that client without saving
-  and discards its tick's requests; the world carries on); one helper per duplicated job (F6);
+  merge, and `overnight_2026_11_01_checklist.md` §2's rerun covers them): **panic containment**
+  (a panic handling one client's message undoes that client's whole tick, then drops it as a
+  cut connection, lingering and saved at the reap; the world carries on. The first version,
+  `1c35cf7`, dropped the client unsaved, which the review found let a dead player relog alive
+  and a low-health one leave a fight at once; fixed in `3f1d4f2`); one helper per duplicated job (F6);
   `IdKind` for what an entity id names (F7); `CoinAmount`, so a client's coin amount is checked
   once at the message (F8); `DbError`, `MoveError` and `TradeError` (F9); log lines name the
   acting player `char_id`, a `client{char_id, account_id}` span, the client id on decode
