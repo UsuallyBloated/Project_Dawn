@@ -452,19 +452,6 @@ done_when = "The boot log shows the new build= with dev_cmds=false and min_clien
 todo = "Trade window"
 
 [[row]]
-id = "v12"
-week = "w4"
-lane = "verify"
-day = "Tue Oct 27"
-what = "The trade window: offer, accept, every edit clears both accepts, nothing leaves a bag until the commit, the ten exploit cases refuse."
-who = "user at a desk"
-needs = ["second seat (two-boxing works)"]
-checklist = "trade_window_checklist.md"
-waits_on = ["o4"]
-todo = "Trade window"
-done_when = "Every row filled."
-
-[[row]]
 id = "v12b"
 week = "w3"
 lane = "verify"
@@ -650,7 +637,7 @@ lane = "build"
 what = "Fixes from the week-3 and week-4 sittings. A reserve, sized from history: every playtest week so far has produced two to four fixes."
 who = "Claude unattended"
 days = 2
-waits_on = ["v12", "v13", "v14"]
+waits_on = ["v13", "v14"]
 done_when = "Each fix has its own checklist row or To-Do line; nothing ticked."
 
 [[row]]
@@ -947,19 +934,6 @@ what = "Clear the R720's four old test corpses by hand, with the server stopped 
 who = "user at a desk, Claude writes the commands"
 hours = 0.25
 done_when = "loaded persisted corpses count=0 on the boot line."
-
-[[row]]
-id = "v21"
-week = "w3"
-lane = "verify"
-day = "Fri Oct 23 to Sun Oct 25"
-what = "Corpse auto-re-equip: die in a full set, loot your corpse, and the gear is back on with the stats it gave; a slot you have filled since keeps what you put on; full bags leave the rest on the corpse with a line."
-who = "user at a desk"
-hours = 0.75
-checklist = "corpse_reequip_checklist.md"
-waits_on = ["b13", "o4"]
-todo = "Corpse auto-re-equip on loot"
-done_when = "Every row filled."
 
 [[row]]
 id = "b14"
@@ -1352,20 +1326,6 @@ done_when = "The boot line shows build=3d938ca and dev_cmds=false."
 todo = "Housekeeping audit 2026-10-23"
 
 [[row]]
-id = "v34"
-week = "w3"
-lane = "verify"
-day = "Fri Oct 23 to Sun Oct 25"
-what = "Hotfix: a long chat line with an accented letter leaves the server running; a dropped and picked-up item stays with one player across a restart, and a regrabbed drop is not lost; a bank withdrawal followed by a quest turn-in or a death stays in one place across a restart; every item on Brom's list still sells."
-who = "user at a desk with a second account"
-hours = 1
-needs = ["the hotfix redeploy (o12)", "permission to restart the server twice during the sitting"]
-checklist = "hotfix_crash_and_dupes_checklist.md"
-waits_on = ["o12"]
-todo = "Housekeeping audit 2026-10-23"
-done_when = "Every row filled."
-
-[[row]]
 id = "b32"
 week = "w3"
 lane = "build"
@@ -1426,20 +1386,6 @@ done_when = "The probe passes and fails on the old code; docs/design/server_fall
 todo = "Housekeeping audit 2026-10-23"
 
 [[row]]
-id = "v36"
-week = "w4"
-lane = "verify"
-day = "after the Oct 22 export reaches testers"
-what = "Online play leaves the offline save alone: log in, level up, quit, finish a /camp, and the save file's date never changes."
-who = "user at a desk"
-hours = 0.25
-needs = ["the Oct 22 export"]
-checklist = "offline_save_online_checklist.md"
-waits_on = ["b34"]
-todo = "Housekeeping audit 2026-10-23"
-done_when = "Every row filled."
-
-[[row]]
 id = "d11"
 week = "w4"
 lane = "decide"
@@ -1475,20 +1421,6 @@ done_when = "The boot line shows build=779a033 (or later) and dev_cmds=false."
 todo = "Housekeeping audit 2026-10-23"
 
 [[row]]
-id = "v37"
-week = "w4"
-lane = "verify"
-day = "after the redeploy (section 1) and the Oct 22 export (section 2)"
-what = "Fall damage slice 0: a GM's Test Panel death still works and is recorded, ordinary deaths are unchanged, and online a big fall shows no damage."
-who = "user at a desk with a GM and a plain account"
-hours = 0.5
-needs = ["the redeploy (o14)", "the Oct 22 export for section 2"]
-checklist = "fall_damage_slice0_checklist.md"
-waits_on = ["o14"]
-todo = "Housekeeping audit 2026-10-23"
-done_when = "Every row filled."
-
-[[row]]
 id = "b36"
 week = "w3"
 lane = "build"
@@ -1511,20 +1443,6 @@ done_when = "Pushed on both deploy branches with the tests and probes green."
 todo = "Class-restricted equipping (EQ's rule)"
 
 [[row]]
-id = "v38"
-week = "w4"
-lane = "verify"
-day = "Thu Oct 29"
-what = "Equip gates: a Cleric's second club and its sword refused, a Wizard's chain boots refused, a Monk's off-hand club worn; a fizzle greys the gems; Smite lands at a full 30 m."
-who = "user at a desk with a GM account"
-hours = 0.5
-needs = ["the redeploy", "the next export"]
-checklist = "equip_gates_and_fizzle_checklist.md"
-waits_on = ["b37"]
-todo = "Class-restricted equipping (EQ's rule)"
-done_when = "Every row filled."
-
-[[row]]
 id = "b38"
 week = "w4"
 lane = "build"
@@ -1534,20 +1452,6 @@ who = "Claude"
 hours = 1
 done_when = "Pushed on the server's deploy branch with the test green."
 todo = "`/say` reaches far too far"
-
-[[row]]
-id = "v39"
-week = "w4"
-lane = "verify"
-day = "Thu Oct 29"
-what = "Two seats 40 m apart hear each other's /say, 60 m apart do not (a /shout still arrives); the eating emote and a jump follow the same reach."
-who = "user at a desk, two seats"
-hours = 0.25
-needs = ["the redeploy", "second seat (two-boxing works)"]
-checklist = "say_range_checklist.md"
-waits_on = ["b38"]
-todo = "`/say` reaches far too far"
-done_when = "Every row filled."
 
 [[row]]
 id = "b39"
@@ -1584,20 +1488,6 @@ who = "Claude"
 hours = 2
 done_when = "Pushed on both deploy branches with the tests and probes green."
 todo = "A two-hander needs an empty off hand, and the off hand swings beside one today"
-
-[[row]]
-id = "v42"
-week = "w5"
-lane = "verify"
-day = "Thu Oct 29"
-what = "A Warrior 15 refused a staff beside a club and a club beside a staff, swinging the staff alone; a Monk the same; a partner's jump seen from 100 m and not from out of view; the cast bar centred and clearing on a landing, a cancel and a fizzle."
-who = "user at a desk, two seats for section 3"
-hours = 0.75
-needs = ["the redeploy", "the next export", "second seat for section 3 (two-boxing works)"]
-checklist = "two_hander_jump_reach_cast_bar_checklist.md"
-waits_on = ["b41"]
-todo = "A two-hander needs an empty off hand, and the off hand swings beside one today"
-done_when = "Every row filled."
 
 [[row]]
 id = "b43"
@@ -1669,20 +1559,6 @@ hours = 0.5
 waits_on = ["b45", "b46"]
 done_when = "The boot line shows the new build= and dev_cmds=false, then ledger swept and ledger check mismatches=0."
 todo = "Research: the Monsters and Memories item log"
-
-[[row]]
-id = "v47"
-week = "w5"
-lane = "verify"
-day = "Sat Oct 31"
-what = "The migration's opening rows balance at boot; a session's sale, purchase, drop, pickup, destroy, meal, vault moves and GM grants each leave their row in admin_report; a trade and a death with the corpse loot keep the check BALANCED; the player link line reads a real rtt_ms."
-who = "user at a desk, two seats for section 3"
-hours = 0.75
-needs = ["the redeploy (o16)", "second seat for section 3 (two-boxing works)"]
-checklist = "item_ledger_and_rtt_checklist.md"
-waits_on = ["o16"]
-todo = "Research: the Monsters and Memories item log"
-done_when = "Every row filled."
 
 [[row]]
 id = "b47"
