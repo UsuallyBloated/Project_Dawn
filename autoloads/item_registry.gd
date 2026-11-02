@@ -6,15 +6,14 @@ extends Node
 # item_name (exact match) or O(n) for substring fuzzy match (n ~ 100).
 #
 # Today's primary consumer is the `/give` chat command in hud.gd — dev
-# workflow to drop any item into the inventory without hunting for
-# specific test-panel buttons. Future: vendor pricing tables, quest
+# workflow to find any item by name (the grant itself is the server's). Future: vendor pricing tables, quest
 # reward indexing, item-stat search tools.
 
 const ITEMS_DIR := "res://data/loot/items"
 
 # Map of lower(item_name) -> ItemData (the template loaded from disk).
 # Callers should duplicate before mutating to avoid sharing state across
-# inventory slots — see give_by_name() for the canonical flow.
+# inventory slots.
 var _by_name: Dictionary = {}
 
 func _ready() -> void:
@@ -85,26 +84,6 @@ func find_matches(query: String, limit: int = 10) -> Array[ItemData]:
 			if out.size() >= limit:
 				break
 	return out
-
-# Dev convenience: resolve a name + add a fresh copy to the local
-# inventory. Returns true on success, false if no match / inventory
-# full / load failure. Multiple matches → returns false and the caller
-# is expected to list ambiguity via find_matches() (the /give command
-# handles this).
-func give_by_name(name: String, count: int = 1) -> bool:
-	var matches := find_matches(name, 2)
-	if matches.size() != 1:
-		return false
-	var template: ItemData = matches[0]
-	for _i in count:
-		var copy: ItemData = template.duplicate()
-		# Resource.duplicate() drops resource_path. Re-attach so the
-		# Track 6 server-side items.toml lookup still resolves
-		# (server reads weapon.resource_path from the Attack intent).
-		copy.resource_path = template.resource_path
-		if not Inventory.add_item(copy):
-			return false
-	return true
 
 func count() -> int:
 	return _by_name.size()

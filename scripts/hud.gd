@@ -1507,8 +1507,8 @@ func _handle_chat_input(text: String) -> void:
 		# against yours. An NPC is named by its display name (the client holds
 		# no server ids for NPCs; the server resolves the name), a mob by its
 		# entity id. The server decides everything; this only asks.
-		if not Net.is_launcher_mode() or not Net.is_app_ready():
-			CombatLog.add_line("There is nothing to consider offline.", CombatLog.MsgType.INFO)
+		if not Net.is_app_ready():
+			CombatLog.add_line("You are not connected to the world.", CombatLog.MsgType.INFO)
 			return
 		var con_target = Combat.current_target
 		if not is_instance_valid(con_target):
@@ -1540,13 +1540,10 @@ func _handle_chat_input(text: String) -> void:
 		return
 
 	if lower == "/stopsong":
-		# EQ's /stopsong: end the song being sung at once. Online the server
-		# pulses the song, so it is told (and says so); the lingering
-		# effects run out on their own.
-		if Net.is_launcher_mode():
-			if Net.stop_song():
-				BardSongs.stop_singing()
-		else:
+		# EQ's /stopsong: end the song being sung at once. The server pulses
+		# the song, so it is told (and says so); the lingering effects run
+		# out on their own.
+		if Net.stop_song():
 			BardSongs.stop_singing()
 		return
 
@@ -1629,20 +1626,12 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line("Refine your search.", CombatLog.MsgType.INFO)
 			return
 		var item_name := (matches[0] as ItemData).item_name
-		# Track 15.2 follow-up — launcher mode routes /give through
-		# the wire so the spawned item exists server-side. The server
-		# fans InventoryDelta which Inventory autoload applies. Solo /
-		# Test Room keeps the legacy local ItemRegistry.give_by_name.
-		if Net.is_launcher_mode():
-			Net.broadcast_gm_command("give %s %d" % [item_name, count])
-			var suffix := " x%d" % count if count > 1 else ""
-			CombatLog.add_line("Requested %s%s from server." % [item_name, suffix], CombatLog.MsgType.INFO)
-			return
-		if ItemRegistry.give_by_name(item_name, count):
-			var suffix := " x%d" % count if count > 1 else ""
-			CombatLog.add_line("Spawned %s%s." % [item_name, suffix], CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("Couldn't spawn %s (inventory full?)." % item_name, CombatLog.MsgType.INFO)
+		# Track 15.2 follow-up — /give goes through the wire (a GM command)
+		# so the spawned item exists server-side. The server fans
+		# InventoryDelta which Inventory autoload applies.
+		Net.broadcast_gm_command("give %s %d" % [item_name, count])
+		var suffix := " x%d" % count if count > 1 else ""
+		CombatLog.add_line("Requested %s%s from server." % [item_name, suffix], CombatLog.MsgType.INFO)
 		return
 
 	# Track 6 sub-task 3 dev — toggle PvP authorization on this client.
@@ -1744,9 +1733,8 @@ func _handle_chat_input(text: String) -> void:
 		# Nothing here is secret: the server gates every power the panel offers on
 		# the is_gm bit in the signed token, independently of this.
 		CombatLog.add_line(
-			"Test Panel unavailable (GM: %s, hosted session: %s). GM is per ACCOUNT and is read at login, so if it was granted while you were online, quit to the login screen and sign in again." % [
+			"Test Panel unavailable (GM: %s). GM is per ACCOUNT and is read at login, so if it was granted while you were online, quit to the login screen and sign in again." % [
 				"yes" if Net.is_gm() else "no",
-				"yes" if Net.is_launcher_mode() else "no",
 			],
 			CombatLog.MsgType.INFO,
 		)
