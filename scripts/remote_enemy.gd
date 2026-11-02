@@ -152,7 +152,7 @@ func _physics_process(_delta: float) -> void:
 	global_position = (a["pos"] as Vector3).lerp(b["pos"], t)
 	rotation.y = lerp_angle(a["yaw"], b["yaw"], t)
 
-# ── Enemy-compatible interface ────────────────────────────────────────
+# ── Target interface ──────────────────────────────────────────────────
 
 func set_targeted(active: bool) -> void:
 	if _target_indicator:

@@ -25,8 +25,8 @@ const RACE_STARTING_SKILLS: Dictionary = {
 	"Felhari":   {"Common": 50,  "Felhari": 100},
 	"Kobold":    {"Common": 30,  "Kobold": 100},
 	"Half-Ogre": {"Common": 75,  "Ogre": 100},
-	# Revenant is a transformation, not a selectable race.
-	# Language grants are handled in autoloads/transformations.gd via Languages.grant_language().
+	# Revenant is a transformation, not a selectable race (no transformation
+	# system runs yet; the offline one was removed with the Test Room).
 }
 
 # Each value is a 26-char permutation mapping a→cipher[0], b→cipher[1], …
