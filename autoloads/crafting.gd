@@ -89,61 +89,13 @@ func gain_skill_xp(skill_name: String, amount: int) -> void:
 	_skill_levels[skill_name] = level
 	_skill_xp[skill_name] = xp
 
-# Attempts a crafting combine. Returns a human-readable result string.
-# XP is only granted below trivial_at.
-func try_combine(recipe: Dictionary, tradeskill: String) -> String:
-	# Client-local crafting is actively dangerous online, not just cosmetic: it
-	# deletes the REAL ingredients from the client mirror while the server still
-	# holds them, so every slot index below drifts out of alignment and a later
-	# Sell/Destroy the player legitimately clicks executes against a different,
-	# real item. Refuse before touching anything, until crafting goes through
-	# the server.
-	if Net.is_launcher_mode():
-		return "Crafting isn't available online yet."
-	if not can_access_skill(tradeskill):
-		return "You do not have access to %s." % tradeskill
-
-	var required: int = recipe.get("required_skill", 0)
-	var trivial: int  = recipe.get("trivial_at", 50)
-	var level := get_skill_level(tradeskill)
-
-	if level < required:
-		return "You need %s skill %d to attempt this (you have %d)." % [tradeskill, required, level]
-
-	var station: String = recipe.get("station", "")
-	if station != "" and StationManager.nearby_station != station:
-		return "You must be at a %s to craft this." % station.replace("_", " ").capitalize()
-
-	var tool: String = recipe.get("tool", "")
-	if tool != "" and count_item(tool) == 0:
-		return "You need a %s to craft this." % tool
-
-	for ing in recipe.get("ingredients", []):
-		var have := count_item(ing["item"])
-		if have < int(ing["qty"]):
-			return "You need %d %s (you have %d)." % [ing["qty"], ing["item"], have]
-
-	var output_name: String = recipe.get("output", "")
-	var output_qty: int     = recipe.get("output_qty", 1)
-	var item := _load_item_by_name(output_name)
-	if item == null:
-		return "Error: output item '%s' not found." % output_name
-
-	# Consume ingredients — lost on both success and failure (EQ-style risk)
-	for ing in recipe.get("ingredients", []):
-		_remove_item_by_name(ing["item"], int(ing["qty"]))
-
-	var success_chance := clampf((level - required + 20) / 40.0, 0.05, 0.95)
-	if randf() > success_chance:
-		return "You failed to create %s. The materials were ruined." % output_name
-
-	if not Inventory.add_item(item, output_qty):
-		return "Inventory is full."
-
-	if level < trivial:
-		gain_skill_xp(tradeskill, 10)
-
-	return "You created %s%s." % [output_name, " x%d" % output_qty if output_qty > 1 else ""]
+# A crafting combine. Crafting is not on the server yet, so it refuses before
+# touching anything: a local combine deleted the REAL ingredients from the
+# client mirror while the server still held them, so every slot index drifted
+# out of alignment and a later Sell/Destroy executed against a different, real
+# item. The recipes and skill rules here stay for the server port.
+func try_combine(_recipe: Dictionary, _tradeskill: String) -> String:
+	return "Crafting isn't available online yet."
 
 # --- Inventory helpers -------------------------------------------------------
 
@@ -153,19 +105,6 @@ func count_item(item_name: String) -> int:
 		if (slot["item"] as ItemData).item_name == item_name:
 			total += int(slot["count"])
 	return total
-
-func _remove_item_by_name(item_name: String, qty: int) -> void:
-	var item_ref: ItemData = null
-	for slot in Inventory.all_slots():
-		if (slot["item"] as ItemData).item_name == item_name:
-			item_ref = slot["item"]
-			break
-	if item_ref != null:
-		Inventory.remove_item(item_ref, qty)
-
-func _load_item_by_name(item_name: String) -> ItemData:
-	var path := "res://data/loot/items/%s.tres" % item_name.to_lower().replace(" ", "_")
-	return load(path) as ItemData
 
 # --- Registration ------------------------------------------------------------
 
