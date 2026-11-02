@@ -411,7 +411,6 @@ func _ready() -> void:
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
 	xp_gained.connect(_on_xp_gained)
-	kill_credit.connect(_on_kill_credit)
 	quest_snapshot.connect(_on_quest_snapshot)
 	quest_progress.connect(_on_quest_progress)
 	quest_rejected.connect(_on_quest_rejected)
@@ -1393,13 +1392,6 @@ func _on_xp_gained(amount: int, current: int, to_next: int) -> void:
 	PlayerStats.apply_remote_xp(amount, current, to_next)
 	if amount < 0:
 		CombatLog.add_line("You lost %d experience points." % -amount, CombatLog.MsgType.DAMAGE_IN)
-
-# PD_W0023 — private quest kill credit. RETIRED as of PD_W0024: the server
-# counts kills itself and drives the journal via quest_progress, and
-# notify_kill ignores launcher mode now. Kept wired in case an old server
-# build is on the other end (it degrades to a no-op).
-func _on_kill_credit(mob_name: String) -> void:
-	QuestManager.notify_kill(mob_name)
 
 # PD_W0024 — journal seed on EnterWorld: rebuild the quest journal from the
 # server's authoritative active + completed sets. This is what makes the
