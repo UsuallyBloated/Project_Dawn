@@ -1138,7 +1138,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   22:07:11 (WAROI, a club, after a Haste had run out between fights). A Godot Timer applies a
   `wait_time` changed in its own timeout handler one gap late (measured with a headless
   probe), so the client paces swing N+1 by the interval set at swing N-1, and the server's
-  one-swing haste carry is one swing short. Fix proposed, not built: carry the last two.
+  one-swing haste carry is one swing short. **Fix BUILT 2026-11-01 night, pending the redeploy**
+  (server `d40e505` on the deploy branch, merged into `feat/facing`): the server carries the
+  haste of the last two accepted swings, and counts an expired Haste for one second (the client
+  hears of the expiry a round trip late); a forged client gains at most two swings at an expired
+  haste. Unit tests replay the client's timer against the rule (the old one-swing carry drops
+  one swing in each expiry case, the new rule none); the late-joiner cast seed got its own
+  integration test, which settles the server half of the sheet's inconclusive Gate row.
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
