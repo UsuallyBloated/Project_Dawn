@@ -1039,8 +1039,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `world health` log line (tick work at the median, 99th percentile and worst, ticks over the
   50 ms budget, the checkpoint's time) while anyone is online, or when a tick overran;
   **DEPLOYED 2026-11-02 16:24 UTC** (R720 boot line `build="d4f1a2a" dev_cmds=false`, nobody
-  online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`), so §1 of the
-  checklist is runnable. (2) **Phase 2's split BUILT** on server `refactor/tick-split` (from
+  online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`); **§1 PASSED 2026-11-02**
+  (two seats: about 1,200 ticks a minute, `over_budget=0`, the median tick 0.5 to 0.8 ms and the
+  worst 13.3 ms, one checkpoint a minute at 3 to 13 ms, no line once both had logged out). §2
+  and §3 were marked the same day on the pre-bump builds and are run again after the bump. (2) **Phase 2's split BUILT** on server `refactor/tick-split` (from
   `feat/facing`, eight commits, the suite green after each: 350 unit, 161 world tests):
   `tick.rs`'s 13,820 lines are `tick/`, `run` about 330 lines calling 23 step modules in the
   order they always ran, `WorldState` and `Intents` in `state.rs`, 5 modules of shared rules;
@@ -3403,6 +3405,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **DECIDED 2026-10-07 (user): "dont make named mobs charm-immune."** Named mobs stay
   charmable; no flag. (EQ's other gate, a maximum target level on each charm rank, was
   described but not asked about and is not decided; charm today has no level cap at all.)
+- [ ] **Other players' levels** *(user 2026-11-02, `overnight_2026_11_01_checklist.md` §3:
+  "We cant currently see eachother's levels in game")*. Read in the code, not yet designed: the
+  group panel seeds every member at level 0 (`GroupManager`, the row's "Lv %d"; `GroupState`
+  carries no level); a player's level reaches others only in `EntitySpawn`, and `LevelUp` goes to
+  the player alone, so a level gained in view is never seen. Shape: a level on the group state
+  and a level relay to the players who can see the leveller (a wire addition, so a bump day).
 - [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
