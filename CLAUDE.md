@@ -1145,6 +1145,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   haste. Unit tests replay the client's timer against the rule (the old one-swing carry drops
   one swing in each expiry case, the new rule none); the late-joiner cast seed got its own
   integration test, which settles the server half of the sheet's inconclusive Gate row.
+  **DEPLOYED 2026-11-02 04:20 UTC** (R720 boot line `build="d40e505" dev_cmds=false`, nobody
+  online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`); row 6 replays as
+  written.
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
