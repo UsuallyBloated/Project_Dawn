@@ -1032,6 +1032,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   DLL built from `feat/server-speed`). **Phase 4's lockstep item (B4) mostly BUILT the same
   day** on that branch: `check_constant_lockstep`, `check_skill_table_lockstep`,
   `check_character_lockstep`, `check_discipline_lockstep` (tooling, no playtest surface).
+  **The overnight of 2026-11-01 (user: "do all four"), all pending the playtest**
+  (`overnight_2026_11_01_checklist.md`; the findings doc's new §5 says where the audit stands
+  and how to finish it). (1) **Phase 6's tick timing BUILT** (server `d4f1a2a` on the deploy
+  branch, merged into `feat/facing`; unit tests on the window and percentiles): a once-a-minute
+  `world health` log line (tick work at the median, 99th percentile and worst, ticks over the
+  50 ms budget, the checkpoint's time) while anyone is online, or when a tick overran; rides
+  the next redeploy. (2) **Phase 2's split BUILT** on server `refactor/tick-split` (from
+  `feat/facing`, eight commits, the suite green after each: 350 unit, 161 world tests):
+  `tick.rs`'s 13,820 lines are `tick/`, `run` about 330 lines calling 23 step modules in the
+  order they always ran, `WorldState` and `Intents` in `state.rs`, 5 modules of shared rules;
+  moves only, checked line by line against the old file; and the integration tests are one
+  binary, `tests/world/`, a module per domain over one harness (`world_smoke.rs`'s copy gone).
+  (3) **Phase 5 BUILT** on client `refactor/remove-offline-code` (from `feat/facing`, 15
+  commits, about 6,400 lines out): the offline game removed (`Network`, `SaveManager`,
+  `Transformations`, `WarderAI`, local enemies, pets and loot, the offline lobby, the client's
+  own regen and buff ticks, every `is_launcher_mode()` branch), the Test Panel's client-only
+  buttons gone and its server-routed tools kept; all 12 checks, 11 probes and a headless boot
+  pass; two online bugs fell out (the group panel marked the wrong own row; the pet's local
+  assist errored on every hit). Both branches merge after `feat/facing` on the next bump day.
+  (4) The older checklists triaged a second time (the planner's b9).
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
   Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying
@@ -2712,6 +2732,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   there is a skill for /sense"): it starts at the level-1 cap, so a fresh character always reads
   exact and the skill is invisible until leveling raises the cap; it is also client-local and
   resets every launch (`character_setup.gd` re-initializes it).
+  **(a) PASSED 2026-11-01** (`haste_limiter_and_cast_relay_checklist.md` row 32: a Haste on a
+  Warrior, fought through from 21:53 to 22:01 with no rejection line in the journal), against a
+  limiter that since 2026-10-30 reads the player's real haste instead of assuming the most; the
+  entry stays open for (b), a design call.
 - [ ] **Client-only spell backlog (~32 spells missing from `spells.toml`)** *(quantified
   2026-07-22 from a Life Drain / Dark Shroud playtest; those two are now ported)*. The client's
   `spell_definitions.gd` has 156 spells; the server has 124. A client-only spell is dropped as

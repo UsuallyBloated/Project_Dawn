@@ -1793,3 +1793,160 @@ checklist = "haste_limiter_and_cast_relay_checklist.md"
 waits_on = ["o18"]
 todo = "Housekeeping audit 2026-10-23"
 done_when = "Row 6 filled again with the journal clean."
+
+# The 2026-11-01 triage of the older checklists (b9's second pass): eight retired, two
+# moved out of the plan (gnome_model to the art pipeline, dev_panel's one row into
+# food_and_water), and the five below kept for a sitting. Tentative until the user takes them.
+
+[[row]]
+id = "v51"
+week = "w5"
+lane = "verify"
+day = "any two-seat sitting"
+what = "Group odds and ends: a PvP miss reads \"B misses you.\" on A's screen; /autosplit off and on tell the other member, a repeat of the same value tells nobody, and a toggle while ungrouped only echoes locally."
+who = "user at a desk, two seats (two-boxing works), both /pvp on for the miss row"
+hours = 0.25
+needs = ["second seat (two-boxing works)"]
+checklist = "group_loot_coin_checklist.md"
+todo = "Loot rights odds and ends"
+tentative = true
+done_when = "Rows 165 and 170 to 173 filled."
+
+[[row]]
+id = "v52"
+week = "w5"
+lane = "verify"
+day = "the same sitting as v51, with a third account"
+what = "A three-person group keeps a two-person roster when C leaves, and when A kicks C; C's group window clears."
+who = "user at a desk, three seats (three accounts; two-boxing works)"
+hours = 0.25
+needs = ["three accounts in one group"]
+checklist = "track_6_post_fix_checklist.md"
+waits_on = ["v51"]
+tentative = true
+done_when = "Rows 46 and 48 filled."
+
+[[row]]
+id = "v53"
+week = "w5"
+lane = "verify"
+day = "any one-seat GM sitting"
+what = "The banker turns 150 copper into 1 silver and keeps 50 copper, and does nothing when both tiers are the same."
+who = "user at a desk with a GM account"
+hours = 0.1
+checklist = "banker_slice1_checklist.md"
+tentative = true
+done_when = "Rows 52 and 55 filled."
+
+[[row]]
+id = "v54"
+week = "w5"
+lane = "verify"
+day = "the same sitting as v53"
+what = "Life Drain on a Blood Mage 6 does 12 damage and heals up to 12; optionally Dark Shroud on a Shadow Knight does 20."
+who = "user at a desk with a GM account (Level Up from the Test Panel)"
+hours = 0.15
+checklist = "spell_drift_life_drain_dark_shroud_checklist.md"
+tentative = true
+done_when = "Row 29 filled (row 34 optional)."
+
+[[row]]
+id = "v55"
+week = "w5"
+lane = "verify"
+day = "the same sitting as v53, optional"
+what = "A Warrior's Skills tab shows no Meditate climbing while sitting."
+who = "user at a desk"
+hours = 0.05
+checklist = "regen_model_checklist.md"
+tentative = true
+done_when = "Row 60 filled."
+
+# The overnight of 2026-11-01 (the user's "do all four"): the last big pieces of the
+# housekeeping audit. The findings doc's section 5 says what is left and where it belongs.
+
+[[row]]
+id = "b51"
+week = "w5"
+lane = "build"
+day = "Sun Nov 1, night"
+what = "The world health line: once a minute, each tick's work time (median, 99th percentile, worst), the ticks past the 50 ms budget and the checkpoint's time, so a slow disk or a crowded world shows in the log before players call it lag. On the deploy branch; rides the next redeploy."
+who = "Claude unattended"
+days = 0.25
+done_when = "Pushed on the deploy branch and merged into feat/facing, the suite green."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "b52"
+week = "w5"
+lane = "build"
+day = "Sun Nov 1, night"
+what = "The world loop split: tick.rs's 13,820 lines into a module per step, run() a list of calls in the order they always ran; the integration tests into one binary with a module per subject. Moves only, on refactor/tick-split (from feat/facing), so it merges after the facing."
+who = "Claude unattended"
+days = 1
+done_when = "Pushed on refactor/tick-split, the suite green after every commit."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "b53"
+week = "w5"
+lane = "build"
+day = "Sun Nov 1, night"
+what = "The offline game removed from the client (the user's decision of 2026-10-23): the ENet layer, the local save, local enemies, pets and loot, the offline lobby, the client's own regen and buff ticks; the Test Panel keeps every server-routed tool. On refactor/remove-offline-code (from feat/facing)."
+who = "Claude unattended"
+days = 1
+done_when = "Pushed on refactor/remove-offline-code, every check and probe passing, reviewed."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "o19"
+week = "w5"
+lane = "operate"
+day = "with the next redeploy of the deploy branch"
+what = "The world health line reaches the R720 with whatever redeploy comes next. Server only."
+who = "user at a desk, Claude writes the commands"
+hours = 0
+waits_on = ["b51"]
+done_when = "The boot line shows a build= at or past d4f1a2a and dev_cmds=false."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v56"
+week = "w5"
+lane = "verify"
+day = "after o19"
+what = "Three minutes online: three world health lines with about 1,200 ticks each and nothing over budget; a checkpoint shows; nothing logged once everyone is out."
+who = "user at a desk"
+hours = 0.1
+needs = ["the redeploy (o19)"]
+checklist = "overnight_2026_11_01_checklist.md"
+waits_on = ["o19"]
+todo = "Housekeeping audit 2026-10-23"
+done_when = "Section 1 filled."
+
+[[row]]
+id = "b54"
+week = "w5"
+lane = "build"
+day = "the next bump day, after feat/facing merges"
+what = "Merge refactor/tick-split (server) and refactor/remove-offline-code (client) onto the deploy branches after the facing, then the one-time rustfmt and the lints turned on. The doc lines the offline removal makes stale go in with it."
+who = "Claude, with the user's yes on the reformat"
+days = 0.5
+waits_on = ["b52", "b53"]
+tentative = true
+done_when = "Both deploy branches carry the two refactors, the suite and every client check green."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v57"
+week = "w5"
+lane = "verify"
+day = "the next bump day, after b54"
+what = "Ordinary play on the split server (a fight, casts, a group, the merchant and bank, a trade, a death, a camp) with a clean journal, and the client without the offline game: the login and lobby, your own group row, a pet's fight with a clean console, the Test Panel's tools, the bag window."
+who = "user at a desk, two seats, a GM account"
+hours = 1
+needs = ["the bump redeploy and export", "second seat (two-boxing works)"]
+checklist = "overnight_2026_11_01_checklist.md"
+waits_on = ["b54"]
+todo = "Housekeeping audit 2026-10-23"
+done_when = "Sections 2 and 3 filled."

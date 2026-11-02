@@ -65,6 +65,20 @@ before the retry is saved without its corpse (reachable only while the database 
 | F9 | `AuthError` is the error type for world persistence; inventory and trade errors are `&'static str`. |
 | F12 | `world_two_clients.rs` holds the harness and 140+ tests in one file; `world_smoke.rs` copies the harness. |
 
+**F5 and F12 BUILT 2026-11-01 (night)** on the server branch `refactor/tick-split` (from
+`feat/facing`, so it merges after the bump; eight commits, the suite green after each, 350
+unit and 161 world tests). F5: `tick.rs` (13,820 lines, one 10,400-line function) is now
+`tick/`: `mod.rs` holds `run` (about 330 lines), whose loop is the stop check, the transport
+update, one call per step in the order they always ran, and the packet send; `state.rs` holds
+`WorldState` (everything kept across ticks) and `Intents` (one tick's queues and their types);
+23 step modules and 5 modules of shared rules hold the code. Every step moved unchanged into a
+function that destructures the two structs into the names it always used; a line-by-line
+comparison of the old file with the new ones finds only the deliberate edits (the queue
+declarations turned into fields, timers read through their reference, `super::` paths now
+`crate::world::`, `pub(super)`, rewritten comments). F12: `tests/world/` is one test binary,
+the harness in `common/` and a module per domain; `world_smoke.rs`'s copy of the harness is
+gone (it is the `smoke` module). **F6 to F9 stay OPEN**; §4 has the recommendation.
+
 ### Phase 3: guardrails (`rust-build-cargo`, `devops-github-workflows`, `rust-testing`): PART BUILT 2026-10-23
 Server `01fd0ae` + review fixes `3f7c23a` on the deploy branch, merged into `feat/server-speed`.
 
@@ -81,8 +95,8 @@ Server `01fd0ae` + review fixes `3f7c23a` on the deploy branch, merged into `fea
 | Id | Finding |
 |---|---|
 | B1 | `DeathBroadcast` kills any player on demand (a free teleport home below level 5); it exists for client-side fall damage. User decision: model falls on the server, then remove it. **Designed 2026-10-23** (`docs/design/server_fall_damage.md`): online a fall never reached the server for an ordinary player (it goes through the dev-gated `DamageSelf`), so `DeathBroadcast`'s only honest sender is the Test Panel's Trigger Death; the design proposes gating it as a dev command now (slice 0) and the fall model with the height model (slice 1). All five DECIDED 2026-10-24 (the recommendations). **Slice 0 FIXED 2026-10-24**: server `779a033` (deploy branch; merged into `feat/server-speed` as `062ca07`), `DeathBroadcast` a dev command, a plain account's forged death ignored (test fails on the old handler); client `99f649b` (`feat/server-speed`): online falls compute nothing, Trigger Death sends a dev `DamageSelf`, no `DeathBroadcast` after a death. `fall_damage_slice0_checklist.md`, **playtested 2026-10-26**. Slice 1 waits on the height model. |
-| B2 | The swing-rate limit assumes everyone is at maximum haste (`MAX_MODELED_HASTE`); the server tracks Haste now. |
-| B3 | Cast relays repeat the client's `duration`, `spell_name` and fail `reason` to every player, unchecked (`duration` not finite-checked). |
+| B2 | The swing-rate limit assumes everyone is at maximum haste (`MAX_MODELED_HASTE`); the server tracks Haste now. **FIXED** 2026-10-30 (`3c10935` + `e8810db`, deployed 10-31), refined 2026-11-01 (`d40e505`, deployed 11-02: the last two swings' haste carry, the client's timer lags by two); `haste_limiter_and_cast_relay_checklist.md`, every row passed but the row 6 replay. |
+| B3 | Cast relays repeat the client's `duration`, `spell_name` and fail `reason` to every player, unchecked (`duration` not finite-checked). **FIXED** 2026-10-30 (same commits): only a spell the server knows is relayed, at its own cast time, and a cancel carries one fixed word; playtested 2026-11-01, the late-joiner seed settled by a test. |
 | M4 | No per-intent rate budget for chat, trade, inventory, buy/sell, bank, loot, invites, inspect on this branch (`feat/public-hosting` has two budgets). |
 | B4 | About 20 client/server pairs of the same data or rule have no lockstep check (stat blocks and level gains, XP curve, res-sickness cut, skill caps, dual-wield levels, day length, encumbrance, hunger threshold, song scaling, spell-bar rules, the spell school map). Many could be sent by the server instead. **Mostly FIXED 2026-10-25** (`bump/oct22`, `bf2d1bf`): four checks cover 25 single values, the skill caps and dual wield levels, race and class tables, level gains, the hell modifier, and the spell schools; all pass, each catches planted faults. Left: the hit point and mana formula and the res-sickness cut (formulas, anchor-tested on each side), and the stats message that would retire most of these. |
 | B5 | `PvpToggle` is ungated (needs the user's call with the PvP flagging design). |
@@ -97,6 +111,19 @@ Game or a finished camp. The dev box's save held "Splenda", a level 10 Shadow Kn
 (not proven: a headless run could also have written it). Probe
 `tools/probe_save_manager_online.gd` fails on the previous code.
 
+**The rest BUILT 2026-11-01 (night)** on the client branch `refactor/remove-offline-code` (from
+`feat/facing`; 15 commits, 102 files, about 6,400 lines out, 740 in): the `Network`,
+`SaveManager`, `Transformations` and `WarderAI` autoloads, the local enemy, pet, loot rolling
+and character creation, the offline lobby and the login's Offline button, the client's own
+regen, buff and song ticks, the local inventory and wallet mutators, and every
+`is_launcher_mode()` branch (the online side kept; the function itself renamed
+`has_world_session`). Test Panel buttons that only changed client state went (the character
+and stats overrides, zone travel, God Mode, No Cooldowns, Clear All Buffs); its server-routed
+tools stay. All 12 checks, all 11 probes and a headless boot pass. Two online bugs fell out:
+the group panel found your own row by `multiplayer.get_unique_id()` (1 for everyone online),
+and the pet's local assist errored on every mob hit online. The dungeon scene and the
+procedural dungeon addon are kept (the canonical-copy decision is open) but unreachable.
+
 About 3,500 lines exist only for the offline/Test Room path (the ENet `Network` layer, local
 `Enemy`/`Pet`/`Loot`, `transformations.gd`, `SaveManager`, which also saves to disk during
 online play) plus ~95 `is_launcher_mode()` branches. Dependants to repoint first: the Test
@@ -105,7 +132,7 @@ Panel, `tools/check_nameplates.gd`, `tools/currency_smoke.gd`.
 ### Phase 6: observability and security polish (`dist-observability`, `security-software`)
 | Id | Finding |
 |---|---|
-| M9 | No tick timing, metrics or spans; the player id appears under four field names; decode failures log without a client id. |
+| M9 | No tick timing, metrics or spans; the player id appears under four field names; decode failures log without a client id. **Tick timing FIXED 2026-11-01** (`d4f1a2a`, deploy branch): a once-a-minute `world health` line (each tick's work at the median, the 99th percentile and worst, the ticks over the 50 ms budget, the checkpoint's time), logged while anyone is in the world or when a tick overran. The spans, the one field name and the decode client id stay OPEN. |
 | M7 / F3 | The 20 Hz loop awaits SQLite inline (about eight reads per connect, the checkpoint writes connections one after another). |
 | M6 / F4 | Argon2 runs on runtime threads; no WebSocket handshake timeout, connection cap or size limit; no password maximum (part of this is on `feat/public-hosting`). |
 | L2 | Session tokens stored raw; expired sessions never purged; the ban check runs before the password check. |
@@ -128,3 +155,38 @@ Phase 0 (the hotfix, deployed 2026-10-23), then Phase 1 durability (built 2026-1
 bump merges (user decision, 2026-10-23), with Phase 3's CI and fuzzing alongside, then Phases
 4 to 6. Running alongside other work: Phase 0 and Phase 6's auth items are independent; Phases
 1, 2 and most of 4 and 5 touch the same files as feature branches and wait for them.
+
+## 5. Where it stands, and how to finish (2026-11-01)
+
+**Done or built:** Phases 0 and 1 (playtested); Phase 2's split and test split (F5, F12, on
+`refactor/tick-split`); Phase 3's CI, `cargo-deny`, decode limit, key redaction,
+`forbid(unsafe_code)` and property tests; Phase 4's B1 slice 0, B2, B3 and most of B4; Phase 5
+(on `refactor/remove-offline-code`); Phase 6's tick timing.
+
+**Left, and where each belongs.** The audit closes when the first group is done; the rest are
+ordinary work and belong in the To-Do, where they would be done when their own feature comes
+up, not as an audit.
+
+| Item | Proposed home |
+|---|---|
+| Merge the two branches after `feat/facing` on the next bump day, playtest both | the bump day (`overnight_2026_11_01_checklist.md`) |
+| F13 rest: the one-time `rustfmt` and the `[workspace.lints]` turn-on | the same bump day, after the merges (a reformat now would conflict with every open branch) |
+| F2 / C1 panic containment | a decision first (see below), then a small build |
+| F6 duplicated helpers, F8 a validated coin type, F9 error types, F7 an id-kind enum | one tech-debt To-Do entry, done when the code is next touched (F7 found no live disagreement: the one loose range check is a test assertion) |
+| M4 intent budgets, M6 / F4 auth limits, L2 sessions, L6 / L7 bind and backups, L8 a characters-per-account cap | the public-host hardening To-Do entry (several are already on `feat/public-hosting`) |
+| B6 wire hygiene and the real `vendor_id` | the next protocol bump |
+| B4's stats message | its own To-Do entry |
+| B5 `PvpToggle` | the PvP flagging To-Do entry |
+| B1 slice 1 (falls simulated on the server) | the fall damage design, waiting on the height model |
+| M7 / F3 the database off the loop | measure first: the `world health` line now shows whether the checkpoint or a login stalls a tick |
+| M9 rest (spans, one field name, the decode client id) | the tech-debt entry |
+| `cargo-fuzz` | needs a nightly toolchain installed outside `F:\Projects`; the property tests cover the decoder meanwhile |
+
+**Panic containment, the decision.** Today a panic anywhere in the tick ends the process, and
+systemd restarts it: everyone loses what was not yet saved (since Phase 1, at most the last
+checkpoint's minute; drops, trades, loot and turn-ins are saved at once). Containing a panic
+inside a step that touches several players is not safe: the step may have half-applied a move,
+and saving or carrying on after it could keep a copy (a dupe) or lose an item. The narrow
+version is safe: a panic while handling one client's message (`intake`, which touches only
+that client) kicks that client without saving it, so its last saved state stands, and the
+world carries on for everyone else. Recommended: the narrow version only.

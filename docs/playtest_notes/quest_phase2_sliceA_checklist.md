@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 90 (line numbers as of the triage).
 
+> **Triage 2026-11-01: retired.** Row 94 is covered by `quest_kill_credit_checklist.md` row 54 (a player outside the group gets no credit); spell batch step 1 only narrowed who gets credit (alive and within 200 m), so a bystander still gets none.
+
 Quest objective STATE moved server-side (PD_W0024). The server now counts quest kills itself
 (`active_quests` table + per-kill `QuestProgress`), the journal is seeded from a server
 `QuestSnapshot` on every login (survives relog AND server restart), turn-ins are rejected until

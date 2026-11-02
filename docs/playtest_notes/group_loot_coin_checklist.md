@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 161, 162, 163, 166, 167, 168, 169 (line numbers as of the triage).
 
+> **Triage 2026-11-01: re-run, two seats.** Still open: row 165 (a PvP miss reads "B misses you.") and rows 170 to 173 (the `/autosplit` notices; To-Do "Loot rights odds and ends" (b)); planner row v51. Row 166 is stale: mobs never miss on the server (`entity.rs` `AiEvents` carries only a hit; the mob path fans Hit or Evade). Row 167 is covered by `client_authority_fixes_checklist.md` row 41.
+
 Coins now drop from mobs and corpses have loot rights: a kill belongs to the killer's
 group, coin auto-distributes (or not) by mode, and Round Robin rotates item turns.
 This verifies the whole feature two-client. **Design:** `docs/design/group_loot_and_coin.md`.

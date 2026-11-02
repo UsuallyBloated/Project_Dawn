@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 48, 51 (line numbers as of the triage).
 
+> **Triage 2026-11-01: re-run, one seat.** Rows 52 (the partial exchange) and 55 (From == To) are still open and still exist (`protocol/src/world.rs`, `bank_window.gd`); later sheets checked only that the exchange works. Planned for the one-seat GM sitting (planner row v53).
+
 The Banker is a town NPC offering **zero-weight coin storage** (deposit/withdraw) and
 **tier exchange** (convert coin between tiers, free for this MVP). This is the relief valve
 for the four-tier coin-weight system — bank your heavy copper and carry nothing.

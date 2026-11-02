@@ -55,6 +55,10 @@ PASS_RE = re.compile(r"^\s*- \[[xX]\]", re.M)
 SKIP_RE = re.compile(r"^\s*- \[-\]", re.M)
 HEADING_RE = re.compile(r"^##+\s+(.*)$")
 TWO_SEAT_RE = re.compile(r"two seats?|second seat|two accounts|two-seat", re.I)
+# A checklist whose open rows a triage found stale, covered elsewhere, or belonging to
+# another list carries this note at its top. Its rows stay unmarked (they were never
+# played), and it no longer counts as unscheduled.
+TRIAGE_RETIRED_RE = re.compile(r"^> \*\*Triage \d{4}-\d{2}-\d{2}: (retired|moved)[.:]", re.M)
 
 
 def sh(*args: str) -> str:
@@ -170,8 +174,9 @@ def main() -> int:
     for p in sorted(NOTES.glob("*checklist*.md")):
         if p.name.startswith("TEMPLATE") or p.name in scheduled_checklists:
             continue
-        counts = count_rows(p.read_text(encoding="utf-8"))
-        if counts["open"] == 0:
+        text = p.read_text(encoding="utf-8")
+        counts = count_rows(text)
+        if counts["open"] == 0 or TRIAGE_RETIRED_RE.search(text):
             continue
         mtime = dt.date.fromtimestamp(p.stat().st_mtime)
         age = (today - mtime).days

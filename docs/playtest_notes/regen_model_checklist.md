@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 46, 56, 69 (line numbers as of the triage).
 
+> **Triage 2026-11-01: re-run, optional, one seat.** Row 60 is still open (its Skills-tab half: a Warrior's Meditate stays 0; the MP half cannot be seen, since the pure melee hold a token 20 mana nothing spends); planner row v55. Row 50 is stale: the server logs no line for a meditate gain, and rows 44 and 54 showed the server owns it. Row 73 was redesigned: since 2026-10-14 a hit stands you; its successors are `seated_combat_checklist.md` rows 34 and 41, which the planner schedules.
+
 Verifies the classic-EQ regen rewrite (`docs/design/regen_model.md`): flat per-6s-tick rates by
 level bracket + posture, the Troll HP bonus, and the new **Meditate** casting skill (server-trained
 while sitting, scales sitting MP). Commit (a) flat rates was already playtested and felt good; this

@@ -1,5 +1,7 @@
 # Sticky Chat Channel Playtest Checklist (2026-10-26)
 
+> **Triage 2026-11-01: retired.** The one open row is a setup row; every action row passed and both To-Do entries this sheet backs were ticked 2026-10-27.
+
 The chat line now works like WoW's: it always has a channel, shown in colour to the left of the
 text (`[Say]`, `[Shout]`, `[OOC]`, `[Group]`, `[Tell: Bob]`). Typing a channel command at the
 start of the line (`/say `, `/s `, `/shout `, `/sh `, `/ooc `, `/g `, `/group `, `/gsay `,
