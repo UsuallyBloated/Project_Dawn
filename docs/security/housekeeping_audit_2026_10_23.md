@@ -163,9 +163,9 @@ bump merges (user decision, 2026-10-23), with Phase 3's CI and fuzzing alongside
 `forbid(unsafe_code)` and property tests; Phase 4's B1 slice 0, B2, B3 and most of B4; Phase 5
 (on `refactor/remove-offline-code`); Phase 6's tick timing.
 
-**Left, and where each belongs.** The audit closes when the first group is done; the rest are
-ordinary work and belong in the To-Do, where they would be done when their own feature comes
-up, not as an audit.
+**Left, and where each belongs.** *(User, 2026-11-02: finish the audit rather than fold its
+leftovers into the To-Do. The homes below say where each piece gets built; the audit stays
+open until they are done, except where a row says the user handed it elsewhere.)*
 
 | Item | Proposed home |
 |---|---|
@@ -173,11 +173,12 @@ up, not as an audit.
 | F13 rest: the one-time `rustfmt` and the `[workspace.lints]` turn-on | the same bump day, after the merges (a reformat now would conflict with every open branch) |
 | F2 / C1 panic containment | a decision first (see below), then a small build |
 | F6 duplicated helpers, F8 a validated coin type, F9 error types, F7 an id-kind enum | one tech-debt To-Do entry, done when the code is next touched (F7 found no live disagreement: the one loose range check is a test assertion) |
-| M4 intent budgets, M6 / F4 auth limits, L2 sessions, L6 / L7 bind and backups, L8 a characters-per-account cap | the public-host hardening To-Do entry (several are already on `feat/public-hosting`) |
+| M4 intent budgets, M6 / F4 auth limits, L2 sessions, L8 a characters-per-account cap | `feat/public-hosting`, rebased across the split (several are already there) |
+| L6 / L7 bind auth to the tailnet address, an off-host backup | **deferred 2026-11-02 (user: "we can wait")**; R720 jobs for the user, steps to be written when picked up |
 | B6 wire hygiene and the real `vendor_id` | the next protocol bump |
 | B4's stats message | its own To-Do entry |
-| B5 `PvpToggle` | the PvP flagging To-Do entry |
-| B1 slice 1 (falls simulated on the server) | the fall damage design, waiting on the height model |
+| B5 `PvpToggle` | **decided 2026-11-02 (user): stays a player toggle** until the PvP flagging design tightens it; closed for the audit |
+| B1 slice 1 (falls simulated on the server) | **handed to the fall damage design 2026-11-02 (user)**; closed for the audit. Noted in `docs/session_notes/handoff_server_height_model.md` (invariant 4) so the height model work picks it up |
 | M7 / F3 the database off the loop | measure first: the `world health` line now shows whether the checkpoint or a login stalls a tick |
 | M9 rest (spans, one field name, the decode client id) | the tech-debt entry |
 | `cargo-fuzz` | needs a nightly toolchain installed outside `F:\Projects`; the property tests cover the decoder meanwhile |

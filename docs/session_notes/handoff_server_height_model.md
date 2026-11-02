@@ -80,11 +80,17 @@ entities rendering at the wrong height. The research doc records the comparison.
    outside the heightmap's extent (clamp to edge is the obvious choice) and for any
    non-finite input (refuse). A client can walk arbitrarily far; there are no world
    bounds (verified: nothing clamps x/z anywhere).
-4. **Fall damage is currently client-originated** (`player.gd` ~542 calls
-   `Combat.receive_player_damage` locally). Verticality makes this worth a decision: a
-   modified client can already decline to report fall damage, and real cliffs raise the
-   stakes. At minimum flag it in the design's exploit ledger; server-side fall damage
-   may be out of scope for slice 1 but the ledger should say so explicitly.
+4. **Fall damage waits on this work, and is part of it.** *(Updated 2026-11-02; the
+   original note said fall damage was client-originated, which stopped being true on
+   2026-10-24.)* Online, nobody takes fall damage today: the client computes none, and
+   `DeathBroadcast` is a dev command (`server_fall_damage.md` slice 0, playtested
+   2026-10-26). The server-simulated fall is **slice 1 of `docs/design/server_fall_damage.md`**
+   (all five decisions taken 2026-10-24) and needs this model's `ground(x, z)` sampler.
+   It is also the last open item of the 2026-10-23 housekeeping audit's finding B1
+   (`docs/security/housekeeping_audit_2026_10_23.md`, §5). The user decided on 2026-11-02 that
+   the audit counts B1 as handed to the fall damage design, so it does not hold the audit open.
+   Plan the fall with this model, not after it: read that design's §3.2 before
+   drafting yours.
 5. **Do not regress the death/corpse path.** Corpse positions, res range, and the
    corpse-run are the most playtested consequence chain in the game. Corpses must get
    ground-pinned Y (they persist `pos_y` already, `migrations/0007`), and res range
