@@ -175,7 +175,7 @@ open until they are done, except where a row says the user handed it elsewhere.)
 |---|---|
 | Merge the two branches after `feat/facing` on the next bump day, playtest both | the bump day (`overnight_2026_11_01_checklist.md`) |
 | F13 rest: the one-time `rustfmt` and the `[workspace.lints]` turn-on | the same bump day, after the merges (a reformat now would conflict with every open branch) |
-| F2 / C1 panic containment | **BUILT 2026-11-02** (`1c35cf7`), the narrow version; see below |
+| F2 / C1 panic containment | **BUILT 2026-11-02** (`1c35cf7`, corrected in `3f1d4f2`), the narrow version; see below |
 | F6 duplicated helpers, F8 a validated coin type, F9 error types, F7 an id-kind enum | **BUILT 2026-11-02** (`31a5dd1`, `fb2756c`, `eb12123`, `4d23a34`). One piece left for the user: F7's `CharId` newtype for the ~128 `as ClientId` / `as u64` casts was not done (wide churn on code the open branches rebase over, and no bug found behind it) |
 | M4 intent budgets, M6 / F4 auth limits, L2 sessions, L8 a characters-per-account cap | `feat/public-hosting`, rebased across the split (several are already there) |
 | L6 / L7 bind auth to the tailnet address, an off-host backup | **deferred 2026-11-02 (user: "we can wait")**; R720 jobs for the user, steps to be written when picked up |
@@ -204,3 +204,18 @@ drain reaps the client at once without saving. Test
 (`Config::panic_probe`, read by no env var); it fails with the catch removed and with the batch
 routed instead of dropped. Residual, accepted: a player who finds a panic bug can use it to leave
 at once, rolled back to the last save; the panic is logged at error with their character.
+**That residual was wrong, and fixed the same day** (`3f1d4f2`, user: "as long as you dont
+think it will become a tripping hazard"). The review of the seven commits found that dropping
+the client unsaved made a panic an undo: a death saves its corpse, gear and XP at once but HP
+and position only at the checkpoint, so a player who died and then hit a panic relogged alive
+at the last checkpoint, beside their corpse; and a player at low health left a fight with no
+linkdead linger. Now a client's batch is all or nothing (`intake::handle_batch`): the
+connection is copied before the first message, and on a panic the copy is put back and the
+outcomes discarded, so the tick is as if that client's messages never arrived; the client then
+leaves through the ordinary unclean-drop path (`go_linkdead`), lingering, vulnerable, refused a
+relogin, and saved at the reap. A GM's audit rows from the undone batch go with the copy. The
+undo is complete because `handle_message` touches only the sender's connection and sends only
+to the sender (rule S4 in `docs/reference/invariants.md`). The copy costs about half a
+microsecond per player per tick in a release build. Test
+`a_panic_undoes_only_its_own_tick_and_drops_the_sender_as_cut` dies first, then panics; it
+fails on `1c35cf7` at the despawn.
