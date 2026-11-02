@@ -32,8 +32,7 @@ var creature_name: String = ""
 
 # Emitted whenever `items` is reassigned from outside (server re-snap-
 # shot after a LootItem / LootAll). LootWindow subscribes to refresh
-# its row list. Local-mode bags also emit this from the legacy local
-# take path so the same wire keeps both flows in sync.
+# its row list.
 signal items_changed
 
 func _ready() -> void:

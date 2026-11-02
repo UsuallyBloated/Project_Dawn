@@ -7,8 +7,8 @@ extends DraggablePanel
 # sends on entering the world, after any eat or drink, on a stage change, on
 # death and respawn, and about once a minute; between sends the bars run down
 # at the rate the server gave, so they move smoothly and the next send only
-# corrects drift. Hidden until the first update, so the offline Test Room
-# (no server) never shows an empty window.
+# corrects drift. Hidden until the first update, so it never shows an empty
+# window.
 
 # Must match HUNGRY_AT_SECS in the server's world/hunger.rs (twelve 144 s
 # units): the bar turns amber when the server would say "You are hungry."

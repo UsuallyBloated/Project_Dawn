@@ -28,7 +28,7 @@ func _run() -> void:
 	var sp = root.get_node("/root/Spells")
 	var rpm = root.get_node("/root/RemotePlayerManager")
 	var ps = root.get_node("/root/PlayerStats")
-	# Launcher mode, and the id a CastFail is matched against as our own.
+	# A world session, and the id a CastFail is matched against as our own.
 	net._char_id = 7
 	net._player_id = 7
 

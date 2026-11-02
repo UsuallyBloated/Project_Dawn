@@ -42,8 +42,7 @@ func _ready() -> void:
 	base_slots.fill(null)
 	bag_contents.resize(BASE_SLOT_COUNT)
 	bag_contents.fill(null)
-	# Track 13.2 — in launcher mode the server is authoritative. The
-	# InventorySnapshot fired privately on EnterWorld seeds us with
+	# Track 13.2 — the server is authoritative. The InventorySnapshot fired privately on EnterWorld seeds us with
 	# whatever was persisted; subsequent server-side mutations
 	# (loot, MoveItem, drop) arrive as InventoryDelta.
 	Net.world_inventory_snapshot.connect(_on_inventory_snapshot)
@@ -56,8 +55,6 @@ func _ready() -> void:
 # walk so the bag's parent base entry — which determines the
 # inner Vec's size from item.bag_num_slots — is in place before
 # its contents arrive).
-# In solo / Test Room mode Net never fires this signal so the
-# legacy local autoload state is preserved.
 func _on_inventory_snapshot(
 		locations: PackedStringArray,
 		slots: PackedInt32Array,
@@ -377,11 +374,8 @@ func _collect_stackable(groups: Dictionary, entry: Dictionary, loc: String, slot
 		"count": int(entry["count"]), "cap": int(item.stack_size),
 	})
 
-## Offline / Test Room path, unchanged: with no server there is nothing to ask,
-## so the local rewrite is correct here.
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-# Returns [base_index] for a free base slot, or [base_index, bag_slot_index] for a bag slot.
 func _init_bag_contents(base_index: int, num_slots: int) -> void:
 	var arr: Array = []
 	arr.resize(num_slots)

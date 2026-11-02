@@ -28,7 +28,7 @@ const RESULT_KEYS := [
 static func parse() -> Variant:
 	var raw: Dictionary = _parse_raw(OS.get_cmdline_args())
 	if not raw.has("world_token_path") or str(raw["world_token_path"]) == "":
-		# No token path → not launcher mode. Warn if the user clearly tried
+		# No token path → no launcher handoff. Warn if the user clearly tried
 		# to launch with partial args (e.g. old launcher build).
 		if raw.has("auth_token") or raw.has("char_id"):
 			push_warning(

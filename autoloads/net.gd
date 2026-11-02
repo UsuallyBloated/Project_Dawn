@@ -472,7 +472,10 @@ func _process(delta: float) -> void:
 func _on_close_requested() -> void:
 	OS.kill(OS.get_process_id())
 
-func is_launcher_mode() -> bool:
+# True once a world session has been started in this process (it stays true
+# after a drop: the character id is kept). The login screen reads it to hand a
+# session the retired standalone launcher started straight to the lobby.
+func has_world_session() -> bool:
 	return _state != State.DISCONNECTED or _char_id >= 0
 
 func is_app_ready() -> bool:
@@ -739,8 +742,8 @@ func broadcast_set_group_loot_mode(mode: int) -> void:
 
 # PD_W0014: current leader hands leadership to new_leader (a member's
 # char_id). The server validates and re-fans the roster, which updates
-# every member's leader_peer_id / is_leader. Fixes the launcher-mode gap
-# where pass-leadership was a local-only change the next roster undid.
+# every member's leader_peer_id / is_leader. Fixes the old gap where
+# pass-leadership was a local-only change the next roster undid.
 func broadcast_pass_leadership(new_leader: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return

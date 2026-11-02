@@ -88,14 +88,14 @@ var _create_status: Label
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_apply_startup_window_size()
-	# Before the launcher-mode early return below, so no entry path can produce a
+	# Before the launcher-handoff early return below, so no entry path can produce a
 	# login screen without a visible build identity.
 	_build_build_stamp_footer()
 	# Backward compatibility: the standalone launcher is retired, but if someone
 	# still runs it, it starts a world session from CLI args in Net's _ready
 	# before this scene loads. Showing a login form on top of a live session
 	# would be nonsense, so hand straight over to the lobby.
-	if Net.is_launcher_mode():
+	if Net.has_world_session():
 		call_deferred("_goto_lobby")
 		return
 	AuthClient.connected.connect(_on_ws_connected)

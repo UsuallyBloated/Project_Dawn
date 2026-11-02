@@ -118,7 +118,7 @@ func _on_pet_spawn(
 	_instantiate_into(id, scene)
 	# Track 11.5 — local player's pet routes through PetManager so
 	# the HUD pet panel + any other PetManager.pet_summoned listener
-	# fires uniformly across solo and launcher modes.
+	# hears of it.
 	if owner == Net.get_player_id():
 		var rp = _by_id.get(id)
 		if rp != null and is_instance_valid(rp):
