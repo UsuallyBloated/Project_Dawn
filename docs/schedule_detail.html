@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Sat Oct 31<span class="stat-sub">repo 1450eb9</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Sun Nov 1<span class="stat-sub">repo 39e9ad7</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">36.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">67.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">68.25 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -1182,7 +1182,7 @@
 <section>
 <h2><span class="week-head"><span>Slack, fixes, and the door</span><span class="when">W5 &middot; November 2 to 8</span></span></h2>
 <p class="lede">Deliberately light. Fixes from the rehearsal, the rest of the group onboarded once the build is final, and Sunday evening. If weeks 1 to 4 run as drawn, this week is mostly empty, which is the point.</p>
-<div class="week-meta"><span>the user's time: 13.25 h</span><span>Claude build days: 2.5</span></div>
+<div class="week-meta"><span>the user's time: 14.25 h</span><span>Claude build days: 2.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -1306,6 +1306,16 @@
 <td class="done">Pushed on feat/facing in both repos with the suite green, the integration test and the headless probe passing, and the DLL rebuilt.<span class="ref">To-Do entry: <code>Held-item bank and vendor interactions</code></span></td>
 </tr>
 <tr>
+<td class="id">b50</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Sun Nov 1, night</span>The swing-limit fix from the 11-01 sitting: the server carries the haste of the last two accepted swings instead of one (the client&#x27;s Godot timer runs an interval set two swings back), and counts an expired Haste for one second (the client hears of it a round trip late). Plus an integration test on the late-joiner cast seed, the inconclusive Gate row.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">2 h</td>
+<td class="id"></td>
+<td class="done">Pushed on the deploy branch and merged into feat/facing, the suite green, the new tests failing on the old rule.<span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
+</tr>
+<tr>
 <td class="id">o7</td>
 <td><span class="chip operate">Operate</span></td>
 <td class="what"><span class="day">Wed Nov 4</span>Redeploy with the rehearsal fixes. One export and one re-zip only if a client fix is unavoidable; if so, every friend gets it before any new friend is onboarded.</td>
@@ -1354,6 +1364,16 @@
 <td class="time">0.5 h</td>
 <td class="id">b48</td>
 <td class="done">The boot line shows the new build= and dev_cmds=false.<span class="ref">To-Do entry: <code>Client-decided outcomes</code></span></td>
+</tr>
+<tr>
+<td class="id">o18</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Mon Nov 2 or later, nobody online</span>Redeploy the R720 at the two-swing haste build. Server only, no export, no migration.</td>
+<td>user at a desk, Claude writes the commands</td>
+<td class="needs">nothing</td>
+<td class="time">0.5 h</td>
+<td class="id">b50</td>
+<td class="done">The boot line shows the new build= and dev_cmds=false.<span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
 </tr>
 <tr>
 <td class="id">v17</td>
@@ -1410,7 +1430,7 @@
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">Sat Oct 31 or Sun Nov 1</span>Honest melee never trips the limiter: bare hands, a slow axe, a weapon swap mid-fight, dual wield, under Haste and as it runs out, a target switch and an auto-attack toggle, with no swing-rate line in the journal; two seats see the other&#x27;s cast bar at the spell&#x27;s own length, ending on a cancel, and no bar for a spell the server does not have.</td>
 <td>user at a desk, two seats for section 2</td>
-<td class="needs"><ul><li>checklist haste_limiter_and_cast_relay_checklist.md: 15 rows to run, 4 of them in a two-seat section</li><li>the redeploy (o17)</li><li>second seat for section 2 (two-boxing works)</li></ul></td>
+<td class="needs"><ul><li>checklist haste_limiter_and_cast_relay_checklist.md: 0 rows to run</li><li>the redeploy (o17)</li><li>second seat for section 2 (two-boxing works)</li></ul></td>
 <td class="time">0.75 h</td>
 <td class="id">o17</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/haste_limiter_and_cast_relay_checklist.md"><code>haste_limiter_and_cast_relay_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Client-decided outcomes</code></span></td>
@@ -1424,6 +1444,16 @@
 <td class="time">0.75 h</td>
 <td class="id">b49, b39</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/held_item_bank_and_vendor_checklist.md"><code>held_item_bank_and_vendor_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Held-item bank and vendor interactions</code></span></td>
+</tr>
+<tr>
+<td class="id">v50</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">after o18</span>Row 6 of the swing-limit sheet played as written: swing through a Haste (or Wanderer&#x27;s Chord) running out mid-fight, and start a new fight right after a Haste ends between fights, with no swing-rate line in the journal.</td>
+<td>user at a desk, an Enchanter 16 and a melee character (two-boxing works)</td>
+<td class="needs"><ul><li>checklist haste_limiter_and_cast_relay_checklist.md: 0 rows to run</li><li>the redeploy (o18)</li></ul></td>
+<td class="time">0.5 h</td>
+<td class="id">o18</td>
+<td class="done">Row 6 filled again with the journal clean.<span class="ref">checklist: <a href="playtest_notes/haste_limiter_and_cast_relay_checklist.md"><code>haste_limiter_and_cast_relay_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
 </tr>
 <tr>
 <td class="id">p4</td>
@@ -1511,5 +1541,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-10-31 at repo 1450eb9</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-01 at repo 39e9ad7</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

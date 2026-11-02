@@ -1756,3 +1756,40 @@ checklist = "held_item_bank_and_vendor_checklist.md"
 waits_on = ["b49", "b39"]
 todo = "Held-item bank and vendor interactions"
 done_when = "Every row filled."
+
+[[row]]
+id = "b50"
+week = "w5"
+lane = "build"
+day = "Sun Nov 1, night"
+what = "The swing-limit fix from the 11-01 sitting: the server carries the haste of the last two accepted swings instead of one (the client's Godot timer runs an interval set two swings back), and counts an expired Haste for one second (the client hears of it a round trip late). Plus an integration test on the late-joiner cast seed, the inconclusive Gate row."
+who = "Claude"
+hours = 2
+done_when = "Pushed on the deploy branch and merged into feat/facing, the suite green, the new tests failing on the old rule."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "o18"
+week = "w5"
+lane = "operate"
+day = "Mon Nov 2 or later, nobody online"
+what = "Redeploy the R720 at the two-swing haste build. Server only, no export, no migration."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+waits_on = ["b50"]
+done_when = "The boot line shows the new build= and dev_cmds=false."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v50"
+week = "w5"
+lane = "verify"
+day = "after o18"
+what = "Row 6 of the swing-limit sheet played as written: swing through a Haste (or Wanderer's Chord) running out mid-fight, and start a new fight right after a Haste ends between fights, with no swing-rate line in the journal."
+who = "user at a desk, an Enchanter 16 and a melee character (two-boxing works)"
+hours = 0.5
+needs = ["the redeploy (o18)"]
+checklist = "haste_limiter_and_cast_relay_checklist.md"
+waits_on = ["o18"]
+todo = "Housekeeping audit 2026-10-23"
+done_when = "Row 6 filled again with the journal clean."
