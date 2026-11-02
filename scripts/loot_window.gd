@@ -118,48 +118,20 @@ func _add_row(entry: Dictionary, slot_idx: int) -> void:
 	btn.pressed.connect(func(): _take_entry(captured, captured_slot))
 	row.add_child(btn)
 
-func _inv_error_msg() -> String:
-	return "Your inventory is full."
-
 func _take_entry(entry: Dictionary, slot_idx: int) -> void:
 	if not is_instance_valid(bag):
 		queue_free()
 		return
-	# Network-owned bag: send the intent and let the server arbitrate.
-	# The server replies with a private LootGranted (handled by
-	# RemoteLootBagManager → Inventory.add_item) and a fresh
-	# LootBagSpawn snapshot → bag.items_changed → refresh.
-	if bag.bag_id >= 0:
-		Net.broadcast_loot_item(bag.bag_id, slot_idx)
-		return
-	if Inventory.add_item(entry["item"], entry["count"]):
-		bag.items.erase(entry)
-		bag.items_changed.emit()
-		CombatLog.add_line("You loot: %s." % entry["item"].item_name, CombatLog.MsgType.LOOT)
-		if bag.items.is_empty():
-			bag.queue_free()
-	else:
-		CombatLog.add_line(_inv_error_msg(), CombatLog.MsgType.INFO)
+	# Send the intent and let the server arbitrate. The server replies with
+	# a private LootGranted (the chat line), an InventoryDelta (the item) and
+	# a fresh LootBagSpawn snapshot → bag.items_changed → refresh.
+	Net.broadcast_loot_item(bag.bag_id, slot_idx)
 
 func _take_all() -> void:
 	if not is_instance_valid(bag):
 		queue_free()
 		return
-	if bag.bag_id >= 0:
-		Net.broadcast_loot_all(bag.bag_id)
-		return
-	var remaining: Array = []
-	for entry in bag.items:
-		if Inventory.add_item(entry["item"], entry["count"]):
-			CombatLog.add_line("You loot: %s." % entry["item"].item_name, CombatLog.MsgType.LOOT)
-		else:
-			remaining.append(entry)
-	bag.items = remaining
-	bag.items_changed.emit()
-	if bag.items.is_empty():
-		bag.queue_free()
-	else:
-		CombatLog.add_line(_inv_error_msg(), CombatLog.MsgType.INFO)
+	Net.broadcast_loot_all(bag.bag_id)
 
 func _rarity_color(rarity: ItemData.Rarity) -> Color:
 	match rarity:
