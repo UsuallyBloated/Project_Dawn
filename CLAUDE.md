@@ -192,7 +192,7 @@ Keep the main model for design, code, and any exploit or verification work.
 
 ## Architecture: two repos, one game
 
-- **Client** (this repo): Godot 4.4. Nearly all gameplay lives in ~53 autoload singletons.
+- **Client** (this repo): Godot 4.4. Nearly all gameplay lives in ~50 autoload singletons.
 - **Server** (`F:\Projects\server`): Rust authoritative server. Auth (Register / Login /
   CharList / Char{Create,Delete} / Logout over WebSocket) **plus a live world UDP
   simulation** (renet, 20 Hz): server-authoritative movement, combat, regen, enemy AI,
@@ -200,10 +200,9 @@ Keep the main model for design, code, and any exploit or verification work.
   rights, passive skills, XP/leveling, player corpses + resurrection, quests. Wire
   protocol is **PD_W0024** (`crates/protocol`); the client
   bridges it via the `gdext_net` GDExtension (source in the server repo, shares the
-  `protocol` crate). A `--local-save` dev path still exists for solo iteration without a
-  server. (This line was "auth-only, world not built" through ~early 2026 — long stale.)
+  `protocol` crate). (This line was "auth-only, world not built" through ~early 2026 — long stale.)
 - **The project is multiplayer-only.** There is no supported solo mode — don't scope
-  features or tests around a solo path. Existing solo plumbing is vestigial.
+  features or tests around a solo path. The offline code was removed 2026-11-01.
 - **Before any change that crosses the wire**, read the canonical contract:
   `docs/concepts/architecture/README.md` → `server/docs/server_design.md`. That covers
   networking/RPCs, save persistence (`autoloads/save_manager.gd`), and the
@@ -282,8 +281,8 @@ another reason). They are **not** a mandate to stop and refactor existing files.
 
 ### File and function shape
 - ~500–600 lines is the "ask yourself if this still has one responsibility" threshold,
-  not a hard cap. Split on *responsibility*, not line count — e.g. `PetManager`→`WarderAI`,
-  `PlayerStats`→`Alignment`, `hud.gd`→the `hud_*.gd` family.
+  not a hard cap. Split on *responsibility*, not line count — e.g. `Alignment` split out of
+  `PlayerStats`, and `hud.gd` into the `hud_*.gd` family.
 - `scripts/test_panel.gd` is a debug tool, not a feature drawer. It should only *invoke*
   systems (call public autoload methods), never hold gameplay logic.
 
@@ -357,17 +356,17 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
 
 ## Architecture reference
 
-### Autoloads (53, grouped — source of truth is the `[autoload]` block in `project.godot`)
+### Autoloads (50, grouped — source of truth is the `[autoload]` block in `project.godot`)
 
 | Domain | Autoloads |
 |---|---|
 | **Progression** | `PlayerStats`, `Alignment`, `Skills`, `Spells`, `WeaponSkills`, `ArmorSkills`, `CastingSkills`, `Memorize`, `SpellBar`, `Regen`, `CharacterSetup` |
 | **Combat** | `Combat`, `BuffManager`, `DamageNumbers`, `PlayerDeath`, `Targeting`, `Loot`, `NetCombatBroadcaster` |
 | **Items / economy** | `Inventory`, `Equipment`, `ItemRegistry`, `VendorManager`, `Crafting`, `StationManager`, `Currency`, `Encumbrance` |
-| **Pets / transforms** | `PetManager`, `WarderAI`, `Transformations`, `MountManager` |
+| **Pets / mounts** | `PetManager`, `MountManager` |
 | **World / environment** | `ZoneLoader`, `TimeOfDay`, `VisionSystem`, `SenseHeading` |
 | **Social / quest / UI** | `GroupManager`, `QuestManager`, `DialogueManager`, `CombatLog`, `ChatWindowManager`, `BardSongs`, `Languages`, `SocialHotkeys`, `GameSettings`, `DebugLog` |
-| **Networking (client)** | `Network`, `Net`, `SaveManager`, `RemotePlayerManager`, `RemoteEnemyManager`, `RemoteLootBagManager`, `RemotePetManager` |
+| **Networking (client)** | `Net`, `RemotePlayerManager`, `RemoteEnemyManager`, `RemoteLootBagManager`, `RemotePetManager` |
 
 Per-autoload responsibilities and the combat/spell deep dive live in
 `docs/concepts/architecture/systems_overview.md`.
@@ -562,7 +561,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   reason and code only), so it needs a wire-layer change and a DLL rebuild, no protocol bump.
   (3) **A real return to character select is a multi-day client job, not a small one:** the
   session token and the auth socket live in the login SCENE and are lost on a scene change;
-  `Net.leave_session` relies on process exit to close the socket; and 54 autoloads hold
+  `Net.leave_session` relies on process exit to close the socket; and 50 autoloads hold
   per-character state that a second character would inherit unless each is audited (the
   hotbar bleed of 08-26 was one of them). Needs its own design pass and a state-reset audit
   before any code.

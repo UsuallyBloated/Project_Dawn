@@ -291,11 +291,10 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
 	var rp = _by_id.get(target)
 	if rp != null and is_instance_valid(rp):
 		DamageNumbers.spawn_damage(rp.global_position, amount, crit)
-		# PvP outgoing — if this Hit's attacker is us, log the strike
-		# against the target. Mirrors the "You hit X for N" line that
-		# Combat.deal_damage_to_target emits for enemy targets; for
-		# PvP we wait until here so the number reflects server-side
-		# armor reduction.
+		# PvP outgoing: if this Hit's attacker is us, log the strike
+		# against the target. Every outgoing "You hit X for N" line is
+		# written here, for players and mobs alike, so the number is the
+		# server's after armor.
 		if attacker == Net.get_player_id():
 			CombatLog.add_line("You hit %s for %d damage%s." % [rp.player_name, amount, (" (Critical!)" if crit else "")], CombatLog.MsgType.DAMAGE_OUT)
 		_play_spell_impact_fx(rp, amount, dmg_type)

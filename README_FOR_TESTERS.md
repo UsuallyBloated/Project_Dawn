@@ -85,9 +85,8 @@ You land on a **login screen**.
 5. You land on a screen showing `Connected. Click Enter World to begin.` Click
    **Enter World**.
 
-> **Ignore the other buttons on that screen.** `Host Game`, `Join Game`, `Test Room` and
-> `Delete Save` are leftovers from before the server existed. They do nothing useful and
-> some of them will misbehave. **Enter World** is the only one you want.
+> **Enter World** is the only button on that screen. (Older builds also had `Host Game`,
+> `Join Game`, `Test Room` and `Delete Save`; they are gone.)
 
 ---
 
