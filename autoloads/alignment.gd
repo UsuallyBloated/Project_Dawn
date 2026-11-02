@@ -105,9 +105,3 @@ func get_effective_class() -> String:
 			if alignment_tier == "Exalted":
 				return "Shadow Knight_Redeemed"
 	return PlayerStats.player_class
-
-func save_state() -> Dictionary:
-	return {"alignment_score": exact_score}
-
-func load_state(d: Dictionary) -> void:
-	set_alignment(float(d.get("alignment_score", 0)))

@@ -62,7 +62,7 @@ var constitution: int = 10
 
 # Intrinsic ("base") stats — race + class + level only. Gear bonuses are NOT
 # accumulated here. apply_item_bonuses/remove_item_bonuses touch the public
-# fields but leave these alone, so saves capture the gear-independent state.
+# fields but leave these alone, so the gear-independent state stays known.
 var _base_strength: int = 10
 var _base_dexterity: int = 10
 var _base_agility: int = 10
@@ -417,77 +417,3 @@ func apply_remote_coins(new_platinum: int, new_gold: int, new_silver: int, new_c
 func lose_xp(amount: int) -> void:
 	xp = max(0, xp - amount)
 	xp_changed.emit(xp, xp_to_next)
-
-# ── Save / load (Tier 1 persistence) ──────────────────────────────────────────
-
-func save_state() -> Dictionary:
-	# Persists intrinsic (gear-free) stats. Equipped items reapply their
-	# bonuses on load via Equipment.equip(), avoiding double-counting.
-	return {
-		"player_name": player_name,
-		"race": race,
-		"player_class": player_class,
-		"level": level,
-		"xp": xp,
-		"xp_to_next": xp_to_next,
-		"platinum": platinum, "gold": gold, "silver": silver, "copper": copper,
-		"max_hp": _base_max_hp, "max_mp": _base_max_mp, "max_stamina": _base_max_stamina,
-		"hp": hp, "mp": mp, "stamina": stamina,
-		"strength": _base_strength, "dexterity": _base_dexterity, "agility": _base_agility,
-		"intelligence": _base_intelligence, "wisdom": _base_wisdom, "charisma": _base_charisma,
-		"constitution": _base_constitution,
-		"bind_zone_path": bind_zone_path, "bind_entry_id": bind_entry_id,
-		"bind_zone_name": bind_zone_name,
-		"transformation": transformation,
-	}
-
-func load_state(d: Dictionary) -> void:
-	player_name    = d.get("player_name", "")
-	race           = d.get("race", "")
-	player_class   = d.get("player_class", "")
-	level          = int(d.get("level", 1))
-	xp             = int(d.get("xp", 0))
-	xp_to_next     = int(d.get("xp_to_next", 1000))
-	# Four-tier wallet; a pre-currency save's single "coins" count carries
-	# forward into copper (it was a flat count with no tiers).
-	platinum       = int(d.get("platinum", 0))
-	gold           = int(d.get("gold", 0))
-	silver         = int(d.get("silver", 0))
-	copper         = int(d.get("copper", d.get("coins", 100)))
-	# Intrinsic stats restored. No gear is equipped at load time, so public
-	# fields mirror the base values until Equipment re-equips items.
-	_base_max_hp        = float(d.get("max_hp", 100.0))
-	_base_max_mp        = float(d.get("max_mp", 100.0))
-	_base_max_stamina   = float(d.get("max_stamina", 100.0))
-	max_hp              = _base_max_hp
-	max_mp              = _base_max_mp
-	max_stamina         = _base_max_stamina
-	hp                  = float(d.get("hp", max_hp))
-	mp                  = float(d.get("mp", max_mp))
-	stamina             = float(d.get("stamina", max_stamina))
-	_base_strength      = int(d.get("strength", 10))
-	_base_dexterity     = int(d.get("dexterity", 10))
-	_base_agility       = int(d.get("agility", 10))
-	_base_intelligence  = int(d.get("intelligence", 10))
-	_base_wisdom        = int(d.get("wisdom", 10))
-	_base_charisma      = int(d.get("charisma", 10))
-	_base_constitution  = int(d.get("constitution", 10))
-	strength            = _base_strength
-	dexterity           = _base_dexterity
-	agility             = _base_agility
-	intelligence        = _base_intelligence
-	wisdom              = _base_wisdom
-	charisma            = _base_charisma
-	constitution        = _base_constitution
-	bind_zone_path = d.get("bind_zone_path", "")
-	bind_entry_id  = d.get("bind_entry_id", "default")
-	bind_zone_name = d.get("bind_zone_name", "")
-	transformation = d.get("transformation", "")
-	hp_changed.emit(hp, max_hp)
-	mp_changed.emit(mp, max_mp)
-	stamina_changed.emit(stamina, max_stamina)
-	xp_changed.emit(xp, xp_to_next)
-	level_changed.emit(level)
-	coins_changed.emit(platinum, gold, silver, copper)
-	stats_changed.emit()
-	character_applied.emit()
