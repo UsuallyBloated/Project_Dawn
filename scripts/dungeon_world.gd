@@ -15,9 +15,8 @@ func _ready() -> void:
 	ZoneLoader.current_zone_name = zone_name
 	ZoneLoader.current_zone_path = scene_file_path
 
-	# See world.gd for context: same dual-gate so launcher-mode sessions
-	# get the dev panel too.
-	if Network.is_test_room or Net.is_launcher_mode():
+	# The Test Panel mounts for GM accounts only, as in world.gd.
+	if Net.is_gm():
 		add_child(preload("res://scripts/test_panel.gd").new())
 
 	dungeon_spawner.dungeon_ready.connect(_on_dungeon_ready)

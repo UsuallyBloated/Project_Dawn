@@ -107,7 +107,6 @@ var _view_index := 1
 # round-trip. DisplayServer's get/warp pair is in raw screen coords —
 # no transforms — so the restore lands exactly where the capture happened.
 var _cursor_before_camera: Vector2i = Vector2i.ZERO
-var _is_local := false
 var _heading_train_accum: float = 0.0
 var _was_on_floor: bool = true
 var _peak_fall_speed: float = 0.0
@@ -135,17 +134,6 @@ var _pre_death_zoom: float = 0.0
 @onready var visual: MeshInstance3D = $Visual
 
 func _ready() -> void:
-	var peer_id := str(name).to_int() if str(name).is_valid_int() else 1
-	set_multiplayer_authority(peer_id)
-	_setup_sync()
-
-	_is_local = is_multiplayer_authority()
-	if not _is_local:
-		camera.current = false
-		set_physics_process(false)
-		set_process_unhandled_input(false)
-		return
-
 	# Swap the capsule for the local player's race model (no-op for races
 	# without a custom model). Remote peers do the same from their own race.
 	RaceModel.apply(visual, PlayerStats.race)
@@ -169,17 +157,7 @@ func _ready() -> void:
 	Regen.register_player(self)
 	Net.world_position.connect(_on_world_position)
 
-func _setup_sync() -> void:
-	var sync := MultiplayerSynchronizer.new()
-	var config := SceneReplicationConfig.new()
-	config.add_property(NodePath(".:position"))
-	config.add_property(NodePath(".:rotation"))
-	sync.replication_config = config
-	add_child(sync)
-
 func _exit_tree() -> void:
-	if not _is_local:
-		return
 	Combat.unregister_player()
 	Regen.unregister_player()
 	PlayerDeath.unregister_player()
@@ -208,8 +186,6 @@ func stand() -> void:
 		_enter_state(PlayerState.STANDING)
 
 func _input(event: InputEvent) -> void:
-	if not _is_local:
-		return
 	# Mouse motion stays in `_input` so click-drag keeps working even when the
 	# cursor crosses over UI panels. Right-drag turns the body; left-drag swings
 	# the camera around a stationary body. Pitch is shared by both.
@@ -312,8 +288,6 @@ func _update_mouse_camera(chat_focused: bool) -> void:
 		DisplayServer.warp_mouse(_cursor_before_camera - get_window().position)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not _is_local:
-		return
 	# Wheel zoom: skip when the cursor is over any UI Control. Godot's
 	# ScrollContainer scrolls on wheel but doesn't mark the event handled,
 	# so without this gate the camera would zoom while the chat / test

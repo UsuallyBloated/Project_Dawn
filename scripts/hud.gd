@@ -1746,7 +1746,7 @@ func _handle_chat_input(text: String) -> void:
 		# rest of the session with no way to recover. Mount it on demand instead,
 		# so the command works whenever the account is entitled to it rather than
 		# depending on the state at one particular moment.
-		if Network.is_test_room or (Net.is_launcher_mode() and Net.is_gm()):
+		if Net.is_gm():
 			var host := get_tree().current_scene
 			if host != null:
 				host.add_child(TEST_PANEL_GD.new())
@@ -1808,11 +1808,8 @@ func _handle_chat_input(text: String) -> void:
 		if target_name == "":
 			CombatLog.add_line("Usage: /invite <character name> — or target a player first.", CombatLog.MsgType.INFO)
 			return
-		if Net.is_launcher_mode():
-			GroupManager.invite_player_by_name(target_name)
-			CombatLog.add_line("Invited %s to your group." % target_name, CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("/invite requires multiplayer.", CombatLog.MsgType.INFO)
+		GroupManager.invite_player_by_name(target_name)
+		CombatLog.add_line("Invited %s to your group." % target_name, CombatLog.MsgType.INFO)
 		return
 
 	if lower == "/accept" or lower == "/accept invite":
@@ -1839,11 +1836,8 @@ func _handle_chat_input(text: String) -> void:
 		if not GroupManager.is_leader:
 			CombatLog.add_line("Only the group leader can kick.", CombatLog.MsgType.INFO)
 			return
-		if Net.is_launcher_mode():
-			GroupManager.kick_member_by_name(target_name)
-			CombatLog.add_line("Kicked %s from the group." % target_name, CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("/kick requires multiplayer.", CombatLog.MsgType.INFO)
+		GroupManager.kick_member_by_name(target_name)
+		CombatLog.add_line("Kicked %s from the group." % target_name, CombatLog.MsgType.INFO)
 		return
 
 	# Track 6 sub-task 3 dev — bypass-the-spell-system self heal.

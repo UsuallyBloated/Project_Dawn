@@ -67,7 +67,7 @@ func _process(delta: float) -> void:
 func _find_local_player() -> PlayerCharacter:
 	var nodes := get_tree().get_nodes_in_group("player")
 	for n in nodes:
-		if n is PlayerCharacter and (n as PlayerCharacter).is_multiplayer_authority():
+		if n is PlayerCharacter:
 			return n
 	return null
 

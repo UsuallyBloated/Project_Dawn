@@ -18,7 +18,6 @@ config/icon="res://icon.svg"
 [autoload]
 
 AuthClient="*res://autoloads/auth_client.gd"
-Network="*res://autoloads/network.gd"
 Currency="*res://autoloads/currency.gd"
 PlayerStats="*res://autoloads/player_stats.gd"
 Alignment="*res://autoloads/alignment.gd"
