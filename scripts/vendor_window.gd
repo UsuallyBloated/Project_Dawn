@@ -372,44 +372,26 @@ func _do_buy() -> void:
 	if item == null:
 		return
 	var total := item.vendor_price * _qty
-	if Net.is_launcher_mode():
-		# Track 14 follow-up — server-authoritative buy. The server
-		# validates coins + inventory cap + item exists, then fans
-		# CoinsUpdate + InventoryDelta. Local state (PlayerStats.coins
-		# / Inventory) is overwritten by the server's reply, not
-		# the local optimistic write. vendor_id is informational
-		# for now (no server NPCs); 0 is fine.
-		if PlayerStats.total_copper() < total:
-			_set_result("You don't have enough coins.", false)
-			return
-		Net.broadcast_buy_item(0, item.item_name, _qty)
-		# Describe what was REQUESTED, never what happened. This used to print
-		# "Ordered X x20 for 1s" the instant it sent, using a quantity and a
-		# price computed right here — so when the server refused for full bags,
-		# or filled only part of the order, the player had already been told
-		# otherwise. A 2026-08-24 playtest saw "Only 7 fit in your bags." in chat
-		# beside "Ordered Honey x20 for 1s." in this very panel.
-		#
-		# The outcome is the server's to report: a refusal arrives as a chat
-		# line, and a success shows up as the items and the coin actually
-		# changing. Neither needs narrating from here.
-		_set_result("Asked the merchant for %s%s." % [
-			item.item_name,
-			" x%d" % _qty if _qty > 1 else ""], true)
-		_qty = 1
-		_refresh_detail()
-		return
-	if not PlayerStats.spend_coins(total):
+	# Track 14 follow-up — server-authoritative buy. The server validates
+	# coins + inventory cap + item exists, then fans CoinsUpdate +
+	# InventoryDelta. vendor_id is informational for now; 0 is fine.
+	if PlayerStats.total_copper() < total:
 		_set_result("You don't have enough coins.", false)
 		return
-	if not Inventory.add_item(item, _qty):
-		PlayerStats.add_coins(total)  # refund
-		_set_result("Your inventory is full.", false)
-		return
-	_set_result("Purchased %s%s for %s." % [
+	Net.broadcast_buy_item(0, item.item_name, _qty)
+	# Describe what was REQUESTED, never what happened. This used to print
+	# "Ordered X x20 for 1s" the instant it sent, using a quantity and a
+	# price computed right here — so when the server refused for full bags,
+	# or filled only part of the order, the player had already been told
+	# otherwise. A 2026-08-24 playtest saw "Only 7 fit in your bags." in chat
+	# beside "Ordered Honey x20 for 1s." in this very panel.
+	#
+	# The outcome is the server's to report: a refusal arrives as a chat
+	# line, and a success shows up as the items and the coin actually
+	# changing. Neither needs narrating from here.
+	_set_result("Asked the merchant for %s%s." % [
 		item.item_name,
-		" x%d" % _qty if _qty > 1 else "",
-		_price_text(total)], true)
+		" x%d" % _qty if _qty > 1 else ""], true)
 	_qty = 1
 	_refresh_detail()
 
@@ -418,38 +400,24 @@ func _do_sell() -> void:
 		return
 	var slot = _sell_items[_selected_index]
 	var item: ItemData = slot["item"]
-	@warning_ignore("integer_division")
-	var sell_price := item.vendor_price / 2
 	var actual_qty := mini(_qty, slot["count"])
-	var total := sell_price * actual_qty
-	if Net.is_launcher_mode():
-		# Track 14 follow-up — server-authoritative sell. Server
-		# computes sell_price = vendor_price / 2 itself and fans
-		# CoinsUpdate + InventoryDelta. _sell_items carries the
-		# (location, slot_idx) tuple captured in _populate_list.
-		var location: String = slot.get("location", NetProtocol.INV_LOCATION_BASE)
-		var slot_idx: int = slot.get("slot_idx", 0)
-		Net.broadcast_sell_item(location, slot_idx, actual_qty)
-		# Same rule as the buy path above, and this one had it worse: the price
-		# shown was computed here as vendor_price / 2 for an intent with seven
-		# silent refusal paths, so a player could be shown a coin total for a
-		# sale that never happened. The server computes the credit and fans a
-		# CoinsUpdate; let that be the answer.
-		_set_result("Offered %s%s to the merchant." % [
-			item.item_name,
-			" x%d" % actual_qty if actual_qty > 1 else ""], true)
-		_selected_index = -1
-		_qty = 1
-		return
+	# Track 14 follow-up — server-authoritative sell. Server computes
+	# sell_price = vendor_price / 2 itself and fans CoinsUpdate +
+	# InventoryDelta. _sell_items carries the (location, slot_idx) tuple
+	# captured in _populate_list.
+	var location: String = slot.get("location", NetProtocol.INV_LOCATION_BASE)
+	var slot_idx: int = slot.get("slot_idx", 0)
+	Net.broadcast_sell_item(location, slot_idx, actual_qty)
+	# Same rule as the buy path above, and this one had it worse: the price
+	# shown was computed here as vendor_price / 2 for an intent with seven
+	# silent refusal paths, so a player could be shown a coin total for a
+	# sale that never happened. The server computes the credit and fans a
+	# CoinsUpdate; let that be the answer.
+	_set_result("Offered %s%s to the merchant." % [
+		item.item_name,
+		" x%d" % actual_qty if actual_qty > 1 else ""], true)
 	_selected_index = -1
 	_qty = 1
-	Inventory.remove_item(item, actual_qty)  # fires inventory_changed -> _populate_list
-	PlayerStats.add_coins(total)
-	_set_result("Sold %s%s for %s." % [
-		item.item_name,
-		" x%d" % actual_qty if actual_qty > 1 else "",
-		_price_text(total)], true)
-	_show_detail_hint()
 
 func _set_result(msg: String, ok: bool) -> void:
 	_result_lbl.text = msg

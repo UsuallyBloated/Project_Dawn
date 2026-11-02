@@ -18,8 +18,7 @@ signal coins_changed(platinum: int, gold: int, silver: int, copper: int)
 # Four independent coin stacks (100:1 per tier — see autoloads/currency.gd and
 # docs/concepts/world/currency.md). Independent on purpose: holding raw copper
 # vs. converted silver is a player choice with a weight cost, so nothing may
-# silently consolidate these. Server-authoritative in launcher mode via
-# apply_remote_coins.
+# silently consolidate these. Server-authoritative via apply_remote_coins.
 var platinum: int = 0
 var gold: int = 0
 var silver: int = 0
@@ -364,46 +363,10 @@ func remove_item_bonuses(item: ItemData) -> void:
 func total_copper() -> int:
 	return Currency.total_copper(platinum, gold, silver, copper)
 
-# Credit exact per-tier stacks, no reduction — a 1000-copper grant stays
-# 1000 raw copper. For loot drops that specify tiers and dev grants; vendor
-# payouts use add_coins (reduced) instead.
-func add_coin_stacks(p: int, g: int, s: int, c: int) -> void:
-	platinum = maxi(platinum + p, 0)
-	gold = maxi(gold + g, 0)
-	silver = maxi(silver + s, 0)
-	copper = maxi(copper + c, 0)
-	coins_changed.emit(platinum, gold, silver, copper)
-
-# Credit a payout of `amount` copper-equivalents, reduced to minimal coins
-# (a 250c payout arrives as 2s 50c). Existing stacks are not re-reduced.
-func add_coins(amount: int) -> void:
-	var payout := Currency.from_copper(amount)
-	platinum += payout[0]
-	gold += payout[1]
-	silver += payout[2]
-	copper += payout[3]
-	coins_changed.emit(platinum, gold, silver, copper)
-
-# Spend `amount` copper-equivalents with make-change: low coins go first, a
-# higher coin is broken only when the lower stacks fall short (see
-# Currency.spend). Returns false (wallet untouched) if unaffordable.
-func spend_coins(amount: int) -> bool:
-	var wallet: Array[int] = [platinum, gold, silver, copper]
-	if not Currency.spend(wallet, amount):
-		return false
-	platinum = wallet[0]
-	gold = wallet[1]
-	silver = wallet[2]
-	copper = wallet[3]
-	coins_changed.emit(platinum, gold, silver, copper)
-	return true
-
 # Track 14 follow-up — server-authoritative coins overwrite. Called
 # from Net._on_coins_update when the server fans a CoinsUpdate
 # (vendor BuyItem / SellItem, and any future coin-mutating flow).
-# In launcher mode this is the only path that changes the wallet —
-# vendor_window.gd no longer touches spend_coins / add_coins
-# directly when Net.is_launcher_mode() is true.
+# This is the only path that changes the wallet.
 func apply_remote_coins(new_platinum: int, new_gold: int, new_silver: int, new_copper: int) -> void:
 	if platinum == new_platinum and gold == new_gold \
 			and silver == new_silver and copper == new_copper:

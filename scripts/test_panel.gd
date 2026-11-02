@@ -628,8 +628,8 @@ func _give_copper_hoard() -> void:
 func _give_mixed_purse() -> void:
 	_give_coins(1, 5, 5, 0)
 
-# Negative grant; both the server handler and add_coin_stacks floor each
-# stack at 0, so this empties the wallet regardless of holdings.
+# Negative grant; the server handler floors each stack at 0, so this
+# empties the wallet regardless of holdings.
 func _clear_money() -> void:
 	const WIPE := -1_000_000_000
 	_give_coins(WIPE, WIPE, WIPE, WIPE)
