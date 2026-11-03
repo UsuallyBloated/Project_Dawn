@@ -57,6 +57,16 @@ never from the message. Why: a modified client can name any item and any number.
 Held by: `a_priced_item_no_merchant_stocks_cannot_be_bought`, `buy_item_rejected_when_no_vendor_in_range`,
 `buy_item_rejects_insufficient_coins`, `a_quest_turn_in_saves_its_reward_xp_with_the_completion`
 
+### I5. A NO DROP item never leaves the character holding it
+It cannot be dropped on the ground, offered in a trade or put in the account-shared vault,
+and the starting kit that carries the tag is worth nothing to a merchant; it can be
+destroyed, banked in the character's own vault and looted back off its own corpse. Why:
+without it, a new character's free kit is a coin farm (make a character, sell or hand on
+its kit, delete it, make another).
+Held by: `a_new_character_is_born_dressed_and_the_kit_cannot_leave`, `every_class_can_wear_its_kit`,
+`the_starting_kit_comes_back_off_its_owners_corpse`, `no_one_is_born_encumbered`,
+`a_fresh_character_holds_only_its_starting_kit`, `probe_no_drop.gd`
+
 ## Saving and leaving
 
 ### S1. A character's stores are saved together, through one path

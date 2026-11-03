@@ -86,6 +86,12 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 # water. The server's items.toml carries the same flag (lockstep-checked).
 @export var no_rent: bool = false
 
+# NO DROP (EverQuest's tag; user 2026-11-03): bound to the character holding it.
+# The server refuses it on the ground, in a trade and in the account-shared
+# vault; destroying it is allowed. The starting kit. Lockstep-checked like
+# no_rent.
+@export var no_drop: bool = false
+
 # ── Save / load (Tier 2) ──────────────────────────────────────────────────────
 
 # Serialize to a dict for JSON. Items loaded from a `.tres` file are saved as
@@ -126,6 +132,7 @@ func _to_snapshot() -> Dictionary:
 		"vendor_price": vendor_price,
 		"weight": weight,
 		"no_rent": no_rent,
+		"no_drop": no_drop,
 	}
 
 static func from_save_dict(d: Dictionary) -> ItemData:
@@ -185,4 +192,5 @@ static func from_save_dict(d: Dictionary) -> ItemData:
 	item.vendor_price       = snap.get("vendor_price", 0)
 	item.weight             = snap.get("weight", 0.0)
 	item.no_rent            = snap.get("no_rent", false)
+	item.no_drop            = snap.get("no_drop", false)
 	return item

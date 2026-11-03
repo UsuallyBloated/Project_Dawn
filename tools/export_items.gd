@@ -83,6 +83,8 @@ const FIELD_MAP := {
 	"weight":              "weight",
 	# NO RENT: the server destroys it 30 minutes after its owner logs out
 	"no_rent":             "no_rent",
+	# NO DROP: it never leaves the character holding it
+	"no_drop":             "no_drop",
 }
 
 # Emit order — keeps the TOML stable across runs. Path, name,
@@ -104,6 +106,7 @@ const EMIT_ORDER := [
 	"vendor_price",
 	"weight",
 	"no_rent",
+	"no_drop",
 ]
 
 const ALWAYS_EMIT := ["path", "name", "item_type", "stack_size"]

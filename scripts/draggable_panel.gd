@@ -220,6 +220,8 @@ func _append_stat_lines(item: ItemData, lines: Array) -> void:
 	# minutes after its owner logs out.
 	if item.no_rent:
 		lines.append("NO RENT")
+	if item.no_drop:
+		lines.append("NO DROP")
 	if item.type == ItemData.Type.WEAPON:
 		lines.append("Damage: %d–%d   Delay: %.1fs" % [
 			item.weapon_damage_min, item.weapon_damage_max, item.weapon_delay])
