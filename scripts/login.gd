@@ -208,6 +208,9 @@ func _build_login_view() -> void:
 	v.add_child(_make_label("Username"))
 	_username_input = LineEdit.new()
 	_username_input.custom_minimum_size = Vector2(0, 36)
+	# Shown only while the box is empty: a first launch on a machine (the last
+	# username is remembered after that).
+	_username_input.placeholder_text = "Enter your user name"
 	v.add_child(_username_input)
 
 	v.add_child(_make_label("Password"))

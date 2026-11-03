@@ -3576,7 +3576,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   two bare fists (the off-hand punch needs both hands empty); unequip it to fight hand to hand.
   **DEPLOYED 2026-11-03 17:21 UTC** (R720 boot line `build="f06e88e" dev_cmds=false`, nobody
   online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`); the friends' zip is
-  `builds/ProjectDawn-alpha-de600ba.zip`.
+  `builds/ProjectDawn-alpha-c37bebd.zip` (since `c37bebd`, the username hint; it replaced `de600ba`).
 - [ ] **Banker exchange fee bands** *(systems_overview "Still open: exchange fee bands";
   `handoff_banker_npc.md`: the plumbing is in place so a rate is a one-line change, currency.md's
   bands (2-5% up, 0-1% down) come "in a later pass as named constants"; audit 2026-09-29)*.
