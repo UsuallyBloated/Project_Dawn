@@ -15,7 +15,7 @@ const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
 const HUNGER_PANEL_GAP := 4.0
 const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
 # Dev Test Panel, mounted on demand by `/testpanel` (world.gd also mounts it at
-# world entry for GMs and the Test Room).
+# world entry for GMs).
 const TEST_PANEL_GD         := preload("res://scripts/test_panel.gd")
 const _TrackWindowScript    := preload("res://scripts/track_window.gd")
 const _SpellBookScript      := preload("res://scripts/spell_book.gd")
@@ -945,7 +945,7 @@ func _on_target_changed(enemy) -> void:
 	if enemy.is_in_group("remote_players"):
 		_setup_peer_target(enemy)
 		return
-	if enemy.is_in_group("pets") or enemy.is_in_group("remote_pets"):
+	if enemy.is_in_group("remote_pets"):
 		# Pet target frame — render like enemies (HP bar + level)
 		# but key off pet_name. Subscribe to hp_changed + died so
 		# the bar tracks regen / damage / dismissal.
@@ -1211,9 +1211,6 @@ func _on_target_enemy_died(_enemy) -> void:
 #   - RemoteEnemy: server-sent `target_id` field (driven by EntityTarget
 #     broadcasts). Resolved through the id partition to a RemotePlayer
 #     / RemoteEnemy / RemotePet / local player.
-#   - Local Enemy (solo / Test Room): the legacy local AI always
-#     chases the player when aggro'd, so we show "You" iff the enemy
-#     is in CHASE / ATTACK. Hidden in IDLE / LEASH / FLEE / DEAD.
 #   - Other tracked kinds (peer player, vendor, pet target frame
 #     usage, etc.): hidden — server doesn't broadcast peer→peer
 #     targeting yet.
@@ -1232,11 +1229,10 @@ func _refresh_tot() -> void:
 		_tot_frame.visible = false
 		return
 
-	# Self-target sentinel: tracked target is hitting the local player.
-	# PlayerStats is the source; we keep _tot_entity = null and let the
-	# existing _on_hp_changed handler tick the bar.
-	var own_id: int = Net.get_player_id() if Net.get_player_id() > 0 else -1
-	if tot_id == own_id or tot_id == -1:
+	# The tracked target is targeting the local player. PlayerStats is the
+	# source; we keep _tot_entity = null and let the existing _on_hp_changed
+	# handler tick the bar.
+	if tot_id == Net.get_player_id():
 		_clear_tot_entity_binding()
 		var pname := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
 		_tot_name_label.text = pname
@@ -1267,15 +1263,6 @@ func _resolve_tracked_target_target_id() -> int:
 			or _tracked_target.is_in_group("remote_players")) \
 			and "target_id" in _tracked_target:
 		return int(_tracked_target.target_id)
-	# Local Enemy: solo / Test Room only. Approximate via state — the
-	# stock enemy AI in enemy.gd always chases the local player.
-	if _tracked_target.is_in_group("enemies") and "state" in _tracked_target:
-		var s: int = _tracked_target.state
-		# Enemy.State.CHASE = 1, Enemy.State.ATTACK = 2. Use literals
-		# rather than the enum reference so a future enum reorder is
-		# caught here.
-		if s == 1 or s == 2:
-			return -1  # sentinel: local player
 	return 0
 
 func _resolve_remote_entity(id: int) -> Node:
@@ -1414,12 +1401,6 @@ func _handle_chat_input(text: String) -> void:
 	if lower == "/camp cancel":
 		Net.broadcast_cancel_camp()
 		return
-	# Track 22.C — manual dismount. Summon is right-click-the-whistle;
-	# this command lets the player step off without using the whistle
-	# again or waiting to take a hit.
-	if lower == "/dismount":
-		MountManager.dismount()
-		return
 	if lower == "/pet follow":
 		PetManager.command_follow()
 		return
@@ -1494,10 +1475,8 @@ func _handle_chat_input(text: String) -> void:
 		if lower.begins_with(prefix):
 			var msg := text.substr(prefix.length())
 			CombatLog.add_line("[Group] %s: %s" % [my_name, msg], CombatLog.MsgType.GROUP_CHAT)
-			# Server fans this to every other group member via the new
-			# Group arm in the chat handler. GroupManager.broadcast_group_chat
-			# uses Godot's RPC system which isn't wired in launcher mode
-			# (no Godot multiplayer peer); that path was the bug.
+			# Server fans this to every other group member via the Group
+			# arm in the chat handler.
 			Net.broadcast_chat(Net.CHAT_CHANNEL_GROUP, msg)
 			return
 
@@ -1520,8 +1499,8 @@ func _handle_chat_input(text: String) -> void:
 		# against yours. An NPC is named by its display name (the client holds
 		# no server ids for NPCs; the server resolves the name), a mob by its
 		# entity id. The server decides everything; this only asks.
-		if not Net.is_launcher_mode() or not Net.is_app_ready():
-			CombatLog.add_line("There is nothing to consider offline.", CombatLog.MsgType.INFO)
+		if not Net.is_app_ready():
+			CombatLog.add_line("You are not connected to the world.", CombatLog.MsgType.INFO)
 			return
 		var con_target = Combat.current_target
 		if not is_instance_valid(con_target):
@@ -1553,13 +1532,10 @@ func _handle_chat_input(text: String) -> void:
 		return
 
 	if lower == "/stopsong":
-		# EQ's /stopsong: end the song being sung at once. Online the server
-		# pulses the song, so it is told (and says so); the lingering
-		# effects run out on their own.
-		if Net.is_launcher_mode():
-			if Net.stop_song():
-				BardSongs.stop_singing()
-		else:
+		# EQ's /stopsong: end the song being sung at once. The server pulses
+		# the song, so it is told (and says so); the lingering effects run
+		# out on their own.
+		if Net.stop_song():
 			BardSongs.stop_singing()
 		return
 
@@ -1642,20 +1618,12 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line("Refine your search.", CombatLog.MsgType.INFO)
 			return
 		var item_name := (matches[0] as ItemData).item_name
-		# Track 15.2 follow-up — launcher mode routes /give through
-		# the wire so the spawned item exists server-side. The server
-		# fans InventoryDelta which Inventory autoload applies. Solo /
-		# Test Room keeps the legacy local ItemRegistry.give_by_name.
-		if Net.is_launcher_mode():
-			Net.broadcast_gm_command("give %s %d" % [item_name, count])
-			var suffix := " x%d" % count if count > 1 else ""
-			CombatLog.add_line("Requested %s%s from server." % [item_name, suffix], CombatLog.MsgType.INFO)
-			return
-		if ItemRegistry.give_by_name(item_name, count):
-			var suffix := " x%d" % count if count > 1 else ""
-			CombatLog.add_line("Spawned %s%s." % [item_name, suffix], CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("Couldn't spawn %s (inventory full?)." % item_name, CombatLog.MsgType.INFO)
+		# Track 15.2 follow-up — /give goes through the wire (a GM command)
+		# so the spawned item exists server-side. The server fans
+		# InventoryDelta which Inventory autoload applies.
+		Net.broadcast_gm_command("give %s %d" % [item_name, count])
+		var suffix := " x%d" % count if count > 1 else ""
+		CombatLog.add_line("Requested %s%s from server." % [item_name, suffix], CombatLog.MsgType.INFO)
 		return
 
 	# Track 6 sub-task 3 dev — toggle PvP authorization on this client.
@@ -1726,8 +1694,8 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line(line, CombatLog.MsgType.INFO)
 		return
 
-	# Show/hide the dev Test Panel. It mounts only for the offline Test Room and
-	# for GM accounts (world.gd), but a GM previously had no way to get it OFF the
+	# Show/hide the dev Test Panel. It mounts only for GM accounts (world.gd),
+	# but a GM previously had no way to get it OFF the
 	# screen: it covers a chunk of the viewport and there is no reason to stare at
 	# it while actually playing. A command rather than a keybind, so it costs no
 	# key and is discoverable by typing.
@@ -1746,7 +1714,7 @@ func _handle_chat_input(text: String) -> void:
 		# rest of the session with no way to recover. Mount it on demand instead,
 		# so the command works whenever the account is entitled to it rather than
 		# depending on the state at one particular moment.
-		if Network.is_test_room or (Net.is_launcher_mode() and Net.is_gm()):
+		if Net.is_gm():
 			var host := get_tree().current_scene
 			if host != null:
 				host.add_child(TEST_PANEL_GD.new())
@@ -1757,9 +1725,8 @@ func _handle_chat_input(text: String) -> void:
 		# Nothing here is secret: the server gates every power the panel offers on
 		# the is_gm bit in the signed token, independently of this.
 		CombatLog.add_line(
-			"Test Panel unavailable (GM: %s, hosted session: %s). GM is per ACCOUNT and is read at login, so if it was granted while you were online, quit to the login screen and sign in again." % [
+			"Test Panel unavailable (GM: %s). GM is per ACCOUNT and is read at login, so if it was granted while you were online, quit to the login screen and sign in again." % [
 				"yes" if Net.is_gm() else "no",
-				"yes" if Net.is_launcher_mode() else "no",
 			],
 			CombatLog.MsgType.INFO,
 		)
@@ -1793,9 +1760,7 @@ func _handle_chat_input(text: String) -> void:
 		CombatLog.add_line("Dev damage self: %s" % arg, CombatLog.MsgType.INFO)
 		return
 
-	# Track 6 sub-task 5 — group commands (launcher mode). Test Room
-	# single-player can't form groups via these — invites need a real
-	# peer over renet.
+	# Track 6 sub-task 5 — group commands, resolved by the server.
 	if lower == "/invite" or lower.begins_with("/invite "):
 		var target_name := ""
 		if lower.begins_with("/invite "):
@@ -1808,11 +1773,8 @@ func _handle_chat_input(text: String) -> void:
 		if target_name == "":
 			CombatLog.add_line("Usage: /invite <character name> — or target a player first.", CombatLog.MsgType.INFO)
 			return
-		if Net.is_launcher_mode():
-			GroupManager.invite_player_by_name(target_name)
-			CombatLog.add_line("Invited %s to your group." % target_name, CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("/invite requires multiplayer.", CombatLog.MsgType.INFO)
+		GroupManager.invite_player_by_name(target_name)
+		CombatLog.add_line("Invited %s to your group." % target_name, CombatLog.MsgType.INFO)
 		return
 
 	if lower == "/accept" or lower == "/accept invite":
@@ -1839,11 +1801,8 @@ func _handle_chat_input(text: String) -> void:
 		if not GroupManager.is_leader:
 			CombatLog.add_line("Only the group leader can kick.", CombatLog.MsgType.INFO)
 			return
-		if Net.is_launcher_mode():
-			GroupManager.kick_member_by_name(target_name)
-			CombatLog.add_line("Kicked %s from the group." % target_name, CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("/kick requires multiplayer.", CombatLog.MsgType.INFO)
+		GroupManager.kick_member_by_name(target_name)
+		CombatLog.add_line("Kicked %s from the group." % target_name, CombatLog.MsgType.INFO)
 		return
 
 	# Track 6 sub-task 3 dev — bypass-the-spell-system self heal.

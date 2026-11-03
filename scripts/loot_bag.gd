@@ -3,16 +3,14 @@ extends Area3D
 
 # `items` is the user-facing entry list:
 #   [{item: ItemData, count: int}, ...]
-# Network-driven bags get their entries written by RemoteLootBagManager
-# from a LootBagSpawn broadcast (path → load() → ItemData); local-mode
-# bags get them from autoloads/loot.gd's _roll(). Same shape either way
-# so LootWindow doesn't care.
+# RemoteLootBagManager writes the entries from each LootBagSpawn broadcast
+# (path → load() → ItemData).
 var items: Array = []
 
 # PD_W0014 — coin sitting on this corpse, shown in the loot window.
 # Server-authoritative; written by RemoteLootBagManager from each
 # LootBagSpawn snapshot. Looting any item (or Take All) credits it
-# server-side and a re-snapshot zeroes these. Local-mode bags stay 0.
+# server-side and a re-snapshot zeroes these.
 var coin_platinum: int = 0
 var coin_gold: int = 0
 var coin_silver: int = 0
@@ -21,11 +19,9 @@ var coin_copper: int = 0
 func has_coins() -> bool:
 	return coin_platinum > 0 or coin_gold > 0 or coin_silver > 0 or coin_copper > 0
 
-# Track 5 sub-task 4 — when non-negative, this bag is server-owned and
-# its lifecycle is driven by LootBagSpawn / EntityDespawn broadcasts.
-# Local single-player bags leave this at -1; they keep the legacy
-# 120-second despawn timer in _ready below. Setting before add_child
-# so _ready can branch on it.
+# Track 5 sub-task 4 — the server's id for this bag, which the loot window's
+# Take buttons send. Its lifecycle is driven by LootBagSpawn / EntityDespawn
+# broadcasts (the server despawns it after LOOT_BAG_LINGER_SECS).
 var bag_id: int = -1
 
 # PD_W0021 — the dead creature's name, set by RemoteLootBagManager before
@@ -36,8 +32,7 @@ var creature_name: String = ""
 
 # Emitted whenever `items` is reassigned from outside (server re-snap-
 # shot after a LootItem / LootAll). LootWindow subscribes to refresh
-# its row list. Local-mode bags also emit this from the legacy local
-# take path so the same wire keeps both flows in sync.
+# its row list.
 signal items_changed
 
 func _ready() -> void:
@@ -51,17 +46,6 @@ func _ready() -> void:
 	else:
 		_build_body()
 
-
-	# Local despawn timer applies only to single-player Test Room bags.
-	# Server-owned bags use EntityDespawn broadcasts after the server-
-	# side LOOT_BAG_LINGER_SECS (matches the local 120s for parity).
-	if bag_id < 0:
-		var despawn_timer := Timer.new()
-		despawn_timer.wait_time = 120.0
-		despawn_timer.one_shot = true
-		despawn_timer.autostart = true
-		despawn_timer.timeout.connect(queue_free)
-		add_child(despawn_timer)
 
 # A slain creature's body — the same gray capsule + white "<creature>'s corpse"
 # nameplate a player corpse uses (scripts/corpse_body.gd), with a body-sized

@@ -176,8 +176,6 @@ func _connect_signals() -> void:
 	CastingSkills.skill_advanced.connect(func(skill_name: String, new_value: int, cap: int):
 		var display: String = CastingSkillDefinitions.DISPLAY.get(skill_name, skill_name)
 		add_line("Your %s skill has increased to %d (cap: %d)." % [display, new_value, cap], MsgType.LEVEL_UP))
-	BuffManager.dot_applied.connect(func(tname, sname):
-		add_line("%s is afflicted by %s." % [tname, sname], MsgType.DAMAGE_OUT))
 	BuffManager.hot_applied.connect(func(sname):
 		add_line("You feel the effects of %s." % sname, MsgType.HEAL))
 	BuffManager.absorb_applied.connect(func(amount, sname):
@@ -188,20 +186,7 @@ func _connect_signals() -> void:
 		add_line("Your shield has been destroyed!", MsgType.DAMAGE_IN))
 	BuffManager.evade_boost_applied.connect(func():
 		add_line("You slip into a defensive stance.", MsgType.INFO))
-	BuffManager.dot_ticked.connect(func(tname, amount, sname):
-		add_line("%s takes %d from %s." % [tname, amount, sname], MsgType.DAMAGE_OUT))
-	BuffManager.hot_ticked.connect(func(amount, sname):
-		add_line("You recover %d health from %s." % [amount, sname], MsgType.HEAL))
 	PetManager.pet_info.connect(func(text): add_line(text, MsgType.INFO))
-	Combat.enemy_stunned.connect(func(n): add_line("%s is stunned!" % n, MsgType.INFO))
-	Combat.enemy_stun_wore_off.connect(func(n): add_line("The stun on %s wears off." % n, MsgType.INFO))
-	Combat.enemy_rooted.connect(func(n): add_line("%s is rooted!" % n, MsgType.INFO))
-	Combat.enemy_snared.connect(func(n): add_line("%s is snared!" % n, MsgType.INFO))
-	Combat.enemy_slowed.connect(func(n): add_line("%s is slowed!" % n, MsgType.INFO))
-	Combat.enemy_mez_applied.connect(func(n): add_line("%s is mesmerized!" % n, MsgType.INFO))
-	Combat.enemy_mez_broke.connect(func(n): add_line("The mesmerize on %s breaks!" % n, MsgType.INFO))
-	Combat.enemy_charmed_attacked.connect(func(atk, tgt, amt): add_line("%s hits %s for %d." % [atk, tgt, amt], MsgType.DAMAGE_OUT))
-	Combat.enemy_silenced.connect(func(n): add_line("%s is silenced!" % n, MsgType.INFO))
 	Combat.auto_attack_toggled.connect(func(on: bool):
 		add_line("Auto attack is now %s." % ("ON" if on else "OFF"), MsgType.INFO))
 	Net.world_chat_message.connect(_on_remote_chat_message)
@@ -229,13 +214,11 @@ func _on_remote_chat_message(speaker: String, channel: int, text: String, _lang:
 
 func _on_player_hp_changed(current: float, _max: float) -> void:
 	var diff := current - _last_hp
-	# Threshold the chat line so per-tick noise from food / drink / HoT
-	# regen (typically 1-5 HP per tick) doesn't spam the log. Spell heals
-	# clear this threshold with room to spare. Server-driven HoT in
-	# launcher mode bypasses BuffManager._is_hot_healing entirely, so the
-	# threshold is the only suppressor that works for both modes.
+	# Threshold the chat line so per-tick noise from the server's regen and
+	# HoT ticks (typically 1-5 HP per tick) doesn't spam the log. Spell heals
+	# clear this threshold with room to spare.
 	const MIN_HEAL_DISPLAY := 10
-	if diff >= MIN_HEAL_DISPLAY and not BuffManager.is_hot_healing():
+	if diff >= MIN_HEAL_DISPLAY:
 		add_line("You were healed for %d health." % int(diff), MsgType.HEAL)
 	_last_hp = current
 

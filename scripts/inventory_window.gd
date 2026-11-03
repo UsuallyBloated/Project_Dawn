@@ -4,14 +4,10 @@ const SLOT_SIZE := 48
 const COLS := 2
 const C_BG := Color(0.07, 0.06, 0.04, 0.95)
 
-# Shared drag state — owned here, read by BagWindows.
-# drag_source_bi == -1  →  dragged from a base slot (drag_source_si = base index)
-# drag_source_bi >= 0   →  dragged from a bag slot  (bi = bag's base index, si = slot within bag)
-var drag_item: ItemData = null
-var drag_count: int = 0
-var drag_source_bi: int = -1
-var drag_source_si: int = -1
-var _drag_icon: TextureRect = null
+# The base inventory window. Every move goes through the server's cursor slot
+# (PD_W0027): a left-click lifts a stack into the hand or places the held one,
+# and the server's InventoryDelta repaints both ends. Nothing here mutates the
+# inventory locally.
 
 var _base_cells: Array = []   # BASE_SLOT_COUNT Panel nodes
 var _bag_windows: Array = []  # BASE_SLOT_COUNT BagWindow or null
@@ -19,14 +15,12 @@ var _tooltip: PanelContainer = null
 var _tooltip_label: Label = null
 var _trash_cell: Panel = null
 var _delete_dialog: ConfirmationDialog = null
-var _drop_dialog: ConfirmationDialog = null
 var _wallet_label: Label = null
 
 func _ready() -> void:
 	_bag_windows.resize(Inventory.BASE_SLOT_COUNT)
 	_bag_windows.fill(null)
 	_build_ui()
-	_build_drag_icon()
 	Inventory.inventory_changed.connect(_refresh_all)
 	PlayerStats.coins_changed.connect(_on_coins_changed)
 	visibility_changed.connect(_on_visibility_changed)
@@ -184,23 +178,6 @@ func _make_slot_cell(index: int) -> Panel:
 
 	return cell
 
-func _build_drag_icon() -> void:
-	_drag_icon = TextureRect.new()
-	_drag_icon.top_level = true
-	_drag_icon.z_index = 100
-	_drag_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_drag_icon.custom_minimum_size = Vector2(48, 48)
-	_drag_icon.size = Vector2(48, 48)
-	_drag_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	_drag_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_drag_icon.modulate = Color(1.0, 1.0, 1.0, 0.85)
-	_drag_icon.visible = false
-	add_child(_drag_icon)
-
-func _process(_delta: float) -> void:
-	if drag_item != null and _drag_icon != null:
-		_drag_icon.position = get_viewport().get_mouse_position() - Vector2(24.0, 24.0)
-
 # ── Refresh ───────────────────────────────────────────────────────────────────
 
 func _refresh_all() -> void:
@@ -238,14 +215,9 @@ func _refresh_cell(index: int) -> void:
 		return
 
 	var item: ItemData = slot["item"]
-	# Hide source-slot icon while it's being dragged so the UI shows
-	# one floating ghost (the drag overlay) instead of two copies of
-	# the item. The Inventory state is intact — we just paint empty
-	# until the drag ends (cancel restores; drop fans InventoryDelta).
-	var is_drag_source: bool = drag_item != null and drag_source_bi == -1 and drag_source_si == index
-	icon_rect.texture = null if is_drag_source else item.icon
+	icon_rect.texture = item.icon
 	if name_label:
-		name_label.visible = (not is_drag_source) and item.icon == null
+		name_label.visible = item.icon == null
 		name_label.text = item.item_name
 
 	if item.type == ItemData.Type.BAG:
@@ -257,9 +229,7 @@ func _refresh_cell(index: int) -> void:
 			Color(0.8, 0.7, 0.3) if is_open else UITheme.C_BORDER,
 			2 if is_open else 1)
 	else:
-		# Hide the count label during a drag too — the drag overlay is the
-		# one-and-only on-screen copy of the stack (matches bag_window).
-		count_label.text = "" if is_drag_source else (str(slot["count"]) if slot["count"] > 1 else "")
+		count_label.text = str(slot["count"]) if slot["count"] > 1 else ""
 		_apply_slot_style(cell, _rarity_color(item.rarity), UITheme.C_BORDER, 1)
 
 # Mirrors vendor_window._coins_text — actual stacks, never reduced.
@@ -273,9 +243,6 @@ func _on_coins_changed(platinum: int, gold: int, silver: int, copper: int) -> vo
 # ── Input ─────────────────────────────────────────────────────────────────────
 
 func _on_cell_hover(index: int) -> void:
-	if drag_item != null:
-		_tooltip.visible = false
-		return
 	var slot = Inventory.base_slots[index]
 	if slot == null:
 		_tooltip.visible = false
@@ -297,7 +264,7 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 		return
 
 	if event.button_index == MOUSE_BUTTON_RIGHT:
-		if drag_item != null or Inventory.cursor_slot != null:
+		if Inventory.cursor_slot != null:
 			return
 		var slot = Inventory.base_slots[index]
 		if slot == null:
@@ -310,21 +277,17 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 			return
 		var item: ItemData = slot["item"]
 		if item.is_mount:
-			# Track 22.C — mount whistle. Summon/dismount toggles
-			# through MountManager; the whistle is not consumed.
-			if MountManager.is_mounted() and MountManager.current_mount == item:
-				MountManager.dismount()
-			else:
-				MountManager.summon(item)
+			# Track 22.C — mount whistle (MountManager refuses until the
+			# server has a mount model).
+			MountManager.summon(item)
 		elif item.type == ItemData.Type.BAG:
 			_toggle_bag(index)
 		elif item.type == ItemData.Type.CONSUMABLE:
 			_use_consumable(item, index)
 		elif item.type != ItemData.Type.MISC:
 			# Track 15.1 — Equipment.request_equip_from routes through
-			# Net.broadcast_equip_item in launcher mode (server fans
-			# InventoryDelta + apply_remote_equip); falls back to the
-			# legacy remove + equip in solo / Test Room mode.
+			# Net.broadcast_equip_item (server fans InventoryDelta +
+			# apply_remote_equip).
 			Equipment.request_equip_from(NetProtocol.INV_LOCATION_BASE, index, item)
 		get_viewport().set_input_as_handled()
 		return
@@ -332,76 +295,25 @@ func _on_cell_input(event: InputEvent, index: int) -> void:
 	if event.button_index != MOUSE_BUTTON_LEFT:
 		return
 
-	# PD_W0027 — an item held on the SERVER cursor places first, before any
-	# local drag logic: one MoveItem, and the deltas repaint both ends
-	# (empty → move, same item → capped merge, different item → swap onto
-	# the cursor). cursor_slot only fills in launcher mode.
-	if Inventory.cursor_slot != null and drag_item == null:
+	# PD_W0027 — an item held on the SERVER cursor places: one MoveItem, and
+	# the deltas repaint both ends (empty → move, same item → capped merge,
+	# different item → swap onto the cursor).
+	if Inventory.cursor_slot != null:
 		Net.broadcast_move_item(NetProtocol.INV_LOCATION_CURSOR, 0, NetProtocol.INV_LOCATION_BASE, index)
 		get_viewport().set_input_as_handled()
 		return
 
-	if drag_item == null:
-		var slot = Inventory.base_slots[index]
-		if slot == null:
-			return
-		# A bag is lifted by left-click like any other non-stackable, and OPENED
-		# by right-click (inventory_interaction_grammar.md §3). This used to call
-		# _toggle_bag() here, so both buttons opened the bag and a bag could never
-		# be picked up or rearranged at all.
-		# Full-bags-move (2026-09-27): online, a non-empty bag lifts WITH its
-		# contents — the server re-keys them onto the cursor. The old
-		# empty-first refusal survives only in the Test Room, whose local
-		# drag has no re-key.
-		if slot["item"].type == ItemData.Type.BAG \
-				and Inventory.bag_has_contents(index) \
-				and not Net.is_launcher_mode():
-			CombatLog.add_line("Empty the bag before moving it.", CombatLog.MsgType.INFO)
-			get_viewport().set_input_as_handled()
-			return
-		# PD_W0027 slice 1.5 — online, every lift goes through the real cursor:
-		# one MoveItem into the hand, and the server's delta puts the item on
-		# the mouse. The local visual drag below is the Test Room's path only.
-		if Net.is_launcher_mode():
-			Net.broadcast_move_item(NetProtocol.INV_LOCATION_BASE, index, NetProtocol.INV_LOCATION_CURSOR, 0)
-			_tooltip.visible = false
-			get_viewport().set_input_as_handled()
-			return
-		begin_drag(slot["item"], slot["count"], -1, index)
-		# Track 14 follow-up — in launcher mode the server is
-		# authoritative; the source slot stays filled visually until
-		# the MoveItem InventoryDelta confirms the swap. Solo / Test
-		# Room mode keeps the optimistic local-clear path.
-		if not Net.is_launcher_mode():
-			Inventory.clear_base_slot(index)
-		_tooltip.visible = false
-		get_viewport().set_input_as_handled()
-	else:
-		# Can't drop a bag on an occupied slot
-		var existing = Inventory.base_slots[index]
-		if drag_item.type == ItemData.Type.BAG and existing != null:
-			get_viewport().set_input_as_handled()
-			return
-		if Net.is_launcher_mode():
-			# Server-authoritative path. Send MoveItem; the server
-			# fans InventoryDelta(s) which Inventory autoload
-			# applies. End the drag locally without mutating state.
-			var src_loc: String = NetProtocol.INV_LOCATION_BASE if drag_source_bi == -1 \
-				else NetProtocol.inv_location_bag(drag_source_bi)
-			Net.broadcast_move_item(src_loc, drag_source_si, NetProtocol.INV_LOCATION_BASE, index)
-			end_drag()
-			get_viewport().set_input_as_handled()
-			return
-		if existing == null:
-			Inventory.set_base_slot(index, {"item": drag_item, "count": drag_count})
-			end_drag()
-		else:
-			# Swap
-			var swap_item: ItemData = existing["item"]
-			var swap_count: int = existing["count"]
-			Inventory.set_base_slot(index, {"item": drag_item, "count": drag_count})
-			begin_drag(swap_item, swap_count, -1, index)
-		get_viewport().set_input_as_handled()
+	var slot = Inventory.base_slots[index]
+	if slot == null:
+		return
+	# A bag is lifted by left-click like any other item, and OPENED by
+	# right-click (inventory_interaction_grammar.md §3). A full bag lifts WITH
+	# its contents: the server re-keys them onto the cursor (2026-09-27).
+	# Every lift goes through the real cursor (PD_W0027 slice 1.5): one
+	# MoveItem into the hand, and the server's delta puts the item on the mouse.
+	Net.broadcast_move_item(NetProtocol.INV_LOCATION_BASE, index, NetProtocol.INV_LOCATION_CURSOR, 0)
+	_tooltip.visible = false
+	get_viewport().set_input_as_handled()
 
 # ── Bag open/close ────────────────────────────────────────────────────────────
 
@@ -419,7 +331,7 @@ func _open_bag(base_index: int) -> void:
 	var win := BagWindow.new()
 	get_parent().add_child(win)
 	tree_exiting.connect(win.queue_free)   # a bag never outlives the inventory it reads
-	win.init_bag(base_index, self)
+	win.init_bag(base_index)
 	win.position = global_position + Vector2(size.x + 8, base_index * 12)
 	win.visibility_changed.connect(func(): _refresh_cell(base_index))
 	_bag_windows[base_index] = win
@@ -427,92 +339,15 @@ func _open_bag(base_index: int) -> void:
 
 func _on_visibility_changed() -> void:
 	if not visible:
-		if drag_item != null:
-			_return_drag_to_source()
 		for win in _bag_windows:
 			if win != null:
 				win.visible = false
 
-# ── Drag API (called by BagWindow) ───────────────────────────────────────────
-
-func begin_drag(item: ItemData, count: int, bi: int, si: int) -> void:
-	drag_item = item
-	drag_count = count
-	drag_source_bi = bi
-	drag_source_si = si
-	_drag_icon.texture = item.icon
-	_drag_icon.visible = true
-	# Hide source-slot icon so the dragged item visibly leaves the slot
-	# (the drag overlay is the one-and-only on-screen copy).
-	if bi == -1 and si >= 0 and si < _base_cells.size():
-		_refresh_cell(si)
-	else:
-		Inventory.inventory_changed.emit()
-
-func end_drag() -> void:
-	Inventory.inventory_changed.emit()
-	_clear_drag()
-
-func cancel_drag() -> void:
-	var prev_bi := drag_source_bi
-	var prev_si := drag_source_si
-	_clear_drag()
-	# Restore source slot's visual after a cancel so the item icon
-	# comes back (state was never mutated).
-	if prev_bi == -1 and prev_si >= 0 and prev_si < _base_cells.size():
-		_refresh_cell(prev_si)
-	else:
-		Inventory.inventory_changed.emit()
-
-func _return_drag_to_source() -> void:
-	if drag_item == null:
-		return
-	# Track 14 follow-up — in launcher mode the source slot was
-	# never cleared (the lift skips the optimistic local mutation),
-	# so there's nothing to put back. Just drop the drag overlay
-	# and repaint the source cell so the icon comes back (the cell
-	# was painted empty by _refresh_cell while drag_item was set).
-	if Net.is_launcher_mode():
-		var prev_bi := drag_source_bi
-		var prev_si := drag_source_si
-		_clear_drag()
-		if prev_bi == -1 and prev_si >= 0 and prev_si < _base_cells.size():
-			_refresh_cell(prev_si)
-		else:
-			Inventory.inventory_changed.emit()
-		return
-	if drag_source_bi == -1:
-		if Inventory.get_base_slot(drag_source_si) == null:
-			Inventory.set_base_slot(drag_source_si, {"item": drag_item, "count": drag_count})
-		else:
-			Inventory.add_item(drag_item, drag_count)
-	elif Inventory.get_slot(drag_source_bi, drag_source_si) == null:
-		Inventory.set_slot(drag_source_bi, drag_source_si, {"item": drag_item, "count": drag_count})
-	else:
-		Inventory.add_item(drag_item, drag_count)
-	_clear_drag()
-
-func _clear_drag() -> void:
-	drag_item = null
-	drag_count = 0
-	drag_source_bi = -1
-	drag_source_si = -1
-	if _drag_icon != null:
-		_drag_icon.visible = false
-		_drag_icon.texture = null
-
-func _gui_input(event: InputEvent) -> void:
-	if drag_item != null and event is InputEventMouseButton \
-			and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		accept_event()
-		return
-	super._gui_input(event)
-
 func _input(event: InputEvent) -> void:
 	super._input(event)
-	# PD_W0027 — a held server-cursor item can reach the Trash / Drop cells
-	# too (the full-bags escape hatch), so the gate admits either hold kind.
-	if not visible or (drag_item == null and Inventory.cursor_slot == null):
+	# PD_W0027 — a held server-cursor item can reach the Trash cell (the
+	# full-bags escape hatch).
+	if not visible or Inventory.cursor_slot == null:
 		return
 	if not (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		return
@@ -524,33 +359,15 @@ func _input(event: InputEvent) -> void:
 		if cell.get_global_rect().has_point(mp):
 			return
 	# Track 16.0 bug 3 — Node-level _input fires before paperdoll's
-	# Control-level _gui_input. Without this check we'd cancel the drag
-	# before paperdoll can route it through Equipment.request_equip_from,
-	# so left-click + paperdoll-slot equip never lands.
+	# Control-level _gui_input, which equips from the hand.
 	var paperdoll := _find_paperdoll_window()
 	if paperdoll != null and paperdoll.visible and paperdoll.get_global_rect().has_point(mp):
 		return
 	if _trash_cell != null and _trash_cell.get_global_rect().has_point(mp):
 		_show_delete_confirm()
 		get_viewport().set_input_as_handled()
-		return
-	# PD_W0027 — a held server-cursor item is dropped via the Drop cell
-	# only. A world click while holding is targeting / ground pickup, so it
-	# must fall through untouched.
-	if drag_item == null:
-		return
-	# Drop only when released over genuinely empty space — i.e. the 3D
-	# world, where no Control sits under the cursor. Any Control there
-	# (this window's own chrome, or another panel like the vendor / loot /
-	# character window or the hotbar) means a mis-drop, so snap the item
-	# back instead of popping a drop prompt. The drag overlay itself is
-	# MOUSE_FILTER_IGNORE, so it never counts as the hovered control.
-	# (Bag/paperdoll windows were already handled by the early returns.)
-	if get_viewport().gui_get_hovered_control() == null:
-		_show_drop_confirm()
-	else:
-		_return_drag_to_source()
-	get_viewport().set_input_as_handled()
+	# A world click while holding is a ground drop (Inventory.request_ground_drop
+	# via player.gd), so anything else falls through untouched.
 
 func _find_paperdoll_window() -> Control:
 	var root: Node = get_tree().current_scene
@@ -569,95 +386,35 @@ func _scan_for_paperdoll(node: Node) -> Control:
 	return null
 
 func _show_delete_confirm() -> void:
-	if _drag_icon != null:
-		_drag_icon.visible = false
 	if _delete_dialog == null:
 		_delete_dialog = ConfirmationDialog.new()
 		_delete_dialog.title = "Delete Item"
-		# Track 15.1 — route through DestroyItem on the wire in
-		# launcher mode (the server-owned slot was never cleared
-		# during pickup). Solo mode falls back to the legacy end_drag
-		# (which is a no-op for inventory state — the local clear
-		# happened at pickup time).
+		# Track 15.1 — route through DestroyItem on the wire.
 		_delete_dialog.confirmed.connect(_confirm_trash_delete)
-		_delete_dialog.canceled.connect(_return_drag_to_source)
 		_delete_dialog.visibility_changed.connect(func():
 			if not _delete_dialog.visible:
 				Inventory.note_modal_closed())
 		add_child(_delete_dialog)
-	var del_item: ItemData = drag_item if drag_item != null else Inventory.cursor_slot["item"]
-	var del_count: int = drag_count if drag_item != null else Inventory.cursor_slot["count"]
+	var del_item: ItemData = Inventory.cursor_slot["item"]
+	var del_count: int = Inventory.cursor_slot["count"]
 	if del_count > 1:
 		_delete_dialog.dialog_text = "Delete %d × %s?" % [del_count, del_item.item_name]
 	else:
 		_delete_dialog.dialog_text = "Delete %s?" % del_item.item_name
 	_delete_dialog.popup_centered()
 
-# Track 15.1 — trash cell confirm. In launcher mode the source slot
-# still holds the item server-side (pickup doesn't clear). Send
-# DestroyItem so the server fans an InventoryDelta that removes the
-# slot client-side. Solo mode keeps the legacy "drag overlay was the
-# state" behaviour.
+# Track 15.1 — trash cell confirm: DestroyItem on the held stack, and the
+# server's cursor delta clears the hand.
 func _confirm_trash_delete() -> void:
-	if Net.is_launcher_mode():
-		if drag_item != null:
-			var src_loc: String = NetProtocol.INV_LOCATION_BASE if drag_source_bi == -1 \
-				else NetProtocol.inv_location_bag(drag_source_bi)
-			Net.broadcast_destroy_item(src_loc, drag_source_si, drag_count)
-		elif Inventory.cursor_slot != null:
-			# Full-bags-move: the server refuses destroying a held bag
-			# with contents (they would orphan); mirror the refusal
-			# instead of letting the confirm be a no-op.
-			if Inventory.cursor_holds_full_bag():
-				CombatLog.add_line("Empty the bag before destroying it.", CombatLog.MsgType.INFO)
-				_clear_drag()
-				return
-			# PD_W0027 — destroy the held stack; the cursor delta clears it.
-			Net.broadcast_destroy_item(NetProtocol.INV_LOCATION_CURSOR, 0, Inventory.cursor_slot["count"])
-		_clear_drag()
+	if Inventory.cursor_slot == null:
 		return
-	end_drag()
-
-# Track 13.2.b — drop the dragged stack to the ground. Reached from the
-# Drop cell or from releasing the drag out onto the 3D world (see `_input`).
-func _show_drop_confirm() -> void:
-	if _drag_icon != null:
-		_drag_icon.visible = false
-	if _drop_dialog == null:
-		_drop_dialog = ConfirmationDialog.new()
-		_drop_dialog.title = "Drop Item"
-		_drop_dialog.confirmed.connect(_confirm_drop_to_ground)
-		_drop_dialog.canceled.connect(_return_drag_to_source)
-		_drop_dialog.visibility_changed.connect(func():
-			if not _drop_dialog.visible:
-				Inventory.note_modal_closed())
-		add_child(_drop_dialog)
-	var drop_item: ItemData = drag_item if drag_item != null else Inventory.cursor_slot["item"]
-	var drop_count: int = drag_count if drag_item != null else Inventory.cursor_slot["count"]
-	if drop_count > 1:
-		_drop_dialog.dialog_text = "Drop %d × %s on the ground?" % [drop_count, drop_item.item_name]
-	else:
-		_drop_dialog.dialog_text = "Drop %s on the ground?" % drop_item.item_name
-	_drop_dialog.popup_centered()
-
-# In launcher mode the source slot still holds the item server-side (the
-# lift never optimistically cleared it), so DropItem is enough — the server
-# spawns a public loot bag and fans the InventoryDelta that empties the
-# slot client-side. Solo mode keeps the legacy end_drag (the overlay was
-# the only state).
-func _confirm_drop_to_ground() -> void:
-	if Net.is_launcher_mode():
-		if drag_item != null:
-			var src_loc: String = NetProtocol.INV_LOCATION_BASE if drag_source_bi == -1 \
-				else NetProtocol.inv_location_bag(drag_source_bi)
-			Net.broadcast_drop_item(src_loc, drag_source_si, drag_count)
-		elif Inventory.cursor_slot != null:
-			# PD_W0027 — put the held stack down; the server spawns the
-			# ground bag and the cursor delta empties the hand.
-			Net.broadcast_drop_item(NetProtocol.INV_LOCATION_CURSOR, 0, Inventory.cursor_slot["count"])
-		_clear_drag()
+	# Full-bags-move: the server refuses destroying a held bag with contents
+	# (they would orphan); mirror the refusal instead of letting the confirm be
+	# a no-op.
+	if Inventory.cursor_holds_full_bag():
+		CombatLog.add_line("Empty the bag before destroying it.", CombatLog.MsgType.INFO)
 		return
-	end_drag()
+	Net.broadcast_destroy_item(NetProtocol.INV_LOCATION_CURSOR, 0, Inventory.cursor_slot["count"])
 
 # ── Consumable use (base slot items) ─────────────────────────────────────────
 
@@ -669,56 +426,17 @@ func _use_consumable(item: ItemData, index: int) -> void:
 	# log line still fires locally for snappy feedback; gate the
 	# broadcast on client-side data so a non-consumable doesn't
 	# round-trip just to be rejected.
-	if Net.is_launcher_mode():
-		# Food and water the EQ way: the server says "You eat a X." when it
-		# takes the item, or refuses with EQ's line when you are full, so no
-		# line is printed here (it would double or contradict the server's).
-		if item.is_food or item.is_drink:
-			Net.hand_eat_requested.emit(item.is_food, item.is_drink)
-			Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)
-		elif item.heal_on_use > 0.0 or item.mp_on_use > 0.0:
-			Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)
-			CombatLog.add_line("You use %s." % item.item_name, CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("You can't use %s that way." % item.item_name, CombatLog.MsgType.INFO)
-		return
-	if item.is_food:
-		if BuffManager.has_food_buff():
-			CombatLog.add_line("You are already eating something.", CombatLog.MsgType.INFO)
-			return
-		Inventory.remove_base_at(index)
-		BuffManager.add_food_buff(item.food_hp_regen, item.food_mp_regen, item.food_duration, item.item_name)
-		CombatLog.add_line("You eat %s." % item.item_name, CombatLog.MsgType.INFO)
-		return
-	if item.is_drink:
-		if BuffManager.has_drink_buff():
-			CombatLog.add_line("You are already drinking something.", CombatLog.MsgType.INFO)
-			return
-		Inventory.remove_base_at(index)
-		BuffManager.add_drink_buff(item.food_hp_regen, item.food_mp_regen, item.food_duration, item.item_name)
-		CombatLog.add_line("You drink %s." % item.item_name, CombatLog.MsgType.INFO)
-		return
-	if item.heal_on_use == 0.0 and item.mp_on_use == 0.0:
+	# Food and water the EQ way: the server says "You eat a X." when it
+	# takes the item, or refuses with EQ's line when you are full, so no
+	# line is printed here (it would double or contradict the server's).
+	if item.is_food or item.is_drink:
+		Net.hand_eat_requested.emit(item.is_food, item.is_drink)
+		Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)
+	elif item.heal_on_use > 0.0 or item.mp_on_use > 0.0:
+		Net.broadcast_use_consumable(NetProtocol.INV_LOCATION_BASE, index)
+		CombatLog.add_line("You use %s." % item.item_name, CombatLog.MsgType.INFO)
+	else:
 		CombatLog.add_line("You can't use %s that way." % item.item_name, CombatLog.MsgType.INFO)
-		return
-	Inventory.remove_base_at(index)
-	var parts: Array[String] = []
-	if item.heal_on_use > 0.0:
-		var before := PlayerStats.hp
-		PlayerStats.set_hp(PlayerStats.hp + item.heal_on_use)
-		var gained := PlayerStats.hp - before
-		if gained > 0.0:
-			parts.append("%d HP" % int(gained))
-	if item.mp_on_use > 0.0:
-		var before := PlayerStats.mp
-		PlayerStats.set_mp(PlayerStats.mp + item.mp_on_use)
-		var gained := PlayerStats.mp - before
-		if gained > 0.0:
-			parts.append("%d MP" % int(gained))
-	var msg := "You use %s." % item.item_name
-	if not parts.is_empty():
-		msg += " You recover %s." % " and ".join(parts)
-	CombatLog.add_line(msg, CombatLog.MsgType.INFO)
 
 # ── Style helpers ─────────────────────────────────────────────────────────────
 

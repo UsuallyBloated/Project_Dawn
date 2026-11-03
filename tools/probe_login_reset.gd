@@ -31,9 +31,6 @@ func _run() -> void:
 			heal_lines[0] += 1)
 	ps.healed.connect(func(_n: int) -> void: heal_numbers[0] += 1)
 
-	# Launcher mode BEFORE the character is applied: a level change fires
-	# SaveManager's autosave, which refuses online and would otherwise write
-	# this probe's character over the real Test Room save.
 	net._char_id = 7
 	_check(ps.hp == 100.0, "starts at the placeholder 100 HP")
 	ps.player_name = "ProbeBun"

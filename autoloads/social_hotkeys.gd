@@ -301,8 +301,7 @@ func _execute_command(cmd: String) -> void:
 # character's banks, slots and macro library, so hotbars bled between
 # characters (playtest finding). Each character now owns
 # user://social_hotkeys_c<char_id>.json, reloaded on the world handshake.
-# The old global file stays untouched as a first-login seed; the Test Room
-# (no handshake) still reads and writes it directly.
+# The old global file stays untouched as a first-login seed.
 
 const LEGACY_SAVE_PATH := "user://social_hotkeys.json"
 var _char_key: String = ""  # "" until the world handshake names the character

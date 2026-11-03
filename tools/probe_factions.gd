@@ -28,7 +28,7 @@ func _run() -> void:
 	var ps = root.get_node("/root/PlayerStats")
 	al.alignment_changed.connect(func(_t, _s): _changes += 1)
 
-	# Offline / before the server speaks: the class seed applies.
+	# Before the server speaks: the class seed applies.
 	ps.player_class = "Paladin"
 	al._on_app_connected(1)
 	al.seed_class_start(500)

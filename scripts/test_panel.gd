@@ -1,30 +1,24 @@
 extends CanvasLayer
 
-const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
+# The GM Test Panel: a dev overlay world.gd mounts for GM accounts. Every
+# button invokes a system; the powers that change the world go to the server
+# as dev commands, which it gates on the account's is_gm bit and audits.
 
 # Named as the camps name them, so a dev spawn carries the camp mob's faction
 # and alignment on the server (zones::faction_of_camp_mob) and a GM can test a
 # kill's faction hits on it. The numbers are the panel's own.
 const NORMAL_MOBS := [
-	{"name":"Plague Rat",        "level":1, "max_hp":18.0,  "base_damage":3,  "xp_reward":10, "move_speed":3.2, "aggro_range":6.0},
-	{"name":"Bandit Scout",      "level":3, "max_hp":60.0,  "base_damage":8,  "xp_reward":30, "move_speed":3.0, "aggro_range":8.0},
+	{"name":"Plague Rat",        "level":1, "max_hp":18.0,  "base_damage":3,  "move_speed":3.2, "aggro_range":6.0},
+	{"name":"Bandit Scout",      "level":3, "max_hp":60.0,  "base_damage":8,  "move_speed":3.0, "aggro_range":8.0},
 	# "Grey Wolf", not "Wolf": the Beast Master warder template is keyed on the
 	# exact name "Wolf" (server pet_templates::is_warder_template), so a spawned
 	# bare "Wolf" that got charmed would arm the free warder-respawn loop for any
 	# class. "Grey Wolf" still ticks "kill Wolf" quests + the wolf loot table via
 	# the bidirectional substring matchers.
-	{"name":"Grey Wolf",         "level":2, "max_hp":45.0,  "base_damage":6,  "xp_reward":20, "move_speed":4.0, "aggro_range":10.0},
-	{"name":"Decrepit Skeleton", "level":4, "max_hp":55.0,  "base_damage":9,  "xp_reward":35, "move_speed":2.8, "aggro_range":7.0},
-	{"name":"Gnoll Raider",      "level":5, "max_hp":80.0,  "base_damage":12, "xp_reward":45, "move_speed":3.2, "aggro_range":9.0},
+	{"name":"Grey Wolf",         "level":2, "max_hp":45.0,  "base_damage":6,  "move_speed":4.0, "aggro_range":10.0},
+	{"name":"Decrepit Skeleton", "level":4, "max_hp":55.0,  "base_damage":9,  "move_speed":2.8, "aggro_range":7.0},
+	{"name":"Gnoll Raider",      "level":5, "max_hp":80.0,  "base_damage":12, "move_speed":3.2, "aggro_range":9.0},
 ]
-
-const ZONES := [
-	{"name": "World (Test Room)",  "path": "res://scenes/world.tscn",         "entry": "default"},
-	{"name": "Dungeon World",      "path": "res://scenes/dungeon_world.tscn", "entry": "default"},
-]
-
-const STAT_KEYS := ["strength", "dexterity", "agility", "intelligence", "wisdom", "constitution"]
-const STAT_ABBR := ["STR", "DEX", "AGI", "INT", "WIS", "CON"]
 
 const C_BG     := Color(0.10, 0.08, 0.06, 0.93)
 const C_BORDER := Color(0.80, 0.60, 0.20, 1.00)
@@ -32,21 +26,15 @@ const C_TITLE  := Color(0.90, 0.75, 0.30, 1.00)
 const C_TEXT   := Color(0.75, 0.70, 0.60, 1.00)
 const C_DIE    := Color(0.70, 0.15, 0.15, 1.00)
 
-var _race_opt: OptionButton
-var _class_opt: OptionButton
-var _level_lbl: Label
 var _body: VBoxContainer
 var _toggle_btn: Button
 var _collapsed: bool = false
 
 # Section containers
-var _sec_character: VBoxContainer
 var _sec_resources: VBoxContainer
 var _sec_gear: VBoxContainer
 var _sec_time: VBoxContainer
-var _sec_zone: VBoxContainer
 var _sec_enemy: VBoxContainer
-var _sec_stats: VBoxContainer
 var _sec_combat: VBoxContainer
 var _sec_factions: VBoxContainer
 # The GM faction panel: a label and a slider per faction id.
@@ -66,9 +54,6 @@ var _time_slider: HSlider
 # Enemy section
 var _normal_mob_opt: OptionButton
 var _named_mob_opt: OptionButton
-
-# Stats section
-var _stat_labels: Array[Label] = []
 
 func _ready() -> void:
 	layer = 10
@@ -117,7 +102,7 @@ func _build_ui() -> void:
 	vbox.add_child(header)
 
 	var title := Label.new()
-	title.text = "TEST ROOM"
+	title.text = "TEST PANEL (GM)"
 	title.add_theme_font_size_override("font_size", 13)
 	title.add_theme_color_override("font_color", C_TITLE)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -143,22 +128,16 @@ func _build_ui() -> void:
 	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_body)
 
-	_sec_character = _make_section("CHARACTER", true)
 	_sec_resources = _make_section("RESOURCES", true)
 	_sec_gear      = _make_section("GEAR")
 	_sec_time      = _make_section("TIME & WORLD")
-	_sec_zone      = _make_section("ZONE TRAVEL")
 	_sec_enemy     = _make_section("ENEMY SPAWN")
-	_sec_stats     = _make_section("STATS OVERRIDE")
 	_sec_combat    = _make_section("COMBAT FLAGS")
 	_sec_factions  = _make_section("FACTIONS (GM)")
-	_build_character_section()
 	_build_resources_section()
 	_build_gear_section()
 	_build_time_section()
-	_build_zone_section()
 	_build_enemy_section()
-	_build_stats_section()
 	_build_combat_section()
 	_build_factions_section()
 
@@ -194,44 +173,6 @@ func _make_section(title: String, start_open: bool = false) -> VBoxContainer:
 		header_btn.text = ("▾ " if content.visible else "▸ ") + title
 	)
 	return content
-
-func _build_character_section() -> void:
-	_sec_character.add_child(_make_label("Race"))
-	_race_opt = OptionButton.new()
-	_race_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_race_opt.focus_mode = Control.FOCUS_NONE
-	_sec_character.add_child(_race_opt)
-
-	_sec_character.add_child(_make_label("Class"))
-	_class_opt = OptionButton.new()
-	_class_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_class_opt.focus_mode = Control.FOCUS_NONE
-	_sec_character.add_child(_class_opt)
-
-	_sec_character.add_child(_make_label("Level"))
-	var lvl_row := HBoxContainer.new()
-	lvl_row.add_theme_constant_override("separation", 4)
-	_sec_character.add_child(lvl_row)
-
-	var btn_minus := _make_step_btn("−")
-	btn_minus.pressed.connect(_change_level.bind(-1))
-	lvl_row.add_child(btn_minus)
-
-	_level_lbl = Label.new()
-	_level_lbl.text = "1"
-	_level_lbl.add_theme_font_size_override("font_size", 14)
-	_level_lbl.add_theme_color_override("font_color", C_TITLE)
-	_level_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_level_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lvl_row.add_child(_level_lbl)
-
-	var btn_plus := _make_step_btn("+")
-	btn_plus.pressed.connect(_change_level.bind(1))
-	lvl_row.add_child(btn_plus)
-
-	var apply_btn := _make_btn("Apply Race / Class / Level", C_BORDER)
-	apply_btn.pressed.connect(_apply_race_class)
-	_sec_character.add_child(apply_btn)
 
 func _build_resources_section() -> void:
 	var heal_btn := _make_btn("Full Heal", Color(0.20, 0.55, 0.20, 1.0))
@@ -272,8 +213,8 @@ func _build_resources_section() -> void:
 
 # GEAR — grant items. The item picker (search + qty + Give) grants ANY registry
 # item; the shortcut buttons below are quick loadout bundles. All route through
-# _grant, which in launcher mode goes SERVER-SIDE (dev-gated GmCommand "give
-# <name>") so items are server-recorded, not client-only ghosts.
+# _grant, which goes SERVER-SIDE (dev-gated GmCommand "give <name>") so items
+# are server-recorded, not client-only ghosts.
 func _build_gear_section() -> void:
 	_sec_gear.add_child(_make_label("Search & grant any item"))
 	_item_filter = LineEdit.new()
@@ -352,21 +293,23 @@ func _on_give_selected_item() -> void:
 	_grant(item, qty)
 	CombatLog.add_line("Granted %dx %s." % [qty, item.item_name], CombatLog.MsgType.INFO)
 
-# Grant an item. In launcher mode routes SERVER-SIDE via the dev-gated GmCommand
-# "give <name>" (item is server-recorded, not a client-only ghost). Test Room /
-# no-server adds it locally. The launcher path needs a registry item (a real
-# item_name in items.toml); the shortcut buttons all use registry .tres.
+# Grant an item SERVER-SIDE via the dev-gated GmCommand "give <name>" (the item
+# is server-recorded, not a client-only ghost). It needs a registry item (a
+# real item_name in items.toml); the shortcut buttons all use registry .tres.
 func _grant(item: ItemData, qty: int = 1) -> void:
 	if item == null or qty <= 0:
 		return
-	if Net.is_launcher_mode() and Net.is_app_ready():
-		Net.broadcast_gm_command("give %s %d" % [item.item_name, qty])
-	else:
-		# Test Room: add a fresh copy so slots don't share the loaded template;
-		# re-attach resource_path so the item still resolves later.
-		var copy: ItemData = item.duplicate()
-		copy.resource_path = item.resource_path
-		Inventory.add_item(copy, qty)
+	if not _require_connection():
+		return
+	Net.broadcast_gm_command("give %s %d" % [item.item_name, qty])
+
+# The server-routed buttons need the world connection; say so instead of
+# sending into nothing.
+func _require_connection() -> bool:
+	if Net.is_app_ready():
+		return true
+	CombatLog.add_line("TestPanel: not connected to the world server.", CombatLog.MsgType.INFO)
+	return false
 
 func _build_time_section() -> void:
 	_time_label = _make_label("Current: " + TimeOfDay.get_time_string())
@@ -407,23 +350,6 @@ func _set_time(hour: float) -> void:
 	_time_slider.value = hour
 	_time_label.text = "Current: " + TimeOfDay.get_time_string()
 
-func _build_zone_section() -> void:
-	var zone_opt := OptionButton.new()
-	zone_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	zone_opt.focus_mode = Control.FOCUS_NONE
-	for z in ZONES:
-		zone_opt.add_item(z["name"])
-	_sec_zone.add_child(zone_opt)
-
-	var teleport_btn := _make_btn("Teleport", Color(0.20, 0.45, 0.75, 1.0))
-	teleport_btn.pressed.connect(func():
-		if ZoneLoader._transitioning:
-			return
-		var z: Dictionary = ZONES[zone_opt.selected]
-		ZoneLoader.travel_to(z["path"], z["entry"], z["name"])
-	)
-	_sec_zone.add_child(teleport_btn)
-
 func _build_enemy_section() -> void:
 	_sec_enemy.add_child(_make_label("Normal Mob"))
 	_normal_mob_opt = OptionButton.new()
@@ -453,34 +379,14 @@ func _build_enemy_section() -> void:
 	despawn_btn.pressed.connect(_despawn_all_enemies)
 	_sec_enemy.add_child(despawn_btn)
 
-func _get_spawn_pos() -> Vector3:
-	var players := get_tree().get_nodes_in_group("player")
-	if players.is_empty():
-		CombatLog.add_line("TestPanel: no player found for spawn position", CombatLog.MsgType.INFO)
-		return Vector3.ZERO
-	var p := players[0] as Node3D
-	return p.global_position + (-p.transform.basis.z.normalized() * 3.0)
-
 func _spawn_normal_enemy() -> void:
 	var data: Dictionary = NORMAL_MOBS[_normal_mob_opt.selected]
-	# Launcher mode: ask the SERVER to spawn it (dev-gated, needs PD_DEV_CMDS=1)
-	# so the mob is a real world creature — server combat, XP, loot, corpse,
-	# quest kill credit. A local instantiate would be a puppet the server can't
-	# see, so kills against it would count for nothing online.
-	if Net.is_launcher_mode() and Net.is_app_ready():
-		Net.send_dev_spawn_mob(data["name"], data["level"], data["max_hp"],
-			data["base_damage"], data["move_speed"], data["aggro_range"])
+	# Ask the SERVER to spawn it (dev-gated) so the mob is a real world
+	# creature: server combat, XP, loot, corpse, quest kill credit.
+	if not _require_connection():
 		return
-	var e = ENEMY_SCENE.instantiate()
-	e.mob_name    = data["name"]
-	e.level       = data["level"]
-	e.max_hp      = data["max_hp"]
-	e.base_damage = data["base_damage"]
-	e.xp_reward   = data["xp_reward"]
-	e.move_speed  = data["move_speed"]
-	e.aggro_range = data["aggro_range"]
-	get_tree().current_scene.add_child(e)
-	e.global_position = _get_spawn_pos()
+	Net.send_dev_spawn_mob(data["name"], data["level"], data["max_hp"],
+		data["base_damage"], data["move_speed"], data["aggro_range"])
 
 func _spawn_named_enemy() -> void:
 	var keys: Array = NamedMobDefinitions.ALL.keys()
@@ -488,110 +394,31 @@ func _spawn_named_enemy() -> void:
 		return
 	var key: String = keys[_named_mob_opt.selected]
 	var def: Dictionary = NamedMobDefinitions.ALL[key]
-	# Launcher: spawn a REAL server mob via DevSpawnMob so kills give XP + quest
-	# credit and it drops a server corpse (not a client-local puppet + golden
-	# orb). Named-mob enrage + guaranteed loot have no server side yet, so this
-	# is a generic server creature carrying the named display name + resolved
-	# stats (base enemy max_hp 50 / base_damage 5 times the named multipliers) —
-	# enough for quests like rotfang_hunt (kill credit; the reward is the
-	# server-granted Hunter's Medal, not a mob drop).
-	if Net.is_launcher_mode() and Net.is_app_ready():
-		var lvl: int = int(def.get("level", 5))
-		var hp: float = 50.0 * float(def.get("hp_mult", 1.0))
-		var dmg: int = int(round(5.0 * float(def.get("damage_mult", 1.0))))
-		Net.send_dev_spawn_mob(String(def.get("display_name", key)), lvl, hp, dmg, 3.0, 9.0)
+	# Spawn a REAL server mob via DevSpawnMob so kills give XP + quest credit
+	# and it drops a server corpse. The server recovers the named id from the
+	# display name it is sent; the stats are the named multipliers on the base
+	# enemy (max_hp 50 / base_damage 5).
+	if not _require_connection():
 		return
-	var e = ENEMY_SCENE.instantiate()
-	get_tree().current_scene.add_child(e)
-	e.global_position = _get_spawn_pos()
-	e.apply_named(key)
+	var lvl: int = int(def.get("level", 5))
+	var hp: float = 50.0 * float(def.get("hp_mult", 1.0))
+	var dmg: int = int(round(5.0 * float(def.get("damage_mult", 1.0))))
+	Net.send_dev_spawn_mob(String(def.get("display_name", key)), lvl, hp, dmg, 3.0, 9.0)
 
 func _despawn_all_enemies() -> void:
-	# Launcher mode: the server owns the mobs, so ask it (dev-gated, audited)
-	# to remove every unowned enemy in view; the despawns arrive as ordinary
-	# EntityDespawn and the server says how many went. Freeing the local nodes,
-	# as this button used to, only hid the mobs while they stayed in the world.
-	# Called by name so a wire layer without the send costs this button, not
-	# the panel's script.
-	if Net.is_launcher_mode() and Net.is_app_ready():
-		if Net.has_method("send_dev_despawn_enemies"):
-			Net.call("send_dev_despawn_enemies")
-		else:
-			CombatLog.add_line("TestPanel: this build's wire layer cannot despawn enemies online.",
-				CombatLog.MsgType.INFO)
+	# The server owns the mobs, so ask it (dev-gated, audited) to remove every
+	# unowned enemy in view; the despawns arrive as ordinary EntityDespawn and
+	# the server says how many went. Called by name so a wire layer without the
+	# send costs this button, not the panel's script.
+	if not _require_connection():
 		return
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if is_instance_valid(enemy):
-			enemy.queue_free()
-
-func _build_stats_section() -> void:
-	_stat_labels.clear()
-	for i in STAT_KEYS.size():
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 4)
-		_sec_stats.add_child(row)
-
-		var abbr := Label.new()
-		abbr.text = STAT_ABBR[i]
-		abbr.custom_minimum_size = Vector2(28, 0)
-		abbr.add_theme_font_size_override("font_size", 11)
-		abbr.add_theme_color_override("font_color", C_TEXT)
-		row.add_child(abbr)
-
-		var minus := _make_step_btn("−")
-		minus.pressed.connect(_change_stat.bind(i, -1))
-		row.add_child(minus)
-
-		var val := Label.new()
-		val.text = str(int(PlayerStats.get(STAT_KEYS[i])))
-		val.add_theme_font_size_override("font_size", 13)
-		val.add_theme_color_override("font_color", C_TITLE)
-		val.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		val.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		row.add_child(val)
-		_stat_labels.append(val)
-
-		var plus := _make_step_btn("+")
-		plus.pressed.connect(_change_stat.bind(i, 1))
-		row.add_child(plus)
-
-	var reset_btn := _make_btn("Reset Stats", Color(0.50, 0.30, 0.15, 1.0))
-	reset_btn.pressed.connect(_reset_stats)
-	_sec_stats.add_child(reset_btn)
-
-func _change_stat(idx: int, delta: int) -> void:
-	var key: String = STAT_KEYS[idx]
-	PlayerStats.set(key, clampi(int(PlayerStats.get(key)) + delta, 1, 255))
-	_stat_labels[idx].text = str(int(PlayerStats.get(key)))
-	PlayerStats.stats_changed.emit()
-
-func _reset_stats() -> void:
-	PlayerStats.apply_character(PlayerStats.race, PlayerStats.player_class, PlayerStats.level)
-	for i in STAT_KEYS.size():
-		_stat_labels[i].text = str(int(PlayerStats.get(STAT_KEYS[i])))
+	if Net.has_method("send_dev_despawn_enemies"):
+		Net.call("send_dev_despawn_enemies")
+	else:
+		CombatLog.add_line("TestPanel: this build's wire layer cannot despawn enemies online.",
+			CombatLog.MsgType.INFO)
 
 func _build_combat_section() -> void:
-	var god_check := CheckButton.new()
-	god_check.text = "God Mode"
-	god_check.focus_mode = Control.FOCUS_NONE
-	god_check.add_theme_color_override("font_color", C_TEXT)
-	god_check.toggled.connect(func(on: bool): Combat.god_mode = on)
-	_sec_combat.add_child(god_check)
-
-	var cd_check := CheckButton.new()
-	cd_check.text = "No Cooldowns"
-	cd_check.focus_mode = Control.FOCUS_NONE
-	cd_check.add_theme_color_override("font_color", C_TEXT)
-	cd_check.toggled.connect(func(on: bool):
-		Spells.no_cooldowns = on
-		Skills.no_cooldowns = on
-	)
-	_sec_combat.add_child(cd_check)
-
-	var clear_btn := _make_btn("Clear All Buffs", Color(0.60, 0.20, 0.50, 1.0))
-	clear_btn.pressed.connect(func(): BuffManager.clear_all())
-	_sec_combat.add_child(clear_btn)
-
 	# Track 4 verification: take fixed damage on demand. Bypasses needing
 	# a mob in range to validate that resource broadcasts reach peers.
 	# Goes through Combat.receive_player_damage so the full damage path
@@ -653,10 +480,9 @@ func _resolve_peer_target():
 # the GM's OWN standing with it to an absolute value through DevSetFaction,
 # which is GM-only and audited on the server (a plain account's request is
 # ignored there). The labels follow the server's FactionUpdate, so the panel
-# shows the true standing after every kill and quest too. Online only: the
-# offline Test Room has no factions.
+# shows the true standing after every kill and quest too.
 func _build_factions_section() -> void:
-	_sec_factions.add_child(_make_label("Your standing (GM only, online)"))
+	_sec_factions.add_child(_make_label("Your standing (GM only)"))
 	for f in FactionDefinitions.ALL:
 		var id: String = f["id"]
 		var lbl := _make_label("%s: 0 (Indifferent)" % f["name"])
@@ -682,8 +508,7 @@ func _build_factions_section() -> void:
 	Alignment.faction_changed.connect(_on_faction_changed)
 
 func _set_faction(id: String, slider: HSlider) -> void:
-	if not (Net.is_launcher_mode() and Net.is_app_ready()):
-		CombatLog.add_line("TestPanel: factions exist online only.", CombatLog.MsgType.INFO)
+	if not _require_connection():
 		return
 	if not Net.dev_set_faction(id, slider.value):
 		CombatLog.add_line("TestPanel: this build's wire layer cannot set factions.",
@@ -747,20 +572,6 @@ func _make_btn(t: String, border: Color) -> Button:
 	return btn
 
 func _populate_options() -> void:
-	for race in CharacterData.RACES:
-		_race_opt.add_item(race)
-	for cls in CharacterData.CLASSES:
-		_class_opt.add_item(cls)
-
-	var race_idx := CharacterData.RACES.find(PlayerStats.race)
-	if race_idx >= 0:
-		_race_opt.select(race_idx)
-	var cls_idx := CharacterData.CLASSES.find(PlayerStats.player_class)
-	if cls_idx >= 0:
-		_class_opt.select(cls_idx)
-
-	_level_lbl.text = str(PlayerStats.level)
-
 	for key in NamedMobDefinitions.ALL.keys():
 		_named_mob_opt.add_item(key)
 
@@ -769,42 +580,25 @@ func _toggle_collapse() -> void:
 	_body.visible = !_collapsed
 	_toggle_btn.text = "+" if _collapsed else "−"
 
-func _apply_race_class() -> void:
-	PlayerStats.apply_character(
-		CharacterData.RACES[_race_opt.selected],
-		CharacterData.CLASSES[_class_opt.selected],
-		PlayerStats.level)
-
-func _change_level(delta: int) -> void:
-	var new_lvl := clampi(PlayerStats.level + delta, 1, 99)
-	if new_lvl == PlayerStats.level:
-		return
-	PlayerStats.apply_character(PlayerStats.race, PlayerStats.player_class, new_lvl)
-	_level_lbl.text = str(PlayerStats.level)
-
 func _full_heal() -> void:
-	# Launcher: HP / MP / stamina are all server-authoritative. A client-only
-	# set is overwritten by the next update — and for MP it won't unblock
+	# HP / MP / stamina are all server-authoritative. A client-only set is overwritten by the next update — and for MP it won't unblock
 	# casting, since the server gates mana independently (this bit us in
 	# playtest: bars looked full while the server still rejected for
 	# "insufficient mana"). Route through HealSelf, which the server treats as
 	# a full dev restore (HP + MP + stamina) and fans the authoritative values
 	# back. Always send — even at full HP — so a drained-mana top-off reaches
 	# the server. The local sets below are optimistic for an instant bar fill.
-	if Net.is_launcher_mode() and Net.is_app_ready():
+	if Net.is_app_ready():
 		Net.broadcast_heal_self(maxi(int(PlayerStats.max_hp - PlayerStats.hp), 0))
 	PlayerStats.set_hp(PlayerStats.max_hp)
 	PlayerStats.set_mp(PlayerStats.max_mp)
 	PlayerStats.set_stamina(PlayerStats.max_stamina)
 
 func _trigger_death() -> void:
-	# Launcher: the server owns HP and every death, so this asks it for a dev
-	# DamageSelf of the whole bar (GM-gated and audited); its death sweep kills
-	# and the HealthUpdate(0) drives PlayerDeath here. Offline it is local.
-	if Net.is_launcher_mode():
-		Net.broadcast_damage_self(int(ceil(PlayerStats.max_hp)) + 1)
-		return
-	PlayerStats.set_hp(0.0)
+	# The server owns HP and every death, so this asks it for a dev DamageSelf
+	# of the whole bar (GM-gated and audited); its death sweep kills and the
+	# HealthUpdate(0) drives PlayerDeath here.
+	Net.broadcast_damage_self(int(ceil(PlayerStats.max_hp)) + 1)
 
 # Slice 0 test aid — push xp through the server's leveling path via the raw
 # GrantQuestXp message (DEV-ONLY server-side as of PD_W0023, like Full Heal —
@@ -823,7 +617,7 @@ func _level_up_test() -> void:
 		needed = 1
 	Net.grant_quest_xp(needed)
 
-# Dev coin grants. Launcher: coins are server-authoritative, so route through
+# Dev coin grants. Coins are server-authoritative, so route through
 # GiveCoins (PD_DEV_CMDS-gated) and do NOT fill locally — if the server
 # silently ignores the grant, the wallet visibly not moving is the correct
 # signal (the optimistic fill on Full Heal masked exactly this once).
@@ -834,17 +628,16 @@ func _give_copper_hoard() -> void:
 func _give_mixed_purse() -> void:
 	_give_coins(1, 5, 5, 0)
 
-# Negative grant; both the server handler and add_coin_stacks floor each
-# stack at 0, so this empties the wallet regardless of holdings.
+# Negative grant; the server handler floors each stack at 0, so this
+# empties the wallet regardless of holdings.
 func _clear_money() -> void:
 	const WIPE := -1_000_000_000
 	_give_coins(WIPE, WIPE, WIPE, WIPE)
 
 func _give_coins(p: int, g: int, s: int, c: int) -> void:
-	if Net.is_launcher_mode() and Net.is_app_ready():
-		Net.broadcast_give_coins(p, g, s, c)
+	if not _require_connection():
 		return
-	PlayerStats.add_coin_stacks(p, g, s, c)
+	Net.broadcast_give_coins(p, g, s, c)
 
 func _give_consumables() -> void:
 	# Registry items (were runtime-built ghosts — the server never knew them, so
@@ -938,8 +731,8 @@ func _give_crafting_materials() -> void:
 
 func _give_bow() -> void:
 	# Registry .tres so the item resolves in items.toml (the server Attack
-	# handler reads damage/is_ranged from the path; _grant sends it by name in
-	# launcher mode so the server grants its own copy).
+	# handler reads damage/is_ranged from the path; _grant sends it by name so
+	# the server grants its own copy).
 	var src: ItemData = load("res://data/loot/items/hunters_shortbow.tres")
 	if src == null:
 		CombatLog.add_line("Failed to load Hunter's Shortbow.", CombatLog.MsgType.INFO)

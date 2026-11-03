@@ -1,10 +1,10 @@
 extends Node
 # Alignment and faction standings, the server's since the factions build
-# (docs/design/factions_and_alignment.md, 2026-10-23). Online this autoload
-# FOLLOWS the server: the score arrives as AlignmentUpdate and every moved
-# standing as FactionUpdate; nothing here moves either by itself. The tiers
-# and the class starts mirror the server's alignment.rs (kept in lockstep by
-# hand); the offline Test Room still seeds from the class start.
+# (docs/design/factions_and_alignment.md, 2026-10-23). This autoload FOLLOWS
+# the server: the score arrives as AlignmentUpdate and every moved standing as
+# FactionUpdate; nothing here moves either by itself. The tiers and the class
+# starts mirror the server's alignment.rs (kept in lockstep by hand); the
+# class start seeds the score until the server's own arrives.
 
 signal alignment_changed(tier: String, score: int)
 # One faction standing as the server holds it: the number the faction's NPCs
@@ -42,8 +42,8 @@ func _on_app_connected(_player_id: int) -> void:
 	factions.clear()
 	_server_held = false
 
-# The class's starting score, from PlayerStats.apply_character: the offline
-# seed, and online only until the server's own score has arrived.
+# The class's starting score, from PlayerStats.apply_character, used only
+# until the server's own score has arrived.
 func seed_class_start(score: float) -> void:
 	if _server_held:
 		return
@@ -54,14 +54,6 @@ func set_alignment(score: float) -> void:
 	alignment_score = roundi(exact_score)
 	alignment_tier = _calc_tier()
 	alignment_changed.emit(alignment_tier, alignment_score)
-
-func modify_alignment(delta: float) -> void:
-	exact_score = clampf(exact_score + delta, -2000.0, 2000.0)
-	alignment_score = roundi(exact_score)
-	var new_tier := _calc_tier()
-	if new_tier != alignment_tier:
-		alignment_tier = new_tier
-		alignment_changed.emit(alignment_tier, alignment_score)
 
 func _on_server_alignment(score: float) -> void:
 	var old_tier := alignment_tier
@@ -105,9 +97,3 @@ func get_effective_class() -> String:
 			if alignment_tier == "Exalted":
 				return "Shadow Knight_Redeemed"
 	return PlayerStats.player_class
-
-func save_state() -> Dictionary:
-	return {"alignment_score": exact_score}
-
-func load_state(d: Dictionary) -> void:
-	set_alignment(float(d.get("alignment_score", 0)))

@@ -8,8 +8,6 @@ const SCENES := [
 	"res://scenes/remote_player.tscn",
 	"res://scenes/remote_enemy.tscn",
 	"res://scenes/remote_pet.tscn",
-	"res://scenes/enemy.tscn",
-	"res://scenes/pet.tscn",
 	"res://scenes/banker_npc.tscn",
 	"res://scenes/dialogue_npc.tscn",
 	"res://scenes/vendor_npc.tscn",

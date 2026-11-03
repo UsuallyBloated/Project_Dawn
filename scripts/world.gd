@@ -1,10 +1,17 @@
 extends Node3D
 
+# The world scene's root: names the zone for ZoneLoader, spawns the local
+# player, and mounts the Test Panel for GM accounts. Everyone else in the
+# world (players, mobs, pets, loot) arrives from the server through the
+# Remote*Manager autoloads.
+
 # Set this in the Inspector for each zone scene.
 @export var zone_name: String = "Ashfield Ruins"
 
 const PLAYER_SCENE  := preload("res://scenes/player.tscn")
 const TEST_PANEL_GD := preload("res://scripts/test_panel.gd")
+# The local player's node name under $Players.
+const LOCAL_PLAYER_NODE_NAME := "1"
 
 @onready var players_container: Node3D = $Players
 
@@ -12,55 +19,18 @@ func _ready() -> void:
 	ZoneLoader.current_zone_name = zone_name
 	ZoneLoader.current_zone_path = scene_file_path
 
-	# Test panel mounts for the offline Test Room (solo dev iteration) and, in a
-	# hosted session, for GM accounts only. Phase 2: it used to mount for EVERY
-	# launcher session, so an invited friend saw a gold-bordered overlay with
-	# Spawn Mob / Level Up / Trigger Death. The server-routed buttons already
-	# no-op for a non-GM, but the client-side ones (Trigger Death, Despawn All
-	# Enemies) did not, and it is confusing regardless.
-	if Network.is_test_room or (Net.is_launcher_mode() and Net.is_gm()):
+	# The Test Panel mounts for GM accounts only. Phase 2: it used to mount for
+	# EVERY session, so an invited friend saw a gold-bordered overlay with
+	# Spawn Mob / Level Up / Trigger Death. The server gates every power it
+	# offers on the is_gm bit in the signed token regardless.
+	if Net.is_gm():
 		add_child(TEST_PANEL_GD.new())
 
-	if not Network.is_online:
-		_spawn_player(1, ZoneLoader.get_spawn_position())
-		ZoneLoader.on_zone_ready()
-		return
-
-	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
-
-	if multiplayer.is_server():
-		_spawn_player(multiplayer.get_unique_id(), ZoneLoader.get_spawn_position())
-	else:
-		_request_spawn.rpc_id(1)
-
+	_spawn_player(ZoneLoader.get_spawn_position())
 	ZoneLoader.on_zone_ready()
 
-# Client calls this on the server to request initial spawn data.
-@rpc("any_peer", "reliable")
-func _request_spawn() -> void:
-	if not multiplayer.is_server():
-		return
-	var new_id := multiplayer.get_remote_sender_id()
-	# Send all existing players to the newly connected client only.
-	for child in players_container.get_children():
-		var existing_id := str(child.name).to_int()
-		_spawn_player.rpc_id(new_id, existing_id, child.global_position)
-	# Spawn the new player on all peers at origin (zone entry for remote clients).
-	_spawn_player.rpc(new_id, Vector3.ZERO)
-
-@rpc("authority", "call_local", "reliable")
-func _spawn_player(peer_id: int, pos: Vector3) -> void:
+func _spawn_player(pos: Vector3) -> void:
 	var player := PLAYER_SCENE.instantiate()
-	player.name = str(peer_id)
+	player.name = LOCAL_PLAYER_NODE_NAME
 	player.position = pos
 	players_container.add_child(player)
-
-func _on_peer_disconnected(id: int) -> void:
-	if multiplayer.is_server():
-		_remove_player.rpc(id)
-
-@rpc("authority", "call_local", "reliable")
-func _remove_player(peer_id: int) -> void:
-	var player: Node = players_container.get_node_or_null(str(peer_id))
-	if player:
-		player.queue_free()

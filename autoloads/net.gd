@@ -6,17 +6,15 @@ extends NetClient
 # signals (`transport_connected`, `position`, ...) are available as-is.
 # On top, this layer:
 #
-#   1. Parses launcher CLI args once on `_ready`.
-#   2. If launcher mode, reads the world-token tempfile, deletes it, and
-#      kicks off the connect flow (transport handshake → app Connect →
-#      ConnectOk).
-#   3. Tracks the high-level state machine and re-emits coarser signals
+#   1. Starts the world session: from the login screen in process
+#      (`start_with_token`), or, for the retired standalone launcher, from
+#      its CLI args and world-token tempfile on `_ready`. Either way the
+#      connect flow is transport handshake → app Connect → ConnectOk.
+#   2. Tracks the high-level state machine and re-emits coarser signals
 #      callers care about: `app_connected`, `app_disconnected`.
-#   4. Pumps `poll(delta)` every frame while a connection exists.
-#
-# Local-save / Test Room flow: when `CliArgs.parse()` returns null, this
-# autoload sits idle. Nothing else changes; the existing client-authoritative
-# code continues to drive the game.
+#   3. Pumps `poll(delta)` every frame while a connection exists.
+#   4. Owns window-close (the X button is a hard self-kill; see
+#      `_on_close_requested`).
 
 enum State {
 	DISCONNECTED,
@@ -413,7 +411,6 @@ func _ready() -> void:
 	loot_rejected.connect(_on_loot_rejected)
 	group_notice.connect(_on_group_notice)
 	xp_gained.connect(_on_xp_gained)
-	kill_credit.connect(_on_kill_credit)
 	quest_snapshot.connect(_on_quest_snapshot)
 	quest_progress.connect(_on_quest_progress)
 	quest_rejected.connect(_on_quest_rejected)
@@ -439,9 +436,16 @@ func _ready() -> void:
 	_heartbeat_timer.timeout.connect(_on_heartbeat_tick)
 	add_child(_heartbeat_timer)
 
+	# Net owns window-close. In Godot 4 the close request is delivered to the
+	# root Window's `close_requested` signal; autoloads do NOT receive
+	# NOTIFICATION_WM_CLOSE_REQUEST via _notification (that path is for Window
+	# nodes only and does not propagate to scene-tree children).
+	get_tree().auto_accept_quit = false
+	get_tree().root.close_requested.connect(_on_close_requested)
+
 	var args: Variant = CliArgs.parse()
 	if args == null:
-		# Local-save / dev-iteration path. Nothing to do.
+		# No legacy launcher handoff: the login screen starts the session.
 		return
 	var ok := _start_from_args(args as Dictionary)
 	if not ok:
@@ -454,7 +458,24 @@ func _process(delta: float) -> void:
 
 # ─── Public API ─────────────────────────────────────────────────────
 
-func is_launcher_mode() -> bool:
+# The window X button simulates a HARD client crash so we can exercise the
+# server's linkdead path: the body lingers in-world ~30 s (vulnerable,
+# killable), a same-account relogin is refused meanwhile, then it reaps. See
+# docs/design/camp_and_linkdead.md.
+#
+# So we deliberately do NOT call leave_session() here. Sending the app-layer
+# Disconnect would make the server reap immediately (a CLEAN logout); that is
+# exactly what "Quit Game" in the Options screen is for, and it stays the way
+# to leave cleanly. Killing our own process is the in-app equivalent of ending
+# the task in Task Manager, and it kills only THIS instance's PID, so a second
+# client on the same machine keeps running.
+func _on_close_requested() -> void:
+	OS.kill(OS.get_process_id())
+
+# True once a world session has been started in this process (it stays true
+# after a drop: the character id is kept). The login screen reads it to hand a
+# session the retired standalone launcher started straight to the lobby.
+func has_world_session() -> bool:
 	return _state != State.DISCONNECTED or _char_id >= 0
 
 func is_app_ready() -> bool:
@@ -515,7 +536,7 @@ func send_movement(direction: Vector3, jumping: bool = false, yaw: float = 0.0) 
 # Track 6: Sit / Stand intents — server uses them to scale regen rates
 # server-side. Movement auto-stands on either side, so a dropped Stand
 # self-heals; the explicit intent just speeds the transition. Gated like
-# every other send wrapper so local-save mode stays quiet on the wire.
+# every other send wrapper so nothing goes out before ConnectOk.
 func broadcast_sit() -> void:
 	if _state != State.CONNECTED_APP:
 		return
@@ -539,7 +560,7 @@ func broadcast_cancel_camp() -> void:
 	send_cancel_camp()
 
 # Track 4 sub-task 2: cast broadcast wrappers. Gated like every other send
-# so local-save and lobby phases stay quiet on the wire.
+# so the login and lobby phases stay quiet on the wire.
 func broadcast_cast_start(spell_name: String, duration: float) -> void:
 	if _state != State.CONNECTED_APP:
 		return
@@ -721,8 +742,8 @@ func broadcast_set_group_loot_mode(mode: int) -> void:
 
 # PD_W0014: current leader hands leadership to new_leader (a member's
 # char_id). The server validates and re-fans the roster, which updates
-# every member's leader_peer_id / is_leader. Fixes the launcher-mode gap
-# where pass-leadership was a local-only change the next roster undid.
+# every member's leader_peer_id / is_leader. Fixes the old gap where
+# pass-leadership was a local-only change the next roster undid.
 func broadcast_pass_leadership(new_leader: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return
@@ -1374,13 +1395,6 @@ func _on_xp_gained(amount: int, current: int, to_next: int) -> void:
 	PlayerStats.apply_remote_xp(amount, current, to_next)
 	if amount < 0:
 		CombatLog.add_line("You lost %d experience points." % -amount, CombatLog.MsgType.DAMAGE_IN)
-
-# PD_W0023 — private quest kill credit. RETIRED as of PD_W0024: the server
-# counts kills itself and drives the journal via quest_progress, and
-# notify_kill ignores launcher mode now. Kept wired in case an old server
-# build is on the other end (it degrades to a no-op).
-func _on_kill_credit(mob_name: String) -> void:
-	QuestManager.notify_kill(mob_name)
 
 # PD_W0024 — journal seed on EnterWorld: rebuild the quest journal from the
 # server's authoritative active + completed sets. This is what makes the

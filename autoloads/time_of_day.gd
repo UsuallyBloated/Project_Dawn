@@ -5,7 +5,7 @@ extends Node
 # repo). It sends the hour as we enter the world and about once a minute
 # after; this clock keeps running at the same rate in between and uses each
 # send only to stay in step, so every player sees the same sky. Until the
-# first send arrives (the login screen, the Test Room) it is a free-running
+# first send arrives (the login screen and the lobby) it is a free-running
 # local clock starting at START_HOUR.
 
 signal hour_changed(hour: int)

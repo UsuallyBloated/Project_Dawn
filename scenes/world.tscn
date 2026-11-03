@@ -1,12 +1,10 @@
-[gd_scene load_steps=17 format=4 uid="uid://h1lkpabnydg3"]
+[gd_scene load_steps=15 format=4 uid="uid://h1lkpabnydg3"]
 
 [ext_resource type="Script" uid="uid://td3xlala4836" path="res://scripts/player.gd" id="1_a202f"]
 [ext_resource type="PackedScene" uid="uid://bm4x7kpqr2n5" path="res://scenes/hud.tscn" id="2_hudsc"]
-[ext_resource type="PackedScene" path="res://scenes/enemy.tscn" id="3_enemy"]
 [ext_resource type="PackedScene" path="res://scenes/vendor_npc.tscn" id="10_vendor"]
 [ext_resource type="PackedScene" path="res://scenes/dialogue_npc.tscn" id="13_dialog"]
 [ext_resource type="PackedScene" path="res://scenes/banker_npc.tscn" id="14_banker"]
-[ext_resource type="Script" path="res://scripts/zone_manager.gd" id="9_zone"]
 [ext_resource type="Script" path="res://scripts/terrain_mesh.gd" id="4_terrain"]
 [ext_resource type="Script" path="res://scripts/hotbar.gd" id="5_hotbar"]
 [ext_resource type="Script" path="res://scripts/levelup_popup.gd" id="6_levelup"]
@@ -99,9 +97,6 @@ shape = SubResource("WorldBoundaryShape3D_floor")
 [node name="Players" type="Node3D" parent="."]
 
 [node name="HUD" parent="." instance=ExtResource("2_hudsc")]
-
-[node name="ZoneManager" type="Node3D" parent="."]
-script = ExtResource("9_zone")
 
 [node name="Hotbar" type="CanvasLayer" parent="."]
 script = ExtResource("5_hotbar")

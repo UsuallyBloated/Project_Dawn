@@ -31,18 +31,6 @@ func initialize(player_class: String, level: int) -> void:
 func get_cap(skill_name: String) -> int:
 	return ArmorSkillDefinitions.get_cap(_player_class, skill_name, _level)
 
-# Called when the player takes a hit. Advances skill for each unique armor type worn.
-func try_advance_worn(equipped: Dictionary) -> void:
-	var seen: Dictionary = {}
-	for slot in equipped:
-		var item = equipped[slot]
-		if item == null or item.armor_type == "":
-			continue
-		if seen.has(item.armor_type):
-			continue
-		seen[item.armor_type] = true
-		try_advance(item.armor_type)
-
 # Returns the effective armor multiplier for a given armor type.
 # cap=0 (wrong armor type): 0.5x. Trained: 1.0–1.25x scaling with skill.
 func get_armor_multiplier(armor_type: String) -> float:

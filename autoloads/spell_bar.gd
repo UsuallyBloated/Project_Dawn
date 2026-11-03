@@ -9,8 +9,7 @@ extends Node
 # keyed-save split — before that one global file shared the memorized bar
 # across every character on the machine, the same bleed the hotbar had).
 # Each character owns user://spell_bar_c<char_id>.json, reloaded on the
-# world handshake; the old global file stays as a first-login seed and as
-# the Test Room's store. Slot value is the spell name as it appears in
+# world handshake; the old global file stays as a first-login seed. Slot value is the spell name as it appears in
 # `Spells.available[i].spell_name`; empty string means the slot is empty.
 
 const SLOT_COUNT := 10
@@ -48,7 +47,7 @@ func _ready() -> void:
 	Net.app_connected.connect(_on_app_connected)
 	Net.world_spell_gems.connect(_on_server_spell_gems)
 
-# Online the SERVER holds the bar (client-authority audit fix 5): it refuses a
+# The SERVER holds the bar (client-authority audit fix 5): it refuses a
 # cast of a spell in no gem. Its SpellGems arrives on entering the world and
 # after every change, and this bar adopts it. A character the server has never
 # held a bar for (everyone before the change) offers this machine's bar once;
@@ -140,9 +139,8 @@ func unlock_level_for_slot(slot: int) -> int:
 
 func clear_slot(slot: int) -> void:
 	set_slot(slot, "")
-	# Online the server holds the bar: tell it the gem is empty too.
-	if Net.is_launcher_mode():
-		Net.forget_spell(slot)
+	# The server holds the bar: tell it the gem is empty too.
+	Net.forget_spell(slot)
 
 func get_spell(slot: int) -> SpellData:
 	var n := get_slot(slot)

@@ -7,7 +7,6 @@ signal skills_changed
 var _all_skills: Dictionary = {}
 var _cooldowns: CooldownTracker
 var available: Array[SkillData] = []
-var no_cooldowns: bool = false
 
 func _ready() -> void:
 	SkillDefinitions.validate()
@@ -45,53 +44,23 @@ func use_skill(skill: SkillData) -> bool:
 	if Combat.is_player_seated():
 		CombatLog.add_line("You cannot use skills while sitting.", CombatLog.MsgType.INFO)
 		return false
-	if _cooldowns.is_active(skill.skill_name) and not no_cooldowns:
+	if _cooldowns.is_active(skill.skill_name):
 		return false
 	if PlayerStats.stamina < skill.stamina_cost:
 		return false
 	if skill.target_type == SkillData.TargetType.ENEMY:
 		if not Combat.has_valid_target():
 			return false
-	# Online the server owns the skill (client-authority audit item 6): the
-	# stamina, the cooldown, the swing times the multiplier, and the effect.
-	# The checks above are an honest pre-flight; the cooldown below is drawn
-	# optimistically and handed back on a SkillFail (the server stamped none).
-	if Net.is_launcher_mode():
-		return _use_skill_online(skill)
+	# The server owns the skill (client-authority audit item 6): the stamina,
+	# the cooldown, the swing times the multiplier, and the effect. The checks
+	# above are an honest pre-flight; the cooldown below is drawn optimistically
+	# and handed back on a SkillFail (the server stamped none).
+	return _send_skill(skill)
 
-	PlayerStats.set_stamina(PlayerStats.stamina - skill.stamina_cost)
-	_cooldowns.start(skill.skill_name, skill.cooldown)
-
-	if skill.target_type == SkillData.TargetType.ENEMY:
-		Combat.deal_damage_to_target(int(Combat.calc_damage() * skill.damage_multiplier))
-
-	match skill.effect_type:
-		SkillData.EffectType.EVADE_BOOST:
-			BuffManager.add_evade_boost(skill.effect_duration)
-		SkillData.EffectType.ABSORB_SHIELD:
-			BuffManager.add_absorb(skill.absorb_amount, skill.skill_name)
-		SkillData.EffectType.WARDER_FURY:
-			WarderAI.command_fury()
-		SkillData.EffectType.STUN:
-			if Combat.has_valid_target():
-				Combat.current_target.stun(skill.stun_duration)
-		SkillData.EffectType.FEIGN_DEATH:
-			_do_feign_death()
-		SkillData.EffectType.STEALTH:
-			BuffManager.add_stealth(skill.stealth_duration, skill.skill_name)
-		SkillData.EffectType.TRUESIGHT:
-			pass  # damage already applied by the target_type == ENEMY block above
-
-	if skill.target_type == SkillData.TargetType.ENEMY:
-		BuffManager.break_stealth()
-
-	skill_used.emit(skill)
-	return true
-
-# The online path: send the skill by name and let the server answer. The
-# server's Hit / Miss / StaminaUpdate / BuffSnapshot show the outcome; a
-# SkillFail hands the cooldown back.
-func _use_skill_online(skill: SkillData) -> bool:
+# Send the skill by name and let the server answer. The server's Hit / Miss /
+# StaminaUpdate / BuffSnapshot show the outcome; a SkillFail hands the
+# cooldown back.
+func _send_skill(skill: SkillData) -> bool:
 	var target_id := 0
 	if skill.target_type == SkillData.TargetType.ENEMY:
 		var t: Node = Combat.current_target
@@ -122,16 +91,6 @@ func _on_server_skill_refused(skill_name: String, reason: String) -> void:
 
 func get_skill_by_name(skill_name: String) -> SkillData:
 	return _all_skills.get(skill_name)
-
-func _do_feign_death() -> void:
-	var success_chance := 0.80
-	if randf() < success_chance:
-		for enemy in get_tree().get_nodes_in_group("enemies"):
-			if is_instance_valid(enemy) and not enemy.is_dead:
-				enemy.feign_death_deaggro()
-		CombatLog.add_line("You feign death successfully.", CombatLog.MsgType.INFO)
-	else:
-		CombatLog.add_line("Your feign death fails!", CombatLog.MsgType.DAMAGE_IN)
 
 func use_skill_by_index(index: int) -> bool:
 	if index < 0 or index >= available.size():

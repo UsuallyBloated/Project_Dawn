@@ -44,21 +44,20 @@ func _initialize() -> void:
 	if cur.spend(w, 150) or w != [0, 0, 1, 0]:
 		failures.append("unaffordable spend mutated wallet: %s" % str(w))
 
-	# PlayerStats wallet round-trip incl. legacy single-int save
-	ps.load_state({"coins": 250})
-	if ps.platinum != 0 or ps.copper != 250:
-		failures.append("legacy coins=250 didn't land in copper")
-	ps.add_coins(5000)  # payout: +50s, copper hoard untouched
-	if ps.silver != 50 or ps.copper != 250:
-		failures.append("payout consolidated the hoard: %ds %dc" % [ps.silver, ps.copper])
-	if not ps.spend_coins(300):
-		failures.append("spend_coins(300) failed")
-	if ps.total_copper() != 250 + 5000 - 300:
-		failures.append("total after spend wrong: %d" % ps.total_copper())
-	var saved: Dictionary = ps.save_state()
-	ps.load_state(saved)
-	if ps.total_copper() != 4950:
-		failures.append("save/load round-trip lost coins: %d" % ps.total_copper())
+	# The online wallet: the server's CoinsUpdate lands through
+	# apply_remote_coins as four exact stacks, never consolidated.
+	var changes: Array[int] = [0]
+	ps.coins_changed.connect(func(_p, _g, _s, _c) -> void: changes[0] += 1)
+	ps.apply_remote_coins(0, 0, 50, 250)
+	if ps.platinum != 0 or ps.gold != 0 or ps.silver != 50 or ps.copper != 250:
+		failures.append("CoinsUpdate did not land as sent: %dp %dg %ds %dc" % [ps.platinum, ps.gold, ps.silver, ps.copper])
+	if ps.total_copper() != 5250:
+		failures.append("total_copper after CoinsUpdate wrong: %d" % ps.total_copper())
+	if changes[0] != 1:
+		failures.append("a changed wallet must emit coins_changed once (got %d)" % changes[0])
+	ps.apply_remote_coins(0, 0, 50, 250)
+	if changes[0] != 1:
+		failures.append("an unchanged CoinsUpdate must not emit coins_changed")
 
 	if failures.is_empty():
 		print("CURRENCY_SMOKE_PASS")

@@ -5,8 +5,7 @@ const KIND_WEAPON := 0
 func _ready() -> void:
 	super._ready()
 	# Track 18.1 — server fans skill advances; subscribe to Net and
-	# route the matching kind into our score cache. Solo / Test Room
-	# fall through to the base class's local-roll path.
+	# route the matching kind into our score cache.
 	Net.world_skill_progress_update.connect(_on_skill_progress_update)
 	Net.world_skill_progress_snapshot.connect(_on_skill_progress_snapshot)
 
@@ -48,16 +47,6 @@ func skill_key_for(item: ItemData) -> String:
 # of 0 at any level means the class never does.
 func class_trains(skill_name: String) -> bool:
 	return get_cap(skill_name) > 0
-
-# 0.05–0.35 miss chance scaling from skill vs cap. Unusable weapon type = 80% miss.
-func get_miss_chance(skill_name: String) -> float:
-	if _player_class == "":
-		return 0.0
-	var cap := get_cap(skill_name)
-	if cap == 0:
-		return 0.80
-	var current := get_current(skill_name)
-	return maxf(0.05, 0.35 * (1.0 - float(current) / float(cap)))
 
 # 1.0–1.15 damage multiplier from skill proficiency. Unusable weapon type = 0.5x.
 func get_damage_multiplier(skill_name: String) -> float:

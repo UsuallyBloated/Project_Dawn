@@ -1,6 +1,6 @@
 extends SceneTree
 # Headless probe for free memorizing (2026-10-26): a memorize that runs its
-# time completes with no mana and takes none, online and offline, as in EQ
+# time completes with no mana and takes none, as in EQ
 # (the mana is paid at the cast). It used to cost half the spell's mana, and a
 # caster short of it was refused at the finish. Exits 1 on any miss. Run:
 #   godot --headless --path . -s tools/probe_memorize_free.gd
@@ -32,8 +32,8 @@ func _run() -> void:
 	smite.spell_name = "Smite"
 	smite.mana_cost = 12.0
 
-	# Online (launcher mode): the finish goes to the server and takes nothing
-	# here, even with an empty mana bar.
+	# The finish goes to the server and takes nothing here, even with an
+	# empty mana bar.
 	net._char_id = 7
 	ps.mp = 0.0
 	mem._committing = true

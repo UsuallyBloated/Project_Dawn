@@ -1,8 +1,11 @@
 extends Node
 
+# The client's mirror of the server's inventory: the base slots, bag contents
+# and the cursor (held) slot, written only by the server's InventorySnapshot
+# and InventoryDelta. The windows read it and send MoveItem / EquipItem /
+# DestroyItem intents; nothing here mutates a slot on its own.
+
 signal inventory_changed
-signal item_added(item: ItemData)
-signal item_removed(item: ItemData)
 # PD_W0027 — the server cursor slot changed (picked up, placed, swapped).
 signal cursor_changed
 
@@ -18,10 +21,9 @@ var base_slots: Array = []
 var bag_contents: Array = []
 
 # PD_W0027 — the SERVER-side cursor slot: null | { "item": ItemData,
-# "count": int }. Distinct from the inventory windows' local visual drag
-# (which never leaves its server slot until the drop lands): this is a real
-# held stack — it persists across logout, weighs, and dies with you. Filled
-# by ground pickup and by place-swaps; rendered attached to the mouse below.
+# "count": int }. A real held stack: it persists across logout, weighs, and
+# dies with you. Filled by every lift, ground pickup and place-swaps;
+# rendered attached to the mouse below.
 var cursor_slot: Variant = null
 
 # Full-bags-move (2026-09-27): the server keys a HELD bag's contents under
@@ -40,8 +42,7 @@ func _ready() -> void:
 	base_slots.fill(null)
 	bag_contents.resize(BASE_SLOT_COUNT)
 	bag_contents.fill(null)
-	# Track 13.2 — in launcher mode the server is authoritative. The
-	# InventorySnapshot fired privately on EnterWorld seeds us with
+	# Track 13.2 — the server is authoritative. The InventorySnapshot fired privately on EnterWorld seeds us with
 	# whatever was persisted; subsequent server-side mutations
 	# (loot, MoveItem, drop) arrive as InventoryDelta.
 	Net.world_inventory_snapshot.connect(_on_inventory_snapshot)
@@ -54,8 +55,6 @@ func _ready() -> void:
 # walk so the bag's parent base entry — which determines the
 # inner Vec's size from item.bag_num_slots — is in place before
 # its contents arrive).
-# In solo / Test Room mode Net never fires this signal so the
-# legacy local autoload state is preserved.
 func _on_inventory_snapshot(
 		locations: PackedStringArray,
 		slots: PackedInt32Array,
@@ -70,9 +69,8 @@ func _on_inventory_snapshot(
 	# prior session is wiped.
 	Equipment.apply_remote_snapshot_clear()
 	var n: int = mini(mini(locations.size(), slots.size()), mini(item_paths.size(), counts.size()))
-	# Pass 1 — base + equip. Bag entries hit _init_bag_contents
-	# via set_base_slot's normal path so pass 2 has somewhere to
-	# write.
+	# Pass 1 — base + equip. Bag entries get _init_bag_contents so
+	# pass 2 has somewhere to write.
 	for i in n:
 		var loc: String = locations[i]
 		var slot_idx: int = slots[i]
@@ -281,203 +279,42 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 			arr[slot] = {"item": item, "count": count}
 		inventory_changed.emit()
 
-# ── Base slot API (used by InventoryWindow) ───────────────────────────────────
+# ── Slot reads ────────────────────────────────────────────────────────────────
 
 func get_base_slot(i: int) -> Variant:
 	return base_slots[i]
 
-func set_base_slot(i: int, val: Variant) -> void:
-	base_slots[i] = val
-	if val == null or val["item"].type != ItemData.Type.BAG:
-		bag_contents[i] = null
-	elif bag_contents[i] == null:
-		_init_bag_contents(i, val["item"].bag_num_slots)
-	inventory_changed.emit()
-
-func clear_base_slot(i: int) -> void:
-	base_slots[i] = null
-	bag_contents[i] = null
-	inventory_changed.emit()
-
-func remove_base_at(i: int) -> void:
-	if base_slots[i] == null:
-		return
-	var item: ItemData = base_slots[i]["item"]
-	base_slots[i] = null
-	bag_contents[i] = null
-	inventory_changed.emit()
-	item_removed.emit(item)
-
-# ── Bag slot API (used by BagWindow) ─────────────────────────────────────────
 # bag_base_index = the base slot index that holds the bag.
-
 func get_slot(bag_base_index: int, slot_index: int) -> Variant:
 	if bag_contents[bag_base_index] == null:
 		return null
 	return bag_contents[bag_base_index][slot_index]
 
-## True when the bag in base slot `bag_base_index` still holds something.
-## Since full-bags-move (2026-09-27) the server MOVES non-empty bags freely
-## (contents re-key along); what still requires an empty bag is selling it,
-## destroying it, and dropping it, plus the Test Room's local drag, which has
-## no re-key. Those are this check's remaining callers.
-func bag_has_contents(bag_base_index: int) -> bool:
-	if bag_base_index < 0 or bag_base_index >= bag_contents.size():
-		return false
-	var arr = bag_contents[bag_base_index]
-	if arr == null:
-		return false
-	for entry in arr:
-		if entry != null:
-			return true
-	return false
-
-func set_slot(bag_base_index: int, slot_index: int, val: Variant) -> void:
-	if bag_contents[bag_base_index] == null:
-		return
-	bag_contents[bag_base_index][slot_index] = val
-	inventory_changed.emit()
-
-func clear_slot(bag_base_index: int, slot_index: int) -> void:
-	if bag_contents[bag_base_index] == null:
-		return
-	bag_contents[bag_base_index][slot_index] = null
-	inventory_changed.emit()
-
-func remove_at(bag_base_index: int, slot_index: int) -> void:
-	if bag_contents[bag_base_index] == null:
-		return
-	var arr: Array = bag_contents[bag_base_index]
-	if arr[slot_index] == null:
-		return
-	var item: ItemData = arr[slot_index]["item"]
-	arr[slot_index] = null
-	inventory_changed.emit()
-	item_removed.emit(item)
-
-# ── add_item ──────────────────────────────────────────────────────────────────
-
-func add_item(item: ItemData, count: int = 1) -> bool:
-	# Bags go in base slots only — no bag-in-bag.
-	if item.type == ItemData.Type.BAG:
-		for i in BASE_SLOT_COUNT:
-			if base_slots[i] == null:
-				base_slots[i] = {"item": item, "count": 1}
-				_init_bag_contents(i, item.bag_num_slots)
-				inventory_changed.emit()
-				item_added.emit(item)
-				return true
-		return false
-
-	# Try to top-up existing stacks: base slots first, then bag slots.
-	if item.stack_size > 1:
-		for i in BASE_SLOT_COUNT:
-			if base_slots[i] != null and base_slots[i]["item"].item_name == item.item_name:
-				var space := item.stack_size - int(base_slots[i]["count"])
-				if space > 0:
-					var add := mini(count, space)
-					base_slots[i]["count"] += add
-					count -= add
-					if count == 0:
-						inventory_changed.emit()
-						item_added.emit(item)
-						return true
-		for i in BASE_SLOT_COUNT:
-			if bag_contents[i] == null:
-				continue
-			var arr: Array = bag_contents[i]
-			for j in arr.size():
-				if arr[j] != null and arr[j]["item"].item_name == item.item_name:
-					var space := item.stack_size - int(arr[j]["count"])
-					if space > 0:
-						var add := mini(count, space)
-						arr[j]["count"] += add
-						count -= add
-						if count == 0:
-							inventory_changed.emit()
-							item_added.emit(item)
-							return true
-
-	# Place remainder in first free slot.
-	while count > 0:
-		var found := _first_free_slot()
-		if found.is_empty():
-			return false
-		var batch := mini(count, item.stack_size)
-		if found.size() == 1:
-			base_slots[found[0]] = {"item": item, "count": batch}
-		else:
-			bag_contents[found[0]][found[1]] = {"item": item, "count": batch}
-		count -= batch
-
-	inventory_changed.emit()
-	item_added.emit(item)
-	return true
-
-# ── remove_item ───────────────────────────────────────────────────────────────
-
-func remove_item(item: ItemData, count: int = 1) -> bool:
-	var remaining := count
-	for i in BASE_SLOT_COUNT:
-		if remaining == 0:
-			break
-		if base_slots[i] != null and base_slots[i]["item"].item_name == item.item_name:
-			var take := mini(remaining, int(base_slots[i]["count"]))
-			base_slots[i]["count"] -= take
-			remaining -= take
-			if base_slots[i]["count"] == 0:
-				base_slots[i] = null
-	for i in BASE_SLOT_COUNT:
-		if remaining == 0:
-			break
-		if bag_contents[i] == null:
-			continue
-		var arr: Array = bag_contents[i]
-		for j in arr.size():
-			if remaining == 0:
-				break
-			if arr[j] != null and arr[j]["item"].item_name == item.item_name:
-				var take := mini(remaining, int(arr[j]["count"]))
-				arr[j]["count"] -= take
-				remaining -= take
-				if arr[j]["count"] == 0:
-					arr[j] = null
-	if remaining < count:
-		inventory_changed.emit()
-		item_removed.emit(item)
-		return true
-	return false
-
 # ── stack_all ─────────────────────────────────────────────────────────────────
 
 ## Consolidate stackable items into the fewest stacks.
 ##
-## Hosted play routes every merge through the server. It used to rewrite
-## base_slots and bag_contents directly and tell the server nothing, which in
-## launcher mode desynced the whole inventory in one click: the client's view
-## became fiction while the server still held the original layout, so every
-## later move from a now-phantom slot was refused. That is the origin of the
-## 2026-08-18 "items get hung up / items vanished" reports.
-func stack_all() -> void:
-	if Net.is_launcher_mode():
-		_stack_all_via_server()
-		return
-	_stack_all_local()
-
-## Hosted path: merge same-item stacks by asking the server to move them, and
-## mutate nothing locally. The server's InventoryDelta fan-out is what updates
-## the UI, exactly like a hand-dragged move.
+## Every merge goes through the server. It used to rewrite base_slots and
+## bag_contents directly and tell the server nothing, which desynced the whole
+## inventory in one click: the client's view became fiction while the server
+## still held the original layout, so every later move from a now-phantom slot
+## was refused. That is the origin of the 2026-08-18 "items get hung up / items
+## vanished" reports.
 ##
-## Deliberately MERGE-ONLY, never relocate. The offline path below redistributes
-## through `_first_free_slot()`, which scans base slots before bags and so drags
-## bag contents out into the main window — reported as "items unstack and move to
-## the main inventory window". Consolidating stacks is the job; rehoming them
+## Merge same-item stacks by asking the server to move them, and mutate nothing
+## locally. The server's InventoryDelta fan-out is what updates the UI, exactly
+## like a hand-dragged move.
+##
+## Deliberately MERGE-ONLY, never relocate: an old local version redistributed
+## through the first free slot, which scanned base slots before bags and so
+## dragged bag contents out into the main window ("items unstack and move to the
+## main inventory window"). Consolidating stacks is the job; rehoming them
 ## between containers was never asked for.
 ##
 ## Only merges that stay within `stack_size` are sent: the server's move-merge
 ## does a plain `saturating_add` with no cap, so an over-large pairing would
 ## produce a stack bigger than the item allows.
-func _stack_all_via_server() -> void:
+func stack_all() -> void:
 	# "<loc>|<item_name>" -> Array of {loc, slot, count, cap}, in scan order.
 	# Keyed by CONTAINER as well as item, so stacks only merge with others in the
 	# same place: three single Bread Loaves, one in the base slots and one in each
@@ -537,62 +374,7 @@ func _collect_stackable(groups: Dictionary, entry: Dictionary, loc: String, slot
 		"count": int(entry["count"]), "cap": int(item.stack_size),
 	})
 
-## Offline / Test Room path, unchanged: with no server there is nothing to ask,
-## so the local rewrite is correct here.
-func _stack_all_local() -> void:
-	# Consolidate WITHIN each container only: the base slots among themselves,
-	# and each bag among itself. Nothing crosses between them, so three single
-	# Bread Loaves — one in the base slots and one in each of two pouches — stay
-	# as three. This used to pool everything and redistribute through
-	# `_first_free_slot()`, which scans base before bags and so emptied bags into
-	# the main window.
-	_consolidate_container(base_slots)
-	for i in BASE_SLOT_COUNT:
-		if bag_contents[i] != null:
-			_consolidate_container(bag_contents[i])
-	inventory_changed.emit()
-
-## Merge same-item stacks in place within one slot array, respecting stack_size
-## and never moving an item to a different slot than one already holding that
-## item. Bags and non-stackables are left alone.
-func _consolidate_container(slots: Array) -> void:
-	for dst in slots.size():
-		var d = slots[dst]
-		if d == null:
-			continue
-		var item: ItemData = d["item"]
-		if item.stack_size <= 1 or item.type == ItemData.Type.BAG:
-			continue
-		# Pull from later slots holding the same item until this one is full.
-		for src in range(dst + 1, slots.size()):
-			if int(d["count"]) >= item.stack_size:
-				break
-			var sdata = slots[src]
-			if sdata == null or sdata["item"].item_name != item.item_name:
-				continue
-			var room: int = item.stack_size - int(d["count"])
-			var take: int = mini(room, int(sdata["count"]))
-			d["count"] = int(d["count"]) + take
-			sdata["count"] = int(sdata["count"]) - take
-			if int(sdata["count"]) <= 0:
-				slots[src] = null
-
-
 # ── helpers ───────────────────────────────────────────────────────────────────
-
-# Returns [base_index] for a free base slot, or [base_index, bag_slot_index] for a bag slot.
-func _first_free_slot() -> Array:
-	for i in BASE_SLOT_COUNT:
-		if base_slots[i] == null:
-			return [i]
-	for i in BASE_SLOT_COUNT:
-		if bag_contents[i] == null:
-			continue
-		var arr: Array = bag_contents[i]
-		for j in arr.size():
-			if arr[j] == null:
-				return [i, j]
-	return []
 
 func _init_bag_contents(base_index: int, num_slots: int) -> void:
 	var arr: Array = []
@@ -620,60 +402,6 @@ func all_slots() -> Array:
 			if s != null:
 				result.append(s)
 	return result
-
-# ── Save / load (Tier 2) ──────────────────────────────────────────────────────
-
-func save_state() -> Dictionary:
-	var base_out: Array = []
-	var bags_out: Array = []
-	for i in BASE_SLOT_COUNT:
-		base_out.append(_slot_to_dict(base_slots[i]))
-		if bag_contents[i] == null:
-			bags_out.append(null)
-		else:
-			var bag_out: Array = []
-			for s in bag_contents[i]:
-				bag_out.append(_slot_to_dict(s))
-			bags_out.append(bag_out)
-	return {"base": base_out, "bags": bags_out}
-
-func load_state(d: Dictionary) -> void:
-	for i in BASE_SLOT_COUNT:
-		base_slots[i] = null
-		bag_contents[i] = null
-	var base_in: Array = d.get("base", [])
-	var bags_in: Array = d.get("bags", [])
-	for i in BASE_SLOT_COUNT:
-		if i < base_in.size():
-			var slot: Variant = _slot_from_dict(base_in[i])
-			if slot != null:
-				base_slots[i] = slot
-				if slot["item"].type == ItemData.Type.BAG and i < bags_in.size():
-					var raw_bag: Variant = bags_in[i]
-					if raw_bag is Array:
-						var size: int = slot["item"].bag_num_slots
-						var bag_arr: Array = []
-						bag_arr.resize(size)
-						bag_arr.fill(null)
-						for j in mini(size, (raw_bag as Array).size()):
-							bag_arr[j] = _slot_from_dict((raw_bag as Array)[j])
-						bag_contents[i] = bag_arr
-	inventory_changed.emit()
-
-func _slot_to_dict(slot: Variant) -> Variant:
-	if slot == null:
-		return null
-	var item: ItemData = slot["item"]
-	return {"item": item.to_save_dict(), "count": int(slot["count"])}
-
-func _slot_from_dict(raw: Variant) -> Variant:
-	if raw == null or not (raw is Dictionary):
-		return null
-	var d: Dictionary = raw
-	var item: ItemData = ItemData.from_save_dict(d.get("item", {}))
-	if item == null:
-		return null
-	return {"item": item, "count": int(d.get("count", 1))}
 
 # ── PD_W0027: the held-item render ───────────────────────────────────────────
 # The server-cursor stack rides the mouse as a name label (items have no

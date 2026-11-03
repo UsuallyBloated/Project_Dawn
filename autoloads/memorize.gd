@@ -67,7 +67,7 @@ func _process(delta: float) -> void:
 func _find_local_player() -> PlayerCharacter:
 	var nodes := get_tree().get_nodes_in_group("player")
 	for n in nodes:
-		if n is PlayerCharacter and (n as PlayerCharacter).is_multiplayer_authority():
+		if n is PlayerCharacter:
 			return n
 	return null
 
@@ -120,10 +120,9 @@ func commit(slot: int) -> bool:
 	_commit_elapsed = 0.0
 	_commit_start_pos = _player.global_position
 	memorize_started.emit(_commit_spell, MEMORIZE_CAST_TIME)
-	# Online the server holds the bar (client-authority audit fix 5): it
-	# starts its own clock now and decides at the finish.
-	if Net.is_launcher_mode():
-		Net.memorize_start(slot, _commit_spell.spell_name)
+	# The server holds the bar (client-authority audit fix 5): it starts its
+	# own clock now and decides at the finish.
+	Net.memorize_start(slot, _commit_spell.spell_name)
 	return true
 
 func is_committing() -> bool:
@@ -158,17 +157,10 @@ func _tick_commit(delta: float) -> void:
 func _finish_commit() -> void:
 	var spell := _commit_spell
 	var slot := _commit_slot
-	if Net.is_launcher_mode():
-		# The server fills the gem (or refuses with a line); its SpellGems is
-		# what changes here, and SpellBar says "You memorize" when the gem
-		# actually fills.
-		Net.memorize_finish()
-	else:
-		SpellBar.set_slot(slot, spell.spell_name)
-		CombatLog.add_line(
-			"You memorize %s into slot %d." % [spell.spell_name, slot + 1],
-			CombatLog.MsgType.INFO,
-		)
+	# The server fills the gem (or refuses with a line); its SpellGems is
+	# what changes here, and SpellBar says "You memorize" when the gem
+	# actually fills.
+	Net.memorize_finish()
 	_committing = false
 	_commit_spell = null
 	_commit_slot = -1

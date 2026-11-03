@@ -159,10 +159,9 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   replicated buff state yet); heals/HoTs still route to pets. Damage shields (Thorns,
   Spellshield, Rune/Primal Bond absorb) are self-only by design except Thorns, which is
   ally-castable.
-- **Ports:** `TargetType.PORT` with `port_zone_path` / `port_entry_id` (offline / Test Room
-  only). Online, Gate, Succor and Evacuate are server moves (see "Respawn, bind points, and
-  the death lock"); the client sends the cast and waits for the `Teleport`. The seven zone
-  ports refuse online: there are no zones to send anyone to.
+- **Ports:** Gate, Succor and Evacuate are server moves (see "Respawn, bind points, and the
+  death lock"); the client sends the cast and waits for the `Teleport`. The seven zone ports
+  refuse: there are no zones to send anyone to.
 - **Notable resolved spells:** Complete Heal (Cleric, self-heal for now), Torpor (Shaman),
   Clarity/Breeze (Enchanter), Haste (Enchanter), Spirit of Wolf (Druid/Shaman), Lich Form
   (Necromancer — skips HP regen, extreme MP regen), Gate (Wizard), Exsanguinate (Blood
@@ -222,11 +221,10 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   additively on top of meditation. (Planned rework: gate base regen instead of stacking —
   see the to-do.)
 - **Bind points:** server-authoritative since 2026-08-12 — see "Respawn, bind points, and the
-  death lock" below. The client-side `PlayerStats.bind_zone_path` / `ZoneLoader.travel_to()` path
-  described here previously now applies **only offline / in the Test Room**; in launcher mode the
-  server decides where you respawn and teleports you. XP loss is logged to the combat log.
-- **Group XP:** `GroupManager.distribute_kill_xp(base_xp)` splits XP with a 20% group bonus;
-  `enemy._die()` routes through it; `_rpc_receive_xp` delivers each remote member's share.
+  death lock" below. The client keeps no bind of its own (its offline bind went with the offline
+  game, 2026-11-01): the server decides where you respawn and teleports you. XP loss is logged to the combat log.
+- **Group XP:** split on the server at the kill (`tick/kills.rs`, `award_kill`), among the
+  members who are alive and within 200 m; the client shows what `XpGained` says.
 
 ---
 
@@ -447,7 +445,7 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     reached two cases that had been unreachable: a non-empty bag could not move at the time
     (**superseded 2026-09-27 by full-bags-move**: online, a full bag now lifts and moves WITH
     its contents, re-keyed server-side under `CURSOR_BAG_KEY` while held; the empty-first rule
-    survives only for selling, destroying, dropping, and the Test Room's local drag —
+    survives only for selling, destroying and dropping —
     `Inventory.bag_has_contents()` now serves those callers; playtested 2026-10-09,
     `full_bags_move_checklist.md` all nine rows: two full bags dropped on each other swap
     PLACES and each keeps its own contents, a held full bag survives a relog, and a death
@@ -481,7 +479,7 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     were client-local (`Inventory.add_item()` with no server call) yet reachable online, creating
     phantom items — and crafting deleted *real* ingredients from the client mirror, desyncing slot
     indices so a legitimate Sell/Destroy executed against a different real item. All three entry
-    points now refuse in launcher mode before touching anything. Offline/Test Room unchanged. Real
+    points refuse before touching anything (there is no offline path since 2026-11-01). Real
     server-authoritative tradeskills are an open item under Tradeskill depth.
   - **Loot mode** (per `Group`, leader-set, default Round Robin; `groups::LootMode`)
     governs **item turns only**: **Round Robin** rotates per corpse (lazy first-loot claim
@@ -603,10 +601,7 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 - **Pet heal (server, 2026-10-07):** `PET_HEAL` spells (Warder's Mend) mend the caster's OWN
   pet, whatever is targeted. The cast pre-flight resolves the pet (alive, in reach, else "You
   have no pet to mend."), the arm heals it by `heal_amount` capped at max and fans its
-  HealthUpdate. The client's `WarderAI.heal_warder` call is a no-op online (the RemotePet
-  stub); the server's update moves the panel.
-- **WarderAI:** Beast Master warder behavior (retreat / fury / `setup_for_class`),
-  extracted from PetManager. Warder idle state faces the player's look direction.
+  HealthUpdate; the server's update moves the panel.
 - **Pet panel (`scripts/hud_pet_panel.gd`):** top left while you have a pet (summoned,
   warder or charmed): name, level, HP bar, and since 2026-10-07 a row of buttons for the five
   `/pet` commands (Attack, Back, Guard, Follow, Sit), each the same `PetManager` call the chat
@@ -624,11 +619,8 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   floating number). **Deferred:** AGI/INT/WIS combat effect (stored/buffable but display-only
   — no pet dodge / spell-power model). MP-regen / accuracy buffs aren't routed to pets (no pet
   mana / crit).
-- **Transformations:** e.g. Revenant — grants ultravision; tradeskill scores carry over
-  automatically (they live outside PlayerStats).
-- **MountManager:** client-side v1 — item whistles summon, per-zone `NO_MOUNT_ZONES`
-  blacklist, any incoming damage dismounts, mount speed multiplier overrides other speed
-  sources. Not fully wired (see to-do).
+- **MountManager:** refuses every mount online, since the server has no mount model yet;
+  the whistle items and `ZoneData.NO_MOUNT_ZONES` stay as data for that build (see to-do).
 
 ---
 
@@ -647,8 +639,7 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   the server at the next send. Nothing on the server reads the hour (the sky is cosmetic; night
   vision is a client-side tint), and a DLL without the signal makes `Net` say so in the console
   and fall back to the local clock. `DAY_LENGTH_SECS` (server) and `DAY_DURATION` (client), both
-  1200 s, must stay in lockstep. `TimeOfDay` emits `hour_changed`; the offline EnemySpawner's
-  `night_only` mobs spawn at hour 20 and despawn at 6.
+  1200 s, must stay in lockstep. `TimeOfDay` emits `hour_changed`.
 - **Vision:** `VisionSystem` adjusts brightness + infravision green tint at night by race —
   ultravision (Dark Elf, Ogre, Troll, Kel\`varath), infravision (Elf, Wood Elf, Half-Elf,
   Dwarf, Gnome, Halfling, Fae, Felhari, Kobold), normal (Human, Minotaur, Half-Ogre).
@@ -663,14 +654,12 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   loot tables match. A boot-time spawner bug was fixed with it: first spawns no longer wait
   a full respawn timer when the server starts near machine boot. Plan + verified reward
   actuals: `docs/design/phase4_content_plan.md`; evidence: `phase4_content_checklist.md`.
-- **Named/boss mobs:** `data/named_mob_definitions.gd` (Rotfang, Greth Bonecrusher, Ancient
-  Crawler, Sable, The Undying). `EnemySpawner.named_mob_id` + `named_respawn_time`;
-  `enemy.apply_named()` sets a gold nameplate, scales HP/XP/damage, arms `_named_drops`
-  (guaranteed + chance-based rare loot), and enrages below a configurable HP% (speed +
-  damage boost, red name). `Loot._on_enemy_died()` appends `_named_drops` after the normal
-  table roll.
-- **Fall damage:** `_on_land()` in `player.gd`; threshold 9 m/s; `(speed - threshold) × 5`
-  HP via `Combat.receive_player_damage()`. (TODO: skip under Levitate / Feather Fall.)
+- **Named/boss mobs:** server-side (`world/named.rs`, `named_mobs.toml`: the scaling, the
+  enrage, the guaranteed and rare drops; see Combat). `data/named_mob_definitions.gd` (Rotfang,
+  Greth Bonecrusher, Ancient Crawler, Sable, The Undying) is the client's copy of the names,
+  read by the Test Panel's Spawn Named and the quest definitions.
+- **Fall damage:** none yet. The client computes nothing; the server's model waits on the
+  height model (`docs/design/server_fall_damage.md`, slice 1).
 
 ---
 
@@ -725,8 +714,8 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   `crafting_window.gd` (K to open) + `data/recipe_definitions.gd` (15 tradeskills:
   Smelting, Tanning, Leatherworking, Tailoring, Blacksmithing, Weaponsmithing, Woodworking,
   Fletching, Alchemy, Poison Making, Baking, Brewing, Jewelry Crafting, Pottery, Tinkering).
-- Mob crafting-material drops via `data/loot_tables.gd` archetypes (`.tres`-backed).
-  Skinning: `skinning_knife.tres` + `enemy.try_skin()` (F key; pelt quality by skill).
+- Mob crafting-material drops are rolled by the server (`world/loot.rs`). Skinning
+  (`skinning_knife.tres`) refuses online until tradeskills are on the server.
 - `StationManager` tracks station proximity (display; not yet enforced). Phase detail in
   `docs/concepts/tradeskills/todo_list.md`.
 
@@ -793,9 +782,9 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 
 ## Networking (client)
 
-> The world simulation server is authoritative (renet UDP, 20 Hz); a `--local-save` dev path
-> still exists for solo iteration. Read `server/docs/server_design.md` before touching anything
-> here.
+> The world simulation server is authoritative (renet UDP, 20 Hz), and the client is online
+> only (the offline game was removed 2026-11-01). Read `server/docs/server_design.md` before
+> touching anything here.
 
 - **The enemy position stream (server, 2026-09-30, playtested 2026-10-07):** an enemy's
   Position fans only when it moved past 0.005 m or turned past 0.001 rad since its last
@@ -835,19 +824,16 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   0.7 s) as an offset on the visual and the nameplate, never on the interpolated position.
   Nothing reads the flag into position: Y stays the server's zero, so a forged flag can only
   make a player look silly. A relayed jump stands the player; a corpse does not hop.
-- `Network` / `Net` — connection + wire message routing.
-- `SaveManager` — writes nothing online (playtested 2026-10-26,
-  `offline_save_online_checklist.md`): `save()` returns at once in launcher mode, because the
-  server is the save, so an online character never lands in the offline Test Room's
-  `character.save`. It also owns window-close. Two distinct exits (see the disconnect-lifecycle entry
-  below): **Quit Game** is a clean save + app-layer `Disconnect`; the **window X button** is a
+- `Net`: the connection and the wire message routing. The server is the save (the client's
+  `SaveManager` and its `character.save` went with the offline game, 2026-11-01). `Net` also
+  owns window-close, with two distinct exits (see the disconnect-lifecycle entry below): **Quit Game** is a clean save + app-layer `Disconnect`; the **window X button** is a
   hard self-kill that drives the server's linkdead path. (Watch the Godot-4 `_notification`-on-
   close save pitfall noted in past audits — close is handled via the root window's
   `close_requested` signal, not `_notification`.)
 - **Disconnect lifecycle (clean vs linkdead):** how you leave the world decides whether the body
   reaps now or lingers. **Quit Game** (Options menu) sends an app-layer `Disconnect`, so the
   server reaps immediately and frees the account. The **window X button** is wired as a hard
-  self-kill (`SaveManager._on_close_requested` → `OS.kill(OS.get_process_id())`, killing only
+  self-kill (`Net._on_close_requested`, which calls `OS.kill(OS.get_process_id())`, killing only
   that instance's PID) — it sends nothing, so the server treats it as an unclean drop and the
   character goes **linkdead**: the body lingers in-world ~30 s (`LINKDEAD_SECS`), still
   targetable and **killable** by mobs and PvP, frozen in place; a same-account relogin is refused
@@ -970,7 +956,7 @@ Where you wake up after dying is server-authoritative (2026-08-12, playtested 08
   the town square, 10 m round the spawn, arrival at the spawn), with a unit test that no camp
   spawn's aggro plus jitter reaches into one. The client (`spells.gd`) no longer runs Gate or a
   bind locally online (Gate used to reload the whole world scene): the cast goes up, the
-  `Teleport` or the bind line comes back. `PlayerStats.bind_zone_path` is now offline-only.
+  `Teleport` or the bind line comes back. The client keeps no bind of its own.
 
 **Why it was broken:** `Respawn` restored HP but never touched position. Because the server owns
 position, the client's own respawn move was overridden by the next Position broadcast and the player
@@ -1019,11 +1005,11 @@ player can never use them (exploit-audit finding #1). Two independent grants:
 - Set the flag offline with the **`grant_gm`** bin (`cargo run -p projectdawn-server --bin grant_gm
   -- <username> on|off`; no args lists every account's GM status). Takes effect on that account's
   next login (the flag is read at token mint, so a live session must re-log).
-- **Caveat — the Test Panel is a CLIENT tool** and mixes server-gated dev commands (above) with
-  client-side helpers and legitimate actions. `_full_heal` fills the bars optimistically client-side
-  even when the server refuses `HealSelf` for a non-GM (self-corrects on the next `HealthUpdate` — a
-  display lie, not an actual heal). `_trigger_death` just sets local HP to 0 (dying is legitimate and
-  never gated). So "Full Heal / Trigger Death work for a non-GM" is expected, not a gate leak.
+- **The Test Panel is a client tool for GM accounts:** every button sends a dev command the
+  server gates and audits (above), and with no world connection a button says so and does
+  nothing (its client-only buttons went with the offline game, 2026-11-01). `_full_heal` still
+  fills the bars at once for feel; if the server refuses `HealSelf`, the next `HealthUpdate`
+  puts them back. Trigger Death sends a dev `DamageSelf` of the whole bar.
 - **`admin_report`** bin: read-only `world.db` viewer (accounts + characters incl. soft-deletes,
   per-char four-tier coins + bank + inventory) → console + a local `world_report.html`. WAL-aware
   (`?mode=ro`), safe to run while the server is live.

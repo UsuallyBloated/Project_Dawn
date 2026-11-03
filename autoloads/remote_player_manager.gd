@@ -268,12 +268,8 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
 			# Track 6 sub-task 4a fix: server already deducted HP in
 			# sub-task 1's enemy-on-player branch and fans the
 			# authoritative HealthUpdate; calling
-			# Combat.receive_player_damage here would now route through
-			# DamageSelf (sub-task 4a addition) and DOUBLE-APPLY the
-			# damage. Trigger the cast-interrupt side effect directly
-			# instead.
-			Spells.try_interrupt_cast()
-			Combat.player_attacked.emit(attacker_node)
+			# Combat.receive_player_damage here would DOUBLE-APPLY the
+			# damage. The server also owns the cast-interrupt roll.
 			CombatLog.add_line(
 				"%s hits you for %d damage." % [
 					attacker_name if attacker_name != "" else "Something",
@@ -295,11 +291,10 @@ func _on_hit(attacker: int, target: int, amount: int, crit: bool, dmg_type: int)
 	var rp = _by_id.get(target)
 	if rp != null and is_instance_valid(rp):
 		DamageNumbers.spawn_damage(rp.global_position, amount, crit)
-		# PvP outgoing — if this Hit's attacker is us, log the strike
-		# against the target. Mirrors the "You hit X for N" line that
-		# Combat.deal_damage_to_target emits for enemy targets; for
-		# PvP we wait until here so the number reflects server-side
-		# armor reduction.
+		# PvP outgoing: if this Hit's attacker is us, log the strike
+		# against the target. Every outgoing "You hit X for N" line is
+		# written here, for players and mobs alike, so the number is the
+		# server's after armor.
 		if attacker == Net.get_player_id():
 			CombatLog.add_line("You hit %s for %d damage%s." % [rp.player_name, amount, (" (Critical!)" if crit else "")], CombatLog.MsgType.DAMAGE_OUT)
 		_play_spell_impact_fx(rp, amount, dmg_type)

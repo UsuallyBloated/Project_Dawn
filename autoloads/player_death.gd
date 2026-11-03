@@ -1,5 +1,10 @@
 extends Node
 
+# The local player's death state: HP reaching zero (as the server reports it)
+# starts the death view, refuses actions the dead cannot take, and after the
+# delay sends the Respawn intent. The server decides the death penalty, the
+# corpse and where you reappear.
+
 signal player_died
 signal player_respawned
 
@@ -8,20 +13,9 @@ const RESPAWN_DELAY := 5.0
 var is_dead: bool = false
 # Said "You cannot do that while dead." during this death already.
 var _told_dead: bool = false
-var _respawn_position: Vector3 = Vector3.ZERO
-var _player: Node3D = null
-
-func register_player(node: Node3D) -> void:
-	_player = node
-
-func unregister_player() -> void:
-	_player = null
 
 func _ready() -> void:
 	PlayerStats.hp_changed.connect(_on_hp_changed)
-
-func set_respawn_point(pos: Vector3) -> void:
-	_respawn_position = pos
 
 func _on_hp_changed(current: float, _max: float) -> void:
 	if is_dead or current > 0.0:
@@ -43,10 +37,6 @@ func _die() -> void:
 	is_dead = true
 	_told_dead = false
 	Combat.set_target(null)
-	# Track 22.C — death dismounts (the killing blow's receive_player_damage
-	# also dismounts, but death from a non-damage path — fall, scripted
-	# event — needs this safety net).
-	MountManager.dismount("died")
 	# Death XP penalty is server-authoritative now (Slice 0): the server applies
 	# it in world::progression (5% of the level band, cascading de-level, floor
 	# at level 5) and reports it back via XpGained (plus a LevelUp if you
@@ -71,24 +61,11 @@ func _respawn() -> void:
 	# .apply_health_update sees was_dead && new_hp > 0 → _apply_respawn().
 	Net.broadcast_respawn()
 
-	# In launcher mode the SERVER decides where you reappear: it teleports you to
-	# your bind point (or the starter spawn if unbound) and sends a Teleport,
-	# which player.gd applies. Moving the player here as well would be a fight the
+	# The SERVER decides where you reappear: it teleports you to your bind
+	# point (or the starter spawn if unbound) and sends a Teleport, which
+	# player.gd applies. Moving the player here as well would be a fight the
 	# client loses anyway — the server owns position, so its next Position
-	# broadcast overrides whatever we set. That fight is exactly what produced the
-	# death loop: the client tried to move you, the server dragged you back to the
-	# corpse, and you died again.
-	if Net.is_launcher_mode():
-		player_respawned.emit()
-		return
-
-	# Offline / Test Room only: no server, so the client still owns respawn.
-	var bind := PlayerStats.bind_zone_path
-	if bind != "" and FileAccess.file_exists(bind):
-		player_respawned.emit()
-		ZoneLoader.travel_to(bind, PlayerStats.bind_entry_id, PlayerStats.bind_zone_name)
-	else:
-		if is_instance_valid(_player):
-			_player.global_position = _respawn_position
-			_player.velocity = Vector3.ZERO
-		player_respawned.emit()
+	# broadcast overrides whatever we set. That fight is exactly what produced
+	# the death loop: the client tried to move you, the server dragged you back
+	# to the corpse, and you died again.
+	player_respawned.emit()
