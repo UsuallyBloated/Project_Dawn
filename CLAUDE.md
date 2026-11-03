@@ -1084,7 +1084,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   work through the night; nothing deployed or exported): `feat/facing`, the split and the
   offline removal merged, the one-time reformat, the lints turn-on with CI's fmt and clippy
   blocking; every server test, client check and probe green, a second fuzz hour clean (208
-  million messages). The bump day is now a fast-forward of both deploy branches to it.
+  million messages). The bump day is now a fast-forward of both deploy branches to it. **The
+  `unwrap` / `expect` rule BUILT 2026-11-03 on `bump/nov`** (`29fa206`): denied in live code, the
+  57 sites made checks before anything moves, logged unreachables or stated invariants; review
+  pass folded in. **The bump waits until after the Nov 8 evening** (user, 2026-11-03).
   Status per finding: the findings doc's §5.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
