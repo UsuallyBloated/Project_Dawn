@@ -117,7 +117,7 @@ The playtests of every checklist in `CHECKLIST_RUN_ORDER.md` wait on the redeplo
   `root.get_node("Name")` (a bare `Net` does not compile in a script outside the project),
   `quit(1)` on failure. Run: `"<godot exe>" --headless --path /f/Projects/Project_Dawn -s
   "C:/.../probe.gd"`. Run `--import` once after adding resources.
-- **The integration harness** (`tests/world_two_clients.rs`): after `send_attack` or any
+- **The integration harness** (`tests/world/common/`, since 2026-11-01; it was `tests/world_two_clients.rs`): after `send_attack` or any
   intent, service the sender's own transport (`pump_both_for`) or the message never leaves its
   socket; `pump_both_for` asserts both clients connected, so never call it after
   `send_disconnect` (use per-client `pump_for`); regen fans HealthUpdate and ManaUpdate on its

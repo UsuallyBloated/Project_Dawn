@@ -82,16 +82,16 @@ A panic while handling a player's message undoes that player's whole tick and th
 the same way. Why: an instant exit is an escape from any fight, and a relogin that boots a
 live session is the Lineage II force-off.
 Held by: `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`,
-`a_panic_undoes_only_its_own_tick_and_drops_the_sender_as_cut` (on refactor/tick-split),
-`a_panic_puts_the_connection_back_as_it_was_before_the_batch` (on refactor/tick-split)
+`a_panic_undoes_only_its_own_tick_and_drops_the_sender_as_cut`,
+`a_panic_puts_the_connection_back_as_it_was_before_the_batch`
 
 ### S4. Handling a message touches only the sender
 `handlers::handle_message` changes the sender's own connection and sends only to the sender;
 everything that reaches another player, a mob or the database happens in the steps after
 the drain, from the outcomes it returns. Why: this is what makes S3's undo complete. A
 handler that reached any other state would let a panic leave half a change behind.
-Held by: `a_panic_puts_the_connection_back_as_it_was_before_the_batch` (on refactor/tick-split),
-`a_panic_undoes_only_its_own_tick_and_drops_the_sender_as_cut` (on refactor/tick-split)
+Held by: `a_panic_puts_the_connection_back_as_it_was_before_the_batch`,
+`a_panic_undoes_only_its_own_tick_and_drops_the_sender_as_cut`
 
 ## Death
 
@@ -100,7 +100,7 @@ A death writes its corpse, the stripped gear and coin, and the XP loss together,
 character that left dead comes back dead (once, with no second penalty). Nothing a player
 does afterwards (a relog, a crash, a panic) undoes it.
 Held by: `a_dead_character_stays_dead_on_relogin_and_pays_once`, `a_dead_character_with_full_pools_is_told_it_is_dead`,
-`a_death_saves_its_xp_loss_with_the_corpse`, `a_panic_undoes_only_its_own_tick_and_drops_the_sender_as_cut` (on refactor/tick-split)
+`a_death_saves_its_xp_loss_with_the_corpse`, `a_panic_undoes_only_its_own_tick_and_drops_the_sender_as_cut`
 
 ### X2. The dead can only do what the dead may do
 A dead player can talk, respawn, accept a resurrection, manage the group and leave;
@@ -133,9 +133,9 @@ A non-finite number, a negative coin amount or a malformed message is dropped wh
 arrives, and range checks are written so that a bad number refuses (keep only when in
 range). Random messages and random bytes never crash the handler. Why: NaN passes every
 `if dist > range { refuse }` test.
-Held by: `nan_move_direction_is_dropped`, `a_players_facing_reaches_the_watcher` (on feat/facing),
-`a_forged_negative_coin_amount_moves_nothing` (on refactor/tick-split),
-`random_client_messages_never_panic_the_handler` (on refactor/tick-split), `random_bytes_never_panic_the_decoder`,
+Held by: `nan_move_direction_is_dropped`, `a_players_facing_reaches_the_watcher`,
+`a_forged_negative_coin_amount_moves_nothing`,
+`random_client_messages_never_panic_the_handler`, `random_bytes_never_panic_the_decoder`,
 `a_chat_line_cut_inside_a_multibyte_char_does_not_crash_the_server`
 
 ### A4. Reach and rate are the server's

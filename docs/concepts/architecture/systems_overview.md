@@ -1001,7 +1001,7 @@ player can never use them (exploit-audit finding #1). Two independent grants:
   connected`). A modified client can't forge it — the token is signed with the netcode key. This is
   what lets a HOSTED friends server run with `PD_DEV_CMDS` off while the host keeps their tools.
   Server-only (no client/DLL/wire change); built 2026-07-17, playtested + integration-tested
-  2026-07-19 (`world_two_clients.rs::is_gm_gates_dev_commands`).
+  2026-07-19 (`is_gm_gates_dev_commands`, now in `tests/world/admin.rs`).
 - Set the flag offline with the **`grant_gm`** bin (`cargo run -p projectdawn-server --bin grant_gm
   -- <username> on|off`; no args lists every account's GM status). Takes effect on that account's
   next login (the flag is read at token mint, so a live session must re-log).
