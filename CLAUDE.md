@@ -3553,7 +3553,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > New section 2026-09-29 (the crack audit): economy and itemization items used to sit in
 > memory notes and design docs with no To-Do home. Runtime inventory mechanics stay under
 > Multiplayer / networking; what an item IS lives here.
-- [ ] **The starting kit** *(user, 2026-11-03: every character starts equipped with a Ragged
+- [x] **The starting kit** — **DONE + playtested 2026-11-03** (`pre_door_check_checklist.md`
+  §2, every row passing on a new Gnome Shadow Knight: born wearing the sword, shirt and pants,
+  `NO DROP` in each tooltip, the sale, the drag onto the world and the shared vault refused, the
+  own vault in and out, the kit back on from the corpse after a death; the trade and destroy
+  rows are covered by the integration test. What exists is in systems_overview, Items, "The
+  starting kit and NO DROP".) *(Original entry:)* *(user, 2026-11-03: every character starts equipped with a Ragged
   Shirt, Ragged Pants and one class Trainee's weapon, NO DROP and worth 0, so the
   make-sell-trade-delete loop pays nothing)*. **BUILT 2026-11-03, pending the redeploy, the
   export and the pre-door check** (server `f06e88e`, client `12d4e5c`, on the deploy branches; `pre_door_check_checklist.md` §2).
