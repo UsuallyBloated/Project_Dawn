@@ -376,6 +376,21 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   beside one: the Attack path's three off-hand gates live in `skills::offhand_swing_refusal`,
   the client's `Combat._is_dual_wielding` sends none, and both staves carry `is_two_handed`,
   which a unit test keeps in step with the `2h_` and archery skills.
+- **The starting kit and NO DROP (built and playtested 2026-11-03, server `f06e88e`, client
+  `12d4e5c`; `pre_door_check_checklist.md` §2):** every new character is born wearing a Ragged
+  Shirt, Ragged Pants and its class's Trainee's weapon (sword: Warrior, Paladin, Shadow Knight,
+  Bard, Ranger, Witch Hunter; knife: Rogue, Blood Mage; club: Cleric, Monk, Druid; one-handed
+  piercing spear: Shaman, Beast Master; two-handed staff: Magician, Wizard, Sorcerer,
+  Necromancer, Enchanter, who have 2H Blunt at 75 for it). The table is
+  `world/starter_kit.rs`; `db::create_character` writes the kit worn and its `starter` ledger
+  rows in the character's own transaction. All seven items are worth nothing and **NO DROP**
+  (`no_drop` on `items.toml` and `ItemData`, lockstep-checked): the server refuses one for a
+  ground drop, a trade offer, the account-shared vault and a sale, with "That item is NO DROP:
+  it cannot leave you." and nothing moved, and the client asks first
+  (`Inventory.refuse_no_drop`); destroying it, the character's own vault and its own corpse are
+  fine. The tooltip leads with `NO DROP`. The kit weighs 3.5 at most, so no race and class is
+  born encumbered. Rule I5 in `docs/reference/invariants.md`. Characters made before it have no
+  kit. A Monk wearing the club swings one stream, not two fists.
 - **Augmentation/socketing:** `ItemData.gem_slots`, `socketed_augments`, `Type.AUGMENT`
   (data shape only; combine UI deferred).
 - **Item registry:** `ItemRegistry` autoload; the canonical item table is exported to the
