@@ -621,6 +621,12 @@ func _confirm_trash_delete() -> void:
 # Track 13.2.b — drop the dragged stack to the ground. Reached from the
 # Drop cell or from releasing the drag out onto the 3D world (see `_input`).
 func _show_drop_confirm() -> void:
+	var held: ItemData = drag_item if drag_item != null else Inventory.cursor_slot["item"]
+	if held.no_drop:
+		# Refused before the confirm, not after it (rule I5); the stack goes back.
+		CombatLog.add_line(Inventory.NO_DROP_REFUSAL, CombatLog.MsgType.INFO)
+		_return_drag_to_source()
+		return
 	if _drag_icon != null:
 		_drag_icon.visible = false
 	if _drop_dialog == null:

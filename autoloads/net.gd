@@ -774,6 +774,8 @@ func broadcast_trade_request(target_id: int) -> void:
 func broadcast_trade_offer_item(window_slot: int, from_location: String, from_slot: int) -> void:
 	if _state != State.CONNECTED_APP:
 		return
+	if Inventory.refuse_no_drop(from_location, from_slot):
+		return
 	send_trade_offer_item(window_slot, from_location, from_slot)
 
 func broadcast_trade_retrieve_item(window_slot: int) -> void:
@@ -809,6 +811,8 @@ func broadcast_split_stack(src_location: String, src_slot: int, dst_location: St
 # whole stack.
 func broadcast_drop_item(location: String, slot: int, count: int) -> void:
 	if _state != State.CONNECTED_APP:
+		return
+	if Inventory.refuse_no_drop(location, slot):
 		return
 	send_drop_item(location, slot, count)
 
@@ -915,6 +919,10 @@ func broadcast_bank_exchange(from_tier: int, to_tier: int, qty: int) -> void:
 # vault. Server-authoritative: it fans an InventoryDelta + a BankItemSnapshot.
 func broadcast_bank_store_item(src_location: String, src_slot: int, shared: bool) -> void:
 	if _state != State.CONNECTED_APP:
+		return
+	# The shared vault passes items between characters; the character's own
+	# vault takes NO DROP.
+	if shared and Inventory.refuse_no_drop(src_location, src_slot):
 		return
 	send_bank_store_item(src_location, src_slot, shared)
 

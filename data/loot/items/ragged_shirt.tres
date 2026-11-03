@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+item_name = "Ragged Shirt"
+description = "Every new arrival is given one. Patched more than it is shirt, it is NO DROP and worth nothing to a merchant."
+type = 3
+rarity = 0
+stack_size = 1
+bonus_armor = 1
+armor_type = "cloth"
+vendor_price = 0
+weight = 0.5
+no_drop = true

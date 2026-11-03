@@ -132,7 +132,7 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 8: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Nov 3<span class="stat-sub">repo 27a93f6</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Nov 3<span class="stat-sub">repo b9eb81c</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">38 days<span class="stat-sub">of Claude time, 0.5 of them waiting on the spell batch approval</span></div></div>
 <div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">61.65 h<span class="stat-sub">scheduled over 5 weeks, against about 30 a week</span></div></div>
@@ -1330,10 +1330,10 @@
 <td><span class="chip verify">Verify</span><span class="chip ms">The pre-door check</span></td>
 <td class="what"><span class="day">Tue Nov 3 to Thu Nov 5</span>The pre-door check: a fresh character plays the starter book for 45 minutes on the exact build the friends will hold (the phase 4 checklist&#x27;s fresh-character row is the model). Anything odd gets a To-Do line the same day.</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch&#x27;s)</li></ul></td>
+<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 36 rows to run</li><li>the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch&#x27;s)</li><li>the R720 redeployed with the starting kit (user 2026-11-03) and the new zip from the same day</li></ul></td>
 <td class="time">1 h</td>
 <td class="id"></td>
-<td class="done">Findings filed in the To-Do; no new ERROR lines in the server log.</td>
+<td class="done">Findings filed in the To-Do; no new ERROR lines in the server log.<span class="ref">checklist: <a href="playtest_notes/pre_door_check_checklist.md"><code>pre_door_check_checklist.md</code></a></span></td>
 </tr>
 <tr>
 <td class="id">v17</td>
@@ -1536,5 +1536,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-03 at repo 27a93f6</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-03 at repo b9eb81c</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>
