@@ -123,9 +123,9 @@ means = "The same evening as Bind and Gate: one protocol bump carries both, so t
 
 [[milestone]]
 id = "m4"
-date = 2026-10-31
-name = "The rehearsal"
-means = "Four friends, three hours (the user widened it from two on 2026-10-07). The phase 4 acceptance measure, on the build the friends will keep."
+date = 2026-11-06
+name = "The pre-door check"
+means = "A fresh character plays the starter book for 45 minutes on the exact build the friends will hold. Replaces the four-friend rehearsal of October 31 (user, 2026-11-03)."
 
 [[milestone]]
 id = "m5"
@@ -640,39 +640,9 @@ days = 2
 waits_on = ["v13", "v14"]
 done_when = "Each fix has its own checklist row or To-Do line; nothing ticked."
 
-[[row]]
-id = "v16"
-week = "w4"
-lane = "verify"
-day = "Thu Oct 29 or Fri Oct 30"
-what = "The pre-rehearsal sweep: a fresh character plays the starter book for 45 minutes on the exact build the friends hold (the phase 4 checklist's fresh-character row is the model). Anything odd gets a To-Do line before Saturday."
-who = "user at a desk"
-hours = 1.0
-waits_on = ["o5"]
-done_when = "Findings filed in the To-Do; no new ERROR lines in the server log."
-
-[[row]]
-id = "o6"
-week = "w4"
-lane = "operate"
-day = "Sat Oct 31, morning"
-what = "Server health and backup check before people arrive (inviting_a_player.md step 1: service active, dev_cmds=false, a backup from this morning)."
-who = "user at a desk"
-hours = 0.25
-done_when = "All three checks pass."
-
-[[row]]
-id = "p3"
-week = "w4"
-lane = "people"
-day = "Sat Oct 31, evening"
-what = "The rehearsal: four friends, three hours. Group up, level, die, run back to the corpse, trade, quest. The phase 4 acceptance measure (written for two; four is a superset), and the opening act of phase 5."
-who = "user at a desk, friends"
-hours = 3.5
-needs = ["all four friends onboarded", "the user online as GM for the evening", "the morning check (o6)"]
-waits_on = ["p2", "o6"]
-milestone = "m4"
-done_when = "A playtest note in docs/playtest_notes/ records the session and its findings (model: first_external_tester_2026_08_11.md); the phase 4 row in schedule.md section 7 moves to complete."
+# v16 (the pre-rehearsal sweep) moved to week 5 as the pre-door check; o6 and p3 (the
+# October 31 morning check and the four-friend rehearsal) left the plan on 2026-11-03: the
+# user chose the 45-minute check in their place.
 
 [[row]]
 id = "d6"
@@ -689,22 +659,34 @@ done_when = "The answer recorded in docs/design/trade_window.md section 6."
 # Week 5: November 2 to 8
 
 [[row]]
+id = "v16"
+week = "w5"
+lane = "verify"
+day = "Tue Nov 3 to Thu Nov 5"
+what = "The pre-door check: a fresh character plays the starter book for 45 minutes on the exact build the friends will hold (the phase 4 checklist's fresh-character row is the model). Anything odd gets a To-Do line the same day."
+who = "user at a desk"
+hours = 1.0
+needs = ["the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch's)"]
+milestone = "m4"
+done_when = "Findings filed in the To-Do; no new ERROR lines in the server log."
+
+[[row]]
 id = "b8"
 week = "w5"
 lane = "build"
-day = "Nov 2 to 4"
-what = "Fixes from the rehearsal. A reserve. Prefer server-side fixes: a client fix means a new zip for every friend."
+day = "Nov 5 to 6"
+what = "Fixes from the pre-door check. A reserve. Prefer server-side fixes: a client fix means a new zip for every friend."
 who = "Claude unattended"
-days = 2
-waits_on = ["p3"]
+days = 1
+waits_on = ["v16"]
 done_when = "Each fix has its own checklist row or To-Do line."
 
 [[row]]
 id = "o7"
 week = "w5"
 lane = "operate"
-day = "Wed Nov 4"
-what = "Redeploy with the rehearsal fixes. One export and one re-zip only if a client fix is unavoidable; if so, every friend gets it before any new friend is onboarded."
+day = "Fri Nov 6"
+what = "Redeploy with the pre-door fixes. One export and one re-zip only if a client fix is unavoidable; if so, every friend gets it before any new friend is onboarded."
 who = "user at a desk"
 hours = 0.25
 needs = ["1.5 h instead if an export is needed"]
@@ -715,7 +697,7 @@ done_when = "The boot log line shows the new build= and dev_cmds=false (and the 
 id = "v17"
 week = "w5"
 lane = "verify"
-what = "Re-run the rows the rehearsal failed, on the fixed build. A reserve."
+what = "Re-run what the pre-door check found, on the fixed build. A reserve."
 who = "user at a desk"
 hours = 2.0
 waits_on = ["o7"]
@@ -725,8 +707,8 @@ done_when = "Each re-run row filled in its checklist."
 id = "p4"
 week = "w5"
 lane = "people"
-day = "Nov 2 to 6"
-what = "Onboard anyone beyond the four (the four are onboarded for the rehearsal), each with the final build (inviting_a_player.md, steps 2 to 5). Half an hour each; the count is the user's call, and may be nobody."
+day = "Nov 6 to 7"
+what = "Onboard every friend not yet onboarded (the four named in d4 among them), each with the final build (inviting_a_player.md, steps 2 to 5). Half an hour each; the count is the user's call, and may be nobody."
 who = "user at a desk, friends"
 hours = 1.5
 needs = ["the final build settled (o7), so nobody receives two zips"]
@@ -812,6 +794,9 @@ done_when = "Each of the nine answered on the Faction system To-Do entry."
 # After the door opens: undated, per the planner's answer. Status for each lives in the To-Do.
 
 [[after]]
+text = "The November bump, prepared on bump/nov in both repos (feat/facing, the server split, the offline client code removed, the reformat, the lint rules): fast-forward both deploy branches, export, redeploy both sides together (PD_W0029), then the overnight checklist's sections 2 and 3 and the facing and held-item sheets. After the door by the user's call of November 3."
+
+[[after]]
 text = "Phase 5's own plan (docs/design/phase5_plan.md) with four decisions open. Parts of its security and big-world tracks are already built (the NaN guard, the password reset tool, the silent-refusals closeout, the idle-creature network fix, creatures appearing when they walk into view, /loc), so the document needs a refresh when the decisions land."
 
 [[after]]
@@ -855,7 +840,7 @@ impact = "A tester who misses the message cannot log in and may think the server
 mitigation = "Pick an evening, tell everyone a week ahead (d5), send the zip within the hour, keep the old server build to hand for one day."
 
 [[risk]]
-risk = "A client-side fix after the rehearsal"
+risk = "A client-side fix after the pre-door check"
 impact = "A new zip for every friend already onboarded, days before the door opens."
 mitigation = "Prefer server-side fixes in week 5; hold any export to one, before the rest of the group is onboarded."
 
