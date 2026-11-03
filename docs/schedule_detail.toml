@@ -798,10 +798,10 @@ done_when = "Each of the nine answered on the Faction system To-Do entry."
 text = "The November bump, prepared on bump/nov in both repos (feat/facing, the server split, the offline client code removed, the reformat, the lint rules): fast-forward both deploy branches, export, redeploy both sides together (PD_W0029), then the overnight checklist's sections 2 and 3 and the facing and held-item sheets. After the door by the user's call of November 3."
 
 [[after]]
-text = "Phase 5's own plan (docs/design/phase5_plan.md) with four decisions open. Parts of its security and big-world tracks are already built (the NaN guard, the password reset tool, the silent-refusals closeout, the idle-creature network fix, creatures appearing when they walk into view, /loc), so the document needs a refresh when the decisions land."
+text = "Phase 5's own plan (docs/design/phase5_plan.md), decided November 3 and open-ended: the decided batch first end to end (all four built, their rows passing, so it closes on the ticks), then the server height model, built by Claude. No items promoted from the candidate list."
 
 [[after]]
-text = "The server height model (design first, from docs/session_notes/handoff_server_height_model.md), then terrain tooling and the first zone with real hills. The capability the large world waits on."
+text = "The server height model, built by Claude (user, November 3): the design doc first, from docs/session_notes/handoff_server_height_model.md, with its exploit ledger and decisions for the user, then the build, then terrain tooling and the first zone with real hills. The capability the large world waits on."
 
 [[after]]
 text = "Trade slice 2: handing items to NPCs."
@@ -813,7 +813,7 @@ text = "Beast Master taming (the decided destination for the class), replacing t
 text = "Factions and alignment, slice 2 (docs/design/factions_and_alignment.md; slice 1 is built, rows b30 and v33): guards that fight and NPCs players can attack, with the standing that costs. Then slice 3, SWG's joinable faction with spendable standing."
 
 [[after]]
-text = "The spells still blocked: seven prestige-class spells, seven ports to zones that do not exist, Exsanguinate, Camouflage, Warder's Mend."
+text = "The spells still client-only: seven ports to zones that do not exist, Exsanguinate (mana drain) and Camouflage (stealth). The prestige-class spells joined the server with factions slice 1, Warder's Mend on October 7."
 
 [[after]]
 text = "The Bard song rework; sound (the friends build ships silent by decision); the UI theming pass, the one most visible to a new player."
