@@ -176,7 +176,7 @@ open until they are done, except where a row says the user handed it elsewhere.)
 | Merge the two branches after `feat/facing` on the next bump day, playtest both | the bump day (`overnight_2026_11_01_checklist.md`) |
 | F13 rest: the one-time `rustfmt` and the `[workspace.lints]` turn-on | the same bump day, after the merges (a reformat now would conflict with every open branch) |
 | F2 / C1 panic containment | **BUILT 2026-11-02** (`1c35cf7`, corrected in `3f1d4f2`), the narrow version; see below |
-| F6 duplicated helpers, F8 a validated coin type, F9 error types, F7 an id-kind enum | **BUILT 2026-11-02** (`31a5dd1`, `fb2756c`, `eb12123`, `4d23a34`). One piece left for the user: F7's `CharId` newtype for the ~128 `as ClientId` / `as u64` casts was not done (wide churn on code the open branches rebase over, and no bug found behind it) |
+| F6 duplicated helpers, F8 a validated coin type, F9 error types, F7 an id-kind enum | **BUILT 2026-11-02** (`31a5dd1`, `fb2756c`, `eb12123`, `4d23a34`). F7's `CharId` newtype for the ~128 `as ClientId` / `as u64` casts **skipped 2026-11-02 (user)**: wide churn on code the open branches rebase over, and no bug found behind it; closed for the audit |
 | M4 intent budgets, M6 / F4 auth limits, L2 sessions, L8 a characters-per-account cap | `feat/public-hosting`, rebased across the split (several are already there) |
 | L6 / L7 bind auth to the tailnet address, an off-host backup | **deferred 2026-11-02 (user: "we can wait")**; R720 jobs for the user, steps to be written when picked up |
 | B6 wire hygiene and the real `vendor_id` | the next protocol bump |
@@ -185,7 +185,7 @@ open until they are done, except where a row says the user handed it elsewhere.)
 | B1 slice 1 (falls simulated on the server) | **handed to the fall damage design 2026-11-02 (user)**; closed for the audit. Noted in `docs/session_notes/handoff_server_height_model.md` (invariant 4) so the height model work picks it up |
 | M7 / F3 the database off the loop | **closed by measurement 2026-11-02** (worst tick 13.3 ms, checkpoints 3 to 13 ms, budget 50 ms); reopen if `over_budget` climbs |
 | M9 rest (spans, one field name, the decode client id) | **BUILT 2026-11-02** (`495a5d4`) |
-| `cargo-fuzz` | **BUILT 2026-11-02** (`8afc96c`; nightly and `cargo-fuzz` installed in the user profile with the user's OK). The soak runs in every `cargo test`; the long coverage-guided run waits for a Linux box (fuzz/README.md) |
+| `cargo-fuzz` | **BUILT 2026-11-02** (`8afc96c`; nightly and `cargo-fuzz` installed in the user profile with the user's OK). The soak runs in every `cargo test`. **The long coverage-guided run DONE 2026-11-02** in WSL's Ubuntu on the dev box (user's go): both targets for an hour on `3f1d4f2`, 169 million messages, no crash, timeout or out-of-memory, coverage flat after about 15 minutes (session note 2026-10-25 §43). Rerun after the next protocol bump |
 
 **Panic containment, the decision.** Today a panic anywhere in the tick ends the process, and
 systemd restarts it: everyone loses what was not yet saved (since Phase 1, at most the last

@@ -1078,8 +1078,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   day: `/pvp` stays a player toggle; B1 slice 1 handed to the fall damage design (noted in the
   height model handoff); the R720's tailnet-only bind and off-host backup wait. **Left:** the
   bump-day merges, reformat and lints; B6 wire hygiene and B4's stats message (the next protocol
-  bump); M4, M6 / F4, L2, L8 on `feat/public-hosting`; F7's `CharId` newtype, not done, the
-  user's call. Status per finding: the findings doc's §5.
+  bump); M4, M6 / F4, L2, L8 on `feat/public-hosting`. F7's `CharId` newtype skipped (user,
+  2026-11-02). **The long fuzz run DONE 2026-11-02** (WSL, an hour on `3f1d4f2`, 169 million
+  messages, no crash). Status per finding: the findings doc's §5.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
   Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying
