@@ -2862,6 +2862,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   for every visible pet riding the pet's Positions; and the spawn-by-kind choice now lives in
   one `fan_out_entity_spawn` used by both the player crossing and the entity crossing, so no
   partition-test ordering can swallow a kind again.
+- [ ] **The server height model** *(phase 5, Track D item 1; the user, 2026-11-03: "Claude
+  will be building the height model")*. **DESIGNED 2026-11-03: `docs/design/server_height_model.md`**,
+  six decisions waiting on the user (§8), nothing built. The server learns the ground so its 3D
+  range checks stop measuring a fiction: today it zeroes Y on every Move and keeps a mob's camp Y
+  forever, so a 2 m ledge breaks combat. The client's ground is exactly the `TerrainMesh`
+  triangles plus the y = 0 `Floor` plane, so the server samples those same triangles (exact, not
+  bilinear) from a `terrain.toml` the editor exports, with a lockstep check in `check_all.ps1`.
+  Everything stands on the ground: players each tick, mobs and pets as they move, spawns,
+  corpses, bags, every teleport and every load. A server slope rule (60° against the client's
+  55°) closes the perch a modified client could climb to. No protocol change. Slices: the ground
+  read only; everything pinned; falls (`server_fall_damage.md` slice 1); the first hills, its own
+  plan. Builds on a branch from `bump/nov`, redeployed after the bump.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);

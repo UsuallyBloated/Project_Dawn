@@ -801,7 +801,7 @@ text = "The November bump, prepared on bump/nov in both repos (feat/facing, the 
 text = "Phase 5's own plan (docs/design/phase5_plan.md), decided November 3 and open-ended: the decided batch first end to end (all four built, their rows passing, so it closes on the ticks), then the server height model, built by Claude. No items promoted from the candidate list."
 
 [[after]]
-text = "The server height model, built by Claude (user, November 3): the design doc first, from docs/session_notes/handoff_server_height_model.md, with its exploit ledger and decisions for the user, then the build, then terrain tooling and the first zone with real hills. The capability the large world waits on."
+text = "The server height model, built by Claude (user, November 3), designed the same day (docs/design/server_height_model.md, six decisions for the user): the ground read only, then everything pinned to it, then falls, then the first zone with real hills as its own plan. Builds on a branch from bump/nov, redeployed after the bump. The capability the large world waits on."
 
 [[after]]
 text = "Trade slice 2: handing items to NPCs."
