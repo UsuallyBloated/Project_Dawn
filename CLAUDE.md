@@ -1080,7 +1080,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   bump-day merges, reformat and lints; B6 wire hygiene and B4's stats message (the next protocol
   bump); M4, M6 / F4, L2, L8 on `feat/public-hosting`. F7's `CharId` newtype skipped (user,
   2026-11-02). **The long fuzz run DONE 2026-11-02** (WSL, an hour on `3f1d4f2`, 169 million
-  messages, no crash). Status per finding: the findings doc's §5.
+  messages, no crash). **The bump PREPARED 2026-11-02 night on `bump/nov` in both repos** (user:
+  work through the night; nothing deployed or exported): `feat/facing`, the split and the
+  offline removal merged, the one-time reformat, the lints turn-on with CI's fmt and clippy
+  blocking; every server test, client check and probe green, a second fuzz hour clean (208
+  million messages). The bump day is now a fast-forward of both deploy branches to it.
+  Status per finding: the findings doc's §5.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
   Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying
