@@ -25,9 +25,11 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
 `journalctl -u projectdawn --since "<start time>" | grep -E "ERROR|WARN"`.
 
 ## Setup
-- [ ] **Export the client from `fix/xp-leveling-overflow`** with the deploy branch's
+- [x] **Export the client from `fix/xp-leveling-overflow`** with the deploy branch's
       `gdext_net.dll` → the export log shows `[BuildStamp] stamped <sha>` for the deploy
-      branch's head. notes:
+      branch's head. notes: done by Claude 2026-11-03: `[BuildStamp] stamped de600ba`, branch
+      `fix/xp-leveling-overflow`, `dirty: false`, DLL md5 `39b8555a` (the deploy branch's);
+      zipped as `builds/ProjectDawn-alpha-de600ba.zip`. The only commit after it is docs.
 - [ ] **Redeploy the R720 to `f06e88e`** (the usual stop, `cp`, start) and confirm
       (`journalctl -u projectdawn -n 20 --no-pager`) → `build="f06e88e" dev_cmds=false`, no
       migration. notes:
