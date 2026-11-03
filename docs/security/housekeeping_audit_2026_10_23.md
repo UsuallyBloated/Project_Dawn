@@ -85,7 +85,7 @@ Server `01fd0ae` + review fixes `3f7c23a` on the deploy branch, merged into `fea
 | Id | Finding | Status |
 |---|---|---|
 | F13 | No CI, `deny.toml` or `cargo audit`. | FIXED: on-demand CI (suite and cargo-deny blocking; rustfmt and clippy report only), actions pinned by SHA. The first advisory match found tokio, anyhow and event-listener advisories, fixed by updates; bincode (unmaintained) and rsa (never compiled) accepted with reasons. |
-| F13 | No `[workspace.lints]`; 981 rustfmt diffs. | OPEN: after the `tick.rs` split, with the one-time reformat. |
+| F13 | No `[workspace.lints]`; 981 rustfmt diffs. | **BUILT 2026-11-02 night on `bump/nov`** (server `f48f2e7` reformat, `f801943` clippy cleanup, `3c4bd6d` lints and CI, `88289f2` tables kept out of rustfmt): `string_slice` denied, rustfmt and clippy `-D warnings` blocking in CI. `unwrap_used` / `expect_used` NOT turned on, by judgement: the tick's expects guard a slot inside a move already begun, where a quiet skip would lose an item; making them safe means resolving both slots before anything moves, its own task. |
 | F2 / C1 | No panic containment. | BUILT 2026-11-02 (the narrow version, user's call; server `1c35cf7` on `refactor/tick-split`): a panic while handling one client's message drops that client without saving, discarding everything it sent that tick, and the world carries on. A panic anywhere else still ends the process, on purpose. |
 | F10 / L3 | `set_var` ran inside the runtime. | FIXED: `.env` loads in a synchronous `main` before the runtime. `#![forbid(unsafe_code)]` on protocol, shared and the server library. |
 | L1 | `Config` printed the netcode key in `Debug`. | FIXED: `NetcodeKey` newtype with a redacting `Debug`. |
@@ -173,8 +173,8 @@ open until they are done, except where a row says the user handed it elsewhere.)
 
 | Item | Proposed home |
 |---|---|
-| Merge the two branches after `feat/facing` on the next bump day, playtest both | the bump day (`overnight_2026_11_01_checklist.md`) |
-| F13 rest: the one-time `rustfmt` and the `[workspace.lints]` turn-on | the same bump day, after the merges (a reformat now would conflict with every open branch) |
+| Merge the two branches after `feat/facing` on the next bump day, playtest both | **PREPARED 2026-11-02 night** on `bump/nov` in both repos (every check green); the bump day fast-forwards the deploy branches to it, then the playtest (`overnight_2026_11_01_checklist.md`) |
+| F13 rest: the one-time `rustfmt` and the `[workspace.lints]` turn-on | **BUILT 2026-11-02 night on `bump/nov`** (see the F13 row above); ships with the bump |
 | F2 / C1 panic containment | **BUILT 2026-11-02** (`1c35cf7`, corrected in `3f1d4f2`), the narrow version; see below |
 | F6 duplicated helpers, F8 a validated coin type, F9 error types, F7 an id-kind enum | **BUILT 2026-11-02** (`31a5dd1`, `fb2756c`, `eb12123`, `4d23a34`). F7's `CharId` newtype for the ~128 `as ClientId` / `as u64` casts **skipped 2026-11-02 (user)**: wide churn on code the open branches rebase over, and no bug found behind it; closed for the audit |
 | M4 intent budgets, M6 / F4 auth limits, L2 sessions, L8 a characters-per-account cap | `feat/public-hosting`, rebased across the split (several are already there) |
