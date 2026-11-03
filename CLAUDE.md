@@ -655,6 +655,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   no quest-only item exists (the one quest item, the Hunter's Medal, is a reward worn at the
   neck). The flag waits on the first fetch or delivery quest (Quest and loot content plumbing,
   item (a)), and gets built with it.
+  **NO DROP BUILT 2026-11-03 with the starting kit** (the entry under Items / economy): `no_drop`
+  on items, both sides, lockstep-checked; the server refuses a NO DROP item for the ground, a
+  trade offer, the account-shared vault and a sale; destroy, the own vault and the own corpse
+  are allowed (rule I5 in `docs/reference/invariants.md`). The no-trade half for quest items is
+  the same flag, set on those items when the first fetch quest is written.
 - [ ] **Pet persistence across logout: a design call** *(server_design.md open question 2;
   audit 2026-09-29)*. Today the warder auto-summons on every EnterWorld and conjured pets
   simply vanish, which is a de-facto answer nobody made on purpose. Confirm or change it when
@@ -3548,6 +3553,27 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > New section 2026-09-29 (the crack audit): economy and itemization items used to sit in
 > memory notes and design docs with no To-Do home. Runtime inventory mechanics stay under
 > Multiplayer / networking; what an item IS lives here.
+- [ ] **The starting kit** *(user, 2026-11-03: every character starts equipped with a Ragged
+  Shirt, Ragged Pants and one class Trainee's weapon, NO DROP and worth 0, so the
+  make-sell-trade-delete loop pays nothing)*. **BUILT 2026-11-03, pending the redeploy, the
+  export and the pre-door check** (server `f06e88e`, client `12d4e5c`, on the deploy branches; `pre_door_check_checklist.md` §2).
+  Seven items on both sides (`data/items.toml`, `data/loot/items/{ragged_*,trainees_*}.tres`),
+  each a step under the cheapest shop weapon of its kind: sword (Warrior, Paladin, Shadow
+  Knight, Bard, Ranger, Witch Hunter), knife (Rogue, Blood Mage), club (Cleric, Monk, Druid),
+  one-handed piercing spear (Shaman, Beast Master), two-handed staff (Magician, Wizard,
+  Sorcerer, Necromancer, Enchanter). The five pure casters gain 2H Blunt at 75, their 1H Blunt
+  cap, as P99 gives them (user: "give them 2h blunt"); every 2H blunt staff is now theirs to
+  wield, the Carved Staff included. `db::create_character` writes the kit worn (main hand,
+  chest, legs) and its `starter` ledger rows in the character's own transaction. The kit
+  weighs 3.5 at most, so no race and class is born encumbered (a Fae caster carries 5.0).
+  Existing characters get no kit (the no-fix rule for older characters). Server-side NO DROP
+  refusals as in the flag's entry; the client refuses first with the same line. Tests: unit
+  (every class can wear its kit, nobody is born encumbered, the user's table), integration (born
+  dressed; sale, drop, trade and shared vault refused with nothing moved; own vault and destroy
+  allowed; the kit back off its owner's corpse; the ledger balanced throughout), the persistence
+  test rewritten for the kit, `tools/probe_no_drop.gd`. Older tests keep their bare characters
+  (the harness strips the kit). **Flagged:** a Monk wearing the club swings one stream, not its
+  two bare fists (the off-hand punch needs both hands empty); unequip it to fight hand to hand.
 - [ ] **Banker exchange fee bands** *(systems_overview "Still open: exchange fee bands";
   `handoff_banker_npc.md`: the plumbing is in place so a rate is a one-line change, currency.md's
   bands (2-5% up, 0-1% down) come "in a later pass as named constants"; audit 2026-09-29)*.

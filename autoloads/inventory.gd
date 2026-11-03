@@ -32,6 +32,9 @@ var cursor_slot: Variant = null
 # them for Encumbrance and re-learns the real bag_<i> rows when the bag is
 # placed back down.
 const CURSOR_BAG_KEY := 255
+
+# The server's refusal for a NO DROP item (items::NO_DROP_REFUSAL).
+const NO_DROP_REFUSAL := "That item is NO DROP: it cannot leave you."
 var cursor_bag_contents: Array = []
 
 var _cursor_ghost: Label = null
@@ -284,6 +287,30 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 func get_base_slot(i: int) -> Variant:
 	return base_slots[i]
 
+## The item at a wire location ("base", "bag_<i>", "cursor") and slot, or null.
+func item_at(location: String, slot: int) -> ItemData:
+	var entry: Variant = null
+	if location == NetProtocol.INV_LOCATION_CURSOR:
+		entry = cursor_slot
+	elif location == "base":
+		if slot >= 0 and slot < base_slots.size():
+			entry = base_slots[slot]
+	elif location.begins_with("bag_"):
+		var bag := location.trim_prefix("bag_").to_int()
+		var inner: Variant = bag_contents[bag] if bag >= 0 and bag < bag_contents.size() else null
+		if inner != null and slot >= 0 and slot < inner.size():
+			entry = inner[slot]
+	return entry["item"] if entry != null else null
+
+## NO DROP is refused here before anything is sent, with the server's own line;
+## the server refuses it again whatever a client sends. True when refused.
+func refuse_no_drop(location: String, slot: int) -> bool:
+	var item := item_at(location, slot)
+	if item == null or not item.no_drop:
+		return false
+	CombatLog.add_line(NO_DROP_REFUSAL, CombatLog.MsgType.INFO)
+	return true
+
 # bag_base_index = the base slot index that holds the bag.
 func get_slot(bag_base_index: int, slot_index: int) -> Variant:
 	if bag_contents[bag_base_index] == null:
@@ -475,6 +502,8 @@ func request_ground_drop() -> void:
 		return
 	if cursor_holds_full_bag():
 		CombatLog.add_line("Empty the bag before dropping it.", CombatLog.MsgType.INFO)
+		return
+	if refuse_no_drop(NetProtocol.INV_LOCATION_CURSOR, 0):
 		return
 	if _drop_dialog != null and _drop_dialog.visible:
 		return

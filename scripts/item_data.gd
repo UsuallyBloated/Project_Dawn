@@ -82,3 +82,9 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 # item once its owner has been logged out for thirty minutes. Conjured food and
 # water. The server's items.toml carries the same flag (lockstep-checked).
 @export var no_rent: bool = false
+
+# NO DROP (EverQuest's tag; user 2026-11-03): bound to the character holding it.
+# The server refuses it on the ground, in a trade, in the account-shared vault
+# and at a merchant; destroying it is allowed. The starting kit. Lockstep-checked
+# like no_rent.
+@export var no_drop: bool = false

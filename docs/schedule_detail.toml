@@ -662,11 +662,12 @@ done_when = "The answer recorded in docs/design/trade_window.md section 6."
 id = "v16"
 week = "w5"
 lane = "verify"
+checklist = "pre_door_check_checklist.md"
 day = "Tue Nov 3 to Thu Nov 5"
 what = "The pre-door check: a fresh character plays the starter book for 45 minutes on the exact build the friends will hold (the phase 4 checklist's fresh-character row is the model). Anything odd gets a To-Do line the same day."
 who = "user at a desk"
 hours = 1.0
-needs = ["the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch's)"]
+needs = ["the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch's)", "the R720 redeployed with the starting kit (user 2026-11-03) and the new zip from the same day"]
 milestone = "m4"
 done_when = "Findings filed in the To-Do; no new ERROR lines in the server log."
 
