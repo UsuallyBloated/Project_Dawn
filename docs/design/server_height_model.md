@@ -251,6 +251,13 @@ the first slice testers see, and it needs an export.
 
 ## 8. Decisions for the user
 
+**ALL SIX DECIDED 2026-11-03 (user): "Yes to all, 5 in important too."** 1, 2, 3, 4 and 6 as
+recommended. **5 changed: terrain line of sight is built now, with slices 0 and 1**, not
+later; and **heals and buffs need line of sight too** ("Heals and buffs require line of
+sight"), so every spell with a target needs it, friendly or hostile. A spell with no target
+(a self buff, a point-blank area spell) has nothing to look at. The line of sight section is
+written before the build and the plan said to the user first. The questions as asked:
+
 1. **The slope rule for players.** The server refuses a step up ground steeper than 60° (the
    client's 55° plus a margin). Recommended: yes. It closes the perch for a modified client and
    never touches an honest one.
