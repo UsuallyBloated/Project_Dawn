@@ -2979,6 +2979,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   own sight and slope pre-checks come with the hills (slice 3), so until then an honest
   player's refusal on a hill is the server's line, a round trip late; the NaN entry's rule A3
   and the sight test's totality are the same rule.
+  **Slice 3, the first hills, PLANNED 2026-11-04 (user: "go on 1!"): `docs/design/first_hills_plan.md`,
+  seven decisions waiting on the user (§10): the resolution (10 m cells recommended), the map
+  (a proposal from the camp names: the western hills with the Sunken Barrow as a pit and the
+  Ossuary on top, the Greywood ridge with a pass, the Wraith Gate plateau with the one real
+  cliff, low rises for the bandits, the spiders, Rotfang and the war camp), a rim of high
+  ground round the plate, flat shading, the GM fling tool as a dev command, mobs refused up a
+  face and giving up after 8 s stuck with pets warping to an owner they cannot reach, and the
+  harness moving to a flat default ground. Heights become data (a features file and a headless
+  generator that writes the scene's heights line and reports the slope under every spawn and
+  NPC); the client gets its own sight check before a cast, held by a probe against a port of
+  the server's rule. About three days once decided; rides the bump (an export).**
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
