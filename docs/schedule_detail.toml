@@ -801,7 +801,7 @@ text = "The November bump, prepared on bump/nov in both repos (feat/facing, the 
 text = "Phase 5's own plan (docs/design/phase5_plan.md), decided November 3 and open-ended: the decided batch first end to end (all four built, their rows passing, so it closes on the ticks), then the server height model, built by Claude. No items promoted from the candidate list."
 
 [[after]]
-text = "The server height model, built by Claude (user, November 3), designed the same day (docs/design/server_height_model.md, six decisions for the user): the ground read only, then everything pinned to it, then falls, then the first zone with real hills as its own plan. Builds on a branch from bump/nov, redeployed after the bump. The capability the large world waits on."
+text = "The server height model, built by Claude (user, November 3), designed the same day and decided in full (docs/design/server_height_model.md): slices 0 and 1 with terrain line of sight built November 4 on feat/height-model in both repos (the ground compiled in, everything pinned, a step as the client's, sight for every targeted spell, arrow, AoE victim and idle mob; the exporter, the lockstep check, nine integration tests on a ramp and a ridge). Waits on the November bump: merged into bump/nov, redeployed with it, then height_model_checklist.md (a regression sheet on the flat world, one seat). Then falls (slice 2), then the first zone with real hills as its own plan. The capability the large world waits on."
 
 [[after]]
 text = "Trade slice 2: handing items to NPCs."
@@ -1798,6 +1798,21 @@ waits_on = ["b52", "b53"]
 tentative = true
 done_when = "Both deploy branches carry the two refactors, the suite and every client check green."
 todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v58"
+week = "w5"
+lane = "verify"
+day = "after the bump's redeploy, with v57"
+what = "The height model's regression sheet on the flat world: movement, combat and spells, camps and pets, death, corpses and ports, the NPC services, all reading exactly as before; the boot line naming the ground; check_all.ps1 with the terrain check."
+who = "user at a desk, one seat (two for section 6)"
+hours = 0.75
+needs = ["the bump redeploy with feat/height-model merged"]
+checklist = "height_model_checklist.md"
+waits_on = ["b54"]
+tentative = true
+todo = "The server height model"
+done_when = "Every section filled."
 
 [[row]]
 id = "v57"
