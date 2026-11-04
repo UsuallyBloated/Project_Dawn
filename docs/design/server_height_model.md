@@ -155,10 +155,11 @@ a metre allowed on every tick would let a forged client climb a vertical wall at
 an honest client never sees (its own collider stopped it first), and the existing XZ
 reconciliation pulls a forged one back. Each refusal is counted and reported once a minute on
 the `world health` line as `slope_refusals` (built 2026-11-04 on the user's go; the line also
-prints for a window with a refusal and nobody left online, so a count never goes unreported):
-0 on ground both sides agree on, so anything else is a modified client at a cliff or a scene
-edit nobody exported. The counter says how many, not who; a per-player line is the follow-up
-if it ever reads non-zero.
+prints for a window with a refusal and nobody left online, so a count never goes unreported).
+On flat ground none can happen, so a count there is a modified client or a scene edit nobody
+exported; on hills a Move carries the player's input, not what their body managed, so a key
+held into a cliff counts too, honest or not (the review's point), and there the number is a
+curiosity, not evidence. The counter says how many, not who.
 
 **Measured 2026-11-04 (`tools/probe_ramp_speed.gd`, a headless probe that runs the real
 player scene on a tilted slab):** straight uphill the body covers exactly `cos²θ` of the flat
