@@ -269,3 +269,48 @@ static func ground_at(terrain: Dictionary, x: float, z: float) -> float:
 	else:
 		h = h11 + (1.0 - u) * (h01 - h11) + (1.0 - v) * (h10 - h11)
 	return maxf(origin.y + h, floor_y)
+
+
+# The slope of the ground at (x, z) for a terrain dictionary, as
+# Vector2(dh/dx, dh/dz): the plane of the triangle there, flat where the ground
+# is the floor (past the grid, or where the mesh is under the floor). The same
+# rule as world/terrain.rs::gradient, on the same cell split as ground_at.
+static func gradient_at(terrain: Dictionary, x: float, z: float) -> Vector2:
+	var gs: int = terrain["grid_size"]
+	var cell: float = terrain["cell_size"]
+	var origin: Vector3 = terrain["origin"]
+	var floor_y: float = terrain["floor_y"]
+	var heights: PackedFloat32Array = terrain["heights"]
+	var half := gs * cell * 0.5
+	var lx := x - origin.x + half
+	var lz := z - origin.z + half
+	var extent := gs * cell
+	if not (lx >= 0.0 and lx <= extent and lz >= 0.0 and lz <= extent):
+		return Vector2.ZERO
+	var fx := lx / cell
+	var fz := lz / cell
+	var cx := mini(int(floor(fx)), gs - 1)
+	var cz := mini(int(floor(fz)), gs - 1)
+	var u := fx - cx
+	var v := fz - cz
+	var row := gs + 1
+	var h00 := heights[cz * row + cx]
+	var h10 := heights[cz * row + cx + 1]
+	var h01 := heights[(cz + 1) * row + cx]
+	var h11 := heights[(cz + 1) * row + cx + 1]
+	var h: float
+	var d: Vector2
+	if u + v <= 1.0:
+		h = h00 + u * (h10 - h00) + v * (h01 - h00)
+		d = Vector2(h10 - h00, h01 - h00)
+	else:
+		h = h11 + (1.0 - u) * (h01 - h11) + (1.0 - v) * (h10 - h11)
+		d = Vector2(h11 - h01, h11 - h10)
+	if origin.y + h < floor_y:
+		return Vector2.ZERO
+	return d / cell
+
+
+# The angle of that slope, in degrees.
+static func slope_deg_at(terrain: Dictionary, x: float, z: float) -> float:
+	return rad_to_deg(atan(gradient_at(terrain, x, z).length()))

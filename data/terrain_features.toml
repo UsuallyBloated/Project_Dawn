@@ -1,0 +1,126 @@
+# The starter zone's relief as data (docs/design/first_hills_plan.md, the
+# first hills). tools/author_terrain.gd composes these into the TerrainMesh's
+# heights in scenes/world.tscn and reports the slope under every camp spawn and
+# NPC; tools/export_terrain.gd then writes the server's terrain.toml from the
+# scene. Coordinates are x east, z north, metres; heights are above the floor
+# at y = 0, and nothing is composed below it.
+#
+# Composition, at every grid vertex, in this order: start at 0; every hill and
+# ridge adds its height times a smoothstep of how far inside it the vertex is
+# (a negative height digs); every plateau raises the vertex to its top inside
+# its rect, and along a ramp outside an edge; every cut lowers the vertex to
+# its floor; the rim raises the plate's outer band; the result is floored at 0.
+#
+# A slope steeper than 55 degrees is no floor (a body slides off it) and one
+# steeper than 60 is a face (the server refuses a step up it). At 10 m cells a
+# feature narrower than two cells is sampled at its grid vertices only, which
+# is why the ridge's height and the pass's width below are what they are.
+
+grid_size = 40          # 40 x 40 cells of 10 m: the 400 m plate
+cell_size = 10.0
+
+# The broad rise the Sunken Barrow is "below"; the Ossuary stands on it.
+[[hill]]
+name = "the western hills"
+center = [-160.0, 0.0]
+radius = 70.0
+height = 25.0
+
+# A pit dug into the western hills: the barrow zombies and the Undying in it,
+# its walls about 30 to 40 degrees (floors), so they climb out after a player.
+[[hill]]
+name = "the Sunken Barrow"
+center = [-150.0, -6.0]
+radius = 18.0
+height = -12.0
+
+# The bandits' lookout.
+[[hill]]
+name = "the bandit knoll"
+center = [-58.0, 60.0]
+radius = 25.0
+height = 8.0
+
+# Bat Hollow: a hollow on flat ground needs ground round it to be lower than,
+# since nothing is composed below the floor, so it is a low rise (to about a
+# metre and a half) with the hollow dug back out of its middle.
+[[hill]]
+name = "Bat Hollow's rim"
+center = [3.0, 48.0]
+radius = 20.0
+height = 4.0
+
+[[hill]]
+name = "Bat Hollow"
+center = [3.0, 48.0]
+radius = 14.0
+height = -4.0
+
+# The Broken Crypt's bowl north of the ridge, made the same way.
+[[hill]]
+name = "the crypt's bowl rim"
+center = [2.0, 118.0]
+radius = 32.0
+height = 5.0
+
+[[hill]]
+name = "the crypt's bowl"
+center = [2.0, 118.0]
+radius = 20.0
+height = -5.0
+
+[[hill]]
+name = "the spiders' rise"
+center = [110.0, 2.0]
+radius = 30.0
+height = 6.0
+
+[[hill]]
+name = "the old rocks"
+center = [3.0, -72.0]
+radius = 22.0
+height = 6.0
+
+[[hill]]
+name = "the war camp's shelf"
+center = [2.0, -150.0]
+radius = 40.0
+height = 8.0
+
+# The Greywood edge: a wall between the bats' side and the crypt's. Its line
+# z = 85 falls between two grid rows, which sample it at a quarter in from its
+# crest, so a height of 24 makes a crest of 17.8 m whose sides are faces (61
+# degrees); at 16 they were 50 degree floors anyone could walk over.
+[[ridge]]
+name = "the Greywood ridge"
+from = [-120.0, 85.0]
+to = [120.0, 85.0]
+half_width = 15.0
+height = 24.0
+
+# The Wraith Gate's high ground: the west edge the one real cliff (18 m over
+# one cell, 61 degrees; a fall from its lip costs 40% of max HP), the south and
+# north edges 30 m ramps (31 degrees).
+[[plateau]]
+name = "the Wraith Gate plateau"
+rect = [150.0, -40.0, 200.0, 30.0]
+height = 18.0
+ramps = { west = 0.0, south = 30.0, north = 30.0, east = 0.0 }
+
+# The way north through the ridge. Wide enough to take the grid columns at
+# x = -10, 0 and 10, so the pass has a floor 20 m wide; at a half width of 6
+# only x = 0 was cut and the pass was a notch of 50 degree walls.
+[[cut]]
+name = "the pass"
+from = [0.0, 60.0]
+to = [0.0, 110.0]
+half_width = 12.0
+floor = 0.0
+
+# High ground round the plate so nobody walks off it: from 0 at 180 m from the
+# centre to 40 m at the edge, 63 degrees, a face. At 30 m it was 56, which the
+# server's 60 degree climb limit lets a modified client climb; at 36 the war
+# camp's shelf, still a metre up where the rim begins, left its cells at 59.
+[[rim]]
+start_at = 180.0
+height = 40.0
