@@ -4,8 +4,10 @@ The first terrain that is not flat. Slices 0 to 2 of the server height model
 (`server_height_model.md`, `server_fall_damage.md`) gave the server the ground, the slope rule,
 line of sight through the terrain and falls, all proven on test terrains of their own and all
 invisible on today's flat 400 m plate. This slice is where testers first see any of it, so it
-is the one with content in it. Written on the user's go ("go on 1!"); the build waits for the
-decisions in §10.
+is the one with content in it. Written on the user's go ("go on 1!"). **All seven decisions
+were made the same evening (§10), and the build is handed to the next session on a smaller
+model: `handoff_first_hills_build.md` has every anchor verified, the order, the tests and the
+traps. Build from that file; this one is the design it follows.**
 
 **In scope:** the starter zone's plate gains rises, a ridge, a cliff, a rim, authored as data
 and exported by the tools that exist; the client's own line-of-sight check before a cast; the
@@ -192,9 +194,9 @@ the Greywood ridge; the docs say so since the falls review.
 
 ## 6. The fling tool
 
-`ClientWorldMsg::DevFling { height }`, appended after `DevDespawnEnemies` under the unshipped
-PD_W0029 (the same place `DevDespawnEnemies` joined under PD_W0028), dev-gated and audited
-exactly like it: a plain account's request is ignored and writes nothing. The server lifts the
+`ClientWorldMsg::DevFling { height }`, appended LAST, after `DevSetFaction` (the encoding is
+positional; `DevDespawnEnemies` was the last variant only under PD_W0028), under the unshipped
+PD_W0029, dev-gated and audited exactly like `DevDespawnEnemies`: a plain account's request is ignored and writes nothing. The server lifts the
 GM's body `height` metres straight up and sets it falling from there (`Vertical { airborne,
 vy: 0, from_y: the new height }`), so the landing goes through the ordinary rules: a 20 m fling
 on flat ground is a 20 m fall, 45% of max HP, the line and the HP drop, anywhere. The Test
@@ -244,17 +246,22 @@ for a cast the client let through, `slope_refusals` on the health line (a curios
 
 ## 10. Decisions for the user
 
+**ALL SEVEN DECIDED 2026-11-04 (user: "sounds fuckin awesome"), each as recommended.** The
+build order and the verified anchors are in `handoff_first_hills_build.md`.
+
 1. **The resolution.** 10 m cells (40 x 40, 1,681 heights; a cliff is a 15 to 18 m face per
    cell row) or 5 m (80 x 80, 6,561 heights; finer cliffs and paths, a bigger file). Recommended:
-   10 m now; the features file regenerates at any resolution later.
-2. **The map.** §3 as proposed, or say what goes where.
+   10 m now; the features file regenerates at any resolution later. **DECIDED: 10 m.**
+2. **The map.** §3 as proposed, or say what goes where. **DECIDED: §3 as proposed.**
 3. **The rim.** A wall of high ground round the plate so nobody walks off it. Recommended: yes.
+   **DECIDED: yes.**
 4. **The look.** Flat shading and a height tint for the low-poly direction, or the material
-   left alone. Recommended: both; they cost nothing and touch no rule.
+   left alone. Recommended: both; they cost nothing and touch no rule. **DECIDED: both.**
 5. **The fling tool** as a wire command (a DLL rebuild the bump already carries), or no tool
-   and falls tested only on the hills. Recommended: the tool.
+   and falls tested only on the hills. Recommended: the tool. **DECIDED: the tool.**
 6. **Mobs at a face.** Give up after 8 s stuck, leash and regenerate; pets warp to the owner
-   after the same 8 s. Recommended: yes to both.
+   after the same 8 s. Recommended: yes to both. **DECIDED: yes to both (`MOB_STUCK_SECS`, 8 s,
+   a knob).**
 7. **The harness.** The existing tests move to a flat terrain and the hills are held by their
    own checks and tests, or the suite runs on the real hills and the tests the hills break are
-   rewritten. Recommended: the flat default.
+   rewritten. Recommended: the flat default. **DECIDED: the flat default.**

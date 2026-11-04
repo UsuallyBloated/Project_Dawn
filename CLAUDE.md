@@ -2988,7 +2988,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   harness moving to a flat default ground. Heights become data (a features file and a headless
   generator that writes the scene's heights line and reports the slope under every spawn and
   NPC); the client gets its own sight check before a cast, held by a probe against a port of
-  the server's rule. About three days once decided; rides the bump (an export).**
+  the server's rule. About three days once decided; rides the bump (an export).** **ALL SEVEN
+  DECIDED 2026-11-04 (user: "sounds fuckin awesome"), each as recommended:** 10 m cells, the map
+  as proposed, the rim, flat shading and the tint, the fling tool, the 8 s give-up with the pet
+  warp (`MOB_STUCK_SECS`, a knob), the flat harness default. **The build is handed to the next
+  session on Opus 5.5 (user: "make sure Opus 5.5 can accomplish this same goal"):
+  `docs/design/handoff_first_hills_build.md`**, every anchor read in both repos that night, the
+  five pieces in order with their tests and the records pass; its traps: `build.ps1` and every
+  client check default to `F:\Projects\server` (the deploy branch), not the height worktree, so
+  the DLL is built by hand from `server-height` and `check_all.ps1` gains a `-ServerRoot`
+  parameter first; the exporter's default output is the deploy checkout too; and `DevFling` is
+  appended LAST in `ClientWorldMsg` (after `DevSetFaction`), not after `DevDespawnEnemies` as the
+  plan's §6 said. Not built.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
