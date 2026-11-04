@@ -119,7 +119,11 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   and the pre-flight refuses a weaker one at no cost.
 - **The group share range (2026-10-08, user call of 10-05):** `GROUP_SHARE_RANGE` is 200 m
   (was 30) and covers the XP split, the quest journal tick and the auto-split coin drop; XP
-  and journal credit also need the member alive. A group-mate in town shares from the camps
+  and journal credit also need the member alive (`!death_processed && hp > 0.0`, so a member
+  killed in the same tick as the mob is already a corpse; a dead member gets no share and does
+  not dilute the pool, which divides among the eligible members only; playtested 2026-10-07).
+  The creditor is exempt from the range half only, so a pet owner may direct a kill from afar.
+  A group-mate in town shares from the camps
   within 200 m of it, which the user accepted as the trade-off. Every new character is bound
   at the starter spawn from creation.
 - **Hit reactions / VFX:** physical hits flash the mesh white; spell hits flash an
@@ -617,6 +621,14 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   pet, whatever is targeted. The cast pre-flight resolves the pet (alive, in reach, else "You
   have no pet to mend."), the arm heals it by `heal_amount` capped at max and fans its
   HealthUpdate; the server's update moves the panel.
+- **Pet levels (server, 2026-09-27, playtested 2026-10-07):** a pet's level follows its owner.
+  The Beast Master's warder is owner level minus 1, always, on the auto-summon and the
+  retreat-respawn; a manual summon rolls EQ's gamble, owner level minus 1 to 3; Summon Skeleton
+  caps at 10. Pet stats interpolate the camp ladder at `PET_STAT_SCALAR` (0.70,
+  `pet_templates.rs`) so a pet class is not a duo by itself; an anchor test fails if
+  `zone_camps.toml` moves without the curve. All three summon paths go through
+  `summon_scaled_pet`. A charmed mob keeps its own stats. The interim until Beast Master taming
+  (`docs/design/pet_levels.md`, option C).
 - **Pet panel (`scripts/hud_pet_panel.gd`):** top left while you have a pet (summoned,
   warder or charmed): name, level, HP bar, and since 2026-10-07 a row of buttons for the five
   `/pet` commands (Attack, Back, Guard, Follow, Sit), each the same `PetManager` call the chat

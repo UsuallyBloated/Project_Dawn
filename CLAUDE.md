@@ -880,8 +880,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Thorns reflect) as of 2026-06-10 (`Entity` has `PrimaryStats` + `active_buffs`; see
   systems_overview). Still open: AGI/INT/WIS are stored + buffable but have no pet
   dodge / spell-power model yet, so they're display-only.
-- [ ] **Pet level does not scale with owner level** *(found 2026-08-26: a level 22 Beast Master's
-  warder is level 5)*. **Research DONE 2026-09-17 (user-commissioned): `docs/design/pet_levels.md`**
+- [x] **Pet level does not scale with owner level** — **DONE + playtested 2026-10-07 (interim
+  A; ticked 2026-11-03)** (`xp_eligibility_and_pet_levels_checklist.md` §2, every row passing:
+  Fennric's warder arrived at owner level minus 1 and respawned there, Summon Skeleton's level
+  varied per cast; the fair-fight row was run with a charmed mob, which keeps the mob's own
+  stats, so the 70% scalar has no tuning read yet. What exists is in systems_overview, Pets,
+  "Pet levels". Option C, Beast Master taming, is its own entry below.) *(Original entry:)*
+  *(found 2026-08-26: a level 22 Beast Master's warder is level 5)*. **Research DONE 2026-09-17 (user-commissioned): `docs/design/pet_levels.md`**
   — EQ classic (spell-owned pets, level rolled per summon, the max-pet ritual), EQ Legends'
   modern 1:1 simplification, WoW's owner-tracking shape, and SWG's taming + pet-maturity system
   (per the user's standing "more SWG influence" note). Three options in the doc: A =
@@ -902,6 +907,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   fails if `zone_camps.toml` moves without the curve. All three summon paths route through
   one `summon_scaled_pet` helper. Integration test pins the original bug: a level 22 Beast
   Master now gets a level 21 warder.
+- [ ] **Beast Master taming (pet option C)** *(split out of the pet level entry when interim A
+  ticked, 2026-11-03)*. DECIDED 2026-09-19 (user) as the Beast Master's destination: SWG-style
+  taming and pet maturity, summoners conjure and Beast Masters raise (`docs/design/pet_levels.md`,
+  option C). Replaces the warder's free owner-1 scaling with earned maturity; tell whoever mains
+  Beast Master when it lands. Also open from interim A: a tuning read on `PET_STAT_SCALAR`
+  (0.70) with a summoned pet, the warder or a skeleton, alone against an even-con mob. Pairs
+  with "Pet persistence across logout: a design call". Not designed; not a friends-build item.
 - [ ] **Player inspect** — right-click a player to see their equipment *(audit 09-09 settled
   the 08-26 flag: this is BUILT, not "in progress" — the window is mounted by the HUD and
   opened by a chat command (`hud.gd` ~1399: `open_for` + `broadcast_inspect_player`) over the
@@ -2048,8 +2060,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > `systems_overview.md` → "Death, corpses & resurrection"; the design + as-built deviations are
 > in `docs/design/corpse_and_resurrection_plan.md`. Only the follow-ups below are open.
 
-- [ ] **Dead group members would receive XP shares (code-confirmed, never seen in play)**
-  *(raised 2026-08-27; the original log observation was MISREAD — the tester corrected it:
+- [x] **Dead group members would receive XP shares** — **DONE + playtested 2026-10-07 (ticked
+  2026-11-03; user: "dead group members should not receive experience")**
+  (`xp_eligibility_and_pet_levels_checklist.md` §1: a member died beside a Decrepit Skeleton
+  and the killer finished it, `kill credit granted ... pool=263 per_member=263 members=1`; the
+  range half of the entry was since widened to 200 m for XP, journal and coin, its rows on
+  `small_rules_checklist.md` §1. What exists is in systems_overview, "The group share range".)
+  *(Original entry:)* *(code-confirmed, never seen in play)* *(raised 2026-08-27; the original log observation was MISREAD — the tester corrected it:
   FIGHTME had respawned at bind and was alive and in range when the 21:35:30 share landed,
   then took the res teleport later, which the log alone could not show)*. What survives is the
   code fact, verified after the correction: the kill-credit split's member filter is
@@ -2873,6 +2890,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   55°) closes the perch a modified client could climb to. No protocol change. Slices: the ground
   read only; everything pinned; falls (`server_fall_damage.md` slice 1); the first hills, its own
   plan. Builds on a branch from `bump/nov`, redeployed after the bump.
+  **ALL SIX DECIDED 2026-11-03 (user): "Yes to all, 5 in important too."** The recommendations,
+  except that **terrain line of sight is built now** with slices 0 and 1, and **heals and buffs
+  need it too** (user: "Heals and buffs require line of sight"): every spell with a target and
+  every ranged attack. Its design section comes next, then the build plan for the user's go.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
