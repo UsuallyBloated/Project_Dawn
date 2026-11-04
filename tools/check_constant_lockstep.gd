@@ -28,7 +28,8 @@ const DEFAULT_SERVER_SRC := "F:/Projects/server/crates/projectdawn-server/src"
 
 # Relations: "eq" the two must match; "client_longer" the client's may be
 # longer (a client-side wait set a little past the server's, so an honest
-# player is never refused) but never shorter.
+# player is never refused) but never shorter; "magnitude" the two match
+# ignoring sign (the client's gravity points down, the server's is a rate).
 const PAIRS := [
 	# server file,         server constant,           client script,                     client constant,          relation
 	["world/clock.rs",      "DAY_LENGTH_SECS",         "res://autoloads/time_of_day.gd",   "DAY_DURATION",           "eq"],
@@ -52,6 +53,9 @@ const PAIRS := [
 	["world/buffs.rs",      "RES_SICKNESS_CUT_AT_1",   "res://autoloads/buff_manager.gd",  "RES_SICKNESS_CUT_AT_1",  "eq"],
 	["world/buffs.rs",      "RES_SICKNESS_CUT_AT_60",  "res://autoloads/buff_manager.gd",  "RES_SICKNESS_CUT_AT_60", "eq"],
 	["world/mod.rs",        "RUN_SPEED",               "res://scripts/player.gd",          "SPEED",                  "eq"],
+	["world/fall.rs",       "GRAVITY",                 "res://scripts/player.gd",          "GRAVITY",                "magnitude"],
+	["world/fall.rs",       "FLOOR_MAX_ANGLE_DEG",     "res://scripts/player.gd",          "FLOOR_MAX_ANGLE_DEG",    "eq"],
+	["world/fall.rs",       "FLOOR_SNAP_LENGTH",       "res://scripts/player.gd",          "FLOOR_SNAP_LENGTH",      "eq"],
 	["world/mod.rs",        "GLOBAL_COOLDOWN",         "res://autoloads/spells.gd",        "GLOBAL_COOLDOWN_SECS",   "client_longer"],
 	["world/skills.rs",     "MAX_LEVEL",               "res://data/weapon_skill_definitions.gd",  "MAX_LEVEL",      "eq"],
 	["world/skills.rs",     "MAX_LEVEL",               "res://data/armor_skill_definitions.gd",   "MAX_LEVEL",      "eq"],
@@ -110,6 +114,8 @@ func _relation_holds(server_v, client_v, relation: String) -> bool:
 			return absf(s - c) <= FLOAT_TOLERANCE
 		"client_longer":
 			return c >= s - FLOAT_TOLERANCE
+		"magnitude":
+			return absf(absf(s) - absf(c)) <= FLOAT_TOLERANCE
 	return false
 
 # Every one-line `const NAME: T = value;` in a Rust file, evaluated. A value
