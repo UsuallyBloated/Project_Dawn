@@ -43,7 +43,7 @@ each one on its own.
 | The R720 | `f06e88e`, `dev_cmds=false` | frozen until after the Nov 8 friends evening (user, 2026-11-03). Nothing here deploys or exports before then. |
 | The bump | `bump/nov` in both repos | the bump day merges `feat/height-model` into `bump/nov` BEFORE the fast-forward of the deploy branches (memory `project_bump_day_merges`). The hills ride it: they need the export (the scene) and the redeploy (the compiled terrain, the fling, the mob rule) together. |
 | Suites on the height branch | server | 396 unit, 177 world tests, clippy `-D warnings` clean under the bump's lints, rustfmt clean. |
-| Checks on the height branch | client | 12 `tools/check_*.gd` green when each is given the height worktree's path (§3); `check_wire_layer.gd` green with a DLL built from the height worktree. |
+| Checks on the height branch | client | 14 `tools/check_*.gd` green with `.\tools\check_all.ps1 -ServerRoot F:\Projects\server-height` (since 4.0, done); `check_wire_layer.gd` green with a DLL built from the height worktree. |
 
 The current build commands, verified:
 
@@ -144,12 +144,25 @@ To-Do entry; one commit per step with the records that step changes.
 
 ### 4.0 Tooling first (an hour)
 
+**DONE 2026-11-04 (the Fable session, on the user's go; the Opus session verifies it once
+and starts at 4.1).** `tools/check_all.ps1 -ServerRoot <server repo>` (default
+`F:\Projects\server`) passes each lockstep check the path it wants from a table keyed by check
+name; it refuses a root with no `Cargo.toml` and prints the root it compares against. Run
+against `F:\Projects\server-height` from the height worktree: **all 14 checks PASS** (the
+count is 14, not 12: `check_nameplates.gd` and `check_window_click_blocking.gd` take no
+server path). Server baseline on `351e732`: **396 unit, 177 world tests green**, clippy
+`-D warnings` and `cargo fmt --check` clean. `docs/reference/commands.md` gained the
+`-ServerRoot` sentence and the three terrain tool rows. Committed on the deploy branch and
+merged forward into `feat/facing`, `bump/nov` and from there into `feat/height-model`
+(client), so the height worktree carries the runner. The height worktree is clean at the
+merge commit; the server worktree is unchanged at `351e732`.
+
 1. `check_all.ps1 -ServerRoot` (trap 2 above). Table: `check_terrain_lockstep.gd` and the vendor,
    item, spell, faction, active-skill checks under `crates/projectdawn-server/data` (the file
    each wants), `check_constant_lockstep.gd` the `src` dir, `check_character_lockstep.gd`
    `src/char_data.rs`, `check_discipline_lockstep.gd` and `check_skill_table_lockstep.gd`
    `src/world/skills.rs`, `check_invariants.gd` the root. Checks not in the table get no argument.
-2. Run it against `F:\Projects\server-height`: all 12 PASS before anything changes. Run
+2. Run it against `F:\Projects\server-height`: all 14 PASS before anything changes. Run
    `cargo test` in the height worktree: 396 unit, 177 world. These are the baselines.
 3. Add the undocumented terrain tools to `docs/reference/commands.md` §2's table (the checks are
    listed there from line 55; `export_terrain.gd`, `check_terrain_lockstep.gd` and
@@ -565,8 +578,8 @@ Add the sheet to `docs/playtest_notes/CHECKLIST_RUN_ORDER.md` (after `height_mod
 - Server: the suite green (expect about 400 unit, 180 world), clippy `-D warnings` and
   `cargo fmt --check` clean, every new test proven to fail with its rule disabled, the boot line
   naming the 40 x 40 ground.
-- Client: `.\tools\check_all.ps1 -ServerRoot F:\Projects\server-height` all PASS (13 with any
-  new `check_`), `check_wire_layer.gd` listing `send_dev_fling` OK against the rebuilt DLL, the
+- Client: `.\tools\check_all.ps1 -ServerRoot F:\Projects\server-height` all PASS (14 today, 15
+  with any new `check_`), `check_wire_layer.gd` listing `send_dev_fling` OK against the rebuilt DLL, the
   sight probe at zero disagreements, the author tool's report clean (every spawn on a floor, the
   square flat, no route past 30° or the warning noted).
 - The user has looked at the hills in the editor once.

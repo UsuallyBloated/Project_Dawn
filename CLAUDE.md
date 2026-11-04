@@ -3000,7 +3000,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   the DLL is built by hand from `server-height` and `check_all.ps1` gains a `-ServerRoot`
   parameter first; the exporter's default output is the deploy checkout too; and `DevFling` is
   appended LAST in `ClientWorldMsg` (after `DevSetFaction`), not after `DevDespawnEnemies` as the
-  plan's §6 said. Not built.
+  plan's §6 said. **Step 4.0 of the handoff DONE 2026-11-04** (this session, on the user's go):
+  `check_all.ps1 -ServerRoot`, all 14 checks green against `server-height`, the server
+  baseline 396 unit and 177 world green on `351e732`, the terrain tool rows in `commands.md`.
+  The Opus session takes 4.1 onward. Nothing else built.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
