@@ -18,7 +18,7 @@ const SIGNALS: Array[String] = ["time_of_day", "kick_retry_after", "entity_repla
 	"skill_fail", "faction_update", "alignment_update"]
 const METHODS: Array[String] = ["rtt_ms", "packet_loss", "send_dev_despawn_enemies",
 	"send_memorize_start", "send_memorize_finish", "send_forget_spell", "send_seed_spell_gems", "send_use_skill",
-	"send_stop_song", "send_consider", "send_dev_set_faction"]
+	"send_stop_song", "send_consider", "send_dev_set_faction", "send_dev_fling"]
 
 
 func _init() -> void:
