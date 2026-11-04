@@ -4,8 +4,10 @@ Slices 0 and 1 of the server height model (`docs/design/server_height_model.md`)
 now carries the client's ground (`terrain.toml`, exported from `world.tscn` and compiled in),
 stands every player, mob, pet, corpse, NPC and safe area on it, takes a player's step as the
 client's body does (three quarters of the flat distance up a 30° slope, none up a face past
-60°), and checks line of sight through the terrain for every targeted spell (heals and buffs
-too), each AoE victim, ranged attacks, an idle mob's scan and a song's pulse.
+60°), checks line of sight through the terrain for every targeted spell (heals and buffs
+too), each AoE victim, ranged attacks, an idle mob's scan and a song's pulse, and (slice 2,
+built the same day) runs a player's fall off an edge itself and charges the landing as a share
+of max HP (`docs/design/server_fall_damage.md`).
 
 **On today's flat world none of that changes anything, and that is what this sheet proves.** A
 regression pass: every row below is ordinary play that must read exactly as before. The proof
@@ -18,12 +20,12 @@ in `world/terrain.rs`.
 `terrain="20x20 cells of 20 m, floor 0, hash 41470a9d8190"`. One seat is enough; two for
 section 6.
 
-Diagnostics: `journalctl -u projectdawn --since "<start>" | grep -E "ERROR|WARN|cannot see|no sight|slope_refusals=[1-9]"`.
-A sight refusal on the flat world would be a bug. A slope refusal only ever holds a modified
-client (an honest one's own collider stops it at a face first); each one is counted on the
-once-a-minute `world health` line as `slope_refusals`, which must read 0 on the flat world. A
-count there means a terrain the client has and the server does not (a scene edit nobody
-exported) or a client pushing at a face the server refuses.
+Diagnostics: `journalctl -u projectdawn --since "<start>" | grep -E "ERROR|WARN|cannot see|no sight|fall damage|slope_refusals=[1-9]"`.
+A sight refusal on the flat world would be a bug. A slope refusal is counted on the
+once-a-minute `world health` line as `slope_refusals`, which must read 0 on the flat world
+(nothing there is steep enough to refuse): a count means a terrain the client has and the
+server does not (a scene edit nobody exported) or a modified client. On hills, later, an
+honest player holding a key into a cliff counts too, since a Move carries the input.
 
 ## Setup
 - [ ] **Redeploy from the merged branch and read the boot line** → it carries
@@ -41,6 +43,10 @@ exported) or a client pushing at a face the server refuses.
       it). notes:
 - [ ] **Walk to the terrain's edge (about 200 m out) and past it** → the ground carries on
       flat; nothing odd at the boundary. notes:
+- [ ] **Jump about, run off the town's steps and bumps, Quit Game mid-jump and log back in**
+      → never a "You hit the ground hard" line, HP untouched, the relogin ordinary (on the flat
+      world the server's fall never begins: a drop needs more than the body's half-metre
+      snap). notes:
 - [ ] **Sit, stand, `/camp`** → as before. notes:
 
 ## 2 — Combat and spells
@@ -76,8 +82,9 @@ exported) or a client pushing at a face the server refuses.
       notes:
 
 ## 7 — The record
-- [ ] **The journal since the start time** → no `ERROR`; no `cannot see` or `no sight` line
-      for anyone; every `world health` line reads `slope_refusals=0`; paste any `WARN`. notes:
+- [ ] **The journal since the start time** → no `ERROR`; no `cannot see`, `no sight` or
+      `fall damage` line for anyone; every `world health` line reads `slope_refusals=0`; paste
+      any `WARN`. notes:
 
 ## Notes / observations
 -
