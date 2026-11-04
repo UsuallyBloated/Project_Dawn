@@ -2908,6 +2908,35 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   an effect already applied. Five exploit rows (12 to 16), unit and integration tests; the
   client's own ray comes with the hills. Nothing changes on the flat world. Builds inside
   slice 1.
+  **Slices 0 and 1 BUILT 2026-11-04, line of sight included, pending the November bump's
+  redeploy and the playtest** (unattended, the user asleep; server `feat/height-model` from
+  `bump/nov`: `9c16f12` the ground, `8980187` the pinning and sight, then the review fixes;
+  client `feat/height-model`: `2980120` and the review fix; `height_model_checklist.md`, 23
+  rows, a regression sheet on the flat world, one seat; the session note of 11-04 has the
+  detail). What exists: `data/terrain.toml` written by `tools/export_terrain.gd` from
+  `world.tscn` and compiled in (its SHA-256 refuses a hand edit; the boot line names the
+  ground); `world/terrain.rs`: `ground` samples the client's own triangles (exact, total),
+  `player_step` takes a player's tick as the client's body does (measured with
+  `tools/probe_ramp_speed.gd`: uphill `cos²θ` of the flat distance, downhill and across the
+  full speed, past 55° a slide), refuses a rise past 60° as an angle with a relative slack
+  (the review caught a fixed allowance letting micro-steps climb any cliff), and pins the
+  player; mobs and pets step by the XZ delta and are pinned on every move, at spawn and at
+  summon; corpses at creation and at load; every teleport, port and the resurrection summon
+  land on the ground; NPCs and safe areas derive their height at load (the files keep a 0.0
+  placeholder); `can_see` checks a sight line where it crosses every cell edge and diagonal,
+  gating every targeted spell at the release (heals too), each AoE victim, ranged attacks and
+  ranged skills (a Miss, as out of reach), the idle mob's scan and the song's pulse.
+  `tools/check_terrain_lockstep.gd` (in `check_all.ps1`) fails on scene-vs-file drift, a
+  collider never rebuilt, or an NPC off its position or off the ground. Tests: 26 unit (the
+  sampler against a ray down the client's triangles, the march proof of the sight shortcut,
+  the slope and step rules) and nine integration on a ramp and a ridge
+  (`tests/world/height.rs`), each failing on the previous server; the suite 384 unit, 174
+  world. **Flagged:** a slope refusal is silent (no log line; only a modified client meets
+  it); the NPC and safe-area tables stand on the compiled ground, not a harness terrain (one
+  binary, one terrain, so moot on a server; a test ground keeps the town flat); the client's
+  own sight and slope pre-checks come with the hills (slice 3), so until then an honest
+  player's refusal on a hill is the server's line, a round trip late; the NaN entry's rule A3
+  and the sight test's totality are the same rule.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);

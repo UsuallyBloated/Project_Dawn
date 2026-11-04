@@ -156,6 +156,17 @@ world, or a datagram with fifty casts in it.
 Held by: `heals_reach_30_m_and_not_past_it`, `pvp_nuke_refuses_out_of_range`, `inspect_player_refuses_beyond_range`,
 `one_cast_per_caster_per_tick`, `a_burst_of_drops_in_one_tick_is_capped`
 
+### A5. The ground and the sight are the server's
+Where everything stands is the server's own ground (the client's terrain, compiled in), a
+player's step up a slope is what the client's body could take and no step climbs a face past
+the limit however short, and nothing targeted reaches through the terrain: a spell, an
+arrow, an AoE's reach or an idle mob's notice. Why: a modified client that sent its own
+height, walked up a cliff, or cast from behind a hill.
+Held by: `micro_steps_climb_no_face` (on feat/height-model), `a_step_up_a_face_too_steep_to_climb_is_refused` (on feat/height-model),
+`a_nuke_and_a_heal_across_a_ridge_are_refused_and_land_from_the_crest` (on feat/height-model),
+`a_bow_needs_sight_of_its_target` (on feat/height-model), `an_idle_mob_behind_a_ridge_notices_a_player_only_at_the_crest` (on feat/height-model),
+`a_mob_on_a_rise_closes_to_melee_with_a_player_at_its_foot` (on feat/height-model)
+
 ### D1. Dev tools are gated and audited, or refused
 A dev command runs only for a GM account or a dev-mode server, and only if its audit row
 was queued; one that cannot be recorded is refused. A refused attempt writes nothing and
