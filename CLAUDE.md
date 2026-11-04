@@ -1176,7 +1176,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   BUILT 2026-10-20** (the "Bard song rework" entry); **alignment DESIGNED 2026-10-20** as
   part of the factions design (the "Faction system" entry, `factions_and_alignment.md`,
   decisions pending); **alignment BUILT 2026-10-23** with factions slice 1 (that entry);
-  fall damage remains.
+  **fall damage BUILT 2026-11-04** (the height model entry under World systems, slice 2):
+  the list is closed.
   **Phase 4's swing pacing and cast relays BUILT 2026-10-30 (night), pending the redeploy and
   the playtest** (server `3c10935` + review fixes `e8810db` on the deploy branch;
   `haste_limiter_and_cast_relay_checklist.md`, 15 rows; server only, no export). The
@@ -2936,12 +2937,43 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `7e51b53` on `feat/height-model`, rides the same merge): `player_step` returns a `Step`
   (the position and whether the slope rule refused it), the movement step counts each
   refusal, and the once-a-minute `world health` line reports it as `slope_refusals`,
-  printing for a window with a refusal even when nobody is left online. An honest client's
-  own collider stops it at a face first, so the count reads 0 on ground both sides agree on
-  (the sheet's §7 row); anything else is a modified client at a cliff or a scene edit nobody
-  exported. The first piece of the position-anomaly logging the public-host hardening entry
-  asks for. **Flagged:** the counter says how many, not who (a per-player line is the
-  follow-up if it ever reads non-zero); the NPC and safe-area tables stand on the compiled
+  printing for a window with a refusal even when nobody is left online. On flat ground none
+  can happen, so a count there is a modified client or a scene edit nobody exported (the
+  sheet's §7 row); on hills a key held into a cliff counts too, honest or not, since a Move
+  carries the input (the falls review's correction). The first piece of the position-anomaly
+  logging the public-host hardening entry asks for.
+  **Slice 2, falls, BUILT 2026-11-04 (user: "Go ahead"; server `351e732`, client `763a4ab`,
+  both on `feat/height-model`, the same merge; `server_fall_damage.md` §3.2 as built; the
+  height sheet gained a jump-and-quit regression row, since nothing falls on the flat world).**
+  `world/fall.rs`: a player's vertical state; after the XZ step the body follows the ground
+  down as far as the client's floor snap reaches and only onto a floor (ground no steeper
+  than the client's 55°); past that, or onto a face, it has left the ground and falls at
+  20 m/s². A face it would meet is a wall it slides down, as the client's body slides off one,
+  onto the first floor the slide reaches; a floor above the body blocks the step. The landing
+  is measured from the height the body left the ground at (exact at any tick rate) and costs
+  a share of max HP: nothing to 2 m, all of it at 42 m, 2.5% a metre between (both knobs), no
+  armor, evasion, shield or attacker; "You hit the ground hard for N damage."; a death goes
+  through the death sweep, the corpse where the body landed. Leaving is no way out of a fall:
+  a linkdead body still falls and lands, a Quit from mid-air is judged unclean where the
+  transport drops, a port or a resurrection summon settles the fall first (a mover it kills is
+  not moved), a respawn lands grounded whatever its bind was saved with, a dropped bag lands
+  under the dropper. The jump stays cosmetic; mobs and pets never fall. Client: three lockstep
+  pairs (gravity by magnitude, the floor angle and snap named in `player.gd`). Tests: fourteen
+  unit and three integration on a 0.5 m-cell ledge (a 10 m walk-off costs a fifth of max HP
+  with the line; a Quit in mid-air lingers, slides, lands and is saved hurt; a lethal fall
+  leaves the corpse where the body landed), each failing with the fall disabled; the suite 396
+  unit, 177 world. Reviewed (twelve findings, six fixed before the commit: the grounded
+  follow-down ignored the floor angle, so a slow enough step descended a vertical cliff
+  grounded and unhurt; the quit rule was judged a step too early; a floor above a falling
+  body landed it upward; a respawn's saved bind height read as a walk-off; a res summon mid-air
+  erased the fall; a bag dropped mid-air floated out of reach). Rule A5 covers falls.
+  **Flagged:** the server's slide is a free fall pushed clear of the face, faster than the
+  client's slope-constrained slide (visible on a long steep face; the hills plan decides); the
+  60° climb limit's slack lets a modified client climb a 55° to 60° face, where it slides as
+  soon as it stops; the fling tool comes with the hills; a landing interrupts no cast;
+  Levitate and Feather Fall stay the open follow-up; the counter says how many, not who (a
+  per-player line is the follow-up if it ever reads non-zero on flat ground); the NPC and
+  safe-area tables stand on the compiled
   ground, not a harness terrain (one
   binary, one terrain, so moot on a server; a test ground keeps the town flat); the client's
   own sight and slope pre-checks come with the hills (slice 3), so until then an honest
@@ -3025,7 +3057,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   pet-collision memory; audit 2026-09-29)*. (a) Skip fall damage under Levitate / Feather
   Fall once those buffs are checked. (b) A player caught between their own pet and an enemy
   takes repeated fall-damage ticks from physics knock-around (a client `_on_land` threshold or
-  collision-layer fix).
+  collision-layer fix). **(b) closed by the server fall model (2026-11-04):** online the
+  client computes no fall damage (slice 0) and the server's fall begins only where the ground
+  drops away under a step, so physics knock-around can no longer hurt anyone. (a) stays, as a
+  server check at the landing once those buffs exist.
 - [ ] **Mount system** — *`MountManager` autoload exists (client-side v1); feature is not
   fully wired* (server speed clamp, Animal Husbandry / Spirit-of-Wolf stacking / Selos'
   Melody interactions still pending)
