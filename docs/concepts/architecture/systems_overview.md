@@ -428,7 +428,15 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   `Encumbrance` predicts the movement half with the same constants so local movement
   agrees. Before, the client scaled its Move vector by its own speed against a 7.5 m/s
   ceiling, so a modified client ran 1.5x and the stamina half ran nowhere at all.
-  Mounts are refused online until the server has a mount model.
+  Mounts are refused online until the server has a mount model. **The Move handler drops a
+  non-finite direction or yaw whole** (2026-09-27, playtested 2026-10-07; invariant A3): a NaN
+  component used to pass `clamp_length` (`len > max` is false for NaN), poison `conn.pos` for
+  good, and then pass every `if dist > RANGE` gate (corpse and bag loot, resurrection, attack
+  and spell reach), since a comparison with NaN is false; SQLite would have saved it as NULL.
+  The guard runs before any state or sequence bookkeeping; the integration test
+  `nan_move_direction_is_dropped` is the exploit-side evidence (an honest client never sends
+  one). The range gates that mattered most were since rewritten keep-only-when-in-range, so a
+  non-finite distance refuses on its own.
 - **Currency & encumbrance visibility UI (2026-06-12):** the wallet renders in the
   inventory window (gold line above the trash slot — raw per-tier stacks via
   `Currency.format_coins`, live on `PlayerStats.coins_changed`) as well as the vendor

@@ -166,9 +166,9 @@ regenerates and walks home, so a perch is never a free kill. Decision 2.
 - **Buildings and props as ground.** The terrain is the only collision in the world today. A
   walkable building would need its own shape on the server; until then, buildings are drawn on
   flat ground and walked around, not on.
-- **Line of sight.** Spells and arrows still reach through a hill. The heightmap makes a terrain
-  line-of-sight test cheap (sample along the segment), so it is a natural later slice
-  (decision 5), not this build.
+- **Walls, buildings and props as sight blockers.** Terrain line of sight is section 3.8; the
+  rest of exploit finding 10b (a modified client casting through a wall) stays open until the
+  server has a shape for buildings.
 - **Water and swimming.** No water exists.
 
 ### 3.7 Falls
@@ -178,6 +178,66 @@ decisions taken on 2026-10-24. It needs exactly `ground(x, z)` and the grounded-
 step in its section 3.2: follow the ground down a slope the client follows, go airborne off a
 steeper drop, land with damage by its formula. It rides here as slice 2, after the ground is
 pinned and proven, so a mistake in one cannot hide in the other.
+
+### 3.8 Line of sight through the terrain
+
+Decision 5, the user's call of 2026-11-03: built now, with heals and buffs needing sight too.
+Today a spell, an arrow and a mob's eyes all reach through a hill, because the server has no
+hill. With the ground in hand, terrain line of sight is one more sample along a segment, and it
+closes the shape of every from-safety exploit the first hills would otherwise open: a nuke from
+behind a ridge, an arrow over a crest, a heal out of a hollow nobody can reach.
+
+**The test.** `terrain::can_see(a, b) -> bool`. The segment from `a` to `b`, each raised by
+`LOS_HEIGHT` (1.2 m: chest height for a human, head height for a gnome, above a rat entirely;
+one constant for everything until creatures carry a height), must stay above the ground the
+whole way. Inside one triangle the ground is a plane and the segment is a line, so their
+difference is linear there, and it is enough to evaluate the clearance where the segment
+enters and leaves each triangle (every cell edge and cell diagonal it crosses) plus the two
+ends: if all of those are above the ground, so is everything between. The floor keeps that
+true (`ground` is `max(mesh, floor_y)`, so the clearance is the smaller of two linear
+functions on each piece, and that is lowest at an end). Exact for the client's collider, no
+step size, no thin ridge stepped over. A clearance down to `LOS_TOLERANCE` (1 cm) below the
+ground still counts as sight, so a cast along flat ground never fails on rounding. A 30 m
+segment crosses at most three 20 m cells each way, about a dozen samples; the aggro scan adds
+it only to candidates already inside the aggro radius. The test is total: a non-finite endpoint
+is no sight, the safe answer, since a refusal costs nothing. It is symmetric by construction,
+the same two raised points either way, so whatever can see you, you can see.
+
+**What needs sight.** EQEmu is the reference, read 2026-11-03 on its master: `Mob::SpellFinished`
+refuses a DETRIMENTAL spell whose target fails `CheckLosFN` at the cast's finish
+("You cannot see your target."), and beneficial spells are exempt there; `Mob::CheckWillAggro`
+lets an idle NPC notice only a target it can see, and an NPC already on a hate list keeps its
+target without sight; `Client::RangedAttack` has no sight check while `NPC::RangedAttack` has;
+the endpoints are a fraction of each body's height (size 6 by default). Ours is stricter in two
+places, by the user's calls and the exploit lens:
+
+| What | Sight | Why |
+|---|---|---|
+| Every targeted spell: ENEMY, ALLY on another, PET_CHARM, PET_HEAL, CORPSE (resurrection), BIND on a group member | Required, caster to the resolved target, in `cast_target_refusal` once after the target resolves, so one site covers every arm; "You cannot see your target." at no cost | The user: heals and buffs too (EQEmu exempts them). |
+| A spell on oneself, a summon, a port, the cast of a point-blank AoE | None | Nothing to look at. |
+| An AoE's victims | Each needs sight from the caster; one that fails is skipped, no line | An AoE on a crest hits the near side of the ridge and not the far one. (EQEmu's per-victim rule was not found in the read; this one is ours.) |
+| A ranged attack (bow) and a ranged damage skill, on a mob or a player | Required; without it the swing answers as an out-of-reach one does, a Miss fanned, nothing landed | A bow over a crest is the nuke's exploit with a string. Stricter than EQEmu's player archery. |
+| Melee, and a melee skill | None | Reach is 2.7 to 4.5 m and cells are 20 m wide, so no crest can stand between two bodies inside melee reach; a check would only cost. |
+| An idle mob noticing a player (the proximity scan, `nearest_target_within`) | Required | EQEmu's `CheckWillAggro`. A player in a hollow is unnoticed, and the same test says they cannot cast out of it. |
+| A mob turning on whoever damaged it, a mob chasing, a pet following or attacking | None | EQ's rule: on the hate list, sight is not needed. Whoever hit the mob had sight to do it, and the mob chases over the crest (3.5). |
+| A song's pulse on its target (Aria of Dismay) | Required at each pulse, skipped out of sight as it is skipped out of reach | A targeted effect, the spell rule. |
+| Effects already applied (DoT ticks, HoTs, buffs, slows) | None | They are on the target; EQ's rule. |
+| Loot, trade, bank, vendor, inspect, `/con`, Evacuate's gather, the say range | None | Not sight. |
+
+**When.** At the release (`CastSpell`), where the pre-flight runs: EQEmu's timing. The CastStart
+carries only the stun, the global cooldown and the fizzle, and gains nothing: a target that
+walks behind a crest during the bar breaks the spell at the release, as one that walks out of
+reach does. The client's own check comes with the hills (slice 3; it needs the hills to matter
+and rides the export that brings them): a Godot ray against the terrain collider between the
+same two raised points, before the bar and before a ranged swing, so an honest player gets the
+line with no round trip and never starts a bar the server will refuse; the server's refusal
+then marks a modified client, as every other pre-check does.
+
+**On today's world** every clearance is `LOS_HEIGHT` and every test passes: nothing changes
+until the first hills.
+
+**Not covered:** walls, buildings and props (3.6); water; a creature's real height (one
+constant for all).
 
 ## 4. Lockstep: keeping the two grounds the same
 
@@ -203,13 +263,18 @@ A server ground that disagrees with the client's is worse than none, so stalenes
 | 2 | Feed the sampler NaN or infinity | The NaN gate drops the Move before it touches state; the sampler is total and returns the floor for a non-finite input. |
 | 3 | Walk off the terrain's edge to a place with no ground | The floor height, exactly what the client stands on there. No world bounds exist and none are needed for this. |
 | 4 | Climb a cliff the client cannot, to a perch | The slope rule (3.4, decision 1). |
-| 5 | Hit or cast down from a height | Reach stays 3D, so height now counts against it (it did not before, on authored-Y camps). Through-terrain line of sight is decision 5. |
+| 5 | Hit or cast down from a height | Reach stays 3D, so height now counts against it (it did not before, on authored-Y camps). Through the terrain, nothing reaches: 3.8. |
 | 6 | Exploit a server ground that differs from the client's | Exact triangle sampling; the lockstep check in `check_all.ps1`; the boot line's hash. |
 | 7 | Get ported into the ground or onto a slope's air | Every teleport destination is re-pinned before it is sent. |
 | 8 | Leave a corpse unreachable by editing nothing (an old save after a terrain change) | Corpses and characters are re-pinned at load; the res and loot ranges then measure from the ground. |
 | 9 | Strand a mob under its target, or pull one up a slope at half speed | `step_toward` steps by the XZ delta. |
 | 10 | Kite a mob up a slope it cannot climb | Decision 2; with the second option, an unreachable mob goes home and nothing is a free kill. |
 | 11 | Save a character mid-air | Not possible in slices 0 and 1 (no airborne state). Slice 2 takes the fall design's ledger rows 4 to 6 (logout, crash and teleport mid-fall). |
+| 12 | Cast, heal or shoot through a hill | Refused at the release, "You cannot see your target.", nothing spent; a bow's swing misses; an AoE skips what the caster cannot see (3.8). |
+| 13 | Hide in a hollow and farm | A mob cannot notice what it cannot see, and the same symmetric test says the player cannot cast or shoot out of the hollow; the first hit puts the attacker on the hate list, and from there the mob chases without sight. |
+| 14 | Cast with sight, then step behind the ridge | The DoT ticks on and the mob keeps chasing: sight is for noticing and for a new cast, not for staying engaged, so the far side of a ridge is not a safe side. |
+| 15 | Feed the sight test NaN or infinity | Total: no sight, a refusal, nothing spent; positions are the server's anyway (row 1). |
+| 16 | A thin ridge the sight test steps over | There is no step: the clearance is checked where the segment crosses every triangle edge, exact for the piecewise-planar ground. |
 
 ## 6. Slices
 
@@ -218,9 +283,10 @@ with the sampler, the boot line, the export tool, the lockstep check in `check_a
 behaviour changes; on today's world `ground` is 0 everywhere. Server and client tooling, no
 redeploy needed for players, no export.
 
-**Slice 1: everything stands on the ground.** Section 3.3's table, the slope rule if decided, the
-step_toward fix, re-pinning at load. Still no visible change on the flat world, which is the
-point: the regression playtest is "nothing changed", and the integration tests on a test terrain
+**Slice 1: everything stands on the ground, and sight is through it.** Section 3.3's table, the
+slope rule, the step_toward fix, re-pinning at load, and terrain line of sight (3.8) as its own
+commit on the same branch, since it needs the ground and the entities' real Y. Still no visible
+change on the flat world, which is the point: the regression playtest is "nothing changed", and the integration tests on a test terrain
 carry the proof. Server only, one redeploy, no export, no protocol change.
 
 **Slice 2: falls.** The fall design's slice 1, on this ground.
@@ -245,7 +311,20 @@ the first slice testers see, and it needs an export.
   on the ramp arrives on the ground; a corpse on the slope is resurrected and looted; a forged
   climb up a 70° face is refused (if decision 1 is yes). The rest of the suite runs on the flat
   compiled terrain unchanged.
+- **Sight, unit:** the flat world sees everywhere; a ridge between two points blocks, and the
+  same ridge lowered under the line does not; symmetric; a target on the crest is seen from both
+  feet; a segment grazing a slope inside the tolerance sees; non-finite is no sight; and a
+  brute-force march at 1 cm along a few thousand random segments over a random terrain agrees
+  with the edge-crossing method (the proof that the shortcut is exact).
+- **Sight, integration** (on a ridge terrain): a Smite across the ridge is refused with the line
+  and the mana untouched, a Greater Heal on a group-mate across it too (the user's call), and
+  both land once the caster steps onto the crest; a mob 8 m away behind the ridge never notices
+  the player and turns the moment they walk over the crest; an AoE on the crest hits the near
+  mob and skips the far one; a bow across the ridge fans a Miss and lands nothing; a DoT cast
+  with sight keeps ticking after the caster steps behind the ridge.
 - **Client:** `check_terrain_lockstep.gd` catches a planted height, a moved node and a moved NPC.
+  With the hills (slice 3), a probe asks the client's ray and the server's test the same
+  segments over the same ridge and fails on a disagreement.
 - **Playtest checklist** for slice 1 (regression only on the flat world: movement, combat,
   camps, death and corpse, ports, pets, NPC services) from `TEMPLATE_checklist.md` when it lands.
 
