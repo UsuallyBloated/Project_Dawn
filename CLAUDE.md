@@ -1778,7 +1778,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   session: a member leaving while the survivor watches their panel (unobserved — both seats
   disconnected 2 s apart).
 
-- [ ] **NaN Move direction poisons position and bypasses range gates** *(found 2026-09-25
+- [x] **NaN Move direction poisons position and bypasses range gates** — **DONE + playtested
+  2026-10-07 (ticked 2026-11-03; user: "movement has felt normal on the guarded build")**
+  (`xp_eligibility_and_pet_levels_checklist.md` §4, the ordinary-movement regression row across
+  three sittings on builds carrying the guard; the exploit half is pinned by the integration
+  test `nan_move_direction_is_dropped`, since only a forged client can send one. What exists
+  is in systems_overview, "Movement speed and encumbrance", and rule A3 in
+  `docs/reference/invariants.md`.) *(Original entry:)* *(found 2026-09-25
   during the zone-size research; verified in source, not yet exploited in play)*. A forged
   Move whose `direction` carries NaN/Infinity slips through `clamp_length`
   (`connection.rs:43` tests `len > max`, false for NaN) and the tick makes `conn.pos`
@@ -2893,7 +2899,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **ALL SIX DECIDED 2026-11-03 (user): "Yes to all, 5 in important too."** The recommendations,
   except that **terrain line of sight is built now** with slices 0 and 1, and **heals and buffs
   need it too** (user: "Heals and buffs require line of sight"): every spell with a target and
-  every ranged attack. Its design section comes next, then the build plan for the user's go.
+  every ranged attack. **Line of sight DESIGNED the same day (§3.8):** `terrain::can_see`, the
+  segment between two points raised 1.2 m checked where it crosses every triangle edge (exact
+  for the client's collider, total, symmetric); required for every targeted spell at the release
+  (EQEmu's timing; it exempts heals, ours does not, the user's call), each AoE victim, ranged
+  attacks and ranged skills (a Miss, as out of reach), the idle mob's scan (EQEmu's
+  `CheckWillAggro`) and a song's pulse; never for melee, a mob already on a hate list, a pet, or
+  an effect already applied. Five exploit rows (12 to 16), unit and integration tests; the
+  client's own ray comes with the hills. Nothing changes on the flat world. Builds inside
+  slice 1.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
