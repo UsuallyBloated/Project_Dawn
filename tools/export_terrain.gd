@@ -94,7 +94,13 @@ static func read_scene(scene_path: String) -> Dictionary:
 			if props.has("cell_size"):
 				out["cell_size"] = float(props["cell_size"])
 			if props.has("transform"):
-				out["origin"] = (props["transform"] as Transform3D).origin
+				var t: Transform3D = props["transform"]
+				# The model carries a position only: a rotated or scaled
+				# TerrainMesh would export, hash and parse cleanly while the
+				# server sampled a ground the client does not have.
+				if not t.basis.is_equal_approx(Basis.IDENTITY):
+					return {"error": "the %s node is rotated or scaled (%s); the height model carries a position only" % [TERRAIN_NODE, t.basis]}
+				out["origin"] = t.origin
 			if props.has("heights"):
 				out["heights"] = PackedFloat32Array(props["heights"])
 		elif name == "TerrainCol" and path.begins_with("./" + TERRAIN_NODE):
@@ -104,7 +110,10 @@ static func read_scene(scene_path: String) -> Dictionary:
 		elif name == FLOOR_NODE and path == "./" + FLOOR_NODE:
 			found_floor = true
 			if props.has("transform"):
-				floor_origin_y = (props["transform"] as Transform3D).origin.y
+				var t: Transform3D = props["transform"]
+				if not t.basis.is_equal_approx(Basis.IDENTITY):
+					return {"error": "the %s node is rotated or scaled (%s); the height model only knows a flat floor" % [FLOOR_NODE, t.basis]}
+				floor_origin_y = t.origin.y
 		elif name == FLOOR_SHAPE_NODE and path.begins_with("./" + FLOOR_NODE):
 			var shape = props.get("shape")
 			if shape is WorldBoundaryShape3D:
