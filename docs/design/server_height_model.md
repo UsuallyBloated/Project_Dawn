@@ -71,7 +71,8 @@ the player stands as well.
 
 ### 3.1 The data: one file, extracted from the scene, compiled into the server
 
-`crates/projectdawn-server/data/terrain.toml`, written by a Godot editor tool and never by hand:
+`crates/projectdawn-server/data/terrain.toml`, written by a headless Godot script
+(`tools/export_terrain.gd`, run like the checks) and never by hand:
 
 ```toml
 # Written by tools/export_terrain.gd from scenes/world.tscn. Do not edit.
@@ -80,8 +81,14 @@ cell_size = 20.0
 origin = [0.0, 0.0, 0.0]     # the TerrainMesh node's global position
 floor_y = 0.0                # the Floor plane's height
 heights = [0.0, 0.0, ...]    # (grid_size + 1)^2 values, row-major by z then x
-sha256 = "..."               # of the line above, so a hand edit is caught at boot
+hash = "..."                 # SHA-256 of the canonical bytes, so a hand edit is refused
 ```
+
+The hash covers the canonical bytes (the grid size as a u32, then every float's IEEE-754 bits,
+little-endian), built the same way on both sides, and the exporter hashes the values it wrote
+(the text parsed back), so neither side's float formatting can make the two disagree. The
+server refuses a file whose hash does not match its heights at first use, which `main` makes
+the boot line. (As built 2026-11-04; the sketch said `sha256` of a line of text.)
 
 It is compiled in with `include_str!`, the pattern every other data file uses (`npcs.rs`,
 `items.rs`): the binary the R720 runs carries its own ground, so the server cannot boot with a
@@ -118,7 +125,7 @@ with the ground's Y) as the one helper every pinning site calls.
 | Mob, at spawn | the camp's authored `y` | `ground` at the jittered spawn point. |
 | Mob, moving (`step_toward`) | Y kept; direction and arrival from the 3D delta | Step in XZ by the XZ delta (so a gap below the target no longer slows or strands it), then `y = ground`. |
 | Pet, at summon and on every move | the owner's Y, then `step_toward` | As mobs. |
-| Corpse and loot bag, at creation | the victim's position | Re-pinned. |
+| Corpse, at creation | the victim's position | Re-pinned. A loot bag takes the position of a body that is pinned already (the dropper, the slain mob) and needs none. |
 | Corpse, loaded at boot | the saved `pos_y` | Re-pinned, so a corpse is never left in the air or underground after a terrain edit (the handoff's invariant 5). |
 | NPCs, safe areas, the starter spawn | authored `y` in the toml | Derived from `ground` at load (decision 4). |
 | GM dev spawn | the GM's Y | Re-pinned like a camp spawn. |
@@ -137,19 +144,33 @@ audit finding 10b).
 The proposal (decision 1): the server refuses a step whose rise is steeper than the client's
 limit, with a margin so an honest player is never refused. Per tick a player moves at most
 about 0.41 m (5 m/s x 1.65, Selos' Melody at level 50, x 0.05 s); the rule, per tick, is
-`rise <= run x tan(SLOPE_LIMIT) + SNAP_ALLOWANCE`, with `SLOPE_LIMIT` 60° (the client's 55° plus
-five) and `SNAP_ALLOWANCE` a centimetre for float rounding. The client's 0.5 m
-`floor_snap_length` does not belong in it: snapping keeps a body on the ground going down, it
-does not lift one up, and half a metre allowed on every tick would let a forged client climb a
-vertical wall at 10 m/s. A refused step leaves the player where they were for that tick, which
+`rise <= run x tan(SLOPE_LIMIT) x (1 + SLOPE_SLACK)`, with `SLOPE_LIMIT` 60° (the client's 55°
+plus five) and `SLOPE_SLACK` a tenth of a percent for float rounding. The slack is a fraction of
+the allowed rise, never a fixed height per step: the first cut allowed a centimetre a tick on top,
+and the review of 2026-11-04 showed what that buys a forged client, steps too short to measure
+against the angle (a direction of length 1e-4, 25 µm a tick) climbing any face at 20 cm/s. An
+angle holds whatever the step's length. The client's 0.5 m `floor_snap_length` does not belong
+in it either: snapping keeps a body on the ground going down, it does not lift one up, and half
+a metre allowed on every tick would let a forged client climb a vertical wall at 10 m/s. A refused step leaves the player where they were for that tick, which
 an honest client never sees (its own collider stopped it first), and the existing XZ
-reconciliation pulls a forged one back.
+reconciliation pulls a forged one back. Each refusal is counted and reported once a minute on
+the `world health` line as `slope_refusals` (built 2026-11-04 on the user's go; the line also
+prints for a window with a refusal and nobody left online, so a count never goes unreported).
+On flat ground none can happen, so a count there is a modified client or a scene edit nobody
+exported; on hills a Move carries the player's input, not what their body managed, so a key
+held into a cliff counts too, honest or not (the review's point), and there the number is a
+curiosity, not evidence. The counter says how many, not who.
 
-**Measured before it is built, not assumed:** how far an honest client moves per second up a
-30° and a 50° ramp. Godot's `move_and_slide` projects the velocity onto the floor, so the
-client may cover less ground uphill than the server's flat 5 m/s, which the reconciliation
-would show as a gentle pull forward on every hill. A headless probe on a ramp settles it; if the
-gap is real the server scales the step by the same projection.
+**Measured 2026-11-04 (`tools/probe_ramp_speed.gd`, a headless probe that runs the real
+player scene on a tilted slab):** straight uphill the body covers exactly `cos²θ` of the flat
+distance (15°: 4.665 m/s, 30°: 3.75, 45°: 2.5, 50°: 2.04, of 5), across a slope the full
+5 m/s, downhill the full 5 m/s (the floor snap keeps it on the surface), and past the 55°
+limit it slides down. That is `move_and_slide` sliding a horizontal motion along the floor
+plane: the motion loses `sin²θ` of its part up the slope. So the server takes the same step
+(`Terrain::player_step`): the gradient of the triangle under the player, the step's part along
+the ascent shrunk by `sin²θ` when it climbs, untouched otherwise, then the slope rule, then
+the pin. Without it the server would have led an honest client by a quarter of its speed on
+every 30° hill, which the XZ reconciliation would have shown as a pull up the slope.
 
 ### 3.5 Mobs on steep ground
 
@@ -157,7 +178,9 @@ Mob pathing stays straight-line (no navmesh; the handoff keeps it out of scope).
 chasing a player up a slope steeper than 60° either climbs it (looks wrong, but nothing is
 unreachable) or stops at its foot (looks right, and the player above is safe from melee while
 their spells still reach 30 m down). EQ's answer was the second plus a rule: an unreachable mob
-regenerates and walks home, so a perch is never a free kill. Decision 2.
+regenerates and walks home, so a perch is never a free kill. Decision 2: (a) is built, a mob's
+step is neither shortened nor refused and it stands on the ground wherever it steps; (b) comes
+with the first hills.
 
 ### 3.6 What this model does not cover
 
@@ -170,6 +193,11 @@ regenerates and walks home, so a perch is never a free kill. Decision 2.
   rest of exploit finding 10b (a modified client casting through a wall) stays open until the
   server has a shape for buildings.
 - **Water and swimming.** No water exists.
+- **A second ground in one process.** The NPC and safe-area tables are process-wide
+  (`OnceLock`), so they stand on the compiled ground, while the world may run the harness's
+  (`Config::terrain`). One binary, one terrain, so it never matters on a server; a test ground
+  must keep the town flat (the test terrain asserts it), and a per-world table is the day a
+  second zone arrives.
 
 ### 3.7 Falls
 
@@ -250,6 +278,9 @@ A server ground that disagrees with the client's is worse than none, so stalenes
 - The same check places each NPC from `npcs.toml` and confirms its node in `world.tscn` stands on
   the ground (within 5 cm) at the same XZ (within 5 cm). No NPC position check exists today;
   this one comes free with the sampler.
+- It also compares the scene's `TerrainCol` triangles with the triangles its heights make, so a
+  mesh edited in the editor and never rebuilt (the client drawing and exporting one ground and
+  colliding with another) fails the check too.
 - The server logs the terrain's size and hash in its boot line, so a deploy shows which ground it
   runs.
 - `export_spells.gd`'s lesson (an exporter nobody runs goes stale) is why the check, not the
@@ -275,19 +306,23 @@ A server ground that disagrees with the client's is worse than none, so stalenes
 | 14 | Cast with sight, then step behind the ridge | The DoT ticks on and the mob keeps chasing: sight is for noticing and for a new cast, not for staying engaged, so the far side of a ridge is not a safe side. |
 | 15 | Feed the sight test NaN or infinity | Total: no sight, a refusal, nothing spent; positions are the server's anyway (row 1). |
 | 16 | A thin ridge the sight test steps over | There is no step: the clearance is checked where the segment crosses every triangle edge, exact for the piecewise-planar ground. |
+| 17 | Climb a cliff with steps too short to measure | The slope rule is an angle with a relative slack, so a 25 µm step up a 70° face is refused like a 25 cm one; ten thousand of them go nowhere (`micro_steps_climb_no_face`). The review of 2026-11-04 found the first cut's fixed allowance let them through. |
 
 ## 6. Slices
 
 **Slice 0: the ground, read only.** `terrain.toml` (today's flat terrain), `world/terrain.rs`
 with the sampler, the boot line, the export tool, the lockstep check in `check_all.ps1`. No
 behaviour changes; on today's world `ground` is 0 everywhere. Server and client tooling, no
-redeploy needed for players, no export.
+redeploy needed for players, no export. **BUILT 2026-11-04** (server `9c16f12`, client
+`2980120`, both on `feat/height-model` from `bump/nov`).
 
 **Slice 1: everything stands on the ground, and sight is through it.** Section 3.3's table, the
 slope rule, the step_toward fix, re-pinning at load, and terrain line of sight (3.8) as its own
 commit on the same branch, since it needs the ground and the entities' real Y. Still no visible
 change on the flat world, which is the point: the regression playtest is "nothing changed", and the integration tests on a test terrain
-carry the proof. Server only, one redeploy, no export, no protocol change.
+carry the proof. Server only, one redeploy, no export, no protocol change. **BUILT 2026-11-04** (server `feat/height-model`; the session note of
+that day has the commits; `height_model_checklist.md` is the regression sheet, after the
+November bump's redeploy).
 
 **Slice 2: falls.** The fall design's slice 1, on this ground.
 
@@ -349,7 +384,10 @@ written before the build and the plan said to the user first. The questions as a
    nobody walks off the terrain into the flat beyond.
 4. **Authored Y in `zone_camps.toml`, `npcs.toml` and `safe_areas.toml`.** Derive it from the
    ground and drop the field, or keep it authorable. Recommended: derive it; an authored Y that
-   disagrees with the ground is the foot-gun `zone_size_limits.md` warned about.
+   disagrees with the ground is the foot-gun `zone_size_limits.md` warned about. *(Built as:
+   the loaders derive it and the files keep their `0.0` placeholder, since three loaders and
+   the client's own readers of `npcs.toml` share the three-number shape; the placeholder is
+   never read.)*
 5. **Terrain line of sight** for spells and ranged attacks. Recommended: not now; a later slice
    once the first hills show whether casting through a ridge matters in play.
 6. **Order:** slices 0 and 1 together on one branch from `bump/nov` (server `refactor/tick-split`

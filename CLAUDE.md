@@ -1175,7 +1175,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   BUILT 2026-10-20** (the "Bard song rework" entry); **alignment DESIGNED 2026-10-20** as
   part of the factions design (the "Faction system" entry, `factions_and_alignment.md`,
   decisions pending); **alignment BUILT 2026-10-23** with factions slice 1 (that entry);
-  fall damage remains.
+  **fall damage BUILT 2026-11-04** (the height model entry under World systems, slice 2):
+  the list is closed.
   **Phase 4's swing pacing and cast relays BUILT 2026-10-30 (night), pending the redeploy and
   the playtest** (server `3c10935` + review fixes `e8810db` on the deploy branch;
   `haste_limiter_and_cast_relay_checklist.md`, 15 rows; server only, no export). The
@@ -2908,6 +2909,100 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   an effect already applied. Five exploit rows (12 to 16), unit and integration tests; the
   client's own ray comes with the hills. Nothing changes on the flat world. Builds inside
   slice 1.
+  **Slices 0 and 1 BUILT 2026-11-04, line of sight included, pending the November bump's
+  redeploy and the playtest** (unattended, the user asleep; server `feat/height-model` from
+  `bump/nov`: `9c16f12` the ground, `8980187` the pinning and sight, then the review fixes;
+  client `feat/height-model`: `2980120` and the review fix; `height_model_checklist.md`, 23
+  rows, a regression sheet on the flat world, one seat; the session note of 11-04 has the
+  detail). What exists: `data/terrain.toml` written by `tools/export_terrain.gd` from
+  `world.tscn` and compiled in (its SHA-256 refuses a hand edit; the boot line names the
+  ground); `world/terrain.rs`: `ground` samples the client's own triangles (exact, total),
+  `player_step` takes a player's tick as the client's body does (measured with
+  `tools/probe_ramp_speed.gd`: uphill `cos²θ` of the flat distance, downhill and across the
+  full speed, past 55° a slide), refuses a rise past 60° as an angle with a relative slack
+  (the review caught a fixed allowance letting micro-steps climb any cliff), and pins the
+  player; mobs and pets step by the XZ delta and are pinned on every move, at spawn and at
+  summon; corpses at creation and at load; every teleport, port and the resurrection summon
+  land on the ground; NPCs and safe areas derive their height at load (the files keep a 0.0
+  placeholder); `can_see` checks a sight line where it crosses every cell edge and diagonal,
+  gating every targeted spell at the release (heals too), each AoE victim, ranged attacks and
+  ranged skills (a Miss, as out of reach), the idle mob's scan and the song's pulse.
+  `tools/check_terrain_lockstep.gd` (in `check_all.ps1`) fails on scene-vs-file drift, a
+  collider never rebuilt, or an NPC off its position or off the ground. Tests: 26 unit (the
+  sampler against a ray down the client's triangles, the march proof of the sight shortcut,
+  the slope and step rules) and nine integration on a ramp and a ridge
+  (`tests/world/height.rs`), each failing on the previous server; the suite 384 unit, 174
+  world. **The slope refusal counter BUILT 2026-11-04** (user: "Ill follow your rec"; server
+  `7e51b53` on `feat/height-model`, rides the same merge): `player_step` returns a `Step`
+  (the position and whether the slope rule refused it), the movement step counts each
+  refusal, and the once-a-minute `world health` line reports it as `slope_refusals`,
+  printing for a window with a refusal even when nobody is left online. On flat ground none
+  can happen, so a count there is a modified client or a scene edit nobody exported (the
+  sheet's §7 row); on hills a key held into a cliff counts too, honest or not, since a Move
+  carries the input (the falls review's correction). The first piece of the position-anomaly
+  logging the public-host hardening entry asks for.
+  **Slice 2, falls, BUILT 2026-11-04 (user: "Go ahead"; server `351e732`, client `763a4ab`,
+  both on `feat/height-model`, the same merge; `server_fall_damage.md` §3.2 as built; the
+  height sheet gained a jump-and-quit regression row, since nothing falls on the flat world).**
+  `world/fall.rs`: a player's vertical state; after the XZ step the body follows the ground
+  down as far as the client's floor snap reaches and only onto a floor (ground no steeper
+  than the client's 55°); past that, or onto a face, it has left the ground and falls at
+  20 m/s². A face it would meet is a wall it slides down, as the client's body slides off one,
+  onto the first floor the slide reaches; a floor above the body blocks the step. The landing
+  is measured from the height the body left the ground at (exact at any tick rate) and costs
+  a share of max HP: nothing to 2 m, all of it at 42 m, 2.5% a metre between (both knobs), no
+  armor, evasion, shield or attacker; "You hit the ground hard for N damage."; a death goes
+  through the death sweep, the corpse where the body landed. Leaving is no way out of a fall:
+  a linkdead body still falls and lands, a Quit from mid-air is judged unclean where the
+  transport drops, a port or a resurrection summon settles the fall first (a mover it kills is
+  not moved), a respawn lands grounded whatever its bind was saved with, a dropped bag lands
+  under the dropper. The jump stays cosmetic; mobs and pets never fall. Client: three lockstep
+  pairs (gravity by magnitude, the floor angle and snap named in `player.gd`). Tests: fourteen
+  unit and three integration on a 0.5 m-cell ledge (a 10 m walk-off costs a fifth of max HP
+  with the line; a Quit in mid-air lingers, slides, lands and is saved hurt; a lethal fall
+  leaves the corpse where the body landed), each failing with the fall disabled; the suite 396
+  unit, 177 world. Reviewed (twelve findings, six fixed before the commit: the grounded
+  follow-down ignored the floor angle, so a slow enough step descended a vertical cliff
+  grounded and unhurt; the quit rule was judged a step too early; a floor above a falling
+  body landed it upward; a respawn's saved bind height read as a walk-off; a res summon mid-air
+  erased the fall; a bag dropped mid-air floated out of reach). Rule A5 covers falls.
+  **Flagged:** the server's slide is a free fall pushed clear of the face, faster than the
+  client's slope-constrained slide (visible on a long steep face; the hills plan decides); the
+  60° climb limit's slack lets a modified client climb a 55° to 60° face, where it slides as
+  soon as it stops; the fling tool comes with the hills; a landing interrupts no cast;
+  Levitate and Feather Fall stay the open follow-up; the counter says how many, not who (a
+  per-player line is the follow-up if it ever reads non-zero on flat ground); the NPC and
+  safe-area tables stand on the compiled
+  ground, not a harness terrain (one
+  binary, one terrain, so moot on a server; a test ground keeps the town flat); the client's
+  own sight and slope pre-checks come with the hills (slice 3), so until then an honest
+  player's refusal on a hill is the server's line, a round trip late; the NaN entry's rule A3
+  and the sight test's totality are the same rule.
+  **Slice 3, the first hills, PLANNED 2026-11-04 (user: "go on 1!"): `docs/design/first_hills_plan.md`,
+  seven decisions waiting on the user (§10): the resolution (10 m cells recommended), the map
+  (a proposal from the camp names: the western hills with the Sunken Barrow as a pit and the
+  Ossuary on top, the Greywood ridge with a pass, the Wraith Gate plateau with the one real
+  cliff, low rises for the bandits, the spiders, Rotfang and the war camp), a rim of high
+  ground round the plate, flat shading, the GM fling tool as a dev command, mobs refused up a
+  face and giving up after 8 s stuck with pets warping to an owner they cannot reach, and the
+  harness moving to a flat default ground. Heights become data (a features file and a headless
+  generator that writes the scene's heights line and reports the slope under every spawn and
+  NPC); the client gets its own sight check before a cast, held by a probe against a port of
+  the server's rule. About three days once decided; rides the bump (an export).** **ALL SEVEN
+  DECIDED 2026-11-04 (user: "sounds fuckin awesome"), each as recommended:** 10 m cells, the map
+  as proposed, the rim, flat shading and the tint, the fling tool, the 8 s give-up with the pet
+  warp (`MOB_STUCK_SECS`, a knob), the flat harness default. **The build is handed to the next
+  session on Opus 5.5 (user: "make sure Opus 5.5 can accomplish this same goal"):
+  `docs/design/handoff_first_hills_build.md`**, every anchor read in both repos that night, the
+  five pieces in order with their tests and the records pass; its traps: `build.ps1` and every
+  client check default to `F:\Projects\server` (the deploy branch), not the height worktree, so
+  the DLL is built by hand from `server-height` and `check_all.ps1` gains a `-ServerRoot`
+  parameter first; the exporter's default output is the deploy checkout too; and `DevFling` is
+  appended LAST in `ClientWorldMsg` (after `DevSetFaction`), not after `DevDespawnEnemies` as the
+  plan's §6 said. **Step 4.0 of the handoff DONE 2026-11-04** (this session, on the user's go):
+  `check_all.ps1 -ServerRoot`, all 14 checks green against `server-height`, the server
+  baseline 396 unit and 177 world green on `351e732`, the terrain tool rows in `commands.md`.
+  The Opus session takes 4.1 onward. Nothing else built.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
@@ -2986,7 +3081,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   pet-collision memory; audit 2026-09-29)*. (a) Skip fall damage under Levitate / Feather
   Fall once those buffs are checked. (b) A player caught between their own pet and an enemy
   takes repeated fall-damage ticks from physics knock-around (a client `_on_land` threshold or
-  collision-layer fix).
+  collision-layer fix). **(b) closed by the server fall model (2026-11-04):** online the
+  client computes no fall damage (slice 0) and the server's fall begins only where the ground
+  drops away under a step, so physics knock-around can no longer hurt anyone. (a) stays, as a
+  server check at the landing once those buffs exist.
 - [ ] **Mount system** — *`MountManager` autoload exists (client-side v1); feature is not
   fully wired* (server speed clamp, Animal Husbandry / Spirit-of-Wolf stacking / Selos'
   Melody interactions still pending)

@@ -118,6 +118,45 @@ could only add damage, so a client that hides its jump flag gains at most 1.2 m 
 counting it keeps the server free of a client-supplied vertical input (the height model's
 invariant 1).
 
+**As built (2026-11-04, `world/fall.rs` and the movement step, on `feat/height-model`).** The
+rule above, with four things settled in the building:
+- **The landing is measured from the height the body left the ground at**, not from the
+  speed at the end of the tick. The ticks integrate speed before height, so a body simulated
+  at 20 Hz runs a little ahead of a true free fall and the end-of-tick speed under-reads the
+  drop by about 5% (a 10 m fall read 9.5 m); the height left from is exact at any tick rate,
+  and the impact speed reported is `sqrt(2 g drop)` of it. A body leaves the ground with no
+  vertical speed (the jump is cosmetic), so the height is the whole fall.
+- **A body stands only on a floor** (ground no steeper than the client's 55°), and **a face is
+  a wall it slides down**, as the client's body slides off one. Grounded, the body follows the
+  ground down only onto a floor (the review of the build found that with the snap added whole,
+  a slow enough step descended a vertical cliff unhurt, grounded all the way): any descent
+  onto a face, or standing on one, leaves the ground. Falling, a body that would meet a face
+  moves down the gradient until the ground is at or below it, or until the slide reaches a
+  floor, where it lands with the whole drop charged; still inside a face after that, it rests
+  against it for a tick, the fall kept open. A floor above the body blocks the step (the body
+  holds its place and falls on there), so a fall never ends with the body moved up.
+- **In the air there is no slope rule and no uphill shrink** (nothing under the body): it keeps
+  its heading at its ground speed. A linkdead body reads no heading but still falls and lands;
+  a dead one lies on the ground where it is, its corpse already there. Whether a Quit came
+  from mid-air is judged where the transport drops, not at the Disconnect message (the
+  movement step runs after the handler and could still carry the body over an edge in the
+  same tick; the review's find).
+- **A port or a resurrection summon settles the fall first** (row 6), charging the whole drop
+  to the ground under the body; a mover the settle kills is not moved (it died where it fell).
+  A respawn lands grounded whatever its bind was saved with, and a dropped bag lands on the
+  ground under the dropper as a corpse does (a bag let go in mid-air would have floated out of
+  the 3D pickup range).
+The constants: `SAFE_DROP` 2 m, `LETHAL_DROP` 42 m (2.5% of max HP a metre between, never
+less than a point once it hurts), the client's `floor_max_angle` 55° and `floor_snap_length`
+0.5 m, held in lockstep with its gravity by `tools/check_constant_lockstep.gd`. **Flagged, not
+built:** the server's slide is a free fall pushed clear of the face, faster than the client's
+slope-constrained slide, so on a long steep face the client is snapped down it (fine for a
+cliff; the hills plan decides whether the server models the slide's speed); the slope rule's
+60° climb limit still lets a modified client climb a 55° to 60° face, where it slides as soon
+as it stops; the fling tool for testing comes with the hills (nothing falls on the flat world;
+the integration tests use a ledge terrain of their own); a landing interrupts no cast (the
+cast movement gate reads XZ only); Levitate and Feather Fall are the open follow-up entry.
+
 ### 3.3 The formula (a user call, section 7)
 
 Today's client formula is flat HP by impact speed. Its numbers against the EQ parity pools
@@ -133,7 +172,9 @@ Today's client formula is flat HP by impact speed. Its numbers against the EQ pa
 | 50 m | 44.7 m/s | 178 | a level 50 Warrior (1,886 HP) shrugs it off |
 
 A share of max HP (WoW's shape) instead hurts every level alike: under TrinityCore's numbers,
-0 at 13.3 m and all of it at 63 m.
+0 at 13.3 m and all of it at 63 m. **Built as** `share = (drop - 2) / 40`, clamped to 0..1,
+times max HP, rounded, at least one point once it hurts: a 10 m fall costs a fifth (6 of a
+Warrior 1's 28, 377 of a Warrior 50's 1,886), 22 m half, 42 m all of it.
 
 ## 4. Exploit ledger
 
@@ -168,6 +209,13 @@ Phase 4 lockstep item, B4).
   teleport lands standing. Integration: a dev-spawned ledge (or a test heightmap) where a player
   walks off 10 m and the `HealthUpdate` shows the formula's damage; a disconnect mid-fall still
   takes it; a fall to 0 HP leaves a corpse at the landing spot.
+  **Built (2026-11-04):** the unit tests as listed, plus the landing reading the same 26 m at
+  three tick rates, the damage table, the floor angle, and the slide clear of a 70° face
+  (`fall.rs`, `terrain.rs`); the three integration tests on a 0.5 m-cell ledge terrain
+  (`tests/world/falls.rs`: a 10 m walk-off costs a fifth of max HP with the line and lands past
+  the face; a Quit in mid-air lingers, slides down the face, lands and is saved hurt at the
+  reap; a fall past the lethal height leaves the corpse on the floor where the body landed),
+  each failing with the fall disabled (the previous server pinned every tick).
 
 ## 7. Decisions for the user
 
@@ -178,6 +226,12 @@ with no audit row; Safe Fall later as its own entry. **Slice 0 BUILT the same da
 on `feat/server-speed`; `fall_damage_slice0_checklist.md`), **playtested 2026-10-26**. Slice 1
 waits on the server height model, and its constants (the percentage slope against a ~2 m safe
 drop) are set with it; its fling tool for testing is a server-side GM command, built with it.
+**Slice 1 BUILT 2026-11-04** (server `351e732`, client `763a4ab`, both on `feat/height-model`;
+the user's go on the shape laid out that morning: "Sounds excellent. nice work. Go ahead.").
+What exists is §3.2's "As built" and §3.3; the tests are §6; it rides the November bump with
+the height model, whose checklist carries its flat-world regression row. The fling tool is
+not built (nothing falls on the flat world; the integration tests use a ledge terrain of
+their own); it comes with the hills.
 
 1. **Slice 0 now?** It reverses the agreed order (falls first, then `DeathBroadcast`), because
    the reason for that order turned out not to hold online. Recommended: yes, the server half on
