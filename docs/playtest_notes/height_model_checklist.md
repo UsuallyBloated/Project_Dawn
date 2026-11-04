@@ -18,9 +18,12 @@ in `world/terrain.rs`.
 `terrain="20x20 cells of 20 m, floor 0, hash 41470a9d8190"`. One seat is enough; two for
 section 6.
 
-Diagnostics: `journalctl -u projectdawn --since "<start>" | grep -E "ERROR|WARN|cannot see|no sight"`.
-A sight refusal on the flat world would be a bug; a slope refusal is silent (it only ever
-holds a modified client).
+Diagnostics: `journalctl -u projectdawn --since "<start>" | grep -E "ERROR|WARN|cannot see|no sight|slope_refusals=[1-9]"`.
+A sight refusal on the flat world would be a bug. A slope refusal only ever holds a modified
+client (an honest one's own collider stops it at a face first); each one is counted on the
+once-a-minute `world health` line as `slope_refusals`, which must read 0 on the flat world. A
+count there means a terrain the client has and the server does not (a scene edit nobody
+exported) or a client pushing at a face the server refuses.
 
 ## Setup
 - [ ] **Redeploy from the merged branch and read the boot line** → it carries
@@ -74,7 +77,7 @@ holds a modified client).
 
 ## 7 — The record
 - [ ] **The journal since the start time** → no `ERROR`; no `cannot see` or `no sight` line
-      for anyone; paste any `WARN`. notes:
+      for anyone; every `world health` line reads `slope_refusals=0`; paste any `WARN`. notes:
 
 ## Notes / observations
 -

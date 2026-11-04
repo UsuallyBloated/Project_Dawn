@@ -2931,8 +2931,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   sampler against a ray down the client's triangles, the march proof of the sight shortcut,
   the slope and step rules) and nine integration on a ramp and a ridge
   (`tests/world/height.rs`), each failing on the previous server; the suite 384 unit, 174
-  world. **Flagged:** a slope refusal is silent (no log line; only a modified client meets
-  it); the NPC and safe-area tables stand on the compiled ground, not a harness terrain (one
+  world. **The slope refusal counter BUILT 2026-11-04** (user: "Ill follow your rec"; server
+  `7e51b53` on `feat/height-model`, rides the same merge): `player_step` returns a `Step`
+  (the position and whether the slope rule refused it), the movement step counts each
+  refusal, and the once-a-minute `world health` line reports it as `slope_refusals`,
+  printing for a window with a refusal even when nobody is left online. An honest client's
+  own collider stops it at a face first, so the count reads 0 on ground both sides agree on
+  (the sheet's §7 row); anything else is a modified client at a cliff or a scene edit nobody
+  exported. The first piece of the position-anomaly logging the public-host hardening entry
+  asks for. **Flagged:** the counter says how many, not who (a per-player line is the
+  follow-up if it ever reads non-zero); the NPC and safe-area tables stand on the compiled
+  ground, not a harness terrain (one
   binary, one terrain, so moot on a server; a test ground keeps the town flat); the client's
   own sight and slope pre-checks come with the hills (slice 3), so until then an honest
   player's refusal on a hill is the server's line, a round trip late; the NaN entry's rule A3

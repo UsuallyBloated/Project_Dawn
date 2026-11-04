@@ -153,7 +153,12 @@ angle holds whatever the step's length. The client's 0.5 m `floor_snap_length` d
 in it either: snapping keeps a body on the ground going down, it does not lift one up, and half
 a metre allowed on every tick would let a forged client climb a vertical wall at 10 m/s. A refused step leaves the player where they were for that tick, which
 an honest client never sees (its own collider stopped it first), and the existing XZ
-reconciliation pulls a forged one back.
+reconciliation pulls a forged one back. Each refusal is counted and reported once a minute on
+the `world health` line as `slope_refusals` (built 2026-11-04 on the user's go; the line also
+prints for a window with a refusal and nobody left online, so a count never goes unreported):
+0 on ground both sides agree on, so anything else is a modified client at a cliff or a scene
+edit nobody exported. The counter says how many, not who; a per-player line is the follow-up
+if it ever reads non-zero.
 
 **Measured 2026-11-04 (`tools/probe_ramp_speed.gd`, a headless probe that runs the real
 player scene on a tilted slab):** straight uphill the body covers exactly `cos²θ` of the flat
