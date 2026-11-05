@@ -305,3 +305,8 @@ bump (the export and the redeploy together). The sheet is
 - **The ridge is no place to test sight from flat ground**: its flanks are faces and its 30 m
   base puts a target out of reach, so the sheet tests sight at the Wraith Gate's cliff, from
   its foot to its top.
+
+- **The perch closed by an evade** (2026-11-05, server `08aad00`, client `f184a70`): the review
+  found a caster at the Greywood crest's edge could nuke a crypt mob held at the foot for its
+  8 s and its walk home. The user took WoW's evade: a mob held past a 1 s grace, or walking
+  home, takes no damage (`server_height_model.md` §3.5).

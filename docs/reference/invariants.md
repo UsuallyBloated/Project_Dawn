@@ -161,7 +161,8 @@ Held by: `heals_reach_30_m_and_not_past_it`, `pvp_nuke_refuses_out_of_range`, `i
 Where everything stands is the server's own ground (the client's terrain, compiled in), a
 player's step up a slope is what the client's body could take and no step climbs a face past
 the limit however short or however slanted (a diagonal or a zigzag up a cliff), a mob or pet
-climbs nothing a player cannot and gives up on a target above a face, and nothing targeted
+climbs nothing a player cannot and gives up on a target above a face, taking no damage while
+it is held there or walks home (it cannot answer), and nothing targeted
 reaches through the terrain: a spell, an arrow, an AoE's reach or an idle mob's notice. A fall is the server's too: it begins where
 the ground drops away under a step, lands on the server's ground and costs what the height
 says, and neither a Quit nor a port mid-air gets out of the landing. Why: a modified client
@@ -176,7 +177,9 @@ Held by: `micro_steps_climb_no_face` (on feat/height-model), `a_step_up_a_face_t
 `a_fall_to_zero_leaves_the_corpse_where_the_body_landed` (on feat/height-model),
 `a_diagonal_climbs_no_face` (on feat/height-model), `nobody_climbs_out_over_the_rim` (on feat/height-model),
 `a_mob_at_a_face_stops_and_gives_up` (on feat/height-model),
-`a_mob_at_a_face_gives_up_and_walks_home` (on feat/height-model)
+`a_mob_at_a_face_gives_up_and_walks_home` (on feat/height-model),
+`a_mob_held_below_a_face_evades_until_it_is_home` (on feat/height-model),
+`a_mob_below_the_greywood_ridge_gives_up_on_a_player_on_its_crest` (on feat/height-model)
 
 ### D1. Dev tools are gated and audited, or refused
 A dev command runs only for a GM account or a dev-mode server, and only if its audit row
