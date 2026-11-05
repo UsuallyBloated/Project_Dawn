@@ -7,7 +7,8 @@ with the Sunken Barrow dug into them, the bandit knoll, Bat Hollow, the Greywood
 its pass, the crypt's bowl, the spiders' rise, the old rocks, the war camp's shelf, the Wraith
 Gate plateau with its one real cliff, and a rim round the edge. Also new: the client refuses a
 cast it cannot see before the bar; a GM's Fling buttons; a mob held below a face gives up after
-8 s and walks home, and a pet warps to an owner it cannot reach; the slope rule refuses a
+8 s and walks home, evading all damage from its first second at the foot until it is home, and a
+pet warps to an owner it cannot reach; the slope rule refuses a
 diagonal up a face, so nobody zigzags up a cliff.
 
 **Build prerequisite:** the November bump's redeploy AND export, both from the merged
@@ -128,14 +129,23 @@ either side its 30 m base puts any target out of reach, so it is no place for th
       way, the jump seen. notes:
 - [ ] **The partner walks off the Wraith Gate's west edge** → seen falling and landing at the
       foot. notes:
-- [ ] **A mob at the cliff's foot that cannot reach you** (A, a GM, stands at the foot below the
-      west edge at about (140, 0) and spawns a Test Panel mob, which turns on A; B, on the
-      plateau at the lip above, about (152, 0), nukes it once and takes it; A walks 20 m away
-      south) → the mob walks to the foot of the cliff under B and stops there; about 8 s later
-      it turns away, walks home and its HP bar refills to full when it gets there. notes:
-- [ ] **The same, with A staying at the foot and meleeing the mob while B keeps the most hate
-      on the lip** → when the mob gives up on B it turns on A and fights, rather than walking
-      home under A's swings. notes:
+- [ ] **A mob below a face that cannot reach you** (B walks onto the Greywood ridge from its
+      east end and along the crest to its north edge at about (25, 89.7): the very edge, `/loc`
+      z between 89.5 and 89.9, since a step back and the crest hides the foot. A, a GM, in the
+      crypt's bowl below at about (25, 108), spawns a Test Panel mob, which turns on A; B nukes
+      it once and takes it; A walks 20 m east) → the mob walks to the foot of the ridge under B
+      (about z = 100) and stops there; about 8 s later it turns away, walks home and its HP bar
+      refills to full when it gets there. notes:
+- [ ] **The same, and B nukes it again once it has stood at the foot a second or two, and once
+      more on its walk home** → "Your target is evading." each time, at once, no mana spent,
+      the mob's HP bar unchanged. notes:
+- [ ] **The same, but A hits the mob once as it walks to the foot, then stands beside it there
+      and keeps swinging; B keeps the most hate** → from its first second at the foot every
+      swing reads "<mob> evades your attack." and does nothing; when it gives up on B it turns
+      on A (A's first hit put A on its list) and fights. notes:
+- [ ] **One seat: pull a mob, run until it turns for home, then hit or nuke it on its walk
+      back** → "<mob> evades your attack." or "Your target is evading."; it heals to full at
+      home and fights normally when pulled again. notes:
 - [ ] **A pet that cannot reach its owner** (an owner with a pet at the cliff's foot walks round
       and up the ramp to the lip above it, or Gates to a bind on the plateau) → the pet stops at
       the foot, and about 8 s later appears beside its owner. notes:

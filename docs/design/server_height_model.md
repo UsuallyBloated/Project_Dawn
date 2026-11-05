@@ -199,12 +199,14 @@ to them; a pet attacking drops a target it cannot reach. Mobs still take a slope
 speed (no `cos²θ` for them) and still have no way round a face. The review pass of the same
 night made the clock a progress clock keyed to its goal (1 m closer, `STUCK_PROGRESS_M`, or a
 new goal, stops it; a step taken does not) and made giving up forget only the unreachable
-target (`094ec29`). **Open, a decision for the user:** the perch. The Greywood crest is
-walkable from the ridge's ends, and from its north edge a crypt champion can sit inside spell
-reach; the mob is held at the foot, takes damage for the 8 s and its walk home, and heals only
-at home, so a caster with enough damage kills it at no risk. Recommended: an evading mob
-(immune while held below a face past a short grace and while it walks home after giving up),
-the WoW answer.
+target (`094ec29`). **The perch, decided 2026-11-05 (the user took the recommendation) and
+built** (`08aad00`): the Greywood crest is walkable from the ridge's ends, and from its north
+edge a crypt champion sits inside spell reach, held at the foot. WoW's answer: a mob evades
+(`Entity::is_evading`) while it walks home, any leash, and while the slope rule holds it
+below a face past a 1 s grace (`EVADE_GRACE_SECS`, refused within the last 0.5 s,
+`EVADE_REFUSAL_RECENT_SECS`). An evading mob takes nothing: a swing is an Evade and adds no
+hate, a hostile spell is refused before its cost, an AoE skips it, a DoT's ticks deal nothing.
+What the edge still gets is the walk to the foot and the grace, about 4 s.
 
 ### 3.6 What this model does not cover
 

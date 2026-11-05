@@ -3062,15 +3062,25 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `check_terrain_sight.gd` fails when `world.tscn`'s TerrainBody or Floor loses the terrain
   layer; a test on the compiled hills (a Cleric on the Greywood crest above the crypt's
   bowl). Flagged: a kited mob that brushes a face once and is then outrun gives up after 8 s
-  (the safe side; ordinary kiting never starts the clock). **One decision waits on the user,
-  the perch:** the crest is walkable from the ridge's ends and a crypt champion jittered to
-  about (6, 108) is 28.9 m from its north edge, inside spell reach; the mob is held below the
-  face, takes damage for the 8 s and the walk home without answering, and heals only at
-  home, so a caster with enough damage kills it at no risk. Recommended: WoW's evade, a
-  mob immune to damage while it is held below a face past a short grace and while it walks
-  home after giving up (a new rule across the ten mob-damage sites).
-  Alternatives: warp home and heal the moment it gives up (only the 8 s stays open), or leave
-  it.
+  (the safe side; ordinary kiting never starts the clock). **The perch** (the crest is
+  walkable from the ridge's ends; from its north edge a crypt champion sits inside spell
+  reach, held at the foot without answering): **DECIDED 2026-11-05 (user: "your rec for
+  stuck enemies"), WoW's evade, BUILT the same day** (server `08aad00`, client `f184a70`, on
+  `feat/height-model`; session note §61). `Entity::is_evading` is true while a mob walks home
+  (any leash, so a mob pulled past its leash is no longer free damage all the way home either)
+  and while the slope rule has held it below a face past `EVADE_GRACE_SECS` (1 s) and refused
+  it within `EVADE_REFUSAL_RECENT_SECS` (0.5 s); never a pet. A swing or a pet's swing is an
+  Evade and adds no hate (the client draws it and logs "<mob> evades your attack."), a
+  hostile spell is refused in the pre-flight at no cost ("Your target is evading."), an AoE
+  skips the mob, a DoT's ticks deal nothing. Tests: a unit test on the rule; the crest test's
+  second Smite refused; the plateau test's Warrior swing an Evade; each fails with its guard
+  off (the AoE, DoT and pet guards have no test of their own). Residual: the walk to the foot
+  and the grace, about 4 s, are still damage from the edge, so a burst caster still needs the
+  kill inside that window. **A question for the user:** when a mob's target dies or ports
+  (`wipe_hate`), it walks home even if others hold hate, and now walks home immune, so a group
+  whose tank dies watches it heal; EQ turns on the next on its hate list, a small change.
+  Also found: from (152, 0) the Wraith Gate's lip cannot see its own foot (only the last half
+  metre can), so the sheet's two-seat face rows moved to the crest.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
