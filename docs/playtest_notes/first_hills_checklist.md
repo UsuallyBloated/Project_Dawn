@@ -51,7 +51,10 @@ on hills a key held into a cliff counts too, so a number there is a curiosity, n
 
 ## 1 — The look and the town
 - [ ] **Log in and look around the town** → flat as before; the hills visible in the distance,
-      flat-shaded (faceted) and tinted green low, grey-brown high. notes:
+      flat-shaded (faceted) and tinted green low, grey-brown high; the ground is solid
+      underfoot and from above (never seen through, never the far slopes from behind). notes:
+- [ ] **Walk onto a hilltop and stand still, then jump** → you stand on the surface (feet on
+      it, not sunk into it) and jump from it as on flat ground. notes:
 - [ ] **Vendor, bank, Sister Maelis's bind, a quest turn-in** → served as before; the NPCs stand
       on the ground. notes:
 - [ ] **Walk the first two rings' camps (the Bonepile, Wolf Run, the Rat Warrens, the Shallow
