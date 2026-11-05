@@ -16,7 +16,9 @@ extends SceneTree
 #             a hand-edited TOML).
 #   COLLIDER  the scene's TerrainCol triangles are not the triangles its
 #             heights make (the mesh was edited and never rebuilt, so the
-#             client walks on an older ground than it draws or exports).
+#             client walks on an older ground than it draws or exports), or a
+#             triangle faces down (wound the wrong way: the ground is culled
+#             from above and a body sinks into the one-sided collider).
 #   NPC       an NPC in the server's npcs.toml has no node in the scene, stands
 #             somewhere else in XZ, or does not stand on the ground (5 cm).
 #
@@ -118,7 +120,9 @@ func _check_hash(scene: Dictionary, toml: Dictionary, problems: Array[String]) -
 # The collider the client walks on must be the triangles its heights make, in
 # the order TerrainMesh._rebuild emits them (two per cell, split from (x1, z0)
 # to (x0, z1)); otherwise the scene draws and exports one ground and collides
-# with another.
+# with another. And every triangle must face up: Godot's front face is the one
+# its corners run clockwise round, its normal (c - a) x (b - a), and a
+# trimesh collides on its front side only.
 func _check_collider(scene: Dictionary, problems: Array[String]) -> void:
 	var data: PackedVector3Array = scene["collider"]
 	var gs: int = scene["grid_size"]
@@ -138,8 +142,8 @@ func _check_collider(scene: Dictionary, problems: Array[String]) -> void:
 	for z in gs:
 		for x in gs:
 			var corners := [
-				Vector2i(x, z), Vector2i(x, z + 1), Vector2i(x + 1, z),
-				Vector2i(x + 1, z), Vector2i(x, z + 1), Vector2i(x + 1, z + 1),
+				Vector2i(x, z), Vector2i(x + 1, z), Vector2i(x, z + 1),
+				Vector2i(x + 1, z), Vector2i(x + 1, z + 1), Vector2i(x, z + 1),
 			]
 			for c in corners:
 				var expect := Vector3(-half + c.x * cell, heights[c.y * row + c.x], -half + c.y * cell)
@@ -150,6 +154,13 @@ func _check_collider(scene: Dictionary, problems: Array[String]) -> void:
 				i += 1
 	if differing > MAX_LISTED:
 		problems.append("COLLIDER ... and %d more vertices differ (rebuild the mesh and save the scene)" % (differing - MAX_LISTED))
+	var facing_down := 0
+	for t in range(0, data.size(), 3):
+		var a := data[t]
+		if (data[t + 2] - a).cross(data[t + 1] - a).y <= 0.0:
+			facing_down += 1
+	if facing_down > 0:
+		problems.append("COLLIDER %d of %d triangles face down (wound the wrong way round)" % [facing_down, data.size() / 3])
 
 
 # Every NPC the server places must have a node in the scene at the same XZ,

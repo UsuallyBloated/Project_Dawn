@@ -129,14 +129,19 @@ func _rebuild() -> void:
 	st.set_smooth_group(-1 if flat_shaded else 0)
 
 	# Each cell is two triangles, split from (x+1, z) to (x, z+1): the corners
-	# (x, z), (x, z+1), (x+1, z) then (x+1, z), (x, z+1), (x+1, z+1). Shared
+	# (x, z), (x+1, z), (x, z+1) then (x+1, z), (x+1, z+1), (x, z+1). Shared
 	# vertices with indices when smooth, three of its own per triangle when
 	# flat; the collider gets the same triangles in the same order either way.
+	# The corner order is the winding: clockwise seen from above, which is
+	# Godot's front face, so the top is drawn and a body stands on it. The
+	# other order faces every triangle down: the ground is culled from above
+	# and a one-sided collider lets a body sink into it
+	# (tools/check_terrain_lockstep.gd and tools/probe_terrain_stand.gd).
 	if flat_shaded:
 		for z in range(grid_size):
 			for x in range(grid_size):
-				for c in [Vector2i(x, z), Vector2i(x, z + 1), Vector2i(x + 1, z),
-						Vector2i(x + 1, z), Vector2i(x, z + 1), Vector2i(x + 1, z + 1)]:
+				for c in [Vector2i(x, z), Vector2i(x + 1, z), Vector2i(x, z + 1),
+						Vector2i(x + 1, z), Vector2i(x + 1, z + 1), Vector2i(x, z + 1)]:
 					_add_corner(st, c.x, c.y)
 	else:
 		for z in range(grid_size + 1):
@@ -146,11 +151,11 @@ func _rebuild() -> void:
 			for x in range(grid_size):
 				var i := z * (grid_size + 1) + x
 				st.add_index(i)
-				st.add_index(i + grid_size + 1)
-				st.add_index(i + 1)
 				st.add_index(i + 1)
 				st.add_index(i + grid_size + 1)
+				st.add_index(i + 1)
 				st.add_index(i + grid_size + 2)
+				st.add_index(i + grid_size + 1)
 
 	st.generate_normals()
 	var mesh_data := st.commit()
