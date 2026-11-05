@@ -146,6 +146,11 @@ either side its 30 m base puts any target out of reach, so it is no place for th
 - [ ] **One seat: pull a mob, run until it turns for home, then hit or nuke it on its walk
       back** → "<mob> evades your attack." or "Your target is evading."; it heals to full at
       home and fights normally when pulled again. notes:
+- [ ] **Two seats, anywhere: both of you hit a mob, then the one it is fighting dies (Trigger
+      Death on a GM) or Gates** → the mob turns on the other at once and fights; it walks home
+      only when nobody who hit it is left. notes:
+- [ ] **The same, but the one it is fighting runs until it turns away** → it turns on the
+      other instead of walking home. notes:
 - [ ] **A pet that cannot reach its owner** (an owner with a pet at the cliff's foot walks round
       and up the ramp to the lip above it, or Gates to a bind on the plateau) → the pet stops at
       the foot, and about 8 s later appears beside its owner. notes:
