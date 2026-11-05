@@ -628,7 +628,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   and gates on the banker's and the merchant's reach as for a bag slot; a held item is part of
   the holdings (the death strip takes it), so nothing moves that could not move from a bag.
   Not built: a drag gesture onto the vault (the held item follows the mouse, so the click is
-  the drop); eating from the hand has the wire arm and no client affordance.
+  the drop); eating from the hand has the wire arm and no client affordance. **DEPLOYED
+  2026-11-05 with the November bump** (server `267065f`, client `da83ea8`);
+  `held_item_bank_and_vendor_checklist.md` is runnable now.
 - [ ] **No-drop / no-trade item flag** *(flagged in `inventory_interaction_grammar.md` §8 and by
   the trade design's ledger, which explicitly has no rule "until itemization grows one"; audit
   2026-09-29)*. `ItemData` carries no binding flag; the two account-shared bank slots and the
@@ -1105,8 +1107,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   57 sites made checks before anything moves, logged unreachables or stated invariants; review
   pass folded in. **The bump was to wait until after the Nov 8 evening (user, 2026-11-03); on
   2026-11-05 the door moved to Thu Nov 12 (the friends busy on the 8th) and the bump moved in
-  front of it** (user: "now that the date is pushed we can add this new tech"): Sat Nov 7 by the
-  planner (row o20), its sheets and a second pre-door check before the last zip goes out.
+  front of it** (user: "now that the date is pushed we can add this new tech"), and **MERGED AND
+  DEPLOYED the same evening** (server `267065f`, client `da83ea8`: the split, the offline
+  removal, the reformat and the lints are on the deploy branches and the R720; row o20); the
+  sheets (`overnight_2026_11_01_checklist.md` §2 and §3 among them) and a second pre-door check
+  follow before the last zip goes out.
   Status per finding: the findings doc's §5.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
@@ -3098,6 +3103,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   all failing on the old winding); `world.tscn` rebaked. Server untouched.
   Also found: from (152, 0) the Wraith Gate's lip cannot see its own foot (only the last half
   metre can), so the sheet's two-seat face rows moved to the crest.
+  **MERGED, EXPORTED AND DEPLOYED 2026-11-05 with the November bump** (the user, the hour the
+  door moved to Nov 12: "i want to run around these hills!"): both deploy branches
+  fast-forwarded to `bump/nov` with this branch merged (server `267065f`, client `da83ea8`); the
+  export `builds/ProjectDawn-alpha-da83ea8.zip`; R720 boot line `build="267065f" dev_cmds=false
+  terrain=40x40 cells of 10 m, floor 0, hash f2bd278da1c3` at 22:29 UTC, nobody online at the
+  stop. `height_model_checklist.md` and `first_hills_checklist.md` are runnable now; nothing
+  ticked.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
@@ -3426,6 +3438,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   real facing. A rooted player may still turn. Test `a_players_facing_reaches_the_watcher`
   (sees 1.25, keeps it through a NaN Move, sees 4.0 wrapped), failing with the yaw ignored.
   Both sides deploy together; the export comes from the merged branch with the rebuilt DLL.
+  **DEPLOYED 2026-11-05 with the November bump** (server `267065f`, client `da83ea8`);
+  `remote_facing_checklist.md` is runnable now.
 - [x] **"You cannot do that while dead." flooded the chat** — **DONE + playtested 2026-10-26**
   (`dead_gate_checklist.md`, every row passing: server `8127a70` and client `6ddeddc`). The
   flood was the client's `EquipUpdate`, one per gear slot as a death strips the gear, which the
