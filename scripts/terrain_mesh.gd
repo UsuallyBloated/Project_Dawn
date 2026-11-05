@@ -13,6 +13,9 @@ class_name TerrainMesh
 const LOW_COLOR := Color(0.22, 0.42, 0.12, 1)
 const HIGH_COLOR := Color(0.45, 0.40, 0.32, 1)
 const TINT_TOP := 30.0
+# Physics layers 1 (bodies, so everything stands on it) and 2 (terrain, which
+# the sight check's ray asks for alone: Spells._target_out_of_sight).
+const COLLISION_LAYERS := 3
 
 @export var grid_size: int = 20:
 	set(v):
@@ -69,6 +72,7 @@ func _ensure_children() -> void:
 	else:
 		_body = StaticBody3D.new()
 		_body.name = "TerrainBody"
+		_body.collision_layer = COLLISION_LAYERS
 		add_child(_body)
 		if Engine.is_editor_hint():
 			_body.owner = get_tree().edited_scene_root

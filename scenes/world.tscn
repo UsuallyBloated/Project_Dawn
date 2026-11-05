@@ -85,11 +85,13 @@ heights = PackedFloat32Array(40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40,
 mesh = SubResource("ArrayMesh_jka67")
 
 [node name="TerrainBody" type="StaticBody3D" parent="TerrainMesh"]
+collision_layer = 3
 
 [node name="TerrainCol" type="CollisionShape3D" parent="TerrainMesh/TerrainBody"]
 shape = SubResource("ConcavePolygonShape3D_i5arm")
 
 [node name="Floor" type="StaticBody3D" parent="."]
+collision_layer = 3
 
 [node name="FloorShape" type="CollisionShape3D" parent="Floor"]
 shape = SubResource("WorldBoundaryShape3D_floor")

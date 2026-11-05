@@ -26,6 +26,11 @@ const FLOOR_SHAPE_NODE := "FloorShape"
 # Heights are written with this many decimals: enough for a 32-bit float to
 # come back from the text as the same number, which the hash relies on.
 const DECIMALS := 9
+# Line of sight, as world/terrain.rs has it (can_see_at below): both ends
+# raised this far, and a sight line may graze the ground by this much. Held
+# equal to the server's by tools/check_constant_lockstep.gd.
+const LOS_HEIGHT := 1.2
+const LOS_TOLERANCE := 0.01
 
 
 func _initialize() -> void:
@@ -241,14 +246,19 @@ static func render_toml(scene: Dictionary) -> String:
 # point is inside the grid, floored by floor_y; the floor outside. The same
 # rule as world/terrain.rs::ground.
 static func ground_at(terrain: Dictionary, x: float, z: float) -> float:
+	var origin: Vector3 = terrain["origin"]
+	var half := int(terrain["grid_size"]) * float(terrain["cell_size"]) * 0.5
+	return _ground_local(terrain, x - origin.x + half, z - origin.z + half)
+
+
+# The ground at a grid-local point (0 to the extent on each axis inside the
+# grid), as world/terrain.rs::ground_local.
+static func _ground_local(terrain: Dictionary, lx: float, lz: float) -> float:
 	var gs: int = terrain["grid_size"]
 	var cell: float = terrain["cell_size"]
 	var origin: Vector3 = terrain["origin"]
 	var floor_y: float = terrain["floor_y"]
 	var heights: PackedFloat32Array = terrain["heights"]
-	var half := gs * cell * 0.5
-	var lx := x - origin.x + half
-	var lz := z - origin.z + half
 	var extent := gs * cell
 	if not (lx >= 0.0 and lx <= extent and lz >= 0.0 and lz <= extent):
 		return floor_y
@@ -314,3 +324,75 @@ static func gradient_at(terrain: Dictionary, x: float, z: float) -> Vector2:
 # The angle of that slope, in degrees.
 static func slope_deg_at(terrain: Dictionary, x: float, z: float) -> float:
 	return rad_to_deg(atan(gradient_at(terrain, x, z).length()))
+
+
+# Whether two points, each raised by LOS_HEIGHT, see each other over the
+# terrain: a line-for-line port of world/terrain.rs::can_see, for the sight
+# probe (tools/probe_terrain_sight.gd), which holds the client's physics ray
+# to it. Inside one triangle the ground is a plane and the line a line, so the
+# clearance is checked at both ends and wherever the line crosses a cell edge
+# or a cell diagonal.
+static func can_see_at(terrain: Dictionary, a: Vector3, b: Vector3) -> bool:
+	if not (a.is_finite() and b.is_finite()):
+		return false
+	var up := Vector3(0.0, LOS_HEIGHT, 0.0)
+	return min_clearance_at(terrain, a + up, b + up) >= -LOS_TOLERANCE
+
+
+# The lowest height of the segment a to b over the ground (world/terrain.rs::
+# min_clearance): at the ends and every cell-edge and diagonal crossing.
+static func min_clearance_at(terrain: Dictionary, a: Vector3, b: Vector3) -> float:
+	var gs: int = terrain["grid_size"]
+	var cell: float = terrain["cell_size"]
+	var origin: Vector3 = terrain["origin"]
+	var half := gs * cell * 0.5
+	var ax := a.x - origin.x + half
+	var az := a.z - origin.z + half
+	var bx := b.x - origin.x + half
+	var bz := b.z - origin.z + half
+	var ts: Array[float] = [0.0, 1.0]
+	_push_crossings(ts, ax, bx, cell, gs)
+	_push_crossings(ts, az, bz, cell, gs)
+	_push_crossings(ts, ax + az, bx + bz, cell, 2 * gs)
+	var lowest := INF
+	for t in ts:
+		var lx := ax + (bx - ax) * t
+		var lz := az + (bz - az) * t
+		var y := a.y + (b.y - a.y) * t
+		lowest = minf(lowest, y - _ground_snapped_local(terrain, lx, lz))
+	return lowest
+
+
+# The parameters in (0, 1) at which a coordinate moving from s0 to s1 crosses
+# the lines k * cell for k in 0..kmax (world/terrain.rs::push_crossings).
+static func _push_crossings(ts: Array[float], s0: float, s1: float, cell: float, kmax: int) -> void:
+	if s0 == s1:
+		return
+	var lo := minf(s0, s1)
+	var hi := maxf(s0, s1)
+	var k0 := int(maxf(ceilf(lo / cell), 0.0))
+	var k1f := floorf(hi / cell)
+	if k1f < 0.0:
+		return
+	var k1 := mini(int(k1f), kmax)
+	for k in range(k0, k1 + 1):
+		var t := (k * cell - s0) / (s1 - s0)
+		if t > 0.0 and t < 1.0:
+			ts.append(t)
+
+
+# The ground for a point computed along a line: a coordinate a hair outside
+# the grid's edge is taken as on it (world/terrain.rs::ground_snapped), since
+# at the edge the ground drops from the mesh to the floor.
+static func _ground_snapped_local(terrain: Dictionary, lx: float, lz: float) -> float:
+	var extent := int(terrain["grid_size"]) * float(terrain["cell_size"])
+	var eps := float(terrain["cell_size"]) * 1e-4
+	return _ground_local(terrain, _snap_to_edge(lx, extent, eps), _snap_to_edge(lz, extent, eps))
+
+
+static func _snap_to_edge(v: float, extent: float, eps: float) -> float:
+	if v < 0.0 and v > -eps:
+		return 0.0
+	if v > extent and v < extent + eps:
+		return extent
+	return v
