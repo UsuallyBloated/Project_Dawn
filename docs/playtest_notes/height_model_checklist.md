@@ -20,6 +20,14 @@ in `world/terrain.rs`.
 `terrain="20x20 cells of 20 m, floor 0, hash 41470a9d8190"`. One seat is enough; two for
 section 6.
 
+> **Updated 2026-11-04 (night): the first hills ride the same merge** (slice 3,
+> `first_hills_checklist.md`), so the world this sheet meets is no longer flat everywhere.
+> The boot line reads `terrain="40x40 cells of 10 m, floor 0, hash f2bd278da1c3"` and the
+> lockstep check counts 1681 heights. The town and the first two rings of camps (to about
+> 60 m out) stay flat: run this sheet's rows there. "Walk past the edge" now meets the rim
+> (the hills sheet's §6), and sight refusals, falls and slope refusals out on the hills are
+> the hills sheet's to judge, not regressions here.
+
 Diagnostics: `journalctl -u projectdawn --since "<start>" | grep -E "ERROR|WARN|cannot see|no sight|fall damage|slope_refusals=[1-9]"`.
 A sight refusal on the flat world would be a bug. A slope refusal is counted on the
 once-a-minute `world health` line as `slope_refusals`, which must read 0 on the flat world
@@ -29,9 +37,10 @@ honest player holding a key into a cliff counts too, since a Move carries the in
 
 ## Setup
 - [ ] **Redeploy from the merged branch and read the boot line** → it carries
-      `terrain="20x20 cells of 20 m, floor 0, hash 41470a9d8190"` and `dev_cmds=false`. notes:
+      `terrain="40x40 cells of 10 m, floor 0, hash f2bd278da1c3"` (the first hills; before
+      them it was `20x20 cells of 20 m, ... 41470a9d8190`) and `dev_cmds=false`. notes:
 - [ ] **On the client checkout, `.\tools\check_all.ps1`** → `PASS  check_terrain_lockstep.gd`
-      among the checks (441 heights, the collider rebuilt, 6 NPCs on the ground). notes:
+      among the checks (1681 heights, the collider rebuilt, 6 NPCs on the ground). notes:
 - [ ] **Note the start time** for the journal check at the end. notes:
 
 ## 1 — Movement

@@ -161,6 +161,16 @@ exported; on hills a Move carries the player's input, not what their body manage
 held into a cliff counts too, honest or not (the review's point), and there the number is a
 curiosity, not evidence. The counter says how many, not who.
 
+**The rule judged a step's own grade, and that was not enough (found 2026-11-04 night while
+building the first hills; server `d5de613`).** On a face of gradient g, a step at angle φ to
+straight uphill climbs at g·cos φ, so a 45° diagonal went up a 63° face at 55° and a zigzag
+climbed any face at all: the Wraith Gate's cliff, the plate's rim. The honest body cannot (it
+slides off ground past its floor limit whichever way it faces). The rule now has a second
+half: a step that rises is refused when the ground it lands on is steeper than
+`SLOPE_LIMIT_DEG`, whatever its direction. Test `a_diagonal_climbs_no_face` (a diagonal step,
+and a zigzag walker from a face's foot); `nobody_climbs_out_over_the_rim` walks hasted
+zigzags at the real rim all the way round.
+
 **Measured 2026-11-04 (`tools/probe_ramp_speed.gd`, a headless probe that runs the real
 player scene on a tilted slab):** straight uphill the body covers exactly `cos²θ` of the flat
 distance (15°: 4.665 m/s, 30°: 3.75, 45°: 2.5, 50°: 2.04, of 5), across a slope the full
@@ -178,9 +188,17 @@ Mob pathing stays straight-line (no navmesh; the handoff keeps it out of scope).
 chasing a player up a slope steeper than 60° either climbs it (looks wrong, but nothing is
 unreachable) or stops at its foot (looks right, and the player above is safe from melee while
 their spells still reach 30 m down). EQ's answer was the second plus a rule: an unreachable mob
-regenerates and walks home, so a perch is never a free kill. Decision 2: (a) is built, a mob's
-step is neither shortened nor refused and it stands on the ground wherever it steps; (b) comes
-with the first hills.
+regenerates and walks home, so a perch is never a free kill. Decision 2: (a) was built in
+slice 1, a mob's step neither shortened nor refused; **(b) is built with the first hills
+(2026-11-04, server `8d21d97`).** Every mob and pet step goes through the player's own slope
+rule (`Entity::step_on`, so a diagonal onto a face is refused too); a refused step starts a
+clock, and after `MOB_STUCK_SECS` (8 s, a knob): a chasing mob forgets everyone and walks
+home, where it heals to full (and every watcher is told its HP, which a leash never used to
+fan); a mob walking home up a face it came down warps home; a pet following its owner warps
+to them; a pet attacking drops a target it cannot reach. Mobs still take a slope at full
+speed (no `cos²θ` for them) and still have no way round a face. Residual: a caster with burst
+enough to kill inside the 8 s still gets the kill from a perch, and the mob never hits back;
+the knob is the lever.
 
 ### 3.6 What this model does not cover
 
@@ -260,6 +278,16 @@ and rides the export that brings them): a Godot ray against the terrain collider
 same two raised points, before the bar and before a ranged swing, so an honest player gets the
 line with no round trip and never starts a bar the server will refuse; the server's refusal
 then marks a modified client, as every other pre-check does.
+
+**As built (2026-11-04 night, client `2f97a4a`):** `Spells._target_out_of_sight`, for the
+targets the reach check takes (an enemy, a charm, an ally who is someone else), after the
+reach refusal and before the bar, with the server's line. The terrain body and the floor sit
+on physics layers 1 and 2 (`project.godot` names 2 `terrain`); the ray asks for layer 2 only,
+so no body, corpse or bag blocks it. `LOS_HEIGHT` is a lockstep pair. Not built: the check
+before a ranged swing (a bow still gets the server's Miss), and the corpse, pet-heal and
+bind-on-another cases (the server's line, a round trip later). `tools/check_terrain_sight.gd`
+(in `check_all.ps1`) holds the ray to a port of `can_see` in the exporter over 3,000 random
+pairs on the real hills: no disagreement.
 
 **On today's world** every clearance is `LOS_HEIGHT` and every test passes: nothing changes
 until the first hills.
