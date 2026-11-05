@@ -23,7 +23,7 @@
 [meta]
 title = "Project Dawn: Week by Week to the Friends Build"
 start = 2026-10-05
-target = 2026-11-08
+target = 2026-11-12
 hours_per_week = 30
 minutes_per_checklist_row = 6
 stale_checklist_days = 30
@@ -58,7 +58,7 @@ text = "The user has about thirty hours a week. Weeks here never schedule more t
 source = "docs/schedule.md header."
 
 [[assumption]]
-text = "Every date here except November 8 is a proposal. The milestones were placed by working back from November 8 at the measured pace with the fifth week left as slack."
+text = "Every date here except November 12 is a proposal. The milestones were placed by working back from November 8 at the measured pace with the fifth week left as slack; on November 5 the door moved to Thursday November 12 (the friends are busy on the 8th) and the user put the November bump in front of it, so a sixth week holds the door."
 source = "The handoff's instruction; docs/schedule.md section 1."
 
 # ---------------------------------------------------------------------------------------
@@ -122,16 +122,22 @@ name = "Trade live"
 means = "The same evening as Bind and Gate: one protocol bump carries both, so testers change clients once."
 
 [[milestone]]
+id = "m6"
+date = 2026-11-07
+name = "The November bump live"
+means = "The hills, the facing, the held-item cursor, the server split and the offline-free client on the hosted server and in the zip the friends hold: one protocol bump. Moved in front of the door on November 5 (user), when the door slipped to the 12th; it had been waiting until after it."
+
+[[milestone]]
 id = "m4"
-date = 2026-11-06
+date = 2026-11-10
 name = "The pre-door check"
-means = "A fresh character plays the starter book for 45 minutes on the exact build the friends will hold. Replaces the four-friend rehearsal of October 31 (user, 2026-11-03)."
+means = "A fresh character plays the starter book for 45 minutes on the exact build the friends will hold. First run November 3 on the pre-bump build (row v16); run again on the bump build (row v60) before the last zip goes out. Replaces the four-friend rehearsal of October 31 (user, 2026-11-03)."
 
 [[milestone]]
 id = "m5"
-date = 2026-11-08
+date = 2026-11-12
 name = "The door opens"
-means = "The full friend group's first evening. The only fixed date on this page."
+means = "The full friend group's first evening. The only fixed date on this page. Thursday November 12 since November 5 (the friends were busy on Sunday the 8th)."
 
 # ---------------------------------------------------------------------------------------
 # Weeks.
@@ -164,7 +170,13 @@ summary = "Fixes from the week-3 sittings, a fresh-character sweep on the exact 
 id = "w5"
 starts = 2026-11-02
 title = "Slack, fixes, and the door"
-summary = "Deliberately light. Fixes from the rehearsal, the rest of the group onboarded once the build is final, and Sunday evening. If weeks 1 to 4 run as drawn, this week is mostly empty, which is the point."
+summary = "Drawn as a light week: fixes from the pre-door check, the rest of the group onboarded once the build was final, and Sunday evening. Redrawn November 5: the door moved to the next Thursday, and the November bump (the hills, the facing, the held-item cursor, the server split, the offline-free client) moved into this weekend instead of waiting until after the door, so the week ends with the bump day and the first of its sheets."
+
+[[week]]
+id = "w6"
+starts = 2026-11-09
+title = "The door, on a Thursday"
+summary = "Added November 5: the friends are busy on Sunday the 8th, so the door is Thursday the 12th, and the user spent the four days on the November bump rather than holding it until after. The bump's sheets finish early in the week, the pre-door check runs again on the build the friends will hold, the last zip goes out, and Thursday evening the door opens."
 
 # ---------------------------------------------------------------------------------------
 # Week 1: October 5 to 11
@@ -706,14 +718,14 @@ done_when = "Each re-run row filled in its checklist."
 
 [[row]]
 id = "p4"
-week = "w5"
+week = "w6"
 lane = "people"
-day = "Nov 6 to 7"
-what = "Onboard every friend not yet onboarded (the four named in d4 among them), each with the final build (inviting_a_player.md, steps 2 to 5). Half an hour each; the count is the user's call, and may be nobody."
+day = "Mon Nov 9 to Wed Nov 11"
+what = "Onboard every friend not yet onboarded (the four named in d4 among them), each with the bump build (inviting_a_player.md, steps 2 to 5). Half an hour each; the count is the user's call, and may be nobody."
 who = "user at a desk, friends"
 hours = 1.5
-needs = ["the final build settled (o7), so nobody receives two zips"]
-waits_on = ["o7"]
+needs = ["the bump zip (o20), so nobody receives two zips"]
+waits_on = ["o20"]
 done_when = "Each account appears in the account list without a [GM] tag."
 
 [[row]]
@@ -727,9 +739,9 @@ done_when = "Every checklist in that table carries a dated note at its top sayin
 
 [[row]]
 id = "o8"
-week = "w5"
+week = "w6"
 lane = "operate"
-day = "Sun Nov 8, morning"
+day = "Thu Nov 12, afternoon"
 what = "Health and backup check, dev_cmds=false confirmed, the console open for the evening."
 who = "user at a desk"
 hours = 0.5
@@ -737,9 +749,9 @@ done_when = "All checks pass."
 
 [[row]]
 id = "p5"
-week = "w5"
+week = "w6"
 lane = "people"
-day = "Sun Nov 8, evening"
+day = "Thu Nov 12, evening"
 what = "The door opens: the full group's first evening."
 who = "user at a desk, friends"
 hours = 4.0
@@ -751,10 +763,10 @@ done_when = "A session note records it; the phase 5 row in schedule.md section 7
 id = "d7"
 week = "w5"
 lane = "decide"
-day = "by Sun Nov 8"
+day = "by Thu Nov 12"
 what = "Phase 5's four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in."
 who = "user and planner"
-by = 2026-11-08
+by = 2026-11-12
 blocks = "The \"after the door opens\" list below becoming a dated plan."
 done_when = "Answers recorded in the plan doc; its bullet list freezes; one row joins schedule.md section 7."
 
@@ -762,10 +774,10 @@ done_when = "Answers recorded in the plan doc; its bullet list freezes; one row 
 id = "d8"
 week = "w5"
 lane = "decide"
-day = "by Sun Nov 8"
+day = "by Thu Nov 12"
 what = "docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it."
 who = "user"
-by = 2026-11-08
+by = 2026-11-12
 blocks = "Nothing."
 done_when = "One line in CLAUDE.md saying which."
 
@@ -784,10 +796,10 @@ done_when = "Each of the eight answered on the To-Do entry (Combat / weapons, EQ
 id = "d10"
 week = "w5"
 lane = "decide"
-day = "by Sun Nov 8"
+day = "by Thu Nov 12"
 what = "The factions and alignment design's nine decisions (docs/design/factions_and_alignment.md, section 6): the first six factions and the hit rule, who gets a kill's hits (the XP rule or EQ's hate list), the nine level thresholds, the v1 refusals (vendors at Dubious, quest givers at Apprehensive), alignment seeded from the class start, the Paladin and Shadow Knight off-side penalty kept on the server, no starting standings by race in v1, the mob and quest values, no GM freeze."
 who = "user"
-by = 2026-11-08
+by = 2026-11-12
 blocks = "The factions build (a migration and a bump), on the after-the-door strip."
 done_when = "Each of the nine answered on the Faction system To-Do entry."
 
@@ -795,13 +807,10 @@ done_when = "Each of the nine answered on the Faction system To-Do entry."
 # After the door opens: undated, per the planner's answer. Status for each lives in the To-Do.
 
 [[after]]
-text = "The November bump, prepared on bump/nov in both repos (feat/facing, the server split, the offline client code removed, the reformat, the lint rules): fast-forward both deploy branches, export, redeploy both sides together (PD_W0029), then the overnight checklist's sections 2 and 3 and the facing and held-item sheets. After the door by the user's call of November 3."
-
-[[after]]
 text = "Phase 5's own plan (docs/design/phase5_plan.md), decided November 3 and open-ended: the decided batch first end to end (all four built, their rows passing, so it closes on the ticks), then the server height model, built by Claude. No items promoted from the candidate list."
 
 [[after]]
-text = "The server height model, built by Claude (user, November 3), designed the same day and decided in full (docs/design/server_height_model.md): slices 0 and 1 with terrain line of sight built November 4 on feat/height-model in both repos (the ground compiled in, everything pinned, a step as the client's, sight for every targeted spell, arrow, AoE victim and idle mob; the exporter, the lockstep check, nine integration tests on a ramp and a ridge). Waits on the November bump: merged into bump/nov, redeployed with it, then height_model_checklist.md (a regression sheet on the flat world, one seat). Then falls (slice 2), then the first zone with real hills as its own plan. The capability the large world waits on."
+text = "The server height model, built by Claude (user, November 3), designed the same day and decided in full (docs/design/server_height_model.md): slices 0 to 3 built November 4 on feat/height-model in both repos (the ground compiled in, everything pinned, sight for every targeted spell, arrow, AoE victim and idle mob, falls, the first hills with the fling tool and mobs giving up below a face), then the evade and the hate-list turn of November 5. It rides the November bump (row o20, in front of the door since November 5) and its sheets are v58 and v59. What follows the door: Levitate and Feather Fall at the landing, the bow's own sight check on the client, the next hills, chunking and a navmesh when the world grows. The capability the large world waits on."
 
 [[after]]
 text = "Trade slice 2: handing items to NPCs."
@@ -1375,10 +1384,10 @@ todo = "Housekeeping audit 2026-10-23"
 id = "d11"
 week = "w4"
 lane = "decide"
-day = "by Sun Nov 8 (the first is best answered before the bump's redeploy)"
+day = "by Thu Nov 12 (the first is best answered before the bump's redeploy)"
 what = "Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later."
 who = "user"
-by = 2026-11-08
+by = 2026-11-12
 blocks = "Slice 0 (one server handler now, the Test Panel's death button with the export); slice 1 waits on the server height model."
 done_when = "Each of the five answered on the Housekeeping audit To-Do entry."
 
@@ -1454,13 +1463,13 @@ todo = "Other players never turn"
 id = "v40"
 week = "w5"
 lane = "verify"
-day = "the next bump day (server and export together)"
+day = "Sun Nov 8, the same sitting as v59"
 what = "Two seats: one turns in place, strafes and backs up while the other watches the body turn; the facing survives a relog."
 who = "user at a desk, two seats"
 hours = 0.25
-needs = ["the next bump redeploy", "the bump export", "second seat (two-boxing works)"]
+needs = ["the November bump live (o20)", "second seat (two-boxing works)"]
 checklist = "remote_facing_checklist.md"
-waits_on = ["b39"]
+waits_on = ["b39", "o20"]
 todo = "Other players never turn"
 done_when = "Every row filled."
 
@@ -1609,13 +1618,13 @@ todo = "Held-item bank and vendor interactions"
 id = "v49"
 week = "w5"
 lane = "verify"
-day = "the next bump day (server and export together)"
+day = "Sun Nov 8 or Mon Nov 9"
 what = "One seat beside the banker and Brom: a lifted stack lands in the vault clicked (personal or shared), merges into a same-item stack, is refused when the vault is full or the item is a bag; the merchant's list leads with what is in hand and sells from it, a held full pouch refused; the old paths unchanged; the ledger rows and the balance in admin_report."
 who = "user at a desk"
 hours = 0.75
-needs = ["the next bump redeploy", "the bump export", "a Small Pouch with something in it"]
+needs = ["the November bump live (o20)", "a Small Pouch with something in it"]
 checklist = "held_item_bank_and_vendor_checklist.md"
-waits_on = ["b49", "b39"]
+waits_on = ["b49", "b39", "o20"]
 todo = "Held-item bank and vendor interactions"
 done_when = "Every row filled."
 
@@ -1790,27 +1799,25 @@ done_when = "Section 1 filled."
 id = "b54"
 week = "w5"
 lane = "build"
-day = "the next bump day, after feat/facing merges"
-what = "Merge refactor/tick-split (server) and refactor/remove-offline-code (client) onto the deploy branches after the facing, then the one-time rustfmt and the lints turned on. The doc lines the offline removal makes stale go in with it."
-who = "Claude, with the user's yes on the reformat"
+day = "Sat Nov 7, the bump day's first step"
+what = "The bump branch made whole: bump/nov in both repos already carries the facing, the server split, the offline client removed, the one-time rustfmt and the lints (prepared November 2); feat/height-model (slices 0 to 3, the evade, the hate-list turn, the ground's winding) merges into it in both repos, the server suite and every client check run green on the merged pair, and the wire layer (gdext_net.dll) is built from the merged server. The deploy branches then fast-forward to it (o20)."
+who = "Claude, the user watching the checks"
 days = 0.5
-waits_on = ["b52", "b53"]
-tentative = true
-done_when = "Both deploy branches carry the two refactors, the suite and every client check green."
+waits_on = ["b52", "b53", "b55"]
+done_when = "Both bump/nov branches carry the height model and are pushed; the suite and every client check green on the pair; the DLL in addons/gdext_net/ is the merged build."
 todo = "Housekeeping audit 2026-10-23"
 
 [[row]]
 id = "v58"
 week = "w5"
 lane = "verify"
-day = "after the bump's redeploy, with v57"
-what = "The height model's regression sheet on the flat world: movement, combat and spells, camps and pets, death, corpses and ports, the NPC services, all reading exactly as before; the boot line naming the ground; check_all.ps1 with the terrain check."
+day = "Sat Nov 7 evening or Sun Nov 8, after o20, with v57"
+what = "The height model's regression sheet: movement, combat and spells, camps and pets, death, corpses and ports, the NPC services, all reading as before (the town and the camps sit on floors; the hills ride the same merge, so the sheet's header says what changed); the boot line naming the ground; check_all.ps1 with the terrain checks."
 who = "user at a desk, one seat (two for section 6)"
 hours = 0.75
-needs = ["the bump redeploy with feat/height-model merged"]
+needs = ["the November bump live (o20)"]
 checklist = "height_model_checklist.md"
-waits_on = ["b54"]
-tentative = true
+waits_on = ["o20"]
 todo = "The server height model"
 done_when = "Every section filled."
 
@@ -1829,14 +1836,13 @@ todo = "The server height model"
 id = "v59"
 week = "w5"
 lane = "verify"
-day = "after the bump's redeploy and export, after v58"
-what = "The first hills sheet: the look and the town, the routes out and the pass, fighting on the hills, the Wraith Gate cliff and a death from it, sight through the terrain at the cliff, the Sunken Barrow and the rim, the Fling tool, and two seats for a mob that gives up below the cliff and a pet that warps to its owner."
+day = "Sun Nov 8, after v58"
+what = "The first hills sheet: the look and the town, the routes out and the pass, fighting on the hills, the Wraith Gate cliff and a death from it, sight through the terrain at the cliff, the Sunken Barrow and the rim, the Fling tool, the evade below a face, and two seats for a mob that gives up below the cliff and a pet that warps to its owner."
 who = "user at a desk, one seat for most of it, two for sections 5 and 9, a GM account"
 hours = 3.9
-needs = ["the bump redeploy and export with feat/height-model merged", "second seat (two-boxing works)"]
+needs = ["the November bump live (o20)", "second seat (two-boxing works)"]
 checklist = "first_hills_checklist.md"
-waits_on = ["b54", "b55"]
-tentative = true
+waits_on = ["o20", "b55"]
 todo = "The server height model"
 done_when = "Every section filled."
 
@@ -1844,12 +1850,50 @@ done_when = "Every section filled."
 id = "v57"
 week = "w5"
 lane = "verify"
-day = "the next bump day, after b54"
+day = "Sun Nov 8 or Mon Nov 9, after o20"
 what = "Ordinary play on the split server (a fight, casts, a group, the merchant and bank, a trade, a death, a camp) with a clean journal, and the client without the offline game: the login and lobby, your own group row, a pet's fight with a clean console, the Test Panel's tools, the bag window."
 who = "user at a desk, two seats, a GM account"
 hours = 1
-needs = ["the bump redeploy and export", "second seat (two-boxing works)"]
+needs = ["the November bump live (o20)", "second seat (two-boxing works)"]
 checklist = "overnight_2026_11_01_checklist.md"
-waits_on = ["b54"]
+waits_on = ["o20"]
 todo = "Housekeeping audit 2026-10-23"
 done_when = "Sections 2 and 3 filled."
+
+[[row]]
+id = "o20"
+week = "w5"
+lane = "operate"
+day = "Sat Nov 7"
+what = "The November bump day, moved in front of the door (user, 2026-11-05: the four extra days carry the new work to the friends instead of holding it until after). With everyone logged out: fast-forward both deploy branches to the merged bump/nov (b54), redeploy the R720, export the client from the merged branch with the wire layer built from the merged server, zip it. One protocol bump (PD_W0029), so the old zip stops connecting the moment the server restarts and the new one goes out within the hour."
+who = "user at a desk; Claude runs the merges, the checks and the export"
+hours = 1.5
+needs = ["everyone logged out", "the R720 over SSH", "the merged DLL in addons/gdext_net/ (built from the merged server, not the deploy checkout's old branch)"]
+waits_on = ["b54"]
+milestone = "m6"
+done_when = "The boot line shows the new build=, dev_cmds=false and the terrain line naming the hills; the export log reads stamped with the merged sha; the zip is in builds/ and sent."
+
+[[row]]
+id = "v60"
+week = "w6"
+lane = "verify"
+day = "Tue Nov 10"
+checklist = "pre_door_check_checklist.md"
+what = "The pre-door check again, on the build the friends will now hold: a fresh character plays the starter book for 45 minutes on the bump build, hills and all (the November 3 run was on the pre-bump build). Marked in place as a second run. Anything odd gets a To-Do line the same day; a server fix redeploys, a client fix means one more zip (o21)."
+who = "user at a desk"
+hours = 1.0
+needs = ["the bump build on the R720 and in the zip (o20)", "the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run"]
+waits_on = ["o20", "v58", "v59"]
+milestone = "m4"
+done_when = "Every row marked for the second run; no new ERROR lines in the server log."
+
+[[row]]
+id = "o21"
+week = "w6"
+lane = "operate"
+day = "Wed Nov 11"
+what = "The final build settled and sent: if the sheets or the second pre-door check found a client fix, one more export and zip to every friend; if only server fixes, a redeploy and no zip. Nobody receives two zips in a row without a reason."
+who = "user at a desk"
+hours = 1.0
+waits_on = ["v60"]
+done_when = "Every friend holds the latest zip (its stamp on the login screen), and the R720's boot line is the build the sheets were run on, or a later one whose fix has its own row."
