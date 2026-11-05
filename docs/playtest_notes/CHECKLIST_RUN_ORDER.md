@@ -45,6 +45,10 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
 7. `inspect_range_gm_audit_ban_checklist.md` §2 (audit log via `admin_report`), §5 (dev tools
    regression), §6 (the Hunter's Medal on the sheet).
 8. `bagspace_groupbars_checklist.md` §1 (carry a pouch, buy something, watch it fill).
+9. **After the November bump** (redeploy and export, both from `bump/nov` with
+   `feat/height-model` merged): `height_model_checklist.md` (the height model's regression
+   pass, on the town and the first two rings), then `first_hills_checklist.md` (the hills
+   themselves; its §5 and §9 want a second seat, §7 and §9 a GM).
 
 ## Two seats (two accounts; two-boxing works)
 

@@ -146,7 +146,8 @@ range). Random messages and random bytes never crash the handler. Why: NaN passe
 Held by: `nan_move_direction_is_dropped`, `a_players_facing_reaches_the_watcher`,
 `a_forged_negative_coin_amount_moves_nothing`,
 `random_client_messages_never_panic_the_handler`, `random_bytes_never_panic_the_decoder`,
-`a_chat_line_cut_inside_a_multibyte_char_does_not_crash_the_server`
+`a_chat_line_cut_inside_a_multibyte_char_does_not_crash_the_server`,
+`a_flung_gm_lands_for_the_formulas_damage` (on feat/height-model)
 
 ### A4. Reach and rate are the server's
 Everything aimed at something (a spell, an inspect, a vendor, a loot) checks the distance on
@@ -159,8 +160,9 @@ Held by: `heals_reach_30_m_and_not_past_it`, `pvp_nuke_refuses_out_of_range`, `i
 ### A5. The ground and the sight are the server's
 Where everything stands is the server's own ground (the client's terrain, compiled in), a
 player's step up a slope is what the client's body could take and no step climbs a face past
-the limit however short, and nothing targeted reaches through the terrain: a spell, an
-arrow, an AoE's reach or an idle mob's notice. A fall is the server's too: it begins where
+the limit however short or however slanted (a diagonal or a zigzag up a cliff), a mob or pet
+climbs nothing a player cannot and gives up on a target above a face, and nothing targeted
+reaches through the terrain: a spell, an arrow, an AoE's reach or an idle mob's notice. A fall is the server's too: it begins where
 the ground drops away under a step, lands on the server's ground and costs what the height
 says, and neither a Quit nor a port mid-air gets out of the landing. Why: a modified client
 that sent its own height, walked up a cliff, cast from behind a hill, or never reported a
@@ -171,7 +173,10 @@ Held by: `micro_steps_climb_no_face` (on feat/height-model), `a_step_up_a_face_t
 `a_mob_on_a_rise_closes_to_melee_with_a_player_at_its_foot` (on feat/height-model),
 `a_walk_off_a_ten_metre_ledge_costs_a_fifth_of_max_hp` (on feat/height-model),
 `a_quit_in_mid_air_still_takes_the_landing` (on feat/height-model),
-`a_fall_to_zero_leaves_the_corpse_where_the_body_landed` (on feat/height-model)
+`a_fall_to_zero_leaves_the_corpse_where_the_body_landed` (on feat/height-model),
+`a_diagonal_climbs_no_face` (on feat/height-model), `nobody_climbs_out_over_the_rim` (on feat/height-model),
+`a_mob_at_a_face_stops_and_gives_up` (on feat/height-model),
+`a_mob_at_a_face_gives_up_and_walks_home` (on feat/height-model)
 
 ### D1. Dev tools are gated and audited, or refused
 A dev command runs only for a GM account or a dev-mode server, and only if its audit row
@@ -179,7 +184,8 @@ was queued; one that cannot be recorded is refused. A refused attempt writes not
 says nothing. Why: the tools are deliberate and essential for testing; this is what keeps
 them from being anyone else's.
 Held by: `is_gm_gates_dev_commands`, `gm_commands_are_audited_only_when_authorized`,
-`gm_command_burst_is_recorded_whole`, `death_broadcast_is_a_dev_command`
+`gm_command_burst_is_recorded_whole`, `death_broadcast_is_a_dev_command`,
+`a_flung_gm_lands_for_the_formulas_damage` (on feat/height-model)
 
 ## Client and server agree
 

@@ -3003,6 +3003,53 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `check_all.ps1 -ServerRoot`, all 14 checks green against `server-height`, the server
   baseline 396 unit and 177 world green on `351e732`, the terrain tool rows in `commands.md`.
   The Opus session takes 4.1 onward. Nothing else built.
+  **Slice 3 BUILT 2026-11-04 (night, the Opus 5.5 session from the handoff), pending the
+  November bump (the export and the redeploy, together) and `first_hills_checklist.md`**
+  (server `d5de613` the slope fix, `e5db8a8` the hills, `b78d11b` the fling, `8d21d97` mobs at
+  a face; client `18f3bdb` the hills, `4c54789` the Fling buttons, `2f97a4a` the sight check;
+  all on `feat/height-model`, pushed; session note §55 to §59). What exists: the relief as data
+  (`data/terrain_features.toml`, twelve features) composed by `tools/author_terrain.gd` into
+  `world.tscn`'s 40 x 40 grid of 10 m cells after a report (every camp spawn, its jitter
+  corners and every NPC on a floor; the town and the NPC row at 0; route grades; the rim),
+  heights rounded to Godot's 0.0001 m collider snap, the mesh and collider spliced in; the
+  server's `terrain.toml` exported from it (boot line `terrain="40x40 cells of 10 m, floor 0,
+  hash f2bd278da1c3"`) and held by `world/terrain_content.rs` (spawns and NPCs on floors, the
+  town flat, nobody climbs out over the rim); flat shading and a height tint
+  (`terrain_mesh.gd`: `LOW_COLOR`, `HIGH_COLOR`, `TINT_TOP` 30 m, knobs). Four features took
+  new numbers so their shapes exist at 10 m cells (the plan's §11: the ridge 24, the pass half
+  width 12, the two dips as a rim with a hollow, the rim 40 m); no camp moved. **The slope
+  rule's hole, found building the rim:** it judged a step's own grade, so a diagonal or a
+  zigzag climbed any face; a rising step onto ground past the 60° limit is now refused
+  whatever its direction. **The fling:** `DevFling { height }` appended last under PD_W0029,
+  dev-gated and audited (`dev_fling`), a height outside (0, `MAX_FLING_HEIGHT` 100 m] or not
+  finite dropped silently, then the ordinary fall; the Test Panel's Fling 5 m and 20 m. **Mobs
+  at a face:** every mob and pet step goes through the slope rule; held for `MOB_STUCK_SECS`
+  (8 s, a knob, `world/mod.rs`) a chasing mob forgets everyone and walks home to heal, a mob
+  walking home warps there, a following pet warps to its owner, an attacking pet drops its
+  target; a mob healed at home is now told to every player (a leash never fanned it). **The
+  client's sight check:** `Spells` refuses a targeted cast the terrain hides before the bar,
+  with the server's line; the terrain on a physics layer of its own (`terrain`, layer 2); held
+  by `tools/check_terrain_sight.gd` (in `check_all.ps1`, now 15 checks: the ray against a port
+  of `can_see` over 3,000 pairs, no disagreement) and `tools/probe_cast_sight.gd`. The harness
+  runs every test with no ground of its own on a flat plate. Suites: 404 unit, 179 world,
+  clippy and fmt clean; every new test fails with its rule disabled. **Exploit lens:** a
+  modified client with its own scene walks the server's hills, not its own (the
+  reconciliation pulls it back, the slope rule refuses any climb onto a face, the sight rule
+  reads the server's ground), and the hash refuses a hand-edited `terrain.toml`; the rim's
+  outer cells are 63° faces all round, so nobody leaves the plate; a player on a lip nuking a
+  mob at its foot gets no kill unless they can burst it inside 8 s (the mob walks home and
+  heals; it never hits back meanwhile; the knob is the lever), and cannot cast through the
+  face; the pet warp moves a pet only to where its owner stands; the fling is a GM's, audited,
+  bounded and finite before anything moves, and its landing costs the GM; the client's sight
+  check is a courtesy, the server's `can_see` at the release the rule. **Flagged, not built:**
+  the bow's client sight check (a bow at a hidden target gets the server's Miss); the corpse,
+  pet-heal and bind-on-another cases of the client check (the server's line, a round trip
+  late); a client-side slope pre-check (the body's own floor angle is it); the pet-warp
+  integration test (its route runs past 25 s; the unit test holds the rule); mobs take a slope
+  at full speed; terrain chunking; a navmesh; a per-creature `LOS_HEIGHT`;
+  `addons/terrain_editor` left disabled; `check_terrain_lockstep.gd` and
+  `check_terrain_sight.gd` join invariant L1's holders after the merge (the deploy branch's
+  `tools/` lacks them).
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);

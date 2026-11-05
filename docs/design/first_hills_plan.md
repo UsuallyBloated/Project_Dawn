@@ -45,7 +45,7 @@ navmesh.
   rule in `zone_size_limits.md` §6 predates the height model and is retired by it.
 - **The client.** Remote players, mobs, pets, corpses and bags already draw at the server's
   full position, so hills cost them nothing. Every body sits on physics layer 1 (the terrain,
-  the floor, the player, the remote entities); corpses and bags use layer 4 for the click ray;
+  the floor, the player, the remote entities); corpses and bags use layer 3 (`collision_layer = 4`, a bitmask) for the click ray;
   NPCs are on no layer. `Targeting` casts the only rays today. `addons/terrain_editor` is a
   disabled click-drag vertex sculpting plugin (`plugin.gd`, 3 KB), never used; the
   `scripts/dunes.gd` generator of April is gone.
@@ -265,3 +265,43 @@ build order and the verified anchors are in `handoff_first_hills_build.md`.
 7. **The harness.** The existing tests move to a flat terrain and the hills are held by their
    own checks and tests, or the suite runs on the real hills and the tests the hills break are
    rewritten. Recommended: the flat default. **DECIDED: the flat default.**
+
+## 11. As built (2026-11-04, night)
+
+Built on `feat/height-model` in both repos by the Opus 5.5 session from
+`handoff_first_hills_build.md`, all five pieces, each its own commit; it rides the November
+bump (the export and the redeploy together). The sheet is
+`docs/playtest_notes/first_hills_checklist.md`. What differed from this plan:
+
+- **Four features changed their numbers so the shapes exist at 10 m cells** (the camps were
+  not moved; the generator's report is clean). The ridge's height is 24, not 16: its line
+  z = 85 falls between two grid rows, which sample it a quarter in from its crest, so 16 gave
+  a 12 m crest with 50° sides anyone could walk over; 24 gives a 17.8 m crest with 61° faces.
+  The pass's half width is 12, not 6: at 6 only the x = 0 column was cut and the pass was a
+  notch of 50° walls with no floor; at 12 the columns at x = -10, 0 and 10 are cut and the pass
+  has a floor 20 m wide. Bat Hollow and the crypt's bowl are each a low rise with the hollow
+  dug back out of it: a hollow on flat ground is clamped to the floor by the composition, so
+  as drafted both vanished. The rim is 40 m, not 30: 30 over 20 m is 56°, which the server's
+  60° climb limit lets a modified client climb, and 36 still left the cells where the war
+  camp's shelf lifts the rim's foot at 59°.
+- **The slope rule had a hole the hills exposed** (server `d5de613`): it judged a step's own
+  grade, so a diagonal or a zigzag climbed any face. Fixed: a rising step onto ground steeper
+  than the limit is refused whatever its direction (`server_height_model.md` §3.4).
+- **Heights are rounded to 0.0001 m** by the generator: Godot's `create_trimesh_shape` snaps
+  every collider vertex to that, so the server now samples exactly the triangles the client
+  collides with (the lockstep check caught 588 vertices a hair off).
+- **The scene's mesh and collider are refreshed headless** by splicing the bodies Godot's own
+  text saver writes for a TerrainMesh built from the new heights into the scene's three terrain
+  subresources; the full repack of the instanced world was not needed. Re-running the
+  generator leaves the scene byte-identical.
+- **A mob healed at home is now told to every player** (the AI loop fans its HealthUpdate): a
+  leash never fanned it, so a watcher's bar kept the HP the mob left the fight with, which
+  the give-up rule would have made obvious.
+- **The sight check is a `check_`, not a probe** (`tools/check_terrain_sight.gd`, about 2 s,
+  in `check_all.ps1`), and a probe drives `cast_spell` itself (`tools/probe_cast_sight.gd`).
+- **The pet-warp integration test was not built**: its route (a bind, a fall, a summon, a
+  guard, a 5 s Gate, then the 8 s window) runs past 25 s; the unit test
+  `a_pet_that_cannot_reach_its_owner_warps_to_them` holds the rule.
+- **The ridge is no place to test sight from flat ground**: its flanks are faces and its 30 m
+  base puts a target out of reach, so the sheet tests sight at the Wraith Gate's cliff, from
+  its foot to its top.
