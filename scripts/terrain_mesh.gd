@@ -68,6 +68,7 @@ func _ensure_children() -> void:
 
 	if has_node("TerrainBody"):
 		_body = get_node("TerrainBody")
+		_body.collision_layer = COLLISION_LAYERS
 		_col_shape = _body.get_node("TerrainCol")
 	else:
 		_body = StaticBody3D.new()

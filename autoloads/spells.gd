@@ -453,44 +453,45 @@ func _cast_target_id(spell: SpellData) -> int:
 		return (t as RemotePet).pet_id
 	return 0
 
-# True when `spell` needs a target within its reach and the current target is
-# further than that. Only the cases the server range-checks: an ENEMY or
-# PET_CHARM spell on its target, and an ALLY spell aimed at another player or a
-# pet (an ALLY spell with anything else targeted falls back to the caster, so
-# it has no reach to check).
-func _target_out_of_reach(spell: SpellData) -> bool:
+# The target and the caster of a cast the client checks for reach and sight,
+# or [] when there is nothing to check. Only the cases the server range-checks
+# and sight-checks: an ENEMY or PET_CHARM spell on its target, and an ALLY
+# spell aimed at another player or a pet (an ALLY spell with anything else
+# targeted falls back to the caster, so it has nothing to check). A corpse, a
+# pet heal and a bind on another get the server's refusal a round trip later.
+func _checked_target(spell: SpellData) -> Array[Node3D]:
 	var ranged := spell.target_type == SpellData.TargetType.ENEMY \
 			or spell.target_type == SpellData.TargetType.PET_CHARM \
 			or _ally_target_is_remote(spell)
 	if not ranged:
-		return false
+		return []
 	var t = Combat.current_target
 	if t == null or not is_instance_valid(t) or not (t is Node3D):
-		return false
+		return []
 	var me := get_tree().get_first_node_in_group("player") as Node3D
 	if me == null:
-		return false
-	return me.global_position.distance_to((t as Node3D).global_position) > spell.reach()
+		return []
+	return [me, t as Node3D]
 
-# Whether the terrain stands between the caster and the target of a targeted
-# cast (the cases _target_out_of_reach takes; a corpse, a pet heal and a bind
-# on another get the server's refusal a round trip later). Both ends are the
-# feet raised by LOS_HEIGHT, as the server's can_see raises them.
+# True when the target of a checked cast is further than the spell reaches.
+func _target_out_of_reach(spell: SpellData) -> bool:
+	var pair := _checked_target(spell)
+	if pair.is_empty():
+		return false
+	return pair[0].global_position.distance_to(pair[1].global_position) > spell.reach()
+
+# True when the terrain stands between the caster and the target of a checked
+# cast. Both ends are the feet raised by LOS_HEIGHT, as the server's can_see
+# raises them; the ray asks for the terrain layer alone.
 func _target_out_of_sight(spell: SpellData) -> bool:
-	var ranged := spell.target_type == SpellData.TargetType.ENEMY 			or spell.target_type == SpellData.TargetType.PET_CHARM 			or _ally_target_is_remote(spell)
-	if not ranged:
-		return false
-	var t = Combat.current_target
-	if t == null or not is_instance_valid(t) or not (t is Node3D):
-		return false
-	var me := get_tree().get_first_node_in_group("player") as Node3D
-	if me == null:
+	var pair := _checked_target(spell)
+	if pair.is_empty():
 		return false
 	var up := Vector3(0.0, LOS_HEIGHT, 0.0)
 	var params := PhysicsRayQueryParameters3D.create(
-		me.global_position + up, (t as Node3D).global_position + up, TERRAIN_LAYER_MASK)
+		pair[0].global_position + up, pair[1].global_position + up, TERRAIN_LAYER_MASK)
 	params.collide_with_areas = false
-	return not me.get_world_3d().direct_space_state.intersect_ray(params).is_empty()
+	return not pair[0].get_world_3d().direct_space_state.intersect_ray(params).is_empty()
 
 # The server refused a cast that had ALREADY completed here
 # (target out of reach or gone, a spell the server has no effect for). It took

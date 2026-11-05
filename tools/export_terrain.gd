@@ -328,7 +328,7 @@ static func slope_deg_at(terrain: Dictionary, x: float, z: float) -> float:
 
 # Whether two points, each raised by LOS_HEIGHT, see each other over the
 # terrain: a line-for-line port of world/terrain.rs::can_see, for the sight
-# probe (tools/probe_terrain_sight.gd), which holds the client's physics ray
+# check (tools/check_terrain_sight.gd), which holds the client's physics ray
 # to it. Inside one triangle the ground is a plane and the line a line, so the
 # clearance is checked at both ends and wherever the line crosses a cell edge
 # or a cell diagonal.

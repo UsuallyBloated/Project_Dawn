@@ -44,6 +44,16 @@ func _run() -> void:
 		printerr("The scene's TerrainCol has no triangles.")
 		quit(2)
 		return
+	# The scene's own terrain and floor must stand on the terrain layer (for
+	# the ray) and on layer 1 (for every body): the bodies built below carry it
+	# by construction, so without this a scene that lost the line would pass
+	# here while the client let every cast through.
+	var layer_problems := _scene_layer_problems(layer)
+	if not layer_problems.is_empty():
+		for p in layer_problems:
+			print("FAIL " + p)
+		quit(1)
+		return
 
 	# The terrain as the client collides with it, on the terrain layer only.
 	var body := StaticBody3D.new()
@@ -118,3 +128,26 @@ func _on_ground(scene: Dictionary, rng: RandomNumberGenerator, origin: Vector3, 
 	var x := origin.x + rng.randf_range(-half, half)
 	var z := origin.z + rng.randf_range(-half, half)
 	return Vector3(x, Exporter.ground_at(scene, x, z), z)
+
+
+# The TerrainBody's and the Floor's collision layers as world.tscn stores them
+# (a StaticBody3D left at the default keeps no line: layer 1 alone).
+func _scene_layer_problems(terrain_layer: int) -> Array[String]:
+	var state := (load(Exporter.WORLD_SCENE) as PackedScene).get_state()
+	var found := {}
+	for i in state.get_node_count():
+		var path := String(state.get_node_path(i))
+		if path != "./TerrainMesh/TerrainBody" and path != "./Floor":
+			continue
+		var layers := 1
+		for j in state.get_node_property_count(i):
+			if String(state.get_node_property_name(i, j)) == "collision_layer":
+				layers = int(state.get_node_property_value(i, j))
+		found[path] = layers
+	var problems: Array[String] = []
+	for path in ["./TerrainMesh/TerrainBody", "./Floor"]:
+		if not found.has(path):
+			problems.append("world.tscn has no %s" % path)
+		elif (found[path] & terrain_layer) == 0 or (found[path] & 1) == 0:
+			problems.append("%s is on collision_layer %d in world.tscn; it must carry layer 1 and the terrain layer (%d)" % [path, found[path], terrain_layer])
+	return problems
