@@ -196,9 +196,15 @@ clock, and after `MOB_STUCK_SECS` (8 s, a knob): a chasing mob forgets everyone 
 home, where it heals to full (and every watcher is told its HP, which a leash never used to
 fan); a mob walking home up a face it came down warps home; a pet following its owner warps
 to them; a pet attacking drops a target it cannot reach. Mobs still take a slope at full
-speed (no `cos²θ` for them) and still have no way round a face. Residual: a caster with burst
-enough to kill inside the 8 s still gets the kill from a perch, and the mob never hits back;
-the knob is the lever.
+speed (no `cos²θ` for them) and still have no way round a face. The review pass of the same
+night made the clock a progress clock keyed to its goal (1 m closer, `STUCK_PROGRESS_M`, or a
+new goal, stops it; a step taken does not) and made giving up forget only the unreachable
+target (`094ec29`). **Open, a decision for the user:** the perch. The Greywood crest is
+walkable from the ridge's ends, and from its north edge a crypt champion can sit inside spell
+reach; the mob is held at the foot, takes damage for the 8 s and its walk home, and heals only
+at home, so a caster with enough damage kills it at no risk. Recommended: an evading mob
+(immune while held below a face past a short grace and while it walks home after giving up),
+the WoW answer.
 
 ### 3.6 What this model does not cover
 
