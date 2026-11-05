@@ -3050,6 +3050,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `addons/terrain_editor` left disabled; `check_terrain_lockstep.gd` and
   `check_terrain_sight.gd` join invariant L1's holders after the merge (the deploy branch's
   `tools/` lacks them).
+  **Review pass the same night** (`/code-review`, nine findings, eight fixed: server
+  `094ec29`, client `2dc49a8`; session note §60): the stuck clock is a progress clock keyed
+  to its goal (`StuckClock`, cleared only by coming `STUCK_PROGRESS_M`, 1 m, closer or a new
+  goal; any step taken used to clear it, so a mob sliding along a face's foot after a player
+  walking the lip never gave up, and a new target inherited the old one's time); giving up
+  forgets only the unreachable target and turns on the best present hater (it used to wipe
+  the whole hate list, so a Warrior at the foot got free swings); the heal at home is an
+  explicit `AiEvents` flag; the client's reach and sight checks share `_checked_target`;
+  `check_terrain_sight.gd` fails when `world.tscn`'s TerrainBody or Floor loses the terrain
+  layer; a test on the compiled hills (a Cleric on the Greywood crest above the crypt's
+  bowl). Flagged: a kited mob that brushes a face once and is then outrun gives up after 8 s
+  (the safe side; ordinary kiting never starts the clock). **One decision waits on the user,
+  the perch:** the crest is walkable from the ridge's ends and a crypt champion jittered to
+  about (6, 108) is 28.9 m from its north edge, inside spell reach; the mob is held below the
+  face, takes damage for the 8 s and the walk home without answering, and heals only at
+  home, so a caster with enough damage kills it at no risk. Recommended: WoW's evade, a
+  mob immune to damage while it is held below a face past a short grace and while it walks
+  home after giving up (a new rule across the ten mob-damage sites).
+  Alternatives: warp home and heal the moment it gives up (only the 8 s stays open), or leave
+  it.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);

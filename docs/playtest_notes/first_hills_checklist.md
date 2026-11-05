@@ -133,6 +133,9 @@ either side its 30 m base puts any target out of reach, so it is no place for th
       plateau at the lip above, about (152, 0), nukes it once and takes it; A walks 20 m away
       south) → the mob walks to the foot of the cliff under B and stops there; about 8 s later
       it turns away, walks home and its HP bar refills to full when it gets there. notes:
+- [ ] **The same, with A staying at the foot and meleeing the mob while B keeps the most hate
+      on the lip** → when the mob gives up on B it turns on A and fights, rather than walking
+      home under A's swings. notes:
 - [ ] **A pet that cannot reach its owner** (an owner with a pet at the cliff's foot walks round
       and up the ramp to the lip above it, or Gates to a bind on the plateau) → the pet stops at
       the foot, and about 8 s later appears beside its owner. notes:
