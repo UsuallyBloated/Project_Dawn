@@ -3084,6 +3084,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   healed out from under them. Tests: a unit test and
   `a_mob_whose_target_dies_turns_on_the_next_hater` (a GM tank dies, the dummy comes for the
   other Cleric), both failing with the mob sent home.
+  **The ground faced down, FIXED 2026-11-05** (client `3785cb6`; session note §63; the user,
+  looking at the hills in the editor: "We appear to be looking through the terrain."). Every
+  triangle `TerrainMesh` has ever built (the 2026 original too) ran its corners the wrong way
+  round, so its front face pointed down: the ground was culled from above, and a body dropped
+  on a 10 m plateau sank 0.6 m into the one-sided collider and never stood on it (the flat
+  world hid both; the Floor plane caught everyone). The corners now run the other way, same
+  triangles and diagonal, so the heights, `terrain.toml` and its hash are unchanged; the
+  lockstep check fails on a triangle facing down; `tools/probe_terrain_stand.gd` (6 checks,
+  all failing on the old winding); `world.tscn` rebaked. Server untouched.
   Also found: from (152, 0) the Wraith Gate's lip cannot see its own foot (only the last half
   metre can), so the sheet's two-seat face rows moved to the crest.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
