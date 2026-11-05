@@ -394,7 +394,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 ## Where things are documented
 
 - **Current plan, dates & sequencing** → `docs/schedule.md` — the push to a playable friends
-  build (target **2026-11-08**, slipped from 09-14 on 09-09, then from 10-05 on 09-27), with the phases, the critical path, and the velocity the estimates
+  build (target **2026-11-12**, slipped from 09-14 on 09-09, from 10-05 on 09-27, then from 11-08 on 11-05), with the phases, the critical path, and the velocity the estimates
   are measured against. **There is one checkbox list in this project and it's the To-Do below.**
   The schedule holds no boxes: its per-phase bullets are the plan, and its status table is just a
   progress readout of what the To-Do already says. (Restructured 2026-09-09: the schedule's
@@ -1103,7 +1103,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   million messages). The bump day is now a fast-forward of both deploy branches to it. **The
   `unwrap` / `expect` rule BUILT 2026-11-03 on `bump/nov`** (`29fa206`): denied in live code, the
   57 sites made checks before anything moves, logged unreachables or stated invariants; review
-  pass folded in. **The bump waits until after the Nov 8 evening** (user, 2026-11-03).
+  pass folded in. **The bump was to wait until after the Nov 8 evening (user, 2026-11-03); on
+  2026-11-05 the door moved to Thu Nov 12 (the friends busy on the 8th) and the bump moved in
+  front of it** (user: "now that the date is pushed we can add this new tech"): Sat Nov 7 by the
+  planner (row o20), its sheets and a second pre-door check before the last zip goes out.
   Status per finding: the findings doc's §5.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
