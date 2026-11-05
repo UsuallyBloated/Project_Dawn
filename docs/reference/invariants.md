@@ -147,7 +147,7 @@ Held by: `nan_move_direction_is_dropped`, `a_players_facing_reaches_the_watcher`
 `a_forged_negative_coin_amount_moves_nothing`,
 `random_client_messages_never_panic_the_handler`, `random_bytes_never_panic_the_decoder`,
 `a_chat_line_cut_inside_a_multibyte_char_does_not_crash_the_server`,
-`a_flung_gm_lands_for_the_formulas_damage` (on feat/height-model)
+`a_flung_gm_lands_for_the_formulas_damage`
 
 ### A4. Reach and rate are the server's
 Everything aimed at something (a spell, an inspect, a vendor, a loot) checks the distance on
@@ -168,18 +168,18 @@ the ground drops away under a step, lands on the server's ground and costs what 
 says, and neither a Quit nor a port mid-air gets out of the landing. Why: a modified client
 that sent its own height, walked up a cliff, cast from behind a hill, or never reported a
 fall.
-Held by: `micro_steps_climb_no_face` (on feat/height-model), `a_step_up_a_face_too_steep_to_climb_is_refused` (on feat/height-model),
-`a_nuke_and_a_heal_across_a_ridge_are_refused_and_land_from_the_crest` (on feat/height-model),
-`a_bow_needs_sight_of_its_target` (on feat/height-model), `an_idle_mob_behind_a_ridge_notices_a_player_only_at_the_crest` (on feat/height-model),
-`a_mob_on_a_rise_closes_to_melee_with_a_player_at_its_foot` (on feat/height-model),
-`a_walk_off_a_ten_metre_ledge_costs_a_fifth_of_max_hp` (on feat/height-model),
-`a_quit_in_mid_air_still_takes_the_landing` (on feat/height-model),
-`a_fall_to_zero_leaves_the_corpse_where_the_body_landed` (on feat/height-model),
-`a_diagonal_climbs_no_face` (on feat/height-model), `nobody_climbs_out_over_the_rim` (on feat/height-model),
-`a_mob_at_a_face_stops_and_gives_up` (on feat/height-model),
-`a_mob_at_a_face_gives_up_and_walks_home` (on feat/height-model),
-`a_mob_held_below_a_face_evades_until_it_is_home` (on feat/height-model),
-`a_mob_below_the_greywood_ridge_gives_up_on_a_player_on_its_crest` (on feat/height-model)
+Held by: `micro_steps_climb_no_face`, `a_step_up_a_face_too_steep_to_climb_is_refused`,
+`a_nuke_and_a_heal_across_a_ridge_are_refused_and_land_from_the_crest`,
+`a_bow_needs_sight_of_its_target`, `an_idle_mob_behind_a_ridge_notices_a_player_only_at_the_crest`,
+`a_mob_on_a_rise_closes_to_melee_with_a_player_at_its_foot`,
+`a_walk_off_a_ten_metre_ledge_costs_a_fifth_of_max_hp`,
+`a_quit_in_mid_air_still_takes_the_landing`,
+`a_fall_to_zero_leaves_the_corpse_where_the_body_landed`,
+`a_diagonal_climbs_no_face`, `nobody_climbs_out_over_the_rim`,
+`a_mob_at_a_face_stops_and_gives_up`,
+`a_mob_at_a_face_gives_up_and_walks_home`,
+`a_mob_held_below_a_face_evades_until_it_is_home`,
+`a_mob_below_the_greywood_ridge_gives_up_on_a_player_on_its_crest`
 
 ### D1. Dev tools are gated and audited, or refused
 A dev command runs only for a GM account or a dev-mode server, and only if its audit row
@@ -188,16 +188,16 @@ says nothing. Why: the tools are deliberate and essential for testing; this is w
 them from being anyone else's.
 Held by: `is_gm_gates_dev_commands`, `gm_commands_are_audited_only_when_authorized`,
 `gm_command_burst_is_recorded_whole`, `death_broadcast_is_a_dev_command`,
-`a_flung_gm_lands_for_the_formulas_damage` (on feat/height-model)
+`a_flung_gm_lands_for_the_formulas_damage`
 
 ## Client and server agree
 
 ### L1. A number both sides hold has a check
-Spells, items, vendor stock, skills, characters, factions, shared constants and the wire
+Spells, items, vendor stock, skills, characters, factions, shared constants, the terrain and the wire
 layer each live on both sides, and each pair has a check that exits 1 when they differ.
 Why: the client draws what the server decides; when they disagree, the player sees one
 thing and gets another.
 Held by: `check_spell_lockstep.gd`, `check_item_lockstep.gd`, `check_vendor_lockstep.gd`,
 `check_active_skill_lockstep.gd`, `check_character_lockstep.gd`, `check_constant_lockstep.gd`,
 `check_discipline_lockstep.gd`, `check_faction_lockstep.gd`, `check_skill_table_lockstep.gd`,
-`check_wire_layer.gd`
+`check_wire_layer.gd`, `check_terrain_lockstep.gd`, `check_terrain_sight.gd`
