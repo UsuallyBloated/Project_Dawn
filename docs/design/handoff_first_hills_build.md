@@ -1,7 +1,8 @@
 # Handoff, 2026-11-04: building the first hills (height model slice 3)
 
 > **BUILT 2026-11-04 night, all of §4** (server `d5de613`, `e5db8a8`, `b78d11b`, `8d21d97`;
-> client `18f3bdb`, `4c54789`, `2f97a4a`, on `feat/height-model`), pending the November bump
+> client `18f3bdb`, `4c54789`, `2f97a4a`, on `feat/height-model`; review fixes server
+> `094ec29`, client `2dc49a8`), pending the November bump
 > and `first_hills_checklist.md`. What differed from this file is in `first_hills_plan.md`
 > §11; one anchor corrected below in place (the dummy's aggro), and the plan's "layer 4" for
 > corpses and bags, which is the bitmask: they are on layer 3. With `check_terrain_sight.gd`
