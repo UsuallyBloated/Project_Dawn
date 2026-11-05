@@ -206,7 +206,10 @@ edge a crypt champion sits inside spell reach, held at the foot. WoW's answer: a
 below a face past a 1 s grace (`EVADE_GRACE_SECS`, refused within the last 0.5 s,
 `EVADE_REFUSAL_RECENT_SECS`). An evading mob takes nothing: a swing is an Evade and adds no
 hate, a hostile spell is refused before its cost, an AoE skips it, a DoT's ticks deal nothing.
-What the edge still gets is the walk to the foot and the grace, about 4 s.
+What the edge still gets is the walk to the foot and the grace, about 4 s. With it, the same
+day (`267065f`): a mob whose target dies, ports, leaves or runs past its leash turns on the next
+attacker on its hate list within its leash, and walks home only with nobody left, so the evade
+on the walk home never heals a mob out from under a group still fighting it.
 
 ### 3.6 What this model does not cover
 
