@@ -28,6 +28,15 @@ var _gcd_remaining: float = 0.0
 # The server's GLOBAL_COOLDOWN is a quarter second shorter (2.0 s), so an
 # honest player who waits this out is never refused; every gem greys meanwhile.
 const GLOBAL_COOLDOWN_SECS := 2.25
+# Line of sight (the height model): a targeted cast needs the caster's and the
+# target's chests, this far above their feet, to see each other over the
+# terrain. The server's LOS_HEIGHT (world/terrain.rs), held equal by
+# tools/check_constant_lockstep.gd; the server's can_see at the release is the
+# rule, this check only spares an honest player the bar and the round trip.
+const LOS_HEIGHT := 1.2
+# The terrain's own physics layer (layer 2, "terrain"): the sight ray asks for
+# it alone, so no body, corpse or bag blocks a line of sight.
+const TERRAIN_LAYER_MASK := 2
 
 # The spell most recently sent to the server, and when. A server refusal
 # (CastFail) arriving within REFUSAL_WINDOW_MSEC of it means that cast never
@@ -184,6 +193,10 @@ func cast_spell(spell: SpellData) -> bool:
 	# nothing for it), but checking here first means the cast bar never runs.
 	if _target_out_of_reach(spell):
 		spell_failed.emit("Your target is too far away.")
+		return false
+	# Sight, the server's line: the same targets as the reach check.
+	if _target_out_of_sight(spell):
+		spell_failed.emit("You cannot see your target.")
 		return false
 
 	# The server owns the bind and every destination (spell batch step 2):
@@ -440,24 +453,45 @@ func _cast_target_id(spell: SpellData) -> int:
 		return (t as RemotePet).pet_id
 	return 0
 
-# True when `spell` needs a target within its reach and the current target is
-# further than that. Only the cases the server range-checks: an ENEMY or
-# PET_CHARM spell on its target, and an ALLY spell aimed at another player or a
-# pet (an ALLY spell with anything else targeted falls back to the caster, so
-# it has no reach to check).
-func _target_out_of_reach(spell: SpellData) -> bool:
+# The target and the caster of a cast the client checks for reach and sight,
+# or [] when there is nothing to check. Only the cases the server range-checks
+# and sight-checks: an ENEMY or PET_CHARM spell on its target, and an ALLY
+# spell aimed at another player or a pet (an ALLY spell with anything else
+# targeted falls back to the caster, so it has nothing to check). A corpse, a
+# pet heal and a bind on another get the server's refusal a round trip later.
+func _checked_target(spell: SpellData) -> Array[Node3D]:
 	var ranged := spell.target_type == SpellData.TargetType.ENEMY \
 			or spell.target_type == SpellData.TargetType.PET_CHARM \
 			or _ally_target_is_remote(spell)
 	if not ranged:
-		return false
+		return []
 	var t = Combat.current_target
 	if t == null or not is_instance_valid(t) or not (t is Node3D):
-		return false
+		return []
 	var me := get_tree().get_first_node_in_group("player") as Node3D
 	if me == null:
+		return []
+	return [me, t as Node3D]
+
+# True when the target of a checked cast is further than the spell reaches.
+func _target_out_of_reach(spell: SpellData) -> bool:
+	var pair := _checked_target(spell)
+	if pair.is_empty():
 		return false
-	return me.global_position.distance_to((t as Node3D).global_position) > spell.reach()
+	return pair[0].global_position.distance_to(pair[1].global_position) > spell.reach()
+
+# True when the terrain stands between the caster and the target of a checked
+# cast. Both ends are the feet raised by LOS_HEIGHT, as the server's can_see
+# raises them; the ray asks for the terrain layer alone.
+func _target_out_of_sight(spell: SpellData) -> bool:
+	var pair := _checked_target(spell)
+	if pair.is_empty():
+		return false
+	var up := Vector3(0.0, LOS_HEIGHT, 0.0)
+	var params := PhysicsRayQueryParameters3D.create(
+		pair[0].global_position + up, pair[1].global_position + up, TERRAIN_LAYER_MASK)
+	params.collide_with_areas = false
+	return not pair[0].get_world_3d().direct_space_state.intersect_ray(params).is_empty()
 
 # The server refused a cast that had ALREADY completed here
 # (target out of reach or gone, a spell the server has no effect for). It took

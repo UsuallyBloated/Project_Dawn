@@ -492,7 +492,7 @@ func _on_entity_target(id: int, target_id: int) -> void:
 	if rp != null and is_instance_valid(rp):
 		rp.apply_target_change(target_id)
 
-func _on_evade(_attacker: int, target: int) -> void:
+func _on_evade(attacker: int, target: int) -> void:
 	# DamageNumbers has no spawn_evade; reuse spawn_miss — same visual
 	# meaning (the attack landed but did nothing). Future polish could
 	# distinguish them.
@@ -501,9 +501,13 @@ func _on_evade(_attacker: int, target: int) -> void:
 		if not players.is_empty():
 			DamageNumbers.spawn_miss((players[0] as Node3D).global_position)
 		return
-	var rp = _by_id.get(target)
-	if rp != null and is_instance_valid(rp):
-		DamageNumbers.spawn_miss(rp.global_position)
+	# Anyone else, a player under the Evade skill or a mob evading (held
+	# below a face, or walking home; the server's Entity::is_evading).
+	var node := _entity_node(target)
+	if node != null:
+		DamageNumbers.spawn_miss((node as Node3D).global_position)
+	if attacker == Net.get_player_id():
+		CombatLog.add_line("%s evades your attack." % _attacker_display_name(target), CombatLog.MsgType.DAMAGE_OUT)
 
 # Track 4 sub-task 3 — full buff snapshot. Cached on _spawn_data so a
 # rehydrate (scene transition with the peer mid-buffs) replays the last

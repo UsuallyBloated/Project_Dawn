@@ -5,6 +5,13 @@ const SPEED = 5.0
 const CROUCH_SPEED = 2.5
 const GRAVITY = -20.0
 const JUMP_VELOCITY = 7.0
+# The floor the body keeps (its snap down to it) and the steepest slope it
+# walks. The server's fall model carries the same numbers with GRAVITY
+# (crates/projectdawn-server/src/world/fall.rs), held in lockstep by
+# tools/check_constant_lockstep.gd: it decides where a body leaves the ground
+# and what the landing costs; the body here only draws the fall.
+const FLOOR_MAX_ANGLE_DEG = 55.0
+const FLOOR_SNAP_LENGTH = 0.5
 const MOUSE_SENSITIVITY = 0.003
 # Pixels the cursor must travel with the left button held before a click turns
 # into a camera-orbit drag. Below this, a left press is a target-select click.
@@ -33,8 +40,9 @@ const CROUCH_CAMERA_Y = 0.7
 #     differ from world.tscn's local spawn point.
 #   - Else: snap if horizontal divergence > SERVER_SNAP_THRESHOLD, otherwise
 #     update _server_pos_target and lerp toward it each physics tick.
-# Server has no Y-axis physics in slice 2 (no gravity, no jumping). Reconcile
-# X/Z only; Y stays under local control until server-side physics lands.
+# The server runs its own fall off its own ground (fall.rs) and judges the
+# landing; the body here keeps its own gravity to draw itself, so Y is never
+# reconciled: X/Z only, the two agreeing by sharing the floor numbers above.
 const SERVER_SNAP_THRESHOLD := 1.0  # metres
 # Time-based smoothing rate. Per-frame factor is computed as
 # `1.0 - exp(-RATE * delta)` so closure speed is consistent across framerates.
@@ -140,8 +148,8 @@ func _ready() -> void:
 	_cam_pitch = camera_pivot.rotation.x
 	_cam_yaw = camera_pivot.rotation.y
 	add_to_group("player")
-	floor_snap_length = 0.5
-	floor_max_angle = deg_to_rad(55.0)
+	floor_snap_length = FLOOR_SNAP_LENGTH
+	floor_max_angle = deg_to_rad(FLOOR_MAX_ANGLE_DEG)
 	ChatWindowManager.visible = true
 	PlayerDeath.player_died.connect(_on_death_camera)
 	PlayerDeath.player_respawned.connect(_on_respawn_camera)
