@@ -3076,9 +3076,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   second Smite refused; the plateau test's Warrior swing an Evade; each fails with its guard
   off (the AoE, DoT and pet guards have no test of their own). Residual: the walk to the foot
   and the grace, about 4 s, are still damage from the edge, so a burst caster still needs the
-  kill inside that window. **A question for the user:** when a mob's target dies or ports
-  (`wipe_hate`), it walks home even if others hold hate, and now walks home immune, so a group
-  whose tank dies watches it heal; EQ turns on the next on its hate list, a small change.
+  kill inside that window. **EQ's hate list, DECIDED 2026-11-05 (user: "Make the mob turn to
+  the next player on its hate list") and BUILT the same day** (server `267065f`; session note
+  §62): a mob whose target dies, ports, leaves the world or runs past its leash turns on the
+  present attacker with the most hate within its leash (`next_hater_or_home`) and walks home
+  only with nobody left; a target past the leash loses its hate but keeps its damage (kill
+  credit). Before, it walked home with the group still on it, and with the evade it would have
+  healed out from under them. Tests: a unit test and
+  `a_mob_whose_target_dies_turns_on_the_next_hater` (a GM tank dies, the dummy comes for the
+  other Cleric), both failing with the mob sent home.
   Also found: from (152, 0) the Wraith Gate's lip cannot see its own foot (only the last half
   metre can), so the sheet's two-seat face rows moved to the crest.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
