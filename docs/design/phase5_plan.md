@@ -153,7 +153,8 @@ window). Read against the To-Do and the checklists on the decision date:
 
 **What the answers mean in practice.** (1) Track B end to end first: all four are built and
 their rows pass, so B closes once the open To-Do entries are ticked on that evidence. (2) No
-date box: the friends-build schedule retires after the Nov 8 evening by its own rule, so the
+date box: the friends-build schedule retires after the door (Thu Nov 12 since 11-05; Nov 8 when
+this was written) by its own rule, so the
 phase runs open-ended, with its one-line status in the schedule's §7 and the planner's
 undated after-the-door strip. (3) Claude builds the height model, design first (D1's design
 doc, its exploit ledger and decisions, the user's approval), then the build. (4) No Track E
