@@ -1,5 +1,12 @@
 # Handoff, 2026-11-04: building the first hills (height model slice 3)
 
+> **BUILT 2026-11-04 night, all of §4** (server `d5de613`, `e5db8a8`, `b78d11b`, `8d21d97`;
+> client `18f3bdb`, `4c54789`, `2f97a4a`, on `feat/height-model`), pending the November bump
+> and `first_hills_checklist.md`. What differed from this file is in `first_hills_plan.md`
+> §11; one anchor corrected below in place (the dummy's aggro), and the plan's "layer 4" for
+> corpses and bags, which is the bitmask: they are on layer 3. With `check_terrain_sight.gd`
+> the client has 15 checks.
+
 **Written for:** the Claude session that builds this on Opus 5.5. The user decided all seven
 calls of `first_hills_plan.md` §10 on 2026-11-04 ("sounds fuckin awesome", the recommendations)
 and asked for a handoff the smaller model can follow at the same standard. Every path, name and
@@ -411,7 +418,9 @@ and z in [85, 115]; the west side a ramp from 0 at x = -130 to 15 at x = -100 (2
 the east, north and south sides one-cell faces (15 m over 5 m, 71.6°). Then:
 
 `a_mob_at_a_face_gives_up_and_walks_home`: A, a GM, seeded at (-45, 100) at the east foot,
-sends `send_dev_spawn("Face Dummy", 1, 500.0, 0, 3.0, 0.0)` (passive, speed 3, 500 HP) and reads
+sends `send_dev_spawn("Face Dummy", 1, 500.0, 0, 3.0, 0.5)` (passive, speed 3, 500 HP; aggro
+0.5, not 0.0: `leash_range` floors only a mob that aggros at all, so an aggro-0 dummy has a
+leash of 0 and never turns on whoever hits it) and reads
 its id and spawn position from `EnemySpawn`. B, a plain Cleric (level 5 via `set_char_level`),
 seeded at (-60.5, 100): on the plateau half a metre from the lip (from there the sight line to the
 foot clears the lip by 0.6 m and the ground by 10 m; from further back the lip blocks it, so
