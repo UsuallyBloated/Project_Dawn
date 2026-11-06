@@ -40,3 +40,7 @@ addons/gdext_net/*.pdb
 # Host runbooks, kept out of git by decision (they hold host details and test
 # account passwords); see the To-Do "Docs debt" entry.
 docs/deployment/
+
+# The harness makes a worktree per agent here (the tick-split and offline-removal
+# builds ran in one); a registered worktree, never content to commit.
+.claude/worktrees/
