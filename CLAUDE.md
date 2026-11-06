@@ -630,7 +630,27 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Not built: a drag gesture onto the vault (the held item follows the mouse, so the click is
   the drop); eating from the hand has the wire arm and no client affordance. **DEPLOYED
   2026-11-05 with the November bump** (server `267065f`, client `da83ea8`);
-  `held_item_bank_and_vendor_checklist.md` is runnable now.
+  `held_item_bank_and_vendor_checklist.md` is runnable now. **Part A of the master sheet run
+  2026-11-06: 16 of 19 rows PASS** (every bank and merchant row; `admin_report` and the setup
+  rows wait for the end of the sitting). Three asks from the notes are the entry directly below.
+- [ ] **The vault in the cursor grammar: lift from the vault, swap on an occupied cell, bags in
+  the bank** *(user, 2026-11-06, on the held-item sheet's rows B1.1, B1.4 and B1.6)*. (a) "I
+  cannot lift a stack of loaves onto the cursor if the loaves are in the vault": a left click on
+  a vault item with an empty hand should lift it, as a bag cell does. `BankWithdrawItem` names a
+  vault slot and no destination (the server places into the bags through the real placer), so it
+  is a wire change (a destination on the intent, or a withdraw-to-cursor intent), the next bump.
+  (b) "I would prefer the items swapped" when the held item is clicked onto an occupied cell:
+  `BankStoreItem` names a vault, not a slot (the server merges, then picks a free slot), so a
+  swap is a slot-targeted store plus the withdraw-to-cursor in ONE step; the same bump. (c) "We
+  need to allow bags in the bank": the server refuses any bag-typed item from anywhere
+  (`tick/banking.rs`, the MVP rule, empty or not) and the client refuses first. An EMPTY bag is
+  small (lift both refusals; no wire change, an export). A bag WITH contents needs the bags map
+  keyed to vault slots (as `CURSOR_BAG_KEY` did for the hand), its contents left out of
+  encumbrance while banked, and a bank UI that opens a banked bag: EQ's bank held bags and
+  opened them. **Decisions (user):** empty bags only or full bags; whether (a) and (b) ride the
+  next bump. Exploit lens: every move stays a server move through the placer, and a swap must be
+  one transaction (never a withdraw that lands beside a store that refuses, leaving two copies or
+  none).
 - [ ] **No-drop / no-trade item flag** *(flagged in `inventory_interaction_grammar.md` §8 and by
   the trade design's ledger, which explicitly has no rule "until itemization grows one"; audit
   2026-09-29)*. `ItemData` carries no binding flag; the two account-shared bank slots and the
@@ -3132,6 +3152,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   terrain=40x40 cells of 10 m, floor 0, hash f2bd278da1c3` at 22:29 UTC, nobody online at the
   stop. `height_model_checklist.md` and `first_hills_checklist.md` are runnable now; nothing
   ticked.
+- [ ] **NPC placeholder capsules sit half in the ground** *(user, 2026-11-06, part A of the master
+  sheet, with a screenshot: "This isnt an issue now, but i want to make sure it wont be an issue
+  when they get models")*. Verified: `dialogue_npc.tscn`, `vendor_npc.tscn` and `banker_npc.tscn`
+  draw a centred 1.8 m `CapsuleMesh` at the node origin, so 0.9 m of it is below the ground
+  (`remote_player.tscn` raises its capsule 1 m). Always so, nothing to do with the hills: the
+  town is flat at 0 and the server derives each NPC's height from the ground. A real model will
+  not sink: its origin sits at its feet (Blender's export convention; the gnome body in the same
+  screenshot stands right) and the node origin is on the ground. The placeholder fix is a 0.9 m
+  offset on the mesh in the three scenes, three lines; waits on the go.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);

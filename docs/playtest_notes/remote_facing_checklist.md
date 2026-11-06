@@ -34,7 +34,7 @@ with the DLL check green means the server build predates PD_W0029.
 ## 2 — Persistence and spawn
 - [ ] **A turns to face B, logs out, logs back in** → A faces the same way on both screens straight after the login. notes:
 - [ ] **B logs in while A stands facing away** → A's body faces away on B's screen from the first frame. notes:
-- [ ] **GM: Test Panel spawn a mob** → it lands in front of where you actually face (the stale yaw used to put it in front of your login facing). notes:
+- [x] **GM: Test Panel spawn a mob** → it lands in front of where you actually face (the stale yaw used to put it in front of your login facing). notes: PASS (11-06, master R2.3).
 
 ## 3 — Regression
 - [ ] **Running, jumping, the jump relay, sitting** → unchanged. notes:

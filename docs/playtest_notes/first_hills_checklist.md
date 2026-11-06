@@ -54,13 +54,14 @@ on hills a key held into a cliff counts too, so a number there is a curiosity, n
 - [ ] **Note the start time** for the journal check at the end. notes:
 
 ## 1 — The look and the town
-- [ ] **Log in and look around the town** → flat as before; the hills visible in the distance,
+- [x] **Log in and look around the town** → flat as before; the hills visible in the distance,
       flat-shaded (faceted) and tinted green low, grey-brown high; the ground is solid
-      underfoot and from above (never seen through, never the far slopes from behind). notes:
+      underfoot and from above (never seen through, never the far slopes from behind). notes: PASS (11-06, master F1.1).
 - [ ] **Walk onto a hilltop and stand still, then jump** → you stand on the surface (feet on
       it, not sunk into it) and jump from it as on flat ground. notes:
-- [ ] **Vendor, bank, Sister Maelis's bind, a quest turn-in** → served as before; the NPCs stand
-      on the ground. notes:
+- [x] **Vendor, bank, Sister Maelis's bind, a quest turn-in** → served as before; the NPCs stand
+      on the ground. notes: PASS (11-06, master F1.3); the placeholder capsules sit half in the ground, see the
+      height sheet's §5 note and the To-Do.
 - [ ] **Walk the first two rings' camps (the Bonepile, Wolf Run, the Rat Warrens, the Shallow
       Graves, the gnoll raiders, the Boar Thicket, the Festering Mound)** → flat ground, play as
       before. notes:
@@ -120,11 +121,11 @@ either side its 30 m base puts any target out of reach, so it is no place for th
       down; nobody gets over it. notes:
 
 ## 7 — The Fling tool (a GM)
-- [ ] **Test Panel, Fling 5 m, anywhere** → the body goes up 5 m and drops: "You hit the ground
-      hard for N damage." with N about 7.5% of max HP. notes:
-- [ ] **Fling 20 m** → about 45% of max HP, the line, the HP bar. notes:
-- [ ] **On a plain account, the Test Panel's Fling** (if one is to hand) → nothing happens.
-      notes:
+- [x] **Test Panel, Fling 5 m, anywhere** → the body goes up 5 m and drops: "You hit the ground
+      hard for N damage." with N about 7.5% of max HP. notes: PASS (11-06, master F7.1).
+- [x] **Fling 20 m** → about 45% of max HP, the line, the HP bar. notes: PASS (11-06, master F7.2).
+- [-] **On a plain account, the Test Panel's Fling** (if you have one) → nothing happens.
+      notes: not run 11-06 (no plain account at the seat; the master row now says how).
 
 ## 8 — Regression
 - [ ] **Die anywhere and respawn** → the respawn lands at the bind on the ground. notes:

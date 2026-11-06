@@ -44,7 +44,7 @@ show; §3 is what the client removal changes on screen.
 - [x] **Melee a camp mob to death, loot the corpse** → swings land, the kill pays XP, the loot window takes items. notes:
 - [x] **Cast a heal and a nuke; let one fizzle or get interrupted** → mana and lines as before. notes:
 - [x] **Group the two seats, kill a mob** → the XP share and the group panel bars. notes:
-- [x] **Buy from Brom, sell to him, deposit at the bank and withdraw** → coins and items move as before. notes:
+- [x] **Buy from Brom, sell to him, deposit at the bank and withdraw** → coins and items move as before. notes: [11-06, the bump build (master O2.5): PASS.]
 - [x] **Trade an item between the seats** → the commit lands on both. notes:
 - [x] **Die, respawn, loot the corpse** → gear goes back on. notes:
 - [x] **/camp one seat, close the other with the window X** → the camp logs out; the other lingers about 30 s, as before. notes:
@@ -57,14 +57,14 @@ show; §3 is what the client removal changes on screen.
 > These rows are run again on the bump-day export. The levels note is filed in the To-Do (UI
 > polish, "Other players' levels"); the Healing Light note waits on a screenshot (both sides list
 > it at 10 mana and nothing on the client changes the cost).]
-- [x] **The login screen** → no Offline button. notes:
-- [x] **The lobby** → the character list and Enter World only (no Solo, Host, Join, Test Room, Test Dungeon or Delete Save). Create a character from it as usual. notes:
+- [x] **The login screen** → no Offline button. notes: [11-06, the bump export (master O3.1): PASS.]
+- [x] **The lobby** → the character list and Enter World only (no Solo, Host, Join, Test Room, Test Dungeon or Delete Save). Create a character from it as usual. notes: [11-06, the bump export (master O3.2): PASS.]
 - [x] **Grouped with the second seat, look at the group panel** → your own row is marked as you on both seats, and the leader sees the kick and leadership controls on the other member's row, not their own (online both used to key on whichever member had character id 1). notes:  We cant currently see eachother's levels in game.  But you probably already know that.
 - [x] **A pet class: summon a pet, attack a mob, watch the console** → the pet fights; no red line on each hit (online it used to error on every mob hit). notes:
-- [x] **The Test Panel (GM): Spawn Normal, Spawn Named, Despawn All, a GEAR give, Give 1,000 Copper, a faction slider, Take 20 dmg, Full Heal, Trigger Death** → each works as before. The removed buttons (the CHARACTER section, STATS OVERRIDE, ZONE TRAVEL, God Mode, No Cooldowns, Clear All Buffs) are gone. notes:
-- [x] **Open a bag window** → no Destroy button in it; destroying still works by holding the item over the inventory's trash cell. notes:  Destroy button still visible in the bag, destroy button doesnt work.
-- [x] **Eat by hand, drink by hand, sit to regen, sing a song (a Bard)** → all as before; the regen and buff bars follow the server. notes:
-- [x] **/dismount** → not a command any more (nothing can be mounted online). notes:
+- [x] **The Test Panel (GM): Spawn Normal, Spawn Named, Despawn All, a GEAR give, Give 1,000 Copper, a faction slider, Take 20 dmg, Full Heal, Trigger Death** → each works as before. The removed buttons (the CHARACTER section, STATS OVERRIDE, ZONE TRAVEL, God Mode, No Cooldowns, Clear All Buffs) are gone. notes: [11-06, the bump export (master O3.5): PASS.]
+- [x] **Open a bag window** → no Destroy button in it; destroying still works by holding the item over the inventory's trash cell. notes:  Destroy button still visible in the bag, destroy button doesnt work. [11-06, the bump export (master O3.6): the button is gone, PASS.]
+- [x] **Eat by hand, drink by hand, sit to regen, sing a song (a Bard)** → all as before; the regen and buff bars follow the server. notes: [11-06, the bump export (master O3.7): eat, drink, sit and stand PASS; no Bard at the seat, the song not sung.]
+- [x] **/dismount** → not a command any more (nothing can be mounted online). notes: [11-06, the bump export (master O3.8): PASS.]
 - [x] **The console over the whole sitting** → no red script error. notes: Not that i saw.
 
 ## Notes / observations

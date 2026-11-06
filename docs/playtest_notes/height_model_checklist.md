@@ -60,7 +60,7 @@ honest player holding a key into a cliff counts too, since a Move carries the in
       → never a "You hit the ground hard" line, HP untouched, the relogin ordinary (on the flat
       world the server's fall never begins: a drop needs more than the body's half-metre
       snap). notes:
-- [ ] **Sit, stand, `/camp`** → as before. notes:
+- [ ] **Sit, stand, `/camp`** → as before. notes: [11-06: sit and stand PASS (master O3.7); `/camp` waits for part E, two seats.]
 
 ## 2 — Combat and spells
 - [ ] **Melee a camp mob** → hits land as before. notes:
@@ -87,8 +87,10 @@ honest player holding a key into a cliff counts too, since a Move carries the in
 - [ ] **Be resurrected** (two seats) → you land beside the corpse. notes:
 
 ## 5 — NPC services
-- [ ] **Vendor, bank, Sister Maelis's bind, a quest turn-in** → served as before (the NPCs'
-      heights are now derived from the ground; on the flat world the same 0). notes:
+- [x] **Vendor, bank, Sister Maelis's bind, a quest turn-in** → served as before (the NPCs'
+      heights are now derived from the ground; on the flat world the same 0). notes: PASS (11-06, master H5.1). The NPC capsules sit half in the ground: the three NPC scenes draw a
+      centred 1.8 m capsule at the node origin (always so, not the hills; the remote player's capsule
+      is raised 1 m); a model with its origin at its feet stands right. Filed in the To-Do.
 
 ## 6 — Two seats (optional)
 - [ ] **A partner's body, pet and corpse** → drawn where they are, on the ground, as before.

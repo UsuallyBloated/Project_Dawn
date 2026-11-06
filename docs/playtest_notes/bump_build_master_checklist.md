@@ -10,6 +10,11 @@ sheet, and a row that appears in two or three sheets is here once with every tag
 sheet comes back, Claude copies each mark into the five sheets, which stay the record the To-Do
 cites. Mark `[x]` pass, `[-]` blocked or skipped, and write what happened after `notes:`.
 
+**Status:** part A (the town, one seat) filled 2026-11-06 and copied into the five sheets, 28
+rows; Setup and parts B to F remain. The sitting ran on an export of `df4f29c`, whose game
+files are byte-identical to the `da83ea8` zip's (only the stamp differs), so the marks stand
+for the friends' build.
+
 | Tag | Sheet | Rows |
 |---|---|---|
 | O | `overnight_2026_11_01_checklist.md` | O2.n = §2 row n, O3.n = §3 row n (§1 passed on 11-02, not rerun) |
@@ -30,7 +35,7 @@ A to C can be one evening and parts D to F another; a part can stop and resume.
 | A pet class with Gate (a Magician or Necromancer: a summoned pet, a nuke, Gate at 8) | the pet rows, the evade nukes, Gate |
 | On the second seat, a Cleric (a heal and a buff on a group-mate, the resurrection, Gate at 8) | parts D and E; the sight rows need a spell cast on a group-mate |
 | A few stacks of Bread Loaf, some coin, a Small Pouch with something in it, and enough items to fill the personal vault's 10 slots | part A's bank and merchant rows (`/give` on the GM account) |
-| Optional, marked "if to hand": a Bard (Aria of Dismay, a song), a bow, a Druid or Wizard (Succor), a caster at level for a point-blank AoE, an Enchanter or Bard for a charm, a Conjured Bread, a plain (non-GM) account | the rows that say so; mark `[-]` without them |
+| Optional, marked "if you have one": a Bard (Aria of Dismay, a song), a bow, a Druid or Wizard (Succor), a caster at level for a point-blank AoE, an Enchanter or Bard for a charm, a Conjured Bread, a plain (non-GM) account | the rows that say so; mark `[-]` without them |
 
 ## Where things are (the hills)
 
@@ -71,34 +76,34 @@ There is nothing to start: the R720's journal keeps every line on its own.
 - [ ] (BS.2) **The characters from the table above**, the main seat beside Thalia Mourne (the banker) and Brom with the loaves, the coin and the pouch. notes:
 
 ## A — One seat: the town (flat)
-- [ ] (O3.1) **The login screen** → no Offline button. notes:
-- [ ] (O3.2) **The lobby** → the character list and Enter World only (no Solo, Host, Join, Test Room, Test Dungeon or Delete Save). Create a character from it as usual. notes:
-- [ ] (F1.1) **Log in and look around the town** → flat as before; the hills visible in the distance, flat-shaded (faceted) and tinted green low, grey-brown high; the ground solid underfoot and from above (never seen through, never the far slopes from behind). notes:
-- [ ] (H5.1, F1.3) **Vendor, bank, Sister Maelis's bind, a quest turn-in** → served as before; the NPCs stand on the ground. notes:
-- [ ] (O2.5, B3.1) **Buy from Brom, sell to him from a bag slot, right-click deposit from the bags with the bank open, withdraw** → coins and items move as before. notes:
-- [ ] (B1.1) **Open the bank, lift a stack of loaves onto the cursor, click an empty personal vault slot** → the loaves land in the personal vault (any slot; the server picks) and the hand is empty. notes:
-- [ ] (B1.2) **Lift another stack of the same loaves, click any personal vault cell** → it merges into the vault's stack (up to the stack cap). notes:
-- [ ] (B1.3) **Lift an item, click a shared vault slot** → it lands in the shared vault. notes:
-- [ ] (B1.4) **Lift an item, click an OCCUPIED vault cell holding a different item** → it deposits into a free slot of that vault; nothing is swapped. notes:
-- [ ] (B1.5) **With the personal vault full (10 slots), lift an item and click a cell** → "Your bank vault is full." and the item stays in hand. notes:
-- [ ] (B1.6) **Lift the pouch (with something in it), click a vault cell** → "Bags can't go in the bank vault." at once, nothing sent (no journal line), the pouch stays in hand. notes:
-- [ ] (B1.7) **Right-click a vault item while holding something** → it still withdraws into the bags; the held item stays in hand. notes:
-- [ ] (B1.8) **Walk out of the banker's reach with the window open, lift an item, click a cell** → "There is no banker near you." (the proximity gate, unchanged). notes:
-- [ ] (B2.1) **Open Brom, SELL tab, with loaves in hand** → the list starts with "In hand: Bread Loaf (N)", then the bags' items. notes:
-- [ ] (B2.2) **Select it and sell 2** → "Offered Bread Loaf x2 to the merchant.", the coin arrives, the hand keeps the rest and the entry's count updates. notes:
-- [ ] (B2.3) **Sell the rest** → the hand empties and the "In hand" entry leaves the list. notes:
-- [ ] (B2.4) **Lift the pouch (with something in it), select "In hand: Small Pouch", sell** → "Empty the bag before selling it."; nothing sold. notes:
-- [ ] (B2.5) **Open the SELL tab empty-handed, and with a Conjured Bread (no vendor value) in hand** (if to hand) → no "In hand" entry either time. notes:
-- [ ] (B2.6) **Lift an item with the SELL tab already open** → the entry appears without reopening the window. notes:
-- [ ] (B3.2) **A click on the inventory, the paperdoll or the world while holding** → places, equips or drops as before; the bank and vendor windows take only their own clicks. notes:
-- [ ] (O3.6) **Open a bag window** → no Destroy button in it; destroying still works by holding the item over the inventory's trash cell. notes:
-- [ ] (O3.7, H1.6) **Eat by hand, drink by hand, sit to regen, stand, sing a song (a Bard, if to hand)** → all as before; the regen and buff bars follow the server. notes:
-- [ ] (O3.8) **`/dismount`** → not a command any more (nothing can be mounted online). notes:
-- [ ] (O3.5) **The Test Panel (GM): Spawn Normal, Spawn Named, Despawn All, a GEAR give, Give 1,000 Copper, a faction slider, Take 20 dmg, Full Heal, Trigger Death** → each works as before. The removed buttons (the CHARACTER section, STATS OVERRIDE, ZONE TRAVEL, God Mode, No Cooldowns, Clear All Buffs) are gone. notes:
-- [ ] (R2.3) **Turn to face a new way, then Test Panel spawn a mob** → it lands in front of where you actually face (the stale yaw used to put it in front of your login facing). notes:
-- [ ] (F7.1) **Test Panel, Fling 5 m, anywhere** → the body goes up 5 m and drops: "You hit the ground hard for N damage." with N about 7.5% of max HP. notes:
-- [ ] (F7.2) **Fling 20 m** → about 45% of max HP, the line, the HP bar. Full Heal after. notes:
-- [ ] (F7.3) **On a plain account, the Test Panel's Fling** (if one is to hand) → nothing happens. notes:
+- [x] (O3.1) **The login screen** → no Offline button. notes:
+- [x] (O3.2) **The lobby** → the character list and Enter World only (no Solo, Host, Join, Test Room, Test Dungeon or Delete Save). Create a character from it as usual. notes:
+- [x] (F1.1) **Log in and look around the town** → flat as before; the hills visible in the distance, flat-shaded (faceted) and tinted green low, grey-brown high; the ground solid underfoot and from above (never seen through, never the far slopes from behind). notes:
+- [x] (H5.1, F1.3) **Vendor, bank, Sister Maelis's bind, a quest turn-in** → served as before; the NPCs stand on the ground. notes: NPCs appear half in the ground.  This isnt an issue now, but i want to make sure it wont be an issue when they get models.  Screenshot attached.
+- [x] (O2.5, B3.1) **Buy from Brom, sell to him from a bag slot, right-click deposit from the bags with the bank open, withdraw** → coins and items move as before. notes:
+- [x] (B1.1) **Open the bank, lift a stack of loaves onto the cursor, click an empty personal vault slot** → the loaves land in the personal vault (any slot; the server picks) and the hand is empty. notes:  This does not work the other way around:  I cannot lift a stack of loaves onto the cursor if the loaves are in the vault.
+- [x] (B1.2) **Lift another stack of the same loaves, click any personal vault cell** → it merges into the vault's stack (up to the stack cap). notes: tested with rat meat
+- [x] (B1.3) **Lift an item, click a shared vault slot** → it lands in the shared vault. notes:
+- [x] (B1.4) **Lift an item, click an OCCUPIED vault cell holding a different item** → it deposits into a free slot of that vault; nothing is swapped. notes:  I would prefer the items swapped in this situation.
+- [x] (B1.5) **With the personal vault full (10 slots), lift an item and click a cell** → "Your bank vault is full." and the item stays in hand. notes:
+- [x] (B1.6) **Lift the pouch (with something in it), click a vault cell** → "Bags can't go in the bank vault." at once, nothing sent (no journal line), the pouch stays in hand. notes:  We need to allow bags in the bank.
+- [x] (B1.7) **Right-click a vault item while holding something** → it still withdraws into the bags; the held item stays in hand. notes:
+- [x] (B1.8) **Walk out of the banker's reach with the window open, lift an item, click a cell** → "There is no banker near you." (the proximity gate, unchanged). notes:
+- [x] (B2.1) **Open Brom, SELL tab, with loaves in hand** → the list starts with "In hand: Bread Loaf (N)", then the bags' items. notes: Impresssive.  This is cool.  Nice work.
+- [x] (B2.2) **Select it and sell 2** → "Offered Bread Loaf x2 to the merchant.", the coin arrives, the hand keeps the rest and the entry's count updates. notes:
+- [x] (B2.3) **Sell the rest** → the hand empties and the "In hand" entry leaves the list. notes:
+- [x] (B2.4) **Lift the pouch (with something in it), select "In hand: Small Pouch", sell** → "Empty the bag before selling it."; nothing sold. notes:
+- [x] (B2.5) **Open the SELL tab empty-handed, and with a Conjured Bread (no vendor value) in hand** (if you have one) → no "In hand" entry either time. notes:
+- [x] (B2.6) **Lift an item with the SELL tab already open** → the entry appears without reopening the window. notes:
+- [x] (B3.2) **A click on the inventory, the paperdoll or the world while holding** → places, equips or drops as before; the bank and vendor windows take only their own clicks. notes:
+- [x] (O3.6) **Open a bag window** → no Destroy button in it; destroying still works by holding the item over the inventory's trash cell. notes:
+- [x] (O3.7, H1.6) **Eat by hand, drink by hand, sit to regen, stand, sing a song (a Bard, if you have one)** → all as before; the regen and buff bars follow the server. notes: WTF does "a Bard, if to hand" mean
+- [x] (O3.8) **`/dismount`** → not a command any more (nothing can be mounted online). notes:
+- [x] (O3.5) **The Test Panel (GM): Spawn Normal, Spawn Named, Despawn All, a GEAR give, Give 1,000 Copper, a faction slider, Take 20 dmg, Full Heal, Trigger Death** → each works as before. The removed buttons (the CHARACTER section, STATS OVERRIDE, ZONE TRAVEL, God Mode, No Cooldowns, Clear All Buffs) are gone. notes:
+- [x] (R2.3) **Turn to face a new way, then Test Panel spawn a mob** → it lands in front of where you actually face (the stale yaw used to put it in front of your login facing). notes:
+- [x] (F7.1) **Test Panel, Fling 5 m, anywhere** → the body goes up 5 m and drops: "You hit the ground hard for N damage." with N about 7.5% of max HP. notes:
+- [x] (F7.2) **Fling 20 m** → about 45% of max HP, the line, the HP bar. Full Heal after. notes:
+- [-] (F7.3) **On a plain account, the Test Panel's Fling** (if you have one: an account never granted GM; log in on it, open the Test Panel, press Fling 5 m) → nothing happens: the body stays put, no line, no HP lost, and the journal gets no `dev_fling` row for it. notes: do you mean "on hand"?  Not sure how to test. [Claude, 11-06: "if to hand" meant "if you have one"; the how-to is in the row now; not run yet, so marked `[-]`.]
 
 ## B — One seat: the flat ground (the first two rings of camps)
 - [ ] (H1.1) **Walk and run in every direction, turn in place, strafe** → the speed and the feel as before; no rubber-banding, no pull forward or back. notes:
@@ -110,10 +115,10 @@ There is nothing to start: the R720's journal keeps every line on its own.
 - [ ] (O2.2, H2.1) **Melee a camp mob to death, loot the corpse** → swings land, the kill pays XP, the loot window takes items. notes:
 - [ ] (O2.3, H2.2) **Cast a nuke at 25 to 30 m and a heal; let one fizzle or get interrupted** → they land, mana and lines as before; no "You cannot see your target." anywhere on the flat ground. notes:
 - [ ] (H2.3) **A bow at range** (if one is to hand) → arrows land as before. notes:
-- [ ] (H2.4) **A point-blank AoE** (a caster at level: Nature's Wrath, Ice Storm, Inferno; if to hand) → every mob inside the radius is hit. notes:
-- [ ] (H2.5) **A Bard: Aria of Dismay on a mob** (if to hand) → the slow pulses as before. notes:
+- [ ] (H2.4) **A point-blank AoE** (a caster at level: Nature's Wrath, Ice Storm, Inferno; if you have one) → every mob inside the radius is hit. notes:
+- [ ] (H2.5) **A Bard: Aria of Dismay on a mob** (if you have one) → the slow pulses as before. notes:
 - [ ] (H3.2, O3.4) **Summon a pet (or the warder), attack a mob, watch the console** → it appears beside you on the ground, follows, and attacks on `/pet attack`; no red line on each hit (online it used to error on every mob hit). notes:
-- [ ] (H3.3) **Charm a mob and let the charm end** (an Enchanter or a Bard, if to hand) → the mob comes back where it stood. notes:
+- [ ] (H3.3) **Charm a mob and let the charm end** (an Enchanter or a Bard, if you have one) → the mob comes back where it stood. notes:
 - [ ] (F9.6) **Pull a mob, run until it turns for home, then hit or nuke it on its walk back** → "<mob> evades your attack." or "Your target is evading."; it heals to full at home and fights normally when pulled again. notes:
 - [ ] (O2.7, H4.1, H4.2, F8.1) **Die (to a mob, or Trigger Death), respawn, walk back and loot the corpse** → the corpse lies at the death spot; the respawn lands at the bind, on the ground; gear goes back on. notes:
 - [ ] (H4.3, F8.2) **Gate (and Succor, if a Druid or Wizard is to hand)** → the arrival at the bind or the town square, on the ground, the pet along. notes:
