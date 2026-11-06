@@ -121,8 +121,8 @@ const ALL: Dictionary = {
 	# Two chains through the existing givers: Aldric carries the undead line
 	# (restless_bones → champions_crypt → the_undying), Brom the road line
 	# (road_toll → silk_harvest). Server mirror: quests.toml, same commit.
-	# Reward items are existing items.toml entries; the inline dicts below
-	# mirror their real stats for the offline path and the journal.
+	# Reward items are existing items.toml entries, granted by the server; the
+	# inline dicts below mirror their real stats.
 
 	"restless_bones": {
 		"id": "restless_bones",

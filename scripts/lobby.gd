@@ -1,121 +1,20 @@
 extends Control
 
-const GAME_SCENE   := "res://scenes/world.tscn"
-const DUNGEON_SCENE := "res://scenes/dungeon_world.tscn"
-const CHAR_CREATION_SCENE := "res://scenes/character_creation.tscn"
+# The lobby: the screen between the login screen's Play and the world. Net is
+# already connecting by the time it loads (login.gd hands the world token over
+# in process); this scene waits for the app-layer ConnectOk, applies the
+# server's character to PlayerStats, then shows Enter World. A drop before
+# Enter World shows the reason and, for a kick that named one, a live relogin
+# countdown.
 
-@onready var address_field: LineEdit = %AddressField
-@onready var port_field: LineEdit = %PortField
+const GAME_SCENE := "res://scenes/world.tscn"
+
 @onready var status_label: Label = %StatusLabel
-@onready var host_btn: Button = %HostButton
-@onready var join_btn: Button = %JoinButton
-@onready var solo_btn: Button = %SoloButton
-@onready var test_room_btn: Button = %TestRoomButton
-@onready var test_dungeon_btn: Button = %TestDungeonButton
-@onready var delete_save_btn: Button = %DeleteSaveButton
 @onready var enter_world_btn: Button = %EnterWorldButton
 
-# Local buttons that drive the legacy ENet / single-player flow. Hidden when
-# Net is in launcher mode (a server-authoritative session is already live);
-# re-shown if the world connection drops, so the user can fall back to
-# offline play.
-@onready var _local_buttons: Array[Control] = [
-	address_field, port_field,
-	solo_btn, host_btn, join_btn,
-	test_room_btn, test_dungeon_btn, delete_save_btn,
-]
-
 func _ready() -> void:
-	Network.is_test_room = false
-	multiplayer.connected_to_server.connect(_on_connected)
-	Network.connection_failed.connect(_on_connection_failed)
-	Network.server_disconnected.connect(_on_server_disconnected)
-
-	if Net.is_launcher_mode():
-		_setup_launcher_mode()
-
-func _on_solo_pressed() -> void:
-	Network.is_online = false
-	get_tree().change_scene_to_file(CHAR_CREATION_SCENE)
-
-func _on_host_pressed() -> void:
-	var port := int(port_field.text) if port_field.text.is_valid_int() else Network.DEFAULT_PORT
-	var err := Network.host_game(port)
-	if err != OK:
-		status_label.text = "Failed to host: " + error_string(err)
-		return
-	status_label.text = "Hosting on port %d" % port
-	get_tree().change_scene_to_file(CHAR_CREATION_SCENE)
-
-func _on_join_pressed() -> void:
-	var address := address_field.text.strip_edges()
-	if address.is_empty():
-		address = "127.0.0.1"
-	var port := int(port_field.text) if port_field.text.is_valid_int() else Network.DEFAULT_PORT
-	var err := Network.join_game(address, port)
-	if err != OK:
-		status_label.text = "Failed to connect: " + error_string(err)
-		return
-	status_label.text = "Connecting..."
-	host_btn.disabled = true
-	join_btn.disabled = true
-
-func _on_connected() -> void:
-	get_tree().change_scene_to_file(CHAR_CREATION_SCENE)
-
-func _on_connection_failed() -> void:
-	status_label.text = "Connection failed."
-	host_btn.disabled = false
-	join_btn.disabled = false
-
-func _on_server_disconnected() -> void:
-	status_label.text = "Server disconnected."
-	host_btn.disabled = false
-	join_btn.disabled = false
-
-func _on_test_room_pressed() -> void:
-	Network.is_online = false
-	Network.is_test_room = true
-	_setup_default_character()
-	get_tree().change_scene_to_file(GAME_SCENE)
-
-func _on_test_dungeon_pressed() -> void:
-	Network.is_online = false
-	Network.is_test_room = true
-	_setup_default_character()
-	get_tree().change_scene_to_file(DUNGEON_SCENE)
-
-const TEST_CHARACTER_NAME  := "Chortle"
-const TEST_CHARACTER_RACE  := "Troll"
-const TEST_CHARACTER_CLASS := "Shadow Knight"
-const TEST_CHARACTER_LEVEL := 50
-
-func _setup_default_character() -> void:
-	if SaveManager.load_save():
-		return
-	PlayerStats.player_name = TEST_CHARACTER_NAME
-	PlayerStats.apply_character(TEST_CHARACTER_RACE, TEST_CHARACTER_CLASS, TEST_CHARACTER_LEVEL)
-
-func _on_delete_save_pressed() -> void:
-	if SaveManager.has_save():
-		SaveManager.delete_save()
-		status_label.text = "Save deleted."
-	else:
-		status_label.text = "No save to delete."
-
-# ─── Launcher-mode flow ─────────────────────────────────────────────
-# When the game was spawned by the launcher, Net is already (or about to be)
-# connected to the world server. The local-mode buttons all assume offline /
-# legacy-ENet state and would put the player into an incoherent session
-# (e.g. clicking Test Dungeon teleports X/Z to whatever world.tscn position
-# the server has saved, dropping the player off the dungeon's floor mesh).
-# Hide the local UI, wait for the app-layer Connect handshake, then show an
-# Enter World button. If the connection drops before/after that, fall back
-# to local-save mode so offline dev iteration still works.
-
-func _setup_launcher_mode() -> void:
-	for control in _local_buttons:
-		control.visible = false
+	# The countdown's _process runs only while a kick's relogin time ticks.
+	set_process(false)
 	enter_world_btn.visible = false
 	status_label.text = "Connecting to world..."
 	Net.app_connected.connect(_on_app_connected)
@@ -142,15 +41,44 @@ func _on_app_connected(_player_id: int) -> void:
 
 func _on_app_disconnected(reason: String) -> void:
 	enter_world_btn.visible = false
-	status_label.text = "Disconnected: %s" % reason
-	for control in _local_buttons:
-		control.visible = true
+	_disconnect_reason = reason
+	_show_disconnect()
+
+# The live relogin countdown. When the kick named a time (a duplicate login
+# refused while the old body lingers), the server's one-shot "You can try again
+# in about Ns." is replaced by a line that ticks down to "now"; with no time,
+# the reason shows as the server wrote it.
+var _disconnect_reason := ""
+var _countdown_shown := -2
+
+func _show_disconnect() -> void:
+	var remaining := Net.get_kick_retry_remaining()
+	_countdown_shown = remaining
+	if remaining < 0:
+		status_label.text = "Disconnected: %s" % _disconnect_reason
+		set_process(false)
+		return
+	var reason := _strip_server_retry(_disconnect_reason)
+	if remaining > 0:
+		status_label.text = "Disconnected: %s You can log in again in %d s." % [reason, remaining]
+		set_process(true)
+	else:
+		status_label.text = "Disconnected: %s You can log in again now." % reason
+		set_process(false)
+
+# Drop the server's own "about Ns" sentence, which the live line replaces.
+# Matched on its exact wording (tick.rs, the duplicate-login refusal); if the
+# wording ever changes, the old sentence simply stays beside the countdown.
+func _strip_server_retry(reason: String) -> String:
+	var re := RegEx.new()
+	re.compile(" You can try again in about \\d+s\\.")
+	return re.sub(reason, "")
+
+func _process(_delta: float) -> void:
+	if Net.get_kick_retry_remaining() != _countdown_shown:
+		_show_disconnect()
 
 func _on_enter_world_pressed() -> void:
-	# Legacy ENet flags must be in a known state — they're irrelevant in
-	# launcher mode but world.gd / its children still read them.
-	Network.is_online = false
-	Network.is_test_room = false
 	# Track 4 follow-up E: tell the server we've left the lobby. Server
 	# gates EntitySpawn / Position fan-out on this so other players don't
 	# see our static body while we're still on the Enter World screen.

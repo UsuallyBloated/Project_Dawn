@@ -4,7 +4,7 @@ The order to run the open playtest checklists in, and what each needs. Kept curr
 checklist is added or finished (last update 2026-10-06). The status of every row lives in the
 checklist files themselves; this page only says what to run next.
 
-**As of 2026-10-13:** server `f58b796` on the R720 (the spell batch, food and water slice 1 with migration `0013_hunger.sql`, the dead-relogin and reliable-resend fixes, the `player link` latency line), boot line `dev_cmds=false`. Client exported 2026-10-13 20:48 from `25eefb1` with the rebuilt wire DLL (hash matches `addons/gdext_net/`; carries `/ping`). **Every open checklist below is runnable on that pair, including the rows that said "next export"**, and `food_and_water_checklist.md` and `dead_relogin_and_resend_checklist.md` join them. The bump day (Thursday Oct 22) brings the trade window, the charm retarget and the hunger window.
+**As of 2026-10-14:** server `5986f26` on the R720 (corpse auto-re-equip with migration `0014`, the `xp_mult` removal, the spell batch, food and water slice 1 with migration `0013_hunger.sql`, the dead-relogin and reliable-resend fixes, the `player link` latency line), boot line `dev_cmds=false`. Client exported 2026-10-13 20:48 from `25eefb1` with the rebuilt wire DLL (hash matches `addons/gdext_net/`; carries `/ping`). **Every open checklist below is runnable on that pair, including the rows that said "next export"**, and `food_and_water_checklist.md`, `dead_relogin_and_resend_checklist.md` and `corpse_reequip_checklist.md` join them. The bump day (Thursday Oct 22) brings the trade window, the charm retarget and the hunger window.
 
 **Test characters:** the `spelltest` account holds one character per class the spell rows
 need (table in `ported_spells_checklist.md`). Log in as `spelltest` with password
@@ -45,6 +45,10 @@ it kept here, 2026-10-06. If it ever needs changing: `reset_password spelltest` 
 7. `inspect_range_gm_audit_ban_checklist.md` §2 (audit log via `admin_report`), §5 (dev tools
    regression), §6 (the Hunter's Medal on the sheet).
 8. `bagspace_groupbars_checklist.md` §1 (carry a pouch, buy something, watch it fill).
+9. **After the November bump** (redeploy and export, both from `bump/nov` with
+   `feat/height-model` merged): `height_model_checklist.md` (the height model's regression
+   pass, on the town and the first two rings), then `first_hills_checklist.md` (the hills
+   themselves; its §5 and §9 want a second seat, §7 and §9 a GM).
 
 ## Two seats (two accounts; two-boxing works)
 

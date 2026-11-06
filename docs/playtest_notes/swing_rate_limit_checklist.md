@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 33, 35 (line numbers as of the triage).
 
+> **Triage 2026-11-01: retired.** Rows 37 and 39 are covered by `haste_limiter_and_cast_relay_checklist.md` row 32 (2026-11-01: a Haste on a Warrior, fought through with no rejection line), against a limiter rebuilt to read the player's real haste.
+
 The server now enforces a per-hand minimum interval between swings (no swing timer existed, so a
 modified client could spam `Attack` for an attack-speed hack). It derives the equipped weapon's
 `weapon_delay`, assumes max haste, and silently drops any same-hand swing that arrives faster than

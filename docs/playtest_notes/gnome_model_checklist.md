@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 32, 33, 34, 35, 40, 41, 44, 45, 54, 55, 56, 57 (line numbers as of the triage).
 
+> **Triage 2026-11-01: moved.** It belongs to the art pipeline: step 6 of the review loop in `docs/design/meshy_asset_pipeline.md` (the in-game sign-off; the Gnome rows of `docs/design/art_assets_checklist.md`), not a planner sitting. It is out of date: it describes the July blockout, and `gnome.glb` was replaced on 2026-10-15 (`48ff037`, with `MODEL_FACING_YAW = PI`, checked only by a headless probe). Rewrite it for the current model before anyone runs it; the remote-view rows overlap `remote_facing_checklist.md`.
+
 Verifies the first per-race character model: a Gnome character should render as `gnome.glb`
 instead of the default 2 m capsule, for the local player (no server needed) and for other
 players who see a gnome (server needed). Cosmetic only — collision/camera/nameplates still

@@ -23,7 +23,7 @@
 [meta]
 title = "Project Dawn: Week by Week to the Friends Build"
 start = 2026-10-05
-target = 2026-11-08
+target = 2026-11-12
 hours_per_week = 30
 minutes_per_checklist_row = 6
 stale_checklist_days = 30
@@ -58,7 +58,7 @@ text = "The user has about thirty hours a week. Weeks here never schedule more t
 source = "docs/schedule.md header."
 
 [[assumption]]
-text = "Every date here except November 8 is a proposal. The milestones were placed by working back from November 8 at the measured pace with the fifth week left as slack."
+text = "Every date here except November 12 is a proposal. The milestones were placed by working back from November 8 at the measured pace with the fifth week left as slack; on November 5 the door moved to Thursday November 12 (the friends are busy on the 8th) and the user put the November bump in front of it, so a sixth week holds the door."
 source = "The handoff's instruction; docs/schedule.md section 1."
 
 # ---------------------------------------------------------------------------------------
@@ -122,16 +122,22 @@ name = "Trade live"
 means = "The same evening as Bind and Gate: one protocol bump carries both, so testers change clients once."
 
 [[milestone]]
+id = "m6"
+date = 2026-11-05
+name = "The November bump live"
+means = "The hills, the facing, the held-item cursor, the server split and the offline-free client on the hosted server and in the zip the friends hold: one protocol bump. Moved in front of the door on November 5 (user), when the door slipped to the 12th; it had been waiting until after it."
+
+[[milestone]]
 id = "m4"
-date = 2026-10-31
-name = "The rehearsal"
-means = "Four friends, three hours (the user widened it from two on 2026-10-07). The phase 4 acceptance measure, on the build the friends will keep."
+date = 2026-11-10
+name = "The pre-door check"
+means = "A fresh character plays the starter book for 45 minutes on the exact build the friends will hold. First run November 3 on the pre-bump build (row v16); run again on the bump build (row v60) before the last zip goes out. Replaces the four-friend rehearsal of October 31 (user, 2026-11-03)."
 
 [[milestone]]
 id = "m5"
-date = 2026-11-08
+date = 2026-11-12
 name = "The door opens"
-means = "The full friend group's first evening. The only fixed date on this page."
+means = "The full friend group's first evening. The only fixed date on this page. Thursday November 12 since November 5 (the friends were busy on Sunday the 8th)."
 
 # ---------------------------------------------------------------------------------------
 # Weeks.
@@ -164,7 +170,13 @@ summary = "Fixes from the week-3 sittings, a fresh-character sweep on the exact 
 id = "w5"
 starts = 2026-11-02
 title = "Slack, fixes, and the door"
-summary = "Deliberately light. Fixes from the rehearsal, the rest of the group onboarded once the build is final, and Sunday evening. If weeks 1 to 4 run as drawn, this week is mostly empty, which is the point."
+summary = "Drawn as a light week: fixes from the pre-door check, the rest of the group onboarded once the build was final, and Sunday evening. Redrawn November 5: the door moved to the next Thursday, and the November bump (the hills, the facing, the held-item cursor, the server split, the offline-free client) moved to Thursday the 5th, the day the date moved, instead of waiting until after the door, so the week's second half is the bump day and its sheets."
+
+[[week]]
+id = "w6"
+starts = 2026-11-09
+title = "The door, on a Thursday"
+summary = "Added November 5: the friends are busy on Sunday the 8th, so the door is Thursday the 12th, and the user spent the four days on the November bump rather than holding it until after. The bump's sheets finish early in the week, the pre-door check runs again on the build the friends will hold, the last zip goes out, and Thursday evening the door opens."
 
 # ---------------------------------------------------------------------------------------
 # Week 1: October 5 to 11
@@ -419,10 +431,10 @@ id = "b6"
 week = "w3"
 lane = "build"
 day = "Oct 21"
-what = "Merge the trade window branch into the deploy branch, run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. The trade window itself has been built and reviewed since September 29 and waits only for this day. The branch also carries the charm re-target (built 2026-10-12): a charm no longer drops your target. And the hunger window (b12), merged into it from feat/hunger-window."
+what = "Merge feat/server-speed into the deploy branch (re-merging the trade branch into it first if the trade session has added to it), run both test suites on the merged tree, rebuild the wire layer (gdext_net.dll) from it. Since October 19 that one branch carries everything for the day: the trade window (built and reviewed since September 29), the charm re-target, the hunger window (b12), the jump relay (b14), Despawn All (b21) and the server-decided movement speed (b23), already merged and green together."
 who = "Claude unattended"
 days = 0.5
-waits_on = ["b4", "b12"]
+waits_on = ["b4", "b12", "b14", "b21", "b23"]
 done_when = "Both suites green on the merged deploy branch and pushed; the DLL in addons/gdext_net/ is the merged build."
 todo = "Trade window"
 
@@ -450,20 +462,6 @@ waits_on = ["b6", "d5"]
 milestone = "m3"
 done_when = "The boot log shows the new build= with dev_cmds=false and min_client=0.2.0; the export log shows [BuildStamp] stamped; /version in game shows the new wire-layer fingerprint."
 todo = "Trade window"
-
-[[row]]
-id = "v12"
-week = "w3"
-lane = "verify"
-day = "Fri Oct 23 to Sun Oct 25"
-what = "The trade window: offer, accept, every edit clears both accepts, nothing leaves a bag until the commit, the ten exploit cases refuse."
-who = "user at a desk"
-needs = ["second seat (two-boxing works)"]
-checklist = "trade_window_checklist.md"
-checklist_branch = "feat/trade-window"
-waits_on = ["o4"]
-todo = "Trade window"
-done_when = "Every row filled."
 
 [[row]]
 id = "v12b"
@@ -574,8 +572,9 @@ todo = "Public-host hardening checklist (mandatory before any exposure beyond Ta
 
 [[row]]
 id = "v18"
-week = "w3"
+week = "w4"
 lane = "verify"
+day = "Tue Oct 27"
 what = "After the bump-day redeploy: leave dead with the window X, log back in, same XP and one corpse (the double death the 2026-10-12 review found); the lossy-link row only if a hotspot is handy."
 who = "user, one seat"
 hours = 0.5
@@ -650,42 +649,12 @@ lane = "build"
 what = "Fixes from the week-3 and week-4 sittings. A reserve, sized from history: every playtest week so far has produced two to four fixes."
 who = "Claude unattended"
 days = 2
-waits_on = ["v12", "v13", "v14"]
+waits_on = ["v13", "v14"]
 done_when = "Each fix has its own checklist row or To-Do line; nothing ticked."
 
-[[row]]
-id = "v16"
-week = "w4"
-lane = "verify"
-day = "Thu Oct 29 or Fri Oct 30"
-what = "The pre-rehearsal sweep: a fresh character plays the starter book for 45 minutes on the exact build the friends hold (the phase 4 checklist's fresh-character row is the model). Anything odd gets a To-Do line before Saturday."
-who = "user at a desk"
-hours = 1.0
-waits_on = ["o5"]
-done_when = "Findings filed in the To-Do; no new ERROR lines in the server log."
-
-[[row]]
-id = "o6"
-week = "w4"
-lane = "operate"
-day = "Sat Oct 31, morning"
-what = "Server health and backup check before people arrive (inviting_a_player.md step 1: service active, dev_cmds=false, a backup from this morning)."
-who = "user at a desk"
-hours = 0.25
-done_when = "All three checks pass."
-
-[[row]]
-id = "p3"
-week = "w4"
-lane = "people"
-day = "Sat Oct 31, evening"
-what = "The rehearsal: four friends, three hours. Group up, level, die, run back to the corpse, trade, quest. The phase 4 acceptance measure (written for two; four is a superset), and the opening act of phase 5."
-who = "user at a desk, friends"
-hours = 3.5
-needs = ["all four friends onboarded", "the user online as GM for the evening", "the morning check (o6)"]
-waits_on = ["p2", "o6"]
-milestone = "m4"
-done_when = "A playtest note in docs/playtest_notes/ records the session and its findings (model: first_external_tester_2026_08_11.md); the phase 4 row in schedule.md section 7 moves to complete."
+# v16 (the pre-rehearsal sweep) moved to week 5 as the pre-door check; o6 and p3 (the
+# October 31 morning check and the four-friend rehearsal) left the plan on 2026-11-03: the
+# user chose the 45-minute check in their place.
 
 [[row]]
 id = "d6"
@@ -702,22 +671,35 @@ done_when = "The answer recorded in docs/design/trade_window.md section 6."
 # Week 5: November 2 to 8
 
 [[row]]
+id = "v16"
+week = "w5"
+lane = "verify"
+checklist = "pre_door_check_checklist.md"
+day = "Tue Nov 3 to Thu Nov 5"
+what = "The pre-door check: a fresh character plays the starter book for 45 minutes on the exact build the friends will hold (the phase 4 checklist's fresh-character row is the model). Anything odd gets a To-Do line the same day."
+who = "user at a desk"
+hours = 1.0
+needs = ["the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch's)", "the R720 redeployed with the starting kit (user 2026-11-03) and the new zip from the same day"]
+milestone = "m4"
+done_when = "Findings filed in the To-Do; no new ERROR lines in the server log."
+
+[[row]]
 id = "b8"
 week = "w5"
 lane = "build"
-day = "Nov 2 to 4"
-what = "Fixes from the rehearsal. A reserve. Prefer server-side fixes: a client fix means a new zip for every friend."
+day = "Nov 5 to 6"
+what = "Fixes from the pre-door check. A reserve. Prefer server-side fixes: a client fix means a new zip for every friend."
 who = "Claude unattended"
-days = 2
-waits_on = ["p3"]
+days = 1
+waits_on = ["v16"]
 done_when = "Each fix has its own checklist row or To-Do line."
 
 [[row]]
 id = "o7"
 week = "w5"
 lane = "operate"
-day = "Wed Nov 4"
-what = "Redeploy with the rehearsal fixes. One export and one re-zip only if a client fix is unavoidable; if so, every friend gets it before any new friend is onboarded."
+day = "Fri Nov 6"
+what = "Redeploy with the pre-door fixes. One export and one re-zip only if a client fix is unavoidable; if so, every friend gets it before any new friend is onboarded."
 who = "user at a desk"
 hours = 0.25
 needs = ["1.5 h instead if an export is needed"]
@@ -728,7 +710,7 @@ done_when = "The boot log line shows the new build= and dev_cmds=false (and the 
 id = "v17"
 week = "w5"
 lane = "verify"
-what = "Re-run the rows the rehearsal failed, on the fixed build. A reserve."
+what = "Re-run what the pre-door check found, on the fixed build. A reserve."
 who = "user at a desk"
 hours = 2.0
 waits_on = ["o7"]
@@ -736,14 +718,14 @@ done_when = "Each re-run row filled in its checklist."
 
 [[row]]
 id = "p4"
-week = "w5"
+week = "w6"
 lane = "people"
-day = "Nov 2 to 6"
-what = "Onboard anyone beyond the four (the four are onboarded for the rehearsal), each with the final build (inviting_a_player.md, steps 2 to 5). Half an hour each; the count is the user's call, and may be nobody."
+day = "Mon Nov 9 to Wed Nov 11"
+what = "Onboard every friend not yet onboarded (the four named in d4 among them), each with the bump build (inviting_a_player.md, steps 2 to 5). Half an hour each; the count is the user's call, and may be nobody."
 who = "user at a desk, friends"
 hours = 1.5
-needs = ["the final build settled (o7), so nobody receives two zips"]
-waits_on = ["o7"]
+needs = ["the bump zip (o20), so nobody receives two zips"]
+waits_on = ["o20"]
 done_when = "Each account appears in the account list without a [GM] tag."
 
 [[row]]
@@ -757,9 +739,9 @@ done_when = "Every checklist in that table carries a dated note at its top sayin
 
 [[row]]
 id = "o8"
-week = "w5"
+week = "w6"
 lane = "operate"
-day = "Sun Nov 8, morning"
+day = "Thu Nov 12, afternoon"
 what = "Health and backup check, dev_cmds=false confirmed, the console open for the evening."
 who = "user at a desk"
 hours = 0.5
@@ -767,9 +749,9 @@ done_when = "All checks pass."
 
 [[row]]
 id = "p5"
-week = "w5"
+week = "w6"
 lane = "people"
-day = "Sun Nov 8, evening"
+day = "Thu Nov 12, evening"
 what = "The door opens: the full group's first evening."
 who = "user at a desk, friends"
 hours = 4.0
@@ -781,10 +763,10 @@ done_when = "A session note records it; the phase 5 row in schedule.md section 7
 id = "d7"
 week = "w5"
 lane = "decide"
-day = "by Sun Nov 8"
+day = "by Thu Nov 12"
 what = "Phase 5's four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in."
 who = "user and planner"
-by = 2026-11-08
+by = 2026-11-12
 blocks = "The \"after the door opens\" list below becoming a dated plan."
 done_when = "Answers recorded in the plan doc; its bullet list freezes; one row joins schedule.md section 7."
 
@@ -792,21 +774,43 @@ done_when = "Answers recorded in the plan doc; its bullet list freezes; one row 
 id = "d8"
 week = "w5"
 lane = "decide"
-day = "by Sun Nov 8"
+day = "by Thu Nov 12"
 what = "docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it."
 who = "user"
-by = 2026-11-08
+by = 2026-11-12
 blocks = "Nothing."
 done_when = "One line in CLAUDE.md saying which."
+
+[[row]]
+id = "d9"
+week = "w3"
+lane = "decide"
+day = "by Sun Oct 25"
+what = "The EQ parity audit's eight recommendations (docs/design/eq_parity_audit.md, section 8): the inflation is on the player's side at levels 1 to 10 and almost nowhere else. Worst first: EQ's hit point and mana formula (a level 1 Warrior at 32 HP instead of 200), the level 1 to 10 spells reshaped to EQ's lines, the regeneration buffs to P99's figures and levels, Haste to 30%, low-level mob hit points toward P99's, the rest left alone; whether a second pass on mana costs and cast times is wanted."
+who = "user"
+by = 2026-10-25
+blocks = "The data edits (a build row once decided). Not the Oct 22 bump: the audit changes numbers, not the wire, so it can ship on any later redeploy and export."
+done_when = "Each of the eight answered on the To-Do entry (Combat / weapons, EQ parity)."
+
+[[row]]
+id = "d10"
+week = "w5"
+lane = "decide"
+day = "by Thu Nov 12"
+what = "The factions and alignment design's nine decisions (docs/design/factions_and_alignment.md, section 6): the first six factions and the hit rule, who gets a kill's hits (the XP rule or EQ's hate list), the nine level thresholds, the v1 refusals (vendors at Dubious, quest givers at Apprehensive), alignment seeded from the class start, the Paladin and Shadow Knight off-side penalty kept on the server, no starting standings by race in v1, the mob and quest values, no GM freeze."
+who = "user"
+by = 2026-11-12
+blocks = "The factions build (a migration and a bump), on the after-the-door strip."
+done_when = "Each of the nine answered on the Faction system To-Do entry."
 
 # ---------------------------------------------------------------------------------------
 # After the door opens: undated, per the planner's answer. Status for each lives in the To-Do.
 
 [[after]]
-text = "Phase 5's own plan (docs/design/phase5_plan.md) with four decisions open. Parts of its security and big-world tracks are already built (the NaN guard, the password reset tool, the silent-refusals closeout, the idle-creature network fix, creatures appearing when they walk into view, /loc), so the document needs a refresh when the decisions land."
+text = "Phase 5's own plan (docs/design/phase5_plan.md), decided November 3 and open-ended: the decided batch first end to end (all four built, their rows passing, so it closes on the ticks), then the server height model, built by Claude. No items promoted from the candidate list."
 
 [[after]]
-text = "The server height model (design first, from docs/session_notes/handoff_server_height_model.md), then terrain tooling and the first zone with real hills. The capability the large world waits on."
+text = "The server height model, built by Claude (user, November 3), designed the same day and decided in full (docs/design/server_height_model.md): slices 0 to 3 built November 4 on feat/height-model in both repos (the ground compiled in, everything pinned, sight for every targeted spell, arrow, AoE victim and idle mob, falls, the first hills with the fling tool and mobs giving up below a face), then the evade and the hate-list turn of November 5. It rides the November bump (row o20, in front of the door since November 5) and its sheets are v58 and v59. What follows the door: Levitate and Feather Fall at the landing, the bow's own sight check on the client, the next hills, chunking and a navmesh when the world grows. The capability the large world waits on."
 
 [[after]]
 text = "Trade slice 2: handing items to NPCs."
@@ -815,13 +819,19 @@ text = "Trade slice 2: handing items to NPCs."
 text = "Beast Master taming (the decided destination for the class), replacing the interim owner-derived pet levels."
 
 [[after]]
-text = "The spells still blocked: seven prestige-class spells, seven ports to zones that do not exist, Exsanguinate, Camouflage, Warder's Mend."
+text = "Factions and alignment, slice 2 (docs/design/factions_and_alignment.md; slice 1 is built, rows b30 and v33): guards that fight and NPCs players can attack, with the standing that costs. Then slice 3, SWG's joinable faction with spendable standing."
+
+[[after]]
+text = "The spells still client-only: seven ports to zones that do not exist, Exsanguinate (mana drain) and Camouflage (stealth). The prestige-class spells joined the server with factions slice 1, Warder's Mend on October 7."
 
 [[after]]
 text = "The Bard song rework; sound (the friends build ships silent by decision); the UI theming pass, the one most visible to a new player."
 
 [[after]]
 text = "Public-host hardening, mandatory only if the server is ever reachable beyond Tailscale."
+
+[[after]]
+text = "Ending a password-reset account's session that is already in the world (needs a migration). Far out by the user's call on October 16 (this operator tool only; vigilance against hacks, dupes and cheats in every build is unchanged); the ban kick already exists for real trouble."
 
 [[after]]
 text = "The multi-zone epic, with the procedural dungeon as its first customer."
@@ -840,7 +850,7 @@ impact = "A tester who misses the message cannot log in and may think the server
 mitigation = "Pick an evening, tell everyone a week ahead (d5), send the zip within the hour, keep the old server build to hand for one day."
 
 [[risk]]
-risk = "A client-side fix after the rehearsal"
+risk = "A client-side fix after the pre-door check"
 impact = "A new zip for every friend already onboarded, days before the door opens."
 mitigation = "Prefer server-side fixes in week 5; hold any export to one, before the rest of the group is onboarded."
 
@@ -921,14 +931,969 @@ hours = 0.25
 done_when = "loaded persisted corpses count=0 on the boot line."
 
 [[row]]
-id = "v21"
+id = "b14"
+week = "w2"
+lane = "build"
+day = "Oct 14"
+what = "Remote jumps: other players' jumps show as hops instead of slides. The client sends its real jump flag, the server relays one cue per jump to the players who can see the jumper (rate-limited, never to the jumper, position untouched), and each client plays the local jump arc. One new message, so it rides the Oct 22 bump; built on feat/jump-relay off the trade branch."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both suites green on feat/jump-relay and pushed; handed to the trade session for the Oct 21 merge."
+todo = "Remote players never show a jump"
+
+[[row]]
+id = "v22"
 week = "w3"
 lane = "verify"
 day = "Fri Oct 23 to Sun Oct 25"
-what = "Corpse auto-re-equip: die in a full set, loot your corpse, and the gear is back on with the stats it gave; a slot you have filled since keeps what you put on; full bags leave the rest on the corpse with a line."
+what = "Remote jumps: a second seat sees your jumps as hops (standing, running, spammed), nothing from out of view, nothing on a corpse, and your own position never changes for them."
+who = "user at a desk"
+hours = 0.5
+needs = ["second seat (two-boxing works)"]
+checklist = "remote_jump_checklist.md"
+checklist_branch = "feat/jump-relay"
+waits_on = ["o4"]
+todo = "Remote players never show a jump"
+done_when = "Every row filled."
+
+[[row]]
+id = "b15"
+week = "w2"
+lane = "build"
+day = "Oct 14"
+what = "Cast handler refactor: the pre-flight resolves the target and the arms act on it, deleting each arm's own copy of the presence, reach, liveness and PvP checks (one home for the rule, the 10-02 review finding). No behaviour change, no wire change; on the deploy branch, rides the Oct 22 redeploy."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both suites green on the deploy branch; a unit test pins what each target kind resolves to. Ticked on the suites; the spell checklists after the redeploy are its regression sweep."
+todo = "The cast arms duplicate the pre-flight"
+
+[[row]]
+id = "b16"
+week = "w2"
+lane = "build"
+day = "Oct 14"
+what = "Seated combat, the classic EQ rule (user call 2026-10-14): a sitting player is hit for the most the attacker can do with no armor, and any damage stands them. Server on the deploy branch (rides the Oct 22 redeploy); the client stands its own body on the hit (rides the Oct 22 export)."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both suites green on the deploy branch; the integration test fails on the previous code. Done only when seated_combat_checklist.md is filled."
+todo = "Seated-combat penalties (EQ-style)"
+
+[[row]]
+id = "v23"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Seated combat: a mob's hit on you while seated is its full swing with no armor and stands you; a PvP fist on a seated partner lands exactly the max; /camp is refused after a hit until you sit again; your body stands on the hit without a key press; the seated regen bonus still runs out of combat."
 who = "user at a desk"
 hours = 0.75
-checklist = "corpse_reequip_checklist.md"
-waits_on = ["b13", "o4"]
-todo = "Corpse auto-re-equip on loot"
+needs = ["a character wearing armor", "second seat for the PvP and spell rows (two-boxing works)"]
+checklist = "seated_combat_checklist.md"
+waits_on = ["o4"]
+todo = "Seated-combat penalties (EQ-style)"
 done_when = "Every row filled."
+
+[[row]]
+id = "b17"
+week = "w2"
+lane = "build"
+day = "Oct 14"
+what = "Resurrection sickness, the corpse plan's last piece, to the P99 design (user call Oct 15): an accepted resurrection lands you at a quarter HP with no mana and leaves a five-minute debuff cutting a level-scaled fraction of the five primaries (a tenth at level 1 to a half at 60), with EQ's lines. Server on the deploy branch (rides the Oct 22 redeploy); the client shows it on the sheet and the buff bar (rides the Oct 22 export)."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both suites green on the deploy branch. Done only when res_sickness_checklist.md is filled."
+todo = "Res-sickness"
+
+[[row]]
+id = "v24"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Resurrection sickness: after an accepted res you land at a quarter HP with no mana and are told you are exhausted, the sheet reads the level-scaled cut and the bar shows the five-minute countdown, and it wears off with its line; a declined res and a plain respawn leave nothing."
+who = "user at a desk"
+hours = 0.75
+needs = ["second seat with a Cleric 20 or higher (two-boxing works)", "a character of level 8 or higher to die"]
+checklist = "res_sickness_checklist.md"
+waits_on = ["o4"]
+todo = "Res-sickness"
+done_when = "Every row filled."
+
+[[row]]
+id = "b18"
+week = "w2"
+lane = "build"
+day = "Oct 15"
+what = "Summon Food and Summon Drink (food slice 2, on the user's Monsters and Memories numbers): a Magician, Cleric, Shaman or Druid conjures 1 to 4 loaves or flasks into the bags, scaling with level, at EQ's per-class spell levels; the conjured items have no vendor value. Both sides change, so it rides the Oct 22 redeploy and export together."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both suites green on the deploy branch; spell and item lockstep checks green. Done only when summon_food_checklist.md is filled."
+todo = "EQ-style food/water gating"
+
+[[row]]
+id = "v25"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Summon Food and Drink: a Magician conjures one loaf and one flask, more at higher levels, the items feed you and the merchant refuses them, a Cleric or Druid gets each spell at its level, full bags refuse before the cast."
+who = "user at a desk"
+hours = 0.75
+needs = ["a Magician", "a Cleric or Druid around level 9 to 14 (Level Up tool)"]
+checklist = "summon_food_checklist.md"
+waits_on = ["o4"]
+todo = "EQ-style food/water gating"
+done_when = "Every row filled."
+
+[[row]]
+id = "b19"
+week = "w2"
+lane = "build"
+day = "Oct 15"
+what = "Nameplates through walls: other players' names no longer show through buildings (enemy and NPC names were already fixed in May). Client only, rides the Oct 22 export."
+who = "Claude unattended"
+days = 0.25
+done_when = "tools/check_nameplates.gd passes. Done only when nameplates_through_walls_checklist.md is filled."
+todo = "Nameplate and targeting polish"
+
+[[row]]
+id = "v26"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Nameplates through walls: a second seat's name hides when they walk behind a building and comes back in view; mob, NPC and corpse names stay hidden behind walls; damage numbers still float over."
+who = "user at a desk"
+hours = 0.25
+needs = ["second seat (two-boxing works)"]
+checklist = "nameplates_through_walls_checklist.md"
+waits_on = ["o4"]
+todo = "Nameplate and targeting polish"
+done_when = "Every row filled."
+
+[[row]]
+id = "b20"
+week = "w2"
+lane = "build"
+day = "Oct 15"
+what = "Live relogin countdown: a refused relogin (your body still in the world after a crash or the window X) counts down to \"You can log in again now\" in the lobby instead of a fixed estimate. A wire-layer change, so it rides the Oct 22 DLL rebuild and export; the server needs nothing."
+who = "Claude unattended"
+days = 0.5
+done_when = "The DLL crate's test and the client probe pass. Done only when relogin_countdown_checklist.md is filled."
+todo = "Camp / kick return-to-lobby flow + live relogin countdown"
+
+[[row]]
+id = "v27"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Live relogin countdown: close the game with the window X, relaunch, log in at once; the lobby counts down to now and the login then succeeds; a refusal while the other session is live shows no countdown."
+who = "user, one seat"
+hours = 0.25
+needs = ["the Oct 22 export with the rebuilt DLL"]
+checklist = "relogin_countdown_checklist.md"
+waits_on = ["o4"]
+todo = "Camp / kick return-to-lobby flow + live relogin countdown"
+done_when = "Every row filled."
+
+[[row]]
+id = "o11"
+week = "w3"
+lane = "operate"
+day = "Mon Oct 19"
+what = "Redeploy the R720 at 33c7e28 (the cast arms consuming the pre-flight, seated combat, res-sickness to the P99 design, Summon Food and Drink). No migration. Seated combat and res-sickness go live on the testers' current client; the summon spells wait for the Oct 22 export."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+done_when = "The boot line shows build=33c7e28 and dev_cmds=false."
+
+[[row]]
+id = "b21"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Despawn All Enemies for real: the Test Panel button asks the server, which removes every enemy in the GM's view (pets and charmed mobs stay, nothing is paid, camp mobs come back on their timer) instead of only hiding them on one screen. Built on the jump-relay branch, so it rides the Oct 22 bump."
+who = "Claude unattended"
+days = 0.5
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when despawn_all_enemies_checklist.md is filled."
+todo = "Test Panel \"Despawn All Enemies\" leaves enemies invisible, not gone"
+
+[[row]]
+id = "v28"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Despawn All Enemies: spawned mobs and a nearby camp vanish for you and a second seat, the chat line gives the count, the camp refills on its timer; pets, a charmed mob and an unlooted corpse stay; a fight 300 m away carries on; admin_report shows the row."
+who = "user at a desk, GM account"
+hours = 0.5
+needs = ["second seat (two-boxing works)", "the Oct 22 export with the rebuilt wire layer"]
+checklist = "despawn_all_enemies_checklist.md"
+checklist_branch = "feat/jump-relay"
+waits_on = ["b21", "o4"]
+todo = "Test Panel \"Despawn All Enemies\" leaves enemies invisible, not gone"
+done_when = "Every row filled."
+
+[[row]]
+id = "b22"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Client-authority fixes 1 and 3 on the deploy branch: made-up combat text is GM-only (a forged hit could have stood other players up), and spells get their power on the server (INT on nukes, WIS on heals, skill multipliers, crits; the client's formula as is, the user's call). Server only, so they ride any redeploy."
+who = "Claude unattended"
+days = 1
+done_when = "The server suite green and pushed. Done only when client_authority_fixes_checklist.md sections 1 and 3 are filled."
+todo = "Client-decided outcomes (audit 2026-10-19)"
+
+[[row]]
+id = "b23"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Client-authority fix 2: the server decides movement speed, carry weight moves server-side (item weights join the lockstep check), mounts wait for a server model. On feat/server-speed, which now also carries every other Oct 22 branch, merged and green together."
+who = "Claude unattended"
+days = 1
+done_when = "Both suites green on the merged branch and pushed. Done only when client_authority_fixes_checklist.md section 2 is filled."
+todo = "Client-decided outcomes (audit 2026-10-19)"
+
+[[row]]
+id = "v29"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Client-authority fixes and the October 19 decisions: a GM's Test Panel hits still show; running, crouching, Spirit of Wolf and snares feel right with no rubber-banding; an overloaded character crawls; a mount whistle refuses; nukes and heals land bigger, crits show, DoT ticks are unchanged; misses come from the server; the off hand swings only from the class's level (Monks from 1); spells reach 30 m; the spell bar survives the first login and memorizing works; conjured food vanishes after thirty minutes logged out; a note on whether low-level nukes now feel too strong."
+who = "user at a desk, GM account"
+hours = 2
+needs = ["second seat (two-boxing works)", "the Oct 22 export"]
+checklist = "client_authority_fixes_checklist.md"
+waits_on = ["b22", "b23", "o4"]
+todo = "Client-decided outcomes (audit 2026-10-19)"
+done_when = "Every row filled."
+
+[[row]]
+id = "b24"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Client-authority fix 4: the server rolls every melee miss and applies the weapon skill (a modified client used to never miss). On feat/server-speed, so it rides Oct 22."
+who = "Claude unattended"
+days = 0.5
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when client_authority_fixes_checklist.md section 4 is filled."
+todo = "Client-decided outcomes (audit 2026-10-19)"
+
+[[row]]
+id = "b25"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Three of the user's October 19 decisions: dual wield earned by class and level (Monks bare-fisted from 1), per-spell ranges on a 30 m baseline (mob leashes to 35 m to stay past them), and conjured food at one more per level to ten. On feat/server-speed, so they ride Oct 22."
+who = "Claude unattended"
+days = 1
+done_when = "The server suite and the client probes pass and both halves are pushed. Done only when client_authority_fixes_checklist.md sections 5 and 6 and summon_food_checklist.md are filled."
+todo = "Dual wield as an unlockable passive"
+
+[[row]]
+id = "b26"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Client-authority fix 5 and NO RENT, with one migration (0015, approved): the server keeps each character's memorized spells (a modified client could cast spells it never memorized) and destroys conjured food thirty minutes after its owner logs out. On feat/server-speed, so they ride Oct 22."
+who = "Claude unattended"
+days = 1
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when client_authority_fixes_checklist.md sections 7 and 8 are filled."
+todo = "Client-decided outcomes (audit 2026-10-19)"
+
+[[row]]
+id = "b27"
+week = "w3"
+lane = "build"
+day = "Oct 19"
+what = "Active skills on the server (audit item 6): Backstab and the other damage skills multiply a real swing, the stamina and cooldowns are the server's, and Shield Bash, Evade, Holy Shield, Hide, Feign Death and Warder's Fury do what they say online. On feat/server-speed, so it rides Oct 22."
+who = "Claude unattended"
+days = 1
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when active_skills_checklist.md is filled."
+todo = "Active skills partly do not work online, and three abort with silent runtime errors"
+
+[[row]]
+id = "v30"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Active skills: Backstab lands about three times a swing and costs 20 stamina at once (a partner sees it); a second use is refused on cooldown; Shield Bash holds a mob for 3 s; Evade deflects every swing for 5 s; Holy Shield absorbs 60; Hide walks up to an idle mob unnoticed until the first swing; Feign Death drops the mobs until you move; Warder's Fury sends a guarding warder."
+who = "user at a desk, GM account"
+hours = 1
+needs = ["second seat (two-boxing works)", "the Oct 22 export"]
+checklist = "active_skills_checklist.md"
+waits_on = ["b27", "o4"]
+todo = "Active skills partly do not work online, and three abort with silent runtime errors"
+done_when = "Every row filled."
+
+[[row]]
+id = "b28"
+week = "w3"
+lane = "build"
+day = "Oct 20"
+what = "Bard songs on the server (audit item 6): a 3 s sing, free, pulsed by the server every 6 s with a 12 s linger, one song at a time, twisting by replacement, the heal song a heal-over-time, /stopsong; every song scales with level (0.4 of its effect when learned to full at 50; Selos' on EQ's own curve, +20% to +65%); Mana Weave, Poet's Mending and Wanderer's Chord matched to P99's numbers. On feat/server-speed, so it rides Oct 22."
+who = "Claude unattended"
+days = 0.5
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when bard_songs_checklist.md is filled."
+todo = "Bard song rework"
+
+[[row]]
+id = "v31"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Bard songs: a 3 s sing costing nothing, the icon refreshing every 6 s while sung, four songs twisted and all up, a dropped one running out 12 s later, re-clicking or /stopsong ending a song at once, a nuke ending it, a sing surviving a run, a level 1 Selos' at about +20% and a level 50 at +65% (EQ's own curve), Poet's Mending a heal-over-time, Mana Weave climbing about 6 a pulse at 50, Aria's slow refreshed on the target."
+who = "user at a desk, GM account"
+hours = 0.75
+needs = ["second seat (two-boxing works)", "the Oct 22 export"]
+checklist = "bard_songs_checklist.md"
+waits_on = ["b28", "o4"]
+todo = "Bard song rework"
+done_when = "Every row filled."
+
+[[row]]
+id = "b29"
+week = "w3"
+lane = "build"
+day = "Oct 20"
+what = "The EQ parity pass (the user's yes to all five, plus the formula calls): EQ's hit point and mana formula on both sides (a level 1 Warrior 28 HP, not 200), the level 1 to 10 spells at EQ's numbers and EQ's mana costs (a level 1 caster holds about 16 mana), the regeneration buffs at P99's figures, levels, durations and costs, Haste 30% for 11 minutes, the low-level mobs' hit points toward P99's; a spell does its listed number (the INT and WIS bonuses and the casting-skill multipliers removed, the crit kept) and the casting skills decide fizzles instead, rolled by the server at the cast's start. On feat/server-speed, so it rides Oct 22."
+who = "Claude unattended"
+days = 1
+done_when = "The server suite and the client probe pass and both halves are pushed. Done only when eq_parity_checklist.md is filled."
+todo = "EQ parity: the inflation pass"
+
+[[row]]
+id = "v32"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "EQ parity: a new Human Warrior reads 28 HP and a Wizard 17 HP and 17 mana on the creation preview and in the world; the Level Up tool moves the maxes by the formula; Smite lands 7 and Healing Light heals 10 with nothing added; a fresh caster fizzles about one cast in ten, each fizzle costing a quarter of the mana and two seconds of gem refresh; Breeze and Regrowth are gone from the low-level books; Haste reads 30%; a Decrepit Skeleton has 16 HP and a level 1 Warrior fighting two wolves at once is in real danger."
+who = "user at a desk, GM account"
+hours = 1
+needs = ["the Oct 22 export"]
+checklist = "eq_parity_checklist.md"
+waits_on = ["b29", "o4"]
+todo = "EQ parity: the inflation pass"
+done_when = "Every row filled."
+
+[[row]]
+id = "b30"
+week = "w3"
+lane = "build"
+day = "Oct 23"
+what = "Factions and alignment, slice 1: six factions; a kill's hits to everyone the mob hated and quests' explicit hits; standing kept per character and conned at EQ's nine levels; merchants and the banker refuse at Dubious, quest givers at Apprehensive; alignment kept by the server (kills, quests, spells at 0.001% of their mana) and deciding the Paladin and Shadow Knight prestige kits; /con, /factions and the GM's faction sliders. On feat/server-speed with a migration, so it rides the Oct 22 bump."
+who = "Claude unattended"
+days = 1
+done_when = "Both halves pushed and the server suite, the client probe and the lockstep checks pass. Done only when factions_checklist.md is filled."
+todo = "Faction system"
+
+[[row]]
+id = "v33"
+week = "w3"
+lane = "verify"
+day = "Fri Oct 23 to Sun Oct 25"
+what = "Factions: /con on Brom and on mobs of every colour; kills move the right factions on every client the mob hated; a quest turn-in pays the Watch and the town; the GM sliders take Brom to Apprehensive (no quests) and Dubious (no trade, no bank) and back; a Paladin set to Evil gets the Fallen kit; standings survive a relog and a restart."
+who = "user at a desk, GM account and a second account"
+hours = 1
+needs = ["the Oct 22 export"]
+checklist = "factions_checklist.md"
+waits_on = ["b30", "o4"]
+todo = "Faction system"
+done_when = "Every row filled."
+
+[[row]]
+id = "b31"
+week = "w3"
+lane = "build"
+day = "Oct 23"
+what = "Hotfix from the housekeeping audit: one chat line could crash the whole server; a dropped item could end up with two players after a restart; quest rewards, deaths, corpse loot and trades saved the bags without the bank; a failed load at login could wipe a character's bags or bank; vendors sold any priced item, rare drops included. All fixed on the deploy branch, server only, so it rides any redeploy."
+who = "Claude unattended"
+days = 1
+done_when = "Both suites green on the deploy branch and on feat/server-speed, each new test failing on the old code. Done only when hotfix_crash_and_dupes_checklist.md is filled."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "o12"
+week = "w3"
+lane = "operate"
+day = "Fri Oct 23, as soon as convenient"
+what = "Redeploy the R720 at 3d938ca (the hotfix). No migration, no export: the testers' current client works. Ask anyone online to log out first."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+waits_on = ["b31"]
+done_when = "The boot line shows build=3d938ca and dev_cmds=false."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "b32"
+week = "w3"
+lane = "build"
+day = "Oct 23"
+what = "Housekeeping Phase 1, durability: a server restart now saves everyone and tells them before closing (it used to throw away up to a minute of everyone's progress); a logout whose save fails is retried instead of lost; experience is saved together with the death, quest or resurrection that changed it. Server only, on the deploy branch, so it rides any redeploy."
+who = "Claude unattended"
+days = 1
+done_when = "Both suites green on the deploy branch and on feat/server-speed, each new test failing with its fix disabled. Done only when phase1_durability_checklist.md is filled."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "o13"
+week = "w3"
+lane = "operate"
+day = "Fri Oct 23 or later, everyone logged out"
+what = "Redeploy the R720 at 6c2bc45 (Phase 1). This one restart is still the old kind, because the old program is the one being stopped, so everyone logs out first. Every restart after it saves everyone. No migration, no export."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+needs = ["everyone logged out"]
+waits_on = ["b32"]
+done_when = "The boot line shows build=6c2bc45 and dev_cmds=false."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v35"
+week = "w3"
+lane = "verify"
+day = "after the Phase 1 redeploy"
+what = "Phase 1: restart the server with two players online and both are told their progress was saved, and both log back in exactly where they were with what they held; a death, a quest turn-in and a resurrection each keep their experience across a restart."
+who = "user at a desk with a second account"
+hours = 1
+needs = ["the Phase 1 redeploy (o13)", "permission to restart the server three or four times during the sitting"]
+checklist = "phase1_durability_checklist.md"
+waits_on = ["o13"]
+todo = "Housekeeping audit 2026-10-23"
+done_when = "Every row filled."
+
+[[row]]
+id = "b33"
+week = "w3"
+lane = "build"
+day = "Oct 23"
+what = "Housekeeping Phase 3, the part that leaves the big world file alone: a server check that runs on demand on GitHub (tests plus a scan of every library the server uses for known security problems, which found and fixed three), a cap on how large a client message may claim to be, the server's secret key kept out of every log, and automated tests that hunt for duplicated coins and items. Tooling only: nothing changes for players."
+who = "Claude unattended"
+days = 1
+done_when = "Both suites green on the deploy branch and on feat/server-speed; tools/check_all.ps1 runs every client check."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "b34"
+week = "w3"
+lane = "build"
+day = "Oct 23, overnight"
+what = "Housekeeping Phase 5, step 1: online play stops writing the character to the offline Test Room's save file (the server is the save). Plus the design for fall damage on the server (no code): it found that falls already do nothing to ordinary players online, and that the instant-death message can be closed now without waiting for hills."
+who = "Claude unattended"
+days = 0.5
+done_when = "The probe passes and fails on the old code; docs/design/server_fall_damage.md written with its decisions marked."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "d11"
+week = "w4"
+lane = "decide"
+day = "by Thu Nov 12 (the first is best answered before the bump's redeploy)"
+what = "Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later."
+who = "user"
+by = 2026-11-12
+blocks = "Slice 0 (one server handler now, the Test Panel's death button with the export); slice 1 waits on the server height model."
+done_when = "Each of the five answered on the Housekeeping audit To-Do entry."
+
+[[row]]
+id = "b35"
+week = "w3"
+lane = "build"
+day = "Oct 24"
+what = "Fall damage slice 0: the instant-death message becomes a GM command (a player can no longer kill themselves on demand for a free trip home), online falls stop pretending to hurt, and the Test Panel's death button goes through the server."
+who = "Claude unattended"
+days = 0.5
+done_when = "Both server suites green; the new test fails on the old handler; the client probe passes."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "o14"
+week = "w4"
+lane = "operate"
+day = "the next redeploy, everyone logged out or not (shutdown is graceful since 6c2bc45)"
+what = "Redeploy the R720 at 779a033 (fall damage slice 0's server half). No migration, no export needed for the server half."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+needs = ["a quiet moment"]
+waits_on = ["b35"]
+done_when = "The boot line shows build=779a033 (or later) and dev_cmds=false."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "b36"
+week = "w3"
+lane = "build"
+day = "Oct 25"
+what = "The Oct 22 bump prepared on its own branch (the client merge done with no conflicts and every check green; the server side is already a straight fast-forward), plus four automated checks that the client and the server agree on about forty more shared numbers and tables."
+who = "Claude unattended"
+days = 0.5
+done_when = "bump/oct22 pushed with every check passing against feat/server-speed's data."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "b37"
+week = "w4"
+lane = "build"
+day = "Tue Oct 27"
+what = "EQ's equip rule on both sides (a weapon goes into the off hand only when the class can dual wield; weapons and armor the class never trains are refused at the equip), a fizzle keeping the spell gems greyed, and a targeted spell cast at its full 30 m (the client stopped at 29; the server's number stays exact)."
+who = "Claude"
+days = 0.5
+done_when = "Pushed on both deploy branches with the tests and probes green."
+todo = "Class-restricted equipping (EQ's rule)"
+
+[[row]]
+id = "b38"
+week = "w4"
+lane = "build"
+day = "Tue Oct 27"
+what = "A /say carries 50 m from the speaker (the user's number) instead of the speaker's whole 120 m-cell neighbourhood; the eating emote and the jump relay reach the same 50 m. Server only."
+who = "Claude"
+hours = 1
+done_when = "Pushed on the server's deploy branch with the test green."
+todo = "`/say` reaches far too far"
+
+[[row]]
+id = "b39"
+week = "w4"
+lane = "build"
+day = "Tue Oct 27"
+what = "Other players turn: the client sends its facing with every movement packet (the way EQ and WoW do it) and the server relays it in the position stream it already sends. A protocol bump on both sides, built on feat/facing for the next bump day."
+who = "Claude"
+hours = 2
+done_when = "Pushed on feat/facing in both repos with the test green and the DLL rebuilt."
+todo = "Other players never turn"
+
+[[row]]
+id = "v40"
+week = "w5"
+lane = "verify"
+day = "Fri Nov 6 to Sun Nov 8, the same sitting as v59"
+what = "Two seats: one turns in place, strafes and backs up while the other watches the body turn; the facing survives a relog."
+who = "user at a desk, two seats"
+hours = 0.25
+needs = ["the November bump live (o20)", "second seat (two-boxing works)"]
+checklist = "remote_facing_checklist.md"
+waits_on = ["b39", "o20"]
+todo = "Other players never turn"
+done_when = "Every row filled."
+
+[[row]]
+id = "b41"
+week = "w5"
+lane = "build"
+day = "Thu Oct 29"
+what = "Three builds from the day's two sittings: EQ's two-hander rule on both sides (a two-hander in the main hand only, and only with the off hand empty; nothing in the off hand beside one; the off hand never swings beside one; both staves flagged two-handed), the jump cue reaching everyone who can see the jumper instead of the 50 m say range (the user's jump check), and the player's own cast bar moved to the centre of the screen from under the hotbars."
+who = "Claude"
+hours = 2
+done_when = "Pushed on both deploy branches with the tests and probes green."
+todo = "A two-hander needs an empty off hand, and the off hand swings beside one today"
+
+[[row]]
+id = "b43"
+week = "w5"
+lane = "build"
+day = "Thu Oct 29"
+what = "Clicks stop at windows: Godot picks the control under the mouse by tree order and ignores z_index, so the bank, vendor, crafting, options and dialogue windows (raised with z_index) drew on top while the clicks went to the window underneath. No window carries z_index now; a window comes to the front when it opens and when it is clicked; bag windows sit beside the inventory window; the disconnect notice, found 0 by 0, fills the screen. A headless check over the real HUD holds it. Client only."
+who = "Claude"
+hours = 2
+done_when = "Pushed with the check green against the fixed scripts and failing against the old ones."
+todo = "Clicks pass through UI windows to what is behind them"
+
+[[row]]
+id = "o15"
+week = "w5"
+lane = "operate"
+day = "Fri Oct 30, morning"
+what = "Export the client at 992bc26 (the clicks build) from the command line, zip it as builds/ProjectDawn-alpha-992bc26.zip, send it to the testers. The server needs nothing."
+who = "Claude exports and zips, user sends"
+hours = 0.25
+waits_on = ["b43"]
+done_when = "The export log reads [BuildStamp] stamped 992bc26 and the zip is with the testers."
+todo = "Clicks pass through UI windows to what is behind them"
+
+[[row]]
+id = "v44"
+week = "w5"
+lane = "verify"
+day = "Fri Oct 30"
+what = "The bank opened over the journal takes every click; a click on the journal brings it to the front; a bag and its destroy confirm come to the front over the bank; the console blocks only its panel; a restart dims the whole screen with the notice centred; ESC closes the window clicked last."
+who = "user at a desk"
+hours = 0.5
+needs = ["the 992bc26 export in the testers' hands (o15)"]
+checklist = "window_click_blocking_checklist.md"
+waits_on = ["b43", "o15"]
+todo = "Clicks pass through UI windows to what is behind them"
+done_when = "Every row filled."
+
+[[row]]
+id = "b45"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30"
+what = "The item ledger (the user's yes on all four calls): an item_events table (migration 0017) with one row per server-made movement of items or coin into or out of a character's holdings, written inside the transaction that persists the move; opening rows for everything held at the migration; a daily sweep that folds rows older than 30 days into carry rows and runs the conservation check (per account and item, the rows must sum to the stores), logging any mismatch; admin_report shows the check and the newest rows. Server only."
+who = "Claude"
+hours = 5
+done_when = "Pushed with the suite green, the migration dry-run on a copy of the dev database balanced at boot, and three integration tests failing on the previous server."
+todo = "Research: the Monsters and Memories item log"
+
+[[row]]
+id = "b46"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30"
+what = "The RTT readout: the world loop advanced renet's clock after handing it the acks, so every player link line read rtt_ms=0.0; the two calls are in renet's documented order now (the live loop and the shutdown drain), and an RTT reads in whole ticks. Server only."
+who = "Claude"
+hours = 0.25
+done_when = "Pushed; the journal's player link line reads a non-zero rtt_ms after the redeploy."
+todo = "Public-host hardening checklist"
+
+[[row]]
+id = "o16"
+week = "w5"
+lane = "operate"
+day = "Fri Oct 30 or later, nobody online"
+what = "Redeploy the R720 at the ledger build (migration 0017 runs at the boot, before any login). No export."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+waits_on = ["b45", "b46"]
+done_when = "The boot line shows the new build= and dev_cmds=false, then ledger swept and ledger check mismatches=0."
+todo = "Research: the Monsters and Memories item log"
+
+[[row]]
+id = "b47"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30, night"
+what = "The ledger's bank test: the three ledger kinds the sitting left unplayed (the vault withdrawal, the bank coin deposit and withdrawal) had no test; one now plays all five bank rows through the logout flush and checks each row, the stores on both sides of the counter and the balance. Server only; the sheet stays the play evidence."
+who = "Claude"
+hours = 0.5
+done_when = "Pushed with the suite green."
+todo = "Research: the Monsters and Memories item log"
+
+[[row]]
+id = "b48"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30, night"
+what = "Phase 4 of the housekeeping audit, two server-only items: the melee swing-rate limit reads the player's own haste instead of assuming everyone fully hasted (with the last accepted swing's pacing carrying into the next, so a Haste that runs out or a weapon swap costs no honest swing), and the cast relays carry only spells the server knows, at the server's cast time, with a fixed cancel word, instead of whatever the client wrote."
+who = "Claude"
+hours = 3
+done_when = "Pushed on the deploy branch with the suite green and two integration tests failing on the previous source."
+todo = "Client-decided outcomes"
+
+[[row]]
+id = "o17"
+week = "w5"
+lane = "operate"
+day = "Sat Oct 31 or later, nobody online"
+what = "Redeploy the R720 at the swing-limit and cast-relay build. Server only, no export, no migration."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+waits_on = ["b48"]
+done_when = "The boot line shows the new build= and dev_cmds=false."
+todo = "Client-decided outcomes"
+
+[[row]]
+id = "v48"
+week = "w5"
+lane = "verify"
+day = "Sat Oct 31 or Sun Nov 1"
+what = "Honest melee never trips the limiter: bare hands, a slow axe, a weapon swap mid-fight, dual wield, under Haste and as it runs out, a target switch and an auto-attack toggle, with no swing-rate line in the journal; two seats see the other's cast bar at the spell's own length, ending on a cancel, and no bar for a spell the server does not have."
+who = "user at a desk, two seats for section 2"
+hours = 0.75
+needs = ["the redeploy (o17)", "second seat for section 2 (two-boxing works)"]
+checklist = "haste_limiter_and_cast_relay_checklist.md"
+waits_on = ["o17"]
+todo = "Client-decided outcomes"
+done_when = "Every row filled."
+
+[[row]]
+id = "b49"
+week = "w5"
+lane = "build"
+day = "Fri Oct 30, night"
+what = "Held items at the bank and the merchant: a click on a vault slot while holding deposits into that vault (a bag refused up front), and a merchant's SELL list leads with the item in hand, sold from the cursor. A cursor variant on the wire, so it rides PD_W0029 with the facing, on feat/facing in both repos; the DLL rebuilt."
+who = "Claude"
+hours = 3
+done_when = "Pushed on feat/facing in both repos with the suite green, the integration test and the headless probe passing, and the DLL rebuilt."
+todo = "Held-item bank and vendor interactions"
+
+[[row]]
+id = "v49"
+week = "w5"
+lane = "verify"
+day = "Fri Nov 6 to Mon Nov 9"
+what = "One seat beside the banker and Brom: a lifted stack lands in the vault clicked (personal or shared), merges into a same-item stack, is refused when the vault is full or the item is a bag; the merchant's list leads with what is in hand and sells from it, a held full pouch refused; the old paths unchanged; the ledger rows and the balance in admin_report."
+who = "user at a desk"
+hours = 0.75
+needs = ["the November bump live (o20)", "a Small Pouch with something in it"]
+checklist = "held_item_bank_and_vendor_checklist.md"
+waits_on = ["b49", "b39", "o20"]
+todo = "Held-item bank and vendor interactions"
+done_when = "Every row filled."
+
+[[row]]
+id = "b50"
+week = "w5"
+lane = "build"
+day = "Sun Nov 1, night"
+what = "The swing-limit fix from the 11-01 sitting: the server carries the haste of the last two accepted swings instead of one (the client's Godot timer runs an interval set two swings back), and counts an expired Haste for one second (the client hears of it a round trip late). Plus an integration test on the late-joiner cast seed, the inconclusive Gate row."
+who = "Claude"
+hours = 2
+done_when = "Pushed on the deploy branch and merged into feat/facing, the suite green, the new tests failing on the old rule."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "o18"
+week = "w5"
+lane = "operate"
+day = "Mon Nov 2, 04:20 UTC, nobody online"
+what = "Redeploy the R720 at the two-swing haste build. Server only, no export, no migration."
+who = "user at a desk, Claude writes the commands"
+hours = 0.5
+waits_on = ["b50"]
+done_when = "The boot line shows the new build= and dev_cmds=false."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v50"
+week = "w5"
+lane = "verify"
+day = "after o18"
+what = "Row 6 of the swing-limit sheet played as written: swing through a Haste (or Wanderer's Chord) running out mid-fight, and start a new fight right after a Haste ends between fights, with no swing-rate line in the journal."
+who = "user at a desk, an Enchanter 16 and a melee character (two-boxing works)"
+hours = 0.5
+needs = ["the redeploy (o18)"]
+checklist = "haste_limiter_and_cast_relay_checklist.md"
+waits_on = ["o18"]
+todo = "Housekeeping audit 2026-10-23"
+done_when = "Row 6 filled again with the journal clean."
+
+# The 2026-11-01 triage of the older checklists (b9's second pass): eight retired, two
+# moved out of the plan (gnome_model to the art pipeline, dev_panel's one row into
+# food_and_water), and the five below kept for a sitting. Tentative until the user takes them.
+
+[[row]]
+id = "v51"
+week = "w5"
+lane = "verify"
+day = "any two-seat sitting"
+what = "Group odds and ends: a PvP miss reads \"B misses you.\" on A's screen; /autosplit off and on tell the other member, a repeat of the same value tells nobody, and a toggle while ungrouped only echoes locally."
+who = "user at a desk, two seats (two-boxing works), both /pvp on for the miss row"
+hours = 0.25
+needs = ["second seat (two-boxing works)"]
+checklist = "group_loot_coin_checklist.md"
+todo = "Loot rights odds and ends"
+tentative = true
+done_when = "Rows 165 and 170 to 173 filled."
+
+[[row]]
+id = "v52"
+week = "w5"
+lane = "verify"
+day = "the same sitting as v51, with a third account"
+what = "A three-person group keeps a two-person roster when C leaves, and when A kicks C; C's group window clears."
+who = "user at a desk, three seats (three accounts; two-boxing works)"
+hours = 0.25
+needs = ["three accounts in one group"]
+checklist = "track_6_post_fix_checklist.md"
+waits_on = ["v51"]
+tentative = true
+done_when = "Rows 46 and 48 filled."
+
+[[row]]
+id = "v53"
+week = "w5"
+lane = "verify"
+day = "any one-seat GM sitting"
+what = "The banker turns 150 copper into 1 silver and keeps 50 copper, and does nothing when both tiers are the same."
+who = "user at a desk with a GM account"
+hours = 0.1
+checklist = "banker_slice1_checklist.md"
+tentative = true
+done_when = "Rows 52 and 55 filled."
+
+[[row]]
+id = "v54"
+week = "w5"
+lane = "verify"
+day = "the same sitting as v53"
+what = "Life Drain on a Blood Mage 6 does 12 damage and heals up to 12; optionally Dark Shroud on a Shadow Knight does 20."
+who = "user at a desk with a GM account (Level Up from the Test Panel)"
+hours = 0.15
+checklist = "spell_drift_life_drain_dark_shroud_checklist.md"
+tentative = true
+done_when = "Row 29 filled (row 34 optional)."
+
+[[row]]
+id = "v55"
+week = "w5"
+lane = "verify"
+day = "the same sitting as v53, optional"
+what = "A Warrior's Skills tab shows no Meditate climbing while sitting."
+who = "user at a desk"
+hours = 0.05
+checklist = "regen_model_checklist.md"
+tentative = true
+done_when = "Row 60 filled."
+
+# The overnight of 2026-11-01 (the user's "do all four"): the last big pieces of the
+# housekeeping audit. The findings doc's section 5 says what is left and where it belongs.
+
+[[row]]
+id = "b51"
+week = "w5"
+lane = "build"
+day = "Sun Nov 1, night"
+what = "The world health line: once a minute, each tick's work time (median, 99th percentile, worst), the ticks past the 50 ms budget and the checkpoint's time, so a slow disk or a crowded world shows in the log before players call it lag. On the deploy branch; rides the next redeploy."
+who = "Claude unattended"
+days = 0.25
+done_when = "Pushed on the deploy branch and merged into feat/facing, the suite green."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "b52"
+week = "w5"
+lane = "build"
+day = "Sun Nov 1, night"
+what = "The world loop split: tick.rs's 13,820 lines into a module per step, run() a list of calls in the order they always ran; the integration tests into one binary with a module per subject. Moves only, on refactor/tick-split (from feat/facing), so it merges after the facing."
+who = "Claude unattended"
+days = 1
+done_when = "Pushed on refactor/tick-split, the suite green after every commit."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "b53"
+week = "w5"
+lane = "build"
+day = "Sun Nov 1, night"
+what = "The offline game removed from the client (the user's decision of 2026-10-23): the ENet layer, the local save, local enemies, pets and loot, the offline lobby, the client's own regen and buff ticks; the Test Panel keeps every server-routed tool. On refactor/remove-offline-code (from feat/facing)."
+who = "Claude unattended"
+days = 1
+done_when = "Pushed on refactor/remove-offline-code, every check and probe passing, reviewed."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "o19"
+week = "w5"
+lane = "operate"
+day = "Mon Nov 2, 16:24 UTC, nobody online"
+what = "Redeploy the R720 at the world health line build. Server only, no export, no migration."
+who = "user at a desk, Claude writes the commands"
+hours = 0
+waits_on = ["b51"]
+done_when = "The boot line shows a build= at or past d4f1a2a and dev_cmds=false."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v56"
+week = "w5"
+lane = "verify"
+day = "after o19"
+what = "Three minutes online: three world health lines with about 1,200 ticks each and nothing over budget; a checkpoint shows; nothing logged once everyone is out."
+who = "user at a desk"
+hours = 0.1
+needs = ["the redeploy (o19)"]
+checklist = "overnight_2026_11_01_checklist.md"
+waits_on = ["o19"]
+todo = "Housekeeping audit 2026-10-23"
+done_when = "Section 1 filled."
+
+[[row]]
+id = "b54"
+week = "w5"
+lane = "build"
+day = "Thu Nov 5, afternoon, the bump day's first step"
+what = "The bump branch made whole: bump/nov in both repos already carries the facing, the server split, the offline client removed, the one-time rustfmt and the lints (prepared November 2); feat/height-model (slices 0 to 3, the evade, the hate-list turn, the ground's winding) merges into it in both repos, the server suite and every client check run green on the merged pair, and the wire layer (gdext_net.dll) is built from the merged server. The deploy branches then fast-forward to it (o20)."
+who = "Claude, the user watching the checks"
+days = 0.5
+waits_on = ["b52", "b53", "b55"]
+done_when = "Both bump/nov branches carry the height model and are pushed; the suite and every client check green on the pair; the DLL in addons/gdext_net/ is the merged build."
+todo = "Housekeeping audit 2026-10-23"
+
+[[row]]
+id = "v58"
+week = "w5"
+lane = "verify"
+day = "Fri Nov 6 to Sun Nov 8, after o20, with v57"
+what = "The height model's regression sheet: movement, combat and spells, camps and pets, death, corpses and ports, the NPC services, all reading as before (the town and the camps sit on floors; the hills ride the same merge, so the sheet's header says what changed); the boot line naming the ground; check_all.ps1 with the terrain checks."
+who = "user at a desk, one seat (two for section 6)"
+hours = 0.75
+needs = ["the November bump live (o20)"]
+checklist = "height_model_checklist.md"
+waits_on = ["o20"]
+todo = "The server height model"
+done_when = "Every section filled."
+
+[[row]]
+id = "b55"
+week = "w5"
+lane = "build"
+day = "Wed Nov 4, night"
+what = "The first hills (height model slice 3): the relief as data with a generator, the hills in world.tscn and the server's ground, the slope rule's diagonal hole closed, the GM fling tool, mobs and pets giving up below a face, the client's own sight check and the check that holds it. On feat/height-model in both repos; rides the bump with the export."
+who = "Claude"
+days = 1
+done_when = "Both feat/height-model branches carry the hills, the server suite and every client check green."
+todo = "The server height model"
+
+[[row]]
+id = "v59"
+week = "w5"
+lane = "verify"
+day = "Fri Nov 6 to Sun Nov 8, after v58"
+what = "The first hills sheet: the look and the town, the routes out and the pass, fighting on the hills, the Wraith Gate cliff and a death from it, sight through the terrain at the cliff, the Sunken Barrow and the rim, the Fling tool, the evade below a face, and two seats for a mob that gives up below the cliff and a pet that warps to its owner."
+who = "user at a desk, one seat for most of it, two for sections 5 and 9, a GM account"
+hours = 3.9
+needs = ["the November bump live (o20)", "second seat (two-boxing works)"]
+checklist = "first_hills_checklist.md"
+waits_on = ["o20", "b55"]
+todo = "The server height model"
+done_when = "Every section filled."
+
+[[row]]
+id = "v57"
+week = "w5"
+lane = "verify"
+day = "Fri Nov 6 to Mon Nov 9, after o20"
+what = "Ordinary play on the split server (a fight, casts, a group, the merchant and bank, a trade, a death, a camp) with a clean journal, and the client without the offline game: the login and lobby, your own group row, a pet's fight with a clean console, the Test Panel's tools, the bag window."
+who = "user at a desk, two seats, a GM account"
+hours = 1
+needs = ["the November bump live (o20)", "second seat (two-boxing works)"]
+checklist = "overnight_2026_11_01_checklist.md"
+waits_on = ["o20"]
+todo = "Housekeeping audit 2026-10-23"
+done_when = "Sections 2 and 3 filled."
+
+[[row]]
+id = "o20"
+week = "w5"
+lane = "operate"
+day = "Thu Nov 5, evening"
+what = "The November bump day, moved in front of the door (user, 2026-11-05: the four extra days carry the new work to the friends instead of holding it until after). With everyone logged out: fast-forward both deploy branches to the merged bump/nov (b54), redeploy the R720, export the client from the merged branch with the wire layer built from the merged server, zip it. One protocol bump (PD_W0029), so the old zip stops connecting the moment the server restarts and the new one goes out within the hour."
+who = "user at a desk; Claude runs the merges, the checks and the export"
+hours = 1.5
+needs = ["everyone logged out", "the R720 over SSH", "the merged DLL in addons/gdext_net/ (built from the merged server, not the deploy checkout's old branch)"]
+waits_on = ["b54"]
+milestone = "m6"
+done_when = "The boot line shows the new build=, dev_cmds=false and the terrain line naming the hills; the export log reads stamped with the merged sha; the zip is in builds/ and sent."
+
+[[row]]
+id = "v60"
+week = "w6"
+lane = "verify"
+day = "Tue Nov 10"
+checklist = "pre_door_check_checklist.md"
+what = "The pre-door check again, on the build the friends will now hold: a fresh character plays the starter book for 45 minutes on the bump build, hills and all (the November 3 run was on the pre-bump build). Marked in place as a second run. Anything odd gets a To-Do line the same day; a server fix redeploys, a client fix means one more zip (o21)."
+who = "user at a desk"
+hours = 1.0
+needs = ["the bump build on the R720 and in the zip (o20)", "the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run"]
+waits_on = ["o20", "v58", "v59"]
+milestone = "m4"
+done_when = "Every row marked for the second run; no new ERROR lines in the server log."
+
+[[row]]
+id = "o21"
+week = "w6"
+lane = "operate"
+day = "Wed Nov 11"
+what = "The final build settled and sent: if the sheets or the second pre-door check found a client fix, one more export and zip to every friend; if only server fixes, a redeploy and no zip. Nobody receives two zips in a row without a reason."
+who = "user at a desk"
+hours = 1.0
+waits_on = ["v60"]
+done_when = "Every friend holds the latest zip (its stamp on the login screen), and the R720's boot line is the build the sheets were run on, or a later one whose fix has its own row."

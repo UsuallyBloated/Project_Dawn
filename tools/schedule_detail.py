@@ -55,6 +55,10 @@ PASS_RE = re.compile(r"^\s*- \[[xX]\]", re.M)
 SKIP_RE = re.compile(r"^\s*- \[-\]", re.M)
 HEADING_RE = re.compile(r"^##+\s+(.*)$")
 TWO_SEAT_RE = re.compile(r"two seats?|second seat|two accounts|two-seat", re.I)
+# A checklist whose open rows a triage found stale, covered elsewhere, or belonging to
+# another list carries this note at its top. Its rows stay unmarked (they were never
+# played), and it no longer counts as unscheduled.
+TRIAGE_RETIRED_RE = re.compile(r"^> \*\*Triage \d{4}-\d{2}-\d{2}: (retired|moved)[.:]", re.M)
 
 
 def sh(*args: str) -> str:
@@ -170,8 +174,9 @@ def main() -> int:
     for p in sorted(NOTES.glob("*checklist*.md")):
         if p.name.startswith("TEMPLATE") or p.name in scheduled_checklists:
             continue
-        counts = count_rows(p.read_text(encoding="utf-8"))
-        if counts["open"] == 0:
+        text = p.read_text(encoding="utf-8")
+        counts = count_rows(text)
+        if counts["open"] == 0 or TRIAGE_RETIRED_RE.search(text):
             continue
         mtime = dt.date.fromtimestamp(p.stat().st_mtime)
         age = (today - mtime).days
@@ -557,13 +562,18 @@ def render_html(c: dict) -> str:
     H.append('<div class="wrap">')
     H.append('<header>')
     H.append('<div class="eyebrow">Project Dawn</div>')
-    H.append('<h1>Five weeks to the first evening your friends play it, <em>one act at a time</em>.</h1>')
+    # The target and the week count come from the plan file, so a slipped date never leaves a
+    # stale "November 8" in the prose (it did, until the slip of 2026-11-05).
+    target_month_day = meta["target"].strftime("%B %d").replace(" 0", " ")
+    target_short = meta["target"].strftime("%b %d").replace(" 0", " ")
+    week_word = {5: "Five", 6: "Six", 7: "Seven", 8: "Eight"}.get(len(weeks), str(len(weeks)))
+    H.append(f'<h1>{week_word} weeks to the first evening your friends play it, <em>one act at a time</em>.</h1>')
     H.append('<p class="thesis">The schedule you already have says which phase we are in. This page says what '
-             'happens in each of the weeks between now and November 8: every checklist sitting, build step, '
+             f'happens in each of the weeks between now and {target_month_day}: every checklist sitting, build step, '
              'redeploy, export, decision and friend session, with who does it, what it needs, how long it takes '
              'and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>')
     H.append('<div class="stats">')
-    H.append(f'<div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 8'
+    H.append(f'<div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">{target_short}'
              f'<span class="stat-sub">the only fixed date here</span></div></div>')
     H.append(f'<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">{esc(fmt_date(c["today"]))}'
              f'<span class="stat-sub">repo {esc(c["head"])}</span></div></div>')
@@ -584,7 +594,8 @@ def render_html(c: dict) -> str:
     # Milestones
     H.append('<section><h2>Milestones</h2>')
     H.append('<p class="lede">Placed by working back from November 8 at the measured pace, with the fifth week '
-             'left as slack. A dashed top edge means the milestone waits on an approval.</p>')
+             'left as slack; on November 5 the door moved to Thursday November 12 and the November bump moved '
+             'in front of it. A dashed top edge means the milestone waits on an approval.</p>')
     H.append('<div class="milestones">')
     for m in c["plan"]["milestone"]:
         cls = "ms tent" if m.get("tentative") else "ms"

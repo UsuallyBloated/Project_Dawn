@@ -1,11 +1,14 @@
 extends Node
 
+# The client's mirror of the server's group: roster, leader, loot mode and the
+# members' resource bars. The server owns every membership change; the action
+# methods here send intents through Net and the roster fan updates the mirror.
+
 # membership_changed=true for join/leave/leader shifts; false for stat-only ticks
 signal group_updated(membership_changed: bool)
 signal invite_received(from_peer_id: int, from_name: String)
 
 const MAX_SIZE := 6
-const GROUP_XP_BONUS := 1.20
 
 var in_group := false
 var is_leader := false
@@ -20,19 +23,13 @@ const LOOT_ROUND_ROBIN := 0
 const LOOT_FREE_FOR_ALL := 1
 var loot_mode := LOOT_ROUND_ROBIN
 
-var _my_peer_id := 0
 var _stats_dirty := false
 
 func _ready() -> void:
-	_my_peer_id = multiplayer.get_unique_id()
 	PlayerStats.hp_changed.connect(func(_c, _m): _sync_stats())
 	PlayerStats.mp_changed.connect(func(_c, _m): _sync_stats())
 	PlayerStats.stamina_changed.connect(func(_c, _m): _sync_stats())
-	# Track 6 sub-task 5 — wire to server-driven group state in
-	# launcher mode. The legacy enet MultiplayerAPI RPCs below stay
-	# for Test Room single-player; in launcher mode the action methods
-	# early-return through Net. (`_flush_stats` is signal-driven rather
-	# than an action method, so it needs its own guard — see there.)
+	# Track 6 sub-task 5 — server-driven group state.
 	Net.world_group_invited.connect(_on_world_group_invited)
 	Net.world_group_roster.connect(_on_world_group_roster)
 	# Group-mate bars. The server already fans HealthUpdate / ManaUpdate /
@@ -68,107 +65,39 @@ func _flush_stats() -> void:
 	_stats_dirty = false
 	if not in_group:
 		return
-	# Launcher mode: the server owns group state and no Godot multiplayer peer
-	# is ever assigned, so the peer-to-peer RPCs below would fire at server
-	# char_ids against an empty ENet peer list ("unknown peer ID"). Refresh our
-	# own row from local PlayerStats — instant, no round trip — and leave every
-	# other member to the server fan-out.
-	if Net.is_launcher_mode():
-		_update_member_entry(_local_stats())
-		group_updated.emit(false)
-		return
-	if _my_peer_id == leader_peer_id:
-		_update_member_entry(_local_stats())
-		for m in members:
-			var pid: int = m.get("peer_id", 0)
-			if pid != 0 and pid != _my_peer_id:
-				_rpc_member_stat_delta.rpc_id(pid, _my_peer_id,
-					PlayerStats.hp, PlayerStats.max_hp,
-					PlayerStats.mp, PlayerStats.max_mp,
-					PlayerStats.stamina, PlayerStats.max_stamina)
-		group_updated.emit(false)
-	else:
-		_rpc_stat_update.rpc_id(leader_peer_id, _my_peer_id,
-			PlayerStats.hp, PlayerStats.max_hp,
-			PlayerStats.mp, PlayerStats.max_mp,
-			PlayerStats.stamina, PlayerStats.max_stamina)
+	# Refresh our own row from local PlayerStats (instant, no round trip) and
+	# leave every other member to the server fan-out.
+	_update_member_entry(_local_stats())
+	group_updated.emit(false)
 
-# â”€â”€ Local actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Local actions ───────────────────────────────────────────────────
 
-func invite_player(target_peer_id: int) -> void:
-	# Track 6 sub-task 5: launcher mode routes through Net (server
-	# resolves the target by name). The local-RPC path stays for
-	# Test Room single-player. target_peer_id is unused in launcher
-	# mode — UI passes 0 or the legacy ID.
-	if Net.is_launcher_mode():
-		# Caller should use invite_player_by_name in launcher mode.
-		push_warning("GroupManager.invite_player called in launcher mode — use invite_player_by_name")
-		return
-	if in_group and members.size() >= MAX_SIZE:
-		return
-	_rpc_receive_invite.rpc_id(target_peer_id, _my_peer_id, PlayerStats.player_name)
-
-# Track 6 sub-task 5 — chat / UI entry point for "/invite <name>" in
-# launcher mode. Server looks up the target by name in its
-# connections map. Test Room single-player has no server; logs a
-# message.
+# Track 6 sub-task 5 — chat / UI entry point for "/invite <name>". The
+# server looks up the target by name in its connections map.
 func invite_player_by_name(target_name: String) -> void:
-	if Net.is_launcher_mode():
-		Net.broadcast_group_invite(target_name)
-	else:
-		push_warning("GroupManager.invite_player_by_name unsupported outside launcher mode")
+	Net.broadcast_group_invite(target_name)
 
 func accept_invite() -> void:
-	if Net.is_launcher_mode():
-		if pending_invite_from == 0:
-			return
-		Net.broadcast_group_accept_invite(pending_invite_from)
-		pending_invite_from = 0
-		return
 	if pending_invite_from == 0:
 		return
-	_rpc_receive_accept.rpc_id(pending_invite_from, _my_peer_id, _local_stats())
+	Net.broadcast_group_accept_invite(pending_invite_from)
 	pending_invite_from = 0
 
 func leave_group() -> void:
 	if not in_group:
 		return
-	if Net.is_launcher_mode():
-		Net.broadcast_group_leave()
-		# Server will fan an empty roster back; _on_world_group_roster
-		# clears local state. Optimistically clear here too so the UI
-		# updates without waiting for the round-trip.
-		_clear_group()
-		return
-	if is_leader:
-		if members.size() <= 1:
-			_disband()
-			return
-		var new_leader := 0
-		var remaining: Array = []
-		for m in members:
-			var pid: int = m.get("peer_id", 0)
-			if pid == _my_peer_id:
-				continue
-			remaining.append(m)
-			if new_leader == 0:
-				new_leader = pid
-		members = remaining
-		leader_peer_id = new_leader
-		_broadcast_state()
-	else:
-		_rpc_receive_leave.rpc_id(leader_peer_id, _my_peer_id)
+	Net.broadcast_group_leave()
+	# Server will fan an empty roster back; _on_world_group_roster
+	# clears local state. Optimistically clear here too so the UI
+	# updates without waiting for the round-trip.
 	_clear_group()
 
-# Track 6 sub-task 5 — leader-only kick by name (launcher mode).
+# Track 6 sub-task 5 — leader-only kick by name.
 func kick_member_by_name(target_name: String) -> void:
-	if Net.is_launcher_mode():
-		Net.broadcast_group_kick(target_name)
-	else:
-		push_warning("GroupManager.kick_member_by_name unsupported outside launcher mode")
+	Net.broadcast_group_kick(target_name)
 
 # Track 6 sub-task 5 — Net signal handlers. Server is authoritative
-# on group membership in launcher mode; these handlers update the
+# on group membership; these handlers update the
 # local mirror so the rest of the GroupManager API (in_group,
 # members, is_leader, etc.) stays accurate without changing the
 # downstream consumers' code.
@@ -218,106 +147,12 @@ func loot_mode_name() -> String:
 func pass_leadership(new_leader_peer_id: int) -> void:
 	if not is_leader:
 		return
-	if Net.is_launcher_mode():
-		# Server validates (current leader → member) and re-fans the
-		# roster, which updates leader_peer_id / is_leader for everyone.
-		# No optimistic local change — the old local-only path was the bug
-		# (the next server roster snapped leadership back to the original).
-		Net.broadcast_pass_leadership(new_leader_peer_id)
-		return
-	leader_peer_id = new_leader_peer_id
-	_broadcast_state()
+	# Server validates (current leader to member) and re-fans the roster,
+	# which updates leader_peer_id / is_leader for everyone. No optimistic
+	# local change: the next server roster would snap it back.
+	Net.broadcast_pass_leadership(new_leader_peer_id)
 
-func distribute_kill_xp(base_xp: int) -> void:
-	# Track 6 sub-task 5: server splits XP among the killer's group
-	# in launcher mode (kill credit branch in tick.rs). The local
-	# Net.xp_gained handler calls PlayerStats.gain_xp directly. This
-	# RPC path stays for Test Room single-player.
-	if Net.is_launcher_mode():
-		return
-	if not in_group or members.size() <= 1:
-		PlayerStats.gain_xp(base_xp)
-		return
-	var share: int = maxi(1, int(base_xp * GROUP_XP_BONUS / members.size()))
-	PlayerStats.gain_xp(share)
-	for m in members:
-		var pid: int = m.get("peer_id", 0)
-		if pid != 0 and pid != _my_peer_id:
-			_rpc_receive_xp.rpc_id(pid, share)
-
-func broadcast_group_chat(sender_name: String, msg: String) -> void:
-	if not in_group:
-		return
-	for m in members:
-		var pid: int = m.get("peer_id", 0)
-		if pid != 0 and pid != _my_peer_id:
-			_rpc_group_chat.rpc_id(pid, sender_name, msg)
-
-# â”€â”€ RPCs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-@rpc("any_peer", "reliable")
-func _rpc_receive_invite(from_peer_id: int, from_name: String) -> void:
-	if multiplayer.get_remote_sender_id() != from_peer_id:
-		return
-	pending_invite_from = from_peer_id
-	invite_received.emit(from_peer_id, from_name)
-
-@rpc("any_peer", "reliable")
-func _rpc_receive_accept(new_peer_id: int, stats: Dictionary) -> void:
-	if multiplayer.get_remote_sender_id() != new_peer_id:
-		return
-	if in_group and not is_leader:
-		return
-	if not in_group:
-		in_group = true
-		is_leader = true
-		leader_peer_id = _my_peer_id
-		members = [_local_stats()]
-	if members.size() >= MAX_SIZE:
-		return
-	members.append(stats)
-	_broadcast_state()
-
-@rpc("any_peer", "reliable")
-func _rpc_receive_leave(leaving_peer_id: int) -> void:
-	if not is_leader:
-		return
-	members = members.filter(func(m): return m.get("peer_id") != leaving_peer_id)
-	if members.size() <= 1:
-		_disband()
-	else:
-		_broadcast_state()
-
-@rpc("any_peer", "reliable")
-func _rpc_receive_state(new_leader_id: int, new_members: Array) -> void:
-	leader_peer_id = new_leader_id
-	is_leader = (_my_peer_id == new_leader_id)
-	members = new_members
-	in_group = true
-	group_updated.emit(true)
-
-# Received by the leader from a member whose stats changed.
-@rpc("any_peer", "unreliable_ordered")
-func _rpc_stat_update(peer_id: int, hp: float, max_hp: float, mp: float, max_mp: float, sta: float, max_sta: float) -> void:
-	if not is_leader:
-		return
-	var stats := {"peer_id": peer_id, "hp": hp, "max_hp": max_hp,
-		"mp": mp, "max_mp": max_mp, "sta": sta, "max_sta": max_sta}
-	_update_member_entry(stats)
-	for m in members:
-		var pid: int = m.get("peer_id", 0)
-		if pid != 0 and pid != _my_peer_id and pid != peer_id:
-			_rpc_member_stat_delta.rpc_id(pid, peer_id, hp, max_hp, mp, max_mp, sta, max_sta)
-	group_updated.emit(false)
-
-# Forwarded by the leader to all other members â€” stat delta only, no membership change.
-@rpc("any_peer", "unreliable_ordered")
-func _rpc_member_stat_delta(peer_id: int, hp: float, max_hp: float, mp: float, max_mp: float, sta: float, max_sta: float) -> void:
-	_update_member_entry({"peer_id": peer_id, "hp": hp, "max_hp": max_hp,
-		"mp": mp, "max_mp": max_mp, "sta": sta, "max_sta": max_sta})
-	group_updated.emit(false)
-
-# ─── Server-driven group-mate resources (launcher mode) ──────────────
+# ─── Server-driven group-mate resources ──────────────────────────────
 # These three signals carry every entity's resources, not just group-mates:
 # enemies and pets ride them too (RemoteEnemyManager / RemotePetManager
 # listen to the same ones). `_apply_peer_stat` returns without emitting
@@ -345,28 +180,9 @@ func _apply_peer_stat(id: int, fields: Dictionary) -> void:
 			group_updated.emit(false)
 			return
 
-@rpc("any_peer", "reliable")
-func _rpc_receive_xp(amount: int) -> void:
-	var sender := multiplayer.get_remote_sender_id()
-	for m in members:
-		if m.get("peer_id", 0) == sender:
-			PlayerStats.gain_xp(amount)
-			return
+# ── Helpers ─────────────────────────────────────────────────────────
 
-@rpc("any_peer", "reliable")
-func _rpc_receive_disband() -> void:
-	_clear_group()
-
-@rpc("any_peer", "reliable")
-func _rpc_group_chat(sender_name: String, msg: String) -> void:
-	if sender_name.length() > 64 or msg.length() > 256:
-		return
-	CombatLog.add_line("[Group] %s: %s" % [sender_name, msg], CombatLog.MsgType.GROUP_CHAT)
-
-# â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-# True when `peer_id` (a server char_id in launcher mode, or an enet
-# unique-id in Test Room) is a current member of the group. Used by
+# True when `peer_id` (a server char_id) is a current member of the group. Used by
 # friend/foe UI (RemotePet allegiance tint) and PvP heal pre-checks
 # (spells.gd) to distinguish group-mate from neutral / hostile.
 func is_member(peer_id: int) -> bool:
@@ -378,12 +194,10 @@ func is_member(peer_id: int) -> bool:
 	return false
 
 func _local_stats() -> Dictionary:
-	# The roster is keyed on whatever ids populated `members`. In launcher mode
-	# those are server char_ids; `_my_peer_id` is Godot's `get_unique_id()`,
-	# which is 1 on every client because no ENet peer is assigned. Using it
-	# there wrote the local player's stats into whichever member happened to be
-	# char_id 1 — so a non-leader's own HP appeared under the leader's name.
-	var pid: int = Net.get_player_id() if Net.is_launcher_mode() else _my_peer_id
+	# The roster is keyed on server char_ids, so our own row is the one under
+	# Net.get_player_id(). (Godot's multiplayer unique id is 1 on every client;
+	# using it once put a non-leader's own HP under the leader's name.)
+	var pid: int = Net.get_player_id()
 	return {
 		"peer_id": pid,
 		"name": PlayerStats.player_name,
@@ -399,24 +213,6 @@ func _update_member_entry(stats: Dictionary) -> void:
 		if members[i].get("peer_id") == pid:
 			members[i].merge(stats, true)
 			return
-
-func _broadcast_state() -> void:
-	for m in members:
-		var pid: int = m.get("peer_id", 0)
-		if pid != 0 and pid != _my_peer_id:
-			_rpc_receive_state.rpc_id(pid, leader_peer_id, members)
-	is_leader = (_my_peer_id == leader_peer_id)
-	group_updated.emit(true)
-
-func _disband() -> void:
-	if not multiplayer.has_multiplayer_peer():
-		_clear_group()
-		return
-	for m in members:
-		var pid: int = m.get("peer_id", 0)
-		if pid != 0 and pid != _my_peer_id:
-			_rpc_receive_disband.rpc_id(pid)
-	_clear_group()
 
 func _clear_group() -> void:
 	in_group = false

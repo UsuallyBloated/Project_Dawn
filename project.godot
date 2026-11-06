@@ -18,7 +18,6 @@ config/icon="res://icon.svg"
 [autoload]
 
 AuthClient="*res://autoloads/auth_client.gd"
-Network="*res://autoloads/network.gd"
 Currency="*res://autoloads/currency.gd"
 PlayerStats="*res://autoloads/player_stats.gd"
 Alignment="*res://autoloads/alignment.gd"
@@ -40,10 +39,8 @@ CombatLog="*res://autoloads/combat_log.gd"
 Targeting="*res://autoloads/targeting.gd"
 Loot="*res://autoloads/loot.gd"
 Crafting="*res://autoloads/crafting.gd"
-Transformations="*res://autoloads/transformations.gd"
 BuffManager="*res://autoloads/buff_manager.gd"
 PetManager="*res://autoloads/pet_manager.gd"
-WarderAI="*res://autoloads/warder_ai.gd"
 ZoneLoader="*res://autoloads/zone_loader.gd"
 GroupManager="*res://autoloads/group_manager.gd"
 SocialHotkeys="*res://autoloads/social_hotkeys.gd"
@@ -61,7 +58,6 @@ DebugLog="*res://autoloads/debug_log.gd"
 QuestManager="*res://autoloads/quest_manager.gd"
 StationManager="*res://autoloads/station_manager.gd"
 DialogueManager="*res://autoloads/dialogue_manager.gd"
-SaveManager="*res://autoloads/save_manager.gd"
 Net="*res://autoloads/net.gd"
 RemotePlayerManager="*res://autoloads/remote_player_manager.gd"
 RemoteEnemyManager="*res://autoloads/remote_enemy_manager.gd"
@@ -84,3 +80,8 @@ window/stretch/aspect="expand"
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/procedural_dungeon/plugin.cfg", "res://addons/build_stamp/plugin.cfg")
+
+[layer_names]
+
+3d_physics/layer_1="bodies"
+3d_physics/layer_2="terrain"

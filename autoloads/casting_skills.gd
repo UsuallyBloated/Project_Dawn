@@ -31,29 +31,9 @@ func initialize(player_class: String, level: int) -> void:
 func get_cap(skill_name: String) -> int:
 	return CastingSkillDefinitions.get_cap(_player_class, skill_name, _level)
 
-func _get_ratio(skill_name: String) -> float:
-	var cap := get_cap(skill_name)
-	if cap == 0:
-		return 0.0
-	return float(get_current(skill_name)) / float(cap)
-
-# 1.0–1.15× damage multiplier for Evocation spells.
-func get_damage_mult(discipline: String) -> float:
-	if discipline != "evocation":
-		return 1.0
-	return 1.0 + 0.15 * _get_ratio("evocation")
-
-# 1.0–1.25× duration multiplier for Alteration effects (HoT, DoT, CC duration).
-func get_duration_mult(discipline: String) -> float:
-	if discipline != "alteration":
-		return 1.0
-	return 1.0 + 0.25 * _get_ratio("alteration")
-
-# 1.0–1.20× absorb multiplier for Abjuration shields.
-func get_absorb_mult(discipline: String) -> float:
-	if discipline != "abjuration":
-		return 1.0
-	return 1.0 + 0.20 * _get_ratio("abjuration")
+# The casting skills no longer scale a spell's damage, duration or absorb: as
+# on P99 a spell does its listed number and a low skill makes it FIZZLE, which
+# the server rolls at the cast's start (the EQ parity audit of 2026-10-20).
 
 # Probability [0.10, 0.70] that an incoming hit interrupts an active cast.
 # At channeling skill 0: 70%. At max skill: 10%.

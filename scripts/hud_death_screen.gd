@@ -35,9 +35,7 @@ func _ready() -> void:
 	PlayerDeath.player_respawned.connect(_hide)
 
 func _show() -> void:
-	var zone := PlayerStats.bind_zone_name
-	var dest := ("Returning to %s..." % zone) if zone != "" else "Respawning..."
-	_lbl.text = "YOU HAVE DIED\n" + dest
+	_lbl.text = "YOU HAVE DIED\nRespawning..."
 	visible = true
 
 func _hide() -> void:

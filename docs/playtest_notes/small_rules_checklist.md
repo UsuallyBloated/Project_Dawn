@@ -31,7 +31,7 @@ holds`.
 ## 2 — Friendly reach is 30 m
 - [ ] **Heal a group-mate at about 28 m (the readout on the target frame)** → it lands. notes:
 - [ ] **Heal them at about 32 m** → "Cast failed: That target is too far away or no longer here." and the mana stays. (On the old client the client's own check refuses past 24 m first, with its own line; both are a refusal with the mana kept.) notes:
-- [ ] **Nuke a mob at about 28 m** → still refused: hostile spells keep 25 m. notes:
+- [ ] **Nuke a mob at about 28 m** → it lands: hostile spells reach 30 m as well now *(updated 2026-10-26: was "still refused, hostile spells keep 25 m"; the per-spell ranges of 2026-10-19 moved hostile spells to 30 m)*. notes:
 
 ## 3 — Slow, Torpor, Aria
 - [ ] **Shaman: cast Torpor on a mob** → it lands for 20 mana with a 1.5 s bar, no heal on you, and the mob swings slower for a minute. notes:

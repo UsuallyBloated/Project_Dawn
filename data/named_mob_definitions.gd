@@ -1,6 +1,6 @@
 class_name NamedMobDefinitions
 
-# Named / boss mob data. Key = named_id string used in EnemySpawner.
+# Named / boss mob data. Key = named_id; the Test Panel spawns them by display name.
 #
 # Fields:
 #   display_name      — shown in nameplate
@@ -107,13 +107,3 @@ const ALL: Dictionary = {
 		]
 	}
 }
-
-# Loads an ItemData by resource path. Returns null with a warning if
-# the file is missing — protects boss kills from silently dropping
-# nothing because an authoring typo broke the path. Used by
-# enemy.apply_named().
-static func load_item(path: String) -> ItemData:
-	if not ResourceLoader.exists(path):
-		push_warning("named mob loot path missing: %s" % path)
-		return null
-	return load(path) as ItemData

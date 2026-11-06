@@ -107,7 +107,6 @@ func _build() -> void:
 	btn_row.add_child(close_btn)
 
 func _on_quit_pressed() -> void:
-	SaveManager.save()
 	Net.leave_session()
 	get_tree().quit()
 

@@ -1,0 +1,6 @@
+meshy_spend_ledger.json
+secret_paths.local.json
+meshy_task_ledger.json
+meshy_tripwire.json
+meshy_status.json
+__pycache__/

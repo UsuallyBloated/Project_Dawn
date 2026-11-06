@@ -14,8 +14,7 @@ func _ready() -> void:
 
 # Track 13.3 — server-driven apply path. The InventoryDelta /
 # InventorySnapshot for `equip` location routes here so the local
-# paperdoll reflects authoritative state. Mirrors the local `equip`
-# path's stat application (the item registry is online now): the six
+# paperdoll reflects authoritative state. The six
 # primary stats have no server->client sync, so the client must apply
 # gear bonuses itself for the character sheet to reflect them; max
 # HP/MP/Stamina still get corrected absolutely by the server's resource
@@ -57,39 +56,54 @@ func apply_remote_snapshot_clear() -> void:
 			equipped[s] = null
 			equipment_changed.emit(s, null)
 
+# Dual wield is earned at a class's level (Combat.can_dual_wield, the server's
+# rule): it decides where a second one-hander lands and whether an off-hand
+# weapon goes on at all.
 func can_dual_wield() -> bool:
-	return WeaponSkills.get_current("dual_wield") > 0
+	return Combat.can_dual_wield()
 
-func equip(item: ItemData) -> void:
-	var slot := _resolve_slot(item)
-	if slot == "":
-		return
-	# Equipping a 2H weapon clears any offhand weapon (shields/weapons)
-	if item.type == ItemData.Type.WEAPON and item.is_two_handed:
-		var oh = equipped.get("offhand")
-		if oh != null:
-			_remove_stat_bonuses(oh)
-			equipped["offhand"] = null
-			equipment_changed.emit("offhand", null)
-			Inventory.add_item(oh)
-	var old = equipped[slot]
-	if old != null:
-		_remove_stat_bonuses(old)
-		# When replacing main hand while offhand holds a weapon, push offhand back too
-		if slot == "weapon" and item.is_two_handed:
-			pass  # already cleared above
-	equipped[slot] = item
-	_apply_stat_bonuses(item)
-	equipment_changed.emit(slot, item)
+# Why this class may not wear `item` in `slot_name`, or "" when it may: the
+# server's rule (`skills::equip_refusal`), asked here first so an honest
+# player gets the line without a round trip. EQ's rule, since 2026-10-27: a
+# weapon of a type the class never trains, armor of a kind it never trains,
+# and a weapon in the off hand before the class can dual wield are refused at
+# the equip, not worn badly. The two-hander rule, since 2026-10-29: a
+# two-hander goes in the main hand only, and only while the off hand is
+# empty; nothing goes in the off hand while the main hand holds one (the
+# user's call: a two-hander beside an off-hand weapon is an end-game Warrior
+# ability, and nobody has it until that ability exists).
+func equip_refusal(item: ItemData, slot_name: String) -> String:
+	if item == null:
+		return ""
+	if item.type == ItemData.Type.WEAPON:
+		if not WeaponSkills.class_trains(WeaponSkills.skill_key_for(item)):
+			return "Your class cannot wield that."
+		if slot_name == "offhand":
+			if item.is_two_handed:
+				return "A two-handed weapon goes in the main hand."
+			if not can_dual_wield():
+				var at: int = WeaponSkillDefinitions.DUAL_WIELD_LEVELS.get(PlayerStats.player_class, 0)
+				if at > 0:
+					return "You will be able to dual wield at level %d." % at
+				return "Your class cannot dual wield."
+			var main_wpn: ItemData = equipped.get("weapon")
+			if main_wpn != null and main_wpn.is_two_handed:
+				return "You cannot hold that with a two-handed weapon."
+		elif slot_name == "weapon" and item.is_two_handed and equipped.get("offhand") != null:
+			return "Empty your off hand first."
+		return ""
+	if item.armor_type != "" and ArmorSkills.get_cap(item.armor_type) <= 0:
+		return "Your class cannot wear that."
+	return ""
 
-# Track 15.1 — server-authoritative equip flow. The launcher-mode call
-# site picks the paperdoll slot client-side (dual-wield + 2H rules live
-# here) then ships EquipItem on the wire. Server-fanned InventoryDelta
+# Track 15.1 — server-authoritative equip flow. The call site picks the
+# paperdoll slot client-side (dual-wield + 2H rules live here) then ships
+# EquipItem on the wire. Server-fanned InventoryDelta
 # + apply_remote_equip update local state.
 #
 # `src_location` is "base" or "bag_<N>"; `src_slot` is the index inside
-# that location. Returns false if the equip is blocked (no valid slot,
-# 2H swap with full inventory, etc.).
+# that location. Returns false if the equip is blocked (no valid slot, or
+# a refusal from `equip_refusal`, printed as its line).
 func request_equip_from(src_location: String, src_slot: int, item: ItemData, target_slot_hint: String = "") -> bool:
 	# `target_slot_hint` lets the caller force a specific paperdoll
 	# slot — e.g. the paperdoll left-click "drop here" path. Empty
@@ -110,36 +124,17 @@ func request_equip_from(src_location: String, src_slot: int, item: ItemData, tar
 	var equip_slot_idx: int = SLOTS.find(slot_name)
 	if equip_slot_idx < 0:
 		return false
+	var refusal := equip_refusal(item, slot_name)
+	if refusal != "":
+		CombatLog.add_line(refusal, CombatLog.MsgType.INFO)
+		return false
 
-	if Net.is_launcher_mode():
-		# 2H weapon while offhand is occupied → unequip offhand to a free
-		# base slot first, then equip the 2H. Server processes the two
-		# intents in send order (renet reliable channel).
-		if item.type == ItemData.Type.WEAPON and item.is_two_handed \
-				and equipped.get("offhand") != null:
-			var dst := _first_free_base_slot()
-			if dst < 0:
-				CombatLog.add_line("Inventory full — free a slot to swap weapons.", CombatLog.MsgType.INFO)
-				return false
-			var oh_equip_idx: int = SLOTS.find("offhand")
-			Net.broadcast_unequip_item(oh_equip_idx, NetProtocol.INV_LOCATION_BASE, dst)
-		Net.broadcast_equip_item(src_location, src_slot, equip_slot_idx)
-		return true
-
-	# Solo / Test Room — preserve the optimistic local mutation path.
-	_local_remove_from_source(src_location, src_slot)
-	equip(item)
+	# A two-hander with a full off hand was refused above ("Empty your off
+	# hand first."), as the server refuses it: EQ's way, never an unequip sent
+	# on the player's behalf. (Until 2026-10-29 this path unequipped the off
+	# hand itself, keyed on a flag both staves lacked.)
+	Net.broadcast_equip_item(src_location, src_slot, equip_slot_idx)
 	return true
-
-func unequip(slot: String) -> ItemData:
-	var item = equipped.get(slot)
-	if item == null:
-		return null
-	_remove_stat_bonuses(item)
-	equipped[slot] = null
-	equipment_changed.emit(slot, null)
-	Inventory.add_item(item)
-	return item
 
 # Track 15.1 — server-authoritative unequip. The server's
 # unequip_to_base requires a concrete dst; client picks the first
@@ -148,23 +143,20 @@ func unequip(slot: String) -> ItemData:
 func request_unequip(slot_name: String) -> bool:
 	if equipped.get(slot_name) == null:
 		return false
-	if Net.is_launcher_mode():
-		var dst := _first_free_base_slot()
-		if dst < 0:
-			CombatLog.add_line("Inventory full — no room to unequip.", CombatLog.MsgType.INFO)
-			return false
-		var equip_slot_idx: int = SLOTS.find(slot_name)
-		if equip_slot_idx < 0:
-			return false
-		Net.broadcast_unequip_item(equip_slot_idx, NetProtocol.INV_LOCATION_BASE, dst)
-		return true
-	unequip(slot_name)
+	var dst := _first_free_base_slot()
+	if dst < 0:
+		CombatLog.add_line("Inventory full — no room to unequip.", CombatLog.MsgType.INFO)
+		return false
+	var equip_slot_idx: int = SLOTS.find(slot_name)
+	if equip_slot_idx < 0:
+		return false
+	Net.broadcast_unequip_item(equip_slot_idx, NetProtocol.INV_LOCATION_BASE, dst)
 	return true
 
 # PD_W0027 slice 1.5 — lift a worn item straight onto the cursor (EQ's
 # click-the-doll-with-an-empty-hand). The server refuses if the hand is full.
 func request_unequip_to_cursor(slot_name: String) -> bool:
-	if equipped.get(slot_name) == null or not Net.is_launcher_mode():
+	if equipped.get(slot_name) == null:
 		return false
 	var equip_slot_idx: int = SLOTS.find(slot_name)
 	if equip_slot_idx < 0:
@@ -172,19 +164,8 @@ func request_unequip_to_cursor(slot_name: String) -> bool:
 	Net.broadcast_unequip_item(equip_slot_idx, NetProtocol.INV_LOCATION_CURSOR, 0)
 	return true
 
-func _resolve_slot(item: ItemData) -> String:
-	var slot := _pick_slot(item)
-	# Legacy path: the caller already removed the item from inventory,
-	# so a blocked offhand-while-2H push gets re-added here so it isn't
-	# lost. Launcher path uses _pick_slot directly to avoid the side
-	# effect (the item never left inventory there).
-	if slot == "" and item.type == ItemData.Type.OFFHAND:
-		Inventory.add_item(item)
-	return slot
-
 # Pure paperdoll-slot picker — no side effects. Encodes the dual-wield
-# + 2H rules used by both the legacy `equip` path and the new
-# request_equip_from launcher path.
+# + 2H rules request_equip_from uses.
 func _pick_slot(item: ItemData) -> String:
 	if item.type == ItemData.Type.WEAPON:
 		var main_wpn: ItemData = equipped.get("weapon")
@@ -238,14 +219,6 @@ func _first_free_base_slot() -> int:
 			return i
 	return -1
 
-func _local_remove_from_source(src_location: String, src_slot: int) -> void:
-	if src_location == NetProtocol.INV_LOCATION_BASE:
-		Inventory.remove_base_at(src_slot)
-		return
-	if src_location.begins_with("bag_"):
-		var bag_idx := int(src_location.substr(4))
-		Inventory.remove_at(bag_idx, src_slot)
-
 func _apply_stat_bonuses(item: ItemData) -> void:
 	PlayerStats.apply_item_bonuses(item)
 
@@ -269,34 +242,3 @@ func _slot_for_type(type: ItemData.Type) -> String:
 		ItemData.Type.RING:     return "ring"
 		ItemData.Type.NECK:     return "neck"
 	return ""
-
-# ── Save / load (Tier 2) ──────────────────────────────────────────────────────
-
-func save_state() -> Dictionary:
-	var slots_out: Dictionary = {}
-	for s in SLOTS:
-		var item: ItemData = equipped.get(s)
-		if item != null:
-			slots_out[s] = item.to_save_dict()
-	return {"slots": slots_out}
-
-func load_state(d: Dictionary) -> void:
-	# Clear current equipment + remove any lingering bonuses (defensive — load
-	# normally runs from a clean state, but Equipment may have items from the
-	# default character path).
-	for s in SLOTS:
-		var existing: ItemData = equipped.get(s)
-		if existing != null:
-			_remove_stat_bonuses(existing)
-			equipped[s] = null
-			equipment_changed.emit(s, null)
-	var slots_in: Dictionary = d.get("slots", {})
-	for s in SLOTS:
-		if not slots_in.has(s):
-			continue
-		var item: ItemData = ItemData.from_save_dict(slots_in[s])
-		if item == null:
-			continue
-		equipped[s] = item
-		_apply_stat_bonuses(item)
-		equipment_changed.emit(s, item)

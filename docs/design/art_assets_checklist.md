@@ -106,8 +106,45 @@ By class (approximate — pull from `spell_definitions.gd` for exact list):
 Folder skeleton already exists for all 16 races. Reference heights:
 `docs/reference/creature_heights.md`.
 
-Per race:
-- [ ] Body mesh — male + female (or a shared neutral if going androgynous)
+Body models, one row per race and sex (decided 2026-10-14: separate male and female
+bodies). The id in backticks is the subject's folder under
+`../Project_Dawn_Source/concept_art/`; the Art Board (`tools/art_board/`) tracks each
+one through the review loop in `meshy_asset_pipeline.md` and ticks the row on sign-off.
+
+- [ ] Human, male (`human/male`)
+- [ ] Human, female (`human/female`)
+- [ ] Elf, male (`elf/male`)
+- [ ] Elf, female (`elf/female`)
+- [ ] Dark Elf, male (`dark_elf/male`)
+- [ ] Dark Elf, female (`dark_elf/female`)
+- [ ] Wood Elf, male (`wood_elf/male`)
+- [ ] Wood Elf, female (`wood_elf/female`)
+- [ ] Gnome, male (`gnome/male`)
+- [ ] Gnome, female (`gnome/female`)
+- [ ] Halfling, male (`halfling/male`)
+- [ ] Halfling, female (`halfling/female`)
+- [ ] Dwarf, male (`dwarf/male`)
+- [ ] Dwarf, female (`dwarf/female`)
+- [ ] Half-Elf, male (`half_elf/male`)
+- [ ] Half-Elf, female (`half_elf/female`)
+- [ ] Ogre, male (`ogre/male`)
+- [ ] Ogre, female (`ogre/female`)
+- [ ] Troll, male (`troll/male`)
+- [ ] Troll, female (`troll/female`)
+- [ ] Kel'varath, male (`kelvarath/male`)
+- [ ] Kel'varath, female (`kelvarath/female`)
+- [ ] Minotaur, male (`minotaur/male`)
+- [ ] Minotaur, female (`minotaur/female`)
+- [ ] Fae, male (`fae/male`)
+- [ ] Fae, female (`fae/female`)
+- [ ] Felhari, male (`felhari/male`)
+- [ ] Felhari, female (`felhari/female`)
+- [ ] Kobold, male (`kobold/male`)
+- [ ] Kobold, female (`kobold/female`)
+- [ ] Half-Ogre, male (`half_ogre/male`)
+- [ ] Half-Ogre, female (`half_ogre/female`)
+
+Per race, beyond the body:
 - [ ] Head / face variants (low priority for V1 — 1 each is fine)
 - [ ] Texture maps — diffuse, normal (skin tones, racial markings)
 

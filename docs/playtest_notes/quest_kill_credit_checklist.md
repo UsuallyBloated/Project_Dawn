@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 41, 44 (line numbers as of the triage).
 
+> **Triage 2026-11-01: retired.** Rows 45 and 48 are covered by `quest_phase2_sliceA_checklist.md` rows 50 and 51 (a spell kill and a pet kill tick the objective, on the later server-side counting).
+
 **The bug:** in launcher (online) mode, `QuestManager.notify_kill` only fired for *local Test-Room*
 enemies, never for server-driven kills, so a "kill N X" objective **never advanced** from real kills and
 the quest could never complete naturally. (This is what you hit last pass.)

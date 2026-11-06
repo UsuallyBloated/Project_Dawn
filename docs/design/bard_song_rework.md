@@ -48,7 +48,18 @@ movement) the server speed buff likely also decays between manual re-casts but i
 6. **Scope spans both repos:** data (spell defs + `spells.toml`), `bard_songs.gd`, `buff_manager.gd` +
    the buff window UI, server tick/buff handling, and the wire.
 
-## Decisions to make with the user before building
+## Decided 2026-10-20 (user) and built the same day
+
+Classic EQ's rules as Project 1999 keeps them (the research is in session note 2026-10-20 §2):
+a 3 s sing (the song's `cast_time`, enforced by the cast-time gate), free ("Please stick with
+this": EQ's songs were free, not cheap), a server pulse every 6 s with a 12 s linger, one song
+at a time, a new song replacing the current while the old lingers, the heal song as a HoT, the
+effects as the ordinary buffs, Aria on the bard's current target, movement never ending a song,
+and every song scaling with level (0.4 of the listed effect at the learn level to full at 50;
+the data holds the level-50 values). Mana Weave cut to P99's 6 a tick. The build is recorded
+on the To-Do entry; the checklist is `bard_songs_checklist.md`.
+
+## Decisions to make with the user before building (as written on 2026-06-22)
 
 - The **feel**: how fast should weaving be, how punishing is dropping a song, how much mana does
   sustaining cost? (The "general vibe" the user wants to define.)

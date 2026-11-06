@@ -10,15 +10,19 @@ const _HudCastBar           := preload("res://scripts/hud_cast_bar.gd")
 const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
 const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
 const _HudPetPanel          := preload("res://scripts/hud_pet_panel.gd")
+const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
+# The hunger window sits this far below the player's information bar.
+const HUNGER_PANEL_GAP := 4.0
 const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
 # Dev Test Panel, mounted on demand by `/testpanel` (world.gd also mounts it at
-# world entry for GMs and the Test Room).
+# world entry for GMs).
 const TEST_PANEL_GD         := preload("res://scripts/test_panel.gd")
 const _TrackWindowScript    := preload("res://scripts/track_window.gd")
 const _SpellBookScript      := preload("res://scripts/spell_book.gd")
 const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
 const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
 const _InspectWindowScript  := preload("res://scripts/inspect_window.gd")
+const _TradeWindowScript    := preload("res://scripts/trade_window.gd")
 const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 
 @onready var health_bar: ProgressBar = $Panel/VBoxContainer/HPRow/HealthBar
@@ -85,11 +89,13 @@ var _bank_window: Panel = null
 
 var _group_panel = null
 var _pet_panel = null
+var _hunger_panel: Control = null
 var _track_window: TrackWindow = null
 var _spell_book: Panel = null
 var _quest_journal: Panel = null
 var _dialogue_window: Panel = null
 var _inspect_window: InspectWindow = null
+var _trade_window: TradeWindow = null
 var _debug_console: DebugConsole = null
 var _target_hp_label: Label = null
 var _target_mp_label: Label = null
@@ -164,7 +170,7 @@ func _ready() -> void:
 	_sta_label.text = "%d / %d" % [int(PlayerStats.stamina), int(PlayerStats.max_stamina)]
 
 	for w in [character_window, inventory_window, paperdoll_window]:
-		w.visibility_changed.connect(_on_window_visibility_changed.bind(w))
+		_watch_window(w)
 
 	_build_xp_bar()
 	_refresh_player_name_label()
@@ -206,18 +212,25 @@ func _build_components() -> void:
 	_pet_panel = _HudPetPanel.new()
 	add_child(_pet_panel)
 
+	# The hunger window (food design section 8), by default directly below
+	# the player's information bar and as wide as it. Placed deferred, once
+	# the bar's containers have their final size (the XP row grows it).
+	_hunger_panel = _HudHungerPanelScene.instantiate()
+	add_child(_hunger_panel)
+	_place_hunger_panel.call_deferred()
+
 	_track_window = _TrackWindowScript.new()
 	add_child(_track_window)
 
 	_spell_book = _SpellBookScript.new()
 	_spell_book.visible = false
 	add_child(_spell_book)
-	_spell_book.visibility_changed.connect(_on_window_visibility_changed.bind(_spell_book))
+	_watch_window(_spell_book)
 
 	_quest_journal = _QuestJournalScript.new()
 	_quest_journal.visible = false
 	add_child(_quest_journal)
-	_quest_journal.visibility_changed.connect(_on_window_visibility_changed.bind(_quest_journal))
+	_watch_window(_quest_journal)
 
 	_dialogue_window = _DialogueWindowScript.new()
 	_dialogue_window.visible = false
@@ -226,8 +239,15 @@ func _build_components() -> void:
 	_inspect_window = _InspectWindowScript.new()
 	_inspect_window.visible = false
 	add_child(_inspect_window)
-	_inspect_window.visibility_changed.connect(_on_window_visibility_changed.bind(_inspect_window))
+	_watch_window(_inspect_window)
 	Targeting.inspect_requested.connect(_inspect_player)
+
+	# PD_W0028 — the trade window opens itself on `world_trade_opened` (a
+	# holding-click on a player) and closes on `world_trade_closed`. Mounted
+	# here so it survives with the HUD; it drives its own visibility.
+	_trade_window = _TradeWindowScript.new()
+	add_child(_trade_window)
+	_watch_window(_trade_window)
 
 	# In-game DebugLog tail. Independent of the user-data debug.log
 	# file (which gets corrupted when two clients share the same
@@ -242,6 +262,11 @@ func _build_components() -> void:
 
 	_group_panel.layout_changed.connect(_reposition_pet_panel)
 	_reposition_pet_panel()
+
+func _place_hunger_panel() -> void:
+	var info: Control = $Panel
+	_hunger_panel.position = Vector2(info.position.x, info.position.y + info.size.y + HUNGER_PANEL_GAP)
+	_hunger_panel.size.x = info.size.x
 
 func _reposition_pet_panel() -> void:
 	if _pet_panel == null or _group_panel == null:
@@ -386,18 +411,14 @@ func _refresh_portrait() -> void:
 func _build_options_screen() -> void:
 	_options_screen = _OptionsScreenScript.new()
 	_options_screen.visible = false
-	_options_screen.z_index = 20
 	add_child(_options_screen)
-	_options_screen.visibility_changed.connect(
-		_on_window_visibility_changed.bind(_options_screen))
+	_watch_window(_options_screen)
 
 func _build_crafting_window() -> void:
 	_crafting_window = _CraftingWindowScript.new()
 	_crafting_window.visible = false
-	_crafting_window.z_index = 20
 	add_child(_crafting_window)
-	_crafting_window.visibility_changed.connect(
-		_on_window_visibility_changed.bind(_crafting_window))
+	_watch_window(_crafting_window)
 	# Right-clicking a crafting station requests the window through this signal
 	# (Targeting.interact_at -> StationManager.request_open) — the station can't
 	# reach the HUD's scene tree directly.
@@ -411,10 +432,8 @@ func _build_crafting_window() -> void:
 func _build_vendor_window() -> void:
 	_vendor_window = _VendorWindowScript.new()
 	_vendor_window.visible = false
-	_vendor_window.z_index = 20
 	add_child(_vendor_window)
-	_vendor_window.visibility_changed.connect(
-		_on_window_visibility_changed.bind(_vendor_window))
+	_watch_window(_vendor_window)
 	VendorManager.vendor_opened.connect(func(vname: String, vtype: String) -> void:
 		(_vendor_window as Node).call("open_for", vname, vtype))
 
@@ -423,10 +442,8 @@ func _build_vendor_window() -> void:
 func _build_bank_window() -> void:
 	_bank_window = _BankWindowScript.new()
 	_bank_window.visible = false
-	_bank_window.z_index = 20
 	add_child(_bank_window)
-	_bank_window.visibility_changed.connect(
-		_on_window_visibility_changed.bind(_bank_window))
+	_watch_window(_bank_window)
 	BankerManager.banker_opened.connect(func(bname: String) -> void:
 		(_bank_window as Node).call("open_for", bname))
 
@@ -578,6 +595,7 @@ func _on_world_resurrect_offer(corpse_id: int, caster_name: String, xp_percent: 
 	_res_corpse_id = corpse_id
 	_res_label.text = "%s offers to resurrect you.\nReturn %d%% of the experience that death cost?" % [caster_name, xp_percent]
 	_res_prompt.visible = true
+	_res_prompt.move_to_front()   # above any window a click has raised since
 
 func _on_res_accept_pressed() -> void:
 	if _res_corpse_id >= 0:
@@ -595,7 +613,7 @@ func _hide_res_prompt() -> void:
 		_res_prompt.visible = false
 
 # Camp slice B — the countdown elapsed: log out cleanly, exactly like the Options
-# "Quit Game" button (SaveManager.save -> Net.leave_session -> quit). The server's
+# "Quit Game" button (Net.leave_session -> quit; the server saves). The server's
 # camp window has elapsed too, so this clean Disconnect reaps the body and frees
 # the account to relog at once. Completion is client-driven because there is no
 # in-game return-to-lobby flow yet; a finished camp exits to desktop, the same end
@@ -604,7 +622,6 @@ func _complete_camp() -> void:
 	_camp_active = false
 	if _camp_label != null:
 		_camp_label.visible = false
-	SaveManager.save()
 	Net.leave_session()
 	get_tree().quit()
 
@@ -676,8 +693,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				Spells.cancel_cast()
 				CombatLog.add_line("You stop casting.", CombatLog.MsgType.INFO)
 				get_viewport().set_input_as_handled()
-			elif _window_stack.size() > 0:
-				_window_stack.back().visible = false
+			elif _top_window() != null:
+				_top_window().visible = false
 				get_viewport().set_input_as_handled()
 			elif _options_screen != null:
 				_options_screen.visible = !_options_screen.visible
@@ -724,6 +741,21 @@ func _unhandled_input(event: InputEvent) -> void:
 		# (Targeting.interact_at) — one grammar with the inventory, and every
 		# interaction needs the cursor on the object, which the proximity-F
 		# path never did (walk near, mash F was trivially bottable).
+
+# ESC closes the window on top. The windows ESC may close register here; the
+# one on top is the highest in the tree, since DraggablePanel moves a window
+# to the back of its siblings when it opens or is clicked. (They used to be
+# stacked with z_index, which moved only the drawing; the clicks went to the
+# window underneath.)
+func _watch_window(window: Panel) -> void:
+	window.visibility_changed.connect(_on_window_visibility_changed.bind(window))
+
+func _top_window() -> Panel:
+	var top: Panel = null
+	for w in _window_stack:
+		if w.visible and (top == null or w.get_index() > top.get_index()):
+			top = w
+	return top
 
 func _on_window_visibility_changed(window: Panel) -> void:
 	if window.visible:
@@ -805,8 +837,8 @@ func _show_self_target() -> void:
 	if _tot_frame != null:
 		_tot_frame.visible = false
 
-# The same straight-line distance the cast range check uses (Spells.SPELL_RANGE
-# compares global positions), so the number on the frame is the number the gate
+# The same straight-line distance the cast range check uses (each spell's
+# reach, compared between global positions), so the number on the frame is the number the gate
 # judges. Blank for a self-target or when either end is missing.
 func _refresh_target_distance() -> void:
 	if not target_frame.visible:
@@ -913,7 +945,7 @@ func _on_target_changed(enemy) -> void:
 	if enemy.is_in_group("remote_players"):
 		_setup_peer_target(enemy)
 		return
-	if enemy.is_in_group("pets") or enemy.is_in_group("remote_pets"):
+	if enemy.is_in_group("remote_pets"):
 		# Pet target frame — render like enemies (HP bar + level)
 		# but key off pet_name. Subscribe to hp_changed + died so
 		# the bar tracks regen / damage / dismissal.
@@ -1179,9 +1211,6 @@ func _on_target_enemy_died(_enemy) -> void:
 #   - RemoteEnemy: server-sent `target_id` field (driven by EntityTarget
 #     broadcasts). Resolved through the id partition to a RemotePlayer
 #     / RemoteEnemy / RemotePet / local player.
-#   - Local Enemy (solo / Test Room): the legacy local AI always
-#     chases the player when aggro'd, so we show "You" iff the enemy
-#     is in CHASE / ATTACK. Hidden in IDLE / LEASH / FLEE / DEAD.
 #   - Other tracked kinds (peer player, vendor, pet target frame
 #     usage, etc.): hidden — server doesn't broadcast peer→peer
 #     targeting yet.
@@ -1200,11 +1229,10 @@ func _refresh_tot() -> void:
 		_tot_frame.visible = false
 		return
 
-	# Self-target sentinel: tracked target is hitting the local player.
-	# PlayerStats is the source; we keep _tot_entity = null and let the
-	# existing _on_hp_changed handler tick the bar.
-	var own_id: int = Net.get_player_id() if Net.get_player_id() > 0 else -1
-	if tot_id == own_id or tot_id == -1:
+	# The tracked target is targeting the local player. PlayerStats is the
+	# source; we keep _tot_entity = null and let the existing _on_hp_changed
+	# handler tick the bar.
+	if tot_id == Net.get_player_id():
 		_clear_tot_entity_binding()
 		var pname := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
 		_tot_name_label.text = pname
@@ -1235,15 +1263,6 @@ func _resolve_tracked_target_target_id() -> int:
 			or _tracked_target.is_in_group("remote_players")) \
 			and "target_id" in _tracked_target:
 		return int(_tracked_target.target_id)
-	# Local Enemy: solo / Test Room only. Approximate via state — the
-	# stock enemy AI in enemy.gd always chases the local player.
-	if _tracked_target.is_in_group("enemies") and "state" in _tracked_target:
-		var s: int = _tracked_target.state
-		# Enemy.State.CHASE = 1, Enemy.State.ATTACK = 2. Use literals
-		# rather than the enum reference so a future enum reorder is
-		# caught here.
-		if s == 1 or s == 2:
-			return -1  # sentinel: local player
 	return 0
 
 func _resolve_remote_entity(id: int) -> Node:
@@ -1352,8 +1371,11 @@ func _inspect_player(rp: RemotePlayer) -> void:
 func _handle_chat_input(text: String) -> void:
 	var my_name := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
 
-	if not text.begins_with("/"):
-		CombatLog.add_line("%s says, '%s'" % [my_name, text], CombatLog.MsgType.SAY)
+	# One canonical form for every line (ChatChannel): plain text is a /say,
+	# and stacked channel commands collapse to the last, so "/say /say hi"
+	# says "hi" and a channel command never reaches anyone inside a message.
+	text = ChatChannel.normalize(text, CombatLog.last_tell_sender())
+	if text == "":
 		return
 
 	var lower := text.to_lower()
@@ -1378,12 +1400,6 @@ func _handle_chat_input(text: String) -> void:
 		return
 	if lower == "/camp cancel":
 		Net.broadcast_cancel_camp()
-		return
-	# Track 22.C — manual dismount. Summon is right-click-the-whistle;
-	# this command lets the player step off without using the whistle
-	# again or waiting to take a hit.
-	if lower == "/dismount":
-		MountManager.dismount()
 		return
 	if lower == "/pet follow":
 		PetManager.command_follow()
@@ -1459,10 +1475,8 @@ func _handle_chat_input(text: String) -> void:
 		if lower.begins_with(prefix):
 			var msg := text.substr(prefix.length())
 			CombatLog.add_line("[Group] %s: %s" % [my_name, msg], CombatLog.MsgType.GROUP_CHAT)
-			# Server fans this to every other group member via the new
-			# Group arm in the chat handler. GroupManager.broadcast_group_chat
-			# uses Godot's RPC system which isn't wired in launcher mode
-			# (no Godot multiplayer peer); that path was the bug.
+			# Server fans this to every other group member via the Group
+			# arm in the chat handler.
 			Net.broadcast_chat(Net.CHAT_CHANNEL_GROUP, msg)
 			return
 
@@ -1477,6 +1491,52 @@ func _handle_chat_input(text: String) -> void:
 	if lower == "/sense" or lower == "/sense heading":
 		if is_instance_valid(_player):
 			CombatLog.add_line(SenseHeading.query(_player.rotation.y), CombatLog.MsgType.INFO)
+		return
+
+	if lower == "/con" or lower == "/consider":
+		# EQ's consider (factions, 2026-10-23): the server answers with how the
+		# target's faction regards you and, for a mob, how its level reads
+		# against yours. An NPC is named by its display name (the client holds
+		# no server ids for NPCs; the server resolves the name), a mob by its
+		# entity id. The server decides everything; this only asks.
+		if not Net.is_app_ready():
+			CombatLog.add_line("You are not connected to the world.", CombatLog.MsgType.INFO)
+			return
+		var con_target = Combat.current_target
+		if not is_instance_valid(con_target):
+			CombatLog.add_line("You must target something to consider it.", CombatLog.MsgType.INFO)
+			return
+		var npc_name := _npc_display_name(con_target)
+		var entity_id := 0 if npc_name != "" else Combat.target_server_id(con_target)
+		if npc_name == "" and entity_id == 0:
+			CombatLog.add_line("You cannot consider that.", CombatLog.MsgType.INFO)
+			return
+		if not Net.consider(npc_name, entity_id):
+			CombatLog.add_line(
+				"This build's gdext_net.dll predates /con (rebuild it with addons/gdext_net/build.ps1).",
+				CombatLog.MsgType.INFO)
+		return
+
+	if lower == "/factions":
+		# Every standing the server has told us: only the factions a kill, a
+		# quest or the GM panel has moved; the rest sit at Indifferent.
+		if Alignment.factions.is_empty():
+			CombatLog.add_line("You have moved no faction's standing yet.", CombatLog.MsgType.INFO)
+			return
+		var ids: Array = Alignment.factions.keys()
+		ids.sort()
+		for id in ids:
+			var f: Dictionary = Alignment.factions[id]
+			CombatLog.add_line("%s: %d (%s)" % [f["name"], roundi(f["standing"]),
+				Alignment.faction_level_name(int(f["level"]))], CombatLog.MsgType.INFO)
+		return
+
+	if lower == "/stopsong":
+		# EQ's /stopsong: end the song being sung at once. The server pulses
+		# the song, so it is told (and says so); the lingering effects run
+		# out on their own.
+		if Net.stop_song():
+			BardSongs.stop_singing()
 		return
 
 	if lower == "/loc" or lower == "/location":
@@ -1558,20 +1618,12 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line("Refine your search.", CombatLog.MsgType.INFO)
 			return
 		var item_name := (matches[0] as ItemData).item_name
-		# Track 15.2 follow-up — launcher mode routes /give through
-		# the wire so the spawned item exists server-side. The server
-		# fans InventoryDelta which Inventory autoload applies. Solo /
-		# Test Room keeps the legacy local ItemRegistry.give_by_name.
-		if Net.is_launcher_mode():
-			Net.broadcast_gm_command("give %s %d" % [item_name, count])
-			var suffix := " x%d" % count if count > 1 else ""
-			CombatLog.add_line("Requested %s%s from server." % [item_name, suffix], CombatLog.MsgType.INFO)
-			return
-		if ItemRegistry.give_by_name(item_name, count):
-			var suffix := " x%d" % count if count > 1 else ""
-			CombatLog.add_line("Spawned %s%s." % [item_name, suffix], CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("Couldn't spawn %s (inventory full?)." % item_name, CombatLog.MsgType.INFO)
+		# Track 15.2 follow-up — /give goes through the wire (a GM command)
+		# so the spawned item exists server-side. The server fans
+		# InventoryDelta which Inventory autoload applies.
+		Net.broadcast_gm_command("give %s %d" % [item_name, count])
+		var suffix := " x%d" % count if count > 1 else ""
+		CombatLog.add_line("Requested %s%s from server." % [item_name, suffix], CombatLog.MsgType.INFO)
 		return
 
 	# Track 6 sub-task 3 dev — toggle PvP authorization on this client.
@@ -1642,8 +1694,8 @@ func _handle_chat_input(text: String) -> void:
 			CombatLog.add_line(line, CombatLog.MsgType.INFO)
 		return
 
-	# Show/hide the dev Test Panel. It mounts only for the offline Test Room and
-	# for GM accounts (world.gd), but a GM previously had no way to get it OFF the
+	# Show/hide the dev Test Panel. It mounts only for GM accounts (world.gd),
+	# but a GM previously had no way to get it OFF the
 	# screen: it covers a chunk of the viewport and there is no reason to stare at
 	# it while actually playing. A command rather than a keybind, so it costs no
 	# key and is discoverable by typing.
@@ -1662,7 +1714,7 @@ func _handle_chat_input(text: String) -> void:
 		# rest of the session with no way to recover. Mount it on demand instead,
 		# so the command works whenever the account is entitled to it rather than
 		# depending on the state at one particular moment.
-		if Network.is_test_room or (Net.is_launcher_mode() and Net.is_gm()):
+		if Net.is_gm():
 			var host := get_tree().current_scene
 			if host != null:
 				host.add_child(TEST_PANEL_GD.new())
@@ -1673,9 +1725,8 @@ func _handle_chat_input(text: String) -> void:
 		# Nothing here is secret: the server gates every power the panel offers on
 		# the is_gm bit in the signed token, independently of this.
 		CombatLog.add_line(
-			"Test Panel unavailable (GM: %s, hosted session: %s). GM is per ACCOUNT and is read at login, so if it was granted while you were online, quit to the login screen and sign in again." % [
+			"Test Panel unavailable (GM: %s). GM is per ACCOUNT and is read at login, so if it was granted while you were online, quit to the login screen and sign in again." % [
 				"yes" if Net.is_gm() else "no",
-				"yes" if Net.is_launcher_mode() else "no",
 			],
 			CombatLog.MsgType.INFO,
 		)
@@ -1709,9 +1760,7 @@ func _handle_chat_input(text: String) -> void:
 		CombatLog.add_line("Dev damage self: %s" % arg, CombatLog.MsgType.INFO)
 		return
 
-	# Track 6 sub-task 5 — group commands (launcher mode). Test Room
-	# single-player can't form groups via these — invites need a real
-	# peer over renet.
+	# Track 6 sub-task 5 — group commands, resolved by the server.
 	if lower == "/invite" or lower.begins_with("/invite "):
 		var target_name := ""
 		if lower.begins_with("/invite "):
@@ -1724,11 +1773,8 @@ func _handle_chat_input(text: String) -> void:
 		if target_name == "":
 			CombatLog.add_line("Usage: /invite <character name> — or target a player first.", CombatLog.MsgType.INFO)
 			return
-		if Net.is_launcher_mode():
-			GroupManager.invite_player_by_name(target_name)
-			CombatLog.add_line("Invited %s to your group." % target_name, CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("/invite requires multiplayer.", CombatLog.MsgType.INFO)
+		GroupManager.invite_player_by_name(target_name)
+		CombatLog.add_line("Invited %s to your group." % target_name, CombatLog.MsgType.INFO)
 		return
 
 	if lower == "/accept" or lower == "/accept invite":
@@ -1755,11 +1801,8 @@ func _handle_chat_input(text: String) -> void:
 		if not GroupManager.is_leader:
 			CombatLog.add_line("Only the group leader can kick.", CombatLog.MsgType.INFO)
 			return
-		if Net.is_launcher_mode():
-			GroupManager.kick_member_by_name(target_name)
-			CombatLog.add_line("Kicked %s from the group." % target_name, CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("/kick requires multiplayer.", CombatLog.MsgType.INFO)
+		GroupManager.kick_member_by_name(target_name)
+		CombatLog.add_line("Kicked %s from the group." % target_name, CombatLog.MsgType.INFO)
 		return
 
 	# Track 6 sub-task 3 dev — bypass-the-spell-system self heal.
@@ -1792,3 +1835,16 @@ func _handle_chat_input(text: String) -> void:
 		return
 
 	CombatLog.add_line("Unknown command: %s" % text, CombatLog.MsgType.INFO)
+
+# The display name an NPC node carries, for /con (the client holds no server
+# ids for NPCs). `npc_name` first: the vendor and banker labels carry a role
+# after a dash that npcs.toml does not, so that part is trimmed.
+func _npc_display_name(node) -> String:
+	if not is_instance_valid(node):
+		return ""
+	for key in ["npc_name", "vendor_name", "banker_name"]:
+		if key in node and String(node.get(key)) != "":
+			var n := String(node.get(key))
+			var dash := n.find(" — ")
+			return n.substr(0, dash) if dash >= 0 else n
+	return ""

@@ -1,42 +1,30 @@
 extends Node
 
 signal buffs_changed
-signal dot_applied(target_name: String, spell_name: String)
 signal hot_applied(spell_name: String)
 signal absorb_applied(amount: int, spell_name: String)
 signal absorb_damaged(absorbed: int, remaining: int)
 signal absorb_broken
 signal evade_boost_applied
-signal dot_ticked(target_name: String, amount: int, spell_name: String)
-signal hot_ticked(amount: int, spell_name: String)
-signal food_buff_changed
-signal drink_buff_changed
 signal stealth_changed(active: bool)
 signal lich_form_changed(active: bool)
 signal haste_changed
 signal primary_stat_buff_changed
 signal damage_shield_applied(amount: int, buff_name: String)
 
-const TICK_INTERVAL := 3.0
-
 var _absorb_hp: float = 0.0
 # Most recent absorb source name (spell or skill). Used by
 # reconcile_with_server_snapshot to clear the pool when the server
-# strips the absorb buff (e.g. drained to 0 by incoming damage in
-# launcher mode, since the local consume_absorb path isn't taken when
-# damage arrives via HealthUpdate).
+# strips the absorb buff (e.g. drained to 0 by incoming damage, since the
+# local consume_absorb path isn't taken when damage arrives via
+# HealthUpdate).
 var _absorb_source: String = ""
-var _is_hot_healing: bool = false
 var _evade_boost_remaining: float = 0.0
 
-# {target, dps, remaining, spell_name, tick_acc}
-var _dots: Array = []
-# {hps, remaining, spell_name, tick_acc}
+# {hps, remaining, spell_name}
 var _hots: Array = []
 
 # {hp_regen, mp_regen, remaining, buff_name}
-var _food_buff: Dictionary = {}
-var _drink_buff: Dictionary = {}
 
 # {speed_mult, remaining, buff_name}
 var _speed_buff: Dictionary = {}
@@ -57,13 +45,11 @@ var _damage_shield: Dictionary = {}
 var _stealth_remaining: float = 0.0
 # Lich Form
 var _lich_form_active: bool = false
-var _lich_mp_regen: float = 0.0
 
-# Track 6 dispel sync — server is authoritative for buff lifetime in
-# launcher mode. reconcile_with_server_snapshot() drops any locally
-# tracked named buff that no longer appears in the server's snapshot
-# (e.g. after Antimagic Ward / Expose). Local-only buffs (food, drink,
-# stealth, evade) are skipped — the server doesn't track those.
+# Track 6 dispel sync — the server is authoritative for buff lifetime.
+# reconcile_with_server_snapshot() drops any locally tracked named buff that
+# no longer appears in the server's snapshot (e.g. after Antimagic Ward /
+# Expose) and rebuilds the ones it lists that we do not track yet.
 
 func _ready() -> void:
 	PlayerDeath.player_died.connect(clear_all)
@@ -81,28 +67,12 @@ func get_absorb_hp() -> float:
 func get_evade_remaining() -> float:
 	return _evade_boost_remaining
 
-func is_hot_healing() -> bool:
-	return _is_hot_healing
-
-func add_dot(target, dps: float, duration: float, spell_name: String) -> void:
-	if not is_instance_valid(target) or target.is_dead:
-		return
-	for d in _dots:
-		if d.target == target and d.spell_name == spell_name:
-			d.remaining = duration
-			d.tick_acc = 0.0
-			return
-	_dots.append({target = target, dps = dps, remaining = duration,
-		spell_name = spell_name, tick_acc = 0.0})
-	dot_applied.emit(target.mob_name, spell_name)
-
 func add_hot(hps: float, duration: float, spell_name: String) -> void:
 	for h in _hots:
 		if h.spell_name == spell_name:
 			h.remaining = duration
-			h.tick_acc = 0.0
 			return
-	_hots.append({hps = hps, remaining = duration, spell_name = spell_name, tick_acc = 0.0})
+	_hots.append({hps = hps, remaining = duration, spell_name = spell_name})
 	hot_applied.emit(spell_name)
 	buffs_changed.emit()
 
@@ -137,40 +107,6 @@ func add_evade_boost(duration: float) -> void:
 func is_evade_boosted() -> bool:
 	return _evade_boost_remaining > 0.0
 
-func add_food_buff(hp_regen: float, mp_regen: float, duration: float, buff_name: String) -> void:
-	_food_buff = {hp_regen = hp_regen, mp_regen = mp_regen, remaining = duration, buff_name = buff_name}
-	food_buff_changed.emit()
-	buffs_changed.emit()
-
-func add_drink_buff(hp_regen: float, mp_regen: float, duration: float, buff_name: String) -> void:
-	_drink_buff = {hp_regen = hp_regen, mp_regen = mp_regen, remaining = duration, buff_name = buff_name}
-	drink_buff_changed.emit()
-	buffs_changed.emit()
-
-func get_food_buff() -> Dictionary:
-	return _food_buff
-
-func get_drink_buff() -> Dictionary:
-	return _drink_buff
-
-func has_food_buff() -> bool:
-	return not _food_buff.is_empty()
-
-func has_drink_buff() -> bool:
-	return not _drink_buff.is_empty()
-
-func get_food_hp_regen() -> float:
-	return _food_buff.get("hp_regen", 0.0)
-
-func get_food_mp_regen() -> float:
-	return _food_buff.get("mp_regen", 0.0)
-
-func get_drink_hp_regen() -> float:
-	return _drink_buff.get("hp_regen", 0.0)
-
-func get_drink_mp_regen() -> float:
-	return _drink_buff.get("mp_regen", 0.0)
-
 func add_speed_buff(speed_mult: float, duration: float, buff_name: String) -> void:
 	_speed_buff = {speed_mult = speed_mult, remaining = duration, buff_name = buff_name}
 	buffs_changed.emit()
@@ -202,9 +138,6 @@ func get_haste_buff() -> Dictionary:
 func add_stat_buff(accuracy: float, crit: float, duration: float, buff_name: String) -> void:
 	_stat_buff = {accuracy = accuracy, crit = crit, remaining = duration, buff_name = buff_name}
 	buffs_changed.emit()
-
-func get_accuracy_bonus() -> float:
-	return _stat_buff.get("accuracy", 0.0)
 
 func get_crit_bonus() -> float:
 	return _stat_buff.get("crit", 0.0)
@@ -286,17 +219,14 @@ func break_stealth() -> void:
 	stealth_changed.emit(false)
 	buffs_changed.emit()
 
-func toggle_lich_form(mp_regen_hps: float) -> void:
+# The form's mana regen is the server's; this is the buff-bar toggle.
+func toggle_lich_form() -> void:
 	_lich_form_active = not _lich_form_active
-	_lich_mp_regen = mp_regen_hps if _lich_form_active else 0.0
 	lich_form_changed.emit(_lich_form_active)
 	buffs_changed.emit()
 
 func is_lich_form() -> bool:
 	return _lich_form_active
-
-func get_lich_mp_regen() -> float:
-	return _lich_mp_regen
 
 # Track 4 sub-task 3 — walk every buff source the local buff bar shows and
 # emit parallel name/duration arrays for over-the-wire snapshot replication.
@@ -314,12 +244,6 @@ func get_snapshot_arrays() -> Dictionary:
 	if _evade_boost_remaining > 0.0:
 		names.append("Evade")
 		durations.append(_evade_boost_remaining)
-	if not _food_buff.is_empty():
-		names.append(_food_buff.get("buff_name", "Food"))
-		durations.append(_food_buff.get("remaining", 0.0))
-	if not _drink_buff.is_empty():
-		names.append(_drink_buff.get("buff_name", "Drink"))
-		durations.append(_drink_buff.get("remaining", 0.0))
 	if not _speed_buff.is_empty():
 		names.append(_speed_buff.get("buff_name", "SoW"))
 		durations.append(_speed_buff.get("remaining", 0.0))
@@ -345,6 +269,26 @@ func get_snapshot_arrays() -> Dictionary:
 		names.append("Lich")
 		durations.append(0.0)
 	return {"names": names, "durations": durations}
+
+# Resurrection sickness: the server's five-minute debuff after an accepted
+# resurrection (classic EQ's Resurrection Effects, the P99 design). It is not a
+# spell, so the additive reconcile cannot rebuild it from a definition; the cut
+# is a level-scaled fraction (a tenth at level 1 to a half at 60) of the
+# INTRINSIC stats race, class and level give, computed the same way on both
+# sides (server `buffs::res_sickness_cut`, kept in lockstep by hand, f64 on
+# both) so the sheet shows what the server fights with.
+const RES_SICKNESS_NAME := "Resurrection Sickness"
+const RES_SICKNESS_CUT_AT_1 := 0.10
+const RES_SICKNESS_CUT_AT_60 := 0.50
+
+func res_sickness_cut_fraction(lvl: int) -> float:
+	var t := float(clampi(lvl, 1, 60) - 1) / 59.0
+	return RES_SICKNESS_CUT_AT_1 + (RES_SICKNESS_CUT_AT_60 - RES_SICKNESS_CUT_AT_1) * t
+
+func res_sickness_cut(intrinsic: int) -> int:
+	if intrinsic <= 0:
+		return 0
+	return int(roundf(intrinsic * res_sickness_cut_fraction(PlayerStats.level)))
 
 func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedFloat32Array) -> void:
 	# Build a name -> remaining map. Matching local buffs get their
@@ -415,7 +359,7 @@ func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedF
 		else:
 			_damage_shield.remaining = server_remaining[nm]
 	# Absorb: the server drains the pool and strips the buff when it
-	# hits 0. In launcher mode the local _absorb_hp never drains
+	# hits 0. The local _absorb_hp never drains
 	# (damage arrives via HealthUpdate, bypassing local consume_absorb),
 	# so without this clear the "Shield Xhp" icon would linger forever.
 	if _absorb_hp > 0.0 and _absorb_source != "" and not server_remaining.has(_absorb_source):
@@ -425,8 +369,16 @@ func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedF
 		changed = true
 	if _lich_form_active and not server_remaining.has("Lich Form"):
 		_lich_form_active = false
-		_lich_mp_regen = 0.0
 		lich_form_changed.emit(false)
+		changed = true
+	# Skill-backed buffs (Evade, Hide, Holy Shield and their kin) are the
+	# server's online: an Evade or a Hide it no longer lists is over here too
+	# (the first swing ended the hide before the local timer did).
+	if _evade_boost_remaining > 0.0 and not _snapshot_has_skill_effect(server_remaining, SkillData.EffectType.EVADE_BOOST):
+		_evade_boost_remaining = 0.0
+		changed = true
+	if _stealth_remaining > 0.0 and not _snapshot_has_skill_effect(server_remaining, SkillData.EffectType.STEALTH):
+		break_stealth()
 		changed = true
 	# Additive reconcile: a buff in the server's snapshot that we don't
 	# track locally is one another player cast on us (ALLY buff routing).
@@ -438,14 +390,63 @@ func reconcile_with_server_snapshot(names: PackedStringArray, durations: PackedF
 		var nm: String = names[idx]
 		if _is_buff_locally_tracked(nm):
 			continue
+		if nm == RES_SICKNESS_NAME:
+			var base: Dictionary = PlayerStats.intrinsic_character(
+				PlayerStats.race, PlayerStats.player_class, PlayerStats.level)["stats"]
+			var rem_sick: float = durations[idx] if idx < durations.size() else 0.0
+			add_primary_stat_buff(
+				-res_sickness_cut(base["strength"]), -res_sickness_cut(base["agility"]),
+				-res_sickness_cut(base["intelligence"]), -res_sickness_cut(base["wisdom"]),
+				-res_sickness_cut(base["constitution"]), 0.0, 0.0, rem_sick, RES_SICKNESS_NAME)
+			continue
+		var rem: float = durations[idx] if idx < durations.size() else 0.0
+		# A Bard song's pulse the server put on us: the song's effects from
+		# its definition, scaled by level as the server scales them, timed by
+		# the server (the subtractive pass above keeps their remaining in step).
+		var song: SpellData = Spells.get_spell_by_name(nm)
+		if song != null and song.is_song:
+			BardSongs.apply_song_buffs(song, rem)
+			changed = true
+			continue
+		# A skill's buff the server put on us (Evade, Hide, Holy Shield):
+		# shown from the skill definition, timed by the server.
+		var skill: SkillData = Skills.get_skill_by_name(nm)
+		if skill != null:
+			match skill.effect_type:
+				SkillData.EffectType.EVADE_BOOST:
+					if not is_evade_boosted():
+						add_evade_boost(rem)
+						changed = true
+					else:
+						_evade_boost_remaining = rem
+				SkillData.EffectType.STEALTH:
+					if not is_stealthed():
+						add_stealth(rem, nm)
+						changed = true
+					else:
+						_stealth_remaining = rem
+				SkillData.EffectType.ABSORB_SHIELD:
+					if _absorb_hp <= 0.0:
+						add_absorb(skill.absorb_amount, nm)
+						changed = true
+				_:
+					pass
+			continue
 		var spell: SpellData = Spells.get_spell_by_name(nm)
 		if spell == null:
 			continue
-		var rem: float = durations[idx] if idx < durations.size() else 0.0
 		if _reconstruct_buff_from_spell(spell, rem):
 			changed = true
 	if changed:
 		buffs_changed.emit()
+
+# Whether any name in the server's snapshot is a skill with `effect`.
+func _snapshot_has_skill_effect(server_remaining: Dictionary, effect: SkillData.EffectType) -> bool:
+	for nm in server_remaining:
+		var skill: SkillData = Skills.get_skill_by_name(nm)
+		if skill != null and skill.effect_type == effect:
+			return true
+	return false
 
 # True if `nm` is already represented in one of our spell-backed buff
 # buckets — guards the additive reconcile against re-adding a buff we cast
@@ -515,13 +516,10 @@ func _has_hot(spell_name: String) -> bool:
 	return false
 
 func clear_all() -> void:
-	_dots.clear()
 	_hots.clear()
 	_absorb_hp = 0.0
 	_absorb_source = ""
 	_evade_boost_remaining = 0.0
-	_food_buff.clear()
-	_drink_buff.clear()
 	_speed_buff.clear()
 	_mp_regen_buff.clear()
 	_haste_buff.clear()
@@ -540,7 +538,6 @@ func clear_all() -> void:
 	if _lich_form_active:
 		lich_form_changed.emit(false)
 	_lich_form_active = false
-	_lich_mp_regen = 0.0
 	buffs_changed.emit()
 
 func _process(delta: float) -> void:
@@ -574,9 +571,7 @@ func _process(delta: float) -> void:
 		if not pstat_expired.is_empty():
 			primary_stat_buff_changed.emit()
 			buffs_changed.emit()
-	_tick_dots(delta)
 	_tick_hots(delta)
-	_tick_consumable_buffs(delta)
 
 func _tick_timed_buff(buff: Dictionary, delta: float) -> void:
 	if buff.is_empty():
@@ -586,68 +581,16 @@ func _tick_timed_buff(buff: Dictionary, delta: float) -> void:
 		buff.clear()
 		buffs_changed.emit()
 
-func _tick_dots(delta: float) -> void:
-	# Track 6 sub-task 4a: server-side DoT application lands in 4b. In
-	# launcher mode skip the damage tick (RemoteEnemy.take_damage is a
-	# no-op, RemotePlayer has none) but still decrement remaining so
-	# the local DoT entry expires on schedule. Test Room single-player
-	# keeps the full local damage tick.
-	var launcher := Net.is_launcher_mode()
-	var i := _dots.size() - 1
-	while i >= 0:
-		var d: Dictionary = _dots[i]
-		if not is_instance_valid(d.target) or d.target.is_dead:
-			_dots.remove_at(i)
-			i -= 1
-			continue
-		d.remaining -= delta
-		if not launcher:
-			d.tick_acc += delta
-			if d.tick_acc >= TICK_INTERVAL:
-				d.tick_acc -= TICK_INTERVAL
-				var dmg := int(d.dps * TICK_INTERVAL)
-				d.target.take_damage(dmg)
-				if is_instance_valid(d.target) and not d.target.is_dead:
-					dot_ticked.emit(d.target.mob_name, dmg, d.spell_name)
-		if d.remaining <= 0.0:
-			_dots.remove_at(i)
-		i -= 1
-
 func _tick_hots(delta: float) -> void:
 	# Track 6 sub-task 4a: server owns HoT application — applies heal
-	# per tick to conn.hp and fans HealthUpdate. Skip the local heal
-	# mutation in launcher mode (would fight the server), but still
-	# decrement remaining so the HUD buff bar duration ticks down and
-	# the entry expires on its own timer.
-	var launcher := Net.is_launcher_mode()
+	# per tick to conn.hp and fans HealthUpdate. Here only the duration
+	# ticks down, so the HUD buff bar counts and the entry expires on its
+	# own timer.
 	var i := _hots.size() - 1
 	while i >= 0:
 		var h: Dictionary = _hots[i]
 		h.remaining -= delta
-		if not launcher:
-			h.tick_acc += delta
-			if h.tick_acc >= TICK_INTERVAL:
-				h.tick_acc -= TICK_INTERVAL
-				var heal: float = h.hps * TICK_INTERVAL
-				_is_hot_healing = true
-				PlayerStats.set_hp(PlayerStats.hp + heal)
-				_is_hot_healing = false
-				hot_ticked.emit(int(heal), h.spell_name)
 		if h.remaining <= 0.0:
 			_hots.remove_at(i)
 			buffs_changed.emit()
 		i -= 1
-
-func _tick_consumable_buffs(delta: float) -> void:
-	if not _food_buff.is_empty():
-		_food_buff.remaining -= delta
-		if _food_buff.remaining <= 0.0:
-			_food_buff.clear()
-			food_buff_changed.emit()
-			buffs_changed.emit()
-	if not _drink_buff.is_empty():
-		_drink_buff.remaining -= delta
-		if _drink_buff.remaining <= 0.0:
-			_drink_buff.clear()
-			drink_buff_changed.emit()
-			buffs_changed.emit()

@@ -1,9 +1,9 @@
 class_name CliArgs
 extends RefCounted
 
-# Parses the launcher → game handoff arguments. Returns a Dictionary on
-# success, or `null` when the launcher didn't pass them — the alpha-with-
-# fallback path that keeps the local-save Test Room flow working.
+# Parses the retired standalone launcher's handoff arguments. Returns a
+# Dictionary on success, or `null` when the launcher didn't pass them (the
+# normal case: the login screen starts the session in process).
 #
 # Args the launcher sets (track B + track D):
 #   --auth-token=<64-char hex>     session_token from LoginOk
@@ -28,12 +28,12 @@ const RESULT_KEYS := [
 static func parse() -> Variant:
 	var raw: Dictionary = _parse_raw(OS.get_cmdline_args())
 	if not raw.has("world_token_path") or str(raw["world_token_path"]) == "":
-		# No token path → not launcher mode. Warn if the user clearly tried
+		# No token path → no launcher handoff. Warn if the user clearly tried
 		# to launch with partial args (e.g. old launcher build).
 		if raw.has("auth_token") or raw.has("char_id"):
 			push_warning(
 				"CliArgs: --auth-token / --char-id present without --world-token-path; "
-				+ "falling through to local-save mode")
+				+ "ignoring them; log in from the login screen")
 		return null
 
 	var char_id_str := str(raw.get("char_id", ""))

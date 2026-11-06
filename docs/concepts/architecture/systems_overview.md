@@ -43,7 +43,11 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   it, or the cast was being held), when an interrupt landed after the bar began (even in
   the same tick), when the caster moved more than 5 m since CastStart, when the spell is on
   cooldown, when the mana is short, and when the target pre-flight (`cast_target_refusal`)
-  says no. Every refusal is private and carries the server's true mana (`refuse_cast`);
+  says no. The pre-flight is the one home of target resolution (since 2026-10-14): it
+  returns a `ResolvedTarget` (a player, a mob, a pet, a corpse with its owner, or nothing)
+  and the per-target-type arms act on it with no checks of their own, so a per-spell range
+  or a new target kind is decided in one place. Every refusal is private and carries the
+  server's true mana (`refuse_cast`);
   interrupts, silence and mez also fan to peers so the bar they drew cancels. Casting
   stands the caster. The pure timing and interrupt decisions are `world/cast_gate.rs`.
   **An interrupt costs mana (spell batch step 3, 2026-10-08, user call):** when a hit that
@@ -104,14 +108,22 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   the client's `RemoteEnemyManager` routes it to `RemoteEnemy`, which mirrors the pet's buff
   surface, and `hud.gd`'s target frame reads it through the same icon row as a pet's or a
   peer's. Online the client no longer runs its own local DoT on a server mob (`spells.gd`).
-  Reach (2026-10-08): hostile spells 25 m (`RANGED_ATTACK_RANGE`), friendly spells (ALLY
-  heals and buffs, PET_HEAL) 30 m (`FRIENDLY_SPELL_RANGE`); the client checks one metre
-  inside each. One attack slow holds a mob at a time, strongest wins: in `Entity::apply_cc`
+  Reach (per-spell ranges 2026-10-19, the full 30 m 2026-10-27, playtested 2026-10-29):
+  every targeted cast reaches `Spell.range` (0 = 30 m, `reach()`; hostile and friendly alike,
+  also the resurrection's corpse and Evacuate's gather), the server's number exact (out of
+  reach at 30.1) and the client checking the same number before the bar, so a target that
+  walks out during the bar costs a free refusal ("Cast failed: That target is too far
+  away."); the tooltip shows the spell's range; the leash floor is 35 m so no mob can be hit
+  from beyond its own leash. One attack slow holds a mob at a time, strongest wins: in `Entity::apply_cc`
   a stronger slow replaces the holder, an equal one refreshes it, a weaker one is ignored,
   and the pre-flight refuses a weaker one at no cost.
 - **The group share range (2026-10-08, user call of 10-05):** `GROUP_SHARE_RANGE` is 200 m
   (was 30) and covers the XP split, the quest journal tick and the auto-split coin drop; XP
-  and journal credit also need the member alive. A group-mate in town shares from the camps
+  and journal credit also need the member alive (`!death_processed && hp > 0.0`, so a member
+  killed in the same tick as the mob is already a corpse; a dead member gets no share and does
+  not dilute the pool, which divides among the eligible members only; playtested 2026-10-07).
+  The creditor is exempt from the range half only, so a pet owner may direct a kill from afar.
+  A group-mate in town shares from the camps
   within 200 m of it, which the user accepted as the trade-off. Every new character is bound
   at the starter spawn from creation.
 - **Hit reactions / VFX:** physical hits flash the mesh white; spell hits flash an
@@ -151,10 +163,9 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   replicated buff state yet); heals/HoTs still route to pets. Damage shields (Thorns,
   Spellshield, Rune/Primal Bond absorb) are self-only by design except Thorns, which is
   ally-castable.
-- **Ports:** `TargetType.PORT` with `port_zone_path` / `port_entry_id` (offline / Test Room
-  only). Online, Gate, Succor and Evacuate are server moves (see "Respawn, bind points, and
-  the death lock"); the client sends the cast and waits for the `Teleport`. The seven zone
-  ports refuse online: there are no zones to send anyone to.
+- **Ports:** Gate, Succor and Evacuate are server moves (see "Respawn, bind points, and the
+  death lock"); the client sends the cast and waits for the `Teleport`. The seven zone ports
+  refuse: there are no zones to send anyone to.
 - **Notable resolved spells:** Complete Heal (Cleric, self-heal for now), Torpor (Shaman),
   Clarity/Breeze (Enchanter), Haste (Enchanter), Spirit of Wolf (Druid/Shaman), Lich Form
   (Necromancer — skips HP regen, extreme MP regen), Gate (Wizard), Exsanguinate (Blood
@@ -214,11 +225,10 @@ This is a reference, not an exhaustive API. When in doubt, the code is truth.
   additively on top of meditation. (Planned rework: gate base regen instead of stacking —
   see the to-do.)
 - **Bind points:** server-authoritative since 2026-08-12 — see "Respawn, bind points, and the
-  death lock" below. The client-side `PlayerStats.bind_zone_path` / `ZoneLoader.travel_to()` path
-  described here previously now applies **only offline / in the Test Room**; in launcher mode the
-  server decides where you respawn and teleports you. XP loss is logged to the combat log.
-- **Group XP:** `GroupManager.distribute_kill_xp(base_xp)` splits XP with a 20% group bonus;
-  `enemy._die()` routes through it; `_rpc_receive_xp` delivers each remote member's share.
+  death lock" below. The client keeps no bind of its own (its offline bind went with the offline
+  game, 2026-11-01): the server decides where you respawn and teleports you. XP loss is logged to the combat log.
+- **Group XP:** split on the server at the kill (`tick/kills.rs`, `award_kill`), among the
+  members who are alive and within 200 m; the client shows what `XpGained` says.
 
 ---
 
@@ -326,8 +336,16 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   `Teleport`ed to the corpse and refunded that percentage of **that death's actual lost xp**
   (captured on `Corpse.lost_xp` — the ACTUAL amount removed, not nominal, which closes a
   level-5-floor over-refund exploit). One res per corpse (persisted `resurrected` flag).
-- **Not built:** **res-sickness** (specced for Slice 3, dropped from v1), corpse auto-re-equip
-  on loot, and per-creature corpse models/scale. (Respawn-at-bind and the Soul Binder shipped
+- **Corpse auto-re-equip** (playtested 2026-10-26, `corpse_reequip_checklist.md`; server
+  `d598ad6` + `5986f26`, migration `0014`). A corpse row remembers the equip slot each worn item
+  died in. Looting your own corpse (Loot All or one item) puts a worn item back on that slot when
+  the slot is empty and still takes it; anything else goes to your bags (a slot you have filled
+  since is never displaced; a held cursor item and carried bags come back to the bags). Worn
+  gear needs no bag room; what does not fit stays on the corpse with "Your bags are full: N items
+  stay on your corpse." and keeps its slot for a later loot. The same holds after a resurrection
+  and across a server restart. Log: `corpse loot put worn gear back on ... reequipped=N`.
+- **Not built:** per-creature corpse models/scale. (Res-sickness is built and awaits its
+  playtest; see the To-Do.) (Respawn-at-bind and the Soul Binder shipped
   2026-08-12; Bind Affinity and Gate joined them server-side 2026-10-08. See "Respawn, bind
   points, and the death lock".)
 
@@ -338,9 +356,43 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 - **Inventory:** bag slots + item stacks; `add_item()` / `remove_item()` / `stack_all()`
   (the "Stack All" button per bag window calls the latter). Base layout is flat slots with
   bags-as-items.
-- **Equipment:** paperdoll slots, equip/unequip; `can_dual_wield()` gates the off-hand
-  weapon slot; `_resolve_slot()` routes a second weapon to "offhand" when the dual_wield
-  skill > 0.
+- **Equipment:** paperdoll slots, equip/unequip. EQ's equip rule (2026-10-27, playtested
+  2026-10-29; `skills::equip_refusal` on the server, `Equipment.equip_refusal` on the client
+  asking first): a weapon of a type the class never trains ("Your class cannot wield that.")
+  and armor of a kind it never trains ("Your class cannot wear that.") are refused at the
+  equip, read off the cap tables both sides hold in lockstep (a cap of 0 is the flag); a
+  weapon into the off hand needs the class's dual-wield level (`skills::dual_wield_level` /
+  `DUAL_WIELD_LEVELS`: Monk 1; Ranger, Rogue 13; Warrior, Witch Hunter, Bard 15; Shadow
+  Knight, Beast Master 20; the rest never), refused with "You will be able to dual wield at
+  level N." or "Your class cannot dual wield."; `_pick_slot()` routes a second weapon to the
+  off hand only past that level. The server line `EquipItem refused — the class cannot use
+  it` marks a client that skipped its own check. The Attack path refuses an off-hand swing
+  before the level and an off hand with no weapon in it (a Monk with both hands empty punches
+  with both). Gear worn before a rule stays worn and keeps the 80% miss and half damage.
+  **The two-hander rule** (2026-10-29, playtested the same day; the user's call: a two-hander
+  beside an off-hand weapon is an end-game Warrior ability, nobody until then): a two-hander
+  goes in the main hand only ("A two-handed weapon goes in the main hand.") and only while the
+  off hand is empty ("Empty your off hand first."); nothing goes in the off hand beside one
+  ("You cannot hold that with a two-handed weapon."); the player empties the hand by hand
+  (EQ's way; the client no longer unequips it on their behalf); and the off hand never swings
+  beside one: the Attack path's three off-hand gates live in `skills::offhand_swing_refusal`,
+  the client's `Combat._is_dual_wielding` sends none, and both staves carry `is_two_handed`,
+  which a unit test keeps in step with the `2h_` and archery skills.
+- **The starting kit and NO DROP (built and playtested 2026-11-03, server `f06e88e`, client
+  `12d4e5c`; `pre_door_check_checklist.md` §2):** every new character is born wearing a Ragged
+  Shirt, Ragged Pants and its class's Trainee's weapon (sword: Warrior, Paladin, Shadow Knight,
+  Bard, Ranger, Witch Hunter; knife: Rogue, Blood Mage; club: Cleric, Monk, Druid; one-handed
+  piercing spear: Shaman, Beast Master; two-handed staff: Magician, Wizard, Sorcerer,
+  Necromancer, Enchanter, who have 2H Blunt at 75 for it). The table is
+  `world/starter_kit.rs`; `db::create_character` writes the kit worn and its `starter` ledger
+  rows in the character's own transaction. All seven items are worth nothing and **NO DROP**
+  (`no_drop` on `items.toml` and `ItemData`, lockstep-checked): the server refuses one for a
+  ground drop, a trade offer, the account-shared vault and a sale, with "That item is NO DROP:
+  it cannot leave you." and nothing moved, and the client asks first
+  (`Inventory.refuse_no_drop`); destroying it, the character's own vault and its own corpse are
+  fine. The tooltip leads with `NO DROP`. The kit weighs 3.5 at most, so no race and class is
+  born encumbered. Rule I5 in `docs/reference/invariants.md`. Characters made before it have no
+  kit. A Monk wearing the club swings one stream, not two fists.
 - **Augmentation/socketing:** `ItemData.gem_slots`, `socketed_augments`, `Type.AUGMENT`
   (data shape only; combine UI deferred).
 - **Item registry:** `ItemRegistry` autoload; the canonical item table is exported to the
@@ -364,11 +416,25 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   ~45% from the starter anchors, ore 0.25 / ingot 0.1 with mithril/adamantite lore
   exceptions, universal 0.1 floor so nothing weighs 0; coverage check:
   `tools/item_weight_audit.gd`, run headless with `--script`). Over capacity:
-  movement slows linearly to a 0.25 floor (applied after the mount mult in
-  `player.gd`) and stamina regen halves (stops at 2× capacity, in `regen.gd`);
-  "You are encumbered!" CombatLog line on threshold crossings. Client-side v1 — the
-  server's movement clamp picks up the slowdown via the scaled direction vector; no
-  server-side weight model yet.
+  movement slows linearly to a 0.25 floor and stamina regen halves (stops at 2×
+  capacity); "You are encumbered!" CombatLog line on threshold crossings. **The server
+  owns both penalties** (`world/encumbrance.rs`, from the 2026-10-19 client-authority
+  audit): `items.toml` carries each item's `weight` (compared by
+  `tools/check_item_lockstep.gd`), the server weighs coins and every carried and worn
+  stack against 10 + STR, and applies the result to its own movement speed
+  (`RUN_SPEED` 5 m/s x speed buffs x snare x load) and stamina regen. The client's
+  `Encumbrance` predicts the movement half with the same constants so local movement
+  agrees. Before, the client scaled its Move vector by its own speed against a 7.5 m/s
+  ceiling, so a modified client ran 1.5x and the stamina half ran nowhere at all.
+  Mounts are refused online until the server has a mount model. **The Move handler drops a
+  non-finite direction or yaw whole** (2026-09-27, playtested 2026-10-07; invariant A3): a NaN
+  component used to pass `clamp_length` (`len > max` is false for NaN), poison `conn.pos` for
+  good, and then pass every `if dist > RANGE` gate (corpse and bag loot, resurrection, attack
+  and spell reach), since a comparison with NaN is false; SQLite would have saved it as NULL.
+  The guard runs before any state or sequence bookkeeping; the integration test
+  `nan_move_direction_is_dropped` is the exploit-side evidence (an honest client never sends
+  one). The range gates that mattered most were since rewritten keep-only-when-in-range, so a
+  non-finite distance refuses on its own.
 - **Currency & encumbrance visibility UI (2026-06-12):** the wallet renders in the
   inventory window (gold line above the trash slot — raw per-tier stacks via
   `Currency.format_coins`, live on `PlayerStats.coins_changed`) as well as the vendor
@@ -406,7 +472,7 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     reached two cases that had been unreachable: a non-empty bag could not move at the time
     (**superseded 2026-09-27 by full-bags-move**: online, a full bag now lifts and moves WITH
     its contents, re-keyed server-side under `CURSOR_BAG_KEY` while held; the empty-first rule
-    survives only for selling, destroying, dropping, and the Test Room's local drag —
+    survives only for selling, destroying and dropping —
     `Inventory.bag_has_contents()` now serves those callers; playtested 2026-10-09,
     `full_bags_move_checklist.md` all nine rows: two full bags dropped on each other swap
     PLACES and each keeps its own contents, a held full bag survives a relog, and a death
@@ -440,7 +506,7 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     were client-local (`Inventory.add_item()` with no server call) yet reachable online, creating
     phantom items — and crafting deleted *real* ingredients from the client mirror, desyncing slot
     indices so a legitimate Sell/Destroy executed against a different real item. All three entry
-    points now refuse in launcher mode before touching anything. Offline/Test Room unchanged. Real
+    points refuse before touching anything (there is no offline path since 2026-11-01). Real
     server-authoritative tradeskills are an open item under Tradeskill depth.
   - **Loot mode** (per `Group`, leader-set, default Round Robin; `groups::LootMode`)
     governs **item turns only**: **Round Robin** rotates per corpse (lazy first-loot claim
@@ -464,6 +530,32 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     coin + reject feedback flow through `RemoteLootBagManager`. XP split is unchanged
     (still distance-agnostic — a deliberate asymmetry vs coin's proximity gate).
 
+- **Trade window** (player to player; design `docs/design/trade_window.md`; built 2026-09-29
+  under PD_W0028, playtested 2026-10-27, `trade_window_checklist.md`, every row). Hold an item
+  and left-click a player within 10 m: the click targets them and both windows open at the
+  centre of the screen (a `DraggablePanel`), eight slots a side plus the four coin fields.
+  **Escrow by locking.** `world/trade.rs` holds one session per player, and an offer is a
+  reference to a slot in the owner's real inventory, never a copy: an offer from the cursor is
+  parked into an empty inventory slot first (no merging, so the offer stays one discrete
+  stack), an offered slot refuses Move / Split / Drop / Destroy / Equip / Unequip / Sell /
+  BankStore with "That item is offered in a trade.", an offer inside a pouch locks the pouch,
+  and an offered empty bag cannot be filled. Every edit clears both accepts. The commit (in the
+  tick's apply block) re-checks liveness, range, coin coverage, the offered count AND item, and
+  both receivers' capacity through the real placer (`can_accept`, `merge_capped`), swaps in
+  memory, writes both characters in one transaction (`db::commit_trade`) and reverts on
+  failure; the deltas go out only after the commit. An offered stack that changes under its
+  owner (a merge from loot or a purchase) is dropped from the offer with "An item you offered
+  changed..." and "Their offer changed..." Walking past 10 m, dying or leaving closes the
+  session for both with a reason and frees every lock. Refused: trading yourself, a partner
+  already trading, a coin overdraft ("You don't have that much coin."), a receiver who cannot
+  hold the goods ("Your bags cannot hold their offer." / "Their bags cannot hold your offer."),
+  a request to anyone not in reach ("There is no one here to trade with.", the same line for
+  absent). Food offered in a trade is never auto-eaten (the tick passes the trade lock to
+  `hunger::first_in_slot_order`; a loaf on the cursor is not eaten either, the cursor not being
+  in the inventory). The client window (`scripts/trade_window.gd`) holds no state and renders
+  the server's offer updates. The exploit ledger of the design is the integration test list
+  (atomic commit, bait-and-switch, the escrow lock, the bag lock, a changed offer, self-trade,
+  overdraft, the auto-eat skip). Still open: giving to an NPC (slice 2).
 - **Banker NPC — slice 1 / coins (2026-06-17, server-authoritative, wire PD_W0015):** a town
   NPC (**Thalia Mourne**) giving **zero-weight coin storage** + **tier exchange** — the relief
   valve for the four-tier coin-weight system. Design: `docs/concepts/world/currency.md`.
@@ -536,10 +628,15 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 - **Pet heal (server, 2026-10-07):** `PET_HEAL` spells (Warder's Mend) mend the caster's OWN
   pet, whatever is targeted. The cast pre-flight resolves the pet (alive, in reach, else "You
   have no pet to mend."), the arm heals it by `heal_amount` capped at max and fans its
-  HealthUpdate. The client's `WarderAI.heal_warder` call is a no-op online (the RemotePet
-  stub); the server's update moves the panel.
-- **WarderAI:** Beast Master warder behavior (retreat / fury / `setup_for_class`),
-  extracted from PetManager. Warder idle state faces the player's look direction.
+  HealthUpdate; the server's update moves the panel.
+- **Pet levels (server, 2026-09-27, playtested 2026-10-07):** a pet's level follows its owner.
+  The Beast Master's warder is owner level minus 1, always, on the auto-summon and the
+  retreat-respawn; a manual summon rolls EQ's gamble, owner level minus 1 to 3; Summon Skeleton
+  caps at 10. Pet stats interpolate the camp ladder at `PET_STAT_SCALAR` (0.70,
+  `pet_templates.rs`) so a pet class is not a duo by itself; an anchor test fails if
+  `zone_camps.toml` moves without the curve. All three summon paths go through
+  `summon_scaled_pet`. A charmed mob keeps its own stats. The interim until Beast Master taming
+  (`docs/design/pet_levels.md`, option C).
 - **Pet panel (`scripts/hud_pet_panel.gd`):** top left while you have a pet (summoned,
   warder or charmed): name, level, HP bar, and since 2026-10-07 a row of buttons for the five
   `/pet` commands (Attack, Back, Guard, Follow, Sit), each the same `PetManager` call the chat
@@ -557,11 +654,8 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   floating number). **Deferred:** AGI/INT/WIS combat effect (stored/buffable but display-only
   — no pet dodge / spell-power model). MP-regen / accuracy buffs aren't routed to pets (no pet
   mana / crit).
-- **Transformations:** e.g. Revenant — grants ultravision; tradeskill scores carry over
-  automatically (they live outside PlayerStats).
-- **MountManager:** client-side v1 — item whistles summon, per-zone `NO_MOUNT_ZONES`
-  blacklist, any incoming damage dismounts, mount speed multiplier overrides other speed
-  sources. Not fully wired (see to-do).
+- **MountManager:** refuses every mount online, since the server has no mount model yet;
+  the whistle items and `ZoneData.NO_MOUNT_ZONES` stay as data for that build (see to-do).
 
 ---
 
@@ -580,8 +674,7 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   the server at the next send. Nothing on the server reads the hour (the sky is cosmetic; night
   vision is a client-side tint), and a DLL without the signal makes `Net` say so in the console
   and fall back to the local clock. `DAY_LENGTH_SECS` (server) and `DAY_DURATION` (client), both
-  1200 s, must stay in lockstep. `TimeOfDay` emits `hour_changed`; the offline EnemySpawner's
-  `night_only` mobs spawn at hour 20 and despawn at 6.
+  1200 s, must stay in lockstep. `TimeOfDay` emits `hour_changed`.
 - **Vision:** `VisionSystem` adjusts brightness + infravision green tint at night by race —
   ultravision (Dark Elf, Ogre, Troll, Kel\`varath), infravision (Elf, Wood Elf, Half-Elf,
   Dwarf, Gnome, Halfling, Fae, Felhari, Kobold), normal (Human, Minotaur, Half-Ogre).
@@ -596,14 +689,12 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   loot tables match. A boot-time spawner bug was fixed with it: first spawns no longer wait
   a full respawn timer when the server starts near machine boot. Plan + verified reward
   actuals: `docs/design/phase4_content_plan.md`; evidence: `phase4_content_checklist.md`.
-- **Named/boss mobs:** `data/named_mob_definitions.gd` (Rotfang, Greth Bonecrusher, Ancient
-  Crawler, Sable, The Undying). `EnemySpawner.named_mob_id` + `named_respawn_time`;
-  `enemy.apply_named()` sets a gold nameplate, scales HP/XP/damage, arms `_named_drops`
-  (guaranteed + chance-based rare loot), and enrages below a configurable HP% (speed +
-  damage boost, red name). `Loot._on_enemy_died()` appends `_named_drops` after the normal
-  table roll.
-- **Fall damage:** `_on_land()` in `player.gd`; threshold 9 m/s; `(speed - threshold) × 5`
-  HP via `Combat.receive_player_damage()`. (TODO: skip under Levitate / Feather Fall.)
+- **Named/boss mobs:** server-side (`world/named.rs`, `named_mobs.toml`: the scaling, the
+  enrage, the guaranteed and rare drops; see Combat). `data/named_mob_definitions.gd` (Rotfang,
+  Greth Bonecrusher, Ancient Crawler, Sable, The Undying) is the client's copy of the names,
+  read by the Test Panel's Spawn Named and the quest definitions.
+- **Fall damage:** none yet. The client computes nothing; the server's model waits on the
+  height model (`docs/design/server_fall_damage.md`, slice 1).
 
 ---
 
@@ -658,8 +749,8 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   `crafting_window.gd` (K to open) + `data/recipe_definitions.gd` (15 tradeskills:
   Smelting, Tanning, Leatherworking, Tailoring, Blacksmithing, Weaponsmithing, Woodworking,
   Fletching, Alchemy, Poison Making, Baking, Brewing, Jewelry Crafting, Pottery, Tinkering).
-- Mob crafting-material drops via `data/loot_tables.gd` archetypes (`.tres`-backed).
-  Skinning: `skinning_knife.tres` + `enemy.try_skin()` (F key; pelt quality by skill).
+- Mob crafting-material drops are rolled by the server (`world/loot.rs`). Skinning
+  (`skinning_knife.tres`) refuses online until tradeskills are on the server.
 - `StationManager` tracks station proximity (display; not yet enforced). Phase detail in
   `docs/concepts/tradeskills/todo_list.md`.
 
@@ -670,6 +761,13 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 - **HUD core** (`scripts/hud.gd`) split into a `hud_*.gd` family: DeathScreen, CastBar,
   BuffBar, PetPanel, GroupPanel. Includes the always-visible XP bar, target frame with
   actual HP numbers, and a target-of-target frame.
+- **The player's own cast bar** (`scripts/hud_cast_bar.gd`; placed 2026-10-29, playtested
+  the same day, `two_hander_jump_reach_cast_bar_checklist.md`): the spell's name over a bar
+  that fills across the cast time, centred left to right with its centre 110 px below the
+  middle of the screen so it does not cover the target (it sat under the hotbars before, where
+  nobody saw it); shown on `Spells.casting_started`, hidden on a cancel, a fizzle or the cast
+  landing; draggable like the other panels. `tools/probe_cast_bar_place.gd` holds the
+  placement.
 - **Buff/debuff bar:** icons with countdown timers (absorb, HoT, evade, etc.).
 - **`/loc` and the compass** (playtested 2026-10-09, `loc_command_checklist.md`, all five rows):
   `/loc` (or `/location`) prints your position as `x, y, z` to one decimal, paste-ready for
@@ -684,12 +782,34 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   misses, XP gains; billboard `Label3D` that faces the camera; per-category toggles in
   Options → Interface.
 - **Spell book** (view known spells, memorize workflow) and **Hotbar** (signal-driven from
-  `spell_cooldown_updated` / `skill_cooldown_updated`). Memorize is gated through `SpellBar`.
+  `spell_cooldown_updated` / `skill_cooldown_updated`). Memorize is gated through `SpellBar`;
+  online the server holds the bar (`world/spell_gems.rs`). Memorizing takes two seated seconds and
+  no mana, as in EQ (the mana is paid at the cast; free since 2026-10-26).
 - **Multi-window chat:** `CombatLog` is a pure broker emitting `line_added(text, type)`;
   `ChatWindowManager` owns N `ChatWindow` instances (each a `DraggablePanel`). Per-window
   filters (by `MsgType`), display settings (bg/font alpha, font size, default channel), and
   tab docking (`group_id` groups windows; drag to dock/undock). Layout persists through
   `GameSettings.chat_windows`.
+  **A `/say` carries 50 m** (`SAY_RANGE` in `world/mod.rs`; playtested 2026-10-29,
+  `say_range_checklist.md`): the server's `tick::say_recipients` picks every in-world player
+  within it, never the speaker, keep-only-when-in-range, and the eating emote uses the same
+  helper (the jump relay did too until 2026-10-29, when it moved to the jumper's AOI view). A
+  shout and OOC reach everyone in the world, a group line its group, a
+  tell its target; hailing an NPC is the NPC gate's own range.
+  **The chat line's channel is sticky, WoW style** (playtested 2026-10-27,
+  `chat_channel_checklist.md`): the line always has a channel, shown beside it (`[Say]`,
+  `[Shout]`, `[OOC]`, `[Group]`, `[Tell: Bob]`); a channel command at the start (`/say /s /shout
+  /sh /ooc /g /group /gsay /tell /t /r`) switches it the moment its space is typed and leaves the
+  text, however many are stacked or pasted; the channel stays until another command moves it;
+  other commands run as typed. The rules live in `scripts/chat_channel.gd`, and `hud.gd` runs
+  every submitted line through `ChatChannel.normalize` (plain text is a say). **Social macros**
+  send each line through the same handler (`CombatLog.chat_submitted`), exactly as if typed.
+  **A chat line is at most 250 characters** (user's call, 2026-10-27; playtested the same day,
+  `chat_channel_checklist.md` §6), counted the same way on both sides so every screen shows the
+  same line: the chat line's `max_length` stops typing and pasting at `ChatChannel.MAX_CHARS`,
+  `normalize` cuts every message to it (macros included, so the echo is what is sent), and the
+  server's `MAX_CHAT_CHARS` (`handlers.rs`, a lockstep pair) cuts a forged client's line by
+  character, never by byte.
 - **Settings:** keybinds, UI panel positions, and chat prefs persist to disk via
   `GameSettings`.
 
@@ -697,9 +817,9 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
 
 ## Networking (client)
 
-> The world simulation server is authoritative (renet UDP, 20 Hz); a `--local-save` dev path
-> still exists for solo iteration. Read `server/docs/server_design.md` before touching anything
-> here.
+> The world simulation server is authoritative (renet UDP, 20 Hz), and the client is online
+> only (the offline game was removed 2026-11-01). Read `server/docs/server_design.md` before
+> touching anything here.
 
 - **The enemy position stream (server, 2026-09-30, playtested 2026-10-07):** an enemy's
   Position fans only when it moved past 0.005 m or turned past 0.001 rad since its last
@@ -727,16 +847,28 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   its panel and every `/pet` command from any distance (the test parks one two cells away;
   the playtest walked past 300 m). Not a leak: the owner learns only their own pet's
   position.
-- `Network` / `Net` — connection + wire message routing.
-- `SaveManager` — owns window-close. Two distinct exits (see the disconnect-lifecycle entry
-  below): **Quit Game** is a clean save + app-layer `Disconnect`; the **window X button** is a
+- **The jump relay (both sides, 2026-10-14, playtested 2026-10-27):** the first piece of a
+  remote animation-state channel. `player.gd` latches a jump and sends it on its next Move's
+  `jumping` flag, once; the server relays only the rising edge, at most once per
+  `JUMP_RELAY_MIN_INTERVAL` (500 ms), as a `PlayerJumped { id }` to the players within the
+  players who can see the jumper (`aoi.entities_visible_from` of the jumper's cell, the
+  Position fan's own set, since 2026-10-29, playtested the same day: the user's "jump check"
+  on someone far off; the say channel's 50 m audience before that), never the jumper; each of
+  their
+  clients plays the hop (`RemotePlayer.play_jump`, the same arc as the local jump, 1.2 m in
+  0.7 s) as an offset on the visual and the nameplate, never on the interpolated position.
+  Nothing reads the flag into position: Y stays the server's zero, so a forged flag can only
+  make a player look silly. A relayed jump stands the player; a corpse does not hop.
+- `Net`: the connection and the wire message routing. The server is the save (the client's
+  `SaveManager` and its `character.save` went with the offline game, 2026-11-01). `Net` also
+  owns window-close, with two distinct exits (see the disconnect-lifecycle entry below): **Quit Game** is a clean save + app-layer `Disconnect`; the **window X button** is a
   hard self-kill that drives the server's linkdead path. (Watch the Godot-4 `_notification`-on-
   close save pitfall noted in past audits — close is handled via the root window's
   `close_requested` signal, not `_notification`.)
 - **Disconnect lifecycle (clean vs linkdead):** how you leave the world decides whether the body
   reaps now or lingers. **Quit Game** (Options menu) sends an app-layer `Disconnect`, so the
   server reaps immediately and frees the account. The **window X button** is wired as a hard
-  self-kill (`SaveManager._on_close_requested` → `OS.kill(OS.get_process_id())`, killing only
+  self-kill (`Net._on_close_requested`, which calls `OS.kill(OS.get_process_id())`, killing only
   that instance's PID) — it sends nothing, so the server treats it as an unclean drop and the
   character goes **linkdead**: the body lingers in-world ~30 s (`LINKDEAD_SECS`), still
   targetable and **killable** by mobs and PvP, frozen in place; a same-account relogin is refused
@@ -797,12 +929,39 @@ Where you wake up after dying is server-authoritative (2026-08-12, playtested 08
 - **Setting a bind.** `ClientWorldMsg::BindAtCurrentLocation` (a variant that sat dormant with no
   sender AND no handler until now) captures *the player's* current position, not the NPC's. It is
   refused while dead, so a corpse cannot bind where it fell. Persisted immediately rather than on
-  the 60 s checkpoint, since there is no graceful shutdown to flush it.
+  the 60 s checkpoint, since a crash (unlike a clean stop) saves nothing.
 - **Sister Maelis**, Soul Binder, stands at the town spawn. She reuses the dialogue NPC and window
   via a `bind_soul` response action rather than bespoke UI.
+- **The dead-state gate** (playtested 2026-10-26, `dead_gate_checklist.md`). While
+  `death_processed`, the server accepts only a short list of messages (movement, chat, respawn,
+  a res accept, targeting, group management, lifecycle traffic, a few GM tools) and refuses the
+  rest with "You cannot do that while dead.", said once per death
+  (`PerConnection::dead_refusal_told`, cleared on Respawn); each refusal is logged by its
+  message name (`refused while dead refused="..."`), the first per death at info. The client
+  refuses skills, spells and switching auto-attack on while dead before sending anything
+  (`PlayerDeath.refuse_if_dead`, the same line once per death), so nothing is announced or put
+  on cooldown, and it sends no `EquipUpdate` (the server derives armor from the equipment it
+  holds).
+- **Leaving dead, coming back dead** (playtested 2026-10-26,
+  `dead_relogin_and_resend_checklist.md`). A character that leaves at 0 HP (a crash, the window
+  X, a restart) loads with `death_processed` already set (`from_spawn`: `spawn.hp <= 0.0`), so
+  the death sweep does not kill it a second time (no second XP penalty, no second corpse). On
+  entering the world every player is sent their own HP, mana and stamina once, whatever the
+  regen fan last sent: the fan sends only what changed, so a dead character with full pools
+  used to hear nothing, and its client never learned it was dead or respawned. Told HP 0, the
+  client runs the death screen and its respawn as after any death.
 - **Death lock.** `Move` is refused server-side while `death_processed`, and the client stops
   predicting/sending in `player.gd::_physics_process`. Both halves are needed: the server alone left
   the corpse twitching as local prediction was repeatedly overridden.
+- **Deaths are the server's alone** (fall damage slice 0, playtested 2026-10-26,
+  `fall_damage_slice0_checklist.md`). HP only reaches zero on the server, and its death sweep
+  runs the death (penalty, corpse, `EntityDied`) before the client hears. `DeathBroadcast` is a
+  GM command (`dev_cmd_allowed`, audited as `death_broadcast`) and the client no longer sends it:
+  ungated, it was an instant death on demand (a free trip home and a hate wipe). The Test
+  Panel's Trigger Death sends a dev `DamageSelf` of the whole bar. **Online a fall does
+  nothing** until the server simulates falls (slice 1, waiting on the height model;
+  `docs/design/server_fall_damage.md`): the old client damage went through a GM-only command,
+  so for ordinary players it never applied.
 - **Aggro breaks on death.** Dead players are excluded from the enemy-AI target list and wiped from
   every enemy's aggro/threat table, so mobs disengage and leash home instead of beating the corpse.
   `wipe_hate` is the one helper (shared with the port arm below) and fans `EntityTarget None` for
@@ -832,7 +991,7 @@ Where you wake up after dying is server-authoritative (2026-08-12, playtested 08
   the town square, 10 m round the spawn, arrival at the spawn), with a unit test that no camp
   spawn's aggro plus jitter reaches into one. The client (`spells.gd`) no longer runs Gate or a
   bind locally online (Gate used to reload the whole world scene): the cast goes up, the
-  `Teleport` or the bind line comes back. `PlayerStats.bind_zone_path` is now offline-only.
+  `Teleport` or the bind line comes back. The client keeps no bind of its own.
 
 **Why it was broken:** `Respawn` restored HP but never touched position. Because the server owns
 position, the client's own respawn move was overridden by the next Position broadcast and the player
@@ -877,15 +1036,15 @@ player can never use them (exploit-audit finding #1). Two independent grants:
   connected`). A modified client can't forge it — the token is signed with the netcode key. This is
   what lets a HOSTED friends server run with `PD_DEV_CMDS` off while the host keeps their tools.
   Server-only (no client/DLL/wire change); built 2026-07-17, playtested + integration-tested
-  2026-07-19 (`world_two_clients.rs::is_gm_gates_dev_commands`).
+  2026-07-19 (`is_gm_gates_dev_commands`, now in `tests/world/admin.rs`).
 - Set the flag offline with the **`grant_gm`** bin (`cargo run -p projectdawn-server --bin grant_gm
   -- <username> on|off`; no args lists every account's GM status). Takes effect on that account's
   next login (the flag is read at token mint, so a live session must re-log).
-- **Caveat — the Test Panel is a CLIENT tool** and mixes server-gated dev commands (above) with
-  client-side helpers and legitimate actions. `_full_heal` fills the bars optimistically client-side
-  even when the server refuses `HealSelf` for a non-GM (self-corrects on the next `HealthUpdate` — a
-  display lie, not an actual heal). `_trigger_death` just sets local HP to 0 (dying is legitimate and
-  never gated). So "Full Heal / Trigger Death work for a non-GM" is expected, not a gate leak.
+- **The Test Panel is a client tool for GM accounts:** every button sends a dev command the
+  server gates and audits (above), and with no world connection a button says so and does
+  nothing (its client-only buttons went with the offline game, 2026-11-01). `_full_heal` still
+  fills the bars at once for feel; if the server refuses `HealSelf`, the next `HealthUpdate`
+  puts them back. Trigger Death sends a dev `DamageSelf` of the whole bar.
 - **`admin_report`** bin: read-only `world.db` viewer (accounts + characters incl. soft-deletes,
   per-char four-tier coins + bank + inventory) → console + a local `world_report.html`. WAL-aware
   (`?mode=ro`), safe to run while the server is live.
@@ -961,10 +1120,63 @@ nightly at 04:00 via `/etc/cron.d/projectdawn-backup`, writing `sqlite3 .backup`
 the dev box pulls those into Google Drive, putting one copy outside the building. Verified by
 restoring a backup and reading a character out of it, not just by the files existing.
 
-**Known operational gaps.** No kick, no ban, no shutdown warning; `accounts.is_banned` is read
-at login but nothing writes it. No SIGTERM handler, so a stop or restart discards up to 60 s of
-position, HP, XP, inventory and coins for everyone online. The database is not in WAL mode
-despite comments claiming otherwise.
+**Saving and shutdown** (housekeeping audit Phase 1, playtested 2026-10-23,
+`phase1_durability_checklist.md`). Every save of a character goes through one function,
+`persistence::flush_connection` (position, resources, the item and coin stores in one
+transaction, skills, faction standings, quests; each part clears its flag only when it lands),
+used by the 60 s checkpoint, logout, a retry queue and shutdown. A stop signal (SIGTERM from
+`systemctl stop`/`restart`, Ctrl-C, a closed console on Windows) saves everyone first, retrying
+failures for 12 s inside systemd's 20 s, then tells each player "The world is being restarted.
+Your progress has been saved; please log in again in a minute." (or that their last moments
+could not be saved), closes every connection and exits; non-zero if anyone was left unsaved;
+a second signal quits at once. A logout whose save fails waits in a retry queue (every
+second) and its account's relogin is refused until it lands, given up after 2 minutes to the
+last saved state. XP is written inside the transaction that records why it changed (the
+corpse, the quest completion, the resurrected flag). A failing world loop ends the process so
+systemd restarts it. A crash still loses up to the last 60 s.
+
+**The immediate saves** (housekeeping audit Phase 0, playtested 2026-10-26,
+`hotfix_crash_and_dupes_checklist.md`). Some changes cannot wait for the checkpoint, because
+a crash between the change and the next save would leave an item in two places or none: a
+ground drop saves the dropper before the bag exists (at most four drops a tick), and whoever
+loots a bag is saved that tick; a quest reward, a death, corpse loot and a trade first write
+every dirty store of every character involved in one transaction
+(`persistence::persist_dirty_stores`), so an unsaved bank withdrawal can never be saved in
+the bags while the vault still holds it. A failed read of any store at login refuses the
+login ("The server could not load your character.") rather than playing on with empty stores
+that the next save would write over. A failed corpse save retries next tick. Chat is cut at
+512 bytes on a character boundary (an accented letter at the cut used to crash the server).
+Vendors sell only what a vendor in reach stocks (`stock` in `npcs.toml`, checked against the
+client by `tools/check_vendor_lockstep.gd`) and, since factions, only to a buyer they serve.
+
+**The item ledger** (the Monsters and Memories research, decided 2026-10-30, playtested
+2026-10-30 and 10-31, `item_ledger_and_rtt_checklist.md`; the design and the calls in
+`docs/design/item_log_research.md`). `item_events` (migration 0017) holds one row per
+server-made movement of items or coin into or out of a character's holdings: a sale or a
+purchase (`sell`, `buy`, the merchant in the detail), a drop and a pickup (`drop`, `pickup`,
+the bag id), `destroy`, `eat` and `use` by hand, the vault moves (`bank_in`, `bank_out`, delta
+0: the item stays the account's), the bank coin ops (`bank_coin_in`, `bank_coin_out`,
+`bank_exchange`, copper 0 with the amount or the conversion in the detail), GM grants
+(`gm_give`, `gm_coins`), both sides of a trade (`trade_out`, `trade_in`, `trade_coins`, each
+naming the partner), the death strip (`death`, `death_coins`) and the corpse loot
+(`corpse_loot`, `corpse_coins`, the corpse id), loot bags, quest rewards, conjured items and
+NO RENT removals; `delta` is the signed change to the account's holdings and `copper` the
+same for coin. Rows are queued on the connection as the move is made and written inside the
+transaction that persists that character's stores (the flush, the trade commit, the corpse
+loot, the death strip), cleared only on the commit and rolled back with the in-memory move on
+a failed persist, so the table and the stores agree at every commit and nothing the client
+sends is ever a row; internal moves (move, split, equip) write nothing. The migration wrote an
+`opening` row per held item and per character's coin. A daily sweep (at boot and every 24 h,
+its own task) folds rows older than 30 days into `carry` rows, prunes them and runs the
+conservation check (`db::ledger_mismatches`: per account and item, the rows must sum to the
+stores), logging `ledger swept`, `ledger check mismatches=N` and each mismatch at warn;
+`admin_report` runs the same check on demand and shows the newest 50 rows. A partial GM
+grant records the ask in `gm_actions` and the placed count in the ledger, and the ledger is
+the one that balances. Not built: `/history` for the owner and M&M's group feed.
+
+**Known operational gaps.** No shutdown warning ahead of time (a timed "restarting in 5
+minutes" is not built). The database is not in WAL mode despite comments claiming otherwise.
+(Kicking and banning exist since 2026-10-01/02: the `admin_account` bin and the ban sweep.)
 
 **Operator docs.** `docs/deployment/server_operations.md` (run, update, recover, triage),
 `docs/deployment/inviting_a_player.md` (onboarding checklist),

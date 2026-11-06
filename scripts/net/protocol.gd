@@ -6,7 +6,12 @@ extends RefCounted
 # World types are bincode over UDP — only tags and enums are mirrored here;
 # bincode ser/deser ships with the future net adapter (GDExtension shim).
 
-const CLIENT_VERSION := "0.1.0"
+# Sent with every Login; the auth server refuses anything below its
+# PROJECTDAWN_MIN_CLIENT_VERSION. The world protocol id does NOT refuse an old
+# client (the client takes it from the server's connect token), so this is the
+# one lever that makes a protocol bump a real cut-over: raise it here, then set
+# the minimum to match on the host when the new build ships.
+const CLIENT_VERSION := "0.2.0"
 
 # ─── Auth: message type tags ────────────────────────────────────────
 

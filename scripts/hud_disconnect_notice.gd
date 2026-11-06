@@ -23,13 +23,19 @@ var _quit_btn: Button
 
 func _ready() -> void:
 	color = Color(0.0, 0.0, 0.0, 0.6)
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	# Above the death screen (z 100): being disconnected outranks being dead.
+	# Anchors AND offsets: set inside _ready, the anchors alone keep the current
+	# (zero) size, and a 0 x 0 notice dimmed nothing and blocked nothing.
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# Drawn above the death screen (z 100): being disconnected outranks being
+	# dead. Picking ignores z_index, so the notice also moves to the front of
+	# the tree when it shows (see _on_disconnected).
 	z_index = 110
 	# Swallow clicks so nothing behind the notice can be used; the world is
 	# not listening any more.
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
+	# A window raised while the notice is up goes back beneath it.
+	add_to_group(DraggablePanel.MODAL_OVERLAY_GROUP)
 
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER)
@@ -76,10 +82,18 @@ func _ready() -> void:
 
 	Net.app_disconnected.connect(_on_disconnected)
 
+# Nothing behind the notice can be used, the keyboard included: I, B and the
+# rest open windows from hud._unhandled_input, and a window opened under the
+# notice would otherwise be picked over it.
+func _input(event: InputEvent) -> void:
+	if visible and event is InputEventKey:
+		get_viewport().set_input_as_handled()
+
 func _on_disconnected(reason: String) -> void:
 	var text := reason.strip_edges()
 	_reason.text = text if text != "" else NO_REASON
 	visible = true
+	move_to_front()
 	DebugLog.warn("World connection ended: %s" % _reason.text)
 	# The same line in chat, so it is still on screen in the log behind the
 	# notice and lands in any chat window the player kept open.

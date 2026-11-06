@@ -5,11 +5,15 @@ you a tell, TAB in the chat line walks everyone who has sent you one this sessio
 right-click on another player opens the inspect window. **Needs a fresh client export; the
 server needs nothing** (the R720's current build already carries the inspect range gate).
 
+> **Updated 2026-10-26 for the sticky chat channel** (`chat_channel_checklist.md`): a tell's
+> name now lives in the line's channel label (`[Tell: B]`) instead of in the text, so the
+> rows below expect `[Tell: B]` where they used to expect `/tell B ` on the line.
+
 | Thing | Effect | Notes |
 |---|---|---|
 | `/r <message>` (or `/reply`) | Sends a tell to the most recent tell sender | "No one has sent you a tell yet." when nobody has. The recipient is whoever is newest when you press Enter (EQ's classic mis-tell); use bare `/r` or TAB to see the name first |
-| `/r` alone | Reopens the chat line holding `/tell <name> ` | Type the message and press Enter |
-| TAB in the chat line | Empty line: `/tell <newest sender> `. On a tell: next older sender, message kept | Leaves `/say`, plain text, and a message to someone outside the list alone; never drops focus out of the line |
+| `/r` alone | Switches the chat line to `[Tell: <name>]` | Open the line again, type the message, press Enter |
+| TAB in the chat line | Empty line: `[Tell: <newest sender>]`. On a tell: next older sender, message kept | Leaves a Say line, plain text, and a message to someone outside the list alone; never drops focus out of the line |
 | Right-click a player | Targets them and opens inspect | 20 m client range, 30 m server backstop |
 
 Tip: this needs two accounts in the world (two-boxing works). Client state shows in the in-game
@@ -23,15 +27,15 @@ target name.
 ## 1 — `/r` reply
 - [ ] **On A, before anyone has sent a tell, type `/r hello`** → "No one has sent you a tell yet." and nothing is sent. notes:
 - [ ] **B sends `/tell A hi`; on A type `/r hello back`** → A sees "You -> B: hello back"; B sees "A tells you, 'hello back'". notes:
-- [ ] **On A type `/r` alone and press Enter** → the chat line reopens already holding `/tell B ` with the caret at the end; type a message, press Enter, B receives it. notes:
+- [ ] **On A type `/r` alone and press Enter** → nothing is sent and the line is now on `[Tell: B]`; press Enter, type a message, press Enter: B receives it. notes:
 - [ ] **`/reply` works the same as `/r`** → same result as the two rows above. notes:
 
 ## 2 — TAB cycles the senders
-- [ ] **With one sender (B), press Enter then TAB on the empty line** → the line becomes `/tell B `. notes:
-- [ ] **With two senders (B, then C most recently), press Enter then TAB, TAB, TAB** → `/tell C `, then `/tell B `, then back to `/tell C `. (Skip if no third character.) notes:
-- [ ] **Type `/tell B where are you` and press TAB** → the name changes to the next sender and "where are you" stays. (With one sender the line simply stays as it is.) notes:
+- [ ] **With one sender (B), press Enter then TAB on the empty line** → the line becomes `[Tell: B]`, empty. notes:
+- [ ] **With two senders (B, then C most recently), press Enter then TAB, TAB, TAB** → `[Tell: C]`, then `[Tell: B]`, then back to `[Tell: C]`. (Skip if no third character.) notes:
+- [ ] **Type `/tell B where are you` and press TAB** → typing `/tell B ` already moved the line to `[Tell: B]`; TAB changes the name to the next sender and "where are you" stays. (With one sender the line simply stays as it is.) notes:
 - [ ] **Type `/tell <someone who has never sent you a tell> hello` and press TAB** → nothing changes: a message written to someone else is never re-addressed. notes:
-- [ ] **Type `/say hello` and press TAB** → nothing changes, and the chat line stays open and focused (before this build TAB dropped focus and hid the line). notes:
+- [ ] **Type `/say hello` and press TAB** → typing `/say ` moved the line to `[Say]`; TAB changes nothing, and the chat line stays open and focused. notes:
 - [ ] **With the chat line closed, press TAB** → still cycles enemy targets as before. notes:
 
 ## 3 — Right-click inspect

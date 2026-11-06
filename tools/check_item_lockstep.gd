@@ -22,7 +22,7 @@ extends SceneTree
 # Exit code 1 on DRIFT or SERVER-ONLY, 0 otherwise. Read-only: unlike
 # export_items.gd it writes nothing. The field map and type names are the
 # exporter's own constants, so the two tools cannot disagree about what the
-# server carries; what the server does NOT carry (description, icon, weight,
+# server carries; what the server does NOT carry (description, icon,
 # the mount fields, augment contents) is client-side by design and never
 # compared.
 

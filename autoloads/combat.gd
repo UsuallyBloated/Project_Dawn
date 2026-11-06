@@ -1,21 +1,10 @@
 extends Node
 
 signal target_changed(enemy)
-signal player_attacked(attacker)
 signal player_hit_enemy(target_name: String, amount: int, is_crit: bool)
 signal player_missed_enemy(target_name: String)
 signal player_evaded_attack(attacker_name: String)
 signal player_took_damage(attacker_name: String, amount: int)
-
-signal enemy_stunned(mob_name: String)
-signal enemy_stun_wore_off(mob_name: String)
-signal enemy_rooted(mob_name: String)
-signal enemy_snared(mob_name: String)
-signal enemy_slowed(mob_name: String)
-signal enemy_mez_applied(mob_name: String)
-signal enemy_mez_broke(mob_name: String)
-signal enemy_charmed_attacked(attacker: String, target: String, amount: int)
-signal enemy_silenced(mob_name: String)
 # Fired when the auto-attack toggle flips. UI subscribers (e.g. a HUD
 # indicator) and combat_log render based on this.
 signal auto_attack_toggled(on: bool)
@@ -28,7 +17,6 @@ const CRIT_PER_DEX            := 0.003
 const CRIT_MAX                := 0.30
 const SPELL_CRIT_PER_INT      := 0.002
 const SPELL_CRIT_MAX          := 0.20
-const DUAL_WIELD_MISS_PENALTY := 0.20
 const OFFHAND_DAMAGE_MULT     := 0.80
 const OFFHAND_DELAY_MULT      := 1.50
 const ARMOR_DR_DIVISOR        := 100.0
@@ -44,7 +32,6 @@ var _auto_attack_timer: Timer
 var _offhand_timer: Timer
 var _player: Node3D = null
 var _last_crit: bool = false
-var god_mode: bool = false
 
 func register_player(node: Node3D) -> void:
 	_player = node
@@ -106,6 +93,9 @@ func set_target(node) -> void:
 		_auto_attack_timer.stop()
 		_offhand_timer.stop()
 	target_changed.emit(current_target)
+	# Tell the server, so the players who can see us draw our target in
+	# their target-of-target frame. 0 means no target.
+	Net.broadcast_set_target(target_server_id(current_target))
 
 func _target_display_name(node) -> String:
 	if node == null:
@@ -123,23 +113,21 @@ func _target_display_name(node) -> String:
 		if pn != null and String(pn) != "":
 			return String(pn)
 	return ""
-	# Track 22.H — broadcast the new target id to the server so peers
-	# can render target-of-target for the local player. Extracts the
-	# id from whichever node type the target is (RemoteEnemy /
-	# RemotePlayer / RemotePet). Solo / Test Room targets have no
-	# server id and broadcast 0 (no-op for peers since there are none).
-	if Net.is_launcher_mode():
-		var tid: int = 0
-		if is_instance_valid(current_target):
-			if "enemy_id" in current_target:
-				tid = current_target.enemy_id
-			elif "char_id" in current_target:
-				tid = current_target.char_id
-			elif "pet_id" in current_target:
-				tid = current_target.pet_id
-		Net.broadcast_set_target(tid)
+
+# The server entity id behind a target node (RemoteEnemy / RemotePlayer /
+# RemotePet), or 0 for none or a node with no server id (an NPC or a corpse).
+func target_server_id(node) -> int:
+	if not is_instance_valid(node):
+		return 0
+	for key in ["enemy_id", "char_id", "pet_id"]:
+		if key in node:
+			return int(node.get(key))
+	return 0
 
 func toggle_auto_attack() -> void:
+	# Switching it on is refused while dead; switching it off never is.
+	if not is_auto_attacking and PlayerDeath.refuse_if_dead():
+		return
 	is_auto_attacking = not is_auto_attacking
 	auto_attack_toggled.emit(is_auto_attacking)
 	_sync_auto_attack_timer()
@@ -173,14 +161,38 @@ func _sync_auto_attack_timer() -> void:
 		_offhand_timer.stop()
 
 func _is_dual_wielding() -> bool:
+	if not can_dual_wield():
+		return false
+	var main_wpn: ItemData = Equipment.equipped.get("weapon")
+	# No off-hand swing beside a two-handed main hand: the server's rule
+	# (`skills::offhand_swing_refusal`); gear worn before 2026-10-29 can
+	# still pair them, and the server would drop every such swing.
+	if main_wpn != null and main_wpn.is_two_handed:
+		return false
 	var oh: ItemData = Equipment.equipped.get("offhand")
-	return oh != null and oh.type == ItemData.Type.WEAPON
+	if oh != null:
+		return oh.type == ItemData.Type.WEAPON
+	# A Monk fights with both fists: with both hands empty the off hand punches.
+	return PlayerStats.player_class == "Monk" and main_wpn == null
+
+# Dual wield is earned at a class's level (WeaponSkillDefinitions.DUAL_WIELD_LEVELS,
+# the server's rule too); a class not listed never dual wields.
+func can_dual_wield() -> bool:
+	var at: int = WeaponSkillDefinitions.DUAL_WIELD_LEVELS.get(PlayerStats.player_class, 0)
+	return at > 0 and PlayerStats.level >= at
 
 func _on_equipment_changed(slot: String, _item) -> void:
 	if slot not in ["weapon", "offhand"] or current_target == null:
 		return
-	# Dual-wield onset/offset honors the auto-attack toggle. Re-syncing
-	# both timers keeps the main + offhand cadence consistent.
+	# A weapon change re-times the swing from the change: the restarted
+	# timers run the NEW weapon's interval, so the first swing after a swap
+	# is a full interval of that weapon later, which is what the server's
+	# swing-rate limit holds it to (it reads the weapon worn at each swing
+	# and carries nothing across a swap; 2026-10-30). Dual-wield onset/offset
+	# honors the auto-attack toggle; re-syncing both timers keeps the main +
+	# offhand cadence consistent.
+	_update_attack_interval()
+	_update_offhand_interval()
 	_sync_auto_attack_timer()
 
 func _on_player_died() -> void:
@@ -224,14 +236,8 @@ func _on_auto_attack() -> void:
 		CombatLog.add_line("Target is out of range.", CombatLog.MsgType.INFO)
 		_update_attack_interval()
 		return
-	var skill_name := _get_weapon_skill_name()
-	WeaponSkills.try_advance(skill_name)
-	var miss_chance := maxf(0.0, WeaponSkills.get_miss_chance(skill_name) - BuffManager.get_accuracy_bonus())
-	if randf() < miss_chance:
-		player_missed_enemy.emit(current_target.mob_name)
-		DamageNumbers.spawn_miss(current_target.global_position)
-		_update_attack_interval()
-		return
+	# The server rolls the miss (combat.rs): every swing goes out, and a miss
+	# comes back as a Miss (RemotePlayerManager draws it).
 	deal_damage_to_target(calc_damage())
 	if is_ranged_weapon and is_instance_valid(current_target):
 		_spawn_arrow_fx(current_target.global_position)
@@ -266,16 +272,7 @@ func _on_offhand_attack() -> void:
 	if dist > MELEE_RANGE:
 		_update_offhand_interval()
 		return
-	var oh: ItemData = Equipment.equipped.get("offhand")
-	var skill_name := oh.weapon_skill if oh.weapon_skill != "" else "1h_slashing"
-	WeaponSkills.try_advance(skill_name)
-	WeaponSkills.try_advance("dual_wield")
-	var miss_chance := minf(0.95, WeaponSkills.get_miss_chance(skill_name) + DUAL_WIELD_MISS_PENALTY - BuffManager.get_accuracy_bonus())
-	if randf() < miss_chance:
-		player_missed_enemy.emit(current_target.mob_name)
-		DamageNumbers.spawn_miss(current_target.global_position)
-		_update_offhand_interval()
-		return
+	# The server rolls the off-hand miss too (see _on_auto_attack).
 	deal_damage_to_target(calc_offhand_damage(), NetProtocol.DamageType.PHYSICAL, true)
 	# Procs are server-authoritative now (see the main-hand note in _on_auto_attack).
 	_update_offhand_interval()
@@ -290,7 +287,7 @@ func calc_offhand_damage() -> int:
 	else:
 		base = randi_range(1, 4) + str_bonus
 	base = int(base * OFFHAND_DAMAGE_MULT)
-	var skill_name := oh.weapon_skill if oh != null and oh.weapon_skill != "" else "1h_slashing"
+	var skill_name := "hand_to_hand" if oh == null or oh.weapon_skill == "" else oh.weapon_skill
 	var skill_mult := WeaponSkills.get_damage_multiplier(skill_name)
 	var crit_chance := clampf((PlayerStats.dexterity - 10) * CRIT_PER_DEX * 0.6 + BuffManager.get_crit_bonus() * 0.6, 0.0, SPELL_CRIT_MAX)
 	_last_crit = randf() < crit_chance
@@ -306,29 +303,13 @@ func _update_offhand_interval() -> void:
 func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.PHYSICAL, is_offhand: bool = false, via_spell: bool = false) -> void:
 	if not is_instance_valid(current_target) or current_target.is_dead:
 		return
-	var target_name: String = ""
-	if "mob_name" in current_target:
-		target_name = current_target.mob_name
-	elif "pet_name" in current_target:
-		target_name = current_target.pet_name
 	var is_crit := _last_crit
 	_last_crit = false
-	var hit_pos: Vector3 = current_target.global_position
-	# Server is authoritative for damage on any remote network entity
-	# (RemotePlayer / RemoteEnemy / RemotePet). For all three the
-	# client suppresses the predictive damage number and chat line —
-	# the server's Hit fan-out drives the visible damage, and a
-	# rejected attack (PvP gate or otherwise) shouldn't leave a
-	# misleading "You hit X" in the log.
-	var target_is_remote := (
-		current_target is RemotePlayer
-		or current_target is RemoteEnemy
-		or current_target is RemotePet
-	)
+	# Server is authoritative for damage on every target (RemotePlayer /
+	# RemoteEnemy / RemotePet): the server's Hit fan-out drives the visible
+	# damage number and chat line, so a rejected attack (PvP gate or
+	# otherwise) leaves no misleading "You hit X" in the log.
 	_apply_damage_to_node(current_target, amount, is_crit, dmg_type, is_offhand, via_spell)
-	if not target_is_remote:
-		player_hit_enemy.emit(target_name, amount, is_crit)
-		DamageNumbers.spawn_damage(hit_pos, amount, is_crit)
 
 # Routes damage to the right authority for `target`:
 #   • RemotePlayer / RemoteEnemy → broadcast Attack (server rolls +
@@ -340,7 +321,6 @@ func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.P
 #       predictive damage (for floating-number flash); the server
 #       ignores it and uses its own roll, then fans the authoritative
 #       Hit with the real number.
-#   • local Enemy    → local take_damage (Test Room single-player path)
 # Centralising the branch keeps deal_damage_to_target, deal_aoe_spell_damage,
 # and the proc handler from diverging when the trust model evolves.
 #
@@ -351,23 +331,22 @@ func deal_damage_to_target(amount: int, dmg_type: int = NetProtocol.DamageType.P
 func _apply_damage_to_node(target: Node, amount: int, is_crit: bool, dmg_type: int, is_offhand: bool = false, via_spell: bool = false) -> void:
 	if not is_instance_valid(target):
 		return
-	if target is RemotePlayer or target is RemoteEnemy or target is RemotePet:
-		if via_spell:
-			return  # CastSpell intent already in flight; server applies.
-		var weapon: ItemData = Equipment.equipped.get("offhand" if is_offhand else "weapon")
-		var weapon_path := ""
-		if weapon != null and weapon.resource_path != "":
-			weapon_path = weapon.resource_path
-		var target_id: int = 0
-		if target is RemotePlayer:
-			target_id = (target as RemotePlayer).char_id
-		elif target is RemoteEnemy:
-			target_id = (target as RemoteEnemy).enemy_id
-		elif target is RemotePet:
-			target_id = (target as RemotePet).pet_id
-		Net.broadcast_attack(target_id, weapon_path, is_offhand, dmg_type)
-	else:
-		target.take_damage(amount)
+	if not (target is RemotePlayer or target is RemoteEnemy or target is RemotePet):
+		return
+	if via_spell:
+		return  # CastSpell intent already in flight; server applies.
+	var weapon: ItemData = Equipment.equipped.get("offhand" if is_offhand else "weapon")
+	var weapon_path := ""
+	if weapon != null and weapon.resource_path != "":
+		weapon_path = weapon.resource_path
+	var target_id: int = 0
+	if target is RemotePlayer:
+		target_id = (target as RemotePlayer).char_id
+	elif target is RemoteEnemy:
+		target_id = (target as RemoteEnemy).enemy_id
+	elif target is RemotePet:
+		target_id = (target as RemotePet).pet_id
+	Net.broadcast_attack(target_id, weapon_path, is_offhand, dmg_type)
 
 func deal_aoe_spell_damage(radius: float, amount: int, damage_type: SpellData.DamageType = SpellData.DamageType.NONE) -> void:
 	if not is_instance_valid(_player):
@@ -431,24 +410,13 @@ func deal_spell_damage(amount: int, damage_type: SpellData.DamageType = SpellDat
 		var nm := _target_display_name(current_target)
 		CombatLog.add_line("%s resists your spell." % (nm if nm != "" else "The target"), CombatLog.MsgType.INFO)
 		return
-	var fx_target: Node = current_target
-	var fx_is_remote := (
-		fx_target is RemotePlayer
-		or fx_target is RemoteEnemy
-		or fx_target is RemotePet
-	)
 	# Spell damage application goes through the server's CastSpell
 	# handler (Spells._apply_spell broadcast). Skip the Attack broadcast
-	# here so the server doesn't apply damage twice. For remote targets
-	# we also defer the elemental flash + impact light until the server
-	# confirms the hit (see RemotePlayerManager._on_hit); otherwise a
-	# PvP-rejected or out-of-range cast still flashes the victim, which
-	# misreads as "spell landed."
+	# here so the server doesn't apply damage twice. The elemental flash +
+	# impact light wait for the server to confirm the hit (see
+	# RemotePlayerManager._on_hit); otherwise a PvP-rejected or out-of-range
+	# cast still flashes the victim, which misreads as "spell landed."
 	deal_damage_to_target(effective, _spell_to_net_damage_type(damage_type), false, true)
-	if not fx_is_remote and is_instance_valid(fx_target):
-		var sc := spell_color(damage_type)
-		fx_target.flash_spell_hit(sc)
-		spawn_impact_light(fx_target.global_position, sc)
 
 func has_valid_target() -> bool:
 	# Track 6 sub-task 3b: PvP targets count too. RemotePlayer lives in
@@ -466,25 +434,13 @@ func has_valid_target() -> bool:
 func receive_player_damage(amount: int, attacker: Node = null, attacker_name: String = "") -> void:
 	if PlayerDeath.is_dead:
 		return
-	if god_mode:
-		return
-	if attacker != null and is_instance_valid(attacker):
-		player_attacked.emit(attacker)
-	Spells.try_interrupt_cast()
-	# Track 22.C — any incoming hit dismounts the rider. Classic-EQ
-	# feel; mounts are travel tools, not combat platforms.
-	MountManager.dismount("hit")
 	if BuffManager.is_evade_boosted():
 		player_evaded_attack.emit(attacker_name if attacker_name != "" else "the attack")
-		WeaponSkills.try_advance("dodge")
 		return
 	var evasion_chance := clampf((PlayerStats.agility - 10) * EVASION_PER_AGI, 0.0, EVASION_MAX)
 	if randf() < evasion_chance:
 		player_evaded_attack.emit(attacker_name if attacker_name != "" else "the attack")
-		WeaponSkills.try_advance("dodge")
 		return
-	WeaponSkills.try_advance("defense")
-	ArmorSkills.try_advance_worn(Equipment.equipped)
 	var armor := Equipment.get_armor_class()
 	var reduction := armor / float(armor + ARMOR_DR_DIVISOR)
 	var was_sitting: bool = is_instance_valid(_player) and _player.state == PlayerCharacter.PlayerState.SITTING
@@ -498,17 +454,13 @@ func receive_player_damage(amount: int, attacker: Node = null, attacker_name: St
 	effective = BuffManager.consume_absorb(effective)
 	if effective <= 0:
 		return
-	# Track 6 fix: in launcher mode the server is authoritative on HP.
-	# Mutating PlayerStats locally without telling the server creates a
-	# desync where peer-view target frames read the (full) server value
-	# while the owner sees the (reduced) local value. Route through
-	# DamageSelf so the server applies, recalculates regen, and fans the
-	# authoritative HealthUpdate back to all peers. Test Room (single-
-	# player) still uses the direct local mutation.
-	if Net.is_launcher_mode():
-		Net.broadcast_damage_self(effective)
-	else:
-		PlayerStats.set_hp(PlayerStats.hp - effective)
+	# Track 6 fix: the server is authoritative on HP. Mutating PlayerStats
+	# locally without telling the server creates a desync where peer-view
+	# target frames read the (full) server value while the owner sees the
+	# (reduced) local value. Route through DamageSelf (a dev command) so the
+	# server applies, recalculates regen, and fans the authoritative
+	# HealthUpdate back to all peers.
+	Net.broadcast_damage_self(effective)
 	player_took_damage.emit(attacker_name if attacker_name != "" else "Something", effective)
 
 func calc_damage() -> int:
@@ -606,9 +558,4 @@ func spawn_impact_light(pos: Vector3, color: Color) -> void:
 	tw.tween_callback(light.queue_free)
 
 func _get_weapon_skill_name() -> String:
-	var weapon: ItemData = Equipment.equipped.get("weapon")
-	if weapon == null:
-		return "hand_to_hand"
-	if weapon.weapon_skill != "":
-		return weapon.weapon_skill
-	return WeaponItemTable.get_skill(weapon.item_name)
+	return WeaponSkills.skill_key_for(Equipment.equipped.get("weapon"))

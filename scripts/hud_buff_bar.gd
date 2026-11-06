@@ -46,12 +46,6 @@ func _on_buffs_changed() -> void:
 		_timer_labels["absorb"] = _add_icon("absorb", absorb_label)
 	if BuffManager.get_evade_remaining() > 0.0:
 		_timer_labels["evade"] = _add_icon("evade", "Evade")
-	var food := BuffManager.get_food_buff()
-	if not food.is_empty():
-		_timer_labels["food"] = _add_icon("food", food.get("buff_name", "Food"))
-	var drink := BuffManager.get_drink_buff()
-	if not drink.is_empty():
-		_timer_labels["drink"] = _add_icon("drink", drink.get("buff_name", "Drink"))
 	var spd := BuffManager.get_speed_buff()
 	if not spd.is_empty():
 		_timer_labels["speed"] = _add_icon("speed", spd.get("buff_name", "SoW"))
@@ -83,8 +77,6 @@ func _add_icon(type: String, spell_name: String) -> Label:
 		"hot":      style.border_color = Color(0.25, 0.65, 0.25)
 		"absorb":   style.border_color = Color(0.30, 0.50, 0.90)
 		"evade":    style.border_color = Color(0.80, 0.70, 0.20)
-		"food":     style.border_color = Color(0.75, 0.45, 0.15)
-		"drink":    style.border_color = Color(0.20, 0.55, 0.80)
 		"speed":    style.border_color = Color(0.40, 0.85, 0.40)
 		"haste":    style.border_color = Color(0.95, 0.85, 0.10)
 		"mp_regen": style.border_color = Color(0.30, 0.50, 1.00)
@@ -132,14 +124,6 @@ func _update_timers() -> void:
 			lbl.text = "%dhp" % int(BuffManager.get_absorb_hp())
 		elif key == "evade":
 			lbl.text = "%ds" % ceili(BuffManager.get_evade_remaining())
-		elif key == "food":
-			var f := BuffManager.get_food_buff()
-			if not f.is_empty():
-				lbl.text = "%ds" % ceili(f.remaining)
-		elif key == "drink":
-			var d := BuffManager.get_drink_buff()
-			if not d.is_empty():
-				lbl.text = "%ds" % ceili(d.remaining)
 		elif key.begins_with("hot:"):
 			var sname: String = key.substr(4)
 			for h in BuffManager.get_hots():

@@ -1,11 +1,9 @@
 extends Node
 
-# The quest journal. In launcher mode (PD_W0024) this is a RENDERER: the
-# server tracks objectives in its own active_quests table, seeds the journal
-# via QuestSnapshot on EnterWorld (so it survives relog/restart), drives
-# progress via QuestProgress, and confirms turn-ins via QuestCompleted /
-# QuestRejected. The local counting paths (notify_kill / notify_collect /
-# auto-complete) survive for the Test Room only.
+# The quest journal, a RENDERER (PD_W0024): the server tracks objectives in
+# its own active_quests table, seeds the journal via QuestSnapshot on
+# EnterWorld (so it survives relog/restart), drives progress via
+# QuestProgress, and confirms turn-ins via QuestCompleted / QuestRejected.
 
 signal quest_added(quest_id: String)
 signal quest_updated(quest_id: String)
@@ -66,51 +64,12 @@ func add_quest(quest_data: Dictionary, from_server: bool = false) -> bool:
 	_quests[id] = q
 	# PD_W0024 — tell the server to start counting (optimistic add: a
 	# QuestRejected reply rolls this entry back via on_server_rejected).
-	if not from_server and Net.is_launcher_mode():
+	if not from_server:
 		Net.accept_quest(id)
 	quest_added.emit(id)
 	return true
 
-func notify_kill(mob_name: String) -> void:
-	# PD_W0024 — the server counts kills online (QuestProgress drives the
-	# journal). Local counting is Test-Room-only; without this gate a stale
-	# server still sending KillCredit would double-count.
-	if Net.is_launcher_mode():
-		return
-	for q in _quests.values():
-		if q["status"] != Status.ACTIVE:
-			continue
-		for obj in q["objectives"]:
-			if obj["done"] or obj["type"] != "kill":
-				continue
-			if obj["target"].to_lower() in mob_name.to_lower() or mob_name.to_lower() in obj["target"].to_lower():
-				obj["count_done"] = mini(obj["count_done"] + 1, obj["count_needed"])
-				obj["text"] = "%s: %d / %d" % [obj["_base_text"], obj["count_done"], obj["count_needed"]]
-				if obj["count_done"] >= obj["count_needed"]:
-					obj["done"] = true
-				quest_updated.emit(q["id"])
-				if _all_objectives_done(q):
-					complete_quest(q["id"])
-
-func notify_collect(item_name: String) -> void:
-	if Net.is_launcher_mode():
-		return  # same authority rule as notify_kill
-	for q in _quests.values():
-		if q["status"] != Status.ACTIVE:
-			continue
-		for obj in q["objectives"]:
-			if obj["done"] or obj["type"] != "collect":
-				continue
-			if obj["target"] == item_name:
-				obj["count_done"] = mini(obj["count_done"] + 1, obj["count_needed"])
-				obj["text"] = "%s: %d / %d" % [obj["_base_text"], obj["count_done"], obj["count_needed"]]
-				if obj["count_done"] >= obj["count_needed"]:
-					obj["done"] = true
-				quest_updated.emit(q["id"])
-				if _all_objectives_done(q):
-					complete_quest(q["id"])
-
-# ── PD_W0024: server-driven journal (launcher mode) ───────────────────────────
+# ── PD_W0024: server-driven journal ───────────────────────────
 
 # Rebuild the journal from the server's authoritative snapshot (sent privately
 # on EnterWorld). Active quests rebuild from QuestDefinitions by id with the
@@ -173,7 +132,7 @@ func apply_server_progress(quest_id: String, objective_index: int, count: int) -
 # XpGained; flag the next XP as quest-sourced so the chat line reads "quest
 # experience" instead of the generic kill/party wording (the server sends
 # QuestCompleted just BEFORE the XpGained, so this lands first). Item rewards
-# stay Test-Room-only until slice B (server-granted items).
+# are the server's and arrive as InventoryDelta.
 func on_server_completed(quest_id: String) -> void:
 	_completed_ids[quest_id] = true
 	PlayerStats.note_next_xp_source("quest")
@@ -221,8 +180,7 @@ func abandon_quest(quest_id: String) -> void:
 	if q["status"] != Status.ACTIVE and q["status"] != Status.READY:
 		return
 	_quests.erase(quest_id)
-	if Net.is_launcher_mode():
-		Net.abandon_quest(quest_id)
+	Net.abandon_quest(quest_id)
 	CombatLog.add_line("Quest abandoned: %s." % q["name"], CombatLog.MsgType.INFO)
 	quest_removed.emit(quest_id)
 
@@ -253,19 +211,6 @@ func _check_ready(q: Dictionary) -> void:
 	CombatLog.add_line("Objectives complete: %s. Return to %s." % [q["name"], where], CombatLog.MsgType.INFO)
 	quest_updated.emit(q["id"])
 
-func complete_objective(quest_id: String, obj_index: int) -> void:
-	if not _quests.has(quest_id):
-		return
-	var q: Dictionary = _quests[quest_id]
-	if q["status"] != Status.ACTIVE:
-		return
-	if obj_index < 0 or obj_index >= q["objectives"].size():
-		return
-	q["objectives"][obj_index]["done"] = true
-	quest_updated.emit(quest_id)
-	if _all_objectives_done(q):
-		complete_quest(quest_id)
-
 func complete_quest(quest_id: String) -> void:
 	if not _quests.has(quest_id):
 		# Already completed on a prior login (no journal entry, only the
@@ -280,29 +225,12 @@ func complete_quest(quest_id: String) -> void:
 		# turn-in gesture never silently does nothing.
 		CombatLog.add_line("You have already completed %s." % q["name"], CombatLog.MsgType.INFO)
 		return
-	# PD_W0024 — in launcher mode this only REQUESTS the turn-in. The server
-	# verifies its own objective counts and answers QuestCompleted (flipped in
+	# PD_W0024 — this only REQUESTS the turn-in. The server verifies its own
+	# objective counts and answers QuestCompleted (flipped in
 	# on_server_completed) or QuestRejected (a visible reason line). Nothing
 	# is granted or flipped optimistically.
-	if Net.is_launcher_mode():
-		if not Net.complete_quest(quest_id):
-			CombatLog.add_line("Cannot turn in %s — not connected." % q["name"], CombatLog.MsgType.INFO)
-		return
-	# Test Room / no-server path: local tier XP + local item grants, as before.
-	# (In launcher mode a client-side item add would be a GHOST item the server
-	# never hears about; server-granted quest items land with slice B.)
-	q["status"] = Status.COMPLETED
-	var xp: int = QuestDefinitions.xp_reward_for(q.get("reward_tier", ""), q.get("level_req", 1))
-	if xp > 0:
-		PlayerStats.gain_xp(xp, "quest")
-	CombatLog.add_line("Quest complete: %s!" % q["name"], CombatLog.MsgType.INFO)
-	for d: Dictionary in q.get("item_rewards", []):
-		var item := _make_reward_item(d)
-		if not Inventory.add_item(item, 1):
-			CombatLog.add_line("Inventory full — could not receive %s." % item.item_name, CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("You receive: %s." % item.item_name, CombatLog.MsgType.INFO)
-	quest_completed.emit(quest_id)
+	if not Net.complete_quest(quest_id):
+		CombatLog.add_line("Cannot turn in %s — not connected." % q["name"], CombatLog.MsgType.INFO)
 
 func get_quest_status(quest_id: String) -> int:
 	if _quests.has(quest_id):
@@ -310,37 +238,6 @@ func get_quest_status(quest_id: String) -> int:
 	if _completed_ids.has(quest_id):
 		return Status.COMPLETED  # completed on the server (e.g. before a relog)
 	return -1   # -1 = not accepted
-
-func _make_reward_item(d: Dictionary) -> ItemData:
-	var item := ItemData.new()
-	item.item_name          = d.get("name", "Unknown")
-	item.description        = d.get("desc", "")
-	item.vendor_price       = d.get("vendor_price", 0)
-	item.bonus_strength     = d.get("bonus_strength", 0)
-	item.bonus_agility      = d.get("bonus_agility", 0)
-	item.bonus_dexterity    = d.get("bonus_dexterity", 0)
-	item.bonus_intelligence = d.get("bonus_intelligence", 0)
-	item.bonus_wisdom       = d.get("bonus_wisdom", 0)
-	item.bonus_constitution = d.get("bonus_constitution", 0)
-	item.bonus_max_hp       = d.get("bonus_max_hp", 0.0)
-	item.bonus_max_mp       = d.get("bonus_max_mp", 0.0)
-	item.bonus_armor        = d.get("bonus_armor", 0)
-	match d.get("type", "MISC"):
-		"WEAPON":  item.type = ItemData.Type.WEAPON
-		"HEAD":    item.type = ItemData.Type.HEAD
-		"CHEST":   item.type = ItemData.Type.CHEST
-		"LEGS":    item.type = ItemData.Type.LEGS
-		"FEET":    item.type = ItemData.Type.FEET
-		"HANDS":   item.type = ItemData.Type.HANDS
-		"RING":    item.type = ItemData.Type.RING
-		"NECK":    item.type = ItemData.Type.NECK
-		_:         item.type = ItemData.Type.MISC
-	match d.get("rarity", "COMMON"):
-		"UNCOMMON": item.rarity = ItemData.Rarity.UNCOMMON
-		"RARE":     item.rarity = ItemData.Rarity.RARE
-		"EPIC":     item.rarity = ItemData.Rarity.EPIC
-		_:          item.rarity = ItemData.Rarity.COMMON
-	return item
 
 func fail_quest(quest_id: String) -> void:
 	if not _quests.has(quest_id):
@@ -365,21 +262,3 @@ func get_completed_quests() -> Array:
 		if q["status"] == Status.COMPLETED:
 			result.append(q)
 	return result
-
-func _all_objectives_done(q: Dictionary) -> bool:
-	for obj in q["objectives"]:
-		if not obj["done"]:
-			return false
-	return true
-
-# ── Save / load (Tier 1 persistence) ──────────────────────────────────────────
-
-func save_state() -> Dictionary:
-	return {"quests": _quests.duplicate(true)}
-
-func load_state(d: Dictionary) -> void:
-	_quests.clear()
-	var saved: Dictionary = d.get("quests", {})
-	for id in saved:
-		_quests[id] = (saved[id] as Dictionary).duplicate(true)
-		quest_added.emit(id)

@@ -89,14 +89,14 @@ var _create_status: Label
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_apply_startup_window_size()
-	# Before the launcher-mode early return below, so no entry path can produce a
+	# Before the launcher-handoff early return below, so no entry path can produce a
 	# login screen without a visible build identity.
 	_build_build_stamp_footer()
 	# Backward compatibility: the standalone launcher is retired, but if someone
 	# still runs it, it starts a world session from CLI args in Net's _ready
 	# before this scene loads. Showing a login form on top of a live session
 	# would be nonsense, so hand straight over to the lobby.
-	if Net.is_launcher_mode():
+	if Net.has_world_session():
 		call_deferred("_goto_lobby")
 		return
 	AuthClient.connected.connect(_on_ws_connected)
@@ -209,6 +209,9 @@ func _build_login_view() -> void:
 	v.add_child(_make_label("Username"))
 	_username_input = LineEdit.new()
 	_username_input.custom_minimum_size = Vector2(0, 36)
+	# Shown only while the box is empty: a first launch on a machine (the last
+	# username is remembered after that).
+	_username_input.placeholder_text = "Enter your user name"
 	v.add_child(_username_input)
 
 	v.add_child(_make_label("Password"))
@@ -241,18 +244,6 @@ func _build_login_view() -> void:
 	register_btn.text = "Register"
 	register_btn.pressed.connect(_on_register_pressed)
 	hb.add_child(register_btn)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = SIZE_EXPAND_FILL
-	hb.add_child(spacer)
-	# Dev escape hatch to the offline lobby (Test Room / local save). Testers
-	# land here on launch and use the account fields above; this is the door to
-	# the single-player flow that used to be what you got by running the game
-	# without the launcher.
-	var offline_btn := Button.new()
-	offline_btn.text = "Offline"
-	offline_btn.tooltip_text = "Single-player Test Room / local save. No account needed."
-	offline_btn.pressed.connect(_on_offline_pressed)
-	hb.add_child(offline_btn)
 
 	_login_status = _make_status()
 	v.add_child(_login_status)
@@ -522,11 +513,6 @@ func _on_register_pressed() -> void:
 
 func _on_password_submitted(_text: String) -> void:
 	_on_login_pressed()
-
-func _on_offline_pressed() -> void:
-	# Straight to the legacy lobby with no session. `Net.is_launcher_mode()` is
-	# false, so the lobby shows its local buttons (Test Room, Solo, dungeon).
-	_goto_lobby()
 
 func _goto_lobby() -> void:
 	get_tree().change_scene_to_file(LOBBY_SCENE)

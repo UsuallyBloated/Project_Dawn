@@ -53,15 +53,18 @@ Blocked: Ogre, Troll, Kel`varath, Half-Ogre.
 **Magician** — All races except Ogre (INT floor too low for arcane study).
 
 **Wizard** — Human, Elf, Dark Elf, Gnome, Dwarf, Half-Elf, Kel`varath, Fae.
+Requires sustained scholarly study over years or decades.
 Blocked: Ogre, Troll (cannot hold the concepts), Wood Elf (oral tradition only), Halfling (no institutional arcane tradition), Minotaur (displaced people, no fixed schools), Felhari (no tradition), Kobold (lifespan too short for meaningful academic completion), Half-Ogre.
 
 **Sorcerer** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Dwarf, Half-Elf, Troll, Kel`varath, Fae, Felhari, Kobold, Half-Ogre.
+Innate power, no training required.
 Blocked: Ogre, Minotaur — the bloodline power exists but manifests as uncontrolled destructive episodes rather than usable magic.
 
 **Enchanter** — Human, Elf, Dark Elf, Wood Elf, Gnome, Halfling, Half-Elf, Fae.
 Blocked: Dwarf, Ogre, Troll, Kel`varath, Minotaur, Felhari, Kobold, Half-Ogre — requires sustained concentration and social intelligence.
 
 **Necromancer** — Human, Dark Elf, Gnome, Ogre, Troll, Kel`varath, Kobold.
+Taboo is absolute among Good-aligned races.
 Blocked: Elf, Halfling, Dwarf (the prohibition is cultural bedrock, not law), Wood Elf, Half-Elf, Minotaur, Fae, Felhari, Half-Ogre.
 
 **Blood Mage** — Human, Dark Elf, Half-Elf, Ogre, Troll, Kel`varath, Kobold, Half-Ogre.

@@ -15,28 +15,28 @@ var available: Array[SpellData] = []
 
 var _casting: SpellData = null
 var _cast_timer: float = 0.0
-var _hit_during_cast: bool = false
-var no_cooldowns: bool = false
 # Seconds left on the global cooldown (0 when none runs).
 var _gcd_remaining: float = 0.0
 
-# How far a targeted spell reaches, in metres. One metre inside the server's
-# RANGED_ATTACK_RANGE (25 m), which is the authority: this check only spares an
-# honest player a wasted cast bar, and the margin keeps position interpolation
-# from turning a cast the client allowed into a server refusal.
-const SPELL_RANGE := 24.0
-# Friendly spells (heals and buffs on another player or a pet) reach further:
-# one metre inside the server's FRIENDLY_SPELL_RANGE (30 m), decided 2026-10-05.
-const FRIENDLY_SPELL_RANGE := 29.0
-# A resurrection's reach to the corpse: the server's RES_CAST_RANGE (30 m). The
-# client runs no check of its own for it (the server reports the refusal);
-# the number is here for the tooltip.
-const CORPSE_SPELL_RANGE := 30.0
+# Each spell reaches its own range (SpellData.reach(), 30 m unless the spell
+# names one; the server's Spell::reach is the authority). The client checks
+# the full reach, the number the tooltip shows, and so does the server: a 30 m
+# spell is out of range at 30.1 (user, 2026-10-27). A target that walks out
+# between the two checks costs a refusal and nothing else.
 # The global cooldown (decided 2026-10-05): after any cast no spell may start
 # for this long, Bard songs excepted (twisting is casting songs back to back).
 # The server's GLOBAL_COOLDOWN is a quarter second shorter (2.0 s), so an
 # honest player who waits this out is never refused; every gem greys meanwhile.
 const GLOBAL_COOLDOWN_SECS := 2.25
+# Line of sight (the height model): a targeted cast needs the caster's and the
+# target's chests, this far above their feet, to see each other over the
+# terrain. The server's LOS_HEIGHT (world/terrain.rs), held equal by
+# tools/check_constant_lockstep.gd; the server's can_see at the release is the
+# rule, this check only spares an honest player the bar and the round trip.
+const LOS_HEIGHT := 1.2
+# The terrain's own physics layer (layer 2, "terrain"): the sight ray asks for
+# it alone, so no body, corpse or bag blocks a line of sight.
+const TERRAIN_LAYER_MASK := 2
 
 # The spell most recently sent to the server, and when. A server refusal
 # (CastFail) arriving within REFUSAL_WINDOW_MSEC of it means that cast never
@@ -70,7 +70,7 @@ func setup_for_class(_player_class: String) -> void:
 	for sname in _all_spells:
 		var spell: SpellData = _all_spells[sname]
 		if spell.allowed_classes.is_empty() or effective in spell.allowed_classes:
-			if current_level >= spell.min_level:
+			if current_level >= spell.required_level(effective):
 				candidates.append(spell)
 	# For ranked spells, keep only the highest accessible rank per base spell.
 	var by_base: Dictionary = {}
@@ -98,23 +98,18 @@ func _get_alignment_effectiveness(player_class: String) -> float:
 	return 1.0
 
 # The reach a spell's tooltip shows, or "" for a spell with no target to reach
-# (self, group-wide, a port, a bind, a summon). All spells of a kind share one
-# reach today (the server has no per-spell range), so this is the kind's
-# number: hostile 24 m, friendly 29 m (to another player or a pet; on yourself
-# there is nothing to reach), a corpse 30 m.
+# (self, group-wide, a port, a bind, a summon): the spell's own reach.
 func spell_range_text(spell: SpellData) -> String:
 	match spell.target_type:
-		SpellData.TargetType.ENEMY, SpellData.TargetType.PET_CHARM:
-			return "%.0f m" % SPELL_RANGE
+		SpellData.TargetType.ENEMY, SpellData.TargetType.PET_CHARM, 		SpellData.TargetType.PET_HEAL, SpellData.TargetType.CORPSE:
+			return "%.0f m" % spell.reach()
 		SpellData.TargetType.ALLY:
-			return "%.0f m to others" % FRIENDLY_SPELL_RANGE
-		SpellData.TargetType.PET_HEAL:
-			return "%.0f m" % FRIENDLY_SPELL_RANGE
-		SpellData.TargetType.CORPSE:
-			return "%.0f m" % CORPSE_SPELL_RANGE
+			return "%.0f m to others" % spell.reach()
 	return ""
 
 func cast_spell(spell: SpellData) -> bool:
+	if PlayerDeath.refuse_if_dead():
+		return false
 	if _casting != null:
 		return false
 	# Casting stands a seated caster, as it does on the server (spell batch
@@ -126,12 +121,18 @@ func cast_spell(spell: SpellData) -> bool:
 		var me := get_tree().get_first_node_in_group("player")
 		if me != null and me.has_method("stand"):
 			me.stand()
-	if _cooldowns.is_active(spell.spell_name) and not no_cooldowns:
+	# The song being sung, sung again, is stopped: online the server pulses
+	# it, so stopping is a message (instant, no bar), and it says so in chat.
+	if spell.is_song and BardSongs.get_active_song() == spell:
+		if Net.stop_song():
+			BardSongs.stop_singing()
+		return false
+	if _cooldowns.is_active(spell.spell_name):
 		spell_failed.emit("Spell is on cooldown.")
 		return false
 	# The global cooldown: a refusal here costs nothing (no bar, no mana), where
 	# the server's own gate at CastStart would answer with a CastFail.
-	if _gcd_remaining > 0.0 and not spell.is_song and not no_cooldowns:
+	if _gcd_remaining > 0.0 and not spell.is_song:
 		spell_failed.emit("You cannot cast again yet.")
 		return false
 	if PlayerStats.mp < spell.mana_cost:
@@ -150,20 +151,19 @@ func cast_spell(spell: SpellData) -> bool:
 		#      gate rejects after the cast. If local /pvp is on but the
 		#      peer's flag is off, the cast must still proceed because
 		#      peer state is server-only.
-		if Net.is_launcher_mode():
-			var t = Combat.current_target
-			if t is RemotePet and (t as RemotePet).owner_id == Net.get_player_id():
-				spell_failed.emit("You cannot attack your own pet.")
+		var t = Combat.current_target
+		if t is RemotePet and (t as RemotePet).owner_id == Net.get_player_id():
+			spell_failed.emit("You cannot attack your own pet.")
+			return false
+		if not Net.is_local_pvp_on():
+			var t_is_pvp_target := false
+			if t is RemotePlayer:
+				t_is_pvp_target = (t as RemotePlayer).char_id != Net.get_player_id()
+			elif t is RemotePet:
+				t_is_pvp_target = (t as RemotePet).owner_id != Net.get_player_id()
+			if t_is_pvp_target:
+				spell_failed.emit("PvP is off. Type /pvp on to attack other players.")
 				return false
-			if not Net.is_local_pvp_on():
-				var t_is_pvp_target := false
-				if t is RemotePlayer:
-					t_is_pvp_target = (t as RemotePlayer).char_id != Net.get_player_id()
-				elif t is RemotePet:
-					t_is_pvp_target = (t as RemotePet).owner_id != Net.get_player_id()
-				if t_is_pvp_target:
-					spell_failed.emit("PvP is off. Type /pvp on to attack other players.")
-					return false
 	# ALLY beneficial-cast pre-check (heals AND buffs). Mirrors the
 	# damage-cast pre-check above so the cast bar doesn't run + mana
 	# isn't spent when the server's PvP gate would refuse. Triggers when
@@ -172,7 +172,7 @@ func cast_spell(spell: SpellData) -> bool:
 	# would land) but in practice a /pvp-on caster shouldn't be buffing
 	# or healing a hostile-tinted target anyway.
 	if spell.target_type == SpellData.TargetType.ALLY:
-		if Net.is_launcher_mode() and Net.is_local_pvp_on():
+		if Net.is_local_pvp_on():
 			var t = Combat.current_target
 			if t is RemotePet:
 				var ownr := (t as RemotePet).owner_id
@@ -191,42 +191,22 @@ func cast_spell(spell: SpellData) -> bool:
 
 	# Reach. The server refuses a targeted cast beyond its range (and charges
 	# nothing for it), but checking here first means the cast bar never runs.
-	if Net.is_launcher_mode() and _target_out_of_reach(spell):
+	if _target_out_of_reach(spell):
 		spell_failed.emit("Your target is too far away.")
 		return false
+	# Sight, the server's line: the same targets as the reach check.
+	if _target_out_of_sight(spell):
+		spell_failed.emit("You cannot see your target.")
+		return false
 
-	if spell.target_type == SpellData.TargetType.PORT:
-		var is_gate        := spell.port_zone_path.is_empty() and spell.port_entry_id.is_empty()
-		var is_same_zone   := spell.port_zone_path.is_empty() and not spell.port_entry_id.is_empty()
-		if Net.is_launcher_mode():
-			# Online the server owns the bind and every destination (spell
-			# batch step 2): Gate always has somewhere to go (every character
-			# is bound from birth), Succor and Evacuate land at the nearest
-			# safe area, and the zone ports have no zones to go to yet, so
-			# they refuse here before any mana is spent.
-			if not spell.port_zone_path.is_empty():
-				spell_failed.emit("%s isn't available online yet." % spell.spell_name)
-				return false
-		else:
-			if is_gate and PlayerStats.bind_zone_path.is_empty():
-				spell_failed.emit("You have no bind point. Cast Bind Affinity first.")
-				return false
-			if is_same_zone and ZoneLoader.current_zone_path.is_empty():
-				spell_failed.emit("Cannot port — no zone loaded.")
-				return false
-			if not spell.port_zone_path.is_empty() and not FileAccess.file_exists(spell.port_zone_path):
-				spell_failed.emit("That destination has not yet been discovered.")
-				return false
-
-	# Online the server decides where a bind may land (anywhere for yourself,
-	# a safe area for a group member); these zone checks are the offline game's.
-	if spell.target_type == SpellData.TargetType.BIND and not Net.is_launcher_mode():
-		if ZoneLoader.current_zone_path.is_empty():
-			spell_failed.emit("You cannot bind here.")
-			return false
-		if ZoneLoader.current_zone_path in ZoneData.NON_BINDABLE_ZONES:
-			spell_failed.emit("The magic will not anchor here.")
-			return false
+	# The server owns the bind and every destination (spell batch step 2):
+	# Gate always has somewhere to go (every character is bound from birth),
+	# Succor and Evacuate land at the nearest safe area, and the zone ports have
+	# no zones to go to yet, so they refuse here before any mana is spent. The
+	# server also decides where a bind may land.
+	if spell.target_type == SpellData.TargetType.PORT and not spell.port_zone_path.is_empty():
+		spell_failed.emit("%s isn't available online yet." % spell.spell_name)
+		return false
 
 	# Slice 3 — a resurrection needs a corpse targeted. Gate before the mana spend
 	# + cast bar (mirrors the ENEMY gate) so a mis-cast doesn't burn a long res cast.
@@ -240,7 +220,6 @@ func cast_spell(spell: SpellData) -> bool:
 	if spell.cast_time > 0.0:
 		_casting = spell
 		_cast_timer = spell.cast_time
-		_hit_during_cast = false
 		casting_started.emit(spell)
 	else:
 		_apply_spell(spell)
@@ -254,6 +233,11 @@ func cast_by_index(index: int) -> bool:
 func is_casting() -> bool:
 	return _casting != null
 
+# A song is sung on the move (Selos' is a running song), so the movement
+# cancel in player.gd leaves a song's bar alone; the server's gate does too.
+func casting_is_song() -> bool:
+	return _casting != null and _casting.is_song
+
 func cancel_cast() -> void:
 	if _casting == null:
 		return
@@ -263,33 +247,14 @@ func cancel_cast() -> void:
 	# record and would linger until the next server ManaUpdate overwrote it.
 	# Same principle as the server's unknown-spell refund: hand back what was
 	# never really taken. Applies to every cancel path (deliberate stop,
-	# server CastFail) and offline alike. One exception online (spell batch
-	# step 3): a cast that a HIT interrupts costs part of its mana server-side,
+	# server CastFail). One exception (spell batch step 3): a cast that a HIT
+	# interrupts costs part of its mana server-side,
 	# and the server's ManaUpdate arrives right behind the CastFail to settle
 	# the bar on the true value; the refund here is just the first frame.
 	PlayerStats.set_mp(minf(PlayerStats.mp + _casting.mana_cost, PlayerStats.max_mp))
 	_casting = null
 	_cast_timer = 0.0
-	_hit_during_cast = false
 	casting_cancelled.emit()
-
-# Called by combat when the player takes a hit during a cast.
-# Uses Channeling skill to determine whether the cast is interrupted or survives.
-#
-# Track 19A — in launcher mode the server owns the roll and fans
-# CastFail("interrupted (hit during cast)") on a successful interrupt
-# (RemotePlayerManager._on_cast_fail handles the local cancel).
-# Channeling advance also lives server-side. So this is a no-op in
-# launcher mode; solo / Test Room keeps the local roll.
-func try_interrupt_cast() -> void:
-	if Net.is_launcher_mode():
-		return
-	if _casting == null:
-		return
-	if randf() < CastingSkills.get_interrupt_chance():
-		cancel_cast()
-	else:
-		_hit_during_cast = true
 
 func is_on_cooldown(spell_name: String) -> bool:
 	return _cooldowns.is_active(spell_name)
@@ -307,14 +272,13 @@ func get_global_cooldown_remaining() -> float:
 func get_spell_by_name(n: String) -> SpellData:
 	return _all_spells.get(n, null)
 
+# The server owns the interrupt roll on a hit during a cast (Track 19A): it fans
+# CastFail("interrupted (hit during cast)"), RemotePlayerManager cancels the bar
+# here, and channeling advances server-side.
 func _finish_cast() -> void:
 	var spell := _casting
-	var was_hit := _hit_during_cast
 	_casting = null
 	_cast_timer = 0.0
-	_hit_during_cast = false
-	if was_hit:
-		CastingSkills.try_advance("channeling")
 	_apply_spell(spell)
 
 func _apply_spell(spell: SpellData) -> void:
@@ -325,7 +289,7 @@ func _apply_spell(spell: SpellData) -> void:
 	# authoritative value. Spells not in the server's spells.toml fall
 	# through silently (the server logs at debug); only the local
 	# effects land. target_id = 0 encodes "no target" for SELF.
-	if Net.is_launcher_mode() and Net.is_app_ready():
+	if Net.is_app_ready():
 		Net.broadcast_cast_spell(spell.spell_name, _cast_target_id(spell))
 		_sent_spell_name = spell.spell_name
 		_sent_at_msec = Time.get_ticks_msec()
@@ -333,13 +297,10 @@ func _apply_spell(spell: SpellData) -> void:
 	_cooldowns.start(spell.spell_name, spell.cooldown)
 	# The global cooldown starts as the cast lands (the server stamps its own
 	# when it accepts the CastSpell); a song starts none.
-	if not spell.is_song and not no_cooldowns:
+	if not spell.is_song:
 		_gcd_remaining = GLOBAL_COOLDOWN_SECS
 		global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
 	var effectiveness := _get_alignment_effectiveness(PlayerStats.player_class)
-	var dmg_mult    := CastingSkills.get_damage_mult(spell.discipline)
-	var dur_mult    := CastingSkills.get_duration_mult(spell.discipline)
-	var absorb_mult := CastingSkills.get_absorb_mult(spell.discipline)
 	# ALLY beneficial spells cast on a remote recipient (peer OR pet) are
 	# applied by the server, which fans the authoritative result back; skip
 	# the local mutation so we don't double-apply or buff the caster instead
@@ -347,58 +308,28 @@ func _apply_spell(spell: SpellData) -> void:
 	var ally_remote := _ally_target_is_remote(spell)
 
 	if spell.target_type == SpellData.TargetType.ENEMY:
-		Combat.deal_spell_damage(int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness * dmg_mult), spell.damage_type)
+		Combat.deal_spell_damage(int(spell.base_damage * effectiveness), spell.damage_type)
 
 	if spell.target_type == SpellData.TargetType.AOE:
 		Combat.deal_aoe_spell_damage(
 			spell.aoe_radius,
-			int((spell.base_damage + PlayerStats.intelligence * 0.5) * effectiveness * dmg_mult),
+			int(spell.base_damage * effectiveness),
 			spell.damage_type)
 
-	if spell.target_type == SpellData.TargetType.PET_SUMMON:
-		PetManager.summon(spell.pet_type)
-
-	if spell.target_type == SpellData.TargetType.PET_CHARM:
-		PetManager.charm_current_target(spell.duration)
-
-	if spell.target_type == SpellData.TargetType.PET_HEAL:
-		WarderAI.heal_warder(spell.heal_amount + PlayerStats.wisdom * 0.3)
-
-	# In launcher mode the server applies the self-heal and the hp-cost
-	# authoritatively and fans HealthUpdate; applying them locally too makes the
-	# HP bar jump to a client-predicted value (the local heal adds WIS + alignment
-	# effectiveness the server's flat heal omits) and then snap back down a
-	# HealthUpdate later — the "bouncing" health bar. Skip the local self-HP
-	# writes in launcher mode, matching regen.gd and the HoT tick; Test Room
-	# (no server) keeps the instant local effect.
-	var server_owns_hp := Net.is_launcher_mode()
-
-	if spell.heal_amount > 0.0 and spell.target_type != SpellData.TargetType.PET_HEAL:
-		if not ally_remote and not server_owns_hp:
-			var heal := (spell.heal_amount + PlayerStats.wisdom * 0.3) * effectiveness
-			PlayerStats.set_hp(PlayerStats.hp + heal)
-
-	if spell.hp_cost > 0.0 and not server_owns_hp:
-		PlayerStats.set_hp(PlayerStats.hp - spell.hp_cost)
-
-	if spell.dot_dps > 0.0 and spell.dot_duration > 0.0:
-		# Online the server owns the DoT (spell batch step 5): it ticks every
-		# three seconds there, fans the hit, the bar and the caster's named
-		# line, and shows in the target frame; nothing runs here. Offline keeps
-		# the local BuffManager DoT on the local enemy node.
-		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and not Net.is_launcher_mode() and not (Combat.current_target is RemotePlayer or Combat.current_target is RemotePet):
-			BuffManager.add_dot(Combat.current_target, spell.dot_dps * effectiveness,
-				spell.dot_duration * dur_mult, spell.spell_name)
+	# The server owns pets (summon, charm, Warder's Mend), the caster's own
+	# heal and hp cost (applied here too, they made the HP bar jump and snap
+	# back: the "bouncing" health bar), and damage over time (spell batch step
+	# 5). Their results arrive as PetSpawn, HealthUpdate and Hit messages.
 
 	if spell.hot_hps > 0.0 and spell.hot_duration > 0.0:
 		if not ally_remote:
-			BuffManager.add_hot(spell.hot_hps * effectiveness, spell.hot_duration * dur_mult, spell.spell_name)
+			BuffManager.add_hot(spell.hot_hps * effectiveness, spell.hot_duration, spell.spell_name)
 
 	if spell.absorb_amount > 0.0 and not ally_remote:
-		BuffManager.add_absorb(spell.absorb_amount * effectiveness * absorb_mult, spell.spell_name)
+		BuffManager.add_absorb(spell.absorb_amount * effectiveness, spell.spell_name)
 
 	if spell.damage_shield_amount > 0.0 and spell.damage_shield_duration > 0.0 and not ally_remote:
-		BuffManager.add_damage_shield(spell.damage_shield_amount * effectiveness, spell.damage_shield_duration * dur_mult, spell.spell_name)
+		BuffManager.add_damage_shield(spell.damage_shield_amount * effectiveness, spell.damage_shield_duration, spell.spell_name)
 
 	# Track 6 sub-task 3b: CC / snare / silence / dispel only fire on
 	# enemy NPC targets that expose the matching methods. RemotePlayer
@@ -407,52 +338,49 @@ func _apply_spell(spell: SpellData) -> void:
 	# while documenting the gap.
 	if spell.cc_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("mesmerize"):
-			Combat.current_target.mesmerize(spell.cc_duration * dur_mult)
+			Combat.current_target.mesmerize(spell.cc_duration)
 
 	if spell.root_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("root"):
-			Combat.current_target.root(spell.root_duration * dur_mult)
+			Combat.current_target.root(spell.root_duration)
 
 	if spell.slow_amount > 0.0 and spell.slow_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("snare"):
-			Combat.current_target.snare(spell.slow_amount, spell.slow_duration * dur_mult)
+			Combat.current_target.snare(spell.slow_amount, spell.slow_duration)
 
 	if spell.attack_slow_amount > 0.0 and spell.attack_slow_duration > 0.0:
 		if spell.target_type == SpellData.TargetType.ENEMY and Combat.has_valid_target() and Combat.current_target.has_method("apply_attack_slow"):
-			Combat.current_target.apply_attack_slow(spell.attack_slow_amount, spell.attack_slow_duration * dur_mult)
+			Combat.current_target.apply_attack_slow(spell.attack_slow_amount, spell.attack_slow_duration)
 
 	if spell.primary_stat_buff_duration > 0.0 and not ally_remote:
 		BuffManager.add_primary_stat_buff(
 			spell.str_buff, spell.agi_buff, spell.int_buff,
 			spell.wis_buff, spell.con_buff,
 			spell.max_hp_buff, spell.max_mp_buff,
-			spell.primary_stat_buff_duration * dur_mult, spell.spell_name)
+			spell.primary_stat_buff_duration, spell.spell_name)
 
-	# Online the server binds and ports (spell batch step 2): its Teleport and
-	# its chat line are the result, so nothing runs here (Gate used to reload
-	# the whole scene and Bind Affinity printed a bind only the client
-	# believed in). Offline keeps the local zone travel and bind.
-	if not Net.is_launcher_mode():
-		if spell.target_type == SpellData.TargetType.PORT:
-			_execute_port(spell)
-		if spell.target_type == SpellData.TargetType.BIND:
-			_execute_bind()
+	# The server binds and ports (spell batch step 2): its Teleport and its
+	# chat line are the result, so nothing runs here.
 
 	if not spell.is_song:
 		if spell.move_speed_mult > 0.0 and spell.move_speed_duration > 0.0 and not ally_remote:
-			BuffManager.add_speed_buff(spell.move_speed_mult, spell.move_speed_duration * dur_mult, spell.spell_name)
+			BuffManager.add_speed_buff(spell.move_speed_mult, spell.move_speed_duration, spell.spell_name)
 
 		if spell.mp_regen_hps > 0.0 and spell.mp_regen_duration > 0.0 and not ally_remote:
-			BuffManager.add_mp_regen_buff(spell.mp_regen_hps * effectiveness, spell.mp_regen_duration * dur_mult, spell.spell_name)
+			BuffManager.add_mp_regen_buff(spell.mp_regen_hps * effectiveness, spell.mp_regen_duration, spell.spell_name)
 
-		if spell.haste_amount > 0.0 and spell.haste_duration > 0.0 and not ally_remote:
-			BuffManager.add_haste_buff(spell.haste_amount, spell.haste_duration * dur_mult, spell.spell_name)
+		# Haste waits for the server's BuffSnapshot (reconstructed from it like
+		# a buff someone else cast): the server paces the swing limit by the
+		# haste IT holds, so a haste applied here at the release and then
+		# refused by the server would have the client swinging faster than the
+		# server allows, every second swing dropped for the buff's length (the
+		# 2026-10-30 review).
 
 		if (spell.accuracy_buff > 0.0 or spell.crit_buff > 0.0) and not ally_remote:
-			BuffManager.add_stat_buff(spell.accuracy_buff, spell.crit_buff, spell.stat_buff_duration * dur_mult, spell.spell_name)
+			BuffManager.add_stat_buff(spell.accuracy_buff, spell.crit_buff, spell.stat_buff_duration, spell.spell_name)
 
 	if spell.is_stealth:
-		BuffManager.add_stealth(spell.stealth_duration * dur_mult, spell.spell_name)
+		BuffManager.add_stealth(spell.stealth_duration, spell.spell_name)
 
 	if spell.is_dispel:
 		if Combat.has_valid_target() and Combat.current_target.has_method("strip_one_buff"):
@@ -464,10 +392,10 @@ func _apply_spell(spell: SpellData) -> void:
 
 	if spell.silence_duration > 0.0:
 		if Combat.has_valid_target() and Combat.current_target.has_method("silence"):
-			Combat.current_target.silence(spell.silence_duration * dur_mult)
+			Combat.current_target.silence(spell.silence_duration)
 
 	if spell.is_lich_form:
-		BuffManager.toggle_lich_form(spell.lich_mp_regen)
+		BuffManager.toggle_lich_form()
 
 	if spell.mana_drain > 0.0:
 		# Mana drain (Exsanguinate) needs take_damage on the target;
@@ -475,21 +403,20 @@ func _apply_spell(spell: SpellData) -> void:
 		# via CastSpell). Caster still gets the mana, but the damage
 		# applies through the server's spell handler.
 		if Combat.has_valid_target() and Combat.current_target.has_method("take_damage"):
-			var drained := minf(spell.mana_drain * effectiveness * dmg_mult, Combat.current_target.hp)
+			var drained := minf(spell.mana_drain * effectiveness, Combat.current_target.hp)
 			Combat.current_target.take_damage(int(drained))
 			PlayerStats.set_mp(PlayerStats.mp + drained)
 			CombatLog.add_line("You drain %d life from %s into mana." % [int(drained), Combat.current_target.mob_name], CombatLog.MsgType.INFO)
 		elif Combat.has_valid_target():
-			PlayerStats.set_mp(PlayerStats.mp + spell.mana_drain * effectiveness * dmg_mult)
+			PlayerStats.set_mp(PlayerStats.mp + spell.mana_drain * effectiveness)
 
 	if spell.is_song:
 		BardSongs.activate_song(spell)
+	else:
+		BardSongs.on_non_song_cast()
 
 	if spell.target_type in [SpellData.TargetType.ENEMY, SpellData.TargetType.AOE]:
 		BuffManager.break_stealth()
-
-	if spell.discipline != "":
-		CastingSkills.try_advance(spell.discipline)
 
 	spell_cast.emit(spell)
 
@@ -526,27 +453,47 @@ func _cast_target_id(spell: SpellData) -> int:
 		return (t as RemotePet).pet_id
 	return 0
 
-# True when `spell` needs a target within SPELL_RANGE and the current target
-# is further than that. Only the cases the server range-checks: an ENEMY or
-# PET_CHARM spell on its target, and an ALLY spell aimed at another player or a
-# pet (an ALLY spell with anything else targeted falls back to the caster, so
-# it has no reach to check).
-func _target_out_of_reach(spell: SpellData) -> bool:
+# The target and the caster of a cast the client checks for reach and sight,
+# or [] when there is nothing to check. Only the cases the server range-checks
+# and sight-checks: an ENEMY or PET_CHARM spell on its target, and an ALLY
+# spell aimed at another player or a pet (an ALLY spell with anything else
+# targeted falls back to the caster, so it has nothing to check). A corpse, a
+# pet heal and a bind on another get the server's refusal a round trip later.
+func _checked_target(spell: SpellData) -> Array[Node3D]:
 	var ranged := spell.target_type == SpellData.TargetType.ENEMY \
 			or spell.target_type == SpellData.TargetType.PET_CHARM \
 			or _ally_target_is_remote(spell)
 	if not ranged:
-		return false
+		return []
 	var t = Combat.current_target
 	if t == null or not is_instance_valid(t) or not (t is Node3D):
-		return false
+		return []
 	var me := get_tree().get_first_node_in_group("player") as Node3D
 	if me == null:
-		return false
-	var reach := FRIENDLY_SPELL_RANGE if spell.target_type == SpellData.TargetType.ALLY else SPELL_RANGE
-	return me.global_position.distance_to((t as Node3D).global_position) > reach
+		return []
+	return [me, t as Node3D]
 
-# Launcher mode: the server refused a cast that had ALREADY completed here
+# True when the target of a checked cast is further than the spell reaches.
+func _target_out_of_reach(spell: SpellData) -> bool:
+	var pair := _checked_target(spell)
+	if pair.is_empty():
+		return false
+	return pair[0].global_position.distance_to(pair[1].global_position) > spell.reach()
+
+# True when the terrain stands between the caster and the target of a checked
+# cast. Both ends are the feet raised by LOS_HEIGHT, as the server's can_see
+# raises them; the ray asks for the terrain layer alone.
+func _target_out_of_sight(spell: SpellData) -> bool:
+	var pair := _checked_target(spell)
+	if pair.is_empty():
+		return false
+	var up := Vector3(0.0, LOS_HEIGHT, 0.0)
+	var params := PhysicsRayQueryParameters3D.create(
+		pair[0].global_position + up, pair[1].global_position + up, TERRAIN_LAYER_MASK)
+	params.collide_with_areas = false
+	return not pair[0].get_world_3d().direct_space_state.intersect_ray(params).is_empty()
+
+# The server refused a cast that had ALREADY completed here
 # (target out of reach or gone, a spell the server has no effect for). It took
 # no mana and stamped no cooldown, so the cooldown this client started when it
 # sent the cast is dropped; the server's ManaUpdate corrects the mana. Does
@@ -562,53 +509,34 @@ func on_server_cast_refused() -> void:
 		global_cooldown_updated.emit(0.0, GLOBAL_COOLDOWN_SECS)
 	_sent_spell_name = ""
 
+# The server FIZZLED the cast (EQ's roll, at the start of a
+# timed cast or the release of an instant one). Unlike a refusal, a fizzle
+# starts the gem's refresh on the server, so the global cooldown runs here too
+# and every gem greys for it; it used to be cleared with the refusal's, and the
+# next click met the server's "You cannot cast again yet." (seen in the journal
+# 2026-10-27). The spell's own cooldown is dropped as for a refusal, since the
+# server stamps none on a fizzle, and a running bar is cancelled (its mana
+# comes back here; the server's ManaUpdate then settles the quarter it burned).
+func on_server_fizzle() -> void:
+	if _sent_spell_name != "":
+		_cooldowns.clear(_sent_spell_name)
+		_sent_spell_name = ""
+	cancel_cast()
+	_gcd_remaining = GLOBAL_COOLDOWN_SECS
+	global_cooldown_updated.emit(_gcd_remaining, GLOBAL_COOLDOWN_SECS)
+
 # True when an ALLY-target spell is being cast on a remote recipient (peer
 # or pet) the server — not the client — applies it to. The caster skips its
 # local BuffManager / heal mutation; the server fans the authoritative
 # result back (the recipient reconstructs a player buff from the
 # BuffSnapshot; pets are server-authoritative throughout).
 func _ally_target_is_remote(spell: SpellData) -> bool:
-	if spell.target_type != SpellData.TargetType.ALLY or not Net.is_launcher_mode():
+	if spell.target_type != SpellData.TargetType.ALLY:
 		return false
 	var t = Combat.current_target
 	if t == null or not is_instance_valid(t):
 		return false
 	return t is RemotePlayer or t is RemotePet
-
-func _execute_bind() -> void:
-	var zone_path := ZoneLoader.current_zone_path
-	if zone_path.is_empty():
-		spell_failed.emit("You cannot bind here.")
-		return
-	if zone_path in ZoneData.NON_BINDABLE_ZONES:
-		spell_failed.emit("The magic will not anchor here.")
-		return
-	# TODO: when multiplayer RPC is wired, check GroupManager for a valid grouped
-	# player target and call set_bind_point on them via RPC instead.
-	PlayerStats.set_bind_point(zone_path, "default", ZoneLoader.current_zone_name)
-	CombatLog.add_line("You are now bound to %s." % ZoneLoader.current_zone_name, CombatLog.MsgType.INFO)
-
-func _execute_port(spell: SpellData) -> void:
-	var zone_path := spell.port_zone_path
-	var entry_id  := spell.port_entry_id
-	var zone_name := spell.port_zone_name
-
-	if zone_path.is_empty() and entry_id.is_empty():
-		zone_path = PlayerStats.bind_zone_path
-		entry_id  = PlayerStats.bind_entry_id
-		zone_name = PlayerStats.bind_zone_name
-	elif zone_path.is_empty():
-		zone_path = ZoneLoader.current_zone_path
-		zone_name = ZoneLoader.current_zone_name
-
-	if zone_path.is_empty():
-		spell_failed.emit("No destination zone available.")
-		return
-
-	if spell.port_is_group and GroupManager.in_group:
-		CombatLog.add_line("Porting group — multiplayer RPC not yet wired.", CombatLog.MsgType.INFO)
-
-	ZoneLoader.travel_to(zone_path, entry_id, zone_name)
 
 func _on_level_changed(_level: int) -> void:
 	setup_for_class(PlayerStats.player_class)
@@ -665,7 +593,12 @@ func _load_spells() -> void:
 		s.damage_shield_amount   = d.get("damage_shield_amount", 0.0)
 		s.damage_shield_duration = d.get("damage_shield_duration", 0.0)
 		s.is_song             = d.get("is_song", false)
+		s.song_scale_at_learn = d.get("song_scale_at_learn", 0.0)
 		s.min_level           = d.get("min_level", 1)
+		s.class_min_levels    = d.get("class_min_levels", {})
+		s.summon_item         = d.get("summon_item", "")
+		s.summon_max          = int(d.get("summon_max", 0))
+		s.range               = float(d.get("range", 0.0))
 		s.str_buff                  = d.get("str_buff", 0)
 		s.agi_buff                  = d.get("agi_buff", 0)
 		s.int_buff                  = d.get("int_buff", 0)
@@ -711,4 +644,5 @@ func _parse_target_type(s: String) -> SpellData.TargetType:
 		"BIND":       return SpellData.TargetType.BIND
 		"AOE":        return SpellData.TargetType.AOE
 		"CORPSE":     return SpellData.TargetType.CORPSE
+		"SUMMON_ITEM": return SpellData.TargetType.SUMMON_ITEM
 	return SpellData.TargetType.NONE

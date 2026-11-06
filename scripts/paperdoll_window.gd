@@ -193,9 +193,8 @@ func _on_slot_input(event: InputEvent, slot_name: String) -> void:
 	var mb := event as InputEventMouseButton
 	if mb.button_index == MOUSE_BUTTON_RIGHT:
 		# Track 15.1 — Equipment.request_unequip routes through
-		# Net.broadcast_unequip_item in launcher mode (picking the
-		# first empty base slot as dst). Legacy unequip path runs in
-		# solo / Test Room mode.
+		# Net.broadcast_unequip_item (picking the first empty base slot
+		# as dst).
 		Equipment.request_unequip(slot_name)
 		_tooltip_panel.visible = false
 		return
@@ -210,43 +209,7 @@ func _on_slot_input(event: InputEvent, slot_name: String) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		# PD_W0027 slice 1.5 — empty hand: lift the worn item onto the cursor.
-		if Net.is_launcher_mode() and Equipment.equipped.get(slot_name) != null:
+		if Equipment.equipped.get(slot_name) != null:
 			Equipment.request_unequip_to_cursor(slot_name)
 			_tooltip_panel.visible = false
 			get_viewport().set_input_as_handled()
-			return
-		# Drop-equip: if the user has an inventory drag in flight and
-		# clicks a paperdoll slot, route the held item through
-		# Equipment.request_equip_from with the clicked slot as the
-		# target hint. Source location/slot come from the inventory
-		# window's shared drag state.
-		var inv_win = _find_inventory_window()
-		if inv_win == null or inv_win.drag_item == null:
-			return
-		var item: ItemData = inv_win.drag_item
-		var src_loc: String = NetProtocol.INV_LOCATION_BASE if inv_win.drag_source_bi == -1 \
-			else NetProtocol.inv_location_bag(inv_win.drag_source_bi)
-		var src_slot: int = inv_win.drag_source_si
-		if Equipment.request_equip_from(src_loc, src_slot, item, slot_name):
-			inv_win.cancel_drag()
-		_tooltip_panel.visible = false
-		get_viewport().set_input_as_handled()
-
-func _find_inventory_window() -> Node:
-	# Inventory window isn't grouped; walk the scene tree once. Cheap
-	# (~10 top-level UI nodes); avoids hard-coding a path that breaks
-	# when the HUD reshapes.
-	var root: Node = get_tree().current_scene
-	if root == null:
-		return null
-	return _scan_for_inventory_window(root)
-
-func _scan_for_inventory_window(node: Node) -> Node:
-	var s: Script = node.get_script() as Script
-	if s != null and s.resource_path.ends_with("inventory_window.gd"):
-		return node
-	for c in node.get_children():
-		var found: Node = _scan_for_inventory_window(c)
-		if found != null:
-			return found
-	return null

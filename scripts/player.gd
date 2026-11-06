@@ -5,6 +5,13 @@ const SPEED = 5.0
 const CROUCH_SPEED = 2.5
 const GRAVITY = -20.0
 const JUMP_VELOCITY = 7.0
+# The floor the body keeps (its snap down to it) and the steepest slope it
+# walks. The server's fall model carries the same numbers with GRAVITY
+# (crates/projectdawn-server/src/world/fall.rs), held in lockstep by
+# tools/check_constant_lockstep.gd: it decides where a body leaves the ground
+# and what the landing costs; the body here only draws the fall.
+const FLOOR_MAX_ANGLE_DEG = 55.0
+const FLOOR_SNAP_LENGTH = 0.5
 const MOUSE_SENSITIVITY = 0.003
 # Pixels the cursor must travel with the left button held before a click turns
 # into a camera-orbit drag. Below this, a left press is a target-select click.
@@ -24,8 +31,6 @@ const STAND_HEIGHT = 2.0
 const CROUCH_HEIGHT = 1.0
 const STAND_CAMERA_Y = 1.6
 const CROUCH_CAMERA_Y = 0.7
-const FALL_DAMAGE_THRESHOLD := 9.0  # m/s downward; below this landing is safe
-const FALL_DAMAGE_MULT := 5         # HP lost per m/s above threshold
 
 # Track 2 — server-authoritative movement reconciliation.
 # When a Position broadcast arrives:
@@ -35,8 +40,9 @@ const FALL_DAMAGE_MULT := 5         # HP lost per m/s above threshold
 #     differ from world.tscn's local spawn point.
 #   - Else: snap if horizontal divergence > SERVER_SNAP_THRESHOLD, otherwise
 #     update _server_pos_target and lerp toward it each physics tick.
-# Server has no Y-axis physics in slice 2 (no gravity, no jumping). Reconcile
-# X/Z only; Y stays under local control until server-side physics lands.
+# The server runs its own fall off its own ground (fall.rs) and judges the
+# landing; the body here keeps its own gravity to draw itself, so Y is never
+# reconciled: X/Z only, the two agreeing by sharing the floor numbers above.
 const SERVER_SNAP_THRESHOLD := 1.0  # metres
 # Time-based smoothing rate. Per-frame factor is computed as
 # `1.0 - exp(-RATE * delta)` so closure speed is consistent across framerates.
@@ -44,14 +50,12 @@ const SERVER_SNAP_THRESHOLD := 1.0  # metres
 # feel at 60 fps, but stays stable when frame rate dips).
 const SERVER_LERP_RATE := 17.3
 
-# Must match MAX_MOVE_SPEED in server crates/projectdawn-server/src/world/mod.rs.
-# The server reads Move.direction as a unit vector and integrates `direction *
-# MAX_MOVE_SPEED * dt` per tick, so we scale outgoing direction by
-# (current_speed / SERVER_MAX_MOVE_SPEED) to make server-side movement match
-# whatever the client is locally predicting (base 5 m/s, crouch 2.5, with
-# speed-buff multipliers). Server clamps direction length to 1.0, so any
-# buff pushing local speed above the cap gets capped on the wire too.
-const SERVER_MAX_MOVE_SPEED := 7.5
+# Online the server decides how fast you move: its RUN_SPEED (the same 5 m/s
+# as SPEED) times the speed buffs, snare and encumbrance it applies itself
+# (crates/projectdawn-server/src/world/mod.rs, RUN_SPEED). A Move's direction
+# says only which way and how much of a run: full length to run, half to
+# crouch. The local prediction below applies the same buffs and encumbrance so
+# the two agree; it never tells the server a speed.
 
 # Throttle Move sends to the server's 20 Hz tick rate. The server applies a
 # fixed TICK_DT (50ms) of integration per accepted Move, so sending faster
@@ -59,6 +63,12 @@ const SERVER_MAX_MOVE_SPEED := 7.5
 # server_tick_rate). At 60 fps unthrottled that runs the server 3× ahead of
 # the client and looks like rubber-banding. 50ms == one server tick.
 const MOVE_SEND_INTERVAL := 0.05
+
+# A jump begun since the last Move went out. Latched here because Moves are
+# throttled to the server tick: the jump rides the NEXT Move's `jumping`
+# flag, once, however many frames pass before it is sent. The server relays
+# it to the players who can see us as a one-shot and moves nobody for it.
+var _jump_pending := false
 
 enum PlayerState { STANDING, CROUCHING, SITTING }
 
@@ -103,10 +113,7 @@ var _view_index := 1
 # round-trip. DisplayServer's get/warp pair is in raw screen coords —
 # no transforms — so the restore lands exactly where the capture happened.
 var _cursor_before_camera: Vector2i = Vector2i.ZERO
-var _is_local := false
 var _heading_train_accum: float = 0.0
-var _was_on_floor: bool = true
-var _peak_fall_speed: float = 0.0
 
 # Track 2 — server-authoritative movement state.
 var _server_pos_target: Vector3 = Vector3.ZERO
@@ -131,17 +138,6 @@ var _pre_death_zoom: float = 0.0
 @onready var visual: MeshInstance3D = $Visual
 
 func _ready() -> void:
-	var peer_id := str(name).to_int() if str(name).is_valid_int() else 1
-	set_multiplayer_authority(peer_id)
-	_setup_sync()
-
-	_is_local = is_multiplayer_authority()
-	if not _is_local:
-		camera.current = false
-		set_physics_process(false)
-		set_process_unhandled_input(false)
-		return
-
 	# Swap the capsule for the local player's race model (no-op for races
 	# without a custom model). Remote peers do the same from their own race.
 	RaceModel.apply(visual, PlayerStats.race)
@@ -152,11 +148,9 @@ func _ready() -> void:
 	_cam_pitch = camera_pivot.rotation.x
 	_cam_yaw = camera_pivot.rotation.y
 	add_to_group("player")
-	floor_snap_length = 0.5
-	floor_max_angle = deg_to_rad(55.0)
+	floor_snap_length = FLOOR_SNAP_LENGTH
+	floor_max_angle = deg_to_rad(FLOOR_MAX_ANGLE_DEG)
 	ChatWindowManager.visible = true
-	PlayerDeath.set_respawn_point(global_position)
-	PlayerDeath.register_player(self)
 	PlayerDeath.player_died.connect(_on_death_camera)
 	PlayerDeath.player_respawned.connect(_on_respawn_camera)
 	Targeting.register_camera(camera)
@@ -165,20 +159,9 @@ func _ready() -> void:
 	Regen.register_player(self)
 	Net.world_position.connect(_on_world_position)
 
-func _setup_sync() -> void:
-	var sync := MultiplayerSynchronizer.new()
-	var config := SceneReplicationConfig.new()
-	config.add_property(NodePath(".:position"))
-	config.add_property(NodePath(".:rotation"))
-	sync.replication_config = config
-	add_child(sync)
-
 func _exit_tree() -> void:
-	if not _is_local:
-		return
 	Combat.unregister_player()
 	Regen.unregister_player()
-	PlayerDeath.unregister_player()
 	Targeting.unregister_player()
 
 func _enter_state(new_state: PlayerState) -> void:
@@ -204,8 +187,6 @@ func stand() -> void:
 		_enter_state(PlayerState.STANDING)
 
 func _input(event: InputEvent) -> void:
-	if not _is_local:
-		return
 	# Mouse motion stays in `_input` so click-drag keeps working even when the
 	# cursor crosses over UI panels. Right-drag turns the body; left-drag swings
 	# the camera around a stationary body. Pitch is shared by both.
@@ -308,8 +289,6 @@ func _update_mouse_camera(chat_focused: bool) -> void:
 		DisplayServer.warp_mouse(_cursor_before_camera - get_window().position)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not _is_local:
-		return
 	# Wheel zoom: skip when the cursor is over any UI Control. Godot's
 	# ScrollContainer scrolls on wheel but doesn't mark the event handled,
 	# so without this gate the camera would zoom while the chat / test
@@ -407,7 +386,7 @@ func _physics_process(delta: float) -> void:
 	# refuses the cast AFTER the mana was optimistically spent. Cancelling here
 	# refunds instantly (Spells.cancel_cast) and matches what the corrected
 	# server comment says the ideal client does.
-	if Spells.is_casting() and not chat_focused and (mouse_run or _autorun or
+	if Spells.is_casting() and not Spells.casting_is_song() and not chat_focused and (mouse_run or _autorun or
 			Input.is_action_pressed("move_forward") or
 			Input.is_action_pressed("move_left") or
 			Input.is_action_pressed("move_backward") or
@@ -431,20 +410,16 @@ func _physics_process(delta: float) -> void:
 			move_and_slide()
 			return
 
-	var now_on_floor := is_on_floor()
-	if now_on_floor and not _was_on_floor:
-		_on_land()
-	_was_on_floor = now_on_floor
-
-	if now_on_floor:
-		_peak_fall_speed = 0.0
+	# Falls are the server's to judge (docs/design/server_fall_damage.md); the
+	# client computes no fall damage.
+	if is_on_floor():
 		if not chat_focused and Input.is_action_pressed("jump") and state != PlayerState.SITTING:
 			velocity.y = JUMP_VELOCITY
+			_jump_pending = true
 		else:
 			velocity.y = maxf(velocity.y, 0.0)
 	else:
 		velocity.y += GRAVITY * delta
-		_peak_fall_speed = maxf(_peak_fall_speed, -velocity.y)
 
 	var direction := Vector3.ZERO
 	if not chat_focused:
@@ -463,13 +438,9 @@ func _physics_process(delta: float) -> void:
 		direction -= transform.basis.z
 
 	var base_speed := CROUCH_SPEED if state == PlayerState.CROUCHING else SPEED
-	# Track 22.C — mount overrides every other speed source. When
-	# mounted, BuffManager.get_speed_mult() is ignored and the mount's
-	# own multiplier applies. MountManager.get_effective_speed_mult
-	# falls through to the BuffManager value when not mounted.
-	# Encumbrance applies after the mount — an overloaded mount is
-	# still overloaded (carry weight vs STR; see autoloads/encumbrance.gd).
-	var current_speed := base_speed * MountManager.get_effective_speed_mult() \
+	# The local prediction of the server's speed: run speed, the speed buff,
+	# then encumbrance (carry weight vs STR; see autoloads/encumbrance.gd).
+	var current_speed := base_speed * BuffManager.get_speed_mult() \
 			* Encumbrance.get_speed_mult()
 	if direction != Vector3.ZERO:
 		direction = direction.normalized()
@@ -498,19 +469,20 @@ func _physics_process(delta: float) -> void:
 		_move_send_accum += delta
 		if _move_send_accum >= MOVE_SEND_INTERVAL:
 			_move_send_accum -= MOVE_SEND_INTERVAL
-			# Scale unit direction to (current_speed / SERVER_MAX_MOVE_SPEED) so
-			# the server's `direction * MAX_MOVE_SPEED` integration produces
-			# current_speed.
-			var server_dir := direction * (current_speed / SERVER_MAX_MOVE_SPEED)
-			Net.send_movement(server_dir, false)
+			# Which way, and how much of a run (a crouch is half); the speed
+			# is the server's. The jump flag goes once per jump. The body's
+			# yaw rides along so other players see this one turn.
+			var server_dir := direction * (base_speed / SPEED)
+			Net.send_movement(server_dir, _jump_pending, rotation.y)
+			_jump_pending = false
 
 	move_and_slide()
 
 	# Track 2 — blend horizontal position toward server truth. Local prediction
 	# (move_and_slide above) and the lerp below run concurrently every frame; the
 	# two equally-valid futures (predicted and authoritative) blend smoothly.
-	# Skipped in local-save mode (Net stays idle, signal never fires, flag stays
-	# false). Y is left untouched — slice 2 server has no Y physics.
+	# Skipped until the first server position arrives. Y is left untouched:
+	# the server has no Y physics.
 	if Net.is_app_ready() and _received_first_pos:
 		var blend := 1.0 - exp(-SERVER_LERP_RATE * delta)
 		var blend_x := lerpf(global_position.x, _server_pos_target.x, blend)
@@ -544,18 +516,6 @@ func _on_world_position(id: int, pos: Vector3, _vel: Vector3, _yaw: float, seque
 		_server_pos_target = global_position
 	else:
 		_server_pos_target = Vector3(pos.x, global_position.y, pos.z)
-
-func _on_land() -> void:
-	if _peak_fall_speed <= FALL_DAMAGE_THRESHOLD:
-		return
-	# TODO: skip if BuffManager has levitate/feather fall active
-	var dmg := maxi(1, int((_peak_fall_speed - FALL_DAMAGE_THRESHOLD) * FALL_DAMAGE_MULT))
-	Combat.receive_player_damage(dmg, null, "Fall")
-	CombatLog.add_line(
-		"You hit the ground hard for %d damage." % dmg,
-		CombatLog.MsgType.DAMAGE_IN)
-	DamageNumbers.spawn_incoming(global_position, dmg)
-
 
 # The soul drifts up: ease the spring arm out and the pitch down over the
 # body. The player can still orbit (EQ let you look around while dead).

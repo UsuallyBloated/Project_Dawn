@@ -1,0 +1,58 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/hud_hunger_panel.gd" id="1"]
+
+[node name="HungerPanel" type="Panel"]
+offset_right = 310.0
+offset_bottom = 44.0
+mouse_filter = 0
+script = ExtResource("1")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 4.0
+offset_right = -6.0
+offset_bottom = -4.0
+theme_override_constants/separation = 3
+
+[node name="FoodRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="FoodLabel" type="Label" parent="VBox/FoodRow"]
+custom_minimum_size = Vector2(38, 0)
+layout_mode = 2
+mouse_filter = 0
+theme_override_font_sizes/font_size = 11
+text = "Food"
+vertical_alignment = 1
+
+[node name="FoodBar" type="ProgressBar" parent="VBox/FoodRow"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+show_percentage = false
+
+[node name="DrinkRow" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="DrinkLabel" type="Label" parent="VBox/DrinkRow"]
+custom_minimum_size = Vector2(38, 0)
+layout_mode = 2
+mouse_filter = 0
+theme_override_font_sizes/font_size = 11
+text = "Water"
+vertical_alignment = 1
+
+[node name="DrinkBar" type="ProgressBar" parent="VBox/DrinkRow"]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+show_percentage = false

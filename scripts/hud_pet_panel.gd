@@ -79,7 +79,7 @@ func _ready() -> void:
 func _on_pet_summoned(pet) -> void:
 	if pet == null or not is_instance_valid(pet):
 		return
-	_name_label.text = pet.mob_name if pet is Enemy else pet.pet_name
+	_name_label.text = pet.pet_name
 	_level_label.text = " (Lv %d)" % pet.level
 	_hp_bar.max_value = pet.max_hp
 	_hp_bar.value = pet.hp

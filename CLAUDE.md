@@ -81,8 +81,11 @@ Three things to know before touching it:
   after being committed **and pushed**. The host tracks `fix/xp-leveling-overflow`, not the
   default branch. (A stale deploy on 2026-08-08 was running a six-week-old `main` with none of
   the Phase 1 exploit gates in it; the only symptom was a missing field in one log line.)
-- **There is no graceful shutdown.** `systemctl restart` discards up to 60 s of position, HP,
-  XP, inventory and coins for everyone online. Get people to log out first.
+- **Shutdown is graceful since build `6c2bc45` (deployed 2026-10-23 21:48 UTC).**
+  `systemctl stop`/`restart` saves everyone and tells them before closing (see
+  `server_operations.md`, "Stopping safely"); an older build discarded up to 60 s of
+  position, HP, XP, inventory and coins for everyone online. Still get people to log out
+  first: it costs nothing, and a crash is never clean.
 
 ### Shipping a change to the R720
 
@@ -135,6 +138,30 @@ header, and via `/version`. Two things worth knowing:
 
 ---
 
+## Secrets and paid services (absolute rules)
+
+- **The private key folder.** API keys live in a private folder outside both repos. Its path
+  is written only in `.claude/hooks/secret_paths.local.json`, which git ignores; never write
+  that path anywhere else (no doc, commit, chat, artifact or log). **Claude never reads,
+  lists, copies, prints, uploads, commits or pushes anything in that folder, under any
+  condition.** Nothing needs it to: our own Meshy client (`.claude/hooks/meshy_client.py`)
+  and the spend gate read the key themselves, outside any tool call. A PreToolUse hook
+  (`.claude/hooks/meshy_spend_gate.py`) refuses any tool call that names the folder or the
+  key file, and any shell command or new script that would reach the key or run the client
+  outside a Meshy tool call. Never edit, disable or work around that hook, and never spell a
+  path or name in pieces to get past it.
+- **Meshy spending.** Never spend more Meshy credits than the account holds, and every paid
+  call waits for the user's approval. The same hook enforces it (live balance check,
+  worst-case prices, unknown tools refused), and the client checks the balance again itself.
+  Never call Meshy's API outside the Meshy tools. **The price tripwire**
+  (`.claude/hooks/meshy_tripwire.json`, written when a task cost more than expected) blocks
+  every paid call until the **user** reviews and clears it; Claude never touches it. Only
+  `meshy_client.py` may contain Meshy's API address (the user's narrow exception,
+  2026-10-14), and every change to it is shown to the user before it runs. When Meshy changes
+  anything, follow "When Meshy changes something" in `docs/design/meshy_asset_pipeline.md`.
+
+---
+
 ## Debugging / chasing bugs
 
 The fastest way to chase a bug is the **in-game debug console** (`scripts/debug_console.gd`)
@@ -165,7 +192,7 @@ Keep the main model for design, code, and any exploit or verification work.
 
 ## Architecture: two repos, one game
 
-- **Client** (this repo): Godot 4.4. Nearly all gameplay lives in ~53 autoload singletons.
+- **Client** (this repo): Godot 4.4. Nearly all gameplay lives in ~50 autoload singletons.
 - **Server** (`F:\Projects\server`): Rust authoritative server. Auth (Register / Login /
   CharList / Char{Create,Delete} / Logout over WebSocket) **plus a live world UDP
   simulation** (renet, 20 Hz): server-authoritative movement, combat, regen, enemy AI,
@@ -173,10 +200,9 @@ Keep the main model for design, code, and any exploit or verification work.
   rights, passive skills, XP/leveling, player corpses + resurrection, quests. Wire
   protocol is **PD_W0024** (`crates/protocol`); the client
   bridges it via the `gdext_net` GDExtension (source in the server repo, shares the
-  `protocol` crate). A `--local-save` dev path still exists for solo iteration without a
-  server. (This line was "auth-only, world not built" through ~early 2026 — long stale.)
+  `protocol` crate). (This line was "auth-only, world not built" through ~early 2026 — long stale.)
 - **The project is multiplayer-only.** There is no supported solo mode — don't scope
-  features or tests around a solo path. Existing solo plumbing is vestigial.
+  features or tests around a solo path. The offline code was removed 2026-11-01.
 - **Before any change that crosses the wire**, read the canonical contract:
   `docs/concepts/architecture/README.md` → `server/docs/server_design.md`. That covers
   networking/RPCs, save persistence (`autoloads/save_manager.gd`), and the
@@ -193,8 +219,10 @@ Keep the main model for design, code, and any exploit or verification work.
   server on 10-08 — see the To-Do "Client-only spell backlog". **Check it with
   `tools/check_spell_lockstep.gd`** (see `docs/reference/commands.md`): it compares every
   field the server carries and exits 1 on drift. On 2026-10-05 the 133 shared spells showed
-  ZERO drift. One deliberate exception is built into the check: Bard songs carry 0 damage
-  and 0 heal on the server because their pulses are still client-side.
+  ZERO drift. *(The check used to excuse Bard songs' damage and heal fields because their
+  pulses were client-side; since the song rework of 2026-10-20 the server carries every song
+  field and the exception is gone. Recounted then: 158 client, 142 server, 16 client-only,
+  zero drift.)*
   `tools/export_spells.gd` (Godot editor) is the intended regen path but is stale.
 - *(Closed 2026-06-22: leveling used to be client-local and provisional. The corpse epic's
   Slice 0 moved XP + leveling server-side — `world/progression.rs::award_xp` is the single
@@ -253,8 +281,8 @@ another reason). They are **not** a mandate to stop and refactor existing files.
 
 ### File and function shape
 - ~500–600 lines is the "ask yourself if this still has one responsibility" threshold,
-  not a hard cap. Split on *responsibility*, not line count — e.g. `PetManager`→`WarderAI`,
-  `PlayerStats`→`Alignment`, `hud.gd`→the `hud_*.gd` family.
+  not a hard cap. Split on *responsibility*, not line count — e.g. `Alignment` split out of
+  `PlayerStats`, and `hud.gd` into the `hud_*.gd` family.
 - `scripts/test_panel.gd` is a debug tool, not a feature drawer. It should only *invoke*
   systems (call public autoload methods), never hold gameplay logic.
 
@@ -328,17 +356,17 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
 
 ## Architecture reference
 
-### Autoloads (53, grouped — source of truth is the `[autoload]` block in `project.godot`)
+### Autoloads (50, grouped — source of truth is the `[autoload]` block in `project.godot`)
 
 | Domain | Autoloads |
 |---|---|
 | **Progression** | `PlayerStats`, `Alignment`, `Skills`, `Spells`, `WeaponSkills`, `ArmorSkills`, `CastingSkills`, `Memorize`, `SpellBar`, `Regen`, `CharacterSetup` |
 | **Combat** | `Combat`, `BuffManager`, `DamageNumbers`, `PlayerDeath`, `Targeting`, `Loot`, `NetCombatBroadcaster` |
 | **Items / economy** | `Inventory`, `Equipment`, `ItemRegistry`, `VendorManager`, `Crafting`, `StationManager`, `Currency`, `Encumbrance` |
-| **Pets / transforms** | `PetManager`, `WarderAI`, `Transformations`, `MountManager` |
+| **Pets / mounts** | `PetManager`, `MountManager` |
 | **World / environment** | `ZoneLoader`, `TimeOfDay`, `VisionSystem`, `SenseHeading` |
 | **Social / quest / UI** | `GroupManager`, `QuestManager`, `DialogueManager`, `CombatLog`, `ChatWindowManager`, `BardSongs`, `Languages`, `SocialHotkeys`, `GameSettings`, `DebugLog` |
-| **Networking (client)** | `Network`, `Net`, `SaveManager`, `RemotePlayerManager`, `RemoteEnemyManager`, `RemoteLootBagManager`, `RemotePetManager` |
+| **Networking (client)** | `Net`, `RemotePlayerManager`, `RemoteEnemyManager`, `RemoteLootBagManager`, `RemotePetManager` |
 
 Per-autoload responsibilities and the combat/spell deep dive live in
 `docs/concepts/architecture/systems_overview.md`.
@@ -366,7 +394,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 ## Where things are documented
 
 - **Current plan, dates & sequencing** → `docs/schedule.md` — the push to a playable friends
-  build (target **2026-11-08**, slipped from 09-14 on 09-09, then from 10-05 on 09-27), with the phases, the critical path, and the velocity the estimates
+  build (target **2026-11-12**, slipped from 09-14 on 09-09, from 10-05 on 09-27, then from 11-08 on 11-05), with the phases, the critical path, and the velocity the estimates
   are measured against. **There is one checkbox list in this project and it's the To-Do below.**
   The schedule holds no boxes: its per-phase bullets are the plan, and its status table is just a
   progress readout of what the To-Do already says. (Restructured 2026-09-09: the schedule's
@@ -379,6 +407,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   build step, redeploy, decision or friend session, with owner, needs and dependencies. Dates
   only, never status; every row names the checklist or To-Do entry its status lives in.
 - **What systems exist & how they work** → `docs/concepts/architecture/systems_overview.md`
+- **The rules that must always hold** (an item in one place, a death stands, leaving is no way
+  out, the server decides outcomes, a refusal costs nothing...) → `docs/reference/invariants.md`.
+  Read the matching rules before changing saving, items, death, or anything a client sends; a
+  fix that closes a hole adds its rule or its test there in the same commit.
+  `tools/check_invariants.gd` (in `check_all.ps1`) fails if a rule's named test disappears.
 - **Commands you type** (CLI/cargo tools, server run wrappers, in-game chat commands, keybinds) →
   `docs/reference/commands.md`. Keep it current when a command is added or renamed.
 - **Server / wire protocol / DB / save migration** → `server/docs/server_design.md`
@@ -424,7 +457,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   clean logout, zero RPC-flood lines. Two follow-on findings, tracked separately: member rows
   are BLANK until the first resource update (own item below), and a skill's stamina cost is
   invisible to the partner (client-local spend — folded into the active-skills item).
-- [ ] **Remote players never show a jump** *(reported 2026-08-14)*. Player 1 jumps; player 2 sees
+- [x] **Remote players never show a jump** — **DONE + playtested 2026-10-27** (the user, after
+  the day's two-seat sittings on the bumped server and export: "the jump relay works. I can see
+  other players jumping."; `remote_jump_checklist.md` §1's headline row, the rest of its rows
+  covered by the integration test; what exists is in systems_overview, Networking, "The jump
+  relay"). *(Original entry:)* *(reported 2026-08-14)*. Player 1 jumps; player 2 sees
   them slide along the ground. Nothing about a jump crosses the wire, and it's dropped in three
   separate places: (a) **the client never reports it** — `scripts/player.gd:489` (was :444) is the only caller
   of `Net.send_movement()` and hardcodes `jumping = false`, even though `net.gd:374` and the gdext
@@ -443,6 +480,48 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Exploit note:** cosmetic-only is safe precisely because the server keeps owning XZ — a forged
   `jumping` flag can then only make you *look* silly, not move you. Don't let the flag become an
   input to position.
+  **BUILT 2026-10-14 (the cosmetic version), pending the Oct 22 bump** (on `feat/jump-relay` in
+  both repos, server `4975e4d`, client `82cf979` (the shas were `%s` placeholders until
+  2026-10-19), branched from `feat/trade-window` like the hunger window
+  so it rides the same `PD_W0028`; awaits the trade session's merge, which was offline when it was
+  built; `remote_jump_checklist.md`, 9 rows, on the branch). (a) `player.gd` latches a jump and
+  sends it on the next Move's `jumping` flag, once. (b) The Move handler reads the flag:
+  `PerConnection::note_move_jump` relays only its rising edge, at most once per
+  `JUMP_RELAY_MIN_INTERVAL` (500 ms; an honest jump lasts 0.7 s), and a relayed jump stands the
+  player; nothing reads the flag into position, Y stays the server's zero. (c) A new
+  `ServerWorldMsg::PlayerJumped { id }` appended after `HungerUpdate`, fanned to the in-world
+  players who can see the jumper (the Say reach), never the jumper; the DLL's `player_jumped`
+  signal, connected by name; `RemotePlayer.play_jump` draws the local jump arc (the same 7 m/s
+  and 20 m/s² as `player.gd`, 1.2 m, 0.7 s) as an offset on the visual and nameplate, never on
+  the interpolated position; a corpse does not hop. Tests: a unit test on the edge-and-rate rule;
+  an integration test with a watcher beside a jumper (one jump plus a forged burst of ten flags
+  inside the interval reaches the watcher as exactly one cue and the jumper as none, an edge
+  past the interval relays again, and the jumper's own Position keeps y = 0); a headless probe
+  of the hop (lift along the arc, the apex, an exact landing, no hop on a corpse). The first
+  piece of the remote animation-state channel.
+- [x] **A jump should be seen as far as the body is** — **DONE + playtested 2026-10-29**
+  (`two_hander_jump_reach_cast_bar_checklist.md`, the JUMP rows, two seats: the hop seen from
+  about 100 m and from 40 m, nothing from out of view, no cue of your own, a `/say` and the
+  eating emote still silent at 60 m. What exists is in systems_overview, Networking, "The jump
+  relay".) *(Original entry:)* *(user 2026-10-29, on
+  `say_range_checklist.md`'s jump row: "When my friends and i play games like this we use a
+  'jump check' when we see someone in the distance but we arent sure if that person is our
+  friend or not. I would like for jump to be broadcasted further.")*. The relay has used the
+  say audience since it was built (`tick.rs` step 4b-jump calls `say_recipients`): the 3x3 AOI
+  neighbourhood on 10-14, and 50 m since the say range landed on 10-27, my call that day. A
+  jump is seen, not heard, so the cue should reach everyone the server already sends the
+  jumper's Position to (the players whose cell can see the jumper's, `aoi.can_see`, the
+  Position fan's own test: 120 to 240 m, the whole distance a body is drawn at), never the
+  jumper; the eating emote stays at the say range. The rate stands (one cue per jumper per
+  `JUMP_RELAY_MIN_INTERVAL`, 500 ms), so the wider fan is bounded; cosmetic, no position
+  input. Server only, no export. **BUILT 2026-10-29 (user: "sounds good"), pending the
+  redeploy and the playtest** (`two_hander_jump_reach_cast_bar_checklist.md`, the JUMP rows):
+  step 4b-jump's recipients are the in-world players in `aoi.entities_visible_from` of the
+  jumper's cell, the Position fan's own set, never the jumper; the say helper serves the say
+  and the eating emote alone. The jump integration test gained a watcher at 128 m (in view,
+  past the say range) who sees the cue and one two cells away who does not; it fails on the
+  50 m audience at the far watcher. **DEPLOYED 2026-10-29 19:04 UTC** (R720 boot line
+  `build="c7c96f6" dev_cmds=false`); the JUMP rows are runnable now on any client.
 - [x] **Incoming `/tell` RPC** — **STALE ENTRY, CORRECTED 2026-08-26: built 2026-05-28**
   (`195891d`, "Chat wire-up: /say /shout /ooc /tell over the network"). The server fans
   `ChatMessage` to the single Tell target and `combat_log.gd:150` renders "%s tells you" into
@@ -478,15 +557,32 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   stood in a frozen world with no message, and the 10-02 ban kick's "told why" was not true
   on screen. New `scripts/hud_disconnect_notice.gd`: the screen dims, a "Disconnected" panel
   shows the server's reason (or a plain line when there is none), a relogin hint, and Quit;
-  the same line goes to chat and the debug log. (2) **The live countdown is not client-only.**
+  the same line goes to chat and the debug log. **Found 2026-10-29 by the window click check:
+  the notice was 0 by 0 when shown (its anchors were set inside `_ready`, which keeps the
+  current size), so it dimmed nothing and its panel sat half off the top-left corner; fixed
+  with the clicks build, same export, one row in `window_click_blocking_checklist.md` §4.**
+  (2) **The live countdown is not client-only.**
   The wire carries `reconnect_after_secs` but the DLL drops it (the `kicked` signal passes
   reason and code only), so it needs a wire-layer change and a DLL rebuild, no protocol bump.
   (3) **A real return to character select is a multi-day client job, not a small one:** the
   session token and the auth socket live in the login SCENE and are lost on a scene change;
-  `Net.leave_session` relies on process exit to close the socket; and 54 autoloads hold
+  `Net.leave_session` relies on process exit to close the socket; and 50 autoloads hold
   per-character state that a second character would inherit unless each is audited (the
   hotbar bleed of 08-26 was one of them). Needs its own design pass and a state-reset audit
   before any code.
+  **(2) BUILT 2026-10-15, pending the Oct 22 export and the playtest** (server `33c7e28` the DLL,
+  client `1159a79`; `relogin_countdown_checklist.md`, 8 rows; no protocol change, no server change).
+  The DLL's `classify` keeps the kick's `reconnect_after_secs` and emits a separate
+  `kick_retry_after(secs)` just before `kicked` (a third argument would have changed
+  `kicked`'s arity; a separate signal costs an old client only the countdown). `Net` connects
+  it by name, holds it as pending until the `kicked` that follows (so an earlier kick's time
+  never shows on a later one that named none) and exposes `get_kick_retry_remaining()`; the
+  lobby shows "You can log in again in N s." ticking to "now" in place of the server's "about
+  Ns" sentence, and starts with its `_process` off. Display only: the server still decides.
+  Tests: a `classify` unit test in the DLL crate (27 s carried, a ban carries -1) and a headless
+  probe of the launcher-mode lobby (5, 2, now, stops; a later ban shows no stale countdown).
+  **Bump-day note:** the trade branch edited the same `SIGNALS` line of
+  `tools/check_wire_layer.gd`; the merge keeps both lists' entries.
 - [x] **Tell testers about the ~45 s worst-case relogin after a crash** — **DONE 2026-09-30
   (a doc line with no playtest surface, ticked on the edit like the reset_password bin)**.
   `camp_and_linkdead.md` §Risks called the number out ("a hard crash can take up to the 15 s
@@ -509,11 +605,63 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `cursor_slot_and_reequip.md` §Open questions; audit 2026-09-29)*. Deposit-from-cursor and
   sell-from-cursor were deferred ("place it first"). `SlotRef` has no cursor variant, so both
   are small wire additions plus the `destroy_at`-style guard for a held full bag.
+  **Raised by play 2026-10-26** (the hotfix checklist's §3): the tester dragged items onto the
+  vault and nothing happened (the drop sends nothing; only right-click with the bank open
+  deposits), concluded the bank could not take items, and could not run §3. Drag-and-drop is
+  what a player reaches for first, so this is a usability gap, not a corner case. Queued
+  next to the chat box cap.
+  **BUILT 2026-10-30 (night; the user's "all three"), pending the next bump day and the
+  playtest** (on `feat/facing` in both repos, server `b3e0790`, client `476c1e7`, so it rides
+  PD_W0029 with the facing; `held_item_bank_and_vendor_checklist.md`, 19 rows). `SlotRef`
+  gains a `Cursor` variant (appended last) so `SellItem` and `UseConsumable` can name what the
+  player holds; the DLL maps the `"cursor"` location to it (rebuilt). The server's sell arm
+  reads the hand, refuses a held bag with contents with the base slot's line, and takes the
+  sold count through `destroy_at` (the review folded the three hand-rolled removal arms, base,
+  bag and the new hand, into that one path; server `b3e0790` + the fold); `BankStoreItem`
+  already took `"cursor"` as a location, so the bank half needed no server change. Client: a left click on any cell of a vault while holding
+  deposits into that vault (a bag is refused up front with the bank's own line, nothing sent);
+  the merchant's SELL list leads with "In hand: <item>", sold from the cursor, and a held item
+  with no vendor value is left off like any other. Tests: an integration test (a stack banked
+  from the hand, back, two sold from the hand, a held pouch with a potion in it refused by
+  both, the ledger balancing) and `tools/probe_held_item_bank_vendor.gd` (17 checks; the old
+  windows cannot run it). Exploit lens: the server verifies the hand, prices from the registry
+  and gates on the banker's and the merchant's reach as for a bag slot; a held item is part of
+  the holdings (the death strip takes it), so nothing moves that could not move from a bag.
+  Not built: a drag gesture onto the vault (the held item follows the mouse, so the click is
+  the drop); eating from the hand has the wire arm and no client affordance. **DEPLOYED
+  2026-11-05 with the November bump** (server `267065f`, client `da83ea8`);
+  `held_item_bank_and_vendor_checklist.md` is runnable now.
 - [ ] **No-drop / no-trade item flag** *(flagged in `inventory_interaction_grammar.md` §8 and by
   the trade design's ledger, which explicitly has no rule "until itemization grows one"; audit
   2026-09-29)*. `ItemData` carries no binding flag; the two account-shared bank slots and the
   trade window both traditionally reject bound items. One flag on `ItemData` + `items.toml`,
   refusals in the bank quick-transfer and `TradeOfferItem`, with a chat line.
+  **DECIDED 2026-10-19 (user): conjured food and water are NO RENT.** Confirmed meaning (EQ's
+  "Temporary" tag, which P99 shows on Summoned: Black Bread): the item is destroyed once the
+  character has been logged out for 30 minutes, not at the instant of logout, so a quick relog
+  or a crash keeps it (Allakhazam's EQ item-tag reference; no classic-only source found that
+  differs). Built with this flag. **Waits on the user's yes for a migration** (2026-10-19):
+  the 30-minute rule needs the time a character logged out, and the database keeps none per
+  character (only an account's last login and a session's last-seen).
+  **NO RENT BUILT 2026-10-19, pending the Oct 22 bump and the playtest** (`feat/server-speed`,
+  same commits as audit fix 5, migration 0015; checklist §8). `no_rent` on items (both sides,
+  lockstep-checked), set on conjured bread and water; every departure stamps
+  `characters.logged_out_at`; at the next login 30 minutes or more later the server removes
+  every NO RENT stack (inventory, worn, bags, the cursor, both bank vaults); the tooltip leads
+  with "NO RENT". Test: 31 minutes away loses the conjured bread, 10 minutes keeps it, an
+  ordinary loaf is never touched, logout stamps the time. **The no-drop / no-trade binding flag
+  this entry is about is still open**; NO RENT was the part decided.
+  **Rule DECIDED 2026-10-19 (user):** no-drop / no-trade is for items made only for a quest,
+  with no other use (not a tradeskill ingredient, not usable like a potion); which items, not
+  yet decided. **Checked the same day: nothing qualifies today.** Quests count kills only, so
+  no quest-only item exists (the one quest item, the Hunter's Medal, is a reward worn at the
+  neck). The flag waits on the first fetch or delivery quest (Quest and loot content plumbing,
+  item (a)), and gets built with it.
+  **NO DROP BUILT 2026-11-03 with the starting kit** (the entry under Items / economy): `no_drop`
+  on items, both sides, lockstep-checked; the server refuses a NO DROP item for the ground, a
+  trade offer, the account-shared vault and a sale; destroy, the own vault and the own corpse
+  are allowed (rule I5 in `docs/reference/invariants.md`). The no-trade half for quest items is
+  the same flag, set on those items when the first fetch quest is written.
 - [ ] **Pet persistence across logout: a design call** *(server_design.md open question 2;
   audit 2026-09-29)*. Today the warder auto-summons on every EnterWorld and conjured pets
   simply vanish, which is a de-facto answer nobody made on purpose. Confirm or change it when
@@ -672,7 +820,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   unaddressable from the wire, the placer never fills a held bag, and destroying/dropping
   a held full bag refuses rather than orphaning contents. Client mirrors bag_255 into a
   cursor-bag store that Encumbrance weighs.
-- [ ] **Trade window** *(requested 2026-08-28 with the cursor work: "a click that lands on an
+- [x] **Trade window** — **Slice 1 DONE + playtested 2026-10-27** (`trade_window_checklist.md`,
+  every row passing on two seats; the journal shows item swaps, coin-only gifts, an eight-stack
+  trade, the walk-away and cancel closes, a relog straight after a commit, and a famished
+  character whose offered bread stayed uneaten through an open trade, then ate the loaf the
+  partner handed over the moment the commit placed it. The window opens centred and drags. What
+  exists is in systems_overview, Items, "Trade window". Slice 2, giving to an NPC, is its own
+  entry below.) *(Original entry:)* *(requested 2026-08-28 with the cursor work: "a click that lands on an
   entity (enemy, NPC, player) still targets but ALSO opens a trade window. EQ works like
   this")*. **DESIGNED 2026-09-19: `docs/design/trade_window.md`** — escrow by locking (offered
   items never leave the owner's inventory until a single-transaction commit, so a crash loses
@@ -681,9 +835,44 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   test list, and a PD_W0028 wire sketch (protocol bump, gdext rebuild, both-sides deploy).
   All four §6 calls DECIDED 2026-09-19 (user): 8 slots per side, instant open, 10 m range for
   now (user flags it as far; tuning candidate after the first playtest), NPC give stays slice 2
-  WITH a standing instruction to pull it forward if slice 1 leaves it nearly free. Build-ready;
-  queued behind the phase 4 deploy/playtest and the bags + dead-XP batch. Until built, entity
-  clicks while holding target only.
+  WITH a standing instruction to pull it forward if slice 1 leaves it nearly free.
+  **Slice 1 BUILT 2026-09-29 on the `feat/trade-window` side branch, pending playtest**
+  (server `a67839a` + gdext/client; `trade_window_checklist.md`; protocol bumped PD_W0028, both
+  sides deploy TOGETHER). Escrow by locking: `world/trade.rs` holds the session (one per player,
+  offer references not copies, every-edit-clears-both-accepts); the tick apply block does the
+  commit (re-validate liveness/range/coin-coverage/offered-count/both-receiver-capacity, then
+  the in-memory swap, `db::commit_trade` one transaction across both characters, revert on
+  failure, deltas deferred until commit); locked slots refuse Move/Split/Drop/Destroy/Equip/
+  Unequip/Sell/BankStore with a chat line. The exploit ledger shipped as integration tests
+  (atomic commit, bait-and-switch, escrow lock, self-trade, overdraft). Client: `trade_window.gd`
+  (server-driven, holds no state), the holding-click-a-player trigger in `targeting.gd`, Net
+  signal wiring. Kept on the side branch until a desk day merges it with a fresh export, so a
+  casual R720 pull never bricks the testers' client. **Still slice 2:** NPC give (one-sided).
+  **Pre-merge review 2026-10-12 found one real hole, FIXED on the branch** (server `bac726e`):
+  the lock covered only the offered slot, but a full bag moves with its contents (09-27), so
+  after the partner accepted, a player could swap the pouch HOLDING the offer with another
+  pouch; the reference then named the other pouch's item, the commit checked only the count,
+  and the partner's window never refreshed. Now an offer inside a bag locks the bag, an
+  offered empty bag cannot be filled, the commit verifies the item as well as the count, and a
+  trade request no longer tells absent from too-far (an is-online check by id). Test
+  `trade_locks_the_bag_holding_an_offered_item`; three new rows in `trade_window_checklist.md`.
+  **Placement fixed 2026-10-26, pending the next export** (client `0ae26a6`; user, in play: "the
+  trade window needs to spawn in the middle of the screen... too far in the top left corner to
+  move or use"): it opened at (-280, -180), off the top-left corner (its centering set `position`
+  inside the HUD, measured from the screen's corner), and as a plain Panel it could not be
+  dragged. Centered offsets now, as the dialogue window does, and a `DraggablePanel`; probe
+  `tools/probe_trade_window_place.gd` fails on the old code; one checklist row.
+- [ ] **Trade slice 2: giving to an NPC** *(the trade design's slice 2,
+  `docs/design/trade_window.md`; split out of the trade entry when slice 1 ticked on
+  2026-10-27)*. The one-sided variant (hand an item to an NPC, as EQ's quest turn-ins do) plus
+  whatever quest-item consumption exists by then. The 2026-09-19 standing instruction was to pull
+  it forward if slice 1 left it nearly free; my read is that it did not (slice 1 is a session
+  between two players with two accepts and two inventories, and an NPC has none of those, so the
+  give is its own handler with its own refusals). Pairs with the first fetch or delivery quest
+  (Quest and loot content plumbing, item (a)) and the no-drop flag. Also from the sitting's
+  notes: the only way to open a trade is a click on the player while holding an item, so a
+  coin-only trade means lifting any item first; a trigger for coin on the cursor or a `/trade`
+  command would close that, a small client ask if wanted.
 - [ ] **PvP flagging** — when is PvP permitted, how is it triggered, consequences;
   alignment kill deltas defined in `docs/concepts/alignment/events.md`. (Pet PvP
   inheritance landed 2026-06-11 — pets inherit the owner's `/pvp` flag on melee, spell, and
@@ -693,8 +882,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Thorns reflect) as of 2026-06-10 (`Entity` has `PrimaryStats` + `active_buffs`; see
   systems_overview). Still open: AGI/INT/WIS are stored + buffable but have no pet
   dodge / spell-power model yet, so they're display-only.
-- [ ] **Pet level does not scale with owner level** *(found 2026-08-26: a level 22 Beast Master's
-  warder is level 5)*. **Research DONE 2026-09-17 (user-commissioned): `docs/design/pet_levels.md`**
+- [x] **Pet level does not scale with owner level** — **DONE + playtested 2026-10-07 (interim
+  A; ticked 2026-11-03)** (`xp_eligibility_and_pet_levels_checklist.md` §2, every row passing:
+  Fennric's warder arrived at owner level minus 1 and respawned there, Summon Skeleton's level
+  varied per cast; the fair-fight row was run with a charmed mob, which keeps the mob's own
+  stats, so the 70% scalar has no tuning read yet. What exists is in systems_overview, Pets,
+  "Pet levels". Option C, Beast Master taming, is its own entry below.) *(Original entry:)*
+  *(found 2026-08-26: a level 22 Beast Master's warder is level 5)*. **Research DONE 2026-09-17 (user-commissioned): `docs/design/pet_levels.md`**
   — EQ classic (spell-owned pets, level rolled per summon, the max-pet ritual), EQ Legends'
   modern 1:1 simplification, WoW's owner-tracking shape, and SWG's taming + pet-maturity system
   (per the user's standing "more SWG influence" note). Three options in the doc: A =
@@ -715,6 +909,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   fails if `zone_camps.toml` moves without the curve. All three summon paths route through
   one `summon_scaled_pet` helper. Integration test pins the original bug: a level 22 Beast
   Master now gets a level 21 warder.
+- [ ] **Beast Master taming (pet option C)** *(split out of the pet level entry when interim A
+  ticked, 2026-11-03)*. DECIDED 2026-09-19 (user) as the Beast Master's destination: SWG-style
+  taming and pet maturity, summoners conjure and Beast Masters raise (`docs/design/pet_levels.md`,
+  option C). Replaces the warder's free owner-1 scaling with earned maturity; tell whoever mains
+  Beast Master when it lands. Also open from interim A: a tuning read on `PET_STAT_SCALAR`
+  (0.70) with a summoned pet, the warder or a skeleton, alone against an even-con mob. Pairs
+  with "Pet persistence across logout: a design call". Not designed; not a friends-build item.
 - [ ] **Player inspect** — right-click a player to see their equipment *(audit 09-09 settled
   the 08-26 flag: this is BUILT, not "in progress" — the window is mounted by the HUD and
   opened by a chat command (`hud.gd` ~1399: `open_for` + `broadcast_inspect_player`) over the
@@ -749,6 +950,286 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (`inspect_range_gm_audit_ban_checklist.md` §6).
 
 ### Security / exploits
+- [ ] **Housekeeping audit 2026-10-23: the hotfix (Phase 0) and the later phases** *(the
+  user asked for the code to be compared with the kodr-skills standards; findings and every
+  id: `docs/security/housekeeping_audit_2026_10_23.md`)*. **Phase 0 DONE + playtested
+  2026-10-26** (`hotfix_crash_and_dupes_checklist.md`, every row passing on `062ca07`: the chat
+  line cut at "jumps ov" with no panic or restart in the journal; drops across a restart; a
+  vault withdrawal and an item-paying quest turn-in surviving a hard kill 15 s later, past
+  the last checkpoint, with nothing lost or duplicated; vendor stock; regression. What exists
+  is in systems_overview, "Saving and shutdown"). Deployed 2026-10-23 (R720 boot line
+  `build="3d938ca" dev_cmds=false`, 19:52 UTC) (server `6f18a5e` + review fixes `3d938ca` on
+  the deploy branch, merged into `feat/server-speed` as `019bfb3`; client
+  `tools/check_vendor_lockstep.gd`; `hotfix_crash_and_dupes_checklist.md`; server-only, no
+  export). H1: one chat line with an accented letter at byte 512 crashed the whole server
+  (a byte slice in the tick task); cut on a char boundary now. H2: a drop waited for the
+  60 s checkpoint, so a restart after someone picked it up and logged out left the item with
+  both; drops are saved at once (one commit per dropper per tick, at most four drops a tick)
+  and so are pickups. H3: immediate saves wrote one store alone (the quest reward the bags
+  only; corpse loot, death and the trade commit the bags and wallet but not the vaults), so a
+  crash after an unsaved bank withdrawal left the item in two places; every store is written
+  together now. H4: a failed read at login played on with empty stores and the next save
+  wiped them (a whole account bank); the login is refused instead. H5: vendors sold any item
+  with a price, named drops included; each vendor's stock now lives in `npcs.toml` too, and
+  on `feat/server-speed` the vendor must also serve the buyer on faction. H6: a failed
+  corpse save skipped the corpse for good; it retries next tick. Eleven tests, each failing
+  on the unfixed code. **Phase 1, durability, DONE + playtested 2026-10-23**
+  (`phase1_durability_checklist.md`: all ten required rows pass, the optional dev-box row not
+  run; what exists is in systems_overview, "Saving and shutdown"). Deployed the same evening
+  (R720 boot line `build="6c2bc45" dev_cmds=false`, 21:48 UTC) (server `b36904e` +
+  review fixes `6c2bc45` on the deploy branch, merged into
+  `feat/server-speed` as `a7a318f`; `phase1_durability_checklist.md`; server-only, no export;
+  user calls: build on the deploy branch, the EQ-flavoured restart line). A stop or restart
+  (SIGTERM, Ctrl-C, a closed console on Windows) now saves everyone first (failed saves
+  retried for 12 s), then tells each player "The world is being restarted. Your progress has
+  been saved; please log in again in a minute." (or that their last moments could not be
+  saved), and exits non-zero if anyone was not saved; a second signal quits at once. One save
+  path, `persistence::flush_connection`, for the checkpoint, logout, the retry queue and
+  shutdown. A logout save that fails is retried every second and the account's relogin is
+  refused until it lands (given up after 2 minutes with an error, to the last saved state).
+  XP is written inside the corpse, quest-completion and resurrection transactions (a crash
+  used to return a death's XP while its corpse kept the refund, and lose a quest's or a
+  resurrection's XP). A failing world loop now ends the process. Five tests, each failing with
+  its fix disabled. Accepted residual: a character whose corpse save failed (the database
+  already failing) and who leaves before the retry is saved without its corpse. **The redeploy
+  INTO this build is not clean** (the old binary is the one stopped): everyone logs out first.
+  **Phase 3, guardrails, the part that leaves `tick.rs` alone, BUILT 2026-10-23** (server
+  `01fd0ae` + review fixes `3f7c23a` on the deploy branch, merged into `feat/server-speed`;
+  client `tools/check_all.ps1`; no playtest surface, tooling and tests). On-demand CI (user
+  call: on demand, private-repo minutes; actions pinned by SHA, read-only, `--locked`): the
+  suite and `cargo-deny` block, rustfmt and clippy report only until the reformat after the
+  split. The advisory database matched against `Cargo.lock` found three real advisories,
+  fixed by updating `tokio` 1.54.1, `anyhow` 1.0.104 and `event-listener` 5.4.2; two accepted
+  in `deny.toml` with reasons (`bincode` unmaintained, the wire format; `rsa`, never
+  compiled). The client decoder has a 16 KiB limit (trailing bytes still ignored, the
+  append-a-field rule) and a throttled warning; `.env` loads before the runtime;
+  `NetcodeKey` never prints; `#![forbid(unsafe_code)]` on three crates; property tests on
+  coin arithmetic, inventory moves (base, bags, cursor; a planted merge dupe is caught) and
+  the decoder. `check_all.ps1`'s first run found the dev box's wire-layer DLL missing
+  `kick_retry_after`: the Oct 22 export must rebuild it. Not done: `cargo-fuzz` (needs a
+  nightly toolchain outside `F:\Projects`), the lints turn-on and panic containment (after
+  the split). The user chose to leave the PR rule on the deploy branch as it is (pushes
+  bypass it). **Later phases (planned, not built):** 2 the `tick.rs` split, right after the
+  Oct 22 bump merges (user decision); 3's remainder (lints, the reformat, panic
+  containment); 4 the client/server line (fall damage on the server then `DeathBroadcast`
+  gone, user decision; swing pacing on real haste; cast relays; intent budgets; a stats
+  message; the ~20 unchecked lockstep pairs; wire hygiene); 5 remove the offline client code
+  (user decision); 6 observability and auth polish.
+  **Phase 5 step 1 DONE + playtested 2026-10-26** (`offline_save_online_checklist.md`: a
+  level-up, Quit Game and a finished `/camp` left `character.save` at its 10/23 date; the
+  optional Test Room row skipped, since Phase 5 removes the offline code; what exists is in
+  systems_overview, `SaveManager`) (client
+  `95354b3` on `feat/server-speed`; `offline_save_online_checklist.md`): `SaveManager.save()`
+  refuses online, so an online character no longer lands in the Test Room's `character.save`
+  (it was written on every level-up, zone load, Quit Game and finished camp, and the Test Room
+  loaded it as its own); probe `tools/probe_save_manager_online.gd` fails on the old code.
+  **Phase 4's fall damage DESIGNED 2026-10-23: `docs/design/server_fall_damage.md`**, five
+  decisions waiting on the user (§7). Found while verifying: **online, falls have never hurt an
+  ordinary player** (the fall goes through `DamageSelf`, a dev command; the client prints the
+  hit, the server ignores it; a GM's falls apply and are each audited as a GM action), so
+  `DeathBroadcast` has no honest online sender except the Test Panel's Trigger Death, and B1
+  can close now (gate it as a dev command, slice 0) without waiting for the height model,
+  which slice 1, the server simulating the fall, does need. That reverses the agreed order,
+  so it is decision 1. **ALL FIVE DECIDED 2026-10-24 (user): "follow your recommendations"**
+  (slice 0 now; a share of max HP, safe drop near 2 m; shields do not soak a fall; GMs take
+  falls, no audit row; Safe Fall later). **Slice 0 DONE + playtested 2026-10-26**
+  (`fall_damage_slice0_checklist.md`: Trigger Death kills the GM and is audited, mob deaths and
+  respawns unchanged for a GM and a plain account; the jump row skipped, no high point online,
+  the probe covering it; what exists is in systems_overview, "Respawn, bind points, and the
+  death lock"). Server half deployed 2026-10-25 (R720 boot line `build="779a033"
+  dev_cmds=false`, 19:34 UTC) (server `779a033` on the deploy branch, merged into
+  `feat/server-speed` as `062ca07`; client `99f649b` on `feat/server-speed`;
+  `fall_damage_slice0_checklist.md`): `DeathBroadcast` is a dev command (test
+  `death_broadcast_is_a_dev_command` fails on the old handler; the eight tests that kill with it
+  make the account a GM); online a fall computes nothing, Trigger Death sends a dev
+  `DamageSelf` of the whole bar, and no `DeathBroadcast` follows a death (probe
+  `tools/probe_fall_and_death_online.gd`). Slice 1 waits on the server height model.
+  **The Oct 22 bump MERGED AND DEPLOYED 2026-10-25** (both deploy branches fast-forwarded:
+  server `062ca07`, client `19f4ca3`; R720 boot line `build="062ca07" dev_cmds=false`,
+  2026-10-26 00:27 UTC) **on a fresh world** (user: no accounts or characters carry over; the
+  old `world.db` retired as `world.db.retired-2026-10-25` beside a backup snapshot, the new one
+  built by every migration on boot). Every checklist written "pending the Oct 22 bump" is
+  runnable once testers hold the export from `19f4ca3`. Prepared earlier the same day
+  on `bump/oct22` (both repos' merges ready: the
+  server's is a fast-forward, the client's merged with no conflicts; every check green with a
+  DLL built from `feat/server-speed`). **Phase 4's lockstep item (B4) mostly BUILT the same
+  day** on that branch: `check_constant_lockstep`, `check_skill_table_lockstep`,
+  `check_character_lockstep`, `check_discipline_lockstep` (tooling, no playtest surface).
+  **The overnight of 2026-11-01 (user: "do all four"), all pending the playtest**
+  (`overnight_2026_11_01_checklist.md`; the findings doc's new §5 says where the audit stands
+  and how to finish it). (1) **Phase 6's tick timing BUILT** (server `d4f1a2a` on the deploy
+  branch, merged into `feat/facing`; unit tests on the window and percentiles): a once-a-minute
+  `world health` log line (tick work at the median, 99th percentile and worst, ticks over the
+  50 ms budget, the checkpoint's time) while anyone is online, or when a tick overran;
+  **DEPLOYED 2026-11-02 16:24 UTC** (R720 boot line `build="d4f1a2a" dev_cmds=false`, nobody
+  online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`); **§1 PASSED 2026-11-02**
+  (two seats: about 1,200 ticks a minute, `over_budget=0`, the median tick 0.5 to 0.8 ms and the
+  worst 13.3 ms, one checkpoint a minute at 3 to 13 ms, no line once both had logged out). §2
+  and §3 were marked the same day on the pre-bump builds and are run again after the bump. (2) **Phase 2's split BUILT** on server `refactor/tick-split` (from
+  `feat/facing`, eight commits, the suite green after each: 350 unit, 161 world tests):
+  `tick.rs`'s 13,820 lines are `tick/`, `run` about 330 lines calling 23 step modules in the
+  order they always ran, `WorldState` and `Intents` in `state.rs`, 5 modules of shared rules;
+  moves only, checked line by line against the old file; and the integration tests are one
+  binary, `tests/world/`, a module per domain over one harness (`world_smoke.rs`'s copy gone).
+  (3) **Phase 5 BUILT** on client `refactor/remove-offline-code` (from `feat/facing`, 15
+  commits, about 6,400 lines out): the offline game removed (`Network`, `SaveManager`,
+  `Transformations`, `WarderAI`, local enemies, pets and loot, the offline lobby, the client's
+  own regen and buff ticks, every `is_launcher_mode()` branch), the Test Panel's client-only
+  buttons gone and its server-routed tools kept; all 12 checks, 11 probes and a headless boot
+  pass; two online bugs fell out (the group panel marked the wrong own row; the pet's local
+  assist errored on every hit). Both branches merge after `feat/facing` on the next bump day.
+  (4) The older checklists triaged a second time (the planner's b9).
+  **The audit's code items finished 2026-11-02** (user: "Lets finish the audit, not fold it
+  into the To-Dos"; server `refactor/tick-split`, seven commits from `1c35cf7` to `8afc96c`,
+  the suite green after each, 352 unit and 163 world tests; they ride the split's bump-day
+  merge, and `overnight_2026_11_01_checklist.md` §2's rerun covers them): **panic containment**
+  (a panic handling one client's message undoes that client's whole tick, then drops it as a
+  cut connection, lingering and saved at the reap; the world carries on. The first version,
+  `1c35cf7`, dropped the client unsaved, which the review found let a dead player relog alive
+  and a low-health one leave a fight at once; fixed in `3f1d4f2`); one helper per duplicated job (F6);
+  `IdKind` for what an entity id names (F7); `CoinAmount`, so a client's coin amount is checked
+  once at the message (F8); `DbError`, `MoveError` and `TradeError` (F9); log lines name the
+  acting player `char_id`, a `client{char_id, account_id}` span, the client id on decode
+  warnings (M9); fuzzing (F11: a seeded soak of 20,000 random messages through the handler in
+  every `cargo test`, and `cargo-fuzz` targets in `fuzz/` whose coverage-guided run needs
+  Linux). M7 / F3 closed by measurement (worst tick 13.3 ms against 50). User calls the same
+  day: `/pvp` stays a player toggle; B1 slice 1 handed to the fall damage design (noted in the
+  height model handoff); the R720's tailnet-only bind and off-host backup wait. **Left:** the
+  bump-day merges, reformat and lints; B6 wire hygiene and B4's stats message (the next protocol
+  bump); M4, M6 / F4, L2, L8 on `feat/public-hosting`. F7's `CharId` newtype skipped (user,
+  2026-11-02). **The long fuzz run DONE 2026-11-02** (WSL, an hour on `3f1d4f2`, 169 million
+  messages, no crash). **The bump PREPARED 2026-11-02 night on `bump/nov` in both repos** (user:
+  work through the night; nothing deployed or exported): `feat/facing`, the split and the
+  offline removal merged, the one-time reformat, the lints turn-on with CI's fmt and clippy
+  blocking; every server test, client check and probe green, a second fuzz hour clean (208
+  million messages). The bump day is now a fast-forward of both deploy branches to it. **The
+  `unwrap` / `expect` rule BUILT 2026-11-03 on `bump/nov`** (`29fa206`): denied in live code, the
+  57 sites made checks before anything moves, logged unreachables or stated invariants; review
+  pass folded in. **The bump was to wait until after the Nov 8 evening (user, 2026-11-03); on
+  2026-11-05 the door moved to Thu Nov 12 (the friends busy on the 8th) and the bump moved in
+  front of it** (user: "now that the date is pushed we can add this new tech"), and **MERGED AND
+  DEPLOYED the same evening** (server `267065f`, client `da83ea8`: the split, the offline
+  removal, the reformat and the lints are on the deploy branches and the R720; row o20); the
+  sheets (`overnight_2026_11_01_checklist.md` §2 and §3 among them) and a second pre-door check
+  follow before the last zip goes out.
+  Status per finding: the findings doc's §5.
+- [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
+  the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
+  Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying
+  client-made Hit/Miss/Evade broadcasts (only the Test Panel sends them; since the 10-14
+  stand-on-hit client change a forged one would stand another player, cancelling seated regen
+  and `/camp`; not live until the Oct 22 export); (2) movement speed decided by the server (a
+  modified client runs 1.5x; Spirit of Wolf counts twice for an honest one; mounts and carry
+  weight need server models); (3) heal and nuke stat bonuses and casting-skill multipliers on
+  the server; (4) the melee miss roll and weapon-skill damage on the server; (5) memorized
+  spell gems tracked by the server (a wire message); (6) active skills, Bard songs, alignment
+  and fall damage as their own builds (the first three have entries already).
+  **Fixes 1 to 3 BUILT 2026-10-19, pending the redeploy, the Oct 22 export and the playtest**
+  (`client_authority_fixes_checklist.md`, 15 rows). (1) server `23bba2c`, deploy branch: the
+  three relays gated and audited like any dev command; the relay test has a plain account's
+  forged hit reach nobody (fails on the old relay). (2) `feat/server-speed` in both repos,
+  server `9a3e1aa`, client `291d433`: `RUN_SPEED` (5 m/s) x the server's speed buff x snare x
+  the new `encumbrance.rs` (coins and every carried and worn stack against 10 + STR, a port of
+  the client's `encumbrance.gd`; `items.toml` gained `weight`, compared by
+  `check_item_lockstep.gd`); the stamina half of encumbrance, documented but never wired,
+  now runs; mounts refuse online. Test: the per-tick step off the server's own Position fan
+  (0.25 m run, the same for a forged over-long direction, the crawl floor at 40,000 copper),
+  failing on the old formula at 0.375. **Must ship with the export**: an older client against
+  the new server walks at two thirds speed. (3) server `b81da60`, deploy branch, works with
+  any client: `spell_power.rs`, the client's formula as is (user: "stick with the client's
+  spell formula for now"): `(base + INT x 0.5) x evocation` on hostile spells, `+ WIS x 0.3`
+  on heals, abjuration on absorbs, alteration on durations, a per-hit crit off INT; the
+  alignment multiplier waits for server-side alignment; six spells missing from the server's
+  discipline map added. Tests: unit tests on the formula; a heal test (60 + WIS x 0.3, flat
+  60 on the old code). Research for the later balance pass: `docs/design/spell_formula_research.md`
+  (EQ, WoW, D&D 5e and 3.5e, M&M, Lineage II). Also found and fixed on the way: the
+  hand-eating test raced the hunger drain (`3173fbc`).
+  **Fix 4 BUILT 2026-10-19, pending the Oct 22 bump and the playtest** (`feat/server-speed`,
+  server `fb49a20`, client `031d435`; checklist §4). `combat.rs` owns the whole swing, the
+  client's `weapon_skills.gd` numbers: the miss (35% at no skill to a 5% floor, 80% with a
+  weapon type the class cannot use, the off hand 20 points more, accuracy buffs off), the
+  skill damage multiplier (1.0 to 1.15, 0.5 unusable); a seated target is never missed. A miss
+  fans a Miss; on a mob it adds one point of hate (my call, EQ's: a swing angers a mob, and it
+  keeps the pet's assist working) and trains the weapon skill and defense, as the client did.
+  The client rolls no miss online and draws the server's on whatever it hit, with "You miss
+  X.". Four weapons named no skill (the server judged them hand-to-hand, the client's name
+  table otherwise, so they trained the wrong skill): both sides name it now. Test:
+  `the_server_rolls_the_melee_miss` (a Rogue with a two-handed staff, a Miss in eight swings;
+  fails with misses disabled). Tests that need a landed swing master the attacker's skill; the
+  six camp-walking tests walk by the server's own position, not the wall clock. **Fix 5 waits
+  on the user's yes for a migration** (the server has nowhere to keep a character's spell bar).
+  **Fix 5 BUILT 2026-10-19 (migration approved: "go ahead"), pending the Oct 22 bump and the
+  playtest** (`feat/server-speed`, server `ea9ff32`, client `817c786`; checklist §7; migration
+  `0015_spell_gems_and_logout_time.sql`, forward-only, ships in the merged build). The server
+  holds the bar (`spell_gems.rs`, the client's rules: ten gems, `3 + level/5` open, memorize
+  seated 2 s at half the mana, forget free; **memorizing is free since 2026-10-26** (user: "spells
+  will be memorized for no cost of mana. Casting the spell is where the cost of mana comes in.";
+  server `c81dca9`, client `1927872`, test `memorizing_takes_two_seated_seconds_and_no_mana` and
+  probe `tools/probe_memorize_free.gd`, both failing on the old code; server DEPLOYED 2026-10-27
+  02:46 UTC, boot line `build="c81dca9" dev_cmds=false`; the client half rides the next export; `client_authority_fixes_checklist.md` §7's row updated)) and refuses a cast of a spell in no gem before
+  anything is spent. New intents `MemorizeStart` / `MemorizeFinish` / `ForgetSpell` /
+  `SeedSpellGems` and a `SpellGems` snapshot, under PD_W0028; the DLL's four sends and
+  `spell_gems` signal, wired by name. **Existing bars** lived only on players' machines, so a
+  character the server never held a bar for offers its bar once, each spell checked as a
+  memorize would be (accepted residual: that one seed skips the memorize time and mana, for
+  spells the character could memorize anyway). Tests: a refused unmemorized cast, the memorize
+  timing (early, stood-up and closed-gem refusals, then half of 20 mana), the one-time seed
+  across a relog; the harness pre-memorizes every class spell, so the 70 existing casts are
+  unchanged. **Hosting-branch note:** add the four spell-bar intents to the per-connection
+  intent budgets when `feat/public-hosting` merges (a refused one answers with the bar). **The
+  client-authority list's fixes 1 to 5 are all built;** item 6 (active skills, Bard songs,
+  alignment, fall damage) stays as their own builds. **Item 6's active skills BUILT
+  2026-10-19** (the "Active skills partly do not work online" entry has it); **Bard songs
+  BUILT 2026-10-20** (the "Bard song rework" entry); **alignment DESIGNED 2026-10-20** as
+  part of the factions design (the "Faction system" entry, `factions_and_alignment.md`,
+  decisions pending); **alignment BUILT 2026-10-23** with factions slice 1 (that entry);
+  **fall damage BUILT 2026-11-04** (the height model entry under World systems, slice 2):
+  the list is closed.
+  **Phase 4's swing pacing and cast relays BUILT 2026-10-30 (night), pending the redeploy and
+  the playtest** (server `3c10935` + review fixes `e8810db` on the deploy branch;
+  `haste_limiter_and_cast_relay_checklist.md`, 15 rows; server only, no export). The
+  swing-rate limit assumed everyone fully hasted (a modified client could swing at twice an
+  unhasted honest rate); it reads the player's own Haste buffs now (`PerConnection::haste_total`,
+  the sum, which can only be as lenient as the client's single strongest) and paces a swing
+  at the greater of the current haste and the haste the hand's last accepted swing was judged
+  at (`last_swing_haste`), since the client timed this swing when that one fired: a Haste
+  that runs out between two swings costs no honest swing, and a forged client gains one swing
+  at the expired haste and nothing more. The weapon never carries (the review caught that a
+  carry of the last swing's whole pacing could be farmed by alternating a dagger and a staff
+  every swing, the staff swung at the dagger's pace for good); the client re-times its swing
+  on a weapon change instead (client `c572f7c`, next export; until it, a swap to a slower
+  weapon inside its old interval may drop one swing). The same review found the client
+  applying a self-cast Haste locally at the release, so a refused release left a phantom
+  haste the limiter would have punished for eleven minutes: a CastSpell refusal now fans the
+  caster's true BuffSnapshot (`e8810db`), and online the client waits for the snapshot
+  instead of applying the haste itself (`c572f7c`). The gates: fists 1.65 s unhasted (0.65
+  for everyone before), 1.05 s under the Enchanter's 30%. The cast relays sent peers whatever
+  `spell_name`, `duration` and fail `reason` the client wrote (any string on every screen in
+  view, a bar stretched at will, a non-finite duration never checked); only a spell the server
+  knows is relayed now, under its own name and at its own cast time (the late-joiner seed
+  reads the same number), and a cancel carries one fixed word, `cancelled` (no client shows the
+  relayed reason). Tests: unit (the gate at each haste and the carry-over rule) and two
+  integration tests failing on the previous source (a hasted Enchanter's four swings at 1.3 s
+  all answered and an unhasted Warrior's at 0.9 s every second one dropped; B sees Ice Spear's 1.0 s
+  bar against a forged 2.5, a made-up spell reaches nobody, a forged fail reason is not
+  relayed); the attack-paced tests swing at the weapon's own delay; the suite 157 of 157.
+  **DEPLOYED 2026-10-31 18:23 UTC** (R720 boot line `build="e8810db" dev_cmds=false`, nobody
+  online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0` at the boot); the sheet
+  is runnable on any client (§1's weapon-swap row has the current-export caveat written on it).
+  **Sheet run 2026-11-01: every row marked, one finding.** One honest swing was dropped at
+  22:07:11 (WAROI, a club, after a Haste had run out between fights). A Godot Timer applies a
+  `wait_time` changed in its own timeout handler one gap late (measured with a headless
+  probe), so the client paces swing N+1 by the interval set at swing N-1, and the server's
+  one-swing haste carry is one swing short. **Fix BUILT 2026-11-01 night, pending the redeploy**
+  (server `d40e505` on the deploy branch, merged into `feat/facing`): the server carries the
+  haste of the last two accepted swings, and counts an expired Haste for one second (the client
+  hears of the expiry a round trip late); a forged client gains at most two swings at an expired
+  haste. Unit tests replay the client's timer against the rule (the old one-swing carry drops
+  one swing in each expiry case, the new rule none); the late-joiner cast seed got its own
+  integration test, which settles the server half of the sheet's inconclusive Gate row.
+  **DEPLOYED 2026-11-02 04:20 UTC** (R720 boot line `build="d40e505" dev_cmds=false`, nobody
+  online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`); row 6 replays as
+  written.
 > Findings doc: `docs/security/exploit_audit_2026-07-08.md` (read-only audit, ran 2026-07-10/11).
 > Finding #1 (ungated `/give`) is **fixed** (2026-07-16), and the **per-account `is_gm` keystone is
 > DONE + playtested 2026-07-19** (server `82f55a9`, a green integration test, and
@@ -1001,6 +1482,67 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   client-driven second Attack inside 1.25 s is an active damage skill fired mid-cycle: this
   gap in play, not a limiter false positive. Each one cost the stamina and the cooldown the
   client had already spent. The user can confirm which skill was on the bar.
+  **SERVER-SIDE ACTIVE SKILLS BUILT 2026-10-19, pending the Oct 22 bump and the playtest**
+  (client-authority audit item 6, the first of its four; user: "GO!!!"; `feat/server-speed`
+  in both repos; `active_skills_checklist.md`, 23 rows). `UseSkill` carries the skill's name
+  under the unshipped PD_W0028 (it was a never-sent `skill_id`), and the server owns all of
+  it: `data/active_skills.toml` (every one of the client's 32 skills; `active_skills.rs`;
+  `tools/check_active_skill_lockstep.gd` exits 1 on any difference either side), the class
+  gate, a per-skill cooldown (`COOLDOWN_GRACE` 250 ms, the global cooldown's reasoning), the
+  stamina (charged and fanned at once, so a group-mate's panel moves with it), and the swing:
+  the ordinary main-hand roll times the skill's multiplier (Backstab x3 is real now), outside
+  the auto-attack limiter, so a skill fired mid-cycle is no longer dropped. Effects, all
+  server-side: **Shield Bash** stuns the mob for 3 s (a new `CcKind::Stun`, frozen like mez
+  but damage does not wake it; "Stunned" on its frame; on a player, no move, swing, cast or
+  skill); **Evade** and **Primal Instinct** deflect every melee swing for 5 s (fanned as an
+  Evade); **Holy Shield** is a 60-point absorb; **Hide** keeps idle mobs from noticing the
+  user (a mob already provoked still finds them; moving, the first swing, a damage skill or
+  a hostile cast ends it); **Feign Death** rolls 80% on the server, a success wipes the user from every
+  mob's hate and holds them unnoticed until they move (standing ends it, as in EQ; two
+  minutes at most); **Warder's Fury** is the hit plus `/pet attack`; **Truesight Strike**
+  never misses and ignores Evade. A refusal (unknown, not your class, stunned, on cooldown,
+  too tired, no target, too far, dead) costs nothing and answers with a private `SkillFail`
+  so the client drops the cooldown it drew. The client sends and shows: no stamina spent,
+  no local effect, the buff bar follows the server's snapshot (Evade, Hide and the shield
+  reconstructed from the skill definition, cleared when the server drops them). **Not
+  built:** the four alignment variants (Paladin_Fallen, Shadow Knight_Redeemed) are refused
+  for everyone until alignment is server-side; a stunned player's own bar shows nothing (the
+  name reaches peers' frames); Feign Death ends the user's DoTs with their hate (an
+  FD-and-DoT farm would otherwise pay from safety). Tests: unit (the table, the cooldown
+  grace, the FD roll, a hidden player unseen by the idle scan yet found by threat, a stunned
+  mob neither moving nor swinging) and seven integration tests (Backstab tripled, charged
+  and refused on cooldown, class and stamina; the stun; feign death told and held until a
+  move; hide until the first swing; evade; the shield; a guarding warder sent by the skill),
+  every one failing on the previous server, which had no `UseSkill` handler at all. A
+  headless probe covers the client half. **Hosting-branch note:** add `UseSkill` to the
+  per-connection intent budgets when `feat/public-hosting` merges.
+  **Review pass the same night, 12 findings, all fixed** (session note §9): the skill's
+  target refusals were a char-id oracle (three lines told absent, unflagged and far apart;
+  presence, liveness and reach share one line now, the 10-02 rule, and the plain Attack's
+  "Unable to attack <name>" names only a target in reach); one `UseSkill` per user per tick
+  (the CastSpell rule; every copy in a forged datagram was answered); **Hide ends on
+  movement** (its 30 s on a 10 s cooldown was a free walk through every camp; classic EQ's
+  Hide held only while you stood still, and a later Sneak skill is the EQ answer if walking
+  hidden is wanted); a Hide while hidden and a Holy Shield while its pool holds are refused
+  ("You are already hidden.", "Your shield still holds.": a re-press used to refill the pool
+  for 10 stamina); a stun refuses a CastStart and ends a running cast outright (a bar begun
+  under the stun and released after it went through); the stamina spend rides the regen fan
+  alone (it was fanned twice); a skill-backed success line goes through `send_system_line`,
+  not `send_refusal`; the helpers sit where rustdoc attaches their own comments. Tests
+  strengthened: Backstab's bound skips a crit (a crit alone could reach it), Feign Death
+  tries fresh monks until a success so the hold path is always exercised, Hide covers the
+  step and the re-use refusal, and the harness heartbeats through long waits (a 10.3 s silent
+  wait had read as a drop at the server's 10 s timeout).
+  **DECIDED 2026-10-20 (user): Hide ending on movement stands ("Good choice"), and a Sneak
+  skill will be built** (EQ's: the rogue moves at a walk while sneaking, unseen from behind;
+  with Hide it is the classic move-while-hidden pair). Not designed yet: its own entry below.
+- [ ] **Sneak skill (Rogue)** *(user 2026-10-20, with the Hide decision)*. The skill that lets
+  a hidden rogue move: in classic EQ, Sneak alone makes the rogue invisible to mobs facing
+  away and walks them at a reduced speed; Sneak and Hide together let them move unseen. Needs
+  a design pass on the server side (a Sneak buff that `end_on_move` spares, a speed multiplier
+  while it holds, and whether facing matters, which needs the facing model this project does
+  not have); a new entry in both skill tables and the lockstep check. Not a friends-build
+  need; sequenced after the remaining client-only systems (Bard songs, alignment).
 - [x] **Right-click is the world-interact verb** — **DONE + playtested 2026-08-24** (client
   `fa2ff04`, all 13 rows of `right_click_interact_checklist.md`). One mouse grammar everywhere:
   right-click (tap) interacts — NPC talk/vendor/bank, corpse + bag loot, veins, stations,
@@ -1245,7 +1787,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   session: a member leaving while the survivor watches their panel (unobserved — both seats
   disconnected 2 s apart).
 
-- [ ] **NaN Move direction poisons position and bypasses range gates** *(found 2026-09-25
+- [x] **NaN Move direction poisons position and bypasses range gates** — **DONE + playtested
+  2026-10-07 (ticked 2026-11-03; user: "movement has felt normal on the guarded build")**
+  (`xp_eligibility_and_pet_levels_checklist.md` §4, the ordinary-movement regression row across
+  three sittings on builds carrying the guard; the exploit half is pinned by the integration
+  test `nan_move_direction_is_dropped`, since only a forged client can send one. What exists
+  is in systems_overview, "Movement speed and encumbrance", and rule A3 in
+  `docs/reference/invariants.md`.) *(Original entry:)* *(found 2026-09-25
   during the zone-size research; verified in source, not yet exploited in play)*. A forged
   Move whose `direction` carries NaN/Infinity slips through `clamp_length`
   (`connection.rs:43` tests `len > max`, false for NaN) and the tick makes `conn.pos`
@@ -1309,6 +1857,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   server logs a `player link` line per player once a minute, and `tools/check_wire_layer.gd`
   says whether a checkout's DLL carries what `Net` calls by name. Needs the DLL rebuild the
   Oct 22 export already carries; the server half rides the next redeploy.
+  **Found 2026-10-29: that `player link` line reads `rtt_ms=0.0` for every player on every
+  send** (the 10-27 and 10-29 journals, two seats). Cause, read in `tick.rs` and renet 2.0's
+  `remote_connection.rs`: the world loop calls `transport.update` (which hands the clients'
+  acks to renet, each timed against the connection's clock) BEFORE `server.update` (the only
+  call that advances that clock), so an ack that arrives within a tick of its packet measures
+  zero and any RTT is under-read by one tick; renet's documented order is the reverse. Two
+  call swaps (the live loop and the shutdown drain), server only, waiting on the go. `/ping`'s
+  number is the DLL's own renet client, whose loop order is unchecked.
+  **BUILT 2026-10-30 (user: "yes"), PLAYTESTED the same evening** (server `088d8f5`,
+  with the item ledger; `item_ledger_and_rtt_checklist.md` §4): the two calls swapped in the
+  live loop and the shutdown drain, renet's README order; an RTT now reads in whole ticks,
+  rounded up (50 ms is the floor). The DLL's own client loop was checked the same day and
+  already has the documented order, so `/ping` was right all along. No test pins the loop
+  order; the journal's `player link` line after the redeploy is the evidence. **DEPLOYED
+  2026-10-30 14:38 UTC** (R720 boot line `build="088d8f5" dev_cmds=false`, nobody online at
+  the stop, `saved=0 unsaved=0`). **§4 PASSED 2026-10-30 evening** (`item_ledger_and_rtt_checklist.md`
+  §4, two seats over the tailnet: every `player link` line across thirty minutes read
+  `rtt_ms=50.0` for both players, never 0.0, where the 10-29 lines on the old build in the
+  same journal read 0.0; `/ping` still a real number). The zero readout is closed; the entry
+  stays open on its public-host items.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -1326,7 +1894,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   answered far and absent ids differently, which would have made the gate a char_id to name map
   and an is-online oracle; far, offline and never-existed now get one generic line and the same
   empty result. No line-of-sight half (there is no server collision model; that stays with
-  (b)). (b) and (c) remain open.
+  (b)). (b) remains open. **(c) narrowed 2026-10-30:** its Hit/Miss/Evade relays were gated
+  as dev commands on 10-19, and its cast relays now carry only spells the server knows, at the
+  server's cast time, with a fixed cancel word (the client-decided outcomes entry); what is
+  left of (c) is the rate cap when public, the hosting branch's cosmetic budget.
 - [ ] **GM action audit log** *(deferred "to a fast follow" when `is_gm` shipped 2026-07-17;
   server_design's day-one rule "all GM actions audited"; the `gm_actions` table has existed
   since the auth schema; audit 2026-09-29)*. Write one row per dev/GM command (`/give`, coin
@@ -1385,6 +1956,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   now", and adding a column for it means a migration, after which an older binary refuses to
   boot on that database (no rollback). `reset_password` names the lever instead: ban, wait
   for the `banned account kicked from the world` log line, unban.
+  **DEFERRED FAR OUT 2026-10-16 (user): "I dont want the password-reset kick for a long time.
+  Im not worried about systems being abused by the people who are using the server."** Not a
+  friends-build item; it sits in the planner's after-the-door strip. Revisit only if the
+  player base grows beyond people the user knows, alongside the public-host hardening.
+  **Scope of the deferral (user, same day):** it covers this one operator tool only. It does
+  NOT relax anti-cheat work: development stays vigilant for hacks, dupes and cheats in every
+  build, whoever is playing.
 - [ ] **PET_CHARM had no range check** *(found 2026-10-01 while reading the charm arm for a test
   fix; **BUILT same day, pending playtest**, server `30f0474`;
   `inspect_range_gm_audit_ban_checklist.md` §4)*. The charm arm checked that the target id was a
@@ -1420,6 +1998,36 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Design note, flagged not decided:** heals now share the nuke's 25 m reach because spells
   have no range field; say so if heals should reach further (a per-spell range is the real
   answer, with the content pass).
+  **DECIDED 2026-10-19 (user): per-spell ranges, "we should do this for sure", on the
+  Monsters and Memories baseline.** Research (the M&M wiki, three pages re-checked by hand):
+  every single-target spell there lists 30 m (nukes, DoTs, heals, buffs on others, snares,
+  roots, slows, mez, stun, charm, fear, lifetaps, debuffs, dispels, bind, resurrection); only
+  shapes differ (group spells 30 m to the target plus a 15 to 20 m radius, point-blank AoE a
+  10 m radius, one 15 m cone). Build: a real `range` field per spell on both sides, every
+  single-target spell defaulting to 30 m (hostile goes from 25 m to 30 m), an AoE radius kept
+  separate from the range, the tooltip showing the spell's own number.
+  **BUILT 2026-10-19, pending the Oct 22 bump and the playtest** (`feat/server-speed`, server
+  `aa225c5`, client `6ab89f1`; checklist §6). `Spell.range` / `SpellData.range` (0 = 30 m) and
+  `reach()`, the one reach for every targeted cast, the resurrection's corpse and Evacuate's
+  gather; hostile spells go 25 to 30 m; the client checks one metre inside. **The leash floor
+  moved 30 to 35 m** (it exists so no mob can be hit from beyond its own leash; a unit test now
+  holds every spell inside it). `check_spell_lockstep.gd` compares `range` even when only one
+  side writes it (a planted one-sided range is caught). Test: `a_nuke_reaches_thirty_metres`
+  (a Smite at about 28 m lands, at 33 m is refused; fails at the old 25 m).
+  **The full 30 m, BUILT 2026-10-27, PLAYTESTED 2026-10-29** (client `spells.gd`;
+  `equip_gates_and_fizzle_checklist.md`, the RANGE rows, all five passing: the tooltip's 30 m,
+  Smite landing at 29.5 m, the client refusing at about 31 m with no bar and no mana, a
+  Greater Heal on a partner who walked past 30 m during its bar refused by the server's
+  pre-flight with the mana untouched, Healing Light landing on a partner at 30 m. The entry
+  stays open on `inspect_range_gm_audit_ban_checklist.md` §4's never-run rows: charm, PvP and
+  resurrection reach. User, on the 10-27 checklist: "Smite max
+  range is 30m, but i cant cast on an enemy that is 30m away"). The client checked one metre
+  inside the reach (`REACH_MARGIN`), so the tooltip said 30 m and the cast refused at 29. Now
+  the client checks the full reach, the server's exact number; a metre of server slack was
+  built and taken out the same hour (user: "if the max range of the spell is 30m then the
+  spell is out of range at 30.1m"), so a target that walks out between the client's check
+  and the server's costs a free refusal and nothing else. `a_nuke_reaches_thirty_metres`
+  now refuses just past 30 (it checked at 33).
 - [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
   ticked on the integration test** (server `f58b796`,
   `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
@@ -1467,8 +2075,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > `systems_overview.md` → "Death, corpses & resurrection"; the design + as-built deviations are
 > in `docs/design/corpse_and_resurrection_plan.md`. Only the follow-ups below are open.
 
-- [ ] **Dead group members would receive XP shares (code-confirmed, never seen in play)**
-  *(raised 2026-08-27; the original log observation was MISREAD — the tester corrected it:
+- [x] **Dead group members would receive XP shares** — **DONE + playtested 2026-10-07 (ticked
+  2026-11-03; user: "dead group members should not receive experience")**
+  (`xp_eligibility_and_pet_levels_checklist.md` §1: a member died beside a Decrepit Skeleton
+  and the killer finished it, `kill credit granted ... pool=263 per_member=263 members=1`; the
+  range half of the entry was since widened to 200 m for XP, journal and coin, its rows on
+  `small_rules_checklist.md` §1. What exists is in systems_overview, "The group share range".)
+  *(Original entry:)* *(code-confirmed, never seen in play)* *(raised 2026-08-27; the original log observation was MISREAD — the tester corrected it:
   FIGHTME had respawned at bind and was alive and in range when the 21:35:30 share landed,
   then took the res teleport later, which the log alone could not show)*. What survives is the
   code fact, verified after the correction: the kill-credit split's member filter is
@@ -1495,6 +2108,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   gate — the decision covered XP shares, and range-gating journal ticks would silently change
   quest play; say the word if journal ticks should be range-gated too.
 - [ ] **A dead character died again on relogin, and lost reliable packets were never resent**
+  **(a) DONE + playtested 2026-10-26** (`dead_relogin_and_resend_checklist.md` §1 and §4 on
+  `3f09fbd`: one death and one corpse across the relogin, the death screen and the respawn, the
+  corpse looted; what exists is in systems_overview, "Respawn, bind points, and the death
+  lock"). **Open for (b) only:** the resend has had no lossy-link test (§2 skipped, no lossy
+  link to hand); it matters once players connect over the internet. The §4 row for the silent
+  login reset passed 2026-10-27 on the new export (no heal line at login; a real heal still
+  prints one), so (a) is closed on both sides.
   *(both found 2026-10-12 by the review of the hosting branch; both older than it; **BUILT
   the same day on the deploy branch, pending redeploy + playtest**: server `6a09aa1` +
   `645606a`, `dead_relogin_and_resend_checklist.md`)*. (a) `from_spawn` set `death_processed: false`
@@ -1508,9 +2128,51 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   lost inventory delta, chat line, kick or teleport was never resent. Invisible on a
   lossless tailnet; on the internet it would have read as random desyncs. Called every
   tick now. No client change for either.
+  **(a) passed its first half 2026-10-26 and exposed a third bug, BUILT the same day**
+  (`dead_relogin_and_resend_checklist.md` §1 and §4): the relogin no longer died again (one
+  death line, one corpse), but the character was stuck. The server sent your own HP only when
+  it changed since the last send, so a character who left dead with full mana and stamina was
+  never told it was dead: the client never showed the death screen or respawned, while the
+  server refused every move. Server `3f09fbd` sends a joiner its own HP, mana and stamina once
+  on entering the world (test `a_dead_character_with_full_pools_is_told_it_is_dead`, failing
+  on the old code; the earlier test passed only because its stamina was regenerating); needs
+  the redeploy. The login's "You were healed for 22 health." was the client resetting the bars
+  from a 100 HP placeholder, nothing mechanical; client `4a93d6e` makes the reset silent
+  (probe `tools/probe_login_reset.gd`), next export.
 - [ ] **Res-sickness** — specced in the plan's Slice 3 but dropped from v1: a short debuff on
   res-accept (reduced stats/regen for a few minutes) via the server buff system. The last piece
   of the plan as written.
+  **BUILT 2026-10-14 and REBUILT 2026-10-15 to the P99 design, pending the redeploy, the export
+  and the playtest** (server `528ae23`, client `9c5e333`; `res_sickness_checklist.md`, 13 rows; the
+  server half works on the client testers hold, the sheet and buff-bar entry need the export).
+  **DECIDED 2026-10-15 (user): "Lets keep the design you found on the P99 wiki page. Difficult
+  is what we are looking for."** So, classic EQ's Resurrection Effects as Project 1999 keeps
+  them: five minutes; "You are exhausted." on landing, "You feel your strength return." when it
+  wears off; the player **lands at a quarter of max HP with no mana** (one-shot at the accept,
+  announced at once; not damage, so no stand or camp cancel rides on it); and STR, AGI, INT, WIS
+  and CON (EQ's STA) lose a **level-scaled fraction of their intrinsic value** (race, class and
+  level via `char_data::compute`, never gear or buffs), a tenth at level 1 to a half at 60
+  (`buffs::RES_SICKNESS_CUT_AT_1 / _AT_60 / _ARRIVAL_HP_FRACTION / _SECS`, tuning knobs). P99's
+  shape: about half a level 60's STR. The first build's level/4 cut and regen halving are gone
+  (the regen half was never P99's). The debuff rides the stat-buff path, so the buff tick
+  expires it and undoes its deltas like any stat buff. Intrinsic because the client computes the
+  same cut from the race, class and level it knows: `PlayerStats.intrinsic_character` (the
+  race-class-level math `apply_character` always ran, now callable on its own) and
+  `BuffManager`'s reconcile, the fraction in f64 in the same order of operations on both sides
+  so they round the same product (kept in lockstep by hand). **Unchanged, by the 2026-06-22
+  lock:** the XP refund tiers (25/50/75%). **Flagged:** buffs are not persisted, so a relog
+  clears the sickness, as camping did in classic (the dodge costs the camp or linkdead wait; a
+  knob if it should persist). Tests: unit (the fraction at 1, 20, 60 and past 60; the cut on
+  sample stats and on a level 60 Human Warrior, half off STR 142 and nothing below zero) and an
+  integration test where a Warrior dies and respawns, a Cleric 20 casts Resurrection (Minor) on
+  the corpse, the owner accepts, is summoned, is told the line, lands at a quarter HP with no
+  mana and carries the sickness with five minutes on it; a headless probe for the client half
+  (a Human Warrior at 1, 20 and 60). Full suite green (276 unit, 98 integration). *(History:
+  the 2026-10-14 build took one point per four levels and halved regen, sized on a wrong claim
+  about the stat scale; the user caught it the same evening.)*
+  **Server half DEPLOYED 2026-10-19** (R720 boot line `build="33c7e28" dev_cmds=false`, no
+  migration); the landing at a quarter HP with no mana, the two chat lines and the
+  stat cut are live on the 10-13 export; the sheet and the buff-bar countdown wait for the Oct 22 export.
 - [x] **Respawn at bind / Soul Binder NPC + a real death state** — **DONE + playtested 2026-08-13**
   (proof: after die/respawn/logout the character's `pos` equals `bind_x/z` to every decimal, where a
   fallback would have written 0/0). What exists is in systems_overview → "Respawn, bind points, and
@@ -1538,7 +2200,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `respawn_bind_checklist.md`. Deliberately NOT included: post-respawn invulnerability (a safe
   respawn location should make it unnecessary — revisit if the playtest says otherwise).
   Original evidence: `docs/playtest_notes/first_external_tester_2026_08_11.md`.
-- [ ] **Corpse auto-re-equip on loot** — looting your own corpse returns gear to your bags; you
+- [x] **Corpse auto-re-equip on loot** — **DONE + playtested 2026-10-26**
+  (`corpse_reequip_checklist.md`: every row passing but the pre-feature corpse, which cannot
+  exist on the fresh world; the journal shows eight Loot All runs each putting 8 worn pieces back,
+  one across a server restart, and a resurrected corpse looted the same way. What exists is in
+  systems_overview, "Death, corpses & resurrection".) *(Original entry:)* Looting your own corpse returns gear to your bags; you
   re-equip by hand. A clean version needs the corpse to remember each item's equip-slot
   provenance. **Now slice 2 of the cursor-slot epic** (user-committed 2026-08-27; design:
   `docs/design/cursor_slot_and_reequip.md`) — the cursor slot is the overflow home that makes
@@ -1553,6 +2219,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   occupied or wrong slot, the slot survives a partial loot in the DB, and an integration test
   has a Warrior die in a cap and robe and loot them back onto slots 2 and 3 with the bread in
   the bags and the gear persisted as worn.
+  **DEPLOYED 2026-10-14** (R720 boot line `build="5986f26" dev_cmds=false`, the four old
+  corpses cleared by hand in the same stop, `loaded persisted corpses count=0`), so
+  `corpse_reequip_checklist.md` is runnable now on the 10-13 export.
 - [ ] **Per-creature corpse models / scale** — corpses (player + mob) share
   `scripts/corpse_body.gd`'s capsule; needs authored per-creature meshes.
 - [ ] **Tune `corpses::CORPSE_LINGER_SECS` for the considered production value** — **raised to 7
@@ -1750,6 +2419,69 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   so the server applies a song's effect once on cast and nothing sustains it; heal songs do a raw
   `set_hp` (HP-bar bounce, no buff-window entry). Make them server-authoritative + weaving-aware +
   buff-window-visible. A real subsystem, not a fix. Design note: `docs/design/bard_song_rework.md`.
+  **DECIDED 2026-10-20 (user) and BUILT the same day, pending the Oct 22 bump and the playtest**
+  (`feat/server-speed`, server `6afcf6a`, client `e1be328`; `bard_songs_checklist.md`, 16 rows;
+  the research in session note 2026-10-20 §2: P99's rules, a 3 s sing, a 6 s pulse, 12 to 18 s
+  of linger, one song at a time, four songs the practical twist). Classic EQ's model: **a song
+  takes 3 s to sing** (the song's `cast_time`, so the existing cast-time gate enforces it, which
+  makes twisting a skill and an instant four-song cycle a forgery), **costs nothing** (user:
+  "Please stick with this", clarified: EQ's were free, not cheap; mana stays the cost of the
+  bard's real spells), and the **server pulses the one active song every 6 s**
+  (`SONG_PULSE_SECS`), each pulse's effect **lingering 12 s** (`SONG_LINGER_SECS`, the low end
+  of EQ's range, so four songs hold and a fifth drops) as the ordinary buffs, refreshed by name:
+  the heal song is a heal-over-time of its per-pulse heal spread over the pulse (the Slice 0
+  ask, buff-window visible, no bounce), speed, haste, mana regen and accuracy/crit go through
+  the buffs the server had. A new song replaces the current one while the old one's effect
+  lingers (twisting); re-singing the active song, the new `StopSong` intent (`/stopsong`, or
+  re-clicking the song), any non-song cast and death end it; **movement never does** (the cast
+  movement gate and the client's cancel-on-move both pass songs). Aria of Dismay pulses its
+  slow on the bard's current target while it is a live mob in reach, skips a pulse out of
+  reach and stops when the target dies or goes. **Every song scales with level** (user: "a
+  level 1 character should not be as capable as a level 10 character"; EQ scaled each song by
+  level, Selo's +20% at 5 to +65% at 50): a song runs at `SONG_SCALE_AT_LEARN` of its
+  listed effect at the level the class learns it, climbing to the full effect at
+  `SONG_FULL_AT_LEVEL` (50); the data carries the level-50 values; both knobs are mirrored in
+  `bard_songs.gd`. **Selos' Melody alone carries EQ's Selo's curve** (user, the same day: "our
+  speed spell should match the scaling of the EQ Selos'", after a first reading had put every
+  song on it for an hour): a per-song `song_scale_at_learn` (0.3077, 20/65; 0 means the
+  global 0.4) and `move_speed_mult` 1.65, so a level 1 bard runs +20% and a level 50 +65%,
+  faster than Spirit of Wolf only from the 30s. **Poet's Mending and Wanderer's Chord were
+  matched to their P99 counterparts the same day** (user: "go ahead with matching"): 11 a
+  pulse at 50 (Hymn of Restoration's line, about 4 when learned at 4) and +10% haste
+  (Anthem de Arms); Aria of Dismay (your 8%) and Anthem of the Hunt (no counterpart) on hold. **Mana Weave cut to P99's mana song** (user: "adjust ours to what the P99
+  numbers are"): 6 mana per 6 s pulse (1.0 a second), down from 12 a second, twelve times
+  EQ's; EQ gave it to the group and not the bard, so when group songs come, follow that. The
+  other five checked against P99 and found at or under it (Selos' +35% ceiling vs EQ's +65%;
+  Poet's 8 vs Hymn of Restoration's 13 at 60; Wanderer's +12% vs Anthem de Arms' +10%; Aria 8%
+  vs Largo's 15 to 35%); three of them matched to EQ's later the same day, below. The client sends
+  and shows: no local pulse online, the buff bar follows the server's snapshot through
+  `BardSongs.apply_song_buffs` (scaled the same way), the spell lockstep check no longer
+  excuses songs (zero drift, 158 client, 142 server). **Not built, flagged:** instruments and
+  the singing skill; group-wide songs (ours are self-only); a PvP target under Aria (the song
+  stops on one); a singing pose for peers. Tests: unit (the scale at the learn level, 25 and
+  50; the pulse effects of Selos', Poet's and Mana Weave; every song a 3 s sing and free) and
+  four integration (a forged instant release refused, the first pulse's 12 s linger, the
+  refresh at 6 s, the stop and the effect running out 12 s after the last pulse, read off the
+  clock; two songs twisted and both up, the active song re-sung stops it, a nuke ends it; a
+  sing on the move through fifteen metres, and a level 1 bard's Selos' measured at 0.300 m a
+  tick, 1.2x, where the flat data would give 1.65x), every one failing on the previous server; the
+  GCD song test rewritten for the sing time; a headless probe for the client half.
+  **Harness lessons:** the position channel clogs through a long wait and a later speed
+  measurement reads the stale positions it kept (the heartbeating pumps drain it now), and a
+  timing assertion reads the clock, not the windows' nominal lengths.
+- [ ] **Dwarf racial ability: Stone Skin** *(user idea 2026-10-19, instead of making Dwarves
+  permanently stone; "go ahead with stone skin")*. Active: the skin turns to granite, a large
+  cut to physical damage taken and no knockback, paid for by being rooted in place, on a long
+  cooldown (starting knobs 50%, 10 s, 10 min). Shape follows Lineage II's Ultimate Defense (the
+  user's comparison: huge defence, unable to move); EQ's Monk Stonestance and WoW's Stoneform
+  are the nearer-but-costless cousins. Written up in `docs/design/race_stats.md` under Dwarf,
+  with sources in the 2026-10-19 session note. **Open (user):** whether it also cuts magic
+  damage. **Before it can be built:** no racial ability exists on the server yet (all of
+  `race_stats.md`'s are design only; Troll regen is the one race perk that shipped), so Stone
+  Skin is the first and needs a server-side home: a race-gated intent, a server cooldown, a
+  self buff carrying the cut and the root, and the no-stacking rule with Guard and Dark Bond.
+  **Exploit lens:** never a client-side effect, or a modified client gives any race a free
+  damage cut; the server checks the race on every use.
 - [ ] **Two-handed damage arc (cleave)** — large 2H weapons (axes/polearms) hit multiple
   enemies in a frontal cone on auto-attack, giving 2H its own identity vs. dual-wield.
   Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it
@@ -1761,6 +2493,35 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   take **bonus damage** and be a **bonus crit target** (higher crit chance + crit damage against
   them); (b) **taking damage should stand you up** (another stand trigger, alongside movement +
   attacking). Both EQ-authentic; neither is in the shipped fix.
+  **Researched 2026-10-14, and the rule is exactly what the sources keep:** the Project 1999
+  wiki (Decoy's Enchanter Notebook) says an enemy hitting a sitting player always hits for the
+  maximum it can, taking damage while sitting forces you to stand, and that stand closes an open
+  spellbook; EQEmu's `attack.cpp` has both halves (a seated client is always hit, and the damage
+  table returns its top entry). Not a separate crit bonus: the "bonus damage" of (a) is the max
+  roll with no mitigation. **DECIDED 2026-10-14 (user): "Both halves, the P99 rule... Changes
+  the med game for casters: sitting near a mob is now dangerous, as in EQ."**
+  **BUILT 2026-10-14, pending the redeploy, the export and the playtest** (server `d4f6b47`, client
+  `2495276`; `seated_combat_checklist.md`, 16 rows; the server half works on the client testers
+  hold, the body standing on a hit needs the export). The damage half is `combat::mitigated`
+  (one home: the mob swing and the PvP swing both call it; a seated target gets no armor off)
+  and `combat::calc_swing_max` (the top of the attacker's band for a seated PvP target; the
+  crit roll stays, a crit being luck on top of the roll; a mob's swing is flat, so its max is
+  the amount). The stand half is one line in `PerConnection::note_damage_taken`, which every
+  player-damage site already calls (melee, spells, DoT ticks, damage shields), so the seated
+  regen rate, `/camp` and the seated rule all end with the first hit. Nothing on the wire
+  carries the flag, so the client stands its own body on the Hit it receives, never on a
+  zero-damage one. Tests: unit (the band max, the offhand, the mitigation table, the stand) and
+  an integration test where a seated player is hit by bare fists for exactly 4 + STR/5, a
+  `/camp` straight after is refused (the one intent that needs the server's own seated flag)
+  and the same `/camp` after sitting again is accepted; it fails on the previous code at the
+  camp assertion. Headless probe for the client half. Full suite green (275 unit, 97
+  integration). **Exploit lens:** both rules key on the server's own seated flag, which the
+  client can only set through the Sit intent, so a client that lies about standing simply
+  forgoes the seated regen; a client that ignores the stand keeps drawing itself seated but is
+  standing to the server and gets no seated regen and no seated rule.
+  **Server half DEPLOYED 2026-10-19** (R720 boot line `build="33c7e28" dev_cmds=false`, no
+  migration); `seated_combat_checklist.md` §1 and §2 are runnable now on the 10-13
+  export; the body standing on a hit (§3) waits for the Oct 22 export.
 - [x] **Named mobs lost enrage + guaranteed drops** — **DONE + playtested 2026-08-21**
   (server `393cc64`, `named_mobs_checklist.md`). What exists is in systems_overview → Combat.
   **They were never placed in the world**, which the old wording missed: no scene or spawner ever
@@ -1783,6 +2544,113 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   owner: port the WIS term server-side or delete it client-side, and make `spells.toml` and
   `spell_definitions.gd` agree per rank. Also gate consumable-heal prediction the same way the
   self-heal gate works (masked today only because food heals are 0).
+  **DECIDED 2026-10-19 (user): the WIS bonus moves to the server**, with the standing rule
+  "Events happening on the client are a no-go." Re-read the same day: the rank mismatch is
+  stale (both sides carry "Mending" 25 and "Mending Rk. II" 38), and the drift is wider than
+  heals: nukes add `INT x 0.5` on the client only, and the casting-skill multipliers too. Fix 3
+  of the client-authority audit (Security, "Client-decided outcomes").
+- [ ] **EQ parity: the inflation pass** *(user, 2026-10-20, after the Bard song pass found Mana
+  Weave at twelve times P99's: "A lot of our spells, skills, effects, etc are pretty over
+  inflated"; baseline P99, scope and format settled the same day; **research DONE 2026-10-20,
+  `docs/design/eq_parity_audit.md`, nothing built, the user's calls pending on §8**)*. Every
+  server spell (142), the 16 client-only ones, the 32 active skills, the mobs, the weapons, the
+  player pools, regen and XP set against their P99 counterparts (PQDI's class lists for the
+  level-scaled spell figures, the P99 wiki and forums for mobs and weapons, EQEmu's source for
+  the pool and skill formulas), as ratios at the same level. **The finding: the inflation is on
+  the player's side at levels 1 to 10 and almost nowhere else.** Player pools at level 1 are 5
+  to 10x EQ's (a Human Warrior 200 HP against 32; a Wizard 210 mana against 22) while the
+  per-level gains are EQ's, so level 50 lands in line for melee and priests (casters' HP under);
+  level 1 to 10 nukes and heals are 4 to 6x (Smite 35 against Strike 7; Healing Light 60 against
+  Minor Healing 10; Ice Spear 50 against Frost Bolt 5 to 7) and in line from 12 to 20 (Meteor
+  130 against Force Shock 171); the regeneration buffs are 6 to 12x and 12 to 33 levels early
+  (Clarity 8 mana a second at 14 against 4 a tick at 29; Regrowth 5 HP a second at 1 against
+  Regeneration 5 a tick at 34); Haste 50% against 30%. **Already EQ's:** mob damage per hit (the
+  2 x level + 2 rule to the point), the HP and mana regen tables, the XP curve, the weapon bands,
+  the stat buffs, shields, absorbs, roots, mez, snare and speed; mob hit points sit 1.5 to 3x
+  above at levels 1 to 6. **Recommendations, worst first (§8, the user's calls):** (1) EQ's pool
+  formula outright (`5 + level x factor / 10 + STA x level x factor / 3000`, mana `22.5 x
+  level`), the one change that fixes the feel of level 1 to 10 by itself; (2) the level 1 to 10
+  spells reshaped to EQ's lines per the class tables, the 12+ spells left alone; (3) the regen
+  buffs to P99's per-tick figures and levels; (4) Haste to 30%; (5) low-level mob HP toward
+  P99's, after the pools move; (6) leave alone everything already EQ's and the user's own calls
+  (Slow and Torpor under EQ, Aria 8%, conjured food x10, the 25/50/75 res tiers, the spell
+  formula "for now"); (7) a second pass on mana costs and cast times (not in PQDI's lists) and
+  mid-level mob HP if wanted. All data edits on both sides, held by the lockstep checks; no new
+  knobs. Planner row d9.
+  **DECIDED 2026-10-20 (user): "yes to all"** five, then three calls on the spell formula when
+  the build plan was laid out: the INT and WIS bonuses go ("If the INT and WIS bonus is not P99
+  accurate, then we can discard it"), the casting skills follow P99's rules (where they never
+  scaled an effect but decided whether a cast FIZZLED), and the INT spell crit stays ("even
+  though its not classic"). **BUILT 2026-10-20, pending the Oct 22 bump and the playtest**
+  (`feat/server-speed` in both repos, server `0b60460`, client `92c1442`;
+  `eq_parity_checklist.md`, 36 rows; the audit's §9 has every number). (1) EQ's pool formula
+  on both sides (`char_data::base_hp` / `base_mana` / `hp_level_factor`, mirrored in
+  `CharacterData`; EQEmu's integer arithmetic so the sheet shows the server's number; our
+  CON, INT and WIS in EQ's stats' place; a Human Warrior 28 HP at 1 and 1,886 at 50, a Wizard
+  17 HP and 17 mana; the pure melee keep a token 20 mana; the per-level HP and mana gains are
+  gone from both gain tables and a level change recomputes, up and down; existing characters
+  recompute at login with current values clamped). (2) The level 1 to 10 spells at EQ's
+  numbers AND EQ's mana costs: the costs were the audit's "second pass", but the first test
+  run showed that with 16 mana at level 1 and 15-to-35-mana spells nobody could cast, so each
+  changed spell took its PQDI counterpart's cost (Strike 12, Minor Healing 10, Burst of Flame
+  7, Fire Bolt 40, about one mana a point); Rune and Bind Affinity to 10 for the same reason.
+  (3) The regen buffs at P99's rates, levels, durations and costs (Breeze 16, 2 a tick for 27
+  min at 35; Clarity 29, 4 a tick at 75; Regrowth 34, 5 a tick for 20.5 min at 100, Rk. II 44
+  at 200; Haste 30% for 11 min at 80; Lich Form at 4 a tick; Healing Wave's HoT dropped),
+  because a 2-a-tick Breeze over the old 30 s would have been a net loss. (4) The mobs at
+  levels 1 to 9 toward P99's (16 at 1, 80 at 6, 160 at 9), the pet curve with them. (5)
+  `spell_power::empower` and the client's three terms deleted; a spell does its listed
+  number; the crit stays. (6) **Fizzles**: EQEmu's `CheckFizzle` as `cast_gate::fizzle_chance`
+  (par `5 x spell level - 10`, at most 235, plus the level, against skill plus level; a Bard's
+  CHA against 110; base 10%, clamped 1 to 95), rolled by the server at a timed cast's
+  CastStart and an instant cast's CastSpell, after the target checks and before the mana: a
+  fizzle answers "Your spell fizzles!" (the client prints EQ's line as is), burns a quarter of
+  the mana (EQEmu's rule; classic charged for a fizzle too, "reduced and capped" in June 1999
+  per P99's patch notes), starts the gem's refresh (the global cooldown; P99's pages list a
+  2.25 s "fizzle time") and trains nothing; songs never fizzle (no singing skill yet).
+  **`Config::fizzles`**, always on for a running server with no env var, exists only so the
+  integration harness can turn the roll off (a 10% coin flip on every single-cast test) and
+  back on for the one test about it. **Exploit lens:** every roll and every number is the
+  server's; a forged CastStart that fizzles costs the forger mana and the refresh; a client
+  that skips CastStart fails the cast-time gate as before. Tests: unit (the pools at both
+  ends against EQEmu's formula, the fizzle formula at par, under, over, the stat term, the
+  Bard, both clamps, the quarter mana; the pet curve anchors) and integration (`a_heal_is_its_
+  listed_number`, the DoT test on the new numbers, `a_cast_can_fizzle_on_a_low_casting_skill`:
+  a level 16 Magician with no evocation fizzles Fireball Rk. III at its start, loses 10.5 of
+  42, is refused inside the refresh, and fizzles the instant Frost Bolt Rk. III from its
+  CastSpell); every test that pinned an old number moved (310 unit, 129 integration green);
+  the client probe (the formula's anchors, a level 1 to 5 to 3 round trip through
+  `apply_server_level`) and the spell lockstep check (zero drift, 142 shared). **Flagged, not
+  built:** cast times (most level 1 nukes are instant; EQ's took 1.1 to 1.8 s); mid-level mob
+  HP; Lich Form's hit point drain (EQ's lich line paid HP for the mana; ours is a free Breeze
+  at 20); a fizzle's line to bystanders; per-spell `base_difficulty`.
+  **Three integration tests this pass made timing-dependent, FIXED 2026-10-23** (server
+  `b25a19d`; the suite then ran 134 of 134 six full runs in a row). (1)
+  `pet_pulls_aggro_via_threat_reaggro` failed every time: the camp's Decrepit Skeleton has
+  16 HP now and the pet killed it before its threat could pass the owner's; the test fights its
+  own 500 HP dev spawn and still fails with the 1.3x switch rule broken. (2)
+  `owner_keeps_seeing_a_pet_parked_two_cells_away` failed about one full run in four: the
+  owner's walk ended 7.4 m from a Cave Bat, a level 6 Necromancer can now die to it, and a
+  dead owner leaves the AI's target list so the pet stood still; the walk moved to a row clear
+  of every camp. (3) `a_cast_can_fizzle_on_a_low_casting_skill` read the regen fan's
+  full-mana update instead of the fizzle's when one landed first; it reads the update after
+  the fizzle line. All three were test faults; the server was right.
+  **A fizzle now keeps the gems greyed, BUILT 2026-10-27, PLAYTESTED 2026-10-29**
+  (client `spells.gd` / `remote_player_manager.gd`; `equip_gates_and_fizzle_checklist.md`, the
+  FIZZLE rows: six Smite fizzles each greyed every gem; the re-click met the client's own "You
+  cannot cast again yet." and sent nothing, which the user keeps as is; a refused cast greyed
+  nothing; no server cooldown refusal in the journal. The timed-cast row is `[-]`: the server
+  fizzled Healing Light at its CastStart twice, `burned=2.5`, but the player never sees a cast
+  bar of their own, a HUD layout finding filed under the UI layout entry).
+  Found in the 2026-10-27 journal: `CastSpell fizzled ... Smite` at 20:48:09.757, then
+  `rejected — inside the global cooldown remaining_ms=200` at 20:48:11.557. The server starts
+  the gem's refresh on a fizzle, but the client treated the fizzle line as a refusal and
+  CLEARED its global cooldown, so the gems never greyed and the next click met the server's
+  "You cannot cast again yet.". `Spells.on_server_fizzle` keeps (an instant cast) or starts (a
+  timed one, fizzled at its CastStart) the 2.25 s cooldown, drops the spell's own (the server
+  stamps none on a fizzle) and cancels a running bar with its mana back for the ManaUpdate to
+  settle; an ordinary refusal still clears everything. `tools/probe_fizzle_cooldown.gd` (7
+  checks, 2 failing on the old code).
 - [ ] **Regen model and race trade-off follow-ups** *(`regen_model.md` §Deferred + §Open tuning,
   `race_xp_regen_tradeoffs_plan.md` slices 1 and 3; audit 2026-09-29 confirmed no race XP
   multiplier exists in `progression.rs`)*. Open: the pool-size formulas (STA to max HP, the
@@ -1792,10 +2660,136 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Race plan slice 1 (per-race XP rate multiplier applied before the group split, shown in
   character creation) and slice 3 (the other perks, e.g. Ogre stun immunity once CC exists)
   were never built; only slice 2 (Troll regen) shipped.
-- [ ] **Dual wield as an unlockable passive** *(user ask 2026-05-02: "unlocked by those who can
+- [x] **Dual wield as an unlockable passive** — **DONE + playtested 2026-10-29**
+  (`equip_gates_and_fizzle_checklist.md`, the DW rows: a Cleric's club refused at the off-hand
+  slot and a second club swapping the main hand only; a Warrior refused below 15, then worn
+  with both hands swinging after the Level Up to 15; a Monk 1's off hand taking a club; no
+  `EquipItem refused` line in the journal, so the client refused first every time. The
+  pre-rule two-club Cleric row is `[-]` by the user's call: that character is being deleted,
+  and no code goes to grandfathered character state. What exists is in systems_overview,
+  Items, "Equipment".) *(Original entry:)* *(user ask 2026-05-02: "unlocked by those who can
   use it at somewhere between 13 and 20"; today `dual_wield` is an ordinary weapon skill with
   a per-class cap and no level gate; audit 2026-09-29)*. Design call on the level, then a
   server-side gate on the off-hand swing plus a client "you cannot dual wield yet" refusal.
+  **DECIDED 2026-10-19 (user), ordered by the class caps already in
+  `weapon_skill_definitions.gd`, Rangers earliest at the user's wish:** level 13 Ranger, Rogue;
+  15 Warrior, Witch Hunter, Bard; 20 Shadow Knight, Beast Master; **Monk born with it (level
+  1)**, as in classic EQ (P99 wiki: Monk 1, Rogue and Warrior 13, Ranger and Bard 17; Paladin
+  and Shadow Knight never). Monk's `dual_wield` cap is 0 today and becomes 250 (EQ's Monk had
+  the highest). The build must let a Monk's empty off-hand swing a fist, which the server
+  refuses for everyone today (the 2026-07-29 swing-limit review closed a forged fist stream
+  that way), so the opening is Monk-only and server-decided. Paladin, the casters and the
+  priests stay at none.
+  **BUILT 2026-10-19, pending the Oct 22 bump and the playtest** (`feat/server-speed`, server
+  `803d7f4`, client `bfd8753`; `client_authority_fixes_checklist.md` §5). `skills::dual_wield_level`
+  and the client's `DUAL_WIELD_LEVELS`; the Attack path refuses an off-hand swing before the
+  level; a Monk with both hands empty punches with the off hand (no one else swings an empty
+  off hand); an off-hand swing trains dual wield on the server; the client prints "You will be
+  able to dual wield at level N." on equipping an off-hand weapon early. Test:
+  `dual_wield_is_earned_by_class_and_level` (a Warrior 1's off hand unanswered, answered past
+  15; a bare-handed Monk 1's answered), failing on the previous code. The dual wield skill
+  itself still changes nothing about the swing (as on the client); a later pass could tie the
+  off hand's chance to swing to it, as EQ did.
+  **The equip itself is refused since 2026-10-27, pending the redeploy, the export and the
+  playtest** (user, on a Cleric wearing two clubs on the R720: the class "should be restricted
+  from dual wield"; server + client the same day; `equip_gates_and_fizzle_checklist.md`, the DW rows).
+  The 10-19 build let the weapon go on and refused only the swing; EQ refused the equip
+  (Allakhazam's 2003 comments on caster daggers: "will not equip in the secondary melee slot",
+  "any item with damage and delay can't equip in the secondary slot of any non-dual-wielding
+  class"; EQEmu's server trusts the client for it and skips the secondary slot in auto-loot
+  when `CanThisClassDualWield()` is false). Now `skills::equip_refusal` runs before
+  `equip_from_location`: a weapon into slot 1 before the class can dual wield is refused with
+  "Your class cannot dual wield." or "You will be able to dual wield at level N."; the client
+  asks the same question first (`Equipment.equip_refusal`), so an honest player gets the line
+  with no round trip and the server line (`EquipItem refused — the class cannot use it`) marks
+  a modified client. `Equipment.can_dual_wield` now reads the level rule (it read the skill's
+  score, which let a Warrior 1's second sword auto-pick the off hand). Gear worn before the
+  rule stays worn; the swing gate still keeps that off hand idle.
+- [x] **Class-restricted equipping (EQ's rule)** — **DONE + playtested 2026-10-29**
+  (`equip_gates_and_fizzle_checklist.md`, the CLASS rows: a Cleric's Iron Short Sword refused
+  from the bags and from the cursor, its chain boots worn; a Warrior's sword and chain boots
+  worn; a Monk's leather vest and a Wizard's chain boots refused; no `EquipItem refused` line in
+  the journal. What exists is in systems_overview, Items, "Equipment".) *(Original entry:)*
+  *(user 2026-10-27, on the fix 4 checklist row:
+  "Why dont we restrict access to weapons instead of weakening the use of non-optimal
+  weapons?")*. **BUILT the same day, pending the redeploy, the export and the playtest**
+  (`equip_gates_and_fizzle_checklist.md`, the CLASS rows). The 10-19 miss model let any class wear any
+  weapon and miss 80% with one it never trains; EQ's item flags refused the equip ("Your class,
+  deity and/or race may not equip that item"). The same `skills::equip_refusal` refuses a
+  weapon whose skill the class never trains ("Your class cannot wield that.": a Cleric's sword)
+  and armor of a kind it never trains ("Your class cannot wear that.": a Wizard's chain boots,
+  a Monk's leather), read off the cap tables both sides already hold in lockstep
+  (`check_skill_table_lockstep.gd`); a cap of 0 is the flag. The client refuses first with the
+  same lines. The 80% miss and half damage stay as the backstop for gear worn before the rule
+  (it is not stripped). Tests: a unit test on the gate and an integration test (a Cleric's
+  off-hand club and sword refused with their lines and no paperdoll delta, its main-hand club
+  worn; a Monk's off-hand club worn and its leather vest refused), failing on the previous
+  server at the first line; `tools/probe_equip_gates.gd` for the client (13 checks, the old
+  code sent every one). Not changed: race or deity restrictions (none exist), shields (the
+  shield skill has no items yet), the Test Panel's loadouts (`/give` places in the bags; the
+  gate applies at the equip). **Server DEPLOYED 2026-10-27 22:22 UTC** (R720 boot line
+  `build="0e58643" dev_cmds=false`; nobody online at the stop, `saved=0 unsaved=0`); the
+  client half waits for the export from `31c3393` or later.
+- [x] **A two-hander needs an empty off hand, and the off hand swings beside one today** —
+  **DONE + playtested 2026-10-29** (`two_hander_jump_reach_cast_bar_checklist.md`, every DW2
+  row on a Warrior 15 and a Monk 1: the staff worn with the off hand empty, a club refused
+  beside it, a club swapping in for it, the staff refused beside two clubs and worn once the
+  off hand was emptied by hand, the staff refused for the off hand, one swing stream with the
+  staff and two with two clubs; the Monk the same. The journal has no `EquipItem refused` and
+  no `Attack rejected — off-hand swing` line, so the client refused first every time and sent
+  no off-hand swing beside a two-hander. What exists is in systems_overview, Items,
+  "Equipment". The end-game Warrior ability is its own entry below.) *(Original entry:)*
+  *(found 2026-10-29 on the equip sheet's Warrior regression row: a Carved Staff went on with
+  a club still in the off hand; user: "We are allowing warriors to equip two handed weapons in
+  one hand? Not too sure about this.")*. Verified in both repos: the server has no two-handed
+  rule at all (`is_two_handed` is read nowhere under `world/`); the only rule is a client
+  convenience in `Equipment.request_equip_from`, which sends an UnequipItem for the off hand
+  before a two-hander's EquipItem, keyed on the item's `is_two_handed` flag; and only two
+  items carry the flag (Bonecrusher's War Axe, the Hunter's Shortbow) while the Carved Staff
+  and the Splintered Staff are `2h_blunt` by skill with the flag false on both sides. So a
+  staff goes on beside an off-hand weapon even for an honest client, and the Attack path then
+  swings the off hand (its gates are the dual-wield level and a real off-hand weapon, nothing
+  about the main hand): a Monk 1 (2h_blunt cap 100) or any dual-wielder past its level gets a
+  two-hander's roll plus an off-hand swing; a modified client gets it with the axe too.
+  **DECIDED 2026-10-29 (user): a two-hander with anything in the off hand is an END-GAME
+  WARRIOR ability** ("being able to dual weild two handers is a fucking crazy damage
+  advantage. Perhaps it could be at a huge sacrifice of gear. But either way, they wont have
+  access until they are near or at level cap"; the shape is WoW's Titan's Grip, the top Fury
+  talent, dual two-handers with a damage penalty). **Until that ability exists, nobody.
+  BUILT 2026-10-29 (user: "Sounds good"), pending the redeploy, the export and the playtest**
+  (server + client the same day; `two_hander_jump_reach_cast_bar_checklist.md`, the DW2
+  rows). (1) Data: `is_two_handed = true` on both staves on both sides (the item lockstep
+  check holds the pair), and a server unit test that the flag follows the skill both ways
+  (every `2h_` or archery weapon carries it, nothing else does). (2) Server:
+  `skills::equip_refusal` reads the other hand: a two-hander into the main hand while the off
+  hand holds anything is "Empty your off hand first.", anything into the off hand while the
+  main hand holds a two-hander is "You cannot hold that with a two-handed weapon.", a
+  two-hander into the off hand is "A two-handed weapon goes in the main hand."; the class and
+  dual-wield lines answer first. The Attack path's three off-hand gates (the dual-wield level,
+  a real off-hand weapon or a Monk's two fists, and now never beside a two-handed main hand)
+  live in one `skills::offhand_swing_refusal`, the old two log lines unchanged and a third
+  (`Attack rejected — off-hand swing beside a two-handed weapon`): the backstop for gear worn
+  before the rule and for a modified client. (3) Client: `Equipment.equip_refusal` asks the
+  same questions first; the old convenience that unequipped the off hand on the player's
+  behalf before a two-hander is gone (EQ's way: the player empties the hand), and
+  `Combat._is_dual_wielding` sends no off-hand swing beside a two-hander. Tests: unit (the
+  flag, the gate's six new cases, the swing rule's seven) and the integration test
+  `a_two_hander_needs_an_empty_off_hand` (a Warrior 15 refused the staff beside a club and
+  the club beside the staff, each with its line and no paperdoll delta; a second Warrior 15
+  seeded wearing both swings the staff and is unanswered on the off hand), failing on the
+  previous server at the first refusal; `tools/probe_equip_gates.gd` gained nine checks (22
+  now). The end-game ability is its own later design (the level, the gear sacrifice, the
+  penalty). **Server DEPLOYED 2026-10-29 19:04 UTC** (R720 boot line `build="c7c96f6"
+  dev_cmds=false`, nobody online at the stop, `saved=0 unsaved=0`); the client half rides the
+  export from `677f292` or later.
+- [ ] **Dual-wielding two-handers as an end-game Warrior ability** *(user 2026-10-29: "being
+  able to dual weild two handers is a fucking crazy damage advantage. Perhaps it could be at a
+  huge sacrifice of gear. But either way, they wont have access until they are near or at
+  level cap")*. The one exception to the two-hander rule above, not designed: the level (near
+  or at the cap), the gear sacrifice, a damage penalty (WoW's Titan's Grip, the top Fury
+  talent, is the shape), how it is earned and switched on, and the server's gate on the equip
+  and the swing (both refuse the pairing for everyone today, so the ability is a server-held
+  flag those two gates read). Not a friends-build item.
 - [ ] **Facing and view angle** *(user 2026-05-05: "currently doesn't seem like any PC or NPC has
   a view angle. Everything has to face the direction of their combat target"; audit
   2026-09-29)*. No facing model exists: mobs snap to their target and remote players show
@@ -1811,6 +2805,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   there is a skill for /sense"): it starts at the level-1 cap, so a fresh character always reads
   exact and the skill is invisible until leveling raises the cap; it is also client-local and
   resets every launch (`character_setup.gd` re-initializes it).
+  **(a) PASSED 2026-11-01** (`haste_limiter_and_cast_relay_checklist.md` row 32: a Haste on a
+  Warrior, fought through from 21:53 to 22:01 with no rejection line in the journal), against a
+  limiter that since 2026-10-30 reads the player's real haste instead of assuming the most; the
+  entry stays open for (b), a design call.
 - [ ] **Client-only spell backlog (~32 spells missing from `spells.toml`)** *(quantified
   2026-07-22 from a Life Drain / Dark Shroud playtest; those two are now ported)*. The client's
   `spell_definitions.gd` has 156 spells; the server has 124. A client-only spell is dropped as
@@ -1895,6 +2893,223 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   for every visible pet riding the pet's Positions; and the spawn-by-kind choice now lives in
   one `fan_out_entity_spawn` used by both the player crossing and the entity crossing, so no
   partition-test ordering can swallow a kind again.
+- [ ] **The server height model** *(phase 5, Track D item 1; the user, 2026-11-03: "Claude
+  will be building the height model")*. **DESIGNED 2026-11-03: `docs/design/server_height_model.md`**,
+  six decisions waiting on the user (§8), nothing built. The server learns the ground so its 3D
+  range checks stop measuring a fiction: today it zeroes Y on every Move and keeps a mob's camp Y
+  forever, so a 2 m ledge breaks combat. The client's ground is exactly the `TerrainMesh`
+  triangles plus the y = 0 `Floor` plane, so the server samples those same triangles (exact, not
+  bilinear) from a `terrain.toml` the editor exports, with a lockstep check in `check_all.ps1`.
+  Everything stands on the ground: players each tick, mobs and pets as they move, spawns,
+  corpses, bags, every teleport and every load. A server slope rule (60° against the client's
+  55°) closes the perch a modified client could climb to. No protocol change. Slices: the ground
+  read only; everything pinned; falls (`server_fall_damage.md` slice 1); the first hills, its own
+  plan. Builds on a branch from `bump/nov`, redeployed after the bump.
+  **ALL SIX DECIDED 2026-11-03 (user): "Yes to all, 5 in important too."** The recommendations,
+  except that **terrain line of sight is built now** with slices 0 and 1, and **heals and buffs
+  need it too** (user: "Heals and buffs require line of sight"): every spell with a target and
+  every ranged attack. **Line of sight DESIGNED the same day (§3.8):** `terrain::can_see`, the
+  segment between two points raised 1.2 m checked where it crosses every triangle edge (exact
+  for the client's collider, total, symmetric); required for every targeted spell at the release
+  (EQEmu's timing; it exempts heals, ours does not, the user's call), each AoE victim, ranged
+  attacks and ranged skills (a Miss, as out of reach), the idle mob's scan (EQEmu's
+  `CheckWillAggro`) and a song's pulse; never for melee, a mob already on a hate list, a pet, or
+  an effect already applied. Five exploit rows (12 to 16), unit and integration tests; the
+  client's own ray comes with the hills. Nothing changes on the flat world. Builds inside
+  slice 1.
+  **Slices 0 and 1 BUILT 2026-11-04, line of sight included, pending the November bump's
+  redeploy and the playtest** (unattended, the user asleep; server `feat/height-model` from
+  `bump/nov`: `9c16f12` the ground, `8980187` the pinning and sight, then the review fixes;
+  client `feat/height-model`: `2980120` and the review fix; `height_model_checklist.md`, 23
+  rows, a regression sheet on the flat world, one seat; the session note of 11-04 has the
+  detail). What exists: `data/terrain.toml` written by `tools/export_terrain.gd` from
+  `world.tscn` and compiled in (its SHA-256 refuses a hand edit; the boot line names the
+  ground); `world/terrain.rs`: `ground` samples the client's own triangles (exact, total),
+  `player_step` takes a player's tick as the client's body does (measured with
+  `tools/probe_ramp_speed.gd`: uphill `cos²θ` of the flat distance, downhill and across the
+  full speed, past 55° a slide), refuses a rise past 60° as an angle with a relative slack
+  (the review caught a fixed allowance letting micro-steps climb any cliff), and pins the
+  player; mobs and pets step by the XZ delta and are pinned on every move, at spawn and at
+  summon; corpses at creation and at load; every teleport, port and the resurrection summon
+  land on the ground; NPCs and safe areas derive their height at load (the files keep a 0.0
+  placeholder); `can_see` checks a sight line where it crosses every cell edge and diagonal,
+  gating every targeted spell at the release (heals too), each AoE victim, ranged attacks and
+  ranged skills (a Miss, as out of reach), the idle mob's scan and the song's pulse.
+  `tools/check_terrain_lockstep.gd` (in `check_all.ps1`) fails on scene-vs-file drift, a
+  collider never rebuilt, or an NPC off its position or off the ground. Tests: 26 unit (the
+  sampler against a ray down the client's triangles, the march proof of the sight shortcut,
+  the slope and step rules) and nine integration on a ramp and a ridge
+  (`tests/world/height.rs`), each failing on the previous server; the suite 384 unit, 174
+  world. **The slope refusal counter BUILT 2026-11-04** (user: "Ill follow your rec"; server
+  `7e51b53` on `feat/height-model`, rides the same merge): `player_step` returns a `Step`
+  (the position and whether the slope rule refused it), the movement step counts each
+  refusal, and the once-a-minute `world health` line reports it as `slope_refusals`,
+  printing for a window with a refusal even when nobody is left online. On flat ground none
+  can happen, so a count there is a modified client or a scene edit nobody exported (the
+  sheet's §7 row); on hills a key held into a cliff counts too, honest or not, since a Move
+  carries the input (the falls review's correction). The first piece of the position-anomaly
+  logging the public-host hardening entry asks for.
+  **Slice 2, falls, BUILT 2026-11-04 (user: "Go ahead"; server `351e732`, client `763a4ab`,
+  both on `feat/height-model`, the same merge; `server_fall_damage.md` §3.2 as built; the
+  height sheet gained a jump-and-quit regression row, since nothing falls on the flat world).**
+  `world/fall.rs`: a player's vertical state; after the XZ step the body follows the ground
+  down as far as the client's floor snap reaches and only onto a floor (ground no steeper
+  than the client's 55°); past that, or onto a face, it has left the ground and falls at
+  20 m/s². A face it would meet is a wall it slides down, as the client's body slides off one,
+  onto the first floor the slide reaches; a floor above the body blocks the step. The landing
+  is measured from the height the body left the ground at (exact at any tick rate) and costs
+  a share of max HP: nothing to 2 m, all of it at 42 m, 2.5% a metre between (both knobs), no
+  armor, evasion, shield or attacker; "You hit the ground hard for N damage."; a death goes
+  through the death sweep, the corpse where the body landed. Leaving is no way out of a fall:
+  a linkdead body still falls and lands, a Quit from mid-air is judged unclean where the
+  transport drops, a port or a resurrection summon settles the fall first (a mover it kills is
+  not moved), a respawn lands grounded whatever its bind was saved with, a dropped bag lands
+  under the dropper. The jump stays cosmetic; mobs and pets never fall. Client: three lockstep
+  pairs (gravity by magnitude, the floor angle and snap named in `player.gd`). Tests: fourteen
+  unit and three integration on a 0.5 m-cell ledge (a 10 m walk-off costs a fifth of max HP
+  with the line; a Quit in mid-air lingers, slides, lands and is saved hurt; a lethal fall
+  leaves the corpse where the body landed), each failing with the fall disabled; the suite 396
+  unit, 177 world. Reviewed (twelve findings, six fixed before the commit: the grounded
+  follow-down ignored the floor angle, so a slow enough step descended a vertical cliff
+  grounded and unhurt; the quit rule was judged a step too early; a floor above a falling
+  body landed it upward; a respawn's saved bind height read as a walk-off; a res summon mid-air
+  erased the fall; a bag dropped mid-air floated out of reach). Rule A5 covers falls.
+  **Flagged:** the server's slide is a free fall pushed clear of the face, faster than the
+  client's slope-constrained slide (visible on a long steep face; the hills plan decides); the
+  60° climb limit's slack lets a modified client climb a 55° to 60° face, where it slides as
+  soon as it stops; the fling tool comes with the hills; a landing interrupts no cast;
+  Levitate and Feather Fall stay the open follow-up; the counter says how many, not who (a
+  per-player line is the follow-up if it ever reads non-zero on flat ground); the NPC and
+  safe-area tables stand on the compiled
+  ground, not a harness terrain (one
+  binary, one terrain, so moot on a server; a test ground keeps the town flat); the client's
+  own sight and slope pre-checks come with the hills (slice 3), so until then an honest
+  player's refusal on a hill is the server's line, a round trip late; the NaN entry's rule A3
+  and the sight test's totality are the same rule.
+  **Slice 3, the first hills, PLANNED 2026-11-04 (user: "go on 1!"): `docs/design/first_hills_plan.md`,
+  seven decisions waiting on the user (§10): the resolution (10 m cells recommended), the map
+  (a proposal from the camp names: the western hills with the Sunken Barrow as a pit and the
+  Ossuary on top, the Greywood ridge with a pass, the Wraith Gate plateau with the one real
+  cliff, low rises for the bandits, the spiders, Rotfang and the war camp), a rim of high
+  ground round the plate, flat shading, the GM fling tool as a dev command, mobs refused up a
+  face and giving up after 8 s stuck with pets warping to an owner they cannot reach, and the
+  harness moving to a flat default ground. Heights become data (a features file and a headless
+  generator that writes the scene's heights line and reports the slope under every spawn and
+  NPC); the client gets its own sight check before a cast, held by a probe against a port of
+  the server's rule. About three days once decided; rides the bump (an export).** **ALL SEVEN
+  DECIDED 2026-11-04 (user: "sounds fuckin awesome"), each as recommended:** 10 m cells, the map
+  as proposed, the rim, flat shading and the tint, the fling tool, the 8 s give-up with the pet
+  warp (`MOB_STUCK_SECS`, a knob), the flat harness default. **The build is handed to the next
+  session on Opus 5.5 (user: "make sure Opus 5.5 can accomplish this same goal"):
+  `docs/design/handoff_first_hills_build.md`**, every anchor read in both repos that night, the
+  five pieces in order with their tests and the records pass; its traps: `build.ps1` and every
+  client check default to `F:\Projects\server` (the deploy branch), not the height worktree, so
+  the DLL is built by hand from `server-height` and `check_all.ps1` gains a `-ServerRoot`
+  parameter first; the exporter's default output is the deploy checkout too; and `DevFling` is
+  appended LAST in `ClientWorldMsg` (after `DevSetFaction`), not after `DevDespawnEnemies` as the
+  plan's §6 said. **Step 4.0 of the handoff DONE 2026-11-04** (this session, on the user's go):
+  `check_all.ps1 -ServerRoot`, all 14 checks green against `server-height`, the server
+  baseline 396 unit and 177 world green on `351e732`, the terrain tool rows in `commands.md`.
+  The Opus session takes 4.1 onward. Nothing else built.
+  **Slice 3 BUILT 2026-11-04 (night, the Opus 5.5 session from the handoff), pending the
+  November bump (the export and the redeploy, together) and `first_hills_checklist.md`**
+  (server `d5de613` the slope fix, `e5db8a8` the hills, `b78d11b` the fling, `8d21d97` mobs at
+  a face; client `18f3bdb` the hills, `4c54789` the Fling buttons, `2f97a4a` the sight check;
+  all on `feat/height-model`, pushed; session note §55 to §59). What exists: the relief as data
+  (`data/terrain_features.toml`, twelve features) composed by `tools/author_terrain.gd` into
+  `world.tscn`'s 40 x 40 grid of 10 m cells after a report (every camp spawn, its jitter
+  corners and every NPC on a floor; the town and the NPC row at 0; route grades; the rim),
+  heights rounded to Godot's 0.0001 m collider snap, the mesh and collider spliced in; the
+  server's `terrain.toml` exported from it (boot line `terrain="40x40 cells of 10 m, floor 0,
+  hash f2bd278da1c3"`) and held by `world/terrain_content.rs` (spawns and NPCs on floors, the
+  town flat, nobody climbs out over the rim); flat shading and a height tint
+  (`terrain_mesh.gd`: `LOW_COLOR`, `HIGH_COLOR`, `TINT_TOP` 30 m, knobs). Four features took
+  new numbers so their shapes exist at 10 m cells (the plan's §11: the ridge 24, the pass half
+  width 12, the two dips as a rim with a hollow, the rim 40 m); no camp moved. **The slope
+  rule's hole, found building the rim:** it judged a step's own grade, so a diagonal or a
+  zigzag climbed any face; a rising step onto ground past the 60° limit is now refused
+  whatever its direction. **The fling:** `DevFling { height }` appended last under PD_W0029,
+  dev-gated and audited (`dev_fling`), a height outside (0, `MAX_FLING_HEIGHT` 100 m] or not
+  finite dropped silently, then the ordinary fall; the Test Panel's Fling 5 m and 20 m. **Mobs
+  at a face:** every mob and pet step goes through the slope rule; held for `MOB_STUCK_SECS`
+  (8 s, a knob, `world/mod.rs`) a chasing mob forgets everyone and walks home to heal, a mob
+  walking home warps there, a following pet warps to its owner, an attacking pet drops its
+  target; a mob healed at home is now told to every player (a leash never fanned it). **The
+  client's sight check:** `Spells` refuses a targeted cast the terrain hides before the bar,
+  with the server's line; the terrain on a physics layer of its own (`terrain`, layer 2); held
+  by `tools/check_terrain_sight.gd` (in `check_all.ps1`, now 15 checks: the ray against a port
+  of `can_see` over 3,000 pairs, no disagreement) and `tools/probe_cast_sight.gd`. The harness
+  runs every test with no ground of its own on a flat plate. Suites: 404 unit, 179 world,
+  clippy and fmt clean; every new test fails with its rule disabled. **Exploit lens:** a
+  modified client with its own scene walks the server's hills, not its own (the
+  reconciliation pulls it back, the slope rule refuses any climb onto a face, the sight rule
+  reads the server's ground), and the hash refuses a hand-edited `terrain.toml`; the rim's
+  outer cells are 63° faces all round, so nobody leaves the plate; a player on a lip nuking a
+  mob at its foot gets no kill unless they can burst it inside 8 s (the mob walks home and
+  heals; it never hits back meanwhile; the knob is the lever), and cannot cast through the
+  face; the pet warp moves a pet only to where its owner stands; the fling is a GM's, audited,
+  bounded and finite before anything moves, and its landing costs the GM; the client's sight
+  check is a courtesy, the server's `can_see` at the release the rule. **Flagged, not built:**
+  the bow's client sight check (a bow at a hidden target gets the server's Miss); the corpse,
+  pet-heal and bind-on-another cases of the client check (the server's line, a round trip
+  late); a client-side slope pre-check (the body's own floor angle is it); the pet-warp
+  integration test (its route runs past 25 s; the unit test holds the rule); mobs take a slope
+  at full speed; terrain chunking; a navmesh; a per-creature `LOS_HEIGHT`;
+  `addons/terrain_editor` left disabled; `check_terrain_lockstep.gd` and
+  `check_terrain_sight.gd` join invariant L1's holders after the merge (the deploy branch's
+  `tools/` lacks them).
+  **Review pass the same night** (`/code-review`, nine findings, eight fixed: server
+  `094ec29`, client `2dc49a8`; session note §60): the stuck clock is a progress clock keyed
+  to its goal (`StuckClock`, cleared only by coming `STUCK_PROGRESS_M`, 1 m, closer or a new
+  goal; any step taken used to clear it, so a mob sliding along a face's foot after a player
+  walking the lip never gave up, and a new target inherited the old one's time); giving up
+  forgets only the unreachable target and turns on the best present hater (it used to wipe
+  the whole hate list, so a Warrior at the foot got free swings); the heal at home is an
+  explicit `AiEvents` flag; the client's reach and sight checks share `_checked_target`;
+  `check_terrain_sight.gd` fails when `world.tscn`'s TerrainBody or Floor loses the terrain
+  layer; a test on the compiled hills (a Cleric on the Greywood crest above the crypt's
+  bowl). Flagged: a kited mob that brushes a face once and is then outrun gives up after 8 s
+  (the safe side; ordinary kiting never starts the clock). **The perch** (the crest is
+  walkable from the ridge's ends; from its north edge a crypt champion sits inside spell
+  reach, held at the foot without answering): **DECIDED 2026-11-05 (user: "your rec for
+  stuck enemies"), WoW's evade, BUILT the same day** (server `08aad00`, client `f184a70`, on
+  `feat/height-model`; session note §61). `Entity::is_evading` is true while a mob walks home
+  (any leash, so a mob pulled past its leash is no longer free damage all the way home either)
+  and while the slope rule has held it below a face past `EVADE_GRACE_SECS` (1 s) and refused
+  it within `EVADE_REFUSAL_RECENT_SECS` (0.5 s); never a pet. A swing or a pet's swing is an
+  Evade and adds no hate (the client draws it and logs "<mob> evades your attack."), a
+  hostile spell is refused in the pre-flight at no cost ("Your target is evading."), an AoE
+  skips the mob, a DoT's ticks deal nothing. Tests: a unit test on the rule; the crest test's
+  second Smite refused; the plateau test's Warrior swing an Evade; each fails with its guard
+  off (the AoE, DoT and pet guards have no test of their own). Residual: the walk to the foot
+  and the grace, about 4 s, are still damage from the edge, so a burst caster still needs the
+  kill inside that window. **EQ's hate list, DECIDED 2026-11-05 (user: "Make the mob turn to
+  the next player on its hate list") and BUILT the same day** (server `267065f`; session note
+  §62): a mob whose target dies, ports, leaves the world or runs past its leash turns on the
+  present attacker with the most hate within its leash (`next_hater_or_home`) and walks home
+  only with nobody left; a target past the leash loses its hate but keeps its damage (kill
+  credit). Before, it walked home with the group still on it, and with the evade it would have
+  healed out from under them. Tests: a unit test and
+  `a_mob_whose_target_dies_turns_on_the_next_hater` (a GM tank dies, the dummy comes for the
+  other Cleric), both failing with the mob sent home.
+  **The ground faced down, FIXED 2026-11-05** (client `3785cb6`; session note §63; the user,
+  looking at the hills in the editor: "We appear to be looking through the terrain."). Every
+  triangle `TerrainMesh` has ever built (the 2026 original too) ran its corners the wrong way
+  round, so its front face pointed down: the ground was culled from above, and a body dropped
+  on a 10 m plateau sank 0.6 m into the one-sided collider and never stood on it (the flat
+  world hid both; the Floor plane caught everyone). The corners now run the other way, same
+  triangles and diagonal, so the heights, `terrain.toml` and its hash are unchanged; the
+  lockstep check fails on a triangle facing down; `tools/probe_terrain_stand.gd` (6 checks,
+  all failing on the old winding); `world.tscn` rebaked. Server untouched.
+  Also found: from (152, 0) the Wraith Gate's lip cannot see its own foot (only the last half
+  metre can), so the sheet's two-seat face rows moved to the crest.
+  **MERGED, EXPORTED AND DEPLOYED 2026-11-05 with the November bump** (the user, the hour the
+  door moved to Nov 12: "i want to run around these hills!"): both deploy branches
+  fast-forwarded to `bump/nov` with this branch merged (server `267065f`, client `da83ea8`); the
+  export `builds/ProjectDawn-alpha-da83ea8.zip`; R720 boot line `build="267065f" dev_cmds=false
+  terrain=40x40 cells of 10 m, floor 0, hash f2bd278da1c3` at 22:29 UTC, nobody online at the
+  stop. `height_model_checklist.md` and `first_hills_checklist.md` are runnable now; nothing
+  ticked.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
@@ -1927,6 +3142,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (humanoid / beast / undead / ...), the hook EQ keys loot by creature and WoW keys both loot
   and spell eligibility on (its charm takes only humanoids and beasts). Content and data;
   sequenced behind (b).
+  **DECIDED 2026-10-19 (user): the table format for (b) and (d) uses cascading rarity tiers**
+  (from candlesan's short "Making an RPG with Loot? Let me save you some time."). Each roll
+  tries the table's tiers rarest first, each at its own fixed chance; the first that hits makes
+  a weighted pick from that tier's own list. Materials sit in the bottom tier, so adding one
+  never moves a rare rate. Why: today's tables are one weighted pool with an empty bucket
+  (`loot.rs::roll_for_mob`), where every entry's chance depends on every other (a Fresh Wolf
+  Pelt is 1/8.5, about 11.8%, and one new 2.0 entry drops it to about 9.5%); harmless while the
+  tables hold only materials, wrong once gear arrives. Named rares already have fixed chances
+  (`named_mobs.toml` `drop_chance`). **Decide when building:** what a tier that hits with an
+  empty list does (after a hotfix disables its last item): drop nothing, or fall through, which
+  quietly makes the lower tiers more common. Rolls stay server-side; a fixed rate per tier is
+  directly testable, like the 400-roll collar test.
 - [ ] **Character creation follow-ups** *(scattered: race expansion memory 2026-06, the CHA
   memory, `item_weight_proposal.md` §Findings, `classes.md`; audit 2026-09-29)*. (a) The three
   drafted races (Aerathi, Vesperin, Sylphari) exist as docs only (`race_expansion_brainstorm.md`
@@ -1937,11 +3164,34 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (`LOCKED_COMBOS` partial vs `race_class_restrictions.md`). (e) The Citizen class concept
   (non-combat: mobile merchant + field money-changer + bodyguard pet; field-exchange role
   committed 2026-06-16) and the planned Assassin/Warlock need class-kit design before code.
+- [ ] **Change your appearance in game, at any time** *(user, 2026-10-15, while setting the
+  art pipeline's base-body rule)*. Players will be able to modify their character's look
+  whenever they want, from in game. This is why every race's base body is made bald,
+  beardless and with no accent colour (`docs/design/meshy_asset_pipeline.md`, "The bare base
+  body"): hair, beards, markings and accent colours become separate, swappable pieces on top
+  of it. Not designed yet: which pieces, where the choice is made, what it costs, and how the
+  server stores and fans an appearance (others must see the change). **Idea, same day (user):
+  body sliders**, e.g. a Gnome's build from wiry to stout ("Perhaps a caster would be wiry
+  while a melee character would be more stout"); the approved Gnome base pack is the wiry end.
+  **Needs its own research session first (user):** how customisable characters are done in
+  comparable games (EQ's and SWG's character creators, later MMOs), and what sliders mean for
+  the art pipeline. A Meshy model is one fixed mesh, so a build slider would likely need extra
+  shapes of the same body authored in Blender (blend shapes), and every piece of equipment
+  would have to follow them; that cost belongs in the research, before any slider is promised.
+  **Second slider idea (user, same day): height**, from the race's minimum to its maximum in
+  `creature_heights.md` (a Gnome 0.90 to 1.05 m). Cheap by comparison: a uniform scale of the
+  model, so equipment follows with no extra shapes. Two calls for the design: the server must
+  clamp the stored height to the race's range (a forged value would otherwise reach every other
+  player), and whether the collision capsule and camera scale with it or it stays cosmetic (a
+  shorter character hiding behind cover is a PvP edge, small within one race).
 - [ ] **Fall damage follow-ups** *(the `TODO` in `player.gd::_on_land` since 2026-05-01 and the
   pet-collision memory; audit 2026-09-29)*. (a) Skip fall damage under Levitate / Feather
   Fall once those buffs are checked. (b) A player caught between their own pet and an enemy
   takes repeated fall-damage ticks from physics knock-around (a client `_on_land` threshold or
-  collision-layer fix).
+  collision-layer fix). **(b) closed by the server fall model (2026-11-04):** online the
+  client computes no fall damage (slice 0) and the server's fall begins only where the ground
+  drops away under a step, so physics knock-around can no longer hurt anyone. (a) stays, as a
+  server check at the landing once those buffs exist.
 - [ ] **Mount system** — *`MountManager` autoload exists (client-side v1); feature is not
   fully wired* (server speed clamp, Animal Husbandry / Spirit-of-Wolf stacking / Selos'
   Melody interactions still pending)
@@ -1950,6 +3200,91 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   attack NPCs and suffer the consequences (evil races farming reputation by killing good
   merchants/guards/villagers, good races by killing bad guards); ask the user for the
   reputation rules before designing.
+  **DESIGNED 2026-10-20: `docs/design/factions_and_alignment.md`**, nine decisions waiting on
+  the user (§6), nothing built. The user's direction, the same day, turned the alignment
+  build into this: "I think casting spells should have a pretty miniscule effect in the over
+  all... We need factions: Killing mobs and running quests are the big two", and the
+  equation: **"spells: .001% of their spell cost."** Researched: EQEmu's faction code (a
+  kill's hits go to every player on the mob's hate list, each NPC's hit table negated for
+  quests, standing capped per faction, nine levels at 1100 / 750 / 500 / 100 / 0 / -100 /
+  -500 / -750, no charisma term, merchants con Dubious at worst), P99's table and rules
+  (vendors refuse at Dubious, quests need Indifferent, kill-on-sight at Threatening), SWG's
+  two systems (GCW points from kills and missions, spent at a recruiter; every other faction a
+  -5000 to 5000 standing moved by killing its enemies). The design: `factions.toml` (six to
+  start: the town, the Watch, gnolls, bandits, the restless dead, wildlife, with ally and
+  enemy links), a `faction` on every mob and NPC, a kill paying `-hit` to its faction and
+  `+hit / 2` to each enemy (`hit = 4 + level`, named x3, derived from the links instead of a
+  table per mob), quests with explicit `faction_hits`, standing persisted and clamped at
+  2000, a `Consider` intent for the con line, vendors refusing at Dubious and quest givers at
+  Apprehensive; and **alignment server-owned**: a float score moved by kills (per-mob tiers
+  from `events.md`), quests (`alignment_delta`) and spells at a hundred-thousandth of their
+  mana, the momentum rule, seeded once from the class start, feeding the prestige-class
+  gates and the 0.7 / 0.4 off-side penalty on the server, the client told by
+  `AlignmentUpdate`. Migration 0016 and a bump. Ten-point exploit ledger. Three slices:
+  the system; guards that fight and attackable NPCs (the user's 2026-05-05 framing);
+  SWG's joinable faction with spendable standing. After the door by the schedule.
+  **ALL NINE DECIDED 2026-10-23 (user), recorded in the design's §6; build-ready, not
+  built:** the six factions and the derived hit rule; **a kill's hits go to EQ's hate list**
+  ("EQ's hate list is the way"), not the XP group; EQEmu's thresholds ("I think we can trust
+  EQEmu"; P99's two pages are player estimates 50 to 100 points either side); vendors and
+  the banker refuse at Dubious, quest givers at Apprehensive, the soul binder always serves;
+  alignment seeded from the class start once; the 0.7 / 0.4 off-side penalty kept, on the
+  server; everyone Indifferent in v1 **with the race-and-class start table built and empty**
+  ("can we build the system for this?"); the content values as proposed; no GM freeze, and
+  **a GM faction tool**: sliders in the Test Panel setting the GM's OWN standing with each
+  faction to an absolute value through a `DevSetFaction` intent, GM-only and audited like
+  every dev command (EQEmu's own are `#faction review / reset / view` and
+  `#factionassociation`, a delta; EQ Live's Guide robes were identification with small stats,
+  the powers being the account flag, so a "Breastplate of Indifference" is a later cosmetic).
+  Planner d10 answered; the build sits on the after-the-door strip.
+  **SLICE 1 BUILT 2026-10-23, pending the Oct 22 bump and the playtest** (user: "Lets rock
+  and roll!"; `feat/server-speed`, server `5efd45d` + `30c270a`, client `22ebde7`;
+  `factions_checklist.md`, 37 rows; migration `0016_factions_and_alignment.sql`, forward-only,
+  ships in the merged build). Server: `data/factions.toml` (six factions, ally and enemy
+  links, empty race and class start tables read from day one), a `faction` and `alignment`
+  tier on every camp mob and NPC, `faction_hits` and `alignment_delta` on all nine quests;
+  `world/factions.rs` and `world/alignment.rs`; a kill pays `-(4 + level)` (x3 named) to its
+  faction and half of it to each enemy, to everyone on the mob's hate list (its damage and
+  threat maps together, so a missed swing or a healer it hated counts), and the kill's
+  alignment move goes to the top damager; quest turn-in pays its explicit hits and delta;
+  standing per character in `character_factions`, clamped at 2000, conned at EQEmu's nine
+  levels, sent as `FactionUpdate`; merchants and the banker refuse at Dubious or worse ("X will
+  not deal with you."), quest givers at Apprehensive or worse, at accept and turn-in ("X has
+  nothing to say to you."), the soul binder never; alignment held by the server
+  (`alignment_score`, existing since 0001 and never written, plus `alignment_seeded`), seeded
+  once from the class start, moved by kills, quests and every cast (0.001% of its mana, the
+  user's equation, through the momentum rule), sent as `AlignmentUpdate` on a 0.01 move or a
+  tier crossing; the prestige class decided by the server at the cast, memorize and skill gates
+  (a Paladin at Evil casts the Fallen kit and loses the Paladin's), the seven prestige spells on
+  the server with the client's numbers (spell lockstep 149 shared, 9 client-only, zero drift);
+  the 0.7 / 0.4 off-side penalty applied as a penalised copy of the spell. Wire, under PD_W0028:
+  `Consider` (an NPC by id or display name, a mob by entity id; EQ's faction phrase plus one
+  level phrase per colour, the colour bands from the P99 wiki's Consider page; anything else
+  gets "You cannot consider that.") and the GM-only, audited `DevSetFaction` (the GM's own
+  standing, set to an absolute value), `FactionUpdate`, `AlignmentUpdate`; the DLL's signals and
+  sends. Client: `Alignment` follows the server (the class seed applies only until the server
+  speaks, so a class re-apply no longer resets it; the first server score re-runs the kits);
+  `/con` (`/consider`) and `/factions`; the Test Panel's FACTIONS (GM) sliders; its normal
+  mobs renamed to camp names, so a dev spawn (named or not) carries its camp's faction;
+  `data/faction_definitions.gd` held by `tools/check_faction_lockstep.gd`. Tests: unit (the
+  table, hits, levels, the con bands, the penalty copy, momentum, a dev spawn's camp faction)
+  and five integration tests, each failing on the previous server (a kill pays the hate list
+  and moves the killer's alignment; a quest pays its hits and a shunned Brom refuses, the
+  standing surviving a relog; a plain account's slider is a silent no-op and Consider names no
+  standing; a Paladin at Evil casts the Fallen kit and not the Paladin's; a Neutral Paladin
+  casts at 0.7); `tools/probe_factions.gd`, 17 checks. Suite: 324 unit, 133 of 134
+  integration; the one failure, `pet_pulls_aggro_via_threat_reaggro`, fails on the branch
+  without this build too (filed under the EQ parity entry). **Calls made in the build, for the
+  user to overrule:** the hate list is damage plus threat; the alignment move goes to the top
+  damager, not the group; the con line is two sentences, not EQ's double-dash join, with one
+  level phrase per colour (the P99 page varies them by level band above 6); `/con` names an
+  NPC by its display name (the client holds no server ids for NPCs); the quest-accept gate
+  uses the quest's turn-in NPC as its giver; the GM slider sets the standing NPCs see.
+  **Not built, flagged:** the faction on the character sheet and a dialogue header (the
+  design's slice 1 named both; `/factions` is the readout for now); a per-tick budget on
+  `Consider` (add `Consider` and `DevSetFaction` to the intent budgets when
+  `feat/public-hosting` merges); a GM tool for alignment (the checklist sets it by hand in
+  SQLite); coloured con lines; conning players.
 - [x] **Time of day is per-client; make it server-driven** — **DONE + playtested 2026-10-09**
   (`time_of_day_checklist.md`, every row PASS including §2's two seats: the clocks agreed to the
   minute and through a full day, dusk came together, the sky carried on across a relaunch and a
@@ -1996,8 +3331,280 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   entity / `RemoteEnemy` not actually despawned), so "cleared" enemies may still be there. Dev-tool
   bug (`test_panel.gd::_despawn_all_enemies`); likely needs the despawn to route through the server
   like `DevSpawnMob` does, not a client-only removal.
+  **BUILT 2026-10-19, pending the Oct 22 bump and the playtest** (on `feat/jump-relay` in both
+  repos, server `9500051`, client `827de57`, so it rides the jump relay into the merge;
+  `despawn_all_enemies_checklist.md`, 13 rows, on that branch). A new `DevDespawnEnemies`
+  appended to `ClientWorldMsg` under the unshipped PD_W0028, gated and audited exactly like
+  `DevSpawnMob` (a plain account's request is ignored and writes no row). The server removes
+  every UNOWNED enemy in the GM's AOI neighbourhood (the set the client button used to hide):
+  pets and charmed mobs stay; no XP, loot or corpse; loot bags and player corpses are a
+  separate map and stay; the camp slot is freed as the body sweep frees it, so camp mobs
+  respawn on their timer. The GM is told "Despawned N enemies." The Test Panel calls the
+  DLL's `send_dev_despawn_enemies` by name (an older wire layer costs the button, not the
+  panel) and keeps the local free for the offline Test Room; `check_wire_layer.gd` lists the
+  send. Tests: an integration test (the plain request does nothing; the GM's despawns two
+  dummies for a bystander, leaves the bystander's warder, reports the count, writes one
+  audit row; a Smite at a removed id is refused) that fails on a no-op despawn, and a
+  headless probe of both button paths that fails on the old button.
 
 ### UI polish
+- [x] **Sticky chat channel, WoW style** — **DONE + playtested 2026-10-27**
+  (`chat_channel_checklist.md` §1 to §4, every row passing on two seats; what exists is in
+  systems_overview, "Multi-window chat"). *(Original entry:)* *(user 2026-10-26, during the hotfix checklist: "This is
+  how chat works in most games. This is critical for us to iron out."; sticky chosen over EQ's
+  one-shot)*. **BUILT 2026-10-26, pending the next export and the playtest** (client `75586db`;
+  `chat_channel_checklist.md`). The chat line always has a channel, shown beside the text
+  (`[Say]`, `[Shout]`, `[OOC]`, `[Group]`, `[Tell: Bob]`); a channel command at the start
+  (`/say /s /shout /sh /ooc /g /group /gsay /tell Name /t Name /r`) switches the line the moment
+  its space is typed and leaves the text, however many are stacked or pasted (`/say /say hi`
+  used to send "/say hi"); the channel sticks until another command moves it; other commands
+  run as typed. Also fixed: plain text with no default channel was echoed on the sender's
+  screen and never sent. Rules in `scripts/chat_channel.gd`; `hud.gd` normalizes every line;
+  probe `tools/probe_chat_channel.gd` (31 checks). The tell reply checklist's rows now expect
+  the `[Tell: Name]` label.
+- [x] **The chat box must match what every player sees** — **DONE + playtested 2026-10-27**
+  (`chat_channel_checklist.md` §6, all four rows passing on two seats: the pasted fox line
+  stopped at character 250 and both screens ended at "6-The quick bro", a macro's long line and a
+  line of é the same on both, the journal clean through it; what exists is in systems_overview,
+  "Multi-window chat"). *(Original entry:)* *(user 2026-10-26, after the hotfix
+  checklist's chat row: the sender's echo showed the whole fox line while the partner saw it cut
+  at "jumps ov")*. The server cuts a chat line at 512 bytes (`MAX_CHAT_LEN`, `handlers.rs`); the
+  client's chat box has no limit, so a long line shows in full to its sender and cut to everyone
+  else. Build: cap the chat box at the server's limit **in UTF-8 bytes, not characters** (an
+  accented letter is 2 bytes, an emoji 4; a character cap would still let a line full of them
+  overflow), refusing input past the cap on a whole-character boundary; apply the same cap
+  where `hud.gd` builds the echo, so a long social macro line echoes exactly what is sent; a
+  lockstep pair (`MAX_CHAT_LEN` against the client constant) for `check_constant_lockstep.gd`.
+  Client only. Not built; queued after the current checklist.
+  **DECIDED 2026-10-27 (user, on `chat_channel_checklist.md` §3): 250 characters**, the cap
+  typed and pasted ("players arent allowed to type more than that"); EQ II's chat box took about
+  250 (the ACT FAQ); no documented figure for the original EQ was found. **BUILT the same night,
+  pending the redeploy, the next export and the playtest** (server `0cf170d`, client `8b378b6`;
+  `chat_channel_checklist.md` §6). Counted in characters on both sides, not bytes, so the two
+  can never disagree (a Godot String's length and Rust's `chars()` both count Unicode scalar
+  values): the chat line's `max_length` stops typing at 250, `ChatChannel.normalize` cuts every
+  message to it (typed lines and macros, so the echo is what is sent), and the server's
+  `MAX_CHAT_CHARS` replaces its 512-byte cut (still never a byte slice, the H1 crash). Lockstep
+  pair `MAX_CHAT_CHARS` / `ChatChannel.MAX_CHARS`. Tests: the chat crash test checks the
+  listener gets exactly 250 characters (fails on the old cut); unit tests on accents and emoji;
+  six probe checks. **Server DEPLOYED 2026-10-27 15:49 UTC** (boot line `build="0cf170d"
+  dev_cmds=false`); the client half rides the export from `ce75b0e` or later.
+- [x] **`/say` reaches far too far** — **DONE + playtested 2026-10-29** (`say_range_checklist.md`,
+  all seven rows passing on two seats: heard at 40 m and 45 m, nothing at 60 m while a shout
+  arrived, the eating emote and the jump following the same reach, shout, OOC, group, tell and
+  the NPC gate unchanged. What exists is in systems_overview, "Multi-window chat". One ask from
+  the sitting has its own entry under Multiplayer / networking: a jump should be seen as far as
+  the body is.) *(Original entry:)* *(user 2026-10-27, `chat_channel_checklist.md` notes: "The
+  range for /say should me much shorter. This should be considered to be at the volume of a
+  conversation.")*. Today a say goes to every player in the speaker's 3x3 AOI neighbourhood of
+  120 m cells (`tick.rs`, the chat fan's Say arm): anyone from about 120 to 240 m away hears it,
+  and the reach changes with where the speaker stands in the cell. EQEmulator (read in its
+  source, 2026-10-27): a player's say reaches other players within **200 units**
+  (`EntityList::ChannelMessage`, `Distance(...) < 200`), and hailing or saying to an NPC needs
+  **15 units** (`RuleI(Range, Say)`). Build shape: a fixed distance from the speaker in place of
+  the AOI cells, the same distance the hunger emote and the jump relay use for "the room".
+  **DECIDED 2026-10-27 (user): 50 m. BUILT the same evening, pending the redeploy and the
+  playtest** (server `2157fd9`; `say_range_checklist.md`, 7 rows; server only, no export).
+  **DEPLOYED 2026-10-27 22:51 UTC** (R720 boot line `build="2157fd9" dev_cmds=false`, nobody
+  online at the stop). `SAY_RANGE` (50 m,
+  `world/mod.rs`) and one helper, `tick::say_recipients` (every in-world player within it,
+  never the speaker, keep-only-when-in-range), used by the Say fan, the eating emote and the
+  jump relay in place of the three copies of the AOI-neighbourhood filter. Test
+  `a_say_carries_fifty_metres_and_no_further` (a listener at 40 m hears, walked to 60 m hears
+  nothing while a shout still arrives), failing on the previous server at the 60 m assertion.
+- [ ] **Other players never turn** *(user 2026-10-27, `chat_channel_checklist.md` notes: "Dip
+  does not see Bun's character models spinning, or looking in different directions.")*.
+  Verified in the server: `Move` carries a direction and no facing, and nothing on the server
+  ever sets a player's `yaw` after login, so every Position it fans carries the facing the
+  player logged in with (the same stale yaw also places a GM's dev spawn "in front"). Two
+  shapes: (a) the client sends its facing with each Move (a protocol bump and a DLL rebuild;
+  the server takes any finite value, cosmetic today; if facing ever matters, such as a
+  backstab-from-behind rule or Sneak, the server must judge it) or (b) the server faces each
+  player along its movement (no wire change, but turning in place, strafing and walking
+  backwards would show wrong). Recommended (a), riding the next bump. Pairs with "Facing and
+  view angle" and the remote animation channel. **DECIDED 2026-10-27 (user): (a)**, after a
+  look at what EQ and WoW do (both: the client reports its heading with every movement
+  packet, EQ's as a 12-bit `heading` plus `delta_heading`, WoW's as the orientation in
+  `MovementInfo` with `MSG_MOVE_SET_FACING` for a turn in place; neither derives it from
+  movement or polices it). Cost here: one number on each 20 Hz Move (about 80 bytes a second
+  upstream per player), copied into the `yaw` the Position fan already carries; no extra
+  packets, no latency change. **BUILT the same night on `feat/facing` in both repos, pending
+  the next bump day and the playtest** (user: "Build it."; server `496b689`, client `a282334`;
+  `remote_facing_checklist.md`, 12 rows, on the branch). PD_W0029: `Move` gains a trailing `yaw` (the client's `rotation.y`,
+  the body the right-drag turns; `send_move` in the DLL and `Net.send_movement` carry it); the
+  handler drops a non-finite one whole and stores the rest wrapped into (-PI, PI]; the
+  `Position` fan, `EntitySpawn` and the checkpoint already carried `conn.yaw`, so the facing
+  reaches every watcher, survives a relog, and the Test Panel's spawn lands in front of the
+  real facing. A rooted player may still turn. Test `a_players_facing_reaches_the_watcher`
+  (sees 1.25, keeps it through a NaN Move, sees 4.0 wrapped), failing with the yaw ignored.
+  Both sides deploy together; the export comes from the merged branch with the rebuilt DLL.
+  **DEPLOYED 2026-11-05 with the November bump** (server `267065f`, client `da83ea8`);
+  `remote_facing_checklist.md` is runnable now.
+- [x] **"You cannot do that while dead." flooded the chat** — **DONE + playtested 2026-10-26**
+  (`dead_gate_checklist.md`, every row passing: server `8127a70` and client `6ddeddc`). The
+  flood was the client's `EquipUpdate`, one per gear slot as a death strips the gear, which the
+  server already ignored; the client no longer sends it, refuses skills, spells and auto-attack
+  locally while dead, and the server's gate says its line once per death, lets targeting
+  through and logs each refusal by name. What exists is in systems_overview, "Respawn, bind
+  points, and the death lock".
+- [ ] **Clicks pass through UI windows to what is behind them** *(hotfix checklist notes,
+  2026-10-26: "Clicking on the bank UI window... the clicks are going THROUGH the window and
+  effecting the windows/interface below")*. **Scope (user): every UI window, not only the
+  bank.** A click on any part of an open window, background included, must stop at that window:
+  never reach a window under it, the HUD, or the world (a world click while holding an item is
+  a ground drop, so a pass-through click can drop an item). Likely cause: window backgrounds
+  or containers with `mouse_filter` IGNORE or PASS. Build: audit every window scene and
+  imperatively built panel (bank, inventory, bags, vendor, character, book, quest journal,
+  dialogue, trade, loot, options, chat, group, pet, test panel), fix each, and add a headless
+  check that instantiates every window and fails if a click on its background would pass
+  through, so a new window cannot regress it. Client only. Not built.
+  **BUILT 2026-10-29 (night), pending the next export and the playtest** (client only;
+  `window_click_blocking_checklist.md`, 18 rows). **The cause was not a mouse filter.** Every
+  window is a `Panel` and stops clicks on its own rect; what passed through was the STACKING:
+  Godot picks the control under the mouse by tree order and ignores `z_index` (verified on
+  4.4.1 with a two-panel probe), and `hud.gd` raised the bank, vendor, crafting and options
+  windows with `z_index = 20` (the dialogue window 25) while the spell book, journal, inspect,
+  trade and group windows are added to the tree after them. So those four drew on top of
+  whatever was open and the clicks went to the window underneath, the bank over the journal or
+  the trade window being the reported case. Now no window carries `z_index`; a window moves to
+  the front of its siblings when it opens and when anything in it is pressed (`DraggablePanel`,
+  the base of every window, raising from `_input` on the hovered control, since a button or a
+  cell takes a press before the window's own input sees it), so drawing and picking agree and
+  the window on top is the one that gets the click, and ESC closes the highest closable window
+  in the tree instead of a hand-kept stack; bag windows are parented beside the inventory
+  window under the HUD instead of inside it (and die with it), so a bag and its destroy confirm
+  can come to the front over the bank; the debug console follows the rule, and the disconnect
+  notice is a modal overlay every raise puts back on top, swallowing keys while it is up (a
+  shortcut could otherwise open a window under it). **Two more findings from the check:** the
+  disconnect notice was 0 by 0 when shown
+  (`set_anchors_preset` inside `_ready` keeps the current size), so it dimmed nothing and
+  blocked nothing, and fills the screen now; and `LootWindow`'s own constructor skipped the
+  base one (GDScript does not chain `_init` for a subclass that defines its own), so it had no
+  raise-on-show hook. `tools/check_window_click_blocking.gd` runs the real `hud.tscn`, the
+  hotbar, the Test Panel and the chat windows headless over a full-screen sentinel that stands
+  for the world: 26 windows clicked on a 16 px grid (about 10,000 points) with nothing reaching
+  the sentinel, no window root carrying `z_index`, four overlapping pairs where the window
+  opened last gets the overlap and a click on the one beneath brings it to the front, the
+  notice covering a window opened before it and one opened after it, the console blocking only
+  its own panel. It fails on the previous scripts in 16 places. Reviewed the same night
+  (`/code-review`, eight findings, six real and fixed before the commit: the raise reached only
+  bare-background clicks; a window opened by key went above the notice; the ESC stack mirrored
+  what tree order already said; an ancestor's visibility flip re-raised every window; a bag
+  outlived the inventory it reads; a stale console comment). **EXPORTED 2026-10-30**
+  (`992bc26`, the first command-line export, stamped clean after all 12 checks;
+  `builds/ProjectDawn-alpha-992bc26.zip`): the checklist is runnable once testers hold it.
+- [ ] **Client crashed moving items in the inventory** *(hotfix checklist, 2026-10-26)*. A
+  native crash, not a script error: Godot's engine log for the session reads "Program crashed
+  with signal 11" with no symbols (the export carries none). The server's last line for that
+  client was `UnequipItem applied ... equip_slot=0` (the main hand to the cursor) at 15:31:01
+  UTC; nothing followed, and the heartbeat timeout linkdead it at 15:31:11. Needs repro
+  steps, ideally run with `builds/ProjectDawn.console.exe`, which prints the engine's last
+  lines before a crash. Not yet reproduced.
+- [x] **Research: the Monsters and Memories item log** — **DONE + playtested 2026-10-31**
+  (`item_ledger_and_rtt_checklist.md`, every row marked across two sittings, 10-30 and 10-31,
+  with the journal and `admin_report` behind each: the opening rows at the migration, a sale, a
+  purchase, a drop and pickup, destroys, an eat and a potion, five vault moves each way, the
+  bank coin deposit and withdrawal with the copper in the detail, GM grants of items and coin,
+  two stack trades on both sides naming the partner (one with 1p 1g alongside), a death's seven
+  rows and the corpse loot's seven back; the check card balanced after every move of both
+  sittings, 138 rows; the daily sweep ran on its own at 14:38 on 10-31 over the first sitting's
+  rows with zero mismatches; the wallets and holdings add up by hand. What exists is in
+  systems_overview, "The item ledger". `/history` (B) and the group feed (C) stay flagged, not
+  built.) *(Original entry:)* *(user, 2026-10-26, hotfix checklist
+  notes: "We need to take a look at the Item Log that Monsters and Memories uses.")*. Find out
+  what M&M's item log shows and to whom before proposing anything; a design note first.
+  **RESEARCH DONE 2026-10-29: `docs/design/item_log_research.md`, four calls waiting on the
+  user (§6), nothing built.** M&M's "ledger": the server keeps one JSON file per character per
+  day of every item and party action (loot, coin purses, drops, pickups, destroys, both sides
+  of a trade, vendor sales and buys, harvests, level-ups, own deaths), hands it to the client on
+  launch and deletes it on exit (about a week kept); a second "social" file carries only what
+  the group and nearby players looted and the party's membership, never their sales, trades or
+  split amounts; combat is excluded by design and the game says it always will be. No in-game
+  view could be verified; fan tools (a loot splitter, a loot meter, a price book) are its
+  readers. Ours today: thirteen journal lines and the GM-only `gm_actions` table, nothing a
+  player can read back. Proposed: (A) a server-side `item_events` table written inside each
+  move's transaction, read by `admin_report` and a nightly dupe query (recommended, small,
+  server only); (B) a `/history` command for the owner, after the door; (C) M&M's full
+  client-side feed only if a group asks.
+  **ALL FOUR DECIDED 2026-10-30 (user: "yes"): build A, every server item mutation, the operator
+  first, 30 days kept. BUILT the same morning, pending the playtest** (server
+  `088d8f5` on the deploy branch; `item_ledger_and_rtt_checklist.md`, 15 rows; migration
+  `0017_item_events.sql`, forward-only, runs at the boot before any login; server only, no
+  export). One row per server-made movement of items or coin into or out of a character's
+  holdings, queued on the connection as the move is made and written INSIDE the transaction
+  that persists that character's stores (the flush, the trade commit, the corpse loot, the
+  death strip), cleared only on the commit and rolled back with the in-memory move on a failed
+  persist, so the table and the stores agree at every commit and nothing the client sends is
+  ever a row; internal moves (move, split, equip) write nothing. `delta` is the signed change
+  to the account's holdings (a vault deposit is 0), `copper` the same for coin; the books
+  balance per account, and `db::ledger_mismatches` names every account and item where the rows
+  and the stores disagree. The migration writes an `opening` row per held item. A daily sweep
+  (at boot and every 24 h, its own task) folds rows older than 30 days into carry rows, prunes
+  them, runs the check and logs `ledger swept`, `ledger check mismatches=N` and each mismatch
+  at warn; `admin_report` leads with the check and shows the newest 50 rows. Tests, each
+  failing on the previous server: three on the table (`tests/item_ledger.rs`: a planted stack
+  and a drained wallet are each the one mismatch; the fold keeps the sums; the operator's
+  read) and three integration (a sale, a purchase, a drop and a pickup, balanced, then a
+  planted stack the one mismatch; a trade's rows on both sides; a death and the corpse loot
+  balanced at both ends). The migration dry-run on a copy of the dev database booted to
+  `ledger check mismatches=0`. **Flagged, not built:** `/history` (B) and the group feed (C).
+  **DEPLOYED 2026-10-30 14:38 UTC** (R720 boot line `build="088d8f5" dev_cmds=false`, nobody
+  online at the stop, `saved=0 unsaved=0`; migration 0017 applied at the boot, then `ledger
+  swept carried=0 deleted=0` and `ledger check mismatches=0`, so the opening rows balance
+  against every account's stores on the live world, §1's first row); the sheet is runnable now.
+  **First sitting 2026-10-30 evening: the moves ran, the report did not.** The journal
+  corroborates §2's drop and pickup (a 9-stack), eat, destroy and nine `gm_give` grants and
+  §3's death (7 stacks to the corpse) and Loot All, but `admin_report`, the only reader of the
+  rows and the balance, died on its first run before the ledger cards: `alignment_score` read as
+  `i64`, and the factions build (10-23) made alignment a float every cast moves, which SQLite
+  keeps as a REAL in the 0001 `INTEGER` column; the server's own loader casts it, the report
+  did not, and no run had met a fractional score on this world. Older than the ledger. **FIXED
+  the same evening** (server `851a8cb`, pushed: the report reads the column through the same
+  CAST and prints two decimals; the query has one home, `CHARACTER_QUERY`, so a bin test with
+  a planted 0.37 runs exactly the report's query and fails on the old field; a dry run on a
+  migrated copy of the dev database with 0.37 planted printed both cards). A `git pull` in
+  `/opt/projectdawn/src` and the same command, no restart (a read-only bin). **The rerun, the
+  same evening, on `851a8cb`: the report ran whole and the books balance.** 112 rows, the check
+  card clean after the death and the loot, and every row the sitting's moves owed is there
+  with the count, delta and detail the sheet asked for: the sell (20:00:47, before the pasted
+  journal began, so it had run), the buy, the 9-stack drop and pickup, the eat, the destroys,
+  the vault deposit (delta 0), eight `gm_give` and the `gm_coins` grant to the copper, the
+  coin trade on both sides naming the other, seven `death` rows and the coins at the death and
+  the same seven back plus the coins at the loot; the two wallets add up by hand. Nothing lost
+  or doubled. **Still unplayed, and the entry waits on them:** the vault withdraw and both
+  bank coin ops (`bank_out`, `bank_coin_in`, `bank_coin_out`; a test plays all five bank kinds
+  since the night of 10-30, `the_ledger_records_the_bank_and_balances`, server `046abb4`, the
+  sheet staying the play evidence), a stack trade (`trade_out` / `trade_in`; the integration
+  test covers those), then one more report. The RTT half (§4) passed and is ticked above.
+  **Second sitting 2026-10-31 (two seats, CLARANCE and VIRT): the three asks played**, by the
+  journal: the vault withdrawal five times, a one-gold coin withdrawal twice and a one-gold
+  deposit, two stack trades (one with 1p 1g alongside). Every row of the sheet is marked by
+  the tester. **The paste came the same evening: every row and the card balanced (138
+  rows); ticked above, the description in systems_overview, "The item ledger".**
+- [x] **Social macros never send chat** — **DONE + playtested 2026-10-27**
+  (`chat_channel_checklist.md` §5, every row passing; what exists is in systems_overview,
+  "Multi-window chat"). *(Original entry:)* *(found 2026-10-26 while building the sticky channel)*.
+  `SocialHotkeys._execute_command` printed `/say`, `/shout`, `/group` and `/tell` lines locally
+  as `[Say] text` and sent nothing; `/sit` and `/stand` printed a line without sitting. A macro
+  online was decoration. **FIXED 2026-10-26 (user: "fix the problem"), pending the next export
+  and the playtest** (`chat_channel_checklist.md` §5): each macro line goes through the real
+  chat handler (`CombatLog.chat_submitted`), exactly as if typed; the hud already handled
+  `/lang` and `/languages`. `/attack`, which the old code faked by re-setting the target, was
+  not added as a command (user: not needed; the Q keybind toggles auto-attack). Probe
+  `tools/probe_chat_channel.gd` gained two checks, both failing on the old code.
+- [ ] **The consider command (`/con`)** *(user, 2026-10-23, on seeing the P99 Consider page:
+  "This is 1000% a mechanic we need in Project Dawn. Please add it to the list.")*. **First
+  piece BUILT 2026-10-23 with factions slice 1, pending the bump and the playtest**
+  (`factions_checklist.md` §2): `/con` (or `/consider`) on the target asks the server, which
+  answers with EQ's faction phrase from the player's standing ("Brom regards you
+  indifferently.") and, for a mob, one level phrase per con colour (white "Looks like an even
+  fight.", yellow one or two above "Looks like quite a gamble.", red three or more above "What
+  would you like your tombstone to say?", blue "Looks like you would have the upper hand.",
+  green "Looks like a reasonably safe opponent."), blue reaching 3 levels below at levels 1 to
+  12, 4 at 13 to 17, then one more every four levels (15 at 58), the colour ranges the P99 wiki's
+  Consider page calls accurate. **Open:** the page's per-band wording (its phrases change with
+  the player's level band); coloured con lines in chat; a keybind; conning players; and a
+  design call on whether the con colour decides XP as EQ's light blue and green did.
 - [ ] **In-game UI layout is "pretty busted"** *(user, machine day 2026-09-22, on the fresh
   1280x720 startup window)*. No specifics captured yet — needs a screenshot pass naming which
   windows/anchors misbehave at which sizes. Belongs to the deferred cohesive UI theming/polish
@@ -2005,6 +3612,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `scripts/ui_theme.gd`); likely interacts with the canvas_items/expand stretch at non-16:9
   window sizes. Same-day context: the startup window shrink to 1280x720 (login.gd) may have
   surfaced layout sins the old full-screen window hid.
+  **One specific, found 2026-10-29 on the equip sheet: the player's own cast bar never shows**
+  (user: "Player cannot see their own casting bar."). `scripts/hud_cast_bar.gd` is drawn 72 to
+  120 px above the bottom edge at the centre, the band the hotbars occupy (`hotbar.gd` anchors
+  its panels to the bottom centre), so whichever draws last hides the other; the fizzle row
+  that needed it is `[-]`. **BUILT 2026-10-29 (user: "Yes, please. You can put it in the center
+  for now.") and PLAYTESTED the same day** (`two_hander_jump_reach_cast_bar_checklist.md`, the
+  BAR rows, all six: the bar centred and filling over Healing Light's 1.2 s, clearing on the
+  landing, on ESC and on a fizzle, staying where it is dragged, clear of the inventory and
+  bank windows; what exists is in systems_overview, UI / HUD): the bar anchors at the screen's midpoint with offsets (the trade window's
+  idiom), its centre 110 px below the middle so it does not cover the target, draggable as
+  before; `tools/probe_cast_bar_place.gd` (10 checks: centred, below the middle, clear of the
+  hotbars' band, shown on a cast's start and hidden on its cancel) fails on the old placement.
 - [ ] **Combine character, equipment, and inventory into one window** *(user ask, twice:
   2026-05-02 "paperdoll, character, inventory combined to one window?" and 2026-05-05
   "Character, Equipment and Inventory to be combined to a single window"; never filed until the
@@ -2018,6 +3637,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   intentional-for-now, fix before ship). (b) Merchant/guard NPC names do not flash when
   targeted. (c) The target-of-target frame was called "huge, taking up too much space"; make
   it adjustable/movable with the other HUD pieces.
+  **(a) BUILT 2026-10-15, pending the export and the playtest** (client `fc0042f`;
+  `nameplates_through_walls_checklist.md`, 9 rows; client only). Verified before building:
+  enemy and NPC plates have depth-tested since `40dcad6` (2026-05-01, the day the complaint
+  was written; `enemy.tscn` went from `no_depth_test = true` to false), and every mob, NPC,
+  pet and station scene since carries false. The one plate still drawn through walls was
+  **other players'** (`remote_player.tscn`, true since `7faceef`, 2026-05-11), now false.
+  Exploit lens: that was a PvP information leak (a player hiding behind a wall showed their
+  name through it); a group-mate gets no exception, as in EQ. `tools/check_nameplates.gd`
+  instantiates all ten nameplate scenes headless and exits 1 if any draws through geometry;
+  it failed on the previous code for `remote_player.tscn` alone. Damage numbers stay drawn
+  over everything on purpose. (b) and (c) remain open.
 - [ ] **Playtest asks from the charm-return sitting (2026-10-07)** *(the tester's notes on
   `charm_return_checklist.md`)*. (a) **Chat lines did not wrap**: long combat lines were
   clipped at the window's right edge. **BUILT 2026-10-07, pending playtest** (client;
@@ -2066,6 +3696,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **DECIDED 2026-10-07 (user): "dont make named mobs charm-immune."** Named mobs stay
   charmable; no flag. (EQ's other gate, a maximum target level on each charm rank, was
   described but not asked about and is not decided; charm today has no level cap at all.)
+- [ ] **Other players' levels** *(user 2026-11-02, `overnight_2026_11_01_checklist.md` §3:
+  "We cant currently see eachother's levels in game")*. Read in the code, not yet designed: the
+  group panel seeds every member at level 0 (`GroupManager`, the row's "Lv %d"; `GroupState`
+  carries no level); a player's level reaches others only in `EntitySpawn`, and `LevelUp` goes to
+  the player alone, so a level gained in view is never seen. Shape: a level on the group state
+  and a level relay to the players who can see the leveller (a wire addition, so a bump day).
 - [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
@@ -2171,6 +3807,35 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 > New section 2026-09-29 (the crack audit): economy and itemization items used to sit in
 > memory notes and design docs with no To-Do home. Runtime inventory mechanics stay under
 > Multiplayer / networking; what an item IS lives here.
+- [x] **The starting kit** — **DONE + playtested 2026-11-03** (`pre_door_check_checklist.md`
+  §2, every row passing on a new Gnome Shadow Knight: born wearing the sword, shirt and pants,
+  `NO DROP` in each tooltip, the sale, the drag onto the world and the shared vault refused, the
+  own vault in and out, the kit back on from the corpse after a death; the trade and destroy
+  rows are covered by the integration test. What exists is in systems_overview, Items, "The
+  starting kit and NO DROP".) *(Original entry:)* *(user, 2026-11-03: every character starts equipped with a Ragged
+  Shirt, Ragged Pants and one class Trainee's weapon, NO DROP and worth 0, so the
+  make-sell-trade-delete loop pays nothing)*. **BUILT 2026-11-03, pending the redeploy, the
+  export and the pre-door check** (server `f06e88e`, client `12d4e5c`, on the deploy branches; `pre_door_check_checklist.md` §2).
+  Seven items on both sides (`data/items.toml`, `data/loot/items/{ragged_*,trainees_*}.tres`),
+  each a step under the cheapest shop weapon of its kind: sword (Warrior, Paladin, Shadow
+  Knight, Bard, Ranger, Witch Hunter), knife (Rogue, Blood Mage), club (Cleric, Monk, Druid),
+  one-handed piercing spear (Shaman, Beast Master), two-handed staff (Magician, Wizard,
+  Sorcerer, Necromancer, Enchanter). The five pure casters gain 2H Blunt at 75, their 1H Blunt
+  cap, as P99 gives them (user: "give them 2h blunt"); every 2H blunt staff is now theirs to
+  wield, the Carved Staff included. `db::create_character` writes the kit worn (main hand,
+  chest, legs) and its `starter` ledger rows in the character's own transaction. The kit
+  weighs 3.5 at most, so no race and class is born encumbered (a Fae caster carries 5.0).
+  Existing characters get no kit (the no-fix rule for older characters). Server-side NO DROP
+  refusals as in the flag's entry; the client refuses first with the same line. Tests: unit
+  (every class can wear its kit, nobody is born encumbered, the user's table), integration (born
+  dressed; sale, drop, trade and shared vault refused with nothing moved; own vault and destroy
+  allowed; the kit back off its owner's corpse; the ledger balanced throughout), the persistence
+  test rewritten for the kit, `tools/probe_no_drop.gd`. Older tests keep their bare characters
+  (the harness strips the kit). **Flagged:** a Monk wearing the club swings one stream, not its
+  two bare fists (the off-hand punch needs both hands empty); unequip it to fight hand to hand.
+  **DEPLOYED 2026-11-03 17:21 UTC** (R720 boot line `build="f06e88e" dev_cmds=false`, nobody
+  online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`); the friends' zip is
+  `builds/ProjectDawn-alpha-c37bebd.zip` (since `c37bebd`, the username hint; it replaced `de600ba`).
 - [ ] **Banker exchange fee bands** *(systems_overview "Still open: exchange fee bands";
   `handoff_banker_npc.md`: the plumbing is in place so a rate is a one-line change, currency.md's
   bands (2-5% up, 0-1% down) come "in a later pass as named constants"; audit 2026-09-29)*.
@@ -2289,6 +3954,36 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   within say range, never the eater. Tests: an integration test with a watcher beside a
   starving Halfling (the update carries the meal and the 2.0 rate, the watcher hears the emote
   and never the eater's counters); a headless panel probe, 17 checks.
+  **Slice 2, Summon Food and Summon Drink, BUILT 2026-10-15, pending the redeploy, the export and
+  the playtest** (server `4577350`, client `ec4fff2`; `summon_food_checklist.md`, 15 rows; both sides
+  move together: an old client knows neither the spell nor the item). **The user's numbers
+  (2026-10-15, from Monsters and Memories): "conjure 1 to 4 slices of bread / flasks of water,
+  scaling by level."** Built as a new `SUMMON_ITEM` target type: the spell's `summon_item` goes
+  into the caster's bags through the real placer, `summon_count` of them (one at the level the
+  class learns the spell, one more per `SUMMON_LEVELS_PER_EXTRA` = 10 levels, capped at
+  `summon_max` = 4; the step is a knob, M&M does not publish theirs), with "You conjure X xN."
+  and the inventory deltas; the pre-flight refuses "Your bags are full." before the mana comes
+  off (the placer's own `can_accept`). The design's per-class levels (Summon Drink: Magician 1,
+  Shaman 2, Cleric 3, Druid 10; Summon Food: Magician 1, Cleric 9, Shaman 9, Druid 14) are
+  honoured by a new `class_min_levels` table on a spell (the cast gate's level check and the
+  client's spell book both read `required_level(class)`, `min_level` for a class absent from
+  it); the lockstep check learned inline tables and dictionaries for it. Two new items on both
+  sides, Conjured Bread (a 48-minute meal) and Conjured Water (a 36-minute drink), with no
+  vendor value, so the existing SellItem rule refuses them (no coin faucet from free food); the
+  item lockstep check is green with 174 on each side. 10 mana, 4 s cast, no cooldown of its
+  own. **Flagged, not built:** EQ landed summoned items on the cursor (ours go to the bags), and
+  EQ's were NO RENT and vanished on logout (ours persist; a no-rent flag is the open "no-drop /
+  no-trade item flag" item). Tests: a unit test on the count and the per-class levels; an
+  integration test where a Magician 1 conjures one bread and is told, and a Magician 35
+  conjures four water; a headless probe of the client's data and the two item resources.
+  **DECIDED 2026-10-19 (user): +1 item per level after the class learns the spell, cap 10**
+  (was +1 per ten levels, cap 4): a Magician conjures 10 per cast from level 10. Safe because
+  conjured food cannot be sold and becomes NO RENT (the no-drop flag item).
+  **BUILT 2026-10-19** (`feat/server-speed`, server `f7c0d05`, client `d0d4c4d`;
+  `summon_food_checklist.md` updated on that branch).
+  **Server half DEPLOYED 2026-10-19** (R720 boot line `build="33c7e28" dev_cmds=false`, no
+  migration); the spells stay unreachable until the Oct 22 export, since the 10-13
+  client knows neither the spells nor the items.
 - [ ] **Exporter drift** *(the "Known drift" note names `tools/export_spells.gd` as stale; the
   2026-07-10 session flagged the `items.toml` exporter emitting `weapon_delay` /
   `proc_damage_type` on every item plus a stale `arrow_bundle`; audit 2026-09-29)*. Both
@@ -2311,7 +4006,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `docs/deployment/` remains untracked by decision and CLAUDE.md links it as canonical (decide
   one way). Small, but each is a trap for the next reader.
   **Checked 2026-10-12:** three of the four are closed. `server/README.md` was rewritten on 10-08 (`c6fccd1`, no unbuilt-world claim remains); `flaky_integration_tests.md` has carried a RESOLVED header since 10-01 with no known-flaky test; `casting_passive.md` now says the system is implemented and where (client `CastingSkills`, server `world/skills.rs`). The `weapons_passive.md` line is about Parry and Riposte, which really are unbuilt. **Open: whether `docs/deployment/` stays untracked** (a user decision; CLAUDE.md links it as canonical and `public_hosting_sitting.md` joined it on 2026-10-12).
-- [ ] **The cast arms duplicate the pre-flight** *(review finding, 2026-10-02; recorded, not
+- [x] **The cast arms duplicate the pre-flight** — **DONE 2026-10-14, ticked on the suites**
+  (server `c377a66` on the deploy branch; server-only, no wire change, no behaviour change, so no
+  checklist: a refactor with no playtest surface, and a test suite is its own checklist, the
+  flaky-trio precedent; the five spell checklists queued for the Oct 22 redeploy exercise every
+  arm and are its regression sweep). `cast_target_refusal` returns a `ResolvedTarget` (Nothing /
+  Player / Mob / Pet / Corpse) and the per-target-type arms act on it; every arm's own copy of
+  the presence, reach, liveness and PvP checks is deleted (594 lines out, 230 in), along with
+  the CORPSE arm's private class/level copy, which the general gate covers. The one fallback
+  left in an arm is `cast_resolution_lost`: a target the pre-flight resolved a moment ago
+  cannot be gone at the arm (they run back to back for one intent), so if it ever is, the
+  server logs it at error, refunds and refuses rather than charging for nothing. The full suite
+  was green before and after (272 unit, 96 integration) and a new unit test pins the variant
+  each target kind resolves to (a mob, a rival's pet, a flagged player, one's own pet refused,
+  an untargeted heal as a self-heal, Warder's Mend to the own pet whatever is targeted, a corpse
+  with its owner, Bind on oneself). *(Original entry:)* *(review finding, 2026-10-02; recorded, not
   built)*. `cast_target_refusal` decides target presence, reach, liveness and the PvP gates
   before any side effect, and the per-target-type arms in `tick.rs` still carry their own
   copies of the same checks (now unreachable, with slightly different lines and the old

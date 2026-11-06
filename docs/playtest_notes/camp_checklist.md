@@ -4,6 +4,8 @@
 > Rows flipped to `[-]` below carry the verdict and the reason after their `notes:`; the
 > rows still open are the re-run: 38, 39, 40 (line numbers as of the triage).
 
+> **Triage 2026-11-01: retired.** Rows 42 to 44 are covered: the 2026-06-20 two-client verification (`session_2026_06_19_camp_linkdead.md`, the linkdead body damaged and reaped at 30.0 s), the integration test `an_unclean_drop_refuses_relogin_until_the_body_is_reaped` (the To-Do entry was ticked on it 2026-10-13), and `relogin_countdown_checklist.md` rows 22 to 25, which the planner schedules. The rows stay unmarked: they were not played here.
+
 Verifies the EverQuest logout model (`docs/design/camp_and_linkdead.md`), both slices:
 **linkdead** (involuntary, slice A) and **`/camp`** (voluntary, slice B). Wire is **PD_W0017**.
 

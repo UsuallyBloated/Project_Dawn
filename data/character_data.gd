@@ -103,92 +103,92 @@ const CLASS_DATA: Dictionary = {
 	"Warrior": {
 		"desc": "Masters of melee combat. Heavy armor, high HP, and physical dominance define their path.",
 		"bonuses": {"strength": 10, "constitution": 8},
-		"hp_bonus": 50.0, "mp_bonus": 0.0, "stamina_bonus": 20.0
+		"stamina_bonus": 20.0
 	},
 	"Magician": {
 		"desc": "Wielders of arcane power. Devastating spells and vast mana, at the cost of physical frailty.",
 		"bonuses": {"intelligence": 15, "wisdom": 10},
-		"hp_bonus": -10.0, "mp_bonus": 100.0, "stamina_bonus": 0.0
+		"stamina_bonus": 0.0
 	},
 	"Wizard": {
 		"desc": "Scholars of the arcane. The broadest spell knowledge of any class, but their spell book is finite — a Wizard who runs dry is a liability.",
 		"bonuses": {"intelligence": 18, "wisdom": 5},
-		"hp_bonus": -15.0, "mp_bonus": 110.0, "stamina_bonus": 0.0
+		"stamina_bonus": 0.0
 	},
 	"Sorcerer": {
 		"desc": "Born to power, not trained to it. Innate magic flows without the limits of preparation — fewer spells known, but always available.",
 		"bonuses": {"intelligence": 10, "charisma": 15, "wisdom": 5},
-		"hp_bonus": -5.0, "mp_bonus": 90.0, "stamina_bonus": 0.0
+		"stamina_bonus": 0.0
 	},
 	"Rogue": {
 		"desc": "Cunning infiltrators. Precision strikes, poisons, and unmatched agility define their craft.",
 		"bonuses": {"dexterity": 15, "agility": 10},
-		"hp_bonus": 20.0, "mp_bonus": 0.0, "stamina_bonus": 20.0
+		"stamina_bonus": 20.0
 	},
 	"Cleric": {
 		"desc": "Devoted healers armored in faith. Divine magic mends wounds and smites the wicked.",
 		"bonuses": {"wisdom": 12, "constitution": 8},
-		"hp_bonus": 30.0, "mp_bonus": 60.0, "stamina_bonus": 0.0
+		"stamina_bonus": 0.0
 	},
 	"Druid": {
 		"desc": "Guardians of the natural world. They balance potent nature spells with restorative magic.",
 		"bonuses": {"wisdom": 10, "intelligence": 8},
-		"hp_bonus": 10.0, "mp_bonus": 70.0, "stamina_bonus": 0.0
+		"stamina_bonus": 0.0
 	},
 	"Shaman": {
 		"desc": "Spiritual warriors who commune with ancestors. Blend melee combat with healing and spirit magic.",
 		"bonuses": {"wisdom": 10, "constitution": 8, "strength": 5},
-		"hp_bonus": 30.0, "mp_bonus": 40.0, "stamina_bonus": 15.0
+		"stamina_bonus": 15.0
 	},
 	"Beast Master": {
 		"desc": "Spirit-bonded hunters who fight alongside a permanent animal warder. They blend melee discipline with primal spirit magic.",
 		"bonuses": {"strength": 8, "constitution": 8, "agility": 5, "wisdom": 5},
-		"hp_bonus": 30.0, "mp_bonus": 30.0, "stamina_bonus": 20.0
+		"stamina_bonus": 20.0
 	},
 	"Blood Mage": {
 		"desc": "Masters of dark vitomancy. They drain life from enemies and bend mortal flesh to their will.",
 		"bonuses": {"intelligence": 15, "constitution": 5},
-		"hp_bonus": 0.0, "mp_bonus": 80.0, "stamina_bonus": 0.0
+		"stamina_bonus": 0.0
 	},
 	"Paladin": {
 		"desc": "A holy warrior armored in faith. Divine strikes, protective auras, and battlefield healing define their calling.",
 		"bonuses": {"strength": 10, "wisdom": 8, "constitution": 5},
-		"hp_bonus": 40.0, "mp_bonus": 30.0, "stamina_bonus": 15.0
+		"stamina_bonus": 15.0
 	},
 	"Shadow Knight": {
 		"desc": "A dark champion fueled by death and suffering. Lifetap strikes and shadow magic sustain them in battle.",
 		"bonuses": {"strength": 10, "intelligence": 8, "constitution": 5},
-		"hp_bonus": 35.0, "mp_bonus": 30.0, "stamina_bonus": 10.0
+		"stamina_bonus": 10.0
 	},
 	"Necromancer": {
 		"desc": "Masters of death magic. They raise the fallen as servants and drain life with corrupting curses.",
 		"bonuses": {"intelligence": 15, "wisdom": 5},
-		"hp_bonus": -10.0, "mp_bonus": 100.0, "stamina_bonus": 0.0
+		"stamina_bonus": 0.0
 	},
 	"Enchanter": {
 		"desc": "Wielders of illusion and mental magic. Unmatched crowd control and mana restoration, but they never throw the first punch.",
 		"bonuses": {"intelligence": 12, "charisma": 12, "wisdom": 5},
-		"hp_bonus": -10.0, "mp_bonus": 90.0, "stamina_bonus": 0.0
+		"stamina_bonus": 0.0
 	},
 	"Bard": {
 		"desc": "Wandering storytellers who weave magic through music. Their songs reshape the battlefield while their blades keep them in it.",
 		"bonuses": {"dexterity": 8, "charisma": 12, "agility": 5},
-		"hp_bonus": 20.0, "mp_bonus": 30.0, "stamina_bonus": 20.0
+		"stamina_bonus": 20.0
 	},
 	"Ranger": {
 		"desc": "Hunters and trackers of the wild. Swift with both blade and bow, they read the land like a second language.",
 		"bonuses": {"dexterity": 12, "agility": 8, "wisdom": 5},
-		"hp_bonus": 20.0, "mp_bonus": 20.0, "stamina_bonus": 20.0
+		"stamina_bonus": 20.0
 	},
 	"Monk": {
 		"desc": "Unarmed masters of discipline. No armor, no weapons — only speed, technique, and unbreakable focus.",
 		"bonuses": {"strength": 8, "dexterity": 8, "agility": 8},
-		"hp_bonus": 25.0, "mp_bonus": 10.0, "stamina_bonus": 30.0
+		"stamina_bonus": 30.0
 	},
 	"Witch Hunter": {
 		"desc": "Relentless pursuers of the arcane and the corrupted. Expert at unraveling dark magic and those who wield it.",
 		"bonuses": {"intelligence": 8, "constitution": 8, "wisdom": 8},
-		"hp_bonus": 20.0, "mp_bonus": 40.0, "stamina_bonus": 10.0
+		"stamina_bonus": 10.0
 	},
 }
 
@@ -233,30 +233,114 @@ const STAT_KEYS: Array[String] = [
 const STAT_SHORT: Array[String] = ["STR", "DEX", "AGI", "INT", "WIS", "CHA", "CON"]
 
 const BASE: int        = 10
-const BASE_HP: float   = 100.0
-const BASE_MP: float   = 100.0
 const BASE_ST: float   = 100.0
+# The pure melee classes have no mana in EQ; they keep a token pool so nothing
+# that divides by a maximum (bars, regen) meets a zero. Mirror of the server's
+# `char_data::MIN_MANA`.
+const MIN_MANA: float  = 20.0
 
-# Per-level stat and resource gains for each class.
-# player_stats.gd reads this in _level_up() — add new classes here, not there.
+# Classic EverQuest's hit points and mana (the EQ parity audit of 2026-10-20,
+# recommendation 1), a mirror of the server's `char_data.rs` (`hp_level_factor`,
+# `base_hp`, `base_mana`): the same integer arithmetic in the same order, so the
+# sheet shows what the server holds. Change both sides in the same commit.
+
+# EQ's class factor for hit points at a level (EQEmu `GetClassLevelFactor`).
+# Our own classes take the EQ class they are shaped after.
+static func hp_level_factor(cls: String, level: int) -> int:
+	match cls:
+		"Warrior":
+			if level < 20: return 220
+			elif level < 30: return 230
+			elif level < 40: return 250
+			elif level < 53: return 270
+			elif level < 57: return 280
+			elif level < 60: return 290
+			elif level < 70: return 300
+			else: return 311
+		"Cleric", "Druid", "Shaman":
+			return 150 if level < 70 else 157
+		"Paladin", "Shadow Knight":
+			if level < 35: return 210
+			elif level < 45: return 220
+			elif level < 51: return 230
+			elif level < 56: return 240
+			elif level < 60: return 250
+			elif level < 68: return 260
+			else: return 270
+		"Monk", "Bard", "Rogue", "Beast Master":
+			if level < 51: return 180
+			elif level < 58: return 190
+			elif level < 70: return 200
+			else: return 210
+		"Ranger", "Witch Hunter":
+			if level < 58: return 200
+			elif level < 70: return 210
+			else: return 220
+		"Magician", "Wizard", "Necromancer", "Enchanter", "Sorcerer", "Blood Mage":
+			return 120 if level < 70 else 127
+		_:
+			if level < 35: return 210
+			elif level < 45: return 220
+			elif level < 51: return 230
+			elif level < 56: return 240
+			elif level < 60: return 250
+			else: return 260
+
+# The stat a class builds its mana on: "intelligence", "wisdom", or "" for the
+# pure melee (EQEmu `GetCasterClass`; Bards are INT casters there).
+static func mana_stat(cls: String) -> String:
+	match cls:
+		"Wizard", "Magician", "Necromancer", "Enchanter", "Shadow Knight", "Bard", "Sorcerer", "Blood Mage", "Witch Hunter":
+			return "intelligence"
+		"Cleric", "Druid", "Shaman", "Paladin", "Ranger", "Beast Master":
+			return "wisdom"
+		_:
+			return ""
+
+# `5 + level x factor / 10 + CON x level x factor / 3000`, integer arithmetic,
+# with our CON in EQ's STA's place.
+@warning_ignore("integer_division")
+static func base_hp(cls: String, level: int, constitution: int) -> int:
+	var lm := hp_level_factor(cls, level)
+	var con: int = maxi(constitution, 0)
+	return maxi(5 + level * lm / 10 + con * level * lm / 3000, 1)
+
+# EQ's classic base mana from the class's mana stat: 22.5 x level at a stat of
+# 100, less below, more above, the top end flattened past 199. Zero for a class
+# with no mana stat (the caller applies MIN_MANA).
+@warning_ignore("integer_division")
+static func base_mana(cls: String, level: int, intelligence: int, wisdom: int) -> int:
+	var stat_name := mana_stat(cls)
+	if stat_name == "":
+		return 0
+	var stat: int = maxi(intelligence if stat_name == "intelligence" else wisdom, 0)
+	var lesser: int = maxi((stat - 199) / 2, 0)
+	var mind: int = stat - lesser
+	if stat > 100:
+		return (5 * (mind + 20)) / 2 * 3 * level / 40
+	return (5 * (mind + 200)) / 2 * 3 * level / 100
+
+# Per-level stat and stamina gains for each class. Hit points and mana are not
+# gains: `base_hp` / `base_mana` recompute them from the level and the stats.
+# player_stats.gd reads this in `intrinsic_character` — add new classes here, not there.
 const CLASS_LEVEL_GAINS: Dictionary = {
-	"Warrior":       {"stats": {"strength": 2, "constitution": 2},                    "max_hp": 20.0, "max_mp":  2.0, "max_stamina":  8.0},
-	"Magician":          {"stats": {"intelligence": 3, "wisdom": 2},                       "max_hp":  5.0, "max_mp": 25.0, "max_stamina":  2.0},
-	"Wizard":        {"stats": {"intelligence": 4, "wisdom": 1},                       "max_hp":  3.0, "max_mp": 28.0, "max_stamina":  1.0},
-	"Sorcerer":      {"stats": {"charisma": 2, "intelligence": 2},                     "max_hp":  5.0, "max_mp": 22.0, "max_stamina":  2.0},
-	"Rogue":         {"stats": {"dexterity": 2, "agility": 2},                         "max_hp": 12.0, "max_mp":  3.0, "max_stamina": 10.0},
-	"Cleric":        {"stats": {"wisdom": 3, "constitution": 1},                       "max_hp": 12.0, "max_mp": 20.0, "max_stamina":  2.0},
-	"Druid":         {"stats": {"wisdom": 2, "intelligence": 2},                       "max_hp":  8.0, "max_mp": 22.0, "max_stamina":  2.0},
-	"Shaman":        {"stats": {"wisdom": 2, "constitution": 1, "strength": 1},        "max_hp": 12.0, "max_mp": 15.0, "max_stamina":  5.0},
-	"Beast Master":  {"stats": {"strength": 2, "constitution": 1, "agility": 1, "wisdom": 1}, "max_hp": 14.0, "max_mp": 10.0, "max_stamina":  6.0},
-	"Blood Mage":    {"stats": {"intelligence": 3, "constitution": 1},                 "max_hp":  7.0, "max_mp": 22.0, "max_stamina":  2.0},
-	"Paladin":       {"stats": {"strength": 2, "wisdom": 2, "constitution": 1},        "max_hp": 15.0, "max_mp": 12.0, "max_stamina":  5.0},
-	"Shadow Knight": {"stats": {"strength": 2, "intelligence": 2, "constitution": 1}, "max_hp": 14.0, "max_mp": 12.0, "max_stamina":  4.0},
-	"Necromancer":   {"stats": {"intelligence": 3, "wisdom": 2},                       "max_hp":  3.0, "max_mp": 25.0, "max_stamina":  1.0},
-	"Enchanter":     {"stats": {"intelligence": 3, "charisma": 2},                     "max_hp":  3.0, "max_mp": 23.0, "max_stamina":  1.0},
-	"Bard":          {"stats": {"dexterity": 2, "charisma": 2, "agility": 1},          "max_hp": 10.0, "max_mp":  8.0, "max_stamina":  8.0},
-	"Ranger":        {"stats": {"dexterity": 2, "agility": 2, "wisdom": 1},            "max_hp": 10.0, "max_mp":  8.0, "max_stamina":  8.0},
-	"Monk":          {"stats": {"strength": 2, "dexterity": 2, "agility": 1},          "max_hp": 12.0, "max_mp":  4.0, "max_stamina": 10.0},
-	"Witch Hunter":  {"stats": {"intelligence": 2, "wisdom": 2, "constitution": 1},   "max_hp": 10.0, "max_mp": 15.0, "max_stamina":  4.0},
-	"_default":      {"stats": {},                                                      "max_hp": 10.0, "max_mp": 10.0, "max_stamina":  5.0},
+	"Warrior":       {"stats": {"strength": 2, "constitution": 2},                    "max_stamina":  8.0},
+	"Magician":          {"stats": {"intelligence": 3, "wisdom": 2},                       "max_stamina":  2.0},
+	"Wizard":        {"stats": {"intelligence": 4, "wisdom": 1},                       "max_stamina":  1.0},
+	"Sorcerer":      {"stats": {"charisma": 2, "intelligence": 2},                     "max_stamina":  2.0},
+	"Rogue":         {"stats": {"dexterity": 2, "agility": 2},                         "max_stamina": 10.0},
+	"Cleric":        {"stats": {"wisdom": 3, "constitution": 1},                       "max_stamina":  2.0},
+	"Druid":         {"stats": {"wisdom": 2, "intelligence": 2},                       "max_stamina":  2.0},
+	"Shaman":        {"stats": {"wisdom": 2, "constitution": 1, "strength": 1},        "max_stamina":  5.0},
+	"Beast Master":  {"stats": {"strength": 2, "constitution": 1, "agility": 1, "wisdom": 1}, "max_stamina":  6.0},
+	"Blood Mage":    {"stats": {"intelligence": 3, "constitution": 1},                 "max_stamina":  2.0},
+	"Paladin":       {"stats": {"strength": 2, "wisdom": 2, "constitution": 1},        "max_stamina":  5.0},
+	"Shadow Knight": {"stats": {"strength": 2, "intelligence": 2, "constitution": 1}, "max_stamina":  4.0},
+	"Necromancer":   {"stats": {"intelligence": 3, "wisdom": 2},                       "max_stamina":  1.0},
+	"Enchanter":     {"stats": {"intelligence": 3, "charisma": 2},                     "max_stamina":  1.0},
+	"Bard":          {"stats": {"dexterity": 2, "charisma": 2, "agility": 1},          "max_stamina":  8.0},
+	"Ranger":        {"stats": {"dexterity": 2, "agility": 2, "wisdom": 1},            "max_stamina":  8.0},
+	"Monk":          {"stats": {"strength": 2, "dexterity": 2, "agility": 1},          "max_stamina": 10.0},
+	"Witch Hunter":  {"stats": {"intelligence": 2, "wisdom": 2, "constitution": 1},   "max_stamina":  4.0},
+	"_default":      {"stats": {},                                                      "max_stamina":  5.0},
 }

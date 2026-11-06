@@ -108,6 +108,9 @@ cannot lose it.
 - Should kill-loot bags with a single item stack + coin allow left-click (grab item, leave
   coin)? v1 says no — keep the rule crisp.
 - Bank/vendor interactions with a held item (deposit-from-cursor, sell-from-cursor): deferred;
-  place it first.
+  place it first. **Built 2026-10-30 (PD_W0029):** a click on a vault slot while holding
+  deposits into that vault (`BankStoreItem` with the `"cursor"` location, bags refused), and
+  the merchant's SELL list leads with the item in hand, sold through `SlotRef::Cursor`
+  (`held_item_bank_and_vendor_checklist.md`).
 - Slice 2's exact overflow order and whether a partially-lootable corpse should re-equip at
   all or refuse whole.

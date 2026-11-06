@@ -1,7 +1,7 @@
 class_name SpellData
 extends Resource
 
-enum TargetType { ENEMY, SELF, ALLY, NONE, PET_SUMMON, PET_CHARM, PET_HEAL, PORT, BIND, AOE, CORPSE }
+enum TargetType { ENEMY, SELF, ALLY, NONE, PET_SUMMON, PET_CHARM, PET_HEAL, PORT, BIND, AOE, CORPSE, SUMMON_ITEM }
 enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, SHADOW, NONE }
 
 @export var spell_name: String = ""
@@ -74,9 +74,36 @@ enum DamageType { FIRE, ICE, LIGHTNING, ARCANE, HEALING, HOLY, NATURE, SPIRIT, S
 @export var aoe_radius: float = 0.0
 # Song: route through BardSongs twist system instead of standard effect handling.
 @export var is_song: bool = false
+# A song's own start fraction (its share of the listed level-50 effect when
+# first learned); 0 means BardSongs.SCALE_AT_LEARN. Selos' carries EQ's
+# Selo's curve (0.3077, +20% of +65%).
+@export var song_scale_at_learn: float = 0.0
 @export var allowed_classes: Array[String] = []
 # Minimum character level required to have this spell available.
 @export var min_level: int = 1
+# Per-class level requirements on a spell several classes share (Summon
+# Drink: Magician 1, Shaman 2, Cleric 3, Druid 10); a class absent here uses
+# min_level. Mirror of the server's `class_min_levels`, compared by the
+# lockstep check.
+@export var class_min_levels: Dictionary = {}
+# SUMMON_ITEM spells (Summon Food / Drink): the item conjured into the bags
+# and the most of it one cast makes; the count is the server's (one at the
+# class's level, one more per ten levels).
+@export var summon_item: String = ""
+@export var summon_max: int = 0
+# How far this spell reaches its target, metres; 0 means DEFAULT_SPELL_RANGE
+# (use reach()). Per-spell since 2026-10-19, on Monsters and Memories' 30 m
+# baseline for every single-target spell; the server's Spell::reach is the
+# authority and the two are compared by tools/check_spell_lockstep.gd.
+@export var range: float = 0.0
+
+const DEFAULT_SPELL_RANGE := 30.0
+
+func reach() -> float:
+	return range if range > 0.0 else DEFAULT_SPELL_RANGE
+
+func required_level(cls: String) -> int:
+	return int(class_min_levels.get(cls, min_level))
 # Casting discipline that trains when this spell is cast. See CastingSkillDefinitions.ALL.
 # "evocation", "alteration", "abjuration", "conjuration", "divination" — or "" if unassigned.
 @export var discipline: String = ""
