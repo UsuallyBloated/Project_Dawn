@@ -177,7 +177,7 @@ open until they are done, except where a row says the user handed it elsewhere.)
 | F13 rest: the one-time `rustfmt` and the `[workspace.lints]` turn-on | **BUILT 2026-11-02 night on `bump/nov`** (see the F13 row above); ships with the bump |
 | F2 / C1 panic containment | **BUILT 2026-11-02** (`1c35cf7`, corrected in `3f1d4f2`), the narrow version; see below |
 | F6 duplicated helpers, F8 a validated coin type, F9 error types, F7 an id-kind enum | **BUILT 2026-11-02** (`31a5dd1`, `fb2756c`, `eb12123`, `4d23a34`). F7's `CharId` newtype for the ~128 `as ClientId` / `as u64` casts **skipped 2026-11-02 (user)**: wide churn on code the open branches rebase over, and no bug found behind it; closed for the audit |
-| M4 intent budgets, M6 / F4 auth limits, L2 sessions, L8 a characters-per-account cap | `feat/public-hosting`, rebased across the split (several are already there) |
+| M4 intent budgets, M6 / F4 auth limits, L2 sessions, L8 a characters-per-account cap | `feat/public-hosting`, **merged across the split 2026-11-06** (server `df46291`): M4 is there with every intent placed (an exhaustive match) and M6 / F4's socket limits, handshake timeout and connection cap are there; L2 (hashed session tokens, a purge of expired sessions) and L8 are not on the branch yet |
 | L6 / L7 bind auth to the tailnet address, an off-host backup | **deferred 2026-11-02 (user: "we can wait")**; R720 jobs for the user, steps to be written when picked up |
 | B6 wire hygiene and the real `vendor_id` | the next protocol bump |
 | B4's stats message | its own To-Do entry |

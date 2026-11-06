@@ -1877,6 +1877,28 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `rtt_ms=50.0` for both players, never 0.0, where the 10-29 lines on the old build in the
   same journal read 0.0; `/ping` still a real number). The zero readout is closed; the entry
   stays open on its public-host items.
+  **The branch MERGED ACROSS THE NOVEMBER BUMP 2026-11-06 (overnight)**: `feat/public-hosting`
+  in both repos now carries the deploy branches (server `df46291`, client `daac86c`; the
+  pre-merge tips kept as `feat/public-hosting-pre-nov`), the Phase 2 branch note's "rebase
+  across the split" done as the branch's own merge-tracking convention. What changed in the
+  port, each re-read against the new code: the restart for a moved world address rides Phase
+  1's stop channel instead of its own signal (the channel carries `Stop`: `Run`, `Signal`,
+  `AddressChanged`; `main` spawns the address watch; `shut_down_world` saves everyone and
+  tells them with the address line; the loop then ends with an error so systemd restarts the
+  process on the new address: one stop path, one save path); `intent_class` is an exhaustive
+  match, so every intent added since the branch was written is placed (the trade window, the
+  spell bar, `UseSkill`, `Consider`, `StopSong` in the budgets; the dev commands stay on the GM
+  command bucket, which refuses a plain account before anything runs) and a new intent does not
+  compile until it is placed; the auth service's three entry points share one accept loop (F6);
+  the lints met (poisoned-lock recovery for `expect`, no string indexing, tungstenite's forced
+  large error type marked with its reason); the invites migration is `0018` (was 0012) so it
+  applies after everything the host has already run; the branch's two world tests live in
+  `tests/world/hosting.rs` on the new harness (the flood test floods says, since Hit/Miss/Evade
+  are dev commands now). fmt, clippy and the whole suite green (420 unit, 183 world, 10 auth, 5
+  persistence, 3 ledger); all 16 client checks green against the merged pair (the hosting
+  worktree's Godot class cache was from 10-12 and had to be rebuilt first). Still off the deploy
+  branches until cutover, as planned; L2 (hashed session tokens, a purge of expired sessions)
+  and L8 (a characters-per-account cap) are not on the branch yet.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
