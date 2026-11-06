@@ -16,6 +16,10 @@ from the merged `feat/facing` AND the export with the rebuilt `gdext_net.dll`. T
 Diagnostics: there is no log line for a facing (it rides every Move); a body that never turns
 with the DLL check green means the server build predates PD_W0029.
 
+> **Run through `bump_build_master_checklist.md` (2026-11-06):** this sheet's rows are in the
+> master in sitting order, each tagged `R<section>.<row>` (`RS.n` for Setup). Fill the master;
+> the marks are copied back here.
+
 ## Setup
 - [ ] Server on the R720 from the merged bump (boot line `build=`, `dev_cmds=false`). notes:
 - [ ] Both seats on the bump export; `tools/check_wire_layer.gd` green on its checkout. notes:

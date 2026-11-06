@@ -9,6 +9,10 @@ into one module per step; nothing should behave differently) and the client's
 a regression sweep of ordinary play, since a split that changes nothing has nothing new to
 show; §3 is what the client removal changes on screen.
 
+> **Run through `bump_build_master_checklist.md` (2026-11-06):** §2 and §3's rows are in the
+> master in sitting order, each tagged `O2.n` / `O3.n` by its row number here. Fill the master;
+> the marks are copied back here.
+
 | Thing | Where | Notes |
 |---|---|---|
 | The `world health` line | `journalctl -u projectdawn \| grep "world health"` | once a minute while anyone is in the world: `ticks` (about 1,200), `p50_ms`, `p99_ms`, `max_ms`, `over_budget` (ticks past 50 ms), `checkpoint_max_ms` |

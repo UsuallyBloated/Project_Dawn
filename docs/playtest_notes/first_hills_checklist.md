@@ -41,6 +41,10 @@ Diagnostics: `journalctl -u projectdawn --since "<start>" | grep -E "ERROR|WARN|
 `slope_refusals` on the once-a-minute `world health` line counts steps the slope rule refused;
 on hills a key held into a cliff counts too, so a number there is a curiosity, not a fault.
 
+> **Run through `bump_build_master_checklist.md` (2026-11-06):** this sheet's rows are in the
+> master in sitting order, each tagged `F<section>.<row>` (`FS.n` for Setup). Fill the master;
+> the marks are copied back here.
+
 ## Setup
 - [ ] **Redeploy from the merged branch and read the boot line** → it carries
       `terrain="40x40 cells of 10 m, floor 0, hash f2bd278da1c3"` and `dev_cmds=false`. notes:

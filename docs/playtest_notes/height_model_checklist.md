@@ -35,6 +35,10 @@ once-a-minute `world health` line as `slope_refusals`, which must read 0 on the 
 server does not (a scene edit nobody exported) or a modified client. On hills, later, an
 honest player holding a key into a cliff counts too, since a Move carries the input.
 
+> **Run through `bump_build_master_checklist.md` (2026-11-06):** this sheet's rows are in the
+> master in sitting order, each tagged `H<section>.<row>` (`HS.n` for Setup). Fill the master;
+> the marks are copied back here.
+
 ## Setup
 - [ ] **Redeploy from the merged branch and read the boot line** → it carries
       `terrain="40x40 cells of 10 m, floor 0, hash f2bd278da1c3"` (the first hills; before

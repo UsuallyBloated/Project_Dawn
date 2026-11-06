@@ -12,6 +12,10 @@ the cursor. The ask from the 10-26 sitting, where items dragged onto the vault d
 | A sale from the hand | journal: `SellItem applied ... qty=N` | `SellItem rejected — bag has contents` for a held bag with something in it |
 | The ledger | `admin_report` | `bank_in` and `sell` rows, as from a bag slot |
 
+> **Run through `bump_build_master_checklist.md` (2026-11-06):** this sheet's rows are in the
+> master in sitting order, each tagged `B<section>.<row>` (`BS.n` for Setup). Fill the master;
+> the marks are copied back here.
+
 ## Setup
 - [ ] Server on the R720 from the merged bump (boot line `build=`, `dev_cmds=false`); the bump export (`/version`). notes:
 - [ ] A character with a few loaves, a Small Pouch with something in it, some coin, beside Thalia Mourne (the banker) and Brom. notes:
