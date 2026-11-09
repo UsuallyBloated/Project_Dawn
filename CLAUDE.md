@@ -2080,6 +2080,23 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   spell is out of range at 30.1m"), so a target that walks out between the client's check
   and the server's costs a free refusal and nothing else. `a_nuke_reaches_thirty_metres`
   now refuses just past 30 (it checked at 33).
+- [ ] **A charmed pet that dies just before its charm expires comes back as a dead mob and
+  drops its loot** *(found 2026-11-09 in the part B and C journal; the mechanism verified in
+  the code)*. At 15:57:14 UTC a Bard's charmed Sable the Dark (Siren's Song, 30 s) was killed
+  by a Cave Bat; four seconds later the charm expired and the sweep in `tick/spawning.rs`
+  handed the DEAD pet back as a mob (`released_from_charm` copies the pet's HP, 0), the
+  zero-HP stray sweep killed it the next tick (`loot bag spawned (stray kill) mob=Sable the
+  Dark`), and the bag held 47 copper and whatever `roll_for_mob` gave Sable (a guaranteed
+  Sable Wing Membrane, a 20% Shadow Signet). No XP, since nobody had damaged it. The expiry
+  filter tests only `charm_expires_at`, never the pet's liveness, and a body lingers
+  `ENEMY_DESPAWN_LINGER_SECS` (5 s), so any charmed pet that dies inside the last five
+  seconds of its charm pays its loot for nothing; `despawn_owned_pets` (the charmer leaving)
+  has the same gap. **A loot faucet with no fight:** charm a named mob, let something kill
+  it as the charm runs out, loot its drops, repeat on the den's respawn. Fix: both paths skip
+  a pet that is not alive (the corpse sweep already frees its slot, and a pet's death drops
+  nothing, the 10-08 rule); a test charms, kills the pet, lets the charm expire and asserts
+  no replacement spawn and no bag. Server only, no export; should ride the pre-door
+  redeploy. Waits on the go.
 - [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
   ticked on the integration test** (server `f58b796`,
   `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
@@ -2534,6 +2551,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   self buff carrying the cut and the root, and the no-stacking rule with Guard and Dark Bond.
   **Exploit lens:** never a client-side effect, or a modified client gives any race a free
   damage cut; the server checks the race on every use.
+- [ ] **Ranged attacks consume no ammo** *(user 2026-11-09, master H2.3: "Bow fires and does
+  damage, currently does not consume ammo. I also dont think we have an arrow item to act as
+  the ammo.")*. Verified: neither side has an ammo model (the server's swing path never reads
+  one; the client has only the arrow effect), so the Hunter's Shortbow fires forever for free;
+  the Arrow Bundle exists on both sides with nothing that consumes it. EQ: an ammo slot, one
+  arrow a shot, no arrows no shot. Two shapes: an ammo slot on the paperdoll (a new equip slot
+  on both sides) or the first Arrow Bundle in slot order consumed per shot, as food is eaten
+  (no new slot). A design call; not a friends-build item, and not a dupe (a missing cost, not
+  a mint).
+- [ ] **A weapon swap with no target keeps the old swing interval for one swing** *(found
+  2026-11-09 in the journal: one `Attack rejected — swing-rate limit (too fast)` for a Druid at
+  15:30:08 UTC, `weapon_delay=3.0 min_interval=2.65`, nineteen seconds after swapping the
+  Trainee's Club (no `weapon_delay` in the data, so the 2.0 s default) for the Hunter's
+  Shortbow with nothing targeted)*. `Combat._on_equipment_changed` returns before re-timing
+  when `current_target` is null, and `_sync_auto_attack_timer` starts the timer with whatever
+  `wait_time` the last swing left, so the first interval of the next fight is the old weapon's
+  and the server drops the second swing. One honest arrow lost per such swap; a forged client
+  gains nothing (the server's gate is the rule). Fix: refresh both intervals in
+  `_sync_auto_attack_timer` before the timers start. Client only, a few lines; could ride the
+  Wednesday zip. Waits on the go.
 - [ ] **Two-handed damage arc (cleave)** — large 2H weapons (axes/polearms) hit multiple
   enemies in a frontal cone on auto-attack, giving 2H its own identity vs. dual-wield.
   Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it
@@ -2913,7 +2950,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   XP value landed to the digit in play, and the gates (level_req, proximity, bag-space
   pre-flight, round-robin, dead-state) all refused correctly under real use. Standing
   watch item: Flamebrand's Flaming Strike procs have not yet been observed in a server
-  log — check on the next melee session with it equipped. `xp_mult` on named mobs was removed
+  log — check on the next melee session with it equipped. **2026-11-09: they never will be from
+  the journal.** The proc path (`tick/melee.rs`, `fan_out_proc_triggered`) writes no log line,
+  so a melee session with Flamebrand worn (the Bard's, 16:04 to 16:17 UTC, four kills) shows
+  nothing either way; the client's chat "<proc> for N" line is the only witness. A one-line
+  `tracing::info!` at the proc would close the watch; waits on the go. `xp_mult` on named mobs was removed
   2026-10-13 (user decision; a named kill pays by level alone).
 - [x] **Enemy AOI cell-crossing spawn/despawn gap** — **DONE + playtested 2026-10-07**
   (`scale_readiness_checklist.md` §3, the two-seat rows, all four PASS: a partner's pet
@@ -3161,7 +3202,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   export `builds/ProjectDawn-alpha-da83ea8.zip`; R720 boot line `build="267065f" dev_cmds=false
   terrain=40x40 cells of 10 m, floor 0, hash f2bd278da1c3` at 22:29 UTC, nobody online at the
   stop. `height_model_checklist.md` and `first_hills_checklist.md` are runnable now; nothing
-  ticked.
+  ticked. **Parts B and C of the master sheet run 2026-11-09, every row passing** (the one-seat
+  rows of both sheets; the falls read the formula to the point). **Two flags from F2.2:** the
+  ridge's south face can be climbed where the bandit knoll meets it (the knoll, radius 25 at
+  z = 60, reaches the ridge's foot at z = 70 and lifts it, so the face there is under the 60°
+  rule; content: a smaller or more southerly knoll in `terrain_features.toml`, re-authored and
+  re-exported, a server rebuild and an export; the crest is the known perch and the evade
+  rule covers it), and walking into a face pushes the client's body a little into it until the
+  player stops (the server holds the foot; the reconciliation pulls the body out), cosmetic.
 - [ ] **NPC placeholder capsules sit half in the ground** *(user, 2026-11-06, part A of the master
   sheet, with a screenshot: "This isnt an issue now, but i want to make sure it wont be an issue
   when they get models")*. Verified: `dialogue_npc.tscn`, `vendor_npc.tscn` and `banker_npc.tscn`

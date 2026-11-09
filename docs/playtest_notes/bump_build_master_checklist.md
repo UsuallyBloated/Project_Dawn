@@ -10,8 +10,8 @@ sheet, and a row that appears in two or three sheets is here once with every tag
 sheet comes back, Claude copies each mark into the five sheets, which stay the record the To-Do
 cites. Mark `[x]` pass, `[-]` blocked or skipped, and write what happened after `notes:`.
 
-**Status:** part A (the town, one seat) filled 2026-11-06 and copied into the five sheets, 28
-rows; Setup and parts B to F remain. The sitting ran on an export of `df4f29c`, whose game
+**Status:** parts A (2026-11-06) and B and C (2026-11-09) filled and copied into the five
+sheets, 60 rows; Setup and parts D to F (two seats, then the record) remain. The sitting ran on an export of `df4f29c`, whose game
 files are byte-identical to the `da83ea8` zip's (only the stamp differs), so the marks stand
 for the friends' build.
 
@@ -106,44 +106,44 @@ There is nothing to start: the R720's journal keeps every line on its own.
 - [-] (F7.3) **On a plain account, the Test Panel's Fling** (if you have one: an account never granted GM; log in on it, open the Test Panel, press Fling 5 m) → nothing happens: the body stays put, no line, no HP lost, and the journal gets no `dev_fling` row for it. notes: do you mean "on hand"?  Not sure how to test. [Claude, 11-06: "if to hand" meant "if you have one"; the how-to is in the row now; not run yet, so marked `[-]`.]
 
 ## B — One seat: the flat ground (the first two rings of camps)
-- [ ] (H1.1) **Walk and run in every direction, turn in place, strafe** → the speed and the feel as before; no rubber-banding, no pull forward or back. notes:
-- [ ] (H1.3) **Jump while running** → as before (the jump stays cosmetic; nothing on the server reads it). notes:
-- [ ] (H1.5) **Jump about, run off the town's steps and bumps, Quit Game mid-jump and log back in** → never a "You hit the ground hard" line, HP untouched, the relogin ordinary (on flat ground the server's fall never begins: a drop needs more than the body's half-metre snap). notes:
-- [ ] (H1.2) **Run under Spirit of Wolf or Selos' Melody** (if a caster is to hand) → the buffed speed as before. notes:
-- [ ] (R3.2) **`/loc` before and after a minute of turning in place** → the position reads the same: turning moves nobody. notes:
-- [ ] (F1.4, H3.1) **Walk the first two rings' camps** → flat ground; mobs stand on the ground where they spawn, notice you at their aggro radius, chase, fight and walk home as before. notes:
-- [ ] (O2.2, H2.1) **Melee a camp mob to death, loot the corpse** → swings land, the kill pays XP, the loot window takes items. notes:
-- [ ] (O2.3, H2.2) **Cast a nuke at 25 to 30 m and a heal; let one fizzle or get interrupted** → they land, mana and lines as before; no "You cannot see your target." anywhere on the flat ground. notes:
-- [ ] (H2.3) **A bow at range** (if one is to hand) → arrows land as before. notes:
-- [ ] (H2.4) **A point-blank AoE** (a caster at level: Nature's Wrath, Ice Storm, Inferno; if you have one) → every mob inside the radius is hit. notes:
-- [ ] (H2.5) **A Bard: Aria of Dismay on a mob** (if you have one) → the slow pulses as before. notes:
-- [ ] (H3.2, O3.4) **Summon a pet (or the warder), attack a mob, watch the console** → it appears beside you on the ground, follows, and attacks on `/pet attack`; no red line on each hit (online it used to error on every mob hit). notes:
-- [ ] (H3.3) **Charm a mob and let the charm end** (an Enchanter or a Bard, if you have one) → the mob comes back where it stood. notes:
-- [ ] (F9.6) **Pull a mob, run until it turns for home, then hit or nuke it on its walk back** → "<mob> evades your attack." or "Your target is evading."; it heals to full at home and fights normally when pulled again. notes:
-- [ ] (O2.7, H4.1, H4.2, F8.1) **Die (to a mob, or Trigger Death), respawn, walk back and loot the corpse** → the corpse lies at the death spot; the respawn lands at the bind, on the ground; gear goes back on. notes:
-- [ ] (H4.3, F8.2) **Gate (and Succor, if a Druid or Wizard is to hand)** → the arrival at the bind or the town square, on the ground, the pet along. notes:
+- [x] (H1.1) **Walk and run in every direction, turn in place, strafe** → the speed and the feel as before; no rubber-banding, no pull forward or back. notes:
+- [x] (H1.3) **Jump while running** → as before (the jump stays cosmetic; nothing on the server reads it). notes:
+- [x] (H1.5) **Jump about, run off the town's steps and bumps, Quit Game mid-jump and log back in** → never a "You hit the ground hard" line, HP untouched, the relogin ordinary (on flat ground the server's fall never begins: a drop needs more than the body's half-metre snap). notes: The town has no steps.  These poor people have no homes or structures.
+- [x] (H1.2) **Run under Spirit of Wolf or Selos' Melody** (if a caster is to hand) → the buffed speed as before. notes:
+- [x] (R3.2) **`/loc` before and after a minute of turning in place** → the position reads the same: turning moves nobody. notes:
+- [x] (F1.4, H3.1) **Walk the first two rings' camps** → flat ground; mobs stand on the ground where they spawn, notice you at their aggro radius, chase, fight and walk home as before. notes:
+- [x] (O2.2, H2.1) **Melee a camp mob to death, loot the corpse** → swings land, the kill pays XP, the loot window takes items. notes:
+- [x] (O2.3, H2.2) **Cast a nuke at 25 to 30 m and a heal; let one fizzle or get interrupted** → they land, mana and lines as before; no "You cannot see your target." anywhere on the flat ground. notes:
+- [x] (H2.3) **A bow at range** (if one is to hand) → arrows land as before. notes: Bow fires and does damage, currently does not consume ammo. I also dont think we have an arrow item to act as the ammo.
+- [x] (H2.4) **A point-blank AoE** (a caster at level: Nature's Wrath, Ice Storm, Inferno; if you have one) → every mob inside the radius is hit. notes:
+- [x] (H2.5) **A Bard: Aria of Dismay on a mob** (if you have one) → the slow pulses as before. notes:
+- [x] (H3.2, O3.4) **Summon a pet (or the warder), attack a mob, watch the console** → it appears beside you on the ground, follows, and attacks on `/pet attack`; no red line on each hit (online it used to error on every mob hit). notes:
+- [x] (H3.3) **Charm a mob and let the charm end** (an Enchanter or a Bard, if you have one) → the mob comes back where it stood. notes:
+- [x] (F9.6) **Pull a mob, run until it turns for home, then hit or nuke it on its walk back** → "<mob> evades your attack." or "Your target is evading."; it heals to full at home and fights normally when pulled again. notes:
+- [x] (O2.7, H4.1, H4.2, F8.1) **Die (to a mob, or Trigger Death), respawn, walk back and loot the corpse** → the corpse lies at the death spot; the respawn lands at the bind, on the ground; gear goes back on. notes:
+- [x] (H4.3, F8.2) **Gate (and Succor, if a Druid or Wizard is to hand)** → the arrival at the bind or the town square, on the ground, the pet along. notes:
 
 ## C — One seat: the hills
 A loop: north to the bandit knoll, the ridge, the pass and the crypt; west to the Barrow, the
 Ossuary and the rim; south to the old rocks and the war camp's shelf; east to the spiders' rise
 and the Wraith Gate. The first five rows span the loop and tick when every place named is done.
 
-- [ ] (F1.2) **Walk onto a hilltop (the bandit knoll is the first) and stand still, then jump** → you stand on the surface (feet on it, not sunk into it) and jump from it as on flat ground. notes:
-- [ ] (F2.1) **Walk from the town to the bandit knoll, the old rocks, the spiders' rise and the war camp's shelf** → uphill is slower (a 30° slope costs about a quarter of the speed), downhill full speed; no rubber-banding, no pull forward or back. notes:
-- [ ] (F3.1) **Fight at the bandit knoll, the spiders' rise and the war camp's shelf** → mobs stand on the slope where they spawn, chase you up and down it, fight and walk home as before. notes:
-- [ ] (F3.3) **Pull a mob from above or below a slope and run** → it follows over the ground and leashes home as before. notes:
-- [ ] (F8.3) **Summon a pet and walk it over the hills** → it follows, standing on the ground. notes:
-- [ ] (F2.2) **North to the Greywood ridge, then into its side** → the ridge cannot be walked up: the body slides back and stays at its foot. notes:
-- [ ] (F2.3) **Through the pass at x = 0 to the Broken Crypt** → a flat way through at walking speed; the crypt in its bowl beyond. notes:
-- [ ] (F2.4) **West to the Sunken Barrow and the Ossuary** → up the western hills, down into the pit and out again (its walls are steep but walkable), on up to the Ossuary. notes:
-- [ ] (F3.2) **Fight in the Sunken Barrow** → the zombies come up out of the pit after you. notes:
-- [ ] (F6.1) **Stand on the Sunken Barrow's rim and look in** → the zombies below; nukes from the rim land where the rim does not hide them. notes:
-- [ ] (F6.2, H1.4) **Walk to the plate's edge anywhere and try to climb the rim, straight and at an angle** → the ground rises steeply from about 180 m out and becomes a face; the body slides back down; nobody gets over it. notes:
-- [ ] (F2.5) **East to the Wraith Gate, up its south ramp** → a long climb onto the flat top. notes:
-- [ ] (F4.1) **From the plateau, walk off its west edge (x = 150)** → the fall: "You hit the ground hard for N damage." with N about 40% of max HP, and the HP bar drops by that. notes:
-- [ ] (F4.2) **At the foot, try to walk back up the cliff, straight and at an angle** → it cannot be climbed either way; the body slides back. The way up is the south or north ramp. notes:
-- [ ] (F4.3) **Below 40% HP, step off the edge again** → you die of the fall; the corpse lies at the foot of the cliff. notes:
-- [ ] (F4.4) **Respawn and run back to the corpse** → it is at the foot; loot it as usual. notes:
+- [x] (F1.2) **Walk onto a hilltop (the bandit knoll is the first) and stand still, then jump** → you stand on the surface (feet on it, not sunk into it) and jump from it as on flat ground. notes:
+- [x] (F2.1) **Walk from the town to the bandit knoll, the old rocks, the spiders' rise and the war camp's shelf** → uphill is slower (a 30° slope costs about a quarter of the speed), downhill full speed; no rubber-banding, no pull forward or back. notes:
+- [x] (F3.1) **Fight at the bandit knoll, the spiders' rise and the war camp's shelf** → mobs stand on the slope where they spawn, chase you up and down it, fight and walk home as before. notes:
+- [x] (F3.3) **Pull a mob from above or below a slope and run** → it follows over the ground and leashes home as before. notes:
+- [x] (F8.3) **Summon a pet and walk it over the hills** → it follows, standing on the ground. notes:
+- [x] (F2.2) **North to the Greywood ridge, then into its side** → the ridge cannot be walked up: the body slides back and stays at its foot. notes: Player can push into geometry if they walk continuously against the wall, when player stops walking they are pushed out of the wall.  Player cannot climb steep areas in most places, but is able to climb the side of the wall at touches the bandit knoll
+- [x] (F2.3) **Through the pass at x = 0 to the Broken Crypt** → a flat way through at walking speed; the crypt in its bowl beyond. notes:
+- [x] (F2.4) **West to the Sunken Barrow and the Ossuary** → up the western hills, down into the pit and out again (its walls are steep but walkable), on up to the Ossuary. notes:
+- [x] (F3.2) **Fight in the Sunken Barrow** → the zombies come up out of the pit after you. notes:
+- [x] (F6.1) **Stand on the Sunken Barrow's rim and look in** → the zombies below; nukes from the rim land where the rim does not hide them. notes:
+- [x] (F6.2, H1.4) **Walk to the plate's edge anywhere and try to climb the rim, straight and at an angle** → the ground rises steeply from about 180 m out and becomes a face; the body slides back down; nobody gets over it. notes:
+- [x] (F2.5) **East to the Wraith Gate, up its south ramp** → a long climb onto the flat top. notes:
+- [x] (F4.1) **From the plateau, walk off its west edge (x = 150)** → the fall: "You hit the ground hard for N damage." with N about 40% of max HP, and the HP bar drops by that. notes:
+- [x] (F4.2) **At the foot, try to walk back up the cliff, straight and at an angle** → it cannot be climbed either way; the body slides back. The way up is the south or north ramp. notes:
+- [x] (F4.3) **Below 40% HP, step off the edge again** → you die of the fall; the corpse lies at the foot of the cliff. notes:
+- [x] (F4.4) **Respawn and run back to the corpse** → it is at the foot; loot it as usual. notes:
 
 ## D — Two seats: the town and the flat ground
 A is the seat being watched, B the watcher; swap as convenient.
@@ -187,4 +187,5 @@ Cleric) and stands at the cliff's foot; B stands on the plateau.
 - [ ] (O3.9) **The console over the whole sitting** → no red script error. notes:
 
 ## Notes / observations
--
+- Selos appears to start working before the spell has completed casting
+

@@ -41,12 +41,12 @@ show; §3 is what the client removal changes on screen.
 > `ERROR` line and no panic (`grep -E "ERROR|panic"` from the 16:24 boot). The turning note is
 > expected: facing reaches the server on the bump day.]
 - [x] **Two seats enter the world** → each sees the other, moves and turns. notes: Characters do NOT see eachother turn/spin.
-- [x] **Melee a camp mob to death, loot the corpse** → swings land, the kill pays XP, the loot window takes items. notes:
-- [x] **Cast a heal and a nuke; let one fizzle or get interrupted** → mana and lines as before. notes:
+- [x] **Melee a camp mob to death, loot the corpse** → swings land, the kill pays XP, the loot window takes items. notes: [11-09, the bump build (master O2.2): PASS.]
+- [x] **Cast a heal and a nuke; let one fizzle or get interrupted** → mana and lines as before. notes: [11-09 (master O2.3): PASS; the journal shows fizzles and interrupts charging as designed.]
 - [x] **Group the two seats, kill a mob** → the XP share and the group panel bars. notes:
 - [x] **Buy from Brom, sell to him, deposit at the bank and withdraw** → coins and items move as before. notes: [11-06, the bump build (master O2.5): PASS.]
 - [x] **Trade an item between the seats** → the commit lands on both. notes:
-- [x] **Die, respawn, loot the corpse** → gear goes back on. notes:
+- [x] **Die, respawn, loot the corpse** → gear goes back on. notes: [11-09 (master O2.7): PASS; the journal: corpse 2000000049, seven stacks, six put back on at the loot.]
 - [x] **/camp one seat, close the other with the window X** → the camp logs out; the other lingers about 30 s, as before. notes:
 - [x] **The journal over the sitting** → no `ERROR` line and no panic. notes:  I forgot to start the log.  Let me know how to handle this.
 - [ ] **Read a few journal lines from the sitting** → a line logged while a player's message is handled starts `client{char_id=N account_id=M}:`, and a buy, sell, bank or loot line names the player `char_id=N` (it said `owner=N` or `caster=N` before 2026-11-02). notes:
@@ -60,7 +60,7 @@ show; §3 is what the client removal changes on screen.
 - [x] **The login screen** → no Offline button. notes: [11-06, the bump export (master O3.1): PASS.]
 - [x] **The lobby** → the character list and Enter World only (no Solo, Host, Join, Test Room, Test Dungeon or Delete Save). Create a character from it as usual. notes: [11-06, the bump export (master O3.2): PASS.]
 - [x] **Grouped with the second seat, look at the group panel** → your own row is marked as you on both seats, and the leader sees the kick and leadership controls on the other member's row, not their own (online both used to key on whichever member had character id 1). notes:  We cant currently see eachother's levels in game.  But you probably already know that.
-- [x] **A pet class: summon a pet, attack a mob, watch the console** → the pet fights; no red line on each hit (online it used to error on every mob hit). notes:
+- [x] **A pet class: summon a pet, attack a mob, watch the console** → the pet fights; no red line on each hit (online it used to error on every mob hit). notes: [11-09, the bump export (master O3.4): PASS.]
 - [x] **The Test Panel (GM): Spawn Normal, Spawn Named, Despawn All, a GEAR give, Give 1,000 Copper, a faction slider, Take 20 dmg, Full Heal, Trigger Death** → each works as before. The removed buttons (the CHARACTER section, STATS OVERRIDE, ZONE TRAVEL, God Mode, No Cooldowns, Clear All Buffs) are gone. notes: [11-06, the bump export (master O3.5): PASS.]
 - [x] **Open a bag window** → no Destroy button in it; destroying still works by holding the item over the inventory's trash cell. notes:  Destroy button still visible in the bag, destroy button doesnt work. [11-06, the bump export (master O3.6): the button is gone, PASS.]
 - [x] **Eat by hand, drink by hand, sit to regen, sing a song (a Bard)** → all as before; the regen and buff bars follow the server. notes: [11-06, the bump export (master O3.7): eat, drink, sit and stand PASS; no Bard at the seat, the song not sung.]

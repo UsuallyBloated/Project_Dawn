@@ -48,42 +48,52 @@ honest player holding a key into a cliff counts too, since a Move carries the in
 - [ ] **Note the start time** for the journal check at the end. notes:
 
 ## 1 — Movement
-- [ ] **Walk and run in every direction, turn in place, strafe** → the speed and the feel as
-      before; no rubber-banding, no pull forward or back. notes:
-- [ ] **Run under Spirit of Wolf or Selos' Melody** (if a caster is to hand) → the buffed speed
-      as before. notes:
-- [ ] **Jump while running** → as before (the jump stays cosmetic; nothing on the server reads
-      it). notes:
-- [ ] **Walk to the terrain's edge (about 200 m out) and past it** → the ground carries on
-      flat; nothing odd at the boundary. notes:
-- [ ] **Jump about, run off the town's steps and bumps, Quit Game mid-jump and log back in**
+- [x] **Walk and run in every direction, turn in place, strafe** → the speed and the feel as
+      before; no rubber-banding, no pull forward or back. notes: PASS (11-09, master H1.1).
+- [x] **Run under Spirit of Wolf or Selos' Melody** (if a caster is to hand) → the buffed speed
+      as before. notes: PASS (11-09, master H1.2). The user: "Selos appears to start working before the spell has
+      completed casting"; the server pulses a song only at its release, after the 3 s sing, so
+      the speed seen during a bar is the previous pulse's 12 s linger when the song is re-sung
+      inside it. Open: whether it was seen on a first sing from cold.
+- [x] **Jump while running** → as before (the jump stays cosmetic; nothing on the server reads
+      it). notes: PASS (11-09, master H1.3).
+- [x] **Walk to the terrain's edge (about 200 m out) and past it** → the ground carries on
+      flat; nothing odd at the boundary. notes: PASS (11-09, master F6.2 / H1.4: the rim now, which the body slides back down).
+- [x] **Jump about, run off the town's steps and bumps, Quit Game mid-jump and log back in**
       → never a "You hit the ground hard" line, HP untouched, the relogin ordinary (on the flat
       world the server's fall never begins: a drop needs more than the body's half-metre
-      snap). notes:
+      snap). notes: PASS (11-09, master H1.5). The user: "The town has no steps. These poor people have no homes
+      or structures."
 - [ ] **Sit, stand, `/camp`** → as before. notes: [11-06: sit and stand PASS (master O3.7); `/camp` waits for part E, two seats.]
 
 ## 2 — Combat and spells
-- [ ] **Melee a camp mob** → hits land as before. notes:
+- [x] **Melee a camp mob** → hits land as before. notes: PASS (11-09, master O2.2 / H2.1).
 - [ ] **Cast a nuke at 25 to 30 m, and a heal or buff on a group-mate at range** → they land as
-      before; no "You cannot see your target." anywhere on the flat world. notes:
-- [ ] **A bow at range** (if one is to hand) → arrows land as before. notes:
-- [ ] **A point-blank AoE** (a caster at level: Nature's Wrath, Ice Storm, Inferno) → every mob
-      inside the radius is hit. notes:
-- [ ] **A Bard: Aria of Dismay on a mob** → the slow pulses as before. notes:
+      before; no "You cannot see your target." anywhere on the flat world. notes: [11-09: the nuke and a self heal PASS (master O2.3 / H2.2); the group-mate half waits for
+      part D, two seats.]
+- [x] **A bow at range** (if one is to hand) → arrows land as before. notes: PASS (11-09, master H2.3). The user: "Bow fires and does damage, currently does not consume
+      ammo. I also dont think we have an arrow item to act as the ammo." Filed: no ammo model on
+      either side (the Arrow Bundle exists and nothing consumes it).
+- [x] **A point-blank AoE** (a caster at level: Nature's Wrath, Ice Storm, Inferno) → every mob
+      inside the radius is hit. notes: PASS (11-09, master H2.4; the journal: Nature's Wrath, radius 6, hits=3).
+- [x] **A Bard: Aria of Dismay on a mob** → the slow pulses as before. notes: PASS (11-09, master H2.5).
 
 ## 3 — Camps and pets
-- [ ] **Watch a camp** → mobs stand on the ground where they spawn, notice you at their aggro
-      radius, chase, fight and walk home as before. notes:
-- [ ] **Summon a pet (or the warder)** → it appears beside you on the ground, follows, and
-      attacks on `/pet attack`. notes:
-- [ ] **Charm a mob and let the charm end** → the mob comes back where it stood. notes:
+- [x] **Watch a camp** → mobs stand on the ground where they spawn, notice you at their aggro
+      radius, chase, fight and walk home as before. notes: PASS (11-09, master F1.4 / H3.1).
+- [x] **Summon a pet (or the warder)** → it appears beside you on the ground, follows, and
+      attacks on `/pet attack`. notes: PASS (11-09, master H3.2 / O3.4).
+- [x] **Charm a mob and let the charm end** → the mob comes back where it stood. notes: PASS (11-09, master H3.3). The journal also shows a charmed pet that died 4 s before its
+      charm expired coming back as a DEAD mob with a loot bag (Sable the Dark, 15:57 UTC): filed
+      under Security.
 
 ## 4 — Death, corpses, ports
-- [ ] **Die and respawn** → the corpse lies at the death spot; the respawn lands at the bind.
-      notes:
-- [ ] **Walk back and loot the corpse** → as before. notes:
-- [ ] **Gate (and Succor, if a Druid or Wizard is to hand)** → the arrival at the bind or the
-      town square, on the ground, the pet along. notes:
+- [x] **Die and respawn** → the corpse lies at the death spot; the respawn lands at the bind.
+      notes: PASS (11-09, master O2.7 / H4.1).
+- [x] **Walk back and loot the corpse** → as before. notes: PASS (11-09, master H4.2).
+- [x] **Gate (and Succor, if a Druid or Wizard is to hand)** → the arrival at the bind or the
+      town square, on the ground, the pet along. notes: PASS (11-09, master H4.3 / F8.2: Gate and Succor both, a Druid; the journal: `PORT applied
+      ... port=bind` and `port=safe`).
 - [ ] **Be resurrected** (two seats) → you land beside the corpse. notes:
 
 ## 5 — NPC services

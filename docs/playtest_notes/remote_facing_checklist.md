@@ -38,7 +38,7 @@ with the DLL check green means the server build predates PD_W0029.
 
 ## 3 — Regression
 - [ ] **Running, jumping, the jump relay, sitting** → unchanged. notes:
-- [ ] **`/loc` before and after a minute of turning in place** → the position reads the same: turning moves nobody. notes:
+- [x] **`/loc` before and after a minute of turning in place** → the position reads the same: turning moves nobody. notes: PASS (11-09, master R3.2).
 
 ## Notes / observations
 -
