@@ -41,7 +41,7 @@ the cursor. The ask from the 10-26 sitting, where items dragged onto the vault d
 ## 3 — Regression
 - [x] **Right-click deposit from the bags with the bank open; sell from a bag slot** → as before. notes: PASS (11-06, master O2.5 / B3.1).
 - [x] **A click on the inventory, the paperdoll or the world while holding** → places, equips or drops as before; the bank and vendor windows take only their own clicks. notes: PASS (11-06).
-- [ ] **`admin_report` after the sitting** → `bank_in`, `bank_out` and `sell` rows for the moves, the check card balanced. notes:
+- [x] **`admin_report` after the sitting** → `bank_in`, `bank_out` and `sell` rows for the moves, the check card balanced. notes: PASS (master B3.3). `admin_report` run on the R720 after both seats were out (11-09, about 19:00 UTC): `Item ledger check: the books balance (every account's rows match its stores)`, 759 rows. The newest 50 are the 11-09 sitting's: `bank_out` and `sell` rows (PLUG emptying the vault to Brom at 17:46, the copper on each sale), a `bank_exchange`, every `death` row answered by a `corpse_loot` row and `death_coins` -125 by `corpse_coins` +125, a `drop` by one seat and the `pickup` by the other, `gm_give`, `loot` and `starter` rows; part A's `bank_in` rows of 11-06 are older than the window and are in the balanced 759. Every GM action row reads `via=gm`, so the host ran with dev commands off.
 
 ## Notes / observations
 -

@@ -678,7 +678,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   lockstep-checked), set on conjured bread and water; every departure stamps
   `characters.logged_out_at`; at the next login 30 minutes or more later the server removes
   every NO RENT stack (inventory, worn, bags, the cursor, both bank vaults); the tooltip leads
-  with "NO RENT". Test: 31 minutes away loses the conjured bread, 10 minutes keeps it, an
+  with "NO RENT" (**seen live 2026-11-09**: the ledger's first `no_rent` row, a Conjured Water
+  removed from NERCO at a login 605,705 s after the logout, in the `admin_report` run after
+  the master sheet's parts D and E). Test: 31 minutes away loses the conjured bread, 10 minutes keeps it, an
   ordinary loaf is never touched, logout stamps the time. **The no-drop / no-trade binding flag
   this entry is about is still open**; NO RENT was the part decided.
   **Rule DECIDED 2026-10-19 (user):** no-drop / no-trade is for items made only for a quest,

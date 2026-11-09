@@ -11,8 +11,8 @@ sheet comes back, Claude copies each mark into the five sheets, which stay the r
 cites. Mark `[x]` pass, `[-]` blocked or skipped, and write what happened after `notes:`.
 
 **Status:** parts A (2026-11-06), B, C, D and E (2026-11-09) filled and copied into the five
-sheets, 85 rows, with the Setup rows and part F's journal rows; left: the `admin_report` card (B3.3),
-the console row (O3.9) and the second seat's build on the stamp row. The sitting ran on an export of `df4f29c`, whose game
+sheets, 85 rows, with the Setup rows and part F's journal rows; left: the console row (O3.9) and
+the second seat's build on the stamp row. The sitting ran on an export of `df4f29c`, whose game
 files are byte-identical to the `da83ea8` zip's (only the stamp differs), so the marks stand
 for the friends' build.
 
@@ -185,7 +185,7 @@ Cleric) and stands at the cliff's foot; B stands on the plateau.
 ## F — The record
 - [x] (O2.9, H7.1, F10.1) **The journal since the start time** (the grep above) → no `ERROR` and no panic; no `cannot see` or `no sight` line for a cast the client let through; a `fall damage` line for each fall taken (the cliff, the flings) and none on the flat ground; `dev_fling` rows only for the GM's Fling presses; `slope_refusals` on the `world health` line is a curiosity on the hills (a key held into a cliff counts), 0 while on flat ground; paste any `WARN`. notes: [Claude, 11-09, both sittings (15:21 to 16:17 and 17:24 to 18:40 UTC): no `ERROR`, `WARN` or panic; no `cannot see` or `no sight`; `fall damage` only for the cliff and the flings, none on flat ground; `dev_fling` only on part C's presses; one `slope_refusals=1` line on the hills at 18:08, every other line 0. PASS.]
 - [x] (O2.10) **Read a few journal lines from the sitting** → a line logged while a player's message is handled starts `client{char_id=N account_id=M}:`, and a buy, sell, bank or loot line names the player `char_id=N` (it said `owner=N` or `caster=N` before 2026-11-02). notes: [Claude, 11-09: `client{char_id=48 account_id=2}: ... spell memorized char_id=48`; `corpse loot put worn gear back on ... char_id=36`. PASS.]
-- [ ] (B3.3) **`admin_report` after the sitting** → `bank_in`, `bank_out` and `sell` rows for part A's moves, the check card balanced. notes:
+- [x] (B3.3) **`admin_report` after the sitting** → `bank_in`, `bank_out` and `sell` rows for part A's moves, the check card balanced. notes: [Claude, 11-09: PASS. `admin_report` run on the R720 after both seats were out (11-09, about 19:00 UTC): `Item ledger check: the books balance (every account's rows match its stores)`, 759 rows. The newest 50 are the 11-09 sitting's: `bank_out` and `sell` rows (PLUG emptying the vault to Brom at 17:46, the copper on each sale), a `bank_exchange`, every `death` row answered by a `corpse_loot` row and `death_coins` -125 by `corpse_coins` +125, a `drop` by one seat and the `pickup` by the other, `gm_give`, `loot` and `starter` rows; part A's `bank_in` rows of 11-06 are older than the window and are in the balanced 759. Every GM action row reads `via=gm`, so the host ran with dev commands off.]
 - [ ] (O3.9) **The console over the whole sitting** → no red script error. notes:
 
 ## Notes / observations
