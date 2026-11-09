@@ -44,10 +44,22 @@ static func data() -> Dictionary:
 static func is_trustworthy() -> bool:
 	return str(data().get("status", "")) == "ok"
 
-## One-line identifier, e.g. `09ad51e-dirty` / `09ad51e-dev` / `UNSTAMPED`.
-## Deliberately short enough for a login-screen footer.
+## One-line identifier, e.g. `09ad51e-dirty` / `09ad51e-dev` / `09ad51e-debug` /
+## `UNSTAMPED`. Deliberately short enough for a login-screen footer.
 static func short() -> String:
-	var d := data()
+	return short_of(data())
+
+## True for an export made with the DEBUG template. The editor's Export dialog
+## ticks "Export With Debug" by default, so it is the easy mistake; the command
+## on record uses --export-release. The game files are the same either way, the
+## engine is the debug one, and testers should never hold it. The flag is
+## written at export time, so an editor run reads false.
+static func is_debug_export() -> bool:
+	return bool(data().get("debug_build", false))
+
+## `short()` over a given stamp, so the format can be checked without making an
+## export (tools/probe_build_stamp_debug.gd).
+static func short_of(d: Dictionary) -> String:
 	if str(d.get("status", "")) != "ok":
 		return UNKNOWN
 	var s := str(d.get("commit", UNKNOWN))
@@ -55,16 +67,23 @@ static func short() -> String:
 		s += "-dirty"
 	if bool(d.get("editor", false)):
 		s += "-dev"
+	if bool(d.get("debug_build", false)):
+		s += "-debug"
 	return s
 
 ## Multi-line detail for `/version` and the debug.log header. This is the text
 ## we actually want pasted back to us during triage.
 static func verbose() -> String:
-	var d := data()
+	return verbose_of(data())
+
+## `verbose()` over a given stamp (see `short_of`).
+static func verbose_of(d: Dictionary) -> String:
 	if str(d.get("status", "")) != "ok":
 		return "Build: %s (%s)" % [UNKNOWN, d.get("reason", "no stamp and no git")]
 	var parts := PackedStringArray()
-	parts.append("Build %s" % short())
+	parts.append("Build %s" % short_of(d))
+	if bool(d.get("debug_build", false)):
+		parts.append("debug export (not for testers)")
 	var branch := str(d.get("branch", ""))
 	if branch != "":
 		var unpushed := int(d.get("unpushed", 0))

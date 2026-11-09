@@ -5,6 +5,11 @@ A brand-new player's first 45 minutes, on the exact build the friends will hold 
 this sheet gets a second run on the bump build, planner row v60). Nothing new is under test: this is the friends' evening played once,
 alone, ahead of time. Anything odd gets a To-Do line the same day; fixes go out on Fri Nov 6.
 
+> **The second run (the bump build, planner row v60, Tue Nov 10):** the `[x]` marks are the
+> 11-03 run on the pre-bump build. Mark the rerun in each row's notes (`11-10: PASS`, or what
+> happened), and the two rows still `[ ]` below are new since (the stamp's debug mark and the
+> NPC bodies, both 2026-11-09): they need the export made after `6f37058`.
+
 **The build:** the friends get the client exported from the deploy branch
 (`fix/xp-leveling-overflow`) at `12d4e5c` or later, and the R720 runs server `f06e88e`:
 the starting kit (every character born in a Ragged Shirt, Ragged Pants and a Trainee's
@@ -36,6 +41,9 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       migration. notes:
 - [x] **Unzip the new build into a fresh folder** (not over an old one) → the login screen's
       bottom-right stamp matches the export, never `UNSTAMPED BUILD`. notes:
+- [ ] **Read the stamp on the bump-build zip, then `/version` in game** → the plain sha in
+      grey, never `UNSTAMPED BUILD` and never `<sha>-debug` in amber (a debug export, which the
+      stamp marks since 2026-11-09); `/version` has no `debug export` line. notes:
 - [x] **Note the start time** for the journal check at the end. notes: Journal started.
 
 ## 1 — Arriving
@@ -46,6 +54,9 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
 - [x] **`/version`** → the same stamp as the login screen. notes:
 - [x] **Look around for a minute** → nothing in town attacks you; nameplates, the sky and
       the NPCs look right. notes:
+- [ ] **Walk up to Brom, Thalia Mourne and Aldric** → each placeholder capsule stands on the
+      ground, its foot at your feet and its name above its head (they sat half in the ground
+      until 2026-11-09). notes:
 - [x] **`/say` a line, then `/ooc` one** → both show in chat. notes:
 
 ## 2 — The starting kit

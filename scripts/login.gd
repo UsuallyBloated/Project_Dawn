@@ -162,7 +162,13 @@ func _build_build_stamp_footer() -> void:
 	l.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	# Purely decorative, so it must never intercept a click meant for the form.
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if BuildInfo.is_trustworthy():
+	if BuildInfo.is_trustworthy() and BuildInfo.is_debug_export():
+		# A debug export runs the debug engine; the game files are the same, but
+		# testers should never hold one, so it is marked as loudly as a footer
+		# allows: "-debug" after the sha, in amber (UNSTAMPED keeps the red).
+		l.text = BuildInfo.short()
+		l.modulate = Color(1, 0.75, 0.3)
+	elif BuildInfo.is_trustworthy():
 		l.text = BuildInfo.short()
 		l.modulate = Color(1, 1, 1, 0.45)
 	else:

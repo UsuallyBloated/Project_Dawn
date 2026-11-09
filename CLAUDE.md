@@ -125,7 +125,7 @@ client fix is not live until they have a fresh build.
 **Every export is stamped automatically** by `addons/build_stamp`, which derives the commit from
 git at export time and injects it into the build. Nothing to remember and nothing to bump by hand.
 A tester's build identifies itself three ways: bottom-right on the login screen, in the `debug.log`
-header, and via `/version`. Two things worth knowing:
+header, and via `/version`. Three things worth knowing:
 - **`UNSTAMPED BUILD` in red on the login screen means the addon is disabled.** Godot silently
   disables an addon whose script fails to load, and rewrites `project.godot` to match, so the
   `[editor_plugins]` enable line must stay committed. A build that can't identify itself is a
@@ -133,6 +133,10 @@ header, and via `/version`. Two things worth knowing:
 - **The stamp fingerprints `gdext_net.dll` separately** from the commit sha, because the DLL is
   gitignored and hand-copied into `builds/`. A client on a clean commit can still carry a stale
   wire layer, which presents as a server bug.
+- **`-debug` after the sha (amber on the login screen) means a DEBUG export.** The editor's
+  Export dialog ticks "Export With Debug" by default; the command on record uses
+  `--export-release`. The game files are identical and the engine is the debug one; never send
+  one (found 2026-11-06, when a debug export read as a normal build).
 
 > Don't modify anything above `F:\Projects\`.
 
@@ -650,7 +654,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   opened them. **Decisions (user):** empty bags only or full bags; whether (a) and (b) ride the
   next bump. Exploit lens: every move stays a server move through the placer, and a swap must be
   one transaction (never a withdraw that lands beside a store that refuses, leaving two copies or
-  none).
+  none). **DECIDED 2026-11-09 (user): FULL bags in the bank ("It is by this method the player can
+  expand their vault size": a banked bag's slots are the vault's extra room, EQ's model), and all
+  three ride the next bump.** For the build: the bags map keyed to vault slots as the hand's
+  `CURSOR_BAG_KEY` is, a bag-in-bag ban in the vault as in the bags, the banked contents out of
+  encumbrance, every vault move (store, withdraw, lift, swap) through the placer in one
+  transaction with the ledger rows, the death strip and the NO DROP rule unchanged (a banked bag
+  is the owner's, like the vault), and the bank window opening a banked bag.
 - [ ] **No-drop / no-trade item flag** *(flagged in `inventory_interaction_grammar.md` §8 and by
   the trade design's ledger, which explicitly has no rule "until itemization grows one"; audit
   2026-09-29)*. `ItemData` carries no binding flag; the two account-shared bank slots and the
@@ -3160,7 +3170,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   town is flat at 0 and the server derives each NPC's height from the ground. A real model will
   not sink: its origin sits at its feet (Blender's export convention; the gnome body in the same
   screenshot stands right) and the node origin is on the ground. The placeholder fix is a 0.9 m
-  offset on the mesh in the three scenes, three lines; waits on the go.
+  offset on the mesh in the three scenes, three lines; waits on the go. **BUILT 2026-11-09 (user:
+  "go ahead"), pending the next export** (`pre_door_check_checklist.md` §1): the click capsule
+  and the mesh raised 0.9 m and the name label to 2 m in the three scenes, so an NPC stands on
+  the node origin as a player does; `tools/probe_npc_capsule_stand.gd` (12 checks) fails on the
+  old scenes. Nothing on the server or the wire.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
