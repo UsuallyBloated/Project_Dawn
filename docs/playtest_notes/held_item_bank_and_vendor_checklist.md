@@ -17,8 +17,8 @@ the cursor. The ask from the 10-26 sitting, where items dragged onto the vault d
 > the marks are copied back here.
 
 ## Setup
-- [ ] Server on the R720 from the merged bump (boot line `build=`, `dev_cmds=false`); the bump export (`/version`). notes:
-- [ ] A character with a few loaves, a Small Pouch with something in it, some coin, beside Thalia Mourne (the banker) and Brom. notes:
+- [x] Server on the R720 from the merged bump (boot line `build=`, `dev_cmds=false`); the bump export (`/version`). notes: [the R720 at `267065f` (the 11-05 boot line, no restart since); the seat on an export of `df4f29c`, whose game files are byte-identical to the `da83ea8` zip's (11-06).]
+- [x] A character with a few loaves, a Small Pouch with something in it, some coin, beside Thalia Mourne (the banker) and Brom. notes: [11-06: the GM seat with the loaves, the pouch and the coin, `/give`n; every §1 and §2 row ran on it.]
 
 ## 1 — The bank
 - [x] **Open the bank, lift a stack of loaves onto the cursor, click an empty personal vault slot** → the loaves land in the personal vault (any slot; the server picks) and the hand is empty. notes: PASS (11-06). The user: "This does not work the other way around: I cannot lift a stack of loaves onto the cursor if the loaves are in the vault." Filed in the To-Do (a wire change).

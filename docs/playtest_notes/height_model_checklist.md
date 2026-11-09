@@ -40,12 +40,12 @@ honest player holding a key into a cliff counts too, since a Move carries the in
 > the marks are copied back here.
 
 ## Setup
-- [ ] **Redeploy from the merged branch and read the boot line** → it carries
+- [x] **Redeploy from the merged branch and read the boot line** → it carries
       `terrain="40x40 cells of 10 m, floor 0, hash f2bd278da1c3"` (the first hills; before
-      them it was `20x20 cells of 20 m, ... 41470a9d8190`) and `dev_cmds=false`. notes:
-- [ ] **On the client checkout, `.\tools\check_all.ps1`** → `PASS  check_terrain_lockstep.gd`
-      among the checks (1681 heights, the collider rebuilt, 6 NPCs on the ground). notes:
-- [ ] **Note the start time** for the journal check at the end. notes:
+      them it was `20x20 cells of 20 m, ... 41470a9d8190`) and `dev_cmds=false`. notes: [the 11-05 deploy's boot line, `build="267065f" dev_cmds=false terrain="40x40 cells of 10 m, floor 0, hash f2bd278da1c3"`, no restart since.]
+- [x] **On the client checkout, `.\tools\check_all.ps1`** → `PASS  check_terrain_lockstep.gd`
+      among the checks (1681 heights, the collider rebuilt, 6 NPCs on the ground). notes: [11-09: all 15 PASS on the checkout at `4e4505c`, `check_terrain_lockstep.gd` among them.]
+- [x] **Note the start time** for the journal check at the end. notes: [15:21 UTC (parts B and C) and 17:24 UTC (parts D and E), 11-09.]
 
 ## 1 — Movement
 - [x] **Walk and run in every direction, turn in place, strafe** → the speed and the feel as
@@ -64,13 +64,13 @@ honest player holding a key into a cliff counts too, since a Move carries the in
       world the server's fall never begins: a drop needs more than the body's half-metre
       snap). notes: PASS (11-09, master H1.5). The user: "The town has no steps. These poor people have no homes
       or structures."
-- [ ] **Sit, stand, `/camp`** → as before. notes: [11-06: sit and stand PASS (master O3.7); `/camp` waits for part E, two seats.]
+- [x] **Sit, stand, `/camp`** → as before. notes: [11-06: sit and stand PASS (master O3.7); `/camp` PASS 11-09 (master O2.8 / H1.6): `camp window elapsed — client logs out char_id=38` at 18:40:58.]
 
 ## 2 — Combat and spells
 - [x] **Melee a camp mob** → hits land as before. notes: PASS (11-09, master O2.2 / H2.1).
-- [ ] **Cast a nuke at 25 to 30 m, and a heal or buff on a group-mate at range** → they land as
-      before; no "You cannot see your target." anywhere on the flat world. notes: [11-09: the nuke and a self heal PASS (master O2.3 / H2.2); the group-mate half waits for
-      part D, two seats.]
+- [x] **Cast a nuke at 25 to 30 m, and a heal or buff on a group-mate at range** → they land as
+      before; no "You cannot see your target." anywhere on the flat world. notes: [11-09: the nuke and a self heal PASS (master O2.3 / H2.2); the group-mate heal at
+      range PASS the same day, two seats (master H2.2): `ALLY heal applied char_id=48 target=36 spell=Greater Heal heal=50.0`, no `cannot see` line in the journal.]
 - [x] **A bow at range** (if one is to hand) → arrows land as before. notes: PASS (11-09, master H2.3). The user: "Bow fires and does damage, currently does not consume
       ammo. I also dont think we have an arrow item to act as the ammo." Filed: no ammo model on
       either side (the Arrow Bundle exists and nothing consumes it).
@@ -94,7 +94,7 @@ honest player holding a key into a cliff counts too, since a Move carries the in
 - [x] **Gate (and Succor, if a Druid or Wizard is to hand)** → the arrival at the bind or the
       town square, on the ground, the pet along. notes: PASS (11-09, master H4.3 / F8.2: Gate and Succor both, a Druid; the journal: `PORT applied
       ... port=bind` and `port=safe`).
-- [ ] **Be resurrected** (two seats) → you land beside the corpse. notes:
+- [x] **Be resurrected** (two seats) → you land beside the corpse. notes: PASS (11-09, master H4.4 / F8.2, marked by Claude from the journal: the row came back blank): corpse 2000000076 at 17:57:06, the Cleric's first Resurrection (Minor) fizzled, the second was `offered ... xp_percent=25` and `accepted` at 17:57:29, the gear back on from the corpse at 17:58:22 (`reequipped=6`). The level 2 character landed at a quarter HP beside the Decrepit Skeleton that had killed it and died again twelve seconds later (three hits of 5; the P99 landing, by design, user call 2026-10-15), leaving a second, empty corpse.
 
 ## 5 — NPC services
 - [x] **Vendor, bank, Sister Maelis's bind, a quest turn-in** → served as before (the NPCs'
@@ -103,13 +103,13 @@ honest player holding a key into a cliff counts too, since a Move carries the in
       is raised 1 m); a model with its origin at its feet stands right. Filed in the To-Do.
 
 ## 6 — Two seats (optional)
-- [ ] **A partner's body, pet and corpse** → drawn where they are, on the ground, as before.
-      notes:
+- [x] **A partner's body, pet and corpse** → drawn where they are, on the ground, as before.
+      notes: PASS (11-09, master H6.1). User: "hard to tell facing of a pet." [Pets do turn (the client applies the server's yaw), but a capsule has no front; nothing to see until pets have models.]
 
 ## 7 — The record
-- [ ] **The journal since the start time** → no `ERROR`; no `cannot see`, `no sight` or
+- [x] **The journal since the start time** → no `ERROR`; no `cannot see`, `no sight` or
       `fall damage` line for anyone; every `world health` line reads `slope_refusals=0`; paste
-      any `WARN`. notes:
+      any `WARN`. notes: PASS (11-09, master O2.9 / H7.1, both sittings): no `ERROR`, `WARN` or panic; no `cannot see` or `no sight`. This row was written for the flat world: with the hills in the same build, the `fall damage` lines are the cliff's and the flings' (every one on the hills sheet's rows, none on flat ground) and one `world health` line on the hills read `slope_refusals=1` (18:08, a key held into a face); on the flat ground every line read 0.
 
 ## Notes / observations
 -

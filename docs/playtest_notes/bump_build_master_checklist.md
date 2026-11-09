@@ -10,8 +10,9 @@ sheet, and a row that appears in two or three sheets is here once with every tag
 sheet comes back, Claude copies each mark into the five sheets, which stay the record the To-Do
 cites. Mark `[x]` pass, `[-]` blocked or skipped, and write what happened after `notes:`.
 
-**Status:** parts A (2026-11-06) and B and C (2026-11-09) filled and copied into the five
-sheets, 60 rows; Setup and parts D to F (two seats, then the record) remain. The sitting ran on an export of `df4f29c`, whose game
+**Status:** parts A (2026-11-06), B, C, D and E (2026-11-09) filled and copied into the five
+sheets, 85 rows, with the Setup rows and part F's journal rows; left: the `admin_report` card (B3.3),
+the console row (O3.9) and the second seat's build on the stamp row. The sitting ran on an export of `df4f29c`, whose game
 files are byte-identical to the `da83ea8` zip's (only the stamp differs), so the marks stand
 for the friends' build.
 
@@ -71,9 +72,9 @@ There is nothing to start: the R720's journal keeps every line on its own.
 
 ## Setup (once)
 - [ ] (HS.1, FS.1, RS.1, BS.1) **The R720's boot line and the client's stamp** → `build="267065f"` (or later), `dev_cmds=false`, `terrain="40x40 cells of 10 m, floor 0, hash f2bd278da1c3"`; the login screen's stamp and `/version` read `da83ea8` (or later) on both seats. notes:
-- [ ] (HS.2, FS.2, RS.2) **On the client checkout, `.\tools\check_all.ps1`** → all 15 PASS, among them `check_terrain_lockstep.gd` (1681 heights, the collider rebuilt, 6 NPCs on the ground), `check_terrain_sight.gd` and `check_wire_layer.gd`. notes:
-- [ ] (HS.3, FS.3) **Note the start time** for the journal check in part F. notes:
-- [ ] (BS.2) **The characters from the table above**, the main seat beside Thalia Mourne (the banker) and Brom with the loaves, the coin and the pouch. notes:
+- [x] (HS.2, FS.2, RS.2) **On the client checkout, `.\tools\check_all.ps1`** → all 15 PASS, among them `check_terrain_lockstep.gd` (1681 heights, the collider rebuilt, 6 NPCs on the ground), `check_terrain_sight.gd` and `check_wire_layer.gd`. notes: [Claude, 11-09: all 15 PASS on the checkout at `4e4505c`.]
+- [x] (HS.3, FS.3) **Note the start time** for the journal check in part F. notes: [15:21 UTC (B and C), 17:24 UTC (D and E).]
+- [x] (BS.2) **The characters from the table above**, the main seat beside Thalia Mourne (the banker) and Brom with the loaves, the coin and the pouch. notes: [11-06, for part A.]
 
 ## A — One seat: the town (flat)
 - [x] (O3.1) **The login screen** → no Offline button. notes:
@@ -148,41 +149,42 @@ and the Wraith Gate. The first five rows span the loop and tick when every place
 ## D — Two seats: the town and the flat ground
 A is the seat being watched, B the watcher; swap as convenient.
 
-- [ ] (O2.1, R1.1) **Both seats enter the world; B watches A; A right-drags to turn in place** → each sees the other move; B sees A's body turn smoothly to the new facing, no slide, no snap. notes:
-- [ ] (R1.2) **A runs a circle** → B sees A face the way it runs throughout. notes:
-- [ ] (R1.3) **A strafes left and right** → B sees A face forward while sliding. notes:
-- [ ] (R1.4) **A walks backwards** → B sees A face forward while backing up. notes:
-- [ ] (R1.5) **A left-drags (camera orbit only)** → B sees A's body stay put: the camera is not the body. notes:
-- [ ] (R2.1) **A turns to face B, logs out, logs back in** → A faces the same way on both screens straight after the login. notes:
-- [ ] (R2.2) **B logs in while A stands facing away** → A's body faces away on B's screen from the first frame. notes:
-- [ ] (O2.4, O3.3) **Group the two seats, kill a mob, look at the group panel** → the XP share and the group panel bars; your own row is marked as you on both seats, and the leader sees the kick and leadership controls on the other member's row, not their own. notes:
-- [ ] (H2.2) **A heal or buff on the group-mate at 25 to 30 m, on flat ground** → it lands; no "You cannot see your target.". notes:
-- [ ] (O2.6) **Trade an item between the seats** → the commit lands on both. notes:
-- [ ] (H4.4, F8.2) **One seat dies; the Cleric casts the resurrection on the corpse; accept** → you land beside the corpse, on the ground. notes:
-- [ ] (H6.1) **A partner's body, pet and corpse** → drawn where they are, on the ground, as before. notes:
+- [x] (O2.1, R1.1) **Both seats enter the world; B watches A; A right-drags to turn in place** → each sees the other move; B sees A's body turn smoothly to the new facing, no slide, no snap. notes:
+- [x] (R1.2) **A runs a circle** → B sees A face the way it runs throughout. notes:
+- [x] (R1.3) **A strafes left and right** → B sees A face forward while sliding. notes:
+- [x] (R1.4) **A walks backwards** → B sees A face forward while backing up. notes:
+- [x] (R1.5) **A left-drags (camera orbit only)** → B sees A's body stay put: the camera is not the body. notes:
+- [x] (R2.1) **A turns to face B, logs out, logs back in** → A faces the same way on both screens straight after the login. notes:character appears to login facing the correct direction then is suddenly rotated a small amount.  Can you look into this?
+- [x] (R2.2) **B logs in while A stands facing away** → A's body faces away on B's screen from the first frame. notes:
+- [x] (O2.4, O3.3) **Group the two seats, kill a mob, look at the group panel** → the XP share and the group panel bars; your own row is marked as you on both seats, and the leader sees the kick and leadership controls on the other member's row, not their own. notes:
+- [x] (H2.2) **A heal or buff on the group-mate at 25 to 30 m, on flat ground** → it lands; no "You cannot see your target.". notes:
+- [x] (O2.6) **Trade an item between the seats** → the commit lands on both. notes:
+- [x] (H4.4, F8.2) **One seat dies; the Cleric casts the resurrection on the corpse; accept** → you land beside the corpse, on the ground. notes: [Claude, from the journal (the row came back blank): PLUG died at 17:57:06, CLARK's first Resurrection fizzled, the second was offered at 25% and accepted at 17:57:29, the gear came back off the corpse at 17:58:22. PLUG landed at a quarter HP beside the skeleton that had killed it and died again twelve seconds later: the P99 landing, by design.]
+- [x] (H6.1) **A partner's body, pet and corpse** → drawn where they are, on the ground, as before. notes: hard to tell facing of a pet. 
 
 ## E — Two seats: the hills
 The Wraith Gate first (E.1 to E.7), then the Greywood ridge and the crypt's bowl (E.8 to E.10),
 then anywhere. In the sight rows, A is whichever seat has a heal or buff on a group-mate (the
 Cleric) and stands at the cliff's foot; B stands on the plateau.
 
-- [ ] (F9.1, R3.1) **A partner walks up a hill, stands on it and jumps on it; runs; sits** → drawn on the ground all the way, the jump seen (the jump relay as before), running and sitting unchanged. notes:
-- [ ] (F9.2) **The partner walks off the Wraith Gate's west edge** → seen falling and landing at the foot. notes:
-- [ ] (F5.1) **B on the plateau near the west edge at about (158, 0); A, at the cliff's foot at about (138, 0), targets B and casts a heal (or any spell on a group-mate)** → "You cannot see your target." at once: no cast bar, no mana spent. (From the foot to the top is 27 m, inside every spell's 30 m, with the lip some 6 m above the line between them.) notes:
-- [ ] (F5.2) **A walks round and up the south ramp and casts the same at B from the top** → it lands. notes:
-- [ ] (F5.3) **B walks to the lip right above A, about (151, 0), and A casts again from the foot** → a steep line up the face: refused or landed, and the server agrees with the client (no `cannot see` in the journal after a cast the client let through). notes:
-- [ ] (F5.4) **A bow at a mob the terrain hides, inside bow range** (if one is to hand) → the server answers "You miss" (bows have no client sight check yet; the swing goes out and misses). notes:
-- [ ] (F9.9) **A pet that cannot reach its owner** (an owner with a pet at the cliff's foot walks round and up the ramp to the lip above it, or Gates to a bind on the plateau) → the pet stops at the foot, and about 8 s later appears beside its owner. notes:
-- [ ] (F9.3) **A mob below a face that cannot reach you** (B walks onto the Greywood ridge from its east end and along the crest to its north edge at about (25, 89.7): the very edge, `/loc` z between 89.5 and 89.9, since a step back and the crest hides the foot. A, a GM, in the crypt's bowl below at about (25, 108), spawns a Test Panel mob, which turns on A; B nukes it once and takes it; A walks 20 m east) → the mob walks to the foot of the ridge under B (about z = 100) and stops there; about 8 s later it turns away, walks home and its HP bar refills to full when it gets there. notes:
-- [ ] (F9.4) **The same, and B nukes it again once it has stood at the foot a second or two, and once more on its walk home** → "Your target is evading." each time, at once, no mana spent, the mob's HP bar unchanged. notes:
-- [ ] (F9.5) **The same, but A hits the mob once as it walks to the foot, then stands beside it there and keeps swinging; B keeps the most hate** → from its first second at the foot every swing reads "<mob> evades your attack." and does nothing; when it gives up on B it turns on A (A's first hit put A on its list) and fights. notes:
-- [ ] (F9.7) **Anywhere: both of you hit a mob, then the one it is fighting dies (Trigger Death on a GM) or Gates** → the mob turns on the other at once and fights; it walks home only when nobody who hit it is left. notes:
-- [ ] (F9.8) **The same, but the one it is fighting runs until it turns away** → it turns on the other instead of walking home. notes:
-- [ ] (O2.8, H1.6) **`/camp` one seat, close the other with the window X** → the camp logs out; the other lingers about 30 s, as before. notes:
+- [x] (F9.1, R3.1) **A partner walks up a hill, stands on it and jumps on it; runs; sits** → drawn on the ground all the way, the jump seen (the jump relay as before), running and sitting unchanged. notes:
+- [x] (F9.2) **The partner walks off the Wraith Gate's west edge** → seen falling and landing at the foot. notes:
+- [x] (F5.1) **B on the plateau near the west edge at about (158, 0); A, at the cliff's foot at about (138, 0), targets B and casts a heal (or any spell on a group-mate)** → "You cannot see your target." at once: no cast bar, no mana spent. (From the foot to the top is 27 m, inside every spell's 30 m, with the lip some 6 m above the line between them.) notes:
+- [x] (F5.2) **A walks round and up the south ramp and casts the same at B from the top** → it lands. notes:
+- [x] (F5.3) **B walks to the lip right above A, about (151, 0), and A casts again from the foot** → a steep line up the face: refused or landed, and the server agrees with the client (no `cannot see` in the journal after a cast the client let through). notes:
+- [x] (F5.4) **A bow at a mob the terrain hides, inside bow range** (if one is to hand) → the server answers "You miss" (bows have no client sight check yet; the swing goes out and misses). notes: this appears to be true
+
+- [x] (F9.9) **A pet that cannot reach its owner** (an owner with a pet at the cliff's foot walks round and up the ramp to the lip above it, or Gates to a bind on the plateau) → the pet stops at the foot, and about 8 s later appears beside its owner. notes: This appears to work.
+- [x] (F9.3) **A mob below a face that cannot reach you** (B walks onto the Greywood ridge from its east end and along the crest to its north edge at about (25, 89.7): the very edge, `/loc` z between 89.5 and 89.9, since a step back and the crest hides the foot. A, a GM, in the crypt's bowl below at about (25, 108), spawns a Test Panel mob, which turns on A; B nukes it once and takes it; A walks 20 m east) → the mob walks to the foot of the ridge under B (about z = 100) and stops there; about 8 s later it turns away, walks home and its HP bar refills to full when it gets there. notes:
+- [x] (F9.4) **The same, and B nukes it again once it has stood at the foot a second or two, and once more on its walk home** → "Your target is evading." each time, at once, no mana spent, the mob's HP bar unchanged. notes: tested with physical attack isntead of nuke.
+- [x] (F9.5) **The same, but A hits the mob once as it walks to the foot, then stands beside it there and keeps swinging; B keeps the most hate** → from its first second at the foot every swing reads "<mob> evades your attack." and does nothing; when it gives up on B it turns on A (A's first hit put A on its list) and fights. notes:
+- [x] (F9.7) **Anywhere: both of you hit a mob, then the one it is fighting dies (Trigger Death on a GM) or Gates** → the mob turns on the other at once and fights; it walks home only when nobody who hit it is left. notes: When a charmed mob vanishes and the player who charmed it hasnt engaged with the enemy, the enemy does not aggro the player when the charm wears off.  Does this make sense?
+- [x] (F9.8) **The same, but the one it is fighting runs until it turns away** → it turns on the other instead of walking home. notes:
+- [x] (O2.8, H1.6) **`/camp` one seat, close the other with the window X** → the camp logs out; the other lingers about 30 s, as before. notes:
 
 ## F — The record
-- [ ] (O2.9, H7.1, F10.1) **The journal since the start time** (the grep above) → no `ERROR` and no panic; no `cannot see` or `no sight` line for a cast the client let through; a `fall damage` line for each fall taken (the cliff, the flings) and none on the flat ground; `dev_fling` rows only for the GM's Fling presses; `slope_refusals` on the `world health` line is a curiosity on the hills (a key held into a cliff counts), 0 while on flat ground; paste any `WARN`. notes:
-- [ ] (O2.10) **Read a few journal lines from the sitting** → a line logged while a player's message is handled starts `client{char_id=N account_id=M}:`, and a buy, sell, bank or loot line names the player `char_id=N` (it said `owner=N` or `caster=N` before 2026-11-02). notes:
+- [x] (O2.9, H7.1, F10.1) **The journal since the start time** (the grep above) → no `ERROR` and no panic; no `cannot see` or `no sight` line for a cast the client let through; a `fall damage` line for each fall taken (the cliff, the flings) and none on the flat ground; `dev_fling` rows only for the GM's Fling presses; `slope_refusals` on the `world health` line is a curiosity on the hills (a key held into a cliff counts), 0 while on flat ground; paste any `WARN`. notes: [Claude, 11-09, both sittings (15:21 to 16:17 and 17:24 to 18:40 UTC): no `ERROR`, `WARN` or panic; no `cannot see` or `no sight`; `fall damage` only for the cliff and the flings, none on flat ground; `dev_fling` only on part C's presses; one `slope_refusals=1` line on the hills at 18:08, every other line 0. PASS.]
+- [x] (O2.10) **Read a few journal lines from the sitting** → a line logged while a player's message is handled starts `client{char_id=N account_id=M}:`, and a buy, sell, bank or loot line names the player `char_id=N` (it said `owner=N` or `caster=N` before 2026-11-02). notes: [Claude, 11-09: `client{char_id=48 account_id=2}: ... spell memorized char_id=48`; `corpse loot put worn gear back on ... char_id=36`. PASS.]
 - [ ] (B3.3) **`admin_report` after the sitting** → `bank_in`, `bank_out` and `sell` rows for part A's moves, the check card balanced. notes:
 - [ ] (O3.9) **The console over the whole sitting** → no red script error. notes:
 

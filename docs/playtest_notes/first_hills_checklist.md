@@ -46,12 +46,12 @@ on hills a key held into a cliff counts too, so a number there is a curiosity, n
 > the marks are copied back here.
 
 ## Setup
-- [ ] **Redeploy from the merged branch and read the boot line** → it carries
-      `terrain="40x40 cells of 10 m, floor 0, hash f2bd278da1c3"` and `dev_cmds=false`. notes:
-- [ ] **On the client checkout, `.\tools\check_all.ps1`** (after the merge the default server
+- [x] **Redeploy from the merged branch and read the boot line** → it carries
+      `terrain="40x40 cells of 10 m, floor 0, hash f2bd278da1c3"` and `dev_cmds=false`. notes: [the 11-05 deploy's boot line, `build="267065f"`, no restart since.]
+- [x] **On the client checkout, `.\tools\check_all.ps1`** (after the merge the default server
       path is right) → all 15 PASS, among them `check_terrain_lockstep.gd` (1681 heights, the
-      collider rebuilt, 6 NPCs on the ground) and `check_terrain_sight.gd`. notes:
-- [ ] **Note the start time** for the journal check at the end. notes:
+      collider rebuilt, 6 NPCs on the ground) and `check_terrain_sight.gd`. notes: [11-09: all 15 PASS on the checkout at `4e4505c`.]
+- [x] **Note the start time** for the journal check at the end. notes: [15:21 UTC (parts B and C) and 17:24 UTC (parts D and E), 11-09.]
 
 ## 1 — The look and the town
 - [x] **Log in and look around the town** → flat as before; the hills visible in the distance,
@@ -109,17 +109,17 @@ to about (158, 0) on the top is 27 m, inside every spell's 30 m, with the lip so
 line between them. (The ridge's own flanks are faces nobody stands on, and from flat ground on
 either side its 30 m base puts any target out of reach, so it is no place for this test.)
 
-- [ ] **B stands on the plateau near the west edge at about (158, 0); A, at the cliff's foot at
+- [x] **B stands on the plateau near the west edge at about (158, 0); A, at the cliff's foot at
       about (138, 0), targets B and casts a heal (or any spell on a group-mate)** → "You cannot
-      see your target." at once: no cast bar, no mana spent. notes:
-- [ ] **A walks round and up the south ramp and casts the same at B from the top** → it lands.
-      notes:
-- [ ] **B walks to the lip right above A, about (151, 0), and A casts again from the foot** → a
+      see your target." at once: no cast bar, no mana spent. notes: PASS (11-09, master F5.1).
+- [x] **A walks round and up the south ramp and casts the same at B from the top** → it lands.
+      notes: PASS (11-09, master F5.2).
+- [x] **B walks to the lip right above A, about (151, 0), and A casts again from the foot** → a
       steep line up the face: refused or landed, and the server agrees with the client (no
-      `cannot see` in the journal after a cast the client let through). notes:
-- [ ] **A bow at a mob the terrain hides, inside bow range** (if one is to hand) → the server
+      `cannot see` in the journal after a cast the client let through). notes: PASS (11-09, master F5.3); no `cannot see` line anywhere in the journal.
+- [x] **A bow at a mob the terrain hides, inside bow range** (if one is to hand) → the server
       answers "You miss" (bows have no client sight check yet; the swing goes out and misses).
-      notes:
+      notes: PASS (11-09, master F5.4). User: "this appears to be true".
 
 ## 6 — The Sunken Barrow and the rim
 - [x] **Stand on the Sunken Barrow's rim and look in** → the zombies below; nukes from the rim
@@ -137,46 +137,46 @@ either side its 30 m base puts any target out of reach, so it is no place for th
 
 ## 8 — Regression
 - [x] **Die anywhere and respawn** → the respawn lands at the bind on the ground. notes: PASS (11-09, master O2.7 / F8.1).
-- [ ] **Gate, and be resurrected (two seats)** → you land on the ground. notes: [11-09: Gate and Succor PASS (master H4.3 / F8.2); the resurrection waits for part D.]
+- [x] **Gate, and be resurrected (two seats)** → you land on the ground. notes: [11-09: Gate and Succor PASS (master H4.3 / F8.2); the resurrection PASS the same day, two seats (master H4.4 / F8.2, from the journal): `resurrection accepted char_id=36 corpse_id=2000000076 xp_percent=25` at 17:57:29, the gear back on from the corpse at 17:58:22. The character landed at a quarter HP beside the skeleton that killed it and died again twelve seconds later, the P99 landing by design.]
 - [x] **Summon a pet and walk it over the hills** → it follows, standing on the ground. notes: PASS (11-09, master F8.3).
 
 ## 9 — Two seats
-- [ ] **A partner walks up a hill, stands on it and jumps on it** → drawn on the ground all the
-      way, the jump seen. notes:
-- [ ] **The partner walks off the Wraith Gate's west edge** → seen falling and landing at the
-      foot. notes:
-- [ ] **A mob below a face that cannot reach you** (B walks onto the Greywood ridge from its
+- [x] **A partner walks up a hill, stands on it and jumps on it** → drawn on the ground all the
+      way, the jump seen. notes: PASS (11-09, master F9.1 / R3.1).
+- [x] **The partner walks off the Wraith Gate's west edge** → seen falling and landing at the
+      foot. notes: PASS (11-09, master F9.2); the journal: `fall damage char_id=36 drop_m=18.0 ... damage=41.0` at 18:02:09 and 18:04:30, `char_id=48 drop_m=18.0 ... damage=135.0` at 18:04:08.
+- [x] **A mob below a face that cannot reach you** (B walks onto the Greywood ridge from its
       east end and along the crest to its north edge at about (25, 89.7): the very edge, `/loc`
       z between 89.5 and 89.9, since a step back and the crest hides the foot. A, a GM, in the
       crypt's bowl below at about (25, 108), spawns a Test Panel mob, which turns on A; B nukes
       it once and takes it; A walks 20 m east) → the mob walks to the foot of the ridge under B
       (about z = 100) and stops there; about 8 s later it turns away, walks home and its HP bar
-      refills to full when it gets there. notes:
-- [ ] **The same, and B nukes it again once it has stood at the foot a second or two, and once
+      refills to full when it gets there. notes: PASS (11-09, master F9.3).
+- [x] **The same, and B nukes it again once it has stood at the foot a second or two, and once
       more on its walk home** → "Your target is evading." each time, at once, no mana spent,
-      the mob's HP bar unchanged. notes:
-- [ ] **The same, but A hits the mob once as it walks to the foot, then stands beside it there
+      the mob's HP bar unchanged. notes: PASS (11-09, master F9.4). User: "tested with physical attack instead of nuke." [The nuke half is in the journal from the plateau rows: `CastSpell refused — target pre-flight char_id=48 spell=Smite Rk. II ... reason=Your target is evading.` at 18:20:40 and 18:20:57, the caster at (150, 18, -35) on the plateau and the mobs at x 147 below its edge; and char 38's Soul Drain at 18:27:53 and 18:27:59, the mob at x 140 then 132 walking home.]
+- [x] **The same, but A hits the mob once as it walks to the foot, then stands beside it there
       and keeps swinging; B keeps the most hate** → from its first second at the foot every
       swing reads "<mob> evades your attack." and does nothing; when it gives up on B it turns
-      on A (A's first hit put A on its list) and fights. notes:
+      on A (A's first hit put A on its list) and fights. notes: PASS (11-09, master F9.5).
 - [x] **One seat: pull a mob, run until it turns for home, then hit or nuke it on its walk
       back** → "<mob> evades your attack." or "Your target is evading."; it heals to full at
       home and fights normally when pulled again. notes: PASS (11-09, master F9.6; the journal: `CastSpell refused — target pre-flight ... reason=Your
       target is evading.`, a Call Lightning at a Decrepit Skeleton walking home).
-- [ ] **Two seats, anywhere: both of you hit a mob, then the one it is fighting dies (Trigger
+- [x] **Two seats, anywhere: both of you hit a mob, then the one it is fighting dies (Trigger
       Death on a GM) or Gates** → the mob turns on the other at once and fights; it walks home
-      only when nobody who hit it is left. notes:
-- [ ] **The same, but the one it is fighting runs until it turns away** → it turns on the
-      other instead of walking home. notes:
-- [ ] **A pet that cannot reach its owner** (an owner with a pet at the cliff's foot walks round
+      only when nobody who hit it is left. notes: PASS (11-09, master F9.7). User: "When a charmed mob vanishes and the player who charmed it hasnt engaged with the enemy, the enemy does not aggro the player when the charm wears off. Does this make sense?" [No charm was cast in this sitting (none in the journal 17:24 to 18:40), so this is the morning's Sable event: the charmed pet died, the charm ran out on the dead body, and the server handed back a dead mob (the loot-faucet bug filed under Security the same day); a living pet whose charm runs out on a present, living charmer turns on them (the 10-07 rule). Whether a pet's OWNER should be on a mob's hate list the moment the pet engages is a design call, filed under Combat.]
+- [x] **The same, but the one it is fighting runs until it turns away** → it turns on the
+      other instead of walking home. notes: PASS (11-09, master F9.8).
+- [x] **A pet that cannot reach its owner** (an owner with a pet at the cliff's foot walks round
       and up the ramp to the lip above it, or Gates to a bind on the plateau) → the pet stops at
-      the foot, and about 8 s later appears beside its owner. notes:
+      the foot, and about 8 s later appears beside its owner. notes: PASS (11-09, master F9.9). User: "This appears to work." [A skeleton summoned at 18:23 on the plateau, its commands in the journal; the warp itself writes no line.]
 
 ## 10 — The record
-- [ ] **The journal since the start time** → no `ERROR`; no `cannot see` line for a cast the
+- [x] **The journal since the start time** → no `ERROR`; no `cannot see` line for a cast the
       client let through (the client refuses its own first); a `fall damage` line for each fall
       taken and none else; `dev_fling` rows only for the GM's Fling presses; `slope_refusals`
-      on the hills is a curiosity; paste any `WARN`. notes:
+      on the hills is a curiosity; paste any `WARN`. notes: PASS (11-09, master O2.9 / H7.1 / F10.1, both sittings 15:21 to 16:17 and 17:24 to 18:40 UTC): no `ERROR`, `WARN` or panic; no `cannot see`; `fall damage` lines only for the cliff (18 m, 40% of max HP, five of them across both seats) and the flings (part C), none on flat ground; `dev_fling` rows only on part C's presses; one `world health` line on the hills at `slope_refusals=1` (18:08), the rest 0.
 
 ## Notes / observations
 -

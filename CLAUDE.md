@@ -1095,7 +1095,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`); **§1 PASSED 2026-11-02**
   (two seats: about 1,200 ticks a minute, `over_budget=0`, the median tick 0.5 to 0.8 ms and the
   worst 13.3 ms, one checkpoint a minute at 3 to 13 ms, no line once both had logged out). §2
-  and §3 were marked the same day on the pre-bump builds and are run again after the bump. (2) **Phase 2's split BUILT** on server `refactor/tick-split` (from
+  and §3 were marked the same day on the pre-bump builds and are run again after the bump.
+  **Rerun on the bump build 2026-11-06 and 11-09 (the master sheet): every §2 and §3 row
+  PASS** but the console row's rerun, which waits on the tester's word. (2) **Phase 2's split BUILT** on server `refactor/tick-split` (from
   `feat/facing`, eight commits, the suite green after each: 350 unit, 161 world tests):
   `tick.rs`'s 13,820 lines are `tick/`, `run` about 330 lines calling 23 step modules in the
   order they always ran, `WorldState` and `Intents` in `state.rs`, 5 modules of shared rules;
@@ -2571,6 +2573,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   gains nothing (the server's gate is the rule). Fix: refresh both intervals in
   `_sync_auto_attack_timer` before the timers start. Client only, a few lines; could ride the
   Wednesday zip. Waits on the go.
+- [ ] **A mob whose only attacker was a pet walks home when the pet dies: should the owner
+  be on its hate list?** *(user 2026-11-09, on the master's F9.7 row: "When a charmed mob
+  vanishes and the player who charmed it hasnt engaged with the enemy, the enemy does not
+  aggro the player when the charm wears off. Does this make sense?"; the event itself was
+  the morning's dead-pet charm return, the Security entry, but the question stands on its
+  own)*. Today a pet's hits are the pet's: a mob's threat map names the pet, the owner gets
+  the kill credit and no hate, so a mob that fought only a pet turns on whoever else hit it
+  when the pet dies or is dismissed, or walks home; a charmed pet's victim the same. An EQ
+  pet pull works exactly because of it (send the pet, the mob follows it, you were never on
+  its list), and the cost is a pet class that can farm with the pet alone at no risk to
+  itself. The alternative is a token hate on the owner the moment their pet engages, so a
+  mob whose pet-tank dies comes for the owner. A design call, after the door.
 - [ ] **Two-handed damage arc (cleave)** — large 2H weapons (axes/polearms) hit multiple
   enemies in a frontal cone on auto-attack, giving 2H its own identity vs. dual-wield.
   Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it
@@ -3210,6 +3224,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   re-exported, a server rebuild and an export; the crest is the known perch and the evade
   rule covers it), and walking into a face pushes the client's body a little into it until the
   player stops (the server holds the foot; the reconciliation pulls the body out), cosmetic.
+  **Parts D and E run 2026-11-09 (two seats): every remaining row of both sheets passes**
+  (`height_model_checklist.md` all 23 rows across 11-06 and 11-09, `first_hills_checklist.md`
+  every row): the group-mate heal at range, the resurrection (the character landed at a
+  quarter HP beside the skeleton that had killed it and died again twelve seconds later, the
+  P99 landing by design), the partner drawn on the hills and seen falling off the cliff (18 m,
+  40% of max HP in the journal, five falls across both seats), the sight rows at the Wraith
+  Gate (refused from the foot, landed from the top, the server agreeing with the client on
+  the lip, a bow's arrow missing a hidden mob), the mob held below the crest giving up after
+  8 s and healing at home, the evade refusals on nukes and swings (`Your target is evading.`
+  on Smites from the plateau at mobs below its edge), the hate list turning on the next
+  attacker, the pet warping to its owner, `/camp` and the window X, the journal clean. **Tick
+  proposed** (the what-exists note moves to systems_overview on the yes).
 - [ ] **NPC placeholder capsules sit half in the ground** *(user, 2026-11-06, part A of the master
   sheet, with a screenshot: "This isnt an issue now, but i want to make sure it wont be an issue
   when they get models")*. Verified: `dialogue_npc.tscn`, `vendor_npc.tscn` and `banker_npc.tscn`
@@ -3552,7 +3578,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (sees 1.25, keeps it through a NaN Move, sees 4.0 wrapped), failing with the yaw ignored.
   Both sides deploy together; the export comes from the merged branch with the rebuilt DLL.
   **DEPLOYED 2026-11-05 with the November bump** (server `267065f`, client `da83ea8`);
-  `remote_facing_checklist.md` is runnable now.
+  `remote_facing_checklist.md` is runnable now. **The sheet RUN 2026-11-09, every row marked**
+  (two seats, parts D and E of the master: turning in place, the circle, strafing, backing up,
+  the camera orbit leaving the body, the facing kept across a relog, a late joiner seeing the
+  facing from the first frame, the running, jump and sit regression on the hills, all PASS;
+  the Test Panel spawn row on 11-06). **One gap from the relog row, read in the code the same
+  day** (user: "character appears to login facing the correct direction then is suddenly
+  rotated a small amount"): the client's own body never reads its facing back from the
+  server. It logs in facing the scene's default, and its first Move (sent every 50 ms, input
+  or not) overwrites the facing the server saved, so the watcher sees the saved facing for a
+  tick and then a turn, and the player's own screen never showed the saved facing at all.
+  Older than the bump (the facing's first build). Fix, client only, a few lines in
+  `player.gd`: seed the body's `rotation.y` from the first server Position's yaw and send no
+  Move before that Position has arrived (a probe for both); could ride the Wednesday zip with
+  the swing re-time. **Waits on the go.** Tick proposed on the sheet, with the login seed as
+  its own row on the pre-door sheet once built.
 - [x] **"You cannot do that while dead." flooded the chat** — **DONE + playtested 2026-10-26**
   (`dead_gate_checklist.md`, every row passing: server `8127a70` and client `6ddeddc`). The
   flood was the client's `EquipUpdate`, one per gear slot as a death strips the gear, which the
