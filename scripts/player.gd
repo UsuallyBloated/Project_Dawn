@@ -463,7 +463,11 @@ func _physics_process(delta: float) -> void:
 		_cam_yaw = lerp_angle(_cam_yaw, 0.0, recenter)
 		_apply_camera_pivot()
 
-	if Net.is_app_ready():
+	# No Move before the first server Position: a Move carries this body's yaw,
+	# and until that Position has seeded it the yaw is the scene's default,
+	# which would overwrite the facing the server saved at the last logout
+	# (seen as a small turn right after a relogin, 2026-11-09).
+	if Net.is_app_ready() and _received_first_pos:
 		# Throttle to server tick rate (20 Hz). Subtract instead of zeroing so
 		# the average rate stays exact across variable frame times.
 		_move_send_accum += delta
@@ -489,7 +493,7 @@ func _physics_process(delta: float) -> void:
 		var blend_z := lerpf(global_position.z, _server_pos_target.z, blend)
 		global_position = Vector3(blend_x, global_position.y, blend_z)
 
-func _on_world_position(id: int, pos: Vector3, _vel: Vector3, _yaw: float, sequence: int) -> void:
+func _on_world_position(id: int, pos: Vector3, _vel: Vector3, yaw: float, sequence: int) -> void:
 	# Track 2 — own-player reconciliation only. Other-player replication is Track 3.
 	if id != Net.get_player_id():
 		return
@@ -503,9 +507,14 @@ func _on_world_position(id: int, pos: Vector3, _vel: Vector3, _yaw: float, seque
 	if not _received_first_pos:
 		# First broadcast wins: server's DB-loaded spawn may differ from
 		# world.tscn's local spawn. Snap unconditionally so scene-in is clean.
+		# The facing too: the server saved it at the last logout and every
+		# watcher already draws it, so the body logs in facing that way and
+		# not the scene's default. Only this once: from here the body's own
+		# facing is the truth, carried on every Move.
 		_received_first_pos = true
 		global_position = Vector3(pos.x, global_position.y, pos.z)
 		_server_pos_target = global_position
+		rotation.y = yaw
 		return
 
 	var dx := pos.x - global_position.x

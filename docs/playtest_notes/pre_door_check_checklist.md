@@ -125,6 +125,22 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       here. notes:
 - [x] **The console (backtick) during play** → no red line. notes:
 
+## 8 — The fixes of 11-09 (the R720 at server `a137b96` or later; the export from the client's 11-09 commit or later)
+- [ ] **Log in while a partner watches** (two seats; the login facing seed) → your body appears
+      facing where it logged out and never turns on its own, on the partner's screen and on
+      yours (it used to face the scene's default, then snap a tick later). notes:
+- [ ] **Swap weapons with nothing targeted, then fight** (the swing re-time) → the first swing
+      of the fight waits the new weapon's full delay; in the journal no `Attack rejected —
+      swing-rate limit (too fast)` line for you. notes:
+- [ ] **A charmer (a Bard 14 or an Enchanter): charm a camp mob and let something kill the pet
+      inside the charm's last five seconds** (the charm-expiry fix) → when the charm runs out
+      nothing comes back and no bag drops; the journal has no `charm expired — mob returned
+      hostile` line for that pet and no `stray kill`; the camp respawns the mob on its own
+      timer. notes:
+- [ ] **Wear a proc weapon (Flamebrand) through a few kills** (the proc log line) → the
+      journal shows `weapon proc` lines naming the proc and the amount whenever the client
+      prints "Flaming Strike for N". notes:
+
 ## Notes / observations
 - Anything that would confuse or annoy a friend, however small: a missing hint, a wrong
   word, a window in the way, a mob too strong, a long walk. These are the point.

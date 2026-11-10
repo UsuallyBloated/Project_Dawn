@@ -20,7 +20,7 @@ show; §3 is what the client removal changes on screen.
 
 ## Setup
 - [x] §1: the R720 at the deploy branch's newest build (boot line `build=`, `dev_cmds=false`). notes: [11-05 deploy's boot line `build="267065f" dev_cmds=false`, no restart since; the 11-06 and 11-09 sittings ran on it.]
-- [ ] §2 and §3: the bump-day redeploy and the export from the merged branches (the login screen's build stamp). notes:
+- [x] §2 and §3: the bump-day redeploy and the export from the merged branches (the login screen's build stamp). notes: [the 11-05 redeploy (`267065f`) and the export of `df4f29c` (game files identical to the `da83ea8` zip's), both seats, 11-06 and 11-09.]
 - [x] Two seats for the group rows (two-boxing works); a GM account for the Test Panel rows. notes: [11-09: two seats (account 1 and the GM account 2), parts D and E of the master.]
 
 ## 1 — The world health line (one seat, after the redeploy)
@@ -65,7 +65,7 @@ show; §3 is what the client removal changes on screen.
 - [x] **Open a bag window** → no Destroy button in it; destroying still works by holding the item over the inventory's trash cell. notes:  Destroy button still visible in the bag, destroy button doesnt work. [11-06, the bump export (master O3.6): the button is gone, PASS.]
 - [x] **Eat by hand, drink by hand, sit to regen, sing a song (a Bard)** → all as before; the regen and buff bars follow the server. notes: [11-06, the bump export (master O3.7): eat, drink, sit and stand PASS; no Bard at the seat, the song not sung.]
 - [x] **/dismount** → not a command any more (nothing can be mounted online). notes: [11-06, the bump export (master O3.8): PASS.]
-- [x] **The console over the whole sitting** → no red script error. notes: Not that i saw.
+- [x] **The console over the whole sitting** → no red script error. notes: Not that i saw. [11-09 (master O3.9), the bump build, two seats: "no red script".]
 
 ## Notes / observations
 - Mana Cost of Healing Light cost reduced from 10 to 8.

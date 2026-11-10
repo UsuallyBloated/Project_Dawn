@@ -604,8 +604,20 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     never exhibited this and the bank did. Playtested clean across 11 rows
     (`bank_vault_display_checklist.md`), including deposit, withdraw, relog persistence, both
     vaults, and the full-vault rejection.
-  - **Still open:** exchange fee bands; a Banker-NPC proximity gate on bank actions (gates only on
-    `in_world` today, matching the vendor pattern — value-preserving); bag storage.
+  - **A held item at the bank and the merchant** (built 2026-10-30, playtested 2026-11-06 and
+    11-09, `held_item_bank_and_vendor_checklist.md`). `SlotRef::Cursor` (appended last) lets
+    `SellItem` and `UseConsumable` name what the player holds; the DLL maps the `"cursor"`
+    location to it. A left click on any cell of a vault while holding deposits into that vault
+    (a held bag with contents is refused up front with the bank's own line, nothing sent;
+    `BankStoreItem` already took `"cursor"`); the merchant's SELL list leads with "In hand:
+    <item>", sold from the cursor through `destroy_at` like a bag slot, and a held item with no
+    vendor value is left off. The server verifies the hand, prices from the registry and gates
+    on the banker's and the merchant's reach; a held item is part of the holdings (the death
+    strip takes it). Not built: a drag gesture onto the vault (the held item follows the mouse,
+    so the click is the drop); eating from the hand has the wire arm and no client affordance.
+  - **Still open:** exchange fee bands; bags in the bank (the To-Do's vault entry: full bags,
+    lifting from the vault, a swap on an occupied cell, decided 2026-11-09). The banker
+    proximity gate shipped 2026-08-26 (see NPCs, dialogue, quests, vendors).
 
 ---
 
@@ -693,8 +705,43 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   enrage, the guaranteed and rare drops; see Combat). `data/named_mob_definitions.gd` (Rotfang,
   Greth Bonecrusher, Ancient Crawler, Sable, The Undying) is the client's copy of the names,
   read by the Test Panel's Spawn Named and the quest definitions.
-- **Fall damage:** none yet. The client computes nothing; the server's model waits on the
-  height model (`docs/design/server_fall_damage.md`, slice 1).
+- **The server height model and the first hills** (built 2026-11-04, playtested 2026-11-06 and
+  11-09, `height_model_checklist.md` and `first_hills_checklist.md`; design
+  `docs/design/server_height_model.md`, `server_fall_damage.md`, `first_hills_plan.md`). The
+  server carries the client's ground: `data/terrain.toml`, exported from `world.tscn` by
+  `tools/export_terrain.gd` and compiled in (its SHA-256 refuses a hand edit; the boot line
+  names it, `terrain="40x40 cells of 10 m, floor 0, hash f2bd278da1c3"`), sampled by
+  `world/terrain.rs` from the same triangles the client stands on. Everything stands on it:
+  players each tick (`player_step` takes a tick as the client's body does, uphill `cos²θ` of the
+  flat distance, and refuses a rising step onto ground past 60° whatever its direction; the
+  refusals are counted on the `world health` line as `slope_refusals`), mobs and pets as they
+  move, spawns, corpses, bags, every teleport and load; NPCs and safe areas derive their height
+  at load. **Line of sight** (`terrain::can_see`, the segment raised 1.2 m checked where it
+  crosses every cell edge) gates every targeted spell at the release, heals and buffs too, each
+  AoE victim, ranged attacks and ranged skills (a Miss), an idle mob's scan and a song's pulse;
+  never melee, a mob already on a hate list, or a pet. The client checks the same ray before a
+  cast (`check_terrain_sight.gd` holds it to a port of the server's rule) and refuses with the
+  server's line. **Falls** (`world/fall.rs`): after the XZ step the body follows the ground down
+  as far as the client's floor snap reaches and only onto a floor; past that it falls at
+  20 m/s² (a face is a wall it slides down); the landing costs a share of max HP, nothing to
+  2 m and all of it at 42 m, 2.5% a metre between, no armor or shield; "You hit the ground hard
+  for N damage."; a death is the death sweep's, the corpse where the body landed. Leaving is
+  no way out: a linkdead body still falls, a Quit mid-air is unclean, a port or a res summon
+  settles the fall first, a respawn lands grounded, a dropped bag lands under the dropper. The
+  jump stays cosmetic; mobs and pets never fall. **The hills:** the relief is data
+  (`data/terrain_features.toml`, twelve features) composed into the scene's 40 x 40 grid of
+  10 m cells by `tools/author_terrain.gd` (every camp spawn and NPC on a floor, the town flat,
+  a rim of 63° faces all round so nobody leaves the plate), flat-shaded with a height tint. A
+  mob held below a face by the slope rule gives up after `MOB_STUCK_SECS` (8 s) and walks home
+  to heal (a following pet warps to its owner instead); a mob walking home or held at a face
+  **evades** (WoW's rule): a swing is an Evade with no hate, a hostile spell is refused at no
+  cost, AoE and DoT ticks deal nothing; and a mob whose target dies, ports, leaves or runs past
+  its leash turns on the next hater within its leash (EQ's hate list). The GM Test Panel's
+  Fling (`DevFling`, audited) throws the GM up to test a fall. Lockstep:
+  `check_terrain_lockstep.gd` (scene against file, the collider, the NPCs on the ground),
+  `check_terrain_sight.gd`, three constant pairs for the fall. Known: the ridge's south face
+  climbs where the bandit knoll lifts it (content); the client's body sinks a little into a
+  face it walks into (cosmetic); Levitate and Feather Fall are not modelled.
 
 ---
 
@@ -914,6 +961,17 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   radius scan — they were previously excluded by the loot-bag id bound, so AOE hit no pets at
   all — and gates each by the same rule). World mobs (`entity.owner == None`) are always
   attackable.
+- **Facing** (built 2026-10-27, playtested 2026-11-09, `remote_facing_checklist.md`; PD_W0029).
+  `Move` carries a trailing `yaw` (the body's `rotation.y`, the one the right-drag turns; the
+  DLL's `send_move` and `Net.send_movement` carry it); the handler drops a non-finite one whole
+  and stores the rest wrapped into (-PI, PI]; `Position`, `EntitySpawn` and the checkpoint carry
+  `conn.yaw`, so the facing reaches every watcher (`RemotePlayer` turns to it with
+  `lerp_angle`, pets the same), survives a relog, and places a GM's dev spawn in front of the
+  real facing. A rooted player may still turn; nothing on the server judges it (a
+  behind-the-back rule, if one comes, must). Since 2026-11-09 the own body takes its facing
+  from the first server Position at login and sends no Move before it (`player.gd`,
+  `probe_login_facing.gd`): before, its first Move overwrote the saved facing with the scene's
+  default, a small turn a tick after a relogin. About 80 bytes a second upstream per player.
 - **Known gaps** (also in the root to-do): incoming `/tell`, the broader PvP-flagging design
   (when/how PvP is triggered + consequences), `RemotePet` friend/foe visual distinction.
   (ALLY-target buff routing and pet buffs both landed — see Spells & casting + Pets.)

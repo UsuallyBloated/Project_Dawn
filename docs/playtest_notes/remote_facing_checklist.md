@@ -22,7 +22,7 @@ with the DLL check green means the server build predates PD_W0029.
 
 ## Setup
 - [x] Server on the R720 from the merged bump (boot line `build=`, `dev_cmds=false`). notes: [the 11-05 deploy's boot line, `build="267065f" dev_cmds=false`, no restart since.]
-- [ ] Both seats on the bump export; `tools/check_wire_layer.gd` green on its checkout. notes:
+- [x] Both seats on the bump export; `tools/check_wire_layer.gd` green on its checkout. notes: [11-09: both seats on the export of `df4f29c` (the bump build; user: "same build as first. same launcher"); `check_wire_layer.gd` PASS in `check_all.ps1` the same day.]
 
 ## 1 — Turning
 - [x] **B watches A; A right-drags to turn in place** → B sees A's body turn smoothly to the new facing, no slide, no snap. notes: PASS (11-09, master O2.1 / R1.1).

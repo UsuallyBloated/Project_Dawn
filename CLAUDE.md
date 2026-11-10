@@ -605,7 +605,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   ALLY heal cast with an enemy targeted should route to the enemy's target (the EQ assist-heal
   pattern) instead of failing on the target type. Server cast resolver change plus the client's
   target-of-target frame as the visible hint.
-- [ ] **Held-item bank and vendor interactions** *(cursor design's carried open question,
+- [x] **Held-item bank and vendor interactions** — **DONE + playtested 2026-11-06 and 11-09**
+  (`held_item_bank_and_vendor_checklist.md`, all 19 rows: every bank and merchant row on 11-06,
+  the `admin_report` card balanced on 11-09; what exists is in systems_overview, Items, "A held
+  item at the bank and the merchant". The three asks from the notes are the vault entry
+  directly below.) *(Original entry:)* *(cursor design's carried open question,
   `cursor_slot_and_reequip.md` §Open questions; audit 2026-09-29)*. Deposit-from-cursor and
   sell-from-cursor were deferred ("place it first"). `SlotRef` has no cursor variant, so both
   are small wire additions plus the `destroy_at`-style guard for a held full bag.
@@ -636,7 +640,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   2026-11-05 with the November bump** (server `267065f`, client `da83ea8`);
   `held_item_bank_and_vendor_checklist.md` is runnable now. **Part A of the master sheet run
   2026-11-06: 16 of 19 rows PASS** (every bank and merchant row; `admin_report` and the setup
-  rows wait for the end of the sitting). Three asks from the notes are the entry directly below.
+  rows wait for the end of the sitting). **The last three rows PASSED 2026-11-09** (the card:
+  the books balance over 759 rows, the sitting's `bank_out` and `sell` rows present). Three
+  asks from the notes are the entry directly below.
 - [ ] **The vault in the cursor grammar: lift from the vault, swap on an occupied cell, bags in
   the bank** *(user, 2026-11-06, on the held-item sheet's rows B1.1, B1.4 and B1.6)*. (a) "I
   cannot lift a stack of loaves onto the cursor if the loaves are in the vault": a left click on
@@ -2100,7 +2106,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   a pet that is not alive (the corpse sweep already frees its slot, and a pet's death drops
   nothing, the 10-08 rule); a test charms, kills the pet, lets the charm expire and asserts
   no replacement spawn and no bag. Server only, no export; should ride the pre-door
-  redeploy. Waits on the go.
+  redeploy. **BUILT 2026-11-09 (user: "go"), pending the redeploy and the pre-door check**
+  (server `a137b96`, `tick/spawning.rs` and `tick/pet_life.rs`; `pre_door_check_checklist.md` §8): the
+  expiry sweep hands back only a living pet, and `despawn_owned_pets` leaves a dead charmed
+  pet to the corpse sweep, which despawns it and frees its camp slot (the port path already
+  filtered on liveness). Test `a_charmed_pet_that_dies_as_its_charm_runs_out_is_not_handed_back`
+  (a Bard 14 charms a 10 HP dummy and, 26 s into the 30 s charm, sends it at a mob that kills
+  it in one hit; through the expiry and the linger no EnemySpawn replaces the pet, no bag
+  drops, and the corpse sweep despawns the body), failing on the previous code at the
+  hand-back. Server only, no export.
 - [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
   ticked on the integration test** (server `f58b796`,
   `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
@@ -2574,7 +2588,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   and the server drops the second swing. One honest arrow lost per such swap; a forged client
   gains nothing (the server's gate is the rule). Fix: refresh both intervals in
   `_sync_auto_attack_timer` before the timers start. Client only, a few lines; could ride the
-  Wednesday zip. Waits on the go.
+  Wednesday zip. **BUILT 2026-11-09 (user: "go"), pending the next export and the pre-door
+  check** (`pre_door_check_checklist.md` §8): the sync reads both intervals fresh before
+  starting the timers, so every fight starts on the weapon worn now, and the equipment hook no
+  longer needs a target to matter. `tools/probe_swing_retime.gd` (6 checks, 2 failing on the
+  old code: a bow fight after a club fight started on the club's 2.0 s).
 - [ ] **A mob whose only attacker was a pet walks home when the pet dies: should the owner
   be on its hate list?** *(user 2026-11-09, on the master's F9.7 row: "When a charmed mob
   vanishes and the player who charmed it hasnt engaged with the enemy, the enemy does not
@@ -2970,7 +2988,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   the journal.** The proc path (`tick/melee.rs`, `fan_out_proc_triggered`) writes no log line,
   so a melee session with Flamebrand worn (the Bard's, 16:04 to 16:17 UTC, four kills) shows
   nothing either way; the client's chat "<proc> for N" line is the only witness. A one-line
-  `tracing::info!` at the proc would close the watch; waits on the go. `xp_mult` on named mobs was removed
+  `tracing::info!` at the proc would close the watch. **The line BUILT 2026-11-09 (user: "go"),
+  pending the redeploy** (server `a137b96`): `weapon proc` with `char_id`, `target`, `proc`, `amount` and `crit`
+  (`tick/melee.rs`); the watch closes on the first such line in a journal
+  (`pre_door_check_checklist.md` §8). `xp_mult` on named mobs was removed
   2026-10-13 (user decision; a named kill pays by level alone).
 - [x] **Enemy AOI cell-crossing spawn/despawn gap** — **DONE + playtested 2026-10-07**
   (`scale_readiness_checklist.md` §3, the two-seat rows, all four PASS: a partner's pet
@@ -3002,7 +3023,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   for every visible pet riding the pet's Positions; and the spawn-by-kind choice now lives in
   one `fan_out_entity_spawn` used by both the player crossing and the entity crossing, so no
   partition-test ordering can swallow a kind again.
-- [ ] **The server height model** *(phase 5, Track D item 1; the user, 2026-11-03: "Claude
+- [x] **The server height model** — **DONE + playtested 2026-11-09** (`height_model_checklist.md`,
+  all 23 rows, and `first_hills_checklist.md`, every row, across the master sheet's parts A to
+  E on 11-06 and 11-09, one and two seats; what exists is in systems_overview, World &
+  environment, "The server height model and the first hills". The two flags the hills sheet
+  left, the knoll-ridge climb and the body pushed into a face, are the entry after this one;
+  Levitate and Feather Fall stay under "Fall damage follow-ups".) *(Original entry:)* *(phase 5, Track D item 1; the user, 2026-11-03: "Claude
   will be building the height model")*. **DESIGNED 2026-11-03: `docs/design/server_height_model.md`**,
   six decisions waiting on the user (§8), nothing built. The server learns the ground so its 3D
   range checks stop measuring a fiction: today it zeroes Y on every Move and keeps a mob's camp Y
@@ -3236,8 +3262,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   the lip, a bow's arrow missing a hidden mob), the mob held below the crest giving up after
   8 s and healing at home, the evade refusals on nukes and swings (`Your target is evading.`
   on Smites from the plateau at mobs below its edge), the hate list turning on the next
-  attacker, the pet warping to its owner, `/camp` and the window X, the journal clean. **Tick
-  proposed** (the what-exists note moves to systems_overview on the yes).
+  attacker, the pet warping to its owner, `/camp` and the window X, the journal clean. **Ticked
+  2026-11-09 (user: "go ahead")**; the what-exists note is in systems_overview.
+- [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
+  a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
+  height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at
+  z = 70 and lifts it, so the face there is under the 60° rule and can be walked up: content, a
+  smaller or more southerly knoll in `terrain_features.toml`, re-authored
+  (`tools/author_terrain.gd`) and re-exported, a server rebuild and an export; the crest is the
+  known perch and the evade rule covers it. (b) Walking into a face pushes the client's body a
+  little into it until the player stops (the server holds the foot; the reconciliation pulls
+  the body out): cosmetic. Both after the door.
 - [ ] **NPC placeholder capsules sit half in the ground** *(user, 2026-11-06, part A of the master
   sheet, with a screenshot: "This isnt an issue now, but i want to make sure it wont be an issue
   when they get models")*. Verified: `dialogue_npc.tscn`, `vendor_npc.tscn` and `banker_npc.tscn`
@@ -3553,7 +3588,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   jump relay in place of the three copies of the AOI-neighbourhood filter. Test
   `a_say_carries_fifty_metres_and_no_further` (a listener at 40 m hears, walked to 60 m hears
   nothing while a shout still arrives), failing on the previous server at the 60 m assertion.
-- [ ] **Other players never turn** *(user 2026-10-27, `chat_channel_checklist.md` notes: "Dip
+- [x] **Other players never turn** — **DONE + playtested 2026-11-09** (`remote_facing_checklist.md`,
+  all nine rows passing on two seats, parts D and E of the master sheet; what exists is in
+  systems_overview, Networking, "Facing". The one gap the sheet found, the own body's facing at
+  login, is its own entry directly below.) *(Original entry:)* *(user 2026-10-27, `chat_channel_checklist.md` notes: "Dip
   does not see Bun's character models spinning, or looking in different directions.")*.
   Verified in the server: `Move` carries a direction and no facing, and nothing on the server
   ever sets a player's `yaw` after login, so every Position it fans carries the facing the
@@ -3593,8 +3631,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Older than the bump (the facing's first build). Fix, client only, a few lines in
   `player.gd`: seed the body's `rotation.y` from the first server Position's yaw and send no
   Move before that Position has arrived (a probe for both); could ride the Wednesday zip with
-  the swing re-time. **Waits on the go.** Tick proposed on the sheet, with the login seed as
-  its own row on the pre-door sheet once built.
+  the swing re-time. **BUILT 2026-11-09 (user: "go"), the entry directly below.**
+- [ ] **The own body never read its facing back at login** *(the relog row of the facing
+  sheet, 2026-11-09; user: "character appears to login facing the correct direction then is
+  suddenly rotated a small amount")*. The client's body logged in facing the scene's default
+  and its first Move (sent every 50 ms, input or not) overwrote the facing the server had
+  saved, so a watcher saw the saved facing for a tick and then a turn, and the player's own
+  screen never showed it. Older than the bump. **BUILT 2026-11-09, pending the next export
+  and the pre-door check** (client, `player.gd`; `pre_door_check_checklist.md` §8): the body
+  takes its `rotation.y` from the first server Position's yaw (the first only; from then on
+  its own facing is the truth the Moves carry), and sends no Move until that Position has
+  arrived. `tools/probe_login_facing.gd` (8 checks, 2 failing on the old code: six Moves went
+  out before the first Position, and the body kept the scene's 0.3 against the saved 1.25).
+  Nothing on the server or the wire.
 - [x] **"You cannot do that while dead." flooded the chat** — **DONE + playtested 2026-10-26**
   (`dead_gate_checklist.md`, every row passing: server `8127a70` and client `6ddeddc`). The
   flood was the client's `EquipUpdate`, one per gear slot as a death strips the gear, which the
