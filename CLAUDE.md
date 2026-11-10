@@ -2114,7 +2114,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (a Bard 14 charms a 10 HP dummy and, 26 s into the 30 s charm, sends it at a mob that kills
   it in one hit; through the expiry and the linger no EnemySpawn replaces the pet, no bag
   drops, and the corpse sweep despawns the body), failing on the previous code at the
-  hand-back. Server only, no export.
+  hand-back. Server only, no export. **DEPLOYED 2026-11-10 14:56 UTC** (R720 boot line `build="e358270" dev_cmds=false`,
+  nobody online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0` at the boot).
 - [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
   ticked on the integration test** (server `f58b796`,
   `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
@@ -2621,6 +2622,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `a_mob_that_fought_only_a_pet_turns_on_the_owner_when_the_pet_dies` (a Necromancer 6 sends
   its skeleton at a 1 m-aggro mob that kills it in one hit; the mob then targets the owner
   and hits them), failing on the previous code at the EntityTarget. Server only, no export.
+  **DEPLOYED 2026-11-10 14:56 UTC** (R720 boot line `build="e358270" dev_cmds=false`,
+  nobody online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0` at the boot).
 - [ ] **Two-handed damage arc (cleave)** — large 2H weapons (axes/polearms) hit multiple
   enemies in a frontal cone on auto-attack, giving 2H its own identity vs. dual-wield.
   Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it
@@ -3007,7 +3010,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `tracing::info!` at the proc would close the watch. **The line BUILT 2026-11-09 (user: "go"),
   pending the redeploy** (server `a137b96`): `weapon proc` with `char_id`, `target`, `proc`, `amount` and `crit`
   (`tick/melee.rs`); the watch closes on the first such line in a journal
-  (`pre_door_check_checklist.md` §8). `xp_mult` on named mobs was removed
+  (`pre_door_check_checklist.md` §8); the server carrying it is live since the redeploy of
+  `e358270` on 2026-11-10 14:56 UTC. `xp_mult` on named mobs was removed
   2026-10-13 (user decision; a named kill pays by level alone).
 - [x] **Enemy AOI cell-crossing spawn/despawn gap** — **DONE + playtested 2026-10-07**
   (`scale_readiness_checklist.md` §3, the two-seat rows, all four PASS: a partner's pet
