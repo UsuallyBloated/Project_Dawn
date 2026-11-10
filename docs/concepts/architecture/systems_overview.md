@@ -634,9 +634,19 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   occupied for the charm's life, so a charm never makes the camp respawn a replacement early
   (the earlier v1 freed the slot on charm and deleted the pet at expiry as "mob runs away";
   reverting on top of that would have added a mob to the camp per charm). A pet that dies
-  while charmed frees the slot through the ordinary corpse sweep. `Entity::released_from_charm`
-  + `turn_on` (`entity.rs`), `return_charmed_mob` (`tick.rs`), used by the expiry sweep and by
+  while charmed frees the slot through the ordinary corpse sweep and is never handed back: a
+  charm that runs out on a dead pet, or a charmer leaving one, leaves the body to that sweep
+  (2026-11-09; handed back, its 0 HP made a stray kill with the mob's loot). `Entity::released_from_charm`
+  + `turn_on` (`entity.rs`), `return_charmed_mob` (`tick/pet_life.rs`), used by the expiry sweep and by
   `despawn_owned_pets`.
+- **The owner is on the hate list (server, 2026-11-09, user call):** from the pet's first
+  landed hit on a world mob, the owner holds `PET_OWNER_HATE_TOKEN` (1.0) on its threat map,
+  inserted once and never added to. A mob whose only attacker was the pet turns on the owner
+  when the pet dies (`next_hater_or_home`) instead of walking home; anyone who fought it
+  outranks the owner. Threat only, so credit (the damage ledger, which already names the owner
+  for the pet's hits), XP, quest credit and faction hits are unchanged; a hidden or feigning
+  owner is left off; charmed pets go through the same path. The EQ pet pull (send the pet,
+  never be on the list) is gone by design. Pending `pre_door_check_checklist.md` §8.
 - **Pet heal (server, 2026-10-07):** `PET_HEAL` spells (Warder's Mend) mend the caster's OWN
   pet, whatever is targeted. The cast pre-flight resolves the pet (alive, in reach, else "You
   have no pet to mend."), the arm heals it by `heal_amount` capped at max and fans its

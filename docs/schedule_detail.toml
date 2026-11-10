@@ -1878,13 +1878,13 @@ id = "o22"
 week = "w6"
 lane = "operate"
 day = "Mon Nov 9, night, to Tue Nov 10, morning"
-what = "The fixes the master sheet and the user's answers produced on 11-09 reach the game before the pre-door rerun: the server at a137b96 (a charmed pet that dies as its charm runs out is no longer handed back as a loot-dropping mob; a weapon proc writes a journal line) redeployed on the R720 with the usual stop, cp and start; the client at d524ecd (the own body's facing seeded from the server at login; the swing re-timed after a weapon swap with no target) exported RELEASE, stamped, and zipped. Claude makes the export the same night; the user runs the redeploy and sends the zip."
+what = "The fixes the master sheet and the user's answers produced on 11-09 reach the game before the pre-door rerun: the server at e358270 (a charmed pet that dies as its charm runs out is no longer handed back as a loot-dropping mob; a weapon proc writes a journal line; a pet's owner is on the mob's hate list from the pet's first swing, decided the same night) redeployed on the R720 with the usual stop, cp and start; the client at d524ecd (the own body's facing seeded from the server at login; the swing re-timed after a weapon swap with no target) exported RELEASE, stamped, and zipped. Claude makes the export the same night; the user runs the redeploy and sends the zip."
 who = "Claude for the export; user over SSH for the redeploy and for sending"
 hours = 0.5
 needs = ["everyone logged out for the redeploy", "the R720 over SSH", "the export log reading stamped e0d0c65 with no -debug mark (it does)"]
 waits_on = ["o20"]
 milestone = "m4"
-done_when = "The boot line shows build=a137b96 (or later) and dev_cmds=false; the zip ProjectDawn-alpha-e0d0c65.zip (made 11-09 night, stamped e0d0c65: the planner commit after d524ecd, game files identical) is sent; pre_door_check_checklist.md section 8 is runnable."
+done_when = "The boot line shows build=e358270 (or later) and dev_cmds=false; the zip ProjectDawn-alpha-e0d0c65.zip (made 11-09 night, stamped e0d0c65: the planner commit after d524ecd, game files identical) is sent; pre_door_check_checklist.md section 8 is runnable."
 
 [[row]]
 id = "v60"

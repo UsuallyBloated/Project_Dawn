@@ -2605,6 +2605,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   its list), and the cost is a pet class that can farm with the pet alone at no risk to
   itself. The alternative is a token hate on the owner the moment their pet engages, so a
   mob whose pet-tank dies comes for the owner. A design call, after the door.
+  **DECIDED 2026-11-09 (user: "The owner should receive hate token as you said. Go ahead.")
+  and BUILT the same night, pending the redeploy and the pre-door check** (server `e358270`;
+  `pre_door_check_checklist.md` §8). `PET_OWNER_HATE_TOKEN` (1.0, `world/mod.rs`, the point a
+  miss adds for the swinger): the pet swing path puts the owner on the mob's threat map at
+  the token when the pet's first hit lands, inserted once and never added to, so a mob whose
+  only attacker was the pet turns on the owner when the pet dies (`next_hater_or_home`)
+  instead of walking home, while anyone who fought it outranks the owner. Threat only: the
+  damage ledger decides credit and already names the owner for the pet's hits, so XP, quest
+  credit and faction hits are unchanged. A hidden or feigning owner stays off the list (their
+  own hate was wiped), and only a world mob takes the token (a pet's own threat map steers
+  nothing). Charmed pets go through the same path, so a charmed mob's victim comes for the
+  charmer when the charm ends or the pet dies. The EQ pet pull is gone with it: send the
+  pet at a mob and you are on its list. Test
+  `a_mob_that_fought_only_a_pet_turns_on_the_owner_when_the_pet_dies` (a Necromancer 6 sends
+  its skeleton at a 1 m-aggro mob that kills it in one hit; the mob then targets the owner
+  and hits them), failing on the previous code at the EntityTarget. Server only, no export.
 - [ ] **Two-handed damage arc (cleave)** — large 2H weapons (axes/polearms) hit multiple
   enemies in a frontal cone on auto-attack, giving 2H its own identity vs. dual-wield.
   Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it

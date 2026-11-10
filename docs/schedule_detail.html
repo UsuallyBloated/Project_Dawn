@@ -132,7 +132,7 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 12: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 12<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Nov 9<span class="stat-sub">repo e0d0c65</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Nov 9<span class="stat-sub">repo 4eefd44</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">39 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
 <div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">70.3 h<span class="stat-sub">scheduled over 6 weeks, against about 30 a week</span></div></div>
@@ -1341,7 +1341,7 @@
 <td><span class="chip verify">Verify</span><span class="chip ms">The pre-door check</span></td>
 <td class="what"><span class="day">Tue Nov 3 to Thu Nov 5</span>The pre-door check: a fresh character plays the starter book for 45 minutes on the exact build the friends will hold (the phase 4 checklist&#x27;s fresh-character row is the model). Anything odd gets a To-Do line the same day.</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 8 rows to run</li><li>the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch&#x27;s)</li><li>the R720 redeployed with the starting kit (user 2026-11-03) and the new zip from the same day</li></ul></td>
+<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 9 rows to run</li><li>the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch&#x27;s)</li><li>the R720 redeployed with the starting kit (user 2026-11-03) and the new zip from the same day</li></ul></td>
 <td class="time">1 h</td>
 <td class="id"></td>
 <td class="done">Findings filed in the To-Do; no new ERROR lines in the server log.<span class="ref">checklist: <a href="playtest_notes/pre_door_check_checklist.md"><code>pre_door_check_checklist.md</code></a></span></td>
@@ -1517,12 +1517,12 @@
 <tr>
 <td class="id">o22</td>
 <td><span class="chip operate">Operate</span><span class="chip ms">The pre-door check</span></td>
-<td class="what"><span class="day">Mon Nov 9, night, to Tue Nov 10, morning</span>The fixes the master sheet and the user&#x27;s answers produced on 11-09 reach the game before the pre-door rerun: the server at a137b96 (a charmed pet that dies as its charm runs out is no longer handed back as a loot-dropping mob; a weapon proc writes a journal line) redeployed on the R720 with the usual stop, cp and start; the client at d524ecd (the own body&#x27;s facing seeded from the server at login; the swing re-timed after a weapon swap with no target) exported RELEASE, stamped, and zipped. Claude makes the export the same night; the user runs the redeploy and sends the zip.</td>
+<td class="what"><span class="day">Mon Nov 9, night, to Tue Nov 10, morning</span>The fixes the master sheet and the user&#x27;s answers produced on 11-09 reach the game before the pre-door rerun: the server at e358270 (a charmed pet that dies as its charm runs out is no longer handed back as a loot-dropping mob; a weapon proc writes a journal line; a pet&#x27;s owner is on the mob&#x27;s hate list from the pet&#x27;s first swing, decided the same night) redeployed on the R720 with the usual stop, cp and start; the client at d524ecd (the own body&#x27;s facing seeded from the server at login; the swing re-timed after a weapon swap with no target) exported RELEASE, stamped, and zipped. Claude makes the export the same night; the user runs the redeploy and sends the zip.</td>
 <td>Claude for the export; user over SSH for the redeploy and for sending</td>
 <td class="needs"><ul><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li><li>the export log reading stamped e0d0c65 with no -debug mark (it does)</li></ul></td>
 <td class="time">0.5 h</td>
 <td class="id">o20</td>
-<td class="done">The boot line shows build=a137b96 (or later) and dev_cmds=false; the zip ProjectDawn-alpha-e0d0c65.zip (made 11-09 night, stamped e0d0c65: the planner commit after d524ecd, game files identical) is sent; pre_door_check_checklist.md section 8 is runnable.</td>
+<td class="done">The boot line shows build=e358270 (or later) and dev_cmds=false; the zip ProjectDawn-alpha-e0d0c65.zip (made 11-09 night, stamped e0d0c65: the planner commit after d524ecd, game files identical) is sent; pre_door_check_checklist.md section 8 is runnable.</td>
 </tr>
 <tr>
 <td class="id">o21</td>
@@ -1539,7 +1539,7 @@
 <td><span class="chip verify">Verify</span><span class="chip ms">The pre-door check</span></td>
 <td class="what"><span class="day">Tue Nov 10</span>The pre-door check again, on the build the friends will now hold: a fresh character plays the starter book for 45 minutes on the bump build, hills and all (the November 3 run was on the pre-bump build). Marked in place as a second run. Anything odd gets a To-Do line the same day; a server fix redeploys, a client fix means one more zip (o21).</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 8 rows to run</li><li>the bump build on the R720 and in the zip (o20)</li><li>the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run</li><li>the 11-09 fixes on the R720 and in the export (o22), so its section 8 can run</li></ul></td>
+<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 9 rows to run</li><li>the bump build on the R720 and in the zip (o20)</li><li>the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run</li><li>the 11-09 fixes on the R720 and in the export (o22), so its section 8 can run</li></ul></td>
 <td class="time">1 h</td>
 <td class="id">o20, v58, v59, o22</td>
 <td class="done">Every row marked for the second run; no new ERROR lines in the server log.<span class="ref">checklist: <a href="playtest_notes/pre_door_check_checklist.md"><code>pre_door_check_checklist.md</code></a></span></td>
@@ -1615,5 +1615,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-09 at repo e0d0c65</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-09 at repo 4eefd44</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

@@ -125,7 +125,7 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       here. notes:
 - [x] **The console (backtick) during play** → no red line. notes:
 
-## 8 — The fixes of 11-09 (the R720 at server `a137b96` or later; the client zip `ProjectDawn-alpha-e0d0c65.zip` or later)
+## 8 — The fixes of 11-09 (the R720 at server `e358270` or later; the client zip `ProjectDawn-alpha-e0d0c65.zip` or later)
 - [ ] **Log in while a partner watches** (two seats; the login facing seed) → your body appears
       facing where it logged out and never turns on its own, on the partner's screen and on
       yours (it used to face the scene's default, then snap a tick later). notes:
@@ -140,6 +140,10 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
 - [ ] **Wear a proc weapon (Flamebrand) through a few kills** (the proc log line) → the
       journal shows `weapon proc` lines naming the proc and the amount whenever the client
       prints "Flaming Strike for N". notes:
+- [ ] **A pet class: send the pet at a mob you never touch, and let the mob kill the pet**
+      (the owner's hate token) → the moment the pet dies the mob turns on you and comes for
+      you instead of walking home; a mob the pet fought beside you still prefers whoever hit
+      it hardest. notes:
 
 ## Notes / observations
 - Anything that would confuse or annoy a friend, however small: a missing hint, a wrong
