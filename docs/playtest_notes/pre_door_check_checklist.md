@@ -125,7 +125,7 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       here. notes:
 - [x] **The console (backtick) during play** → no red line. notes:
 
-## 8 — The fixes of 11-09 (the R720 at server `a137b96` or later; the export from the client's 11-09 commit or later)
+## 8 — The fixes of 11-09 (the R720 at server `a137b96` or later; the client zip `ProjectDawn-alpha-e0d0c65.zip` or later)
 - [ ] **Log in while a partner watches** (two seats; the login facing seed) → your body appears
       facing where it logged out and never turns on its own, on the partner's screen and on
       yours (it used to face the scene's default, then snap a tick later). notes:
