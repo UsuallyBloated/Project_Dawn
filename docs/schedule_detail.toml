@@ -1874,6 +1874,19 @@ milestone = "m6"
 done_when = "The boot line shows the new build=, dev_cmds=false and the terrain line naming the hills; the export log reads stamped with the merged sha; the zip is in builds/ and sent."
 
 [[row]]
+id = "o22"
+week = "w6"
+lane = "operate"
+day = "Mon Nov 9, night, to Tue Nov 10, morning"
+what = "The fixes the master sheet and the user's answers produced on 11-09 reach the game before the pre-door rerun: the server at a137b96 (a charmed pet that dies as its charm runs out is no longer handed back as a loot-dropping mob; a weapon proc writes a journal line) redeployed on the R720 with the usual stop, cp and start; the client at d524ecd (the own body's facing seeded from the server at login; the swing re-timed after a weapon swap with no target) exported RELEASE, stamped, and zipped. Claude makes the export the same night; the user runs the redeploy and sends the zip."
+who = "Claude for the export; user over SSH for the redeploy and for sending"
+hours = 0.5
+needs = ["everyone logged out for the redeploy", "the R720 over SSH", "the export log reading stamped d524ecd with no -debug mark"]
+waits_on = ["o20"]
+milestone = "m4"
+done_when = "The boot line shows build=a137b96 (or later) and dev_cmds=false; the zip ProjectDawn-alpha-d524ecd.zip is in builds/ and sent; pre_door_check_checklist.md section 8 is runnable."
+
+[[row]]
 id = "v60"
 week = "w6"
 lane = "verify"
@@ -1882,8 +1895,8 @@ checklist = "pre_door_check_checklist.md"
 what = "The pre-door check again, on the build the friends will now hold: a fresh character plays the starter book for 45 minutes on the bump build, hills and all (the November 3 run was on the pre-bump build). Marked in place as a second run. Anything odd gets a To-Do line the same day; a server fix redeploys, a client fix means one more zip (o21)."
 who = "user at a desk"
 hours = 1.0
-needs = ["the bump build on the R720 and in the zip (o20)", "the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run"]
-waits_on = ["o20", "v58", "v59"]
+needs = ["the bump build on the R720 and in the zip (o20)", "the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run", "the 11-09 fixes on the R720 and in the export (o22), so its section 8 can run"]
+waits_on = ["o20", "v58", "v59", "o22"]
 milestone = "m4"
 done_when = "Every row marked for the second run; no new ERROR lines in the server log."
 
