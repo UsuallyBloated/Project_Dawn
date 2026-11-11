@@ -169,6 +169,7 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
   2.5 s, reduced to 4 by the kit's armor 2) and lived on a Full Heal at 19:17:12; six Full
   Heals in the sitting. A friend has none. For the user: a mob too strong for the level 1
   quest, or EQ as it was (a level 1 caster meleed rats one at a time and sat between them)?
+  **DECIDED 2026-11-11 (user): "rat level is fine."** The rat stays as it is.
 - 11-11: the run was on the GM account (dev coin grant, GmGive, Full Heal), so the register
   row and a plain account's survival are not evidenced this run.
 - 11-11: **left to run**, on a fresh plain account on the next zip: the NPC capsules (§1),
