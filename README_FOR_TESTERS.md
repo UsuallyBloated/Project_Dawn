@@ -8,12 +8,15 @@ rough edges are real and the point of this build is to find them.
 
 **Your character can be wiped at any time.** Treat anything you build as throwaway.
 
-> **September 2026 build: the world is NEW and so is everyone.** The map has been
-> rebuilt (new camps, new quests, new NPCs) and every account and character was
-> erased with it. **Register a fresh account on first login** — your old name and
-> password no longer exist, and that is expected, not a bug. Recommended first:
-> delete the old bar layouts so your new character starts clean — close the game,
-> then remove `social_hotkeys*.json` and `spell_bar*.json` from
+> **November 2026 build.** The world was rebuilt on 2026-10-25 and every account made
+> before that day was erased with it; anything registered since still exists. If your
+> last visit was earlier, **register a fresh account**: the old name and password are
+> gone, which is expected, not a bug. New since then: hills (and falls that hurt), food
+> and water, factions, a trade window, your gear going back on when you loot your
+> corpse, and a lot of server-side tightening. The login screen's bottom-right corner
+> names the build; `/version` in chat prints it, and a bug report should quote it.
+> If your hotbars show macros you never made, close the game and delete
+> `social_hotkeys*.json` and `spell_bar*.json` from
 > `%APPDATA%\Godot\app_userdata\Project_Dawn\`.
 
 ---
@@ -81,7 +84,9 @@ You land on a **login screen**.
    straight in. Use **Login** on later visits.
 3. **Create a character.** Names accept **letters, apostrophes and backticks only**, 2 to 24
    characters. Digits, spaces and punctuation are rejected.
-4. Pick a race and class, create, then hit **Play**.
+4. Pick a race and class, create, then hit **Play**. Every character is born wearing a
+   ragged shirt, ragged pants and a trainee's weapon of its class: NO DROP, worth nothing
+   to a merchant, and back on your body when you loot your corpse.
 5. You land on a screen showing `Connected. Click Enter World to begin.` Click
    **Enter World**.
 
@@ -95,15 +100,25 @@ You land on a **login screen**.
 This is the single biggest thing to know before you play.
 
 - **When you die you drop everything.** Gear and coin stay on your **corpse** where you fell.
-  You respawn with nothing.
+  You respawn with nothing, at your bind point (the town until a Soul Binder or your own
+  Bind Affinity moves it).
 - **You have to go and get it.** Walk back to your corpse and loot it. Only you can loot
-  your own corpse.
+  your own corpse. **Loot All puts your gear back on** where it was worn; anything whose
+  slot is already taken goes to your bags.
 - **Corpses last 7 days**, so you can log off and do the corpse run tomorrow.
 - **You lose XP**, and enough deaths can drop you a level. There is a floor and a grace
   period at low level.
-- **Clerics and Paladins can resurrect you** and refund part of the lost XP.
-
-Looted gear returns to your bags, not to your body. You re-equip by hand.
+- **Clerics and Paladins can resurrect you** and refund part of the lost XP. **A
+  resurrection leaves you weak**: a quarter of your health, no mana and lower stats for
+  five minutes, as in EverQuest. Make sure the spot is safe before you accept.
+- **Falling hurts.** A drop of more than about 2 metres costs health in proportion to the
+  height, and a long fall kills; the corpse lies where you landed. The hills are new, and
+  the cliff at the Wraith Gate is real.
+- **You need food and water.** Hunger and thirst tick down slowly (a loaf of bread lasts
+  about 48 minutes, a flask of water about 36), and the game eats and drinks from your bags
+  on its own, so keep some in them. Out of food your health stops regenerating, out of
+  water your mana, and either stops your stamina. Nobody starves to death. The bars sit
+  under your character bar.
 
 ---
 
@@ -116,10 +131,12 @@ Looted gear returns to your bags, not to your body. You re-equip by hand.
 | **X** | Crouch |
 | **Z** | Sit / Rest (boosts HP/MP regen; suppressed in combat) |
 | **Right-click + drag** | Camera control |
-| **Right-click** (tap) | Interact: talk to an NPC, loot a corpse or bag, use a station or ore vein |
+| **Right-click** (tap) | Interact: talk to an NPC, loot a corpse or bag, inspect a player's gear |
 | **Left-click** | Click-target an enemy, NPC or corpse (targeting only — right-click interacts) |
 | **Tab** | Cycle target |
 | **F1** | Target self |
+| **F2** to **F6** | Target group member 1 to 5 |
+| **Q** | Toggle auto-attack |
 | **Enter** | Open chat input |
 | **C / I / P / K / B / J** | Character / Inventory / Paperdoll / Tradeskill / Spellbook / Quest Journal |
 | **Esc** | Options menu |
@@ -144,8 +161,11 @@ quit matters.
   the 30-second linger starts from there. A refused login inside that window is the
   linkdead guard working; just try again.
 
-Progress is written continuously, but up to about a minute of position, HP and XP can be
-lost if the server is stopped while you are connected. A clean logout flushes immediately.
+Progress is written every minute, and a planned server restart saves everyone first and
+says so in chat, so a restart costs nothing. A server crash can still lose up to a minute
+of position, HP and XP; most item and coin moves (a drop, a pickup, a trade, a bank visit,
+a quest reward, your corpse) are written the moment they happen. A clean logout flushes
+immediately.
 
 ---
 
@@ -154,14 +174,20 @@ lost if the server is stopped while you are connected. A clean logout flushes im
 Please **do** still report these if you hit them, with any extra detail. Knowing they are
 known just saves you writing them up from scratch.
 
-- **Some spells fizzle.** Roughly 32 spells exist in the client but not yet on the server.
-  Casting one says so and refunds the mana. Tell us which one you miss most.
-- **Bard songs are half-built.** They apply once and do not sustain.
+- **Nine spells exist in the client but not on the server yet**: the seven zone teleports
+  (there is one zone), Exsanguinate and Camouflage. Casting one says so and costs nothing.
+  A `Your spell fizzles!` is a different thing: a low casting skill, and it costs a quarter
+  of the mana, as in EverQuest.
+- **Bard songs are new.** A song takes 3 seconds to sing and costs nothing; the server
+  pulses it every 6 seconds and each pulse lingers 12, so a bard keeps several up by
+  twisting. The numbers are still being tuned; say what feels off.
 - **Tradeskills (mining, crafting, skinning) are not available online yet.** They refuse with a
   clear message rather than pretending to work.
 - **No sound at all.** Combat, spells, ambience and music are all coming.
-- **No mounts, weather, swimming, faction or PvP** yet.
-- **No player portrait or target-of-target frames.**
+- **No mounts, weather or swimming** yet. Factions are new: `/con` your target to see how it
+  regards you. PvP exists only as a `/pvp on` toggle for testing; both sides must turn it
+  on.
+- **No player portrait.**
 
 ---
 
@@ -175,9 +201,33 @@ The most useful things you can do:
   count goes wrong.
 - **Take a quest to completion** and check the reward actually arrives.
 - **Log out and back in** after anything significant, and confirm the world remembered.
+- **Pets and charms changed this week**: send a pet in alone and let it die, charm something
+  and let the charm run out (it comes back angry, at you), and watch for anything that pays
+  out when it should not.
+- **Climb the hills and jump off things** (carefully), and check the damage line against the
+  drop; cast at something on the far side of a ridge and expect a refusal.
 
 Anything that vanishes, duplicates, or gives you something you should not have is the
 highest-value bug you can find.
+
+---
+
+## Chat and useful commands
+
+The chat line keeps its channel: type `/g` (group), `/say`, `/shout`, `/ooc` or `/tell Name`
+once and everything after it goes there until you switch. `/r` answers the last tell you
+got, and **Tab** in an empty chat line addresses it for you.
+
+| Command | What it does |
+|---|---|
+| `/con` | Consider your target: how its faction regards you, and how the fight would go |
+| `/loc` | Your position, for bug reports and for meeting up |
+| `/ping` | Round trip to the server and packet loss, for lag reports |
+| `/camp` | Sit first; a 30-second logout to the desktop, the EverQuest way |
+| `/pet attack`, `/pet follow`, `/pet guard`, `/pet back` | Pet commands; the pet window has buttons for them |
+| `/stopsong` | Stop the song you are singing |
+| `/inspect` | Your targeted player's gear (a right-click on them does the same) |
+| `/version` | The build you are running, for bug reports |
 
 ---
 

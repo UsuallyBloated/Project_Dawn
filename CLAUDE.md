@@ -226,7 +226,9 @@ Keep the main model for design, code, and any exploit or verification work.
   ZERO drift. *(The check used to excuse Bard songs' damage and heal fields because their
   pulses were client-side; since the song rework of 2026-10-20 the server carries every song
   field and the exception is gone. Recounted then: 158 client, 142 server, 16 client-only,
-  zero drift.)*
+  zero drift.)* *(Recounted 2026-11-10 with the check: 158 client, 149 server, **9
+  client-only** (the seven zone ports, Exsanguinate, Camouflage), zero drift; the seven
+  prestige spells and the two DoTs joined the server with factions and the spell batch.)*
   `tools/export_spells.gd` (Godot editor) is the intended regen path but is stale.
 - *(Closed 2026-06-22: leveling used to be client-local and provisional. The corpse epic's
   Slice 0 moved XP + leveling server-side — `world/progression.rs::award_xp` is the single
@@ -366,11 +368,11 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
 |---|---|
 | **Progression** | `PlayerStats`, `Alignment`, `Skills`, `Spells`, `WeaponSkills`, `ArmorSkills`, `CastingSkills`, `Memorize`, `SpellBar`, `Regen`, `CharacterSetup` |
 | **Combat** | `Combat`, `BuffManager`, `DamageNumbers`, `PlayerDeath`, `Targeting`, `Loot`, `NetCombatBroadcaster` |
-| **Items / economy** | `Inventory`, `Equipment`, `ItemRegistry`, `VendorManager`, `Crafting`, `StationManager`, `Currency`, `Encumbrance` |
+| **Items / economy** | `Inventory`, `Equipment`, `ItemRegistry`, `VendorManager`, `BankerManager`, `Crafting`, `StationManager`, `Currency`, `Encumbrance` |
 | **Pets / mounts** | `PetManager`, `MountManager` |
 | **World / environment** | `ZoneLoader`, `TimeOfDay`, `VisionSystem`, `SenseHeading` |
 | **Social / quest / UI** | `GroupManager`, `QuestManager`, `DialogueManager`, `CombatLog`, `ChatWindowManager`, `BardSongs`, `Languages`, `SocialHotkeys`, `GameSettings`, `DebugLog` |
-| **Networking (client)** | `Net`, `RemotePlayerManager`, `RemoteEnemyManager`, `RemoteLootBagManager`, `RemotePetManager` |
+| **Networking (client)** | `AuthClient`, `Net`, `RemotePlayerManager`, `RemoteEnemyManager`, `RemoteLootBagManager`, `RemoteCorpseManager`, `RemotePetManager` |
 
 Per-autoload responsibilities and the combat/spell deep dive live in
 `docs/concepts/architecture/systems_overview.md`.
@@ -1939,6 +1941,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   worktree's Godot class cache was from 10-12 and had to be rebuilt first). Still off the deploy
   branches until cutover, as planned; L2 (hashed session tokens, a purge of expired sessions)
   and L8 (a characters-per-account cap) are not on the branch yet.
+  **L2 and L8 BUILT 2026-11-10 (night, unattended) on `feat/public-hosting`, server `f12052c`**,
+  after the deploy branch (`e358270`) was merged in (`f0178bf`, the branch's convention).
+  A session row is keyed by the SHA-256 of the token the launcher holds (`db::session_key`),
+  so a copy of `world.db` (a backup, the off-host copy) carries no redeemable session, and
+  migration `0019_hashed_sessions.sql` clears the rows stored raw (one fresh login per
+  launcher at the cutover, which the day asks for anyway); the auth service purges expired
+  rows at boot and hourly (`SESSION_PURGE_INTERVAL`; `expired sessions purged` in the journal
+  when any went); the ban-before-password half of L2 was already on the branch (10-12). An
+  account holds at most `MAX_CHARACTERS_PER_ACCOUNT` (8, EQ's count, a knob) live characters,
+  counted inside the create transaction AFTER the insert (the write lock is held, so two
+  creates in flight cannot both pass a count of seven), the next refused with "This account
+  already has 8 characters. Delete one to make another." on the `InvalidInput` wire code, so
+  the launcher shows it unchanged; a refused create writes no row and no kit. Tests: three db
+  unit tests (the stored bytes are the hash and redeem nothing; the purge takes the expired
+  row and keeps the live one; the cap, the refusal writing nothing, a delete making room) and
+  an auth smoke test over the wire; fmt and clippy clean; the suite green on the branch at `f12052c` (423 unit, 185 world, 11 auth, 5 persistence, 3 ledger); its first run failed one world test, the bank ledger test, on a fixed 300 ms sleep before reading the table under the whole suite's load (it passes alone), so the deploy branch's `cef31f0` (test code only, merged forward) has the eight ledger reads poll for their rows (`ledger_rows_at_least`, 50 ms steps, five seconds at most) instead. Two rows in
+  `public_hosting_checklist.md` §4. Still off the deploy branches until cutover; the audit's
+  hosting-branch list is closed with this.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -3856,6 +3876,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   dials now exist (`LOGIN_UI_SCALE` in login.gd, `GAME_UI_SCALE` in hud.gd); expose the game
   one as a slider persisted in `GameSettings`. Also from the same notes: window backgrounds
   should scale with the display, and "be critical" about HUD scaling at every resolution.
+  **STALE ENTRY, CORRECTED 2026-11-10: the slider has existed since 2026-05-05** (client
+  `145aa8e`, the day it was asked for: `options_screen.gd` builds a UI Scale row, 75% to
+  150% in 5% steps, and `README_FOR_TESTERS.md` has pointed testers at it under
+  Troubleshooting since). The 09-29 audit filed it from the notes without reading the options
+  screen. No checklist row has ever named it, so it is not ticked here; it ticks on the
+  user's word or on a row. The two HUD-scaling asks (backgrounds scaling with the display,
+  HUD scaling at every resolution) belong to the UI layout entry.
 - [ ] **Nameplate and targeting polish** *(user 2026-05-01/05; audit 2026-09-29)*. (a) NPC and
   enemy name labels are visible through walls ("not good"; the dungeon checklist called it
   intentional-for-now, fix before ship). (b) Merchant/guard NPC names do not flash when
