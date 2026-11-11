@@ -268,8 +268,9 @@ a lot.
 the same folder as `ProjectDawn.exe`.
 
 **UI too small or too large.** **Esc > Options > Graphics > UI Scale**, drag between 75% and
-150%, then **Apply**. The HUD scales, the 3D world does not. If the whole window is wrong,
-change **Window Mode** and **Resolution** in the same panel.
+150%, then **Apply**. The HUD scales, the 3D world does not, and the setting is kept for every
+later login. If the whole window is wrong, change **Window Mode** and **Resolution** in the
+same panel.
 
 ---
 

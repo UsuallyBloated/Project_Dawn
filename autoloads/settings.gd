@@ -52,7 +52,16 @@ var ui_volume: float = 1.0
 var window_mode: int = 0       # 0=windowed, 1=fullscreen, 2=borderless
 var vsync_mode: int = 1        # 0=disabled, 1=enabled, 2=adaptive
 var resolution_index: int = 2  # index into RESOLUTIONS; -1 = don't touch
-var ui_scale: float = 1.0      # multiplier on top of canvas_items stretch (0.75–1.5)
+var ui_scale: float = 1.0      # the options slider, a multiplier on the canvas_items stretch (0.75 to 1.5)
+
+# The in-game UI scale is the slider times this dial. Deliberately separate
+# from login.gd's LOGIN_UI_SCALE (user call, 2026-09-23): the launcher scales
+# the window for itself, and the HUD applies this one the moment the world is
+# on screen. Turn this dial for the HUD only; the slider is the player's.
+# (From 2026-09-23 to 2026-11-11 the HUD reset the window to the dial alone,
+# so the saved slider value was thrown away at every login and held only
+# after an Apply in the same session.)
+const GAME_UI_SCALE := 1.0
 
 # Floating combat text
 var floating_text_enabled: bool = true
@@ -116,9 +125,17 @@ func apply_graphics() -> void:
 		if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_WINDOWED:
 			DisplayServer.window_set_size(RESOLUTIONS[resolution_index])
 
+	apply_ui_scale()
+
+func game_ui_scale() -> float:
+	return GAME_UI_SCALE * clampf(ui_scale, 0.5, 2.0)
+
+# One home for the window's scale in game: the options screen's Apply (through
+# apply_graphics) and the HUD's _ready both land here.
+func apply_ui_scale() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree != null and tree.root != null:
-		tree.root.content_scale_factor = clampf(ui_scale, 0.5, 2.0)
+		tree.root.content_scale_factor = game_ui_scale()
 
 # ── Keybinds ──────────────────────────────────────────────────────────────────
 

@@ -3883,6 +3883,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   screen. No checklist row has ever named it, so it is not ticked here; it ticks on the
   user's word or on a row. The two HUD-scaling asks (backgrounds scaling with the display,
   HUD scaling at every resolution) belong to the UI layout entry.
+  **Verified before the tick 2026-11-11 (user: "good to tick the UI"), and the tick was not
+  earned: the saved value never took effect at login.** `hud.gd`'s `_ready` reset the window's
+  scale to a constant 1.0 on every world load (`ae48504`, 2026-09-23, the launcher-vs-game
+  split), so a saved 125% showed in the slider while the HUD ran at 100% until an Apply in
+  that session, and `/camp` and Quit end the session. **BUILT 2026-11-11 (user: "build it
+  now"), pending the next export and the pre-door check** (`pre_door_check_checklist.md` §8,
+  its last row): `GameSettings` owns the in-game scale (`GAME_UI_SCALE` moved there, the dial
+  times the slider, and one `apply_ui_scale` that the options screen's Apply and the HUD's
+  `_ready` both land on), so the saved value is the window's scale the moment the world is on
+  screen; the login flow keeps its own 1.6 (the 09-23 call unchanged). Client only.
+  `tools/probe_ui_scale_persists.gd` (6 checks; on the old code the settings autoload has no
+  scale and the HUD check reads 1.0 against a saved 1.25). The tester README's line now says
+  the setting is kept for every later login, true from that zip.
 - [ ] **Nameplate and targeting polish** *(user 2026-05-01/05; audit 2026-09-29)*. (a) NPC and
   enemy name labels are visible through walls ("not good"; the dungeon checklist called it
   intentional-for-now, fix before ship). (b) Merchant/guard NPC names do not flash when

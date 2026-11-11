@@ -113,19 +113,16 @@ var _tot_entity: Node = null
 
 var _self_targeted: bool = false
 
-# In-game UI scale, deliberately separate from login.gd's LOGIN_UI_SCALE
-# (user call, 2026-09-23): the launcher flow sets the window's
-# content_scale_factor for itself, and this resets it the moment the world
-# (which instances this HUD) is on screen. Turn this dial for the HUD only.
-const GAME_UI_SCALE := 1.0
-
 # How far away /inspect works, in metres. Tighter than the server's own
 # INSPECT_RANGE (30 m) on purpose: the server gate is the backstop against a
 # modified client, and this one is what an honest player actually meets.
 const INSPECT_RANGE := 20.0
 
 func _ready() -> void:
-	get_window().content_scale_factor = GAME_UI_SCALE
+	# The launcher scales the window for itself (login.gd's LOGIN_UI_SCALE);
+	# the world takes the player's saved UI scale back the moment it is on
+	# screen (GameSettings.GAME_UI_SCALE times the options slider).
+	GameSettings.apply_ui_scale()
 	_style_panel()
 	_hp_label  = UITheme.style_bar(health_bar,  UITheme.C_BAR_HP)
 	_sta_label = UITheme.style_bar(stamina_bar, UITheme.C_BAR_STAMINA)

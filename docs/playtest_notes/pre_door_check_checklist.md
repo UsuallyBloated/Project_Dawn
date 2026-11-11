@@ -144,6 +144,11 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       (the owner's hate token) → the moment the pet dies the mob turns on you and comes for
       you instead of walking home; a mob the pet fought beside you still prefers whoever hit
       it hardest. notes:
+- [ ] **Esc, Options, Graphics: set UI Scale to 125%, Apply, quit the game, relaunch, log
+      in** (the saved UI scale; needs the zip made after `e0d0c65`) → the HUD is at 125%
+      from the first frame in the world without opening Options (it used to come back at
+      100% every login, the slider still reading 125%); the login screen looks as before;
+      Apply at 100% afterwards puts it back. notes:
 
 ## Notes / observations
 - Anything that would confuse or annoy a friend, however small: a missing hint, a wrong
