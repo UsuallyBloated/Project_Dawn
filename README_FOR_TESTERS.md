@@ -64,6 +64,10 @@ work until it is.
 
 No installer, no auto-update. For a new version, delete the folder and unzip the new one.
 
+**`CHECKLIST_FOR_TESTERS.md`, in the same folder, is a route through your first evening with a
+box per step.** Open it in Notepad, tick the boxes as you go, and paste or attach it in our
+Discord at the end of the night. This guide is the reference; that sheet is the plan.
+
 `ProjectDawn.console.exe` is the same game with a console window attached. Ignore it unless
 you are asked for it while chasing a bug.
 
@@ -193,7 +197,8 @@ known just saves you writing them up from scratch.
 
 ## What to hammer on
 
-The most useful things you can do:
+**The checklist (`CHECKLIST_FOR_TESTERS.md`) walks you through all of this in order, with a
+box per step.** The loose version, if you would rather roam:
 
 - **Group up** with someone and check XP split, loot rights and the group window.
 - **Die on purpose**, then do the corpse run. Check your gear all came back.
