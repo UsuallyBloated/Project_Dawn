@@ -135,7 +135,7 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       here. notes: 11-11: PASS for 19:08 to 19:25 UTC (no `ERROR` or `WARN`, no `cannot see`, no `Attack rejected`; `world health` p50 0.5 ms, max 19.1 ms, `over_budget=0`, `slope_refusals=0`, two players).
 - [x] **The console (backtick) during play** → no red line. notes: 11-11: PASS (the console screenshot: INFO only, the faction and alignment lines and `Skills: 0 available for class 'Necromancer'`, which is right: no active skill names the class).
 
-## 8 — The fixes of 11-09 (the R720 at server `e358270`, live since 2026-11-10 14:56 UTC; the client zip `ProjectDawn-alpha-e0d0c65.zip` or later)
+## 8 — The fixes of 11-09 (the R720 at server `e358270`, live since 2026-11-10 14:56 UTC; the client zip `ProjectDawn-alpha-e0d0c65.zip` or later; the UI scale row needs `ProjectDawn-alpha-919671b.zip`, the 11-11 evening export)
 - [ ] **Log in while a partner watches** (two seats; the login facing seed) → your body appears
       facing where it logged out and never turns on its own, on the partner's screen and on
       yours (it used to face the scene's default, then snap a tick later). notes:
@@ -155,7 +155,7 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       you instead of walking home; a mob the pet fought beside you still prefers whoever hit
       it hardest. notes:
 - [ ] **Esc, Options, Graphics: set UI Scale to 125%, Apply, quit the game, relaunch, log
-      in** (the saved UI scale; needs the zip made after `e0d0c65`) → the HUD is at 125%
+      in** (the saved UI scale; needs the `919671b` zip, made 2026-11-11 evening) → the HUD is at 125%
       from the first frame in the world without opening Options (it used to come back at
       100% every login, the slider still reading 125%); the login screen looks as before;
       Apply at 100% afterwards puts it back. notes:
@@ -175,5 +175,5 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
 - 11-11: **left to run**, on a fresh plain account on the next zip: the NPC capsules (§1),
   the Wolf Threat turn-in with room in the bags, Restless Bones at 2 and the Raiders at 3
   (§4), and §8's six rows (the five fixes are live on the R720 and in `e0d0c65`; the UI scale
-  row needs the next zip).
+  row needs the `919671b` zip, made 11-11 evening, which carries all six).
 - The default user name in the login screen is tyler_mkee.  This needs to be removed. Maybe it could say "Enter your user name" until someone begins filling the field.  Screen shot attached.  

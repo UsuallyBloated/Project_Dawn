@@ -3895,7 +3895,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   screen; the login flow keeps its own 1.6 (the 09-23 call unchanged). Client only.
   `tools/probe_ui_scale_persists.gd` (6 checks; on the old code the settings autoload has no
   scale and the HUD check reads 1.0 against a saved 1.25). The tester README's line now says
-  the setting is kept for every later login, true from that zip.
+  the setting is kept for every later login, true from that zip. **EXPORTED 2026-11-11 evening**
+  (`builds/ProjectDawn-alpha-919671b.zip`, the Wednesday zip: this fix is its one game-file
+  change over `e0d0c65`); the row is runnable once the testers hold it.
 - [ ] **Nameplate and targeting polish** *(user 2026-05-01/05; audit 2026-09-29)*. (a) NPC and
   enemy name labels are visible through walls ("not good"; the dungeon checklist called it
   intentional-for-now, fix before ship). (b) Merchant/guard NPC names do not flash when
