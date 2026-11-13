@@ -34,11 +34,14 @@ center = [-150.0, -6.0]
 radius = 18.0
 height = -12.0
 
-# The bandits' lookout.
+# The bandits' lookout, south of the ridge's foot: the camp sits on its north
+# slope. At [-58, 60] with radius 25 it reached the foot row at z = 70 and
+# lifted it 5 m, so the face above dropped to 53 degrees and could be walked
+# up (the hills sheet's F2.2, 2026-11-09); its north edge now ends at z = 70.
 [[hill]]
 name = "the bandit knoll"
-center = [-58.0, 60.0]
-radius = 25.0
+center = [-58.0, 48.0]
+radius = 22.0
 height = 8.0
 
 # Bat Hollow: a hollow on flat ground needs ground round it to be lower than,

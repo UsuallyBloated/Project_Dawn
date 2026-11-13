@@ -29,7 +29,7 @@ const ITEMS_DIR := "res://data/loot/items"
 # expects (matches #[serde(rename_all = "snake_case")]).
 const TYPE_NAMES := [
 	"weapon", "offhand", "head", "chest", "legs", "feet", "hands",
-	"ring", "neck", "consumable", "misc", "augment", "bag",
+	"ring", "neck", "consumable", "misc", "augment", "bag", "ammo",
 ]
 
 # Map of (item field on ItemData → TOML key). Anything not in here

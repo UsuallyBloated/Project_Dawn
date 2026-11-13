@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 19: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 19<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Nov 13<span class="stat-sub">repo c4d5a6d</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Nov 13<span class="stat-sub">repo 1e710af</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">39.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">65.55 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">40.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">66.55 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -1331,7 +1331,7 @@
 <td><span class="chip verify">Verify</span><span class="chip ms">The pre-door check</span></td>
 <td class="what"><span class="day">Tue Nov 3 to Thu Nov 5</span>The pre-door check: a fresh character plays the starter book for 45 minutes on the exact build the friends will hold (the phase 4 checklist&#x27;s fresh-character row is the model). Anything odd gets a To-Do line the same day.</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 9 rows to run</li><li>the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch&#x27;s)</li><li>the R720 redeployed with the starting kit (user 2026-11-03) and the new zip from the same day</li></ul></td>
+<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 20 rows to run</li><li>the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch&#x27;s)</li><li>the R720 redeployed with the starting kit (user 2026-11-03) and the new zip from the same day</li></ul></td>
 <td class="time">1 h</td>
 <td class="id"></td>
 <td class="done">Findings filed in the To-Do; no new ERROR lines in the server log.<span class="ref">checklist: <a href="playtest_notes/pre_door_check_checklist.md"><code>pre_door_check_checklist.md</code></a></span></td>
@@ -1431,7 +1431,7 @@
 <section>
 <h2><span class="week-head"><span>The door, on a Thursday</span><span class="when">W6 &middot; November 9 to 15</span></span></h2>
 <p class="lede">Added November 5: the friends are busy on Sunday the 8th, so the door is Thursday the 12th, and the user spent the four days on the November bump rather than holding it until after. The bump&#x27;s sheets finish early in the week, the pre-door check runs again on the build the friends will hold, the last zip goes out, and Thursday evening the door opens. Redrawn November 13: the sheets, the rerun, the last zip and the players&#x27; checklist happened, but the invites had not gone out, so the door moved to the next Thursday and the week ends with the zip made and unsent.</p>
-<div class="week-meta"><span>the user's time: 2.5 h</span><span>Claude build days: 0.25</span></div>
+<div class="week-meta"><span>the user's time: 2.5 h</span><span>Claude build days: 1.25</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -1443,6 +1443,16 @@
 <td class="time">0.25 Claude days</td>
 <td class="id">o21</td>
 <td class="done">builds/ProjectDawn-alpha-919671b.zip holds the sheet and the README that points at it.</td>
+</tr>
+<tr>
+<td class="id">b57</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Fri Nov 13</span>The ammo slot (user: into the zip): EquipSlot::Ammo on the wire (PD_W0030), an ammo item type that fits it alone, the Arrow Bundle counted in arrows, every bow shot taking one on the server (a ledger row) and an empty quiver firing nothing, on both sides with the paperdoll&#x27;s Ammo cell; Elara sells arrows and Hadrik the bow. The bandit knoll moved south so the ridge&#x27;s face is a face again (terrain.toml re-exported). Three debug lines for the Selos&#x27; question.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id">b56</td>
+<td class="done">Both repos committed and pushed; the server suite, clippy and all 21 client probes green; the item, vendor and terrain lockstep checks green.</td>
 </tr>
 <tr>
 <td class="id">o22</td>
@@ -1469,7 +1479,7 @@
 <td><span class="chip verify">Verify</span><span class="chip ms">The pre-door check</span></td>
 <td class="what"><span class="day">Tue Nov 10</span>The pre-door check again, on the build the friends will now hold: a fresh character plays the starter book for 45 minutes on the bump build, hills and all (the November 3 run was on the pre-bump build). Marked in place as a second run. Anything odd gets a To-Do line the same day; a server fix redeploys, a client fix means one more zip (o21).</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 9 rows to run</li><li>the bump build on the R720 and in the zip (o20)</li><li>the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run</li><li>the 11-09 fixes on the R720 and in the export (o22), so its section 8 can run</li></ul></td>
+<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 20 rows to run</li><li>the bump build on the R720 and in the zip (o20)</li><li>the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run</li><li>the 11-09 fixes on the R720 and in the export (o22), so its section 8 can run</li></ul></td>
 <td class="time">1 h</td>
 <td class="id">o20, o22</td>
 <td class="done">Every row marked for the second run; no new ERROR lines in the server log.<span class="ref">checklist: <a href="playtest_notes/pre_door_check_checklist.md"><code>pre_door_check_checklist.md</code></a></span></td>
@@ -1479,7 +1489,7 @@
 <section>
 <h2><span class="week-head"><span>The door, a week later</span><span class="when">W7 &middot; November 16 to 22</span></span></h2>
 <p class="lede">Added November 13: the user held the invites back on the 12th, so the door is Thursday the 19th. Early in the week the pre-door rerun&#x27;s last rows run on the zip, then the share links, the zip and the players&#x27; checklist go out to all four (the plan&#x27;s own advice from October: the network part settled days before the evening), and Thursday evening the door opens.</p>
-<div class="week-meta"><span>the user's time: 8 h</span><span>Claude build days: 0</span></div>
+<div class="week-meta"><span>the user's time: 9 h</span><span>Claude build days: 0</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -1493,13 +1503,23 @@
 <td class="done">All checks pass.</td>
 </tr>
 <tr>
+<td class="id">o23</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Mon Nov 16</span>The Monday build out: the R720 pulled, built and restarted on the ammo-slot server (its boot line reading hash 5324d5d0c754), the client exported with the rebuilt DLL and zipped with the two documents inside; the old zip refused by the protocol id, so nobody keeps it.</td>
+<td>user at a desk</td>
+<td class="needs"><ul><li>the server pushed</li><li>the export in builds/</li></ul></td>
+<td class="time">0.5 h</td>
+<td class="id">b57</td>
+<td class="done">The boot line names the new build and hash; builds/ holds the new zip; /version on a fresh install reads its stamp.</td>
+</tr>
+<tr>
 <td class="id">v61</td>
 <td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Mon Nov 16</span>The pre-door rerun&#x27;s last rows, on a fresh plain account on the 919671b zip: the NPC capsules (section 1), the Wolf Threat turn-in with room in the bags, Restless Bones at level 2 and the Raiders at 3 (section 4), and section 8&#x27;s six rows (the login facing seed, the swing re-time, the charm hand-back, the pet-owner hate token, the weapon proc line, the UI scale row).</td>
+<td class="what"><span class="day">Mon Nov 16</span>The pre-door rerun&#x27;s last rows, on a fresh plain account on the Monday zip: the NPC capsules (section 1), the Wolf Threat turn-in with room in the bags, Restless Bones at level 2 and the Raiders at 3 (section 4), section 8&#x27;s six rows (the login facing seed, the swing re-time, the charm hand-back, the pet-owner hate token, the weapon proc line, the UI scale row), and section 9&#x27;s eleven (the ammo slot, the knoll, the Selos&#x27; lines).</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 9 rows to run</li><li>the 919671b zip</li><li>the R720 at e358270 or later</li></ul></td>
-<td class="time">1 h</td>
-<td class="id">v60, o21</td>
+<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 20 rows to run</li><li>the Monday zip</li><li>the R720 on the ammo-slot build</li></ul></td>
+<td class="time">1.5 h</td>
+<td class="id">v60, o23</td>
 <td class="done">Every row of the sheet marked; a server fix redeploys, a client fix means one more zip before p6.<span class="ref">checklist: <a href="playtest_notes/pre_door_check_checklist.md"><code>pre_door_check_checklist.md</code></a></span></td>
 </tr>
 <tr>
@@ -1525,12 +1545,12 @@
 <tr>
 <td class="id">p6</td>
 <td><span class="chip people">People</span></td>
-<td class="what"><span class="day">Tue Nov 17</span>The share links, the zip (ProjectDawn-alpha-919671b.zip, the players&#x27; checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday.</td>
+<td class="what"><span class="day">Tue Nov 17</span>The share links, the Monday zip (the players&#x27; checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday.</td>
 <td>user at a desk, friends</td>
 <td class="needs"><ul><li>a share link from the Tailscale admin console (share the machine, never the tailnet: inviting_a_player.md step 2)</li><li>the zip in builds/</li></ul></td>
 <td class="time">1 h</td>
 <td class="id">v61</td>
-<td class="done">All four shares accepted in the admin console; each friend&#x27;s /version reads 919671b.</td>
+<td class="done">All four shares accepted in the admin console; each friend&#x27;s /version reads the Monday zip&#x27;s stamp.</td>
 </tr>
 </tbody></table></div>
 </section>
@@ -1582,5 +1602,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-13 at repo c4d5a6d</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-13 at repo 1e710af</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

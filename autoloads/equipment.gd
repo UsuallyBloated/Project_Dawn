@@ -2,15 +2,21 @@ extends Node
 
 signal equipment_changed(slot: String, item)
 
-# Slot names match ItemData.Type enum labels for weapons/armor
-const SLOTS := ["weapon", "offhand", "head", "chest", "legs", "feet", "hands", "ring", "neck"]
+# Slot names match ItemData.Type enum labels for weapons/armor; "ammo" (the
+# quiver, 2026-11-13) is last, as EquipSlot::Ammo is on the wire.
+const SLOTS := ["weapon", "offhand", "head", "chest", "legs", "feet", "hands", "ring", "neck", "ammo"]
+const AMMO_SLOT := "ammo"
 
 # slot_name -> ItemData or null
 var equipped: Dictionary = {}
+# slot_name -> how many the slot holds: the arrows left in the quiver (1 for
+# any worn piece). The server's delta carries the count; a bow shot takes one.
+var equipped_counts: Dictionary = {}
 
 func _ready() -> void:
 	for s in SLOTS:
 		equipped[s] = null
+		equipped_counts[s] = 0
 
 # Track 13.3 — server-driven apply path. The InventoryDelta /
 # InventorySnapshot for `equip` location routes here so the local
@@ -21,7 +27,7 @@ func _ready() -> void:
 # fan (remote_player_manager `_on_health_update`). Remove any item
 # already in this slot first (defensive — the server normally sends the
 # unequip delta first, but this keeps the invariant if it doesn't).
-func apply_remote_equip(equip_slot_idx: int, item: ItemData) -> void:
+func apply_remote_equip(equip_slot_idx: int, item: ItemData, count: int = 1) -> void:
 	if equip_slot_idx < 0 or equip_slot_idx >= SLOTS.size():
 		return
 	var slot_name: String = SLOTS[equip_slot_idx]
@@ -29,6 +35,7 @@ func apply_remote_equip(equip_slot_idx: int, item: ItemData) -> void:
 	if old != null:
 		_remove_stat_bonuses(old)
 	equipped[slot_name] = item
+	equipped_counts[slot_name] = maxi(count, 1)
 	_apply_stat_bonuses(item)
 	equipment_changed.emit(slot_name, item)
 
@@ -40,6 +47,7 @@ func apply_remote_unequip(equip_slot_idx: int) -> void:
 	if old != null:
 		_remove_stat_bonuses(old)
 	equipped[slot_name] = null
+	equipped_counts[slot_name] = 0
 	equipment_changed.emit(slot_name, null)
 
 # Track 13.3 — wipe all paperdoll slots before applying a fresh
@@ -51,10 +59,18 @@ func apply_remote_unequip(equip_slot_idx: int) -> void:
 # reset base right before this runs.
 func apply_remote_snapshot_clear() -> void:
 	for s in SLOTS:
+		equipped_counts[s] = 0
 		if equipped[s] != null:
 			_remove_stat_bonuses(equipped[s])
 			equipped[s] = null
 			equipment_changed.emit(s, null)
+
+# The arrows in the quiver, 0 when it is empty: a bow shot needs one (the
+# server's rule, `tick/melee.rs`; asked here first so no shot is sent without).
+func ammo_count() -> int:
+	if equipped.get(AMMO_SLOT) == null:
+		return 0
+	return int(equipped_counts.get(AMMO_SLOT, 0))
 
 # Dual wield is earned at a class's level (Combat.can_dual_wield, the server's
 # rule): it decides where a second one-hander lands and whether an off-hand
@@ -211,6 +227,7 @@ func _is_valid_target_slot(item: ItemData, slot_name: String) -> bool:
 		"hands": return item.type == ItemData.Type.HANDS
 		"ring":  return item.type == ItemData.Type.RING
 		"neck":  return item.type == ItemData.Type.NECK
+		"ammo":  return item.type == ItemData.Type.AMMO
 	return false
 
 func _first_free_base_slot() -> int:
@@ -241,4 +258,5 @@ func _slot_for_type(type: ItemData.Type) -> String:
 		ItemData.Type.HANDS:    return "hands"
 		ItemData.Type.RING:     return "ring"
 		ItemData.Type.NECK:     return "neck"
+		ItemData.Type.AMMO:     return "ammo"
 	return ""

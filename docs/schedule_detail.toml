@@ -810,16 +810,39 @@ waits_on = ["o21"]
 done_when = "builds/ProjectDawn-alpha-919671b.zip holds the sheet and the README that points at it."
 
 [[row]]
+id = "b57"
+week = "w6"
+lane = "build"
+day = "Fri Nov 13"
+what = "The ammo slot (user: into the zip): EquipSlot::Ammo on the wire (PD_W0030), an ammo item type that fits it alone, the Arrow Bundle counted in arrows, every bow shot taking one on the server (a ledger row) and an empty quiver firing nothing, on both sides with the paperdoll's Ammo cell; Elara sells arrows and Hadrik the bow. The bandit knoll moved south so the ridge's face is a face again (terrain.toml re-exported). Three debug lines for the Selos' question."
+who = "Claude"
+days = 1.0
+waits_on = ["b56"]
+done_when = "Both repos committed and pushed; the server suite, clippy and all 21 client probes green; the item, vendor and terrain lockstep checks green."
+
+[[row]]
+id = "o23"
+week = "w7"
+lane = "operate"
+day = "Mon Nov 16"
+what = "The Monday build out: the R720 pulled, built and restarted on the ammo-slot server (its boot line reading hash 5324d5d0c754), the client exported with the rebuilt DLL and zipped with the two documents inside; the old zip refused by the protocol id, so nobody keeps it."
+who = "user at a desk"
+hours = 0.5
+needs = ["the server pushed", "the export in builds/"]
+waits_on = ["b57"]
+done_when = "The boot line names the new build and hash; builds/ holds the new zip; /version on a fresh install reads its stamp."
+
+[[row]]
 id = "v61"
 week = "w7"
 lane = "verify"
 day = "Mon Nov 16"
 checklist = "pre_door_check_checklist.md"
-what = "The pre-door rerun's last rows, on a fresh plain account on the 919671b zip: the NPC capsules (section 1), the Wolf Threat turn-in with room in the bags, Restless Bones at level 2 and the Raiders at 3 (section 4), and section 8's six rows (the login facing seed, the swing re-time, the charm hand-back, the pet-owner hate token, the weapon proc line, the UI scale row)."
+what = "The pre-door rerun's last rows, on a fresh plain account on the Monday zip: the NPC capsules (section 1), the Wolf Threat turn-in with room in the bags, Restless Bones at level 2 and the Raiders at 3 (section 4), section 8's six rows (the login facing seed, the swing re-time, the charm hand-back, the pet-owner hate token, the weapon proc line, the UI scale row), and section 9's eleven (the ammo slot, the knoll, the Selos' lines)."
 who = "user at a desk"
-hours = 1.0
-needs = ["the 919671b zip", "the R720 at e358270 or later"]
-waits_on = ["v60", "o21"]
+hours = 1.5
+needs = ["the Monday zip", "the R720 on the ammo-slot build"]
+waits_on = ["v60", "o23"]
 done_when = "Every row of the sheet marked; a server fix redeploys, a client fix means one more zip before p6."
 
 [[row]]
@@ -827,12 +850,12 @@ id = "p6"
 week = "w7"
 lane = "people"
 day = "Tue Nov 17"
-what = "The share links, the zip (ProjectDawn-alpha-919671b.zip, the players' checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday."
+what = "The share links, the Monday zip (the players' checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday."
 who = "user at a desk, friends"
 hours = 1.0
 needs = ["a share link from the Tailscale admin console (share the machine, never the tailnet: inviting_a_player.md step 2)", "the zip in builds/"]
 waits_on = ["v61"]
-done_when = "All four shares accepted in the admin console; each friend's /version reads 919671b."
+done_when = "All four shares accepted in the admin console; each friend's /version reads the Monday zip's stamp."
 
 # ---------------------------------------------------------------------------------------
 # After the door opens: undated, per the planner's answer. Status for each lives in the To-Do.

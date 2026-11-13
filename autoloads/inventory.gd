@@ -92,7 +92,7 @@ func _on_inventory_snapshot(
 			if item.type == ItemData.Type.BAG and bag_contents[slot_idx] == null:
 				_init_bag_contents(slot_idx, item.bag_num_slots)
 		elif loc == NetProtocol.INV_LOCATION_EQUIP:
-			Equipment.apply_remote_equip(slot_idx, item)
+			Equipment.apply_remote_equip(slot_idx, item, count)
 		elif loc == NetProtocol.INV_LOCATION_CURSOR:
 			# PD_W0027 — an item held at logout comes back in hand. A held
 			# BAG brings its contents store so pass 2's bag_255 rows land.
@@ -186,7 +186,7 @@ func _on_inventory_delta(location: String, slot: int, item_path: String, count: 
 			if item == null:
 				push_warning("Inventory delta: unknown ItemData path '%s'" % item_path)
 				return
-			Equipment.apply_remote_equip(slot, item)
+			Equipment.apply_remote_equip(slot, item, count)
 		return
 	# PD_W0027 — the cursor slot. The server is the only writer; a delta
 	# here means a pickup landed, a place emptied the hand, or a swap put

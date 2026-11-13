@@ -160,6 +160,38 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       100% every login, the slider still reading 125%); the login screen looks as before;
       Apply at 100% afterwards puts it back. notes:
 
+## 9 — The Monday export (the ammo slot, the knoll, the Selos' lines; needs the zip exported after 2026-11-13 and the R720 redeployed with it, its boot line reading `hash 5324d5d0c754`)
+- [ ] **Buy a Hunter's Shortbow from Hadrik and twenty Arrow Bundle from Elara** → both sell
+      (80 copper and 1 copper an arrow); the arrows' tooltip reads "Ammunition: worn in the ammo
+      slot, one per shot" and the bundle weighs 2.0 at twenty. notes:
+- [ ] **Right-click the arrows in a bag** → they go into the paperdoll's new Ammo cell (bottom
+      right, under Wpn) reading "Arrow Bundle (20)"; right-click them there and they come back
+      to the bags. notes:
+- [ ] **Drag the arrows onto the Wpn cell, and a sword onto the Ammo cell** → the arrows land in
+      Ammo anyway and the sword in Wpn (the wrong cell falls through to the right one); no
+      refusal line, nothing lost. notes:
+- [ ] **Wear the bow and auto-attack a wolf from about 15 m** → every shot takes one arrow (the
+      Ammo cell counts down, hit or miss); the journal has no `Attack rejected` line for you.
+      notes:
+- [ ] **Shoot the quiver empty** → the Ammo cell empties on the last arrow, the next swing prints
+      "You have no ammunition." at the swing cadence and nothing is sent (the journal shows no
+      `Attack dropped — no ammunition` line for an honest client); putting arrows back resumes
+      the shooting. notes:
+- [ ] **Swap to the sword with arrows worn and fight** → the count never moves. notes:
+- [ ] **A Ranger: Aimed Shot with the bow and an empty quiver** → "You have no ammunition." and
+      no stamina spent; with arrows it fires and takes one. notes:
+- [ ] **Die with arrows worn, then Loot All on your corpse** → the arrows come back into the
+      Ammo cell with their count. notes:
+- [ ] **`admin_report` after the sitting** → `shoot` rows, one per arrow with delta -1, and the
+      check card balanced. notes:
+- [ ] **Walk up the ridge's south face where the bandit knoll meets it (around x -58, z 70)**
+      → the face refuses you everywhere along it (the knoll now ends at its foot); the bandit
+      camp sits on the knoll's north slope and the walk out to it is as before. notes:
+- [ ] **A Bard: stand still, sing Selos' Melody once from cold, then send `debug.log`** → the
+      log's `cast start`, `cast release` and `speed buff` lines say whether the speed arrived
+      before or after the release (the open Selos' question); a speed-up before the release
+      line is the bug, after it is the song. notes:
+
 ## Notes / observations
 - Anything that would confuse or annoy a friend, however small: a missing hint, a wrong
   word, a window in the way, a mob too strong, a long walk. These are the point.
