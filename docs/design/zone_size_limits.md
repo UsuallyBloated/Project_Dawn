@@ -5,6 +5,13 @@ world LARGE, with wide open spaces and great verticality." This documents the li
 does not build anything. Every code claim below was verified against the real source, not
 just reported by recon.*
 
+> **2026-11-13: the starting zone is 4 x 4 km** (built on `feat/zone-4km`, see
+> `docs/session_notes/session_2026_11_13_zone_4km.md`). The two client items section 2 names
+> are done for it: the terrain is built in chunks with a collider each, and the fog, the
+> shadow distance and the scenery's visibility ranges are set on purpose. Section 2's
+> description of a 400 m flat plate is history. Still as written: the entity view distance
+> (section 3's AOI cells) and the per-mob costs.
+
 ## The short version
 
 | Question | Answer |

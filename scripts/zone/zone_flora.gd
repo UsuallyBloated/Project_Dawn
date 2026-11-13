@@ -1,3 +1,4 @@
+@tool
 class_name ZoneFlora
 extends Node3D
 
@@ -14,7 +15,7 @@ extends Node3D
 # disagree about where the player stands.
 
 # The scatter is bucketed into squares this wide; each is culled as one.
-const CELL := 250.0
+const CELL := 400.0
 # Roads and clearings are looked up in a grid of squares this wide.
 const BLOCK_CELL := 100.0
 # Nothing grows on ground steeper than this (rise over run: about 40 degrees).
@@ -35,15 +36,15 @@ const BONE := Color(0.84, 0.81, 0.70)
 # What grows. `scale` is the range of sizes; `near` is how far the full mesh
 # is drawn; a kind with a `far` mesh is drawn as that from `near` out to `end`.
 const KINDS := {
-	"pine": {"scale": Vector2(0.9, 1.6), "near": 380.0, "far": "pine_far", "end": 2000.0, "sink": 0.2},
-	"tall_pine": {"scale": Vector2(0.9, 1.5), "near": 380.0, "far": "tall_pine_far", "end": 2000.0, "sink": 0.2},
-	"broadleaf": {"scale": Vector2(0.8, 1.4), "near": 380.0, "far": "crown_far", "end": 1600.0, "sink": 0.2},
-	"dark_tree": {"scale": Vector2(0.9, 1.5), "near": 380.0, "far": "dark_crown_far", "end": 1400.0, "sink": 0.2},
+	"pine": {"scale": Vector2(0.9, 1.6), "near": 450.0, "far": "pine_far", "end": 2000.0, "sink": 0.2},
+	"tall_pine": {"scale": Vector2(0.9, 1.5), "near": 450.0, "far": "tall_pine_far", "end": 2000.0, "sink": 0.2},
+	"broadleaf": {"scale": Vector2(0.8, 1.4), "near": 450.0, "far": "crown_far", "end": 1600.0, "sink": 0.2},
+	"dark_tree": {"scale": Vector2(0.9, 1.5), "near": 450.0, "far": "dark_crown_far", "end": 1400.0, "sink": 0.2},
 	"dead_tree": {"scale": Vector2(0.7, 1.4), "near": 900.0, "sink": 0.2},
-	"bush": {"scale": Vector2(0.7, 1.5), "near": 420.0, "sink": 0.1},
-	"scrub": {"scale": Vector2(0.6, 1.4), "near": 360.0, "sink": 0.05},
+	"bush": {"scale": Vector2(0.7, 1.5), "near": 480.0, "sink": 0.1},
+	"scrub": {"scale": Vector2(0.6, 1.4), "near": 460.0, "sink": 0.05},
 	"boulder": {"scale": Vector2(0.5, 2.6), "near": 1000.0, "sink": 0.25, "tumble": true},
-	"bones": {"scale": Vector2(0.7, 1.6), "near": 450.0, "sink": 0.05},
+	"bones": {"scale": Vector2(0.7, 1.6), "near": 520.0, "sink": 0.05},
 }
 
 @export var terrain_path := NodePath("../TerrainMesh")
@@ -79,8 +80,12 @@ func build() -> void:
 		planted += _scatter(region, terrain, clump, buckets)
 	for key in buckets:
 		_emit(key, buckets[key], terrain)
-	if not Engine.is_editor_hint():
-		DebugLog.info("ZoneFlora: %d things in %d batches, %d ms" % [planted, buckets.size(), Time.get_ticks_msec() - started])
+	# The log autoload is looked up, never named: this script is also compiled
+	# by tools that run before the autoloads exist, and in the editor, where
+	# they never do.
+	var debug_log := get_node_or_null("/root/DebugLog")
+	if debug_log != null:
+		debug_log.info("ZoneFlora: %d things in %d batches, %d ms" % [planted, buckets.size(), Time.get_ticks_msec() - started])
 
 
 # --- Where nothing grows -------------------------------------------------
@@ -286,7 +291,7 @@ static func _build_mesh(mesh_name: String) -> Mesh:
 			b.blob(LowPoly.at(Vector3(0.5, 5.6, 0.4)), Vector3(3.8, 1.9, 3.6), 0.3, DARK_LEAF)
 			b.blob(LowPoly.at(Vector3(-1.8, 4.6, -1.2)), Vector3(2.2, 1.3, 2.2), 0.3, DARK_LEAF.lightened(0.05))
 			# Web hanging off the crown.
-			b.sheet(Vector3(2.6, 5.0, 0.4), Vector3(0.8, 4.9, 2.4), Vector3(0.9, 2.4, 1.8), Vector3(2.2, 2.9, 0.6), Color(0.78, 0.80, 0.80))
+			b.sheet(Vector3(2.4, 5.0, 0.4), Vector3(1.0, 4.9, 2.0), Vector3(1.2, 3.2, 1.7), Vector3(2.1, 3.4, 0.7), Color(0.62, 0.64, 0.63))
 		"dark_crown_far":
 			b.jitter = 0.0
 			b.blob(LowPoly.at(up * 5.4), Vector3(3.8, 2.0, 3.6), 0.15, DARK_LEAF)
@@ -308,8 +313,8 @@ static func _build_mesh(mesh_name: String) -> Mesh:
 			# A ribcage half sunk in the ground, and a skull beside it.
 			for i in 4:
 				var z := -0.9 + i * 0.6
-				b.column(LowPoly.leaning(Vector3(-0.55, 0.0, z), PI * 0.5, -0.5), 0.07, 0.03, 1.3, 4, BONE)
-				b.column(LowPoly.leaning(Vector3(0.55, 0.0, z), PI * 0.5, 0.5), 0.07, 0.03, 1.3, 4, BONE)
+				b.column(LowPoly.leaning(Vector3(-0.55, 0.0, z), PI * 0.5, 0.5), 0.07, 0.03, 1.3, 4, BONE)
+				b.column(LowPoly.leaning(Vector3(0.55, 0.0, z), PI * 0.5, -0.5), 0.07, 0.03, 1.3, 4, BONE)
 			b.column(LowPoly.leaning(Vector3(0.0, 0.12, -1.2), 0.0, PI * 0.5), 0.09, 0.07, 2.4, 4, BONE.darkened(0.08))
 			b.blob(LowPoly.at(Vector3(0.3, 0.28, 1.7)), Vector3(0.34, 0.3, 0.4), 0.12, BONE)
 		_:

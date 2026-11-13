@@ -11,9 +11,10 @@ rough edges are real and the point of this build is to find them.
 > **November 2026 build.** The world was rebuilt on 2026-10-25 and every account made
 > before that day was erased with it; anything registered since still exists. If your
 > last visit was earlier, **register a fresh account**: the old name and password are
-> gone, which is expected, not a bug. New since then: hills (and falls that hurt), food
-> and water, factions, a trade window, your gear going back on when you loot your
-> corpse, and a lot of server-side tightening. The login screen's bottom-right corner
+> gone, which is expected, not a bug. New since then: **a starting zone a hundred times
+> the size** (four kilometres across, with a walled town, a forest, and somewhere to walk
+> to), hills (and falls that hurt), food and water, factions, a trade window, your gear
+> going back on when you loot your corpse, and a lot of server-side tightening. The login screen's bottom-right corner
 > names the build; `/version` in chat prints it, and a bug report should quote it.
 > If your hotbars show macros you never made, close the game and delete
 > `social_hotkeys*.json` and `spell_bar*.json` from
@@ -118,6 +119,12 @@ This is the single biggest thing to know before you play.
 - **Falling hurts.** A drop of more than about 2 metres costs health in proportion to the
   height, and a long fall kills; the corpse lies where you landed. The hills are new, and
   the cliff at the Wraith Gate is real.
+- **The world is big now.** The nearest monsters are under a minute's run from the town
+  gates, the furthest five or six minutes, and a road leaves each gate. Bind your soul with Sister
+  Maelis before you go far: a death far out is a long walk back to your corpse.
+- **You can walk through the walls, the houses and the trees.** They are placeholder
+  scenery for now and nothing stops you; the ground, the cliffs and the mountains at the
+  edge are real. Not a bug, and not worth reporting.
 - **You need food and water.** Hunger and thirst tick down slowly (a loaf of bread lasts
   about 48 minutes, a flask of water about 36), and the game eats and drinks from your bags
   on its own, so keep some in them. Out of food your health stops regenerating, out of

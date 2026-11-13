@@ -24,8 +24,8 @@ const SHOTS := [
 	# The four composition sketches.
 	["a_town_from_east_road", Vector3(330, 2.0, -34), Vector3(60, 14, 0)],
 	["b_the_pass", Vector3(8, 2.0, 640), Vector3(0, 30, 900)],
-	["c_sunken_barrow", Vector3(-1290, 3.0, -40), Vector3(-1560, -30, -60)],
-	["d_wraith_gate", Vector3(1210, 2.0, -60), Vector3(1640, 70, -40)],
+	["c_sunken_barrow", Vector3(-1300, 3.0, -40), Vector3(-1600, 0, -60)],
+	["d_wraith_gate", Vector3(1300, 2.0, -150), Vector3(1506, 76, -40)],
 	# The town.
 	["town_square", Vector3(-26, 1.8, -14), Vector3(30, 6, 24)],
 	["town_from_above", Vector3(-150, 110, -170), Vector3(0, 0, 0)],
@@ -41,7 +41,7 @@ const SHOTS := [
 	["greywood_road", Vector3(4, 1.8, 1070), Vector3(8, 6, 1400)],
 	["gnoll_war_camp", Vector3(-70, 4.0, -1400), Vector3(30, 2, -1540)],
 	["ossuary", Vector3(-1640, 3.0, 20), Vector3(-1765, 14, 105)],
-	["wraith_gate_top", Vector3(1560, 2.0, -130), Vector3(1640, 14, -40)],
+	["wraith_gate_top", Vector3(1620, 2.0, -110), Vector3(1506, 16, -40)],
 	["mill", Vector3(-10, 2.0, -350), Vector3(60, 8, -420)],
 	["rotfang_den", Vector3(10, 2.0, -720), Vector3(52, 0, -820)],
 	["festering_mound", Vector3(570, 2.0, -560), Vector3(640, 2, -620)],

@@ -3309,6 +3309,46 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   on Smites from the plateau at mobs below its edge), the hate list turning on the next
   attacker, the pet warping to its owner, `/camp` and the window X, the journal clean. **Ticked
   2026-11-09 (user: "go ahead")**; the what-exists note is in systems_overview.
+- [ ] **The starting zone at 4 km** *(user, 2026-11-13: "build the updated 3D zone using the
+  comp made by a previous session"; the comp is `docs/design/starting_area_comp_sketches.html`;
+  the five calls the same day: 10 m cells, keep the 54 spawns and tune after, the three painted
+  concept sheets reviewed, "put it in front of the friends", placeholder shapes and trees)*.
+  **BUILT 2026-11-13 on `feat/zone-4km` in both repos, pending the merge, the export, the
+  redeploy and the playtest** (client worktree `F:\Projects\Project_Dawn-zone`, server worktree
+  `F:\Projects\server-zone`, server `d3d83c1`; `zone_4km_checklist.md`; session note
+  `session_2026_11_13_zone_4km.md`; both sides move together, no wire change, no migration).
+  **The ground:** `data/terrain_features.toml` is the comp's plate, 400 x 400 cells of 10 m:
+  the western hills to 110 m with the Sunken Barrow dug 45 m into them, the Greywood ridge as a
+  wall 62 m high with the pass cut through it, the Wraith Gate plateau at 60 m (its cliff a
+  lethal fall), rolling ground everywhere but the town's 150 m, mountains round the edge.
+  `tools/author_terrain.gd` gained the shapes for it and a walk report (from the town every
+  camp is reached, the plate's edge and the ridge's crest are not), and paints the ground
+  texture (roads, farms, forest floor) from `data/zone_layout.gd`. `TerrainMesh` builds its
+  meshes and colliders from the heights at load in chunks of 40 cells (the scene stores the
+  heights alone; baked in, the mesh was 55 MB of text), same triangles in the same order, so
+  the server samples the same surface. **The server:** `terrain.toml` re-exported (hash
+  `35a3f1a15f4f`), every camp at the comp's position with its spawns three times wider, the
+  town's safe area 60 m (was 10). **Scenery, client only** (`scripts/zone/`): 40,908 scattered
+  trees, bushes, boulders and bones; the walled town with its gates, banner tower, houses and
+  what each NPC keeps; a set piece at every camp (the barrow's ward stones and glowing door,
+  the Ossuary's spires, the Wraith Gate's arch at the cliff's lip, the crypt, the gnolls' and
+  bandits' camps, graves, dens). All placeholder shapes built in code by `LowPoly`, none of
+  them a physics body (rule L2 in `docs/reference/invariants.md`, held by
+  `tools/check_zone_scenery.gd`): the walls and trees are walked through until the server
+  knows obstacles. The fog thinned so the ridge and the hills read from the town; the sun now
+  rises east and sets west. Tests: server 408 unit and 183 world (the camp-walking tests enter
+  beside the Bonepile's new place; the compiled-ground perch test moved to the plateau ramp's
+  edge); client 16 checks and 21 probes, the lockstep and sight checks building the real
+  chunked node, two planted faults caught. **Exploit lens:** the ground is the server's own
+  compiled file; scenery never collides, so the client and the server never disagree about
+  where a body is; the ridge's crest and the cliff are out of every spell's reach, the one
+  reachable perch (the ramp's side wall) is under the evade rule and its test; nobody leaves
+  the plate. **Flagged, not built:** server obstacles (so walls stop a body on both sides);
+  the mob count (54 spawns in 16 square km is thin between camps: tune after the first walk);
+  the 120 to 240 m view distance for players and mobs in a zone with kilometre sightlines;
+  water; the world reads mirrored against the comp's map (+Z north with +X east puts east on
+  the left when facing north); `systems_overview.md`'s terrain paragraphs move with the tick;
+  the planner's page is republished at the merge.
 - [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
   a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
   height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at

@@ -1,3 +1,4 @@
+@tool
 class_name ZoneLayout
 extends RefCounted
 
@@ -116,7 +117,7 @@ const SITES := {
 	"The Sunken Barrow": Vector2(-1480, -60),
 	"The Undying": Vector2(-1560, -60),
 	"Ossuary": Vector2(-1740, 90),
-	"Wraith Gate": Vector2(1720, -40),
+	"Wraith Gate": Vector2(1570, -40),
 }
 
 # The worn ground under a camp: [radius, colour]. Wildlife camps have none.
@@ -136,7 +137,9 @@ const SITE_GROUND := {
 
 # Set pieces that are no camp.
 const MILL := Vector2(60, -420)
-const WRAITH_GATE_ARCH := Vector2(1640, -40)
+# The arch stands at the cliff's lip (the cliff is the plateau's west edge, x = 1450),
+# so it is seen from the flats below, as the composition sketch has it.
+const WRAITH_GATE_ARCH := Vector2(1506, -40)
 const BARROW_MOUTH := Vector2(-1612, -60)
 const OSSUARY_RUIN := Vector2(-1765, 105)
 const BROKEN_CRYPT := Vector2(20, 1262)

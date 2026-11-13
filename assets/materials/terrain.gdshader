@@ -52,9 +52,9 @@ void fragment() {
 	// (strata) that fade out where they would be thinner than a pixel.
 	float patchy = texture(detail_noise, xz * 0.0013 + vec2(world_pos.y * 0.002)).r;
 	vec3 stone = mix(rock_dark, rock_color, clamp(fine * 0.5 + patchy * 0.9 - 0.1, 0.0, 1.0));
-	float band = world_pos.y * 0.11 + coarse * 2.0;
+	float band = world_pos.y * 0.09 + coarse * 0.7;
 	float band_fade = clamp(1.0 - fwidth(band) * 2.5, 0.0, 1.0);
-	stone *= mix(1.0, mix(0.86, 1.06, step(0.5, fract(band))), band_fade);
+	stone *= mix(1.0, mix(0.91, 1.04, step(0.5, fract(band))), band_fade);
 
 	ALBEDO = mix(ground, stone, rock);
 	ROUGHNESS = 0.95;

@@ -179,7 +179,7 @@ Held by: `micro_steps_climb_no_face`, `a_step_up_a_face_too_steep_to_climb_is_re
 `a_mob_at_a_face_stops_and_gives_up`,
 `a_mob_at_a_face_gives_up_and_walks_home`,
 `a_mob_held_below_a_face_evades_until_it_is_home`,
-`a_mob_below_the_greywood_ridge_gives_up_on_a_player_on_its_crest`
+`a_mob_below_the_plateau_ramp_gives_up_on_a_player_on_its_edge`
 
 ### D1. Dev tools are gated and audited, or refused
 A dev command runs only for a GM account or a dev-mode server, and only if its audit row
@@ -201,3 +201,12 @@ Held by: `check_spell_lockstep.gd`, `check_item_lockstep.gd`, `check_vendor_lock
 `check_active_skill_lockstep.gd`, `check_character_lockstep.gd`, `check_constant_lockstep.gd`,
 `check_discipline_lockstep.gd`, `check_faction_lockstep.gd`, `check_skill_table_lockstep.gd`,
 `check_wire_layer.gd`, `check_terrain_lockstep.gd`, `check_terrain_sight.gd`
+
+### L2. What the server does not know never stops a body
+The server knows the ground and nothing that stands on it. The town's walls, the trees and
+every set piece of the zone are scenery on the client, and none of it is a physics body.
+Why: the client sends a direction and the server moves the player; a wall that stopped the
+client's body and not the server's would leave the player drawn in one place and standing
+in another, and the next correction would pull them through it. When the server learns
+obstacles, both sides get them together, with their own check.
+Held by: `check_zone_scenery.gd`
