@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 19: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 19<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Nov 13<span class="stat-sub">repo 014b466</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Nov 13<span class="stat-sub">repo c4d5a6d</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">39.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">72.3 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">65.55 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -1083,7 +1083,7 @@
 <section>
 <h2><span class="week-head"><span>Slack, fixes, and the door</span><span class="when">W5 &middot; November 2 to 8</span></span></h2>
 <p class="lede">Drawn as a light week: fixes from the pre-door check, the rest of the group onboarded once the build was final, and Sunday evening. Redrawn November 5: the door moved to the next Thursday, and the November bump (the hills, the facing, the held-item cursor, the server split, the offline-free client) moved to Thursday the 5th, the day the date moved, instead of waiting until after the door, so the week&#x27;s second half is the bump day and its sheets.</p>
-<div class="week-meta"><span>the user's time: 15.8 h</span><span>Claude build days: 5.25</span></div>
+<div class="week-meta"><span>the user's time: 9.05 h</span><span>Claude build days: 5.25</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -1095,16 +1095,6 @@
 <td class="time">by Thu Nov 19</td>
 <td class="id"></td>
 <td class="done">Answers recorded in the plan doc; its bullet list freezes; one row joins schedule.md section 7.</td>
-</tr>
-<tr>
-<td class="id">d8</td>
-<td><span class="chip decide">Decide</span></td>
-<td class="what"><span class="day">by Thu Nov 19</span>docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it.<span class="blocks"><b>Blocks:</b> Nothing.</span></td>
-<td>user</td>
-<td class="needs">nothing</td>
-<td class="time">by Thu Nov 19</td>
-<td class="id"></td>
-<td class="done">One line in CLAUDE.md saying which.</td>
 </tr>
 <tr>
 <td class="id">d10</td>
@@ -1357,16 +1347,6 @@
 <td class="done">Each re-run row filled in its checklist.</td>
 </tr>
 <tr>
-<td class="id">v40</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Nov 6 to Sun Nov 8, the same sitting as v59</span>Two seats: one turns in place, strafes and backs up while the other watches the body turn; the facing survives a relog.</td>
-<td>user at a desk, two seats</td>
-<td class="needs"><ul><li>checklist remote_facing_checklist.md: 0 rows to run</li><li>the November bump live (o20)</li><li>second seat (two-boxing works)</li></ul></td>
-<td class="time">0.25 h</td>
-<td class="id">b39, o20</td>
-<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/remote_facing_checklist.md"><code>remote_facing_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Other players never turn</code></span></td>
-</tr>
-<tr>
 <td class="id">v44</td>
 <td><span class="chip verify">Verify</span></td>
 <td class="what"><span class="day">Fri Oct 30</span>The bank opened over the journal takes every click; a click on the journal brings it to the front; a bag and its destroy confirm come to the front over the bank; the console blocks only its panel; a restart dims the whole screen with the notice centred; ESC closes the window clicked last.</td>
@@ -1385,16 +1365,6 @@
 <td class="time">0.75 h</td>
 <td class="id">o17</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/haste_limiter_and_cast_relay_checklist.md"><code>haste_limiter_and_cast_relay_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Client-decided outcomes</code></span></td>
-</tr>
-<tr>
-<td class="id">v49</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Nov 6 to Mon Nov 9</span>One seat beside the banker and Brom: a lifted stack lands in the vault clicked (personal or shared), merges into a same-item stack, is refused when the vault is full or the item is a bag; the merchant&#x27;s list leads with what is in hand and sells from it, a held full pouch refused; the old paths unchanged; the ledger rows and the balance in admin_report.</td>
-<td>user at a desk</td>
-<td class="needs"><ul><li>checklist held_item_bank_and_vendor_checklist.md: 0 rows to run</li><li>the November bump live (o20)</li><li>a Small Pouch with something in it</li></ul></td>
-<td class="time">0.75 h</td>
-<td class="id">b49, b39, o20</td>
-<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/held_item_bank_and_vendor_checklist.md"><code>held_item_bank_and_vendor_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Held-item bank and vendor interactions</code></span></td>
 </tr>
 <tr>
 <td class="id">v50</td>
@@ -1456,46 +1426,6 @@
 <td class="id"></td>
 <td class="done">Row 60 filled.<span class="ref">checklist: <a href="playtest_notes/regen_model_checklist.md"><code>regen_model_checklist.md</code></a></span></td>
 </tr>
-<tr>
-<td class="id">v56</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">after o19</span>Three minutes online: three world health lines with about 1,200 ticks each and nothing over budget; a checkpoint shows; nothing logged once everyone is out.</td>
-<td>user at a desk</td>
-<td class="needs"><ul><li>checklist overnight_2026_11_01_checklist.md: 0 rows to run</li><li>the redeploy (o19)</li></ul></td>
-<td class="time">0.1 h</td>
-<td class="id">o19</td>
-<td class="done">Section 1 filled.<span class="ref">checklist: <a href="playtest_notes/overnight_2026_11_01_checklist.md"><code>overnight_2026_11_01_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
-</tr>
-<tr>
-<td class="id">v58</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Nov 6 to Sun Nov 8, after o20, with v57</span>The height model&#x27;s regression sheet: movement, combat and spells, camps and pets, death, corpses and ports, the NPC services, all reading as before (the town and the camps sit on floors; the hills ride the same merge, so the sheet&#x27;s header says what changed); the boot line naming the ground; check_all.ps1 with the terrain checks.</td>
-<td>user at a desk, one seat (two for section 6)</td>
-<td class="needs"><ul><li>checklist height_model_checklist.md: 0 rows to run</li><li>the November bump live (o20)</li></ul></td>
-<td class="time">0.75 h</td>
-<td class="id">o20</td>
-<td class="done">Every section filled.<span class="ref">checklist: <a href="playtest_notes/height_model_checklist.md"><code>height_model_checklist.md</code></a></span><span class="ref">To-Do entry: <code>The server height model</code></span></td>
-</tr>
-<tr>
-<td class="id">v59</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Nov 6 to Sun Nov 8, after v58</span>The first hills sheet: the look and the town, the routes out and the pass, fighting on the hills, the Wraith Gate cliff and a death from it, sight through the terrain at the cliff, the Sunken Barrow and the rim, the Fling tool, the evade below a face, and two seats for a mob that gives up below the cliff and a pet that warps to its owner.</td>
-<td>user at a desk, one seat for most of it, two for sections 5 and 9, a GM account</td>
-<td class="needs"><ul><li>checklist first_hills_checklist.md: 0 rows to run</li><li>the November bump live (o20)</li><li>second seat (two-boxing works)</li></ul></td>
-<td class="time">3.9 h</td>
-<td class="id">o20, b55</td>
-<td class="done">Every section filled.<span class="ref">checklist: <a href="playtest_notes/first_hills_checklist.md"><code>first_hills_checklist.md</code></a></span><span class="ref">To-Do entry: <code>The server height model</code></span></td>
-</tr>
-<tr>
-<td class="id">v57</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Nov 6 to Mon Nov 9, after o20</span>Ordinary play on the split server (a fight, casts, a group, the merchant and bank, a trade, a death, a camp) with a clean journal, and the client without the offline game: the login and lobby, your own group row, a pet&#x27;s fight with a clean console, the Test Panel&#x27;s tools, the bag window.</td>
-<td>user at a desk, two seats, a GM account</td>
-<td class="needs"><ul><li>checklist overnight_2026_11_01_checklist.md: 0 rows to run</li><li>the November bump live (o20)</li><li>second seat (two-boxing works)</li></ul></td>
-<td class="time">1 h</td>
-<td class="id">o20</td>
-<td class="done">Sections 2 and 3 filled.<span class="ref">checklist: <a href="playtest_notes/overnight_2026_11_01_checklist.md"><code>overnight_2026_11_01_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
-</tr>
 </tbody></table></div>
 </section>
 <section>
@@ -1541,7 +1471,7 @@
 <td>user at a desk</td>
 <td class="needs"><ul><li>checklist pre_door_check_checklist.md: 9 rows to run</li><li>the bump build on the R720 and in the zip (o20)</li><li>the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run</li><li>the 11-09 fixes on the R720 and in the export (o22), so its section 8 can run</li></ul></td>
 <td class="time">1 h</td>
-<td class="id">o20, v58, v59, o22</td>
+<td class="id">o20, o22</td>
 <td class="done">Every row marked for the second run; no new ERROR lines in the server log.<span class="ref">checklist: <a href="playtest_notes/pre_door_check_checklist.md"><code>pre_door_check_checklist.md</code></a></span></td>
 </tr>
 </tbody></table></div>
@@ -1612,7 +1542,6 @@
 <tr><td class="time">Sun Oct 25</td><td class="what">The EQ parity audit&#x27;s eight recommendations (docs/design/eq_parity_audit.md, section 8): the inflation is on the player&#x27;s side at levels 1 to 10 and almost nowhere else. Worst first: EQ&#x27;s hit point and mana formula (a level 1 Warrior at 32 HP instead of 200), the level 1 to 10 spells reshaped to EQ&#x27;s lines, the regeneration buffs to P99&#x27;s figures and levels, Haste to 30%, low-level mob hit points toward P99&#x27;s, the rest left alone; whether a second pass on mana costs and cast times is wanted.</td><td>user</td><td class="needs">The data edits (a build row once decided). Not the Oct 22 bump: the audit changes numbers, not the wire, so it can ship on any later redeploy and export.</td></tr>
 <tr><td class="time">Sun Nov 1</td><td class="what">Trade range: keep 10 m or tighten it. Flagged as far when decided; the first trade sitting is the evidence.</td><td>user (the phone is fine)</td><td class="needs">Nothing. A one-constant change if it moves.</td></tr>
 <tr><td class="time">Thu Nov 19</td><td class="what">Phase 5&#x27;s four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in.</td><td>user and planner</td><td class="needs">The &quot;after the door opens&quot; list below becoming a dated plan.</td></tr>
-<tr><td class="time">Thu Nov 19</td><td class="what">docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it.</td><td>user</td><td class="needs">Nothing.</td></tr>
 <tr><td class="time">Thu Nov 19</td><td class="what">The factions and alignment design&#x27;s nine decisions (docs/design/factions_and_alignment.md, section 6): the first six factions and the hit rule, who gets a kill&#x27;s hits (the XP rule or EQ&#x27;s hate list), the nine level thresholds, the v1 refusals (vendors at Dubious, quest givers at Apprehensive), alignment seeded from the class start, the Paladin and Shadow Knight off-side penalty kept on the server, no starting standings by race in v1, the mob and quest values, no GM freeze.</td><td>user</td><td class="needs">The factions build (a migration and a bump), on the after-the-door strip.</td></tr>
 <tr><td class="time">Thu Nov 19</td><td class="what">Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later.</td><td>user</td><td class="needs">Slice 0 (one server handler now, the Test Panel&#x27;s death button with the export); slice 1 waits on the server height model.</td></tr>
 </tbody></table></div></section>
@@ -1653,5 +1582,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-13 at repo 014b466</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-13 at repo c4d5a6d</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

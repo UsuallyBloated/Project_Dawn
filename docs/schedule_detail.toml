@@ -777,17 +777,6 @@ blocks = "The \"after the door opens\" list below becoming a dated plan."
 done_when = "Answers recorded in the plan doc; its bullet list freezes; one row joins schedule.md section 7."
 
 [[row]]
-id = "d8"
-week = "w5"
-lane = "decide"
-day = "by Thu Nov 19"
-what = "docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it."
-who = "user"
-by = 2026-11-19
-blocks = "Nothing."
-done_when = "One line in CLAUDE.md saying which."
-
-[[row]]
 id = "d9"
 week = "w3"
 lane = "decide"
@@ -1502,20 +1491,6 @@ done_when = "Pushed on feat/facing in both repos with the test green and the DLL
 todo = "Other players never turn"
 
 [[row]]
-id = "v40"
-week = "w5"
-lane = "verify"
-day = "Fri Nov 6 to Sun Nov 8, the same sitting as v59"
-what = "Two seats: one turns in place, strafes and backs up while the other watches the body turn; the facing survives a relog."
-who = "user at a desk, two seats"
-hours = 0.25
-needs = ["the November bump live (o20)", "second seat (two-boxing works)"]
-checklist = "remote_facing_checklist.md"
-waits_on = ["b39", "o20"]
-todo = "Other players never turn"
-done_when = "Every row filled."
-
-[[row]]
 id = "b41"
 week = "w5"
 lane = "build"
@@ -1655,20 +1630,6 @@ who = "Claude"
 hours = 3
 done_when = "Pushed on feat/facing in both repos with the suite green, the integration test and the headless probe passing, and the DLL rebuilt."
 todo = "Held-item bank and vendor interactions"
-
-[[row]]
-id = "v49"
-week = "w5"
-lane = "verify"
-day = "Fri Nov 6 to Mon Nov 9"
-what = "One seat beside the banker and Brom: a lifted stack lands in the vault clicked (personal or shared), merges into a same-item stack, is refused when the vault is full or the item is a bag; the merchant's list leads with what is in hand and sells from it, a held full pouch refused; the old paths unchanged; the ledger rows and the balance in admin_report."
-who = "user at a desk"
-hours = 0.75
-needs = ["the November bump live (o20)", "a Small Pouch with something in it"]
-checklist = "held_item_bank_and_vendor_checklist.md"
-waits_on = ["b49", "b39", "o20"]
-todo = "Held-item bank and vendor interactions"
-done_when = "Every row filled."
 
 [[row]]
 id = "b50"
@@ -1824,20 +1785,6 @@ done_when = "The boot line shows a build= at or past d4f1a2a and dev_cmds=false.
 todo = "Housekeeping audit 2026-10-23"
 
 [[row]]
-id = "v56"
-week = "w5"
-lane = "verify"
-day = "after o19"
-what = "Three minutes online: three world health lines with about 1,200 ticks each and nothing over budget; a checkpoint shows; nothing logged once everyone is out."
-who = "user at a desk"
-hours = 0.1
-needs = ["the redeploy (o19)"]
-checklist = "overnight_2026_11_01_checklist.md"
-waits_on = ["o19"]
-todo = "Housekeeping audit 2026-10-23"
-done_when = "Section 1 filled."
-
-[[row]]
 id = "b54"
 week = "w5"
 lane = "build"
@@ -1850,20 +1797,6 @@ done_when = "Both bump/nov branches carry the height model and are pushed; the s
 todo = "Housekeeping audit 2026-10-23"
 
 [[row]]
-id = "v58"
-week = "w5"
-lane = "verify"
-day = "Fri Nov 6 to Sun Nov 8, after o20, with v57"
-what = "The height model's regression sheet: movement, combat and spells, camps and pets, death, corpses and ports, the NPC services, all reading as before (the town and the camps sit on floors; the hills ride the same merge, so the sheet's header says what changed); the boot line naming the ground; check_all.ps1 with the terrain checks."
-who = "user at a desk, one seat (two for section 6)"
-hours = 0.75
-needs = ["the November bump live (o20)"]
-checklist = "height_model_checklist.md"
-waits_on = ["o20"]
-todo = "The server height model"
-done_when = "Every section filled."
-
-[[row]]
 id = "b55"
 week = "w5"
 lane = "build"
@@ -1873,34 +1806,6 @@ who = "Claude"
 days = 1
 done_when = "Both feat/height-model branches carry the hills, the server suite and every client check green."
 todo = "The server height model"
-
-[[row]]
-id = "v59"
-week = "w5"
-lane = "verify"
-day = "Fri Nov 6 to Sun Nov 8, after v58"
-what = "The first hills sheet: the look and the town, the routes out and the pass, fighting on the hills, the Wraith Gate cliff and a death from it, sight through the terrain at the cliff, the Sunken Barrow and the rim, the Fling tool, the evade below a face, and two seats for a mob that gives up below the cliff and a pet that warps to its owner."
-who = "user at a desk, one seat for most of it, two for sections 5 and 9, a GM account"
-hours = 3.9
-needs = ["the November bump live (o20)", "second seat (two-boxing works)"]
-checklist = "first_hills_checklist.md"
-waits_on = ["o20", "b55"]
-todo = "The server height model"
-done_when = "Every section filled."
-
-[[row]]
-id = "v57"
-week = "w5"
-lane = "verify"
-day = "Fri Nov 6 to Mon Nov 9, after o20"
-what = "Ordinary play on the split server (a fight, casts, a group, the merchant and bank, a trade, a death, a camp) with a clean journal, and the client without the offline game: the login and lobby, your own group row, a pet's fight with a clean console, the Test Panel's tools, the bag window."
-who = "user at a desk, two seats, a GM account"
-hours = 1
-needs = ["the November bump live (o20)", "second seat (two-boxing works)"]
-checklist = "overnight_2026_11_01_checklist.md"
-waits_on = ["o20"]
-todo = "Housekeeping audit 2026-10-23"
-done_when = "Sections 2 and 3 filled."
 
 [[row]]
 id = "o20"
@@ -1938,7 +1843,7 @@ what = "The pre-door check again, on the build the friends will now hold: a fres
 who = "user at a desk"
 hours = 1.0
 needs = ["the bump build on the R720 and in the zip (o20)", "the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run", "the 11-09 fixes on the R720 and in the export (o22), so its section 8 can run"]
-waits_on = ["o20", "v58", "v59", "o22"]
+waits_on = ["o20", "o22"]
 milestone = "m4"
 done_when = "Every row marked for the second run; no new ERROR lines in the server log."
 
