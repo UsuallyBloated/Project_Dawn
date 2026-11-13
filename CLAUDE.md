@@ -4270,13 +4270,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   defaults (proc fields compared only on items that proc). First run: one drift, the Arrow
   Bundle's stack (200 on the server, 20 in the `.tres`), fixed in the TOML the same day (server
   `93f5360`); the exporter itself stays stale and unrun. Both checks are in `commands.md`.
-- [ ] **Docs debt** *(audit 2026-09-29)*: `server/README.md` is "badly stale" (still claims the
+- [x] **Docs debt** *(audit 2026-09-29; DONE 2026-11-13, the last part a user decision)*: `server/README.md` is "badly stale" (still claims the
   world sim is unbuilt, per `deployment_linux.md`); `server/docs/flaky_integration_tests.md`
   still describes the flaky trio the 09-16 fix retired; `docs/concepts/passive_skills/*` says
   casting passives are "not yet implemented" while `CastingSkills` has shipped for months;
   `docs/deployment/` remains untracked by decision and CLAUDE.md links it as canonical (decide
   one way). Small, but each is a trap for the next reader.
-  **Checked 2026-10-12:** three of the four are closed. `server/README.md` was rewritten on 10-08 (`c6fccd1`, no unbuilt-world claim remains); `flaky_integration_tests.md` has carried a RESOLVED header since 10-01 with no known-flaky test; `casting_passive.md` now says the system is implemented and where (client `CastingSkills`, server `world/skills.rs`). The `weapons_passive.md` line is about Parry and Riposte, which really are unbuilt. **Open: whether `docs/deployment/` stays untracked** (a user decision; CLAUDE.md links it as canonical and `public_hosting_sitting.md` joined it on 2026-10-12).
+  **Checked 2026-10-12:** three of the four are closed. `server/README.md` was rewritten on 10-08 (`c6fccd1`, no unbuilt-world claim remains); `flaky_integration_tests.md` has carried a RESOLVED header since 10-01 with no known-flaky test; `casting_passive.md` now says the system is implemented and where (client `CastingSkills`, server `world/skills.rs`). The `weapons_passive.md` line is about Parry and Riposte, which really are unbuilt. **Closed 2026-11-13 (user): `docs/deployment/` is tracked.** The four runbooks are committed (placeholders only, checked); `test_accounts.md`, a temporary credential, is deleted and its name kept in `.gitignore`; the password it held is in the private repo's history since `0beb8e2` (the 11-02 sweep), so the `spelltest` account wants a `reset_password` or a ban on the host. The entry's last open part; ticked on the edit, as doc lines are.
 - [x] **The cast arms duplicate the pre-flight** — **DONE 2026-10-14, ticked on the suites**
   (server `c377a66` on the deploy branch; server-only, no wire change, no behaviour change, so no
   checklist: a refactor with no playtest surface, and a test suite is its own checklist, the
