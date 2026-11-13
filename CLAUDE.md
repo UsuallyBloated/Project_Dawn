@@ -2598,7 +2598,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   arrow a shot, no arrows no shot. Two shapes: an ammo slot on the paperdoll (a new equip slot
   on both sides) or the first Arrow Bundle in slot order consumed per shot, as food is eaten
   (no new slot). A design call; not a friends-build item, and not a dupe (a missing cost, not
-  a mint).
+  a mint). **DECIDED 2026-11-13 (user): an ammo slot**, EQ's shape: a new equip slot on the
+  paperdoll on both sides (the slot tables in lockstep; the death strip, the corpse re-equip
+  and the ledger cover it like any worn slot), one arrow taken from it per shot, no arrows no
+  shot; the Arrow Bundle is the first ammo. Both sides and the paperdoll UI change, so it
+  rides a zip and a redeploy: recommended for the bump after the door, not the Nov 19 zip (a
+  new slot the friends would be the first to test).
 - [ ] **A weapon swap with no target keeps the old swing interval for one swing** *(found
   2026-11-09 in the journal: one `Attack rejected — swing-rate limit (too fast)` for a Druid at
   15:30:08 UTC, `weapon_delay=3.0 min_interval=2.65`, nineteen seconds after swapping the
