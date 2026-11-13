@@ -25,13 +25,13 @@ menu. The hotbar is 1 to 0; the spell gems are Alt+1 to Alt+0. The full list is 
 
 - [ ] **1. Tailscale is connected and `ping 100.93.108.112` answers** → replies, not timeouts. notes:
 - [ ] **2. Set the server to `100.93.108.112:8765` and Register** → you are logged straight in, no error. notes:
-- [ ] **3. Create a character, Play, then Enter World** → you stand in the town square wearing a ragged shirt, ragged pants and a trainee's weapon, every bar full. notes:
+- [ ] **3. Create a character, Play, then Enter World** → you stand in the town square wearing a ragged shirt, ragged pants and a trainee's weapon, every bar full. The town has a wall with a gate on each side and a road out of each gate. (The walls, houses and trees are placeholder scenery: you can walk through them, and that is not a bug.) notes:
 - [ ] **4. Type `/version` in chat** → it prints the build; copy the first word to the top of this sheet. notes:
 
 ## 2. The first fight
 
 - [ ] **5. Right-click Aldric the Guard (the row of NPCs a few steps north of where you appeared)** → a dialogue window; take The Wolf Threat; J shows it at 0/5. Brom, further east along the row, has Rat Infestation too. `/con` on either → "regards you indifferently." notes:
-- [ ] **6. Walk to the wolves: about 25 m east and 20 m south of the square (`/loc` prints x, y, z; x grows going east, z grows going north). Left-click a Grey Wolf and type `/con`** → a line on how the fight reads, such as "Looks like an even fight." notes:
+- [ ] **6. Go to the wolves: leave by the east gate (the one by the tall tower) and head south of the road, to about x 280, z -200; a little over a minute's run (`/loc` prints x, y, z; x grows going east, z grows going north). Left-click a Grey Wolf and type `/con`** → a line on how the fight reads, such as "Looks like an even fight." notes:
 - [ ] **7. Fight it: press Q for auto-attack. Casters: sit (Z), open the book (B), click a spell, click a Spell Bar slot, stand, then Alt+1 casts it** → the wolf dies and you get an XP line. notes:
 - [ ] **8. Right-click the wolf's corpse and press Loot All** → the drops land in your bags (I) and any coin in your purse. notes:
 - [ ] **9. Kill five, then right-click Aldric again and turn it in** → XP, and a Tarnished Silver Ring. Right-click the ring in your bags → it goes on, and AGI on your character sheet (C) rises by 1. notes:
@@ -54,19 +54,20 @@ menu. The hotbar is 1 to 0; the spell gems are Alt+1 to Alt+0. The full list is 
 
 ## 5. Die on purpose (once you have a few things in your bags)
 
-- [ ] **20. Pick a fight you cannot win (the Gnoll Raiders about 50 m east of the square, or three rats at once)** → YOU HAVE DIED; about five seconds later you stand in the town square wearing nothing, with a little less XP. notes:
-- [ ] **21. Walk back to where you died** → your corpse lies there with your name on it. notes:
+- [ ] **20. Pick a fight you cannot win (the Gnoll Raiders' camp two minutes out along the east road, at about x 560, or the whole wolf pack at once)** → YOU HAVE DIED; about five seconds later you stand in the town square wearing nothing, with a little less XP. notes:
+- [ ] **21. Run back to where you died (the world is big now, so it is a real run)** → your corpse lies there with your name on it. notes:
 - [ ] **22. Right-click it and press Loot All** → your gear is back ON you (not just in the bags) and your coin is exact to the copper. notes:
 - [ ] **23. If a Cleric or Paladin is on: die again and let them resurrect you** → an Accept prompt; you land at your corpse with a quarter of your health, no mana and "You are exhausted."; five minutes later "You feel your strength return." notes:
 
 ## 6. The hills
 
-- [ ] **24. Walk north about 45 m to Bat Hollow: the ground rises into a rim with a dip inside. Three Cave Bats live in it (level 4), so look from the rim unless you are grouped** → you walk the slope cleanly, nothing jitters, and a friend standing on it looks like they stand ON it, not in it. notes:
+- [ ] **24. Leave by the north gate and follow the road about 500 m; Bat Hollow is a short way west of it (about x -130, z 540): a ring of raised ground, 9 m high, with a dip inside. Three Cave Bats live in it (level 4), so look from the rim unless you are grouped** → you walk the slope cleanly, nothing jitters, and a friend standing on it looks like they stand ON it, not in it. notes:
 - [ ] **25. With a bat down in the hollow and the rim between you, try to cast or shoot at it** → refused (no line of sight); step up onto the rim and it lands. notes:
 
 Long drops hurt now (a share of your health per metre past two), but there is no cliff near
-town. The real ones are the pass walls through the ridge far north and the Wraith Gate plateau
-far east, both deep in high-level ground. Not tonight.
+town. The real ones are the ridge a kilometre north (the road goes through it by a pass) and
+the Wraith Gate plateau far east, whose cliff kills. Both are a long way into high-level
+ground. Look, do not climb.
 
 ## 7. Leaving
 
