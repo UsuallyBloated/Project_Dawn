@@ -2577,6 +2577,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Harness lessons:** the position channel clogs through a long wait and a later speed
   measurement reads the stale positions it kept (the heartbeating pumps drain it now), and a
   timing assertion reads the clock, not the windows' nominal lengths.
+  **Open, 2026-11-13: a first sing of Selos' sped the bard up before the bar had filled**
+  (user, on the 11-09 journal's song lines; §70 item 6 had read it as a re-sing inside the
+  12 s linger, and the user says it was a first sing from cold). Read on both sides the same
+  day: nothing applies a song before its release (the client spends no local effect on a song,
+  the server starts and pulses it at the CastSpell after the 3 s cast-time gate, the only
+  speed inputs on the client are the buff, the crouch and the encumbrance), so no mechanism is
+  known. Three debug-log lines added to the client for the next Bard sitting (the bar's start
+  with the speed multiplier at that moment, the release, and every speed buff applied with its
+  name and multiplier): `debug.log` then says whether the speed arrived before or after the
+  release. Instruction for the sitting: stand still, sing Selos' once from cold, and send
+  `debug.log`.
 - [ ] **Dwarf racial ability: Stone Skin** *(user idea 2026-10-19, instead of making Dwarves
   permanently stone; "go ahead with stone skin")*. Active: the skin turns to granite, a large
   cut to physical damage taken and no knockback, paid for by being rooted in place, on a long
@@ -2603,7 +2614,37 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   and the ledger cover it like any worn slot), one arrow taken from it per shot, no arrows no
   shot; the Arrow Bundle is the first ammo. Both sides and the paperdoll UI change, so it
   rides a zip and a redeploy: recommended for the bump after the door, not the Nov 19 zip (a
-  new slot the friends would be the first to test).
+  new slot the friends would be the first to test). **Into the zip after all (user, the same
+  day: "lets add it", the zip open until the 17th), BUILT AND EXPORTED 2026-11-13, pending the
+  Monday redeploy and the pre-door check** (`pre_door_check_checklist.md` §9; server `d3cceef`,
+  client `f5b8b24`, both on the deploy branches, PD_W0030; the zip
+  `builds/ProjectDawn-alpha-f5b8b24.zip`, refused by the R720 until it runs `d3cceef`). `EquipSlot::Ammo` appended last (slot 9; the slot index
+  rides the existing `EquipItem` bytes, so the protocol id is the only wire change, and the DLL
+  moves with the server). An `ItemType::Ammo` / `ItemData.Type.AMMO` that fits the ammo slot
+  alone, nothing else fitting it (`items::is_equippable_in_slot`, the client's slot picker);
+  the Arrow Bundle is the first, its count the arrows (weight 0.1 and 1 copper per arrow, so a
+  full bundle of twenty is 2.0 and 20 copper; the 06-12 weight ruling's "bundle of twenty" unit
+  is superseded, noted in `item_weight_proposal.md`); Elara sells arrows and Hadrik the
+  Hunter's Shortbow (no vendor sold a bow). The server takes one arrow from the slot on every
+  bow shot (`tick/melee.rs::spend_arrow`, after the PvP gate so an unflagged target costs
+  none, before the reach and the roll so a miss or an out-of-reach shot costs one: the arrow
+  flies), fans the slot's delta and queues a `shoot` ledger row (delta -1); with the slot empty
+  there is no shot and "You have no ammunition." (a bow skill is refused the same way before
+  its stamina); a melee swing spends nothing. The death strip, the corpse re-equip and the
+  persistence cover the slot as any worn one (`restore_worn` puts the arrows back in it). The
+  client refuses a bow shot or a bow skill with an empty quiver before sending (the same line,
+  at the swing cadence as the range line is), keeps the slot's count from the deltas
+  (`Equipment.equipped_counts`), shows "Arrow Bundle (17)" on the paperdoll's new Ammo cell
+  and the inspect window's tenth row. Tests: `ammo_fits_the_ammo_slot_alone`,
+  `the_quiver_gives_one_arrow_a_shot_until_empty`, and the integration test
+  `a_bow_shot_takes_an_arrow_and_an_empty_quiver_fires_nothing` (arrows refused for the main
+  hand and a bow for the quiver, two arrows worn, a sword swing spending none, two shots each
+  taking one with the second emptying the slot, a third shot refused with the line and no Hit
+  or Miss, two `shoot` rows in the books), failing on the previous server at the first equip;
+  `tools/probe_ammo_slot.gd` (16 checks). Rule I6 in `docs/reference/invariants.md`. **Not
+  built, flagged:** arrows add no damage (EQ's did); no arrow is dropped on a miss to be picked
+  up; the Fletcher's recipes still make the bundle as before; a crossbow or a thrown weapon has
+  no ammo of its own.
 - [ ] **A weapon swap with no target keeps the old swing interval for one swing** *(found
   2026-11-09 in the journal: one `Attack rejected — swing-rate limit (too fast)` for a Druid at
   15:30:08 UTC, `weapon_delay=3.0 min_interval=2.65`, nineteen seconds after swapping the
@@ -3357,7 +3398,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (`tools/author_terrain.gd`) and re-exported, a server rebuild and an export; the crest is the
   known perch and the evade rule covers it. (b) Walking into a face pushes the client's body a
   little into it until the player stops (the server holds the foot; the reconciliation pulls
-  the body out): cosmetic. Both after the door.
+  the body out): cosmetic. Both after the door. **(a) BUILT 2026-11-13 (the zip open until the
+  17th), BUILT AND EXPORTED 2026-11-13, pending the Monday redeploy and the pre-door check**
+  (`pre_door_check_checklist.md` §9; server `d3cceef`, client `f5b8b24`): the knoll is at `[-58, 48]` with radius 22 (was `[-58, 60]`, 25), so its
+  north edge ends at the foot row (z = 70 reads 0.0 along it, checked from the exported file)
+  and the camp sits on its north slope (spawns at 5.9, 2.4 and 0.9 m, the steepest 25.9°, the
+  route from town 25.6°, no WARN); every triangle of the ridge's south face is a face again
+  (the shallowest outside the pass 60.7°, checked from the exported file). `world.tscn`
+  re-authored, `terrain.toml` re-exported (`hash 5324d5d0c754`; the boot line must read it),
+  the lockstep check green. (b) stays.
 - [ ] **NPC placeholder capsules sit half in the ground** *(user, 2026-11-06, part A of the master
   sheet, with a screenshot: "This isnt an issue now, but i want to make sure it wont be an issue
   when they get models")*. Verified: `dialogue_npc.tscn`, `vendor_npc.tscn` and `banker_npc.tscn`

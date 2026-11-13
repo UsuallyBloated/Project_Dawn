@@ -814,6 +814,17 @@ id = "b57"
 week = "w6"
 lane = "build"
 day = "Fri Nov 13"
+what = "The ammo slot (user: into the zip): EquipSlot::Ammo on the wire (PD_W0030), an ammo item type that fits it alone, the Arrow Bundle counted in arrows, every bow shot taking one on the server (a ledger row) and an empty quiver firing nothing, on both sides with the paperdoll's Ammo cell; Elara sells arrows and Hadrik the bow. The bandit knoll moved south so the ridge's face is a face again (terrain.toml re-exported). Three debug lines for the Selos' question."
+who = "Claude"
+days = 1.0
+waits_on = ["b56"]
+done_when = "Both repos committed and pushed; the server suite, clippy and all 21 client probes green; the item, vendor and terrain lockstep checks green."
+
+[[row]]
+id = "b58"
+week = "w6"
+lane = "build"
+day = "Fri Nov 13"
 what = "The starting zone at 4 km, from the composition sketches: the ground rebuilt as data (the western hills, the Greywood ridge and its pass, the Wraith Gate plateau, mountains round the edge) and drawn in chunks; the same 20 camps and 54 spawns moved about ten times further out; a walled town, a planted wood of 40,000 trees and a set piece at every camp, all placeholder shapes built in code. On feat/zone-4km in both repos; the server suite, all 16 client checks and the probes green."
 who = "Claude"
 days = 1.0
@@ -823,12 +834,24 @@ done_when = "Both branches pushed; zone_4km_checklist.md written."
 id = "o23"
 week = "w7"
 lane = "operate"
+day = "Mon Nov 16"
+what = "The Monday build out: the R720 pulled, built and restarted on the ammo-slot server (its boot line reading hash 5324d5d0c754), the client exported with the rebuilt DLL and zipped with the two documents inside; the old zip refused by the protocol id, so nobody keeps it."
+who = "user at a desk"
+hours = 0.5
+needs = ["the server pushed", "the export in builds/"]
+waits_on = ["b57"]
+done_when = "The boot line names the new build and hash; builds/ holds the new zip; /version on a fresh install reads its stamp."
+
+[[row]]
+id = "o24"
+week = "w7"
+lane = "operate"
 day = "Sat Nov 14 to Mon Nov 16"
-what = "The 4 km zone reaches the game: feat/zone-4km merged into the deploy branch in both repos (after the ammo slot's work is committed, so neither lands on the other), every check run on the merged pair, a RELEASE export stamped and zipped, and the server redeployed on the R720 with the usual stop, cp and start. Both sides move together: a client from before the merge walks the old ground on the new server."
+what = "The 4 km zone reaches the game: feat/zone-4km merged into the deploy branch in both repos (the branch already carries the ammo slot, so the merge is a fast-forward), which replaces the Monday build of o23 if it lands first: one zip and one redeploy carry both, and the boot line's terrain hash is the zone's, not o23's, every check run on the merged pair, a RELEASE export stamped and zipped, and the server redeployed on the R720 with the usual stop, cp and start. Both sides move together: a client from before the merge walks the old ground on the new server."
 who = "Claude for the merge and the export; user over SSH for the redeploy"
 hours = 1.0
-needs = ["everyone logged out for the redeploy", "the R720 over SSH", "the ammo slot's session at a commit"]
-waits_on = ["b57"]
+needs = ["everyone logged out for the redeploy", "the R720 over SSH", "the ammo slot on the deploy branch (it is: merged into feat/zone-4km on 11-13)"]
+waits_on = ["b58", "o23"]
 done_when = "The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f; the export log reads stamped with the merged sha and no -debug mark."
 
 [[row]]
@@ -840,8 +863,8 @@ checklist = "zone_4km_checklist.md"
 what = "The 4 km zone walked: the town and its four gates, the ground the server stands everyone on (the barrow's pit, the ridge's faces, the pass, the plateau's ramp and its lethal cliff, the mountains at the edge), every camp at its set piece, a quest per giver, the bigger world's rules (a far death and the run back, Gate, the group share range, a partner out of view and back), and how it runs and looks (frame rate, pop-in, night, dusk). Two seats for the partner rows."
 who = "user at a desk, a second seat for part"
 hours = 2.0
-needs = ["the zone build on the R720 and in the export (o23)", "a GM account for the cliff row"]
-waits_on = ["o23"]
+needs = ["the zone build on the R720 and in the export (o24)", "a GM account for the cliff row"]
+waits_on = ["o24"]
 done_when = "Every row marked; a finding that needs a fix gets a To-Do line the same day, and the zip the friends receive (p6) is the one the sheet was run on or a later one."
 
 [[row]]
@@ -850,11 +873,11 @@ week = "w7"
 lane = "verify"
 day = "Mon Nov 16"
 checklist = "pre_door_check_checklist.md"
-what = "The pre-door rerun's last rows, on a fresh plain account on the 919671b zip: the NPC capsules (section 1), the Wolf Threat turn-in with room in the bags, Restless Bones at level 2 and the Raiders at 3 (section 4), and section 8's six rows (the login facing seed, the swing re-time, the charm hand-back, the pet-owner hate token, the weapon proc line, the UI scale row)."
+what = "The pre-door rerun's last rows, on a fresh plain account on the Monday zip: the NPC capsules (section 1), the Wolf Threat turn-in with room in the bags, Restless Bones at level 2 and the Raiders at 3 (section 4), section 8's six rows (the login facing seed, the swing re-time, the charm hand-back, the pet-owner hate token, the weapon proc line, the UI scale row), and section 9's eleven (the ammo slot, the knoll, the Selos' lines)."
 who = "user at a desk"
-hours = 1.0
-needs = ["the 919671b zip", "the R720 at e358270 or later"]
-waits_on = ["v60", "o21"]
+hours = 1.5
+needs = ["the Monday zip", "the R720 on the ammo-slot build"]
+waits_on = ["v60", "o23"]
 done_when = "Every row of the sheet marked; a server fix redeploys, a client fix means one more zip before p6."
 
 [[row]]
@@ -862,12 +885,12 @@ id = "p6"
 week = "w7"
 lane = "people"
 day = "Tue Nov 17"
-what = "The share links, the zip (ProjectDawn-alpha-919671b.zip, the players' checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday."
+what = "The share links, the Monday zip (the players' checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday."
 who = "user at a desk, friends"
 hours = 1.0
 needs = ["a share link from the Tailscale admin console (share the machine, never the tailnet: inviting_a_player.md step 2)", "the zip in builds/"]
 waits_on = ["v61"]
-done_when = "All four shares accepted in the admin console; each friend's /version reads 919671b."
+done_when = "All four shares accepted in the admin console; each friend's /version reads the Monday zip's stamp."
 
 # ---------------------------------------------------------------------------------------
 # After the door opens: undated, per the planner's answer. Status for each lives in the To-Do.

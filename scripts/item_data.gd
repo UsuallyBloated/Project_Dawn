@@ -1,7 +1,9 @@
 class_name ItemData
 extends Resource
 
-enum Type { WEAPON, OFFHAND, HEAD, CHEST, LEGS, FEET, HANDS, RING, NECK, CONSUMABLE, MISC, AUGMENT, BAG }
+# AMMO (2026-11-13) fits the paperdoll's ammo slot alone; a bow shot takes one
+# unit of its stack. Appended last: the numeric value is what every .tres holds.
+enum Type { WEAPON, OFFHAND, HEAD, CHEST, LEGS, FEET, HANDS, RING, NECK, CONSUMABLE, MISC, AUGMENT, BAG, AMMO }
 enum Rarity { COMMON, UNCOMMON, RARE, EPIC }
 
 @export var item_name: String = ""

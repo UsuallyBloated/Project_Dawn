@@ -11,6 +11,8 @@ signal auto_attack_toggled(on: bool)
 
 const MELEE_RANGE             := 3.0
 const RANGED_RANGE            := 25.0
+# The server's line for a bow with an empty quiver (`tick/melee.rs`).
+const NO_AMMUNITION_LINE      := "You have no ammunition."
 const EVASION_PER_AGI         := 0.005
 const EVASION_MAX             := 0.50
 const CRIT_PER_DEX            := 0.003
@@ -244,6 +246,14 @@ func _on_auto_attack() -> void:
 		CombatLog.add_line("Target is out of range.", CombatLog.MsgType.INFO)
 		_update_attack_interval()
 		return
+	# A bow needs an arrow in the ammo slot (the server's rule, 2026-11-13):
+	# with none there is no shot and nothing is sent, said at the swing cadence
+	# as the range line is. The server refuses the same way for a client that
+	# sends anyway.
+	if is_ranged_weapon and Equipment.ammo_count() <= 0:
+		CombatLog.add_line(NO_AMMUNITION_LINE, CombatLog.MsgType.INFO)
+		_update_attack_interval()
+		return
 	# The server rolls the miss (combat.rs): every swing goes out, and a miss
 	# comes back as a Miss (RemotePlayerManager draws it).
 	deal_damage_to_target(calc_damage())
@@ -255,6 +265,11 @@ func _on_auto_attack() -> void:
 	# rolls or sends the proc (the old client-sent proc Attack double-hit and is
 	# dropped by the swing-rate limit anyway).
 	_update_attack_interval()
+
+# Whether the main hand holds a bow: a shot needs an arrow.
+func wields_ranged_weapon() -> bool:
+	var weapon: ItemData = Equipment.equipped.get("weapon")
+	return weapon != null and weapon.is_ranged
 
 func _get_weapon_delay() -> float:
 	var weapon: ItemData = Equipment.equipped.get("weapon")

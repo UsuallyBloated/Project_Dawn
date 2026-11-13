@@ -109,6 +109,7 @@ func is_evade_boosted() -> bool:
 
 func add_speed_buff(speed_mult: float, duration: float, buff_name: String) -> void:
 	_speed_buff = {speed_mult = speed_mult, remaining = duration, buff_name = buff_name}
+	DebugLog.info("speed buff: %s x%.2f for %.0f s" % [buff_name, speed_mult, duration])
 	buffs_changed.emit()
 
 func get_speed_mult() -> float:

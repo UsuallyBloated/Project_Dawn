@@ -67,6 +67,15 @@ Held by: `a_new_character_is_born_dressed_and_the_kit_cannot_leave`, `every_clas
 `the_starting_kit_comes_back_off_its_owners_corpse`, `no_one_is_born_encumbered`,
 `a_fresh_character_holds_only_its_starting_kit`, `probe_no_drop.gd`
 
+### I6. A shot costs an arrow, and the server takes it
+Ammunition goes in the ammo slot and nowhere else, nothing else goes there, and every bow
+shot takes one arrow from it on the server, hit or miss, as a ledger row; with the slot empty
+there is no shot. Why: a bow that fires for nothing has no cost, and a client that decided
+its own ammo could shoot forever.
+Held by: `a_bow_shot_takes_an_arrow_and_an_empty_quiver_fires_nothing`,
+`the_quiver_gives_one_arrow_a_shot_until_empty`, `ammo_fits_the_ammo_slot_alone`,
+`probe_ammo_slot.gd`
+
 ## Saving and leaving
 
 ### S1. A character's stores are saved together, through one path

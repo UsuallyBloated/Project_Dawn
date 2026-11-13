@@ -221,6 +221,10 @@ func cast_spell(spell: SpellData) -> bool:
 		_casting = spell
 		_cast_timer = spell.cast_time
 		casting_started.emit(spell)
+		# For the debug log's clock (a Bard sped up before Selos' bar had
+		# filled, 2026-11-13): the bar's start against the speed buff's arrival.
+		DebugLog.info("cast start: %s, %.1f s bar, speed x%.2f" % [
+			spell.spell_name, spell.cast_time, BuffManager.get_speed_mult()])
 	else:
 		_apply_spell(spell)
 	return true
@@ -278,6 +282,7 @@ func get_spell_by_name(n: String) -> SpellData:
 func _finish_cast() -> void:
 	var spell := _casting
 	_casting = null
+	DebugLog.info("cast release: %s" % spell.spell_name)
 	_cast_timer = 0.0
 	_apply_spell(spell)
 

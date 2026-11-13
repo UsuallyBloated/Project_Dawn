@@ -15,12 +15,14 @@ const SLOT_LAYOUT: Dictionary = {
 	"offhand": [2, 1],
 	"weapon":  [2, 2],
 	"feet":    [1, 3],
+	"ammo":    [2, 3],
 }
 
 const SLOT_LABELS: Dictionary = {
 	"head": "Head", "neck": "Neck", "chest": "Chest",
 	"hands": "Hands", "ring": "Ring", "legs": "Legs",
 	"offhand": "Off", "weapon": "Wpn", "feet": "Feet",
+	"ammo": "Ammo",
 }
 
 var _slot_frames: Dictionary = {}
@@ -164,7 +166,7 @@ func _refresh_slot(slot_name: String) -> void:
 	if item != null:
 		if slot_lbl: slot_lbl.visible = false
 		if item_lbl:
-			item_lbl.text    = item.item_name
+			item_lbl.text    = _worn_text(slot_name, item)
 			item_lbl.visible = true
 	else:
 		if slot_lbl: slot_lbl.visible = true
@@ -172,12 +174,18 @@ func _refresh_slot(slot_name: String) -> void:
 			item_lbl.text    = ""
 			item_lbl.visible = false
 
+# What a worn slot says: the item's name, with the count behind it for a stack
+# (the arrows left in the quiver).
+func _worn_text(slot_name: String, item: ItemData) -> String:
+	var n: int = Equipment.equipped_counts.get(slot_name, 1)
+	return item.item_name if n <= 1 else "%s (%d)" % [item.item_name, n]
+
 func _on_slot_hover(slot_name: String) -> void:
 	var item = Equipment.equipped.get(slot_name)
 	if item == null:
 		_tooltip_label.text = SLOT_LABELS.get(slot_name, slot_name) + " (empty)"
 	else:
-		var lines := [item.item_name, item.description]
+		var lines := [_worn_text(slot_name, item), item.description]
 		_append_stat_lines(item, lines)
 		lines.append("\n[Right-click to unequip]")
 		_tooltip_label.text = "\n".join(lines)

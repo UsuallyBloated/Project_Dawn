@@ -4,7 +4,7 @@ class_name InspectWindow
 # Read-only paperdoll view of another player's equipped items. Opened
 # by the /inspect command or HUD wire-up; populated by the
 # `Net.world_inspect_result` signal. Bag contents are not exposed —
-# only the 9 paperdoll slots are public.
+# only the 10 paperdoll slots are public.
 
 # Slot order matches the EquipSlot discriminants on the wire
 # (server's protocol.rs ChatChannel comment lists them). Display labels
@@ -19,6 +19,7 @@ const SLOT_LABELS: Array[String] = [
 	"Hands",    # 6
 	"Ring",     # 7
 	"Neck",     # 8
+	"Ammo",     # 9
 ]
 
 const C_TITLE_BG := Color(0.10, 0.08, 0.05, 0.95)
