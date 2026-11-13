@@ -132,7 +132,7 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 19: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 19<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Nov 13<span class="stat-sub">repo e7badea</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Fri Nov 13<span class="stat-sub">repo 68c3e13</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">41.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
 <div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">69.55 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
@@ -1515,7 +1515,7 @@
 <tr>
 <td class="id">o23</td>
 <td><span class="chip operate">Operate</span></td>
-<td class="what"><span class="day">Mon Nov 16</span>The Monday build out: the R720 pulled, built and restarted on the ammo-slot server (its boot line reading hash 5324d5d0c754), the client exported with the rebuilt DLL and zipped with the two documents inside; the old zip refused by the protocol id, so nobody keeps it.</td>
+<td class="what"><span class="day">Mon Nov 16</span>(The build named here was superseded the same evening by o24: the zone merged on top, so the server is 162c151, the zip is 68c3e13 and the boot line&#x27;s terrain hash is 35a3f1a15f4f.) The Monday build out: the R720 pulled, built and restarted on the ammo-slot server (its boot line reading hash 5324d5d0c754), the client exported with the rebuilt DLL and zipped with the two documents inside; the old zip refused by the protocol id, so nobody keeps it.</td>
 <td>user at a desk</td>
 <td class="needs"><ul><li>the server pushed</li><li>the export in builds/</li></ul></td>
 <td class="time">0.5 h</td>
@@ -1525,7 +1525,7 @@
 <tr>
 <td class="id">o24</td>
 <td><span class="chip operate">Operate</span></td>
-<td class="what"><span class="day">Sat Nov 14 to Mon Nov 16</span>The 4 km zone reaches the game: feat/zone-4km merged into the deploy branch in both repos (the branch already carries the ammo slot, so the merge is a fast-forward), which replaces the Monday build of o23 if it lands first: one zip and one redeploy carry both, and the boot line&#x27;s terrain hash is the zone&#x27;s, not o23&#x27;s, every check run on the merged pair, a RELEASE export stamped and zipped, and the server redeployed on the R720 with the usual stop, cp and start. Both sides move together: a client from before the merge walks the old ground on the new server.</td>
+<td class="what"><span class="day">Fri Nov 13 for the merge and the export; Mon Nov 16 for the redeploy</span>(Merged and exported 11-13: both deploy branches at the merged build, server 162c151 and client 68c3e13; builds/ProjectDawn-alpha-68c3e13.zip stamped 68c3e13, a release export. Left: the redeploy and the send.) The 4 km zone reaches the game: feat/zone-4km merged into the deploy branch in both repos (the branch already carries the ammo slot, so the merge is a fast-forward), which replaces the Monday build of o23 if it lands first: one zip and one redeploy carry both, and the boot line&#x27;s terrain hash is the zone&#x27;s, not o23&#x27;s, every check run on the merged pair, a RELEASE export stamped and zipped, and the server redeployed on the R720 with the usual stop, cp and start. Both sides move together: a client from before the merge walks the old ground on the new server.</td>
 <td>Claude for the merge and the export; user over SSH for the redeploy</td>
 <td class="needs"><ul><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li><li>the ammo slot on the deploy branch (it is: merged into feat/zone-4km on 11-13)</li></ul></td>
 <td class="time">1 h</td>
@@ -1632,5 +1632,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-13 at repo e7badea</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-13 at repo 68c3e13</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

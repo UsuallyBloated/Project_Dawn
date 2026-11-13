@@ -2618,7 +2618,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   day: "lets add it", the zip open until the 17th), BUILT AND EXPORTED 2026-11-13, pending the
   Monday redeploy and the pre-door check** (`pre_door_check_checklist.md` §9; server `d3cceef`,
   client `f5b8b24`, both on the deploy branches, PD_W0030; the zip
-  `builds/ProjectDawn-alpha-f5b8b24.zip`, refused by the R720 until it runs `d3cceef`). `EquipSlot::Ammo` appended last (slot 9; the slot index
+  `builds/ProjectDawn-alpha-f5b8b24.zip`, refused by the R720 until it runs `d3cceef`). *(Superseded the same evening: the 4 km zone merged on top, so the build to deploy and send is server `162c151` and `builds/ProjectDawn-alpha-68c3e13.zip`, and the boot line reads `terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f`.)* `EquipSlot::Ammo` appended last (slot 9; the slot index
   rides the existing `EquipItem` bytes, so the protocol id is the only wire change, and the DLL
   moves with the server). An `ItemType::Ammo` / `ItemData.Type.AMMO` that fits the ammo slot
   alone, nothing else fitting it (`items::is_equippable_in_slot`, the client's slot picker);
@@ -3354,10 +3354,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   comp made by a previous session"; the comp is `docs/design/starting_area_comp_sketches.html`;
   the five calls the same day: 10 m cells, keep the 54 spawns and tune after, the three painted
   concept sheets reviewed, "put it in front of the friends", placeholder shapes and trees)*.
-  **BUILT 2026-11-13 on `feat/zone-4km` in both repos, pending the merge, the export, the
-  redeploy and the playtest** (client worktree `F:\Projects\Project_Dawn-zone`, server worktree
-  `F:\Projects\server-zone`, server `d3d83c1`; `zone_4km_checklist.md`; session note
-  `session_2026_11_13_zone_4km.md`; both sides move together, no wire change, no migration).
+  **BUILT, MERGED AND EXPORTED 2026-11-13, pending the redeploy and the playtest** (built on
+  `feat/zone-4km` in both repos, the deploy branch with the ammo slot merged into it, both
+  deploy branches then fast-forwarded: server `162c151`, client `68c3e13`; the export
+  `builds/ProjectDawn-alpha-68c3e13.zip`, stamped `68c3e13`, a release export;
+  `zone_4km_checklist.md`; session note `session_2026_11_13_zone_4km.md`; both sides move
+  together, no wire change of its own and no migration; **the R720's boot line must read
+  `terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f`**, and this zip replaces
+  `f5b8b24` as the one to send).
   **The ground:** `data/terrain_features.toml` is the comp's plate, 400 x 400 cells of 10 m:
   the western hills to 110 m with the Sunken Barrow dug 45 m into them, the Greywood ridge as a
   wall 62 m high with the pass cut through it, the Wraith Gate plateau at 60 m (its cliff a
@@ -3406,7 +3410,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   route from town 25.6°, no WARN); every triangle of the ridge's south face is a face again
   (the shallowest outside the pass 60.7°, checked from the exported file). `world.tscn`
   re-authored, `terrain.toml` re-exported (`hash 5324d5d0c754`; the boot line must read it),
-  the lockstep check green. (b) stays.
+  the lockstep check green. (b) stays. **Superseded the same evening by the 4 km zone** (the
+  entry "The starting zone at 4 km"): that plate replaces this ground whole, its knoll stands
+  at (-600, 640), 150 m clear of the ridge's foot, every triangle of the ridge's faces is a
+  face (the author's walk report holds the crest unreachable), and the boot line reads `hash
+  35a3f1a15f4f`.
 - [ ] **NPC placeholder capsules sit half in the ground** *(user, 2026-11-06, part A of the master
   sheet, with a screenshot: "This isnt an issue now, but i want to make sure it wont be an issue
   when they get models")*. Verified: `dialogue_npc.tscn`, `vendor_npc.tscn` and `banker_npc.tscn`

@@ -160,7 +160,14 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       100% every login, the slider still reading 125%); the login screen looks as before;
       Apply at 100% afterwards puts it back. notes:
 
-## 9 — The Monday build (the ammo slot, the knoll, the Selos' lines; needs `ProjectDawn-alpha-f5b8b24.zip` and the R720 redeployed on server `d3cceef`, its boot line reading `hash 5324d5d0c754`)
+## 9 — The Monday build (the ammo slot, the knoll, the Selos' lines; needs `ProjectDawn-alpha-68c3e13.zip` and the R720 redeployed on server `162c151`, its boot line reading `terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f`)
+
+> **The build changed the evening this section was written (2026-11-13):** the 4 km starting
+> zone merged on top of the ammo slot, so the zip is `68c3e13` (not `f5b8b24`), the server is
+> `162c151` (not `d3cceef`) and the terrain hash is the zone's. Every camp is about ten times
+> further from the town than these rows' authors had in mind: the wolves are a minute's run
+> out of the east gate (about x 280, z -200). The zone has its own sheet,
+> `zone_4km_checklist.md`.
 - [ ] **Buy a Hunter's Shortbow from Hadrik and twenty Arrow Bundle from Elara** → both sell
       (80 copper and 1 copper an arrow); the arrows' tooltip reads "Ammunition: worn in the ammo
       slot, one per shot" and the bundle weighs 2.0 at twenty. notes:
@@ -184,9 +191,10 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       Ammo cell with their count. notes:
 - [ ] **`admin_report` after the sitting** → `shoot` rows, one per arrow with delta -1, and the
       check card balanced. notes:
-- [ ] **Walk up the ridge's south face where the bandit knoll meets it (around x -58, z 70)**
-      → the face refuses you everywhere along it (the knoll now ends at its foot); the bandit
-      camp sits on the knoll's north slope and the walk out to it is as before. notes:
+- [ ] **Walk at the Greywood ridge's south face (it runs along z = 790, a kilometre north of
+      the town; the bandits' knoll is at about x -600, z 640, 150 m clear of it)** → the face
+      refuses you everywhere along it; the bandit camp sits on the knoll's top. *(Rewritten
+      for the 4 km zone: the old row named the knoll's place on the 400 m plate.)* notes:
 - [ ] **A Bard: stand still, sing Selos' Melody once from cold, then send `debug.log`** → the
       log's `cast start`, `cast release` and `speed buff` lines say whether the speed arrived
       before or after the release (the open Selos' question); a speed-up before the release

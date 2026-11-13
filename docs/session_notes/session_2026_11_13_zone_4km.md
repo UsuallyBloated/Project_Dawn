@@ -1,8 +1,10 @@
 # Session 2026-11-13: the starting zone at 4 km
 
 Built on `feat/zone-4km` in both repos (client worktree `F:\Projects\Project_Dawn-zone`,
-server worktree `F:\Projects\server-zone`; server `d3d83c1`). Not merged, not exported, not
-deployed. This note is its own file, not a section of the running one, because another
+server worktree `F:\Projects\server-zone`), then merged with the ammo slot and exported the
+same evening (section 7): **server `162c151`, client `68c3e13`, the zip
+`builds/ProjectDawn-alpha-68c3e13.zip`. Not deployed: the R720 redeploy and the send are the
+user's.** This note is its own file, not a section of the running one, because another
 session was writing to the main checkouts the same afternoon (the ammo slot); see "Two
 sessions, one checkout" below.
 
@@ -147,11 +149,9 @@ body"), held by the scenery check.
   kept their bearings from the town).
 - **`systems_overview.md`'s terrain paragraphs** still describe the 400 m plate; they move
   with the tick, as the workflow has it.
-- **The planner's page was not republished from this branch.** Three rows joined
-  `schedule_detail.toml` (b57 the build, o23 the merge, export and redeploy, v62 the sheet)
-  and the two outputs were regenerated here (135 rows, no warnings); the other session will
-  have regenerated the same files, so they are regenerated once more at the merge and the
-  page republished then.
+- **The planner:** three rows joined `schedule_detail.toml` (b58 the build, o24 the merge,
+  export and redeploy, v62 the sheet; b57 and o23 are the ammo slot's), the outputs were
+  regenerated after the merge (137 rows, no warnings) and the page republished.
 
 ## 6. Two sessions, one checkout
 
@@ -163,9 +163,34 @@ was moved out file by file into two new worktrees and both main checkouts were p
 `fix/xp-leveling-overflow` with the other session's changes untouched. From then on every
 tool was given the zone worktree's server path, since each defaults to the deploy checkout.
 
-## 7. To ship it
+## 7. Merged with the ammo slot, and exported
 
-Both sides together, after the ammo session's work is committed: fast-forward (or merge)
-`feat/zone-4km` into `fix/xp-leveling-overflow` in both repos, rebuild the DLL only if the
-ammo slot changed the wire, run `check_all.ps1`, export, redeploy, and confirm the boot line's
-`terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f`. Then `zone_4km_checklist.md`.
+By the time the zone was built the other session had committed and pushed the ammo slot
+(PD_W0030, server `d3cceef`, client `f5b8b24` and `da53b1d`) and exported a zip of it for
+Monday. The user's call for the zone was "put it in front of the friends", so:
+
+- **The deploy branches were merged into the zone branches first, in the zone's worktrees.**
+  Server: one conflict, `terrain.toml` (the ammo commit had re-exported the 400 m plate with
+  the bandit knoll moved off the ridge's foot; the zone's plate replaces that ground whole and
+  its knoll stands 150 m clear, so the zone's file is kept). Client: `terrain_features.toml`
+  and `world.tscn` for the same reason, the planner (both sessions had used the ids b57 and
+  o23; the ammo slot keeps them, the zone's rows are b58, o24 and v62, the outputs
+  regenerated at 137 rows) and the session index (both lines kept).
+- **The merged pair, validated:** server 410 unit and 184 world tests, clippy and fmt clean;
+  client all 16 checks and all 22 probes, with the ammo session's rebuilt DLL.
+- **Both deploy branches fast-forwarded and pushed by name:** server `162c151`, client
+  `68c3e13`. All 16 checks again in the main checkout.
+- **The export:** `[BuildStamp] stamped 68c3e13`, `--export-release`, the pack holding the
+  zone's scripts, shaders and paint, the exported build booting clean to the login screen;
+  `builds/ProjectDawn-alpha-68c3e13.zip` (38,044,941 bytes: the exe, the console exe, the
+  DLL, the tester README and the players' checklist).
+- **The players' checklist** (`CHECKLIST_FOR_TESTERS.md`, in the zip) quoted distances from
+  the 400 m world in three rows (the wolves 25 m from the square, the gnolls 50 m, Bat Hollow
+  45 m); they name the gate, the road and the place now. The pre-door sheet's section 9 names
+  the new zip, server and terrain hash, and its knoll row was rewritten for the new ridge.
+
+**Left for the user:** the R720 redeploy (`git pull`, build, stop, `cp`, start; the boot line
+must read `dev_cmds=false` and `terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f`),
+sending `68c3e13` in place of `f5b8b24`, and `zone_4km_checklist.md` beside the pre-door
+sheet's section 9. If the zone should not go out after all, the ammo-only build is still
+there: server `d3cceef`, client `da53b1d`, the zip `f5b8b24`.
