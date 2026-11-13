@@ -1,7 +1,7 @@
 # Pre-Door Check Playtest Checklist — 2026-11-03
 
 A brand-new player's first 45 minutes, on the exact build the friends will hold on Nov 8
-(planner row v16; since 11-05 the door is Thu Nov 12 and the November bump lands first, so
+(planner row v16; since 11-13 the door is Thu Nov 19 (Nov 12 since 11-05) and the November bump lands first, so
 this sheet gets a second run on the bump build, planner row v60). Nothing new is under test: this is the friends' evening played once,
 alone, ahead of time. Anything odd gets a To-Do line the same day; fixes go out on Fri Nov 6.
 

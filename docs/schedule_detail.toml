@@ -23,7 +23,7 @@
 [meta]
 title = "Project Dawn: Week by Week to the Friends Build"
 start = 2026-10-05
-target = 2026-11-12
+target = 2026-11-19
 hours_per_week = 30
 minutes_per_checklist_row = 6
 stale_checklist_days = 30
@@ -58,7 +58,7 @@ text = "The user has about thirty hours a week. Weeks here never schedule more t
 source = "docs/schedule.md header."
 
 [[assumption]]
-text = "Every date here except November 12 is a proposal. The milestones were placed by working back from November 8 at the measured pace with the fifth week left as slack; on November 5 the door moved to Thursday November 12 (the friends are busy on the 8th) and the user put the November bump in front of it, so a sixth week holds the door."
+text = "Every date here except November 19 is a proposal. The milestones were placed by working back from November 8 at the measured pace with the fifth week left as slack; on November 5 the door moved to Thursday November 12 (the friends are busy on the 8th) and the user put the November bump in front of it, so a sixth week holds the door. On November 13 it moved a fourth time, to Thursday November 19: the invites had not gone out, and the week sends the share links early and runs the last pre-door rows, so a seventh week holds the door."
 source = "The handoff's instruction; docs/schedule.md section 1."
 
 # ---------------------------------------------------------------------------------------
@@ -135,9 +135,9 @@ means = "A fresh character plays the starter book for 45 minutes on the exact bu
 
 [[milestone]]
 id = "m5"
-date = 2026-11-12
+date = 2026-11-19
 name = "The door opens"
-means = "The full friend group's first evening. The only fixed date on this page. Thursday November 12 since November 5 (the friends were busy on Sunday the 8th)."
+means = "The full friend group's first evening. The only fixed date on this page. Thursday November 19 since November 13 (the invites had not gone out, so the user held them a week); November 12 since November 5 before that (the friends were busy on Sunday the 8th)."
 
 # ---------------------------------------------------------------------------------------
 # Weeks.
@@ -176,7 +176,13 @@ summary = "Drawn as a light week: fixes from the pre-door check, the rest of the
 id = "w6"
 starts = 2026-11-09
 title = "The door, on a Thursday"
-summary = "Added November 5: the friends are busy on Sunday the 8th, so the door is Thursday the 12th, and the user spent the four days on the November bump rather than holding it until after. The bump's sheets finish early in the week, the pre-door check runs again on the build the friends will hold, the last zip goes out, and Thursday evening the door opens."
+summary = "Added November 5: the friends are busy on Sunday the 8th, so the door is Thursday the 12th, and the user spent the four days on the November bump rather than holding it until after. The bump's sheets finish early in the week, the pre-door check runs again on the build the friends will hold, the last zip goes out, and Thursday evening the door opens. Redrawn November 13: the sheets, the rerun, the last zip and the players' checklist happened, but the invites had not gone out, so the door moved to the next Thursday and the week ends with the zip made and unsent."
+
+[[week]]
+id = "w7"
+starts = 2026-11-16
+title = "The door, a week later"
+summary = "Added November 13: the user held the invites back on the 12th, so the door is Thursday the 19th. Early in the week the pre-door rerun's last rows run on the zip, then the share links, the zip and the players' checklist go out to all four (the plan's own advice from October: the network part settled days before the evening), and Thursday evening the door opens."
 
 # ---------------------------------------------------------------------------------------
 # Week 1: October 5 to 11
@@ -718,14 +724,14 @@ done_when = "Each re-run row filled in its checklist."
 
 [[row]]
 id = "p4"
-week = "w6"
+week = "w7"
 lane = "people"
-day = "Mon Nov 9 to Wed Nov 11"
+day = "Tue Nov 17 to Wed Nov 18"
 what = "Onboard every friend not yet onboarded (the four named in d4 among them), each with the bump build (inviting_a_player.md, steps 2 to 5). Half an hour each; the count is the user's call, and may be nobody."
 who = "user at a desk, friends"
 hours = 1.5
-needs = ["the bump zip (o20), so nobody receives two zips"]
-waits_on = ["o20"]
+needs = ["the share links, the zip and the post already sent (p6)"]
+waits_on = ["p6"]
 done_when = "Each account appears in the account list without a [GM] tag."
 
 [[row]]
@@ -739,9 +745,9 @@ done_when = "Every checklist in that table carries a dated note at its top sayin
 
 [[row]]
 id = "o8"
-week = "w6"
+week = "w7"
 lane = "operate"
-day = "Thu Nov 12, afternoon"
+day = "Thu Nov 19, afternoon"
 what = "Health and backup check, dev_cmds=false confirmed, the console open for the evening."
 who = "user at a desk"
 hours = 0.5
@@ -749,9 +755,9 @@ done_when = "All checks pass."
 
 [[row]]
 id = "p5"
-week = "w6"
+week = "w7"
 lane = "people"
-day = "Thu Nov 12, evening"
+day = "Thu Nov 19, evening"
 what = "The door opens: the full group's first evening."
 who = "user at a desk, friends"
 hours = 4.0
@@ -763,10 +769,10 @@ done_when = "A session note records it; the phase 5 row in schedule.md section 7
 id = "d7"
 week = "w5"
 lane = "decide"
-day = "by Thu Nov 12"
+day = "by Thu Nov 19"
 what = "Phase 5's four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in."
 who = "user and planner"
-by = 2026-11-12
+by = 2026-11-19
 blocks = "The \"after the door opens\" list below becoming a dated plan."
 done_when = "Answers recorded in the plan doc; its bullet list freezes; one row joins schedule.md section 7."
 
@@ -774,10 +780,10 @@ done_when = "Answers recorded in the plan doc; its bullet list freezes; one row 
 id = "d8"
 week = "w5"
 lane = "decide"
-day = "by Thu Nov 12"
+day = "by Thu Nov 19"
 what = "docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it."
 who = "user"
-by = 2026-11-12
+by = 2026-11-19
 blocks = "Nothing."
 done_when = "One line in CLAUDE.md saying which."
 
@@ -796,12 +802,48 @@ done_when = "Each of the eight answered on the To-Do entry (Combat / weapons, EQ
 id = "d10"
 week = "w5"
 lane = "decide"
-day = "by Thu Nov 12"
+day = "by Thu Nov 19"
 what = "The factions and alignment design's nine decisions (docs/design/factions_and_alignment.md, section 6): the first six factions and the hit rule, who gets a kill's hits (the XP rule or EQ's hate list), the nine level thresholds, the v1 refusals (vendors at Dubious, quest givers at Apprehensive), alignment seeded from the class start, the Paladin and Shadow Knight off-side penalty kept on the server, no starting standings by race in v1, the mob and quest values, no GM freeze."
 who = "user"
-by = 2026-11-12
+by = 2026-11-19
 blocks = "The factions build (a migration and a bump), on the after-the-door strip."
 done_when = "Each of the nine answered on the Faction system To-Do entry."
+
+[[row]]
+id = "b56"
+week = "w6"
+lane = "build"
+day = "Thu Nov 12"
+what = "The players' checklist: CHECKLIST_FOR_TESTERS.md, 27 boxes in first-evening order for the friends, each row saying what should happen, ticked in Notepad and pasted back in Discord; the tester README points at it; the 919671b zip remade with both inside, the game files unchanged (verified by hash)."
+who = "Claude"
+days = 0.25
+waits_on = ["o21"]
+done_when = "builds/ProjectDawn-alpha-919671b.zip holds the sheet and the README that points at it."
+
+[[row]]
+id = "v61"
+week = "w7"
+lane = "verify"
+day = "Mon Nov 16"
+checklist = "pre_door_check_checklist.md"
+what = "The pre-door rerun's last rows, on a fresh plain account on the 919671b zip: the NPC capsules (section 1), the Wolf Threat turn-in with room in the bags, Restless Bones at level 2 and the Raiders at 3 (section 4), and section 8's six rows (the login facing seed, the swing re-time, the charm hand-back, the pet-owner hate token, the weapon proc line, the UI scale row)."
+who = "user at a desk"
+hours = 1.0
+needs = ["the 919671b zip", "the R720 at e358270 or later"]
+waits_on = ["v60", "o21"]
+done_when = "Every row of the sheet marked; a server fix redeploys, a client fix means one more zip before p6."
+
+[[row]]
+id = "p6"
+week = "w7"
+lane = "people"
+day = "Tue Nov 17"
+what = "The share links, the zip (ProjectDawn-alpha-919671b.zip, the players' checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday."
+who = "user at a desk, friends"
+hours = 1.0
+needs = ["a share link from the Tailscale admin console (share the machine, never the tailnet: inviting_a_player.md step 2)", "the zip in builds/"]
+waits_on = ["v61"]
+done_when = "All four shares accepted in the admin console; each friend's /version reads 919671b."
 
 # ---------------------------------------------------------------------------------------
 # After the door opens: undated, per the planner's answer. Status for each lives in the To-Do.
@@ -1384,10 +1426,10 @@ todo = "Housekeeping audit 2026-10-23"
 id = "d11"
 week = "w4"
 lane = "decide"
-day = "by Thu Nov 12 (the first is best answered before the bump's redeploy)"
+day = "by Thu Nov 19 (the first is best answered before the bump's redeploy)"
 what = "Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later."
 who = "user"
-by = 2026-11-12
+by = 2026-11-19
 blocks = "Slice 0 (one server handler now, the Test Panel's death button with the export); slice 1 waits on the server height model."
 done_when = "Each of the five answered on the Housekeeping audit To-Do entry."
 

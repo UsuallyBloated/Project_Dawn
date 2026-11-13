@@ -400,7 +400,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 ## Where things are documented
 
 - **Current plan, dates & sequencing** → `docs/schedule.md` — the push to a playable friends
-  build (target **2026-11-12**, slipped from 09-14 on 09-09, from 10-05 on 09-27, then from 11-08 on 11-05), with the phases, the critical path, and the velocity the estimates
+  build (target **2026-11-19**, slipped from 09-14 on 09-09, from 10-05 on 09-27, from 11-08 on 11-05, then from 11-12 on 11-13), with the phases, the critical path, and the velocity the estimates
   are measured against. **There is one checkbox list in this project and it's the To-Do below.**
   The schedule holds no boxes: its per-phase bullets are the plan, and its status table is just a
   progress readout of what the To-Do already says. (Restructured 2026-09-09: the schedule's
