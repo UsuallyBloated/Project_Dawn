@@ -2615,9 +2615,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   shot; the Arrow Bundle is the first ammo. Both sides and the paperdoll UI change, so it
   rides a zip and a redeploy: recommended for the bump after the door, not the Nov 19 zip (a
   new slot the friends would be the first to test). **Into the zip after all (user, the same
-  day: "lets add it", the zip open until the 17th), BUILT 2026-11-13, pending the Monday
-  export, the redeploy and the pre-door check** (`pre_door_check_checklist.md` §9; both repos
-  on the deploy branches, PD_W0030). `EquipSlot::Ammo` appended last (slot 9; the slot index
+  day: "lets add it", the zip open until the 17th), BUILT AND EXPORTED 2026-11-13, pending the
+  Monday redeploy and the pre-door check** (`pre_door_check_checklist.md` §9; server `d3cceef`,
+  client `f5b8b24`, both on the deploy branches, PD_W0030; the zip
+  `builds/ProjectDawn-alpha-f5b8b24.zip`, refused by the R720 until it runs `d3cceef`). `EquipSlot::Ammo` appended last (slot 9; the slot index
   rides the existing `EquipItem` bytes, so the protocol id is the only wire change, and the DLL
   moves with the server). An `ItemType::Ammo` / `ItemData.Type.AMMO` that fits the ammo slot
   alone, nothing else fitting it (`items::is_equippable_in_slot`, the client's slot picker);
@@ -3358,8 +3359,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   known perch and the evade rule covers it. (b) Walking into a face pushes the client's body a
   little into it until the player stops (the server holds the foot; the reconciliation pulls
   the body out): cosmetic. Both after the door. **(a) BUILT 2026-11-13 (the zip open until the
-  17th), pending the Monday export and redeploy and the pre-door check** (`pre_door_check_
-  checklist.md` §9): the knoll is at `[-58, 48]` with radius 22 (was `[-58, 60]`, 25), so its
+  17th), BUILT AND EXPORTED 2026-11-13, pending the Monday redeploy and the pre-door check**
+  (`pre_door_check_checklist.md` §9; server `d3cceef`, client `f5b8b24`): the knoll is at `[-58, 48]` with radius 22 (was `[-58, 60]`, 25), so its
   north edge ends at the foot row (z = 70 reads 0.0 along it, checked from the exported file)
   and the camp sits on its north slope (spawns at 5.9, 2.4 and 0.9 m, the steepest 25.9°, the
   route from town 25.6°, no WARN); every triangle of the ridge's south face is a face again

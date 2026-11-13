@@ -160,7 +160,7 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       100% every login, the slider still reading 125%); the login screen looks as before;
       Apply at 100% afterwards puts it back. notes:
 
-## 9 — The Monday export (the ammo slot, the knoll, the Selos' lines; needs the zip exported after 2026-11-13 and the R720 redeployed with it, its boot line reading `hash 5324d5d0c754`)
+## 9 — The Monday build (the ammo slot, the knoll, the Selos' lines; needs `ProjectDawn-alpha-f5b8b24.zip` and the R720 redeployed on server `d3cceef`, its boot line reading `hash 5324d5d0c754`)
 - [ ] **Buy a Hunter's Shortbow from Hadrik and twenty Arrow Bundle from Elara** → both sell
       (80 copper and 1 copper an arrow); the arrows' tooltip reads "Ammunition: worn in the ammo
       slot, one per shot" and the bundle weighs 2.0 at twenty. notes:
