@@ -1,126 +1,233 @@
-# The starter zone's relief as data (docs/design/first_hills_plan.md, the
-# first hills). tools/author_terrain.gd composes these into the TerrainMesh's
-# heights in scenes/world.tscn and reports the slope under every camp spawn and
-# NPC; tools/export_terrain.gd then writes the server's terrain.toml from the
-# scene. Coordinates are x east, z north, metres; heights are above the floor
-# at y = 0, and nothing is composed below it.
+# The starting zone's relief as data: the 4 km plate of the composition
+# sketches (docs/design/starting_area_comp_sketches.html, 2026-11-13).
+# tools/author_terrain.gd composes these into the TerrainMesh's heights in
+# scenes/world.tscn, reports the slope under every camp spawn and NPC and who
+# can walk where, and paints the ground texture from data/zone_layout.gd;
+# tools/export_terrain.gd then writes the server's terrain.toml from the scene.
+# Coordinates are x east, z north, metres; heights are above the floor at
+# y = 0, and nothing is composed below it.
 #
-# Composition, at every grid vertex, in this order: start at 0; every hill and
-# ridge adds its height times a smoothstep of how far inside it the vertex is
-# (a negative height digs); every plateau raises the vertex to its top inside
-# its rect, and along a ramp outside an edge; every cut lowers the vertex to
-# its floor; the rim raises the plate's outer band; the result is floored at 0.
+# Composition, at every grid vertex, in this order:
+#   1. start at 0;
+#   2. every hill adds its height times a smoothstep of how far inside it the
+#      vertex is (full height inside flat_radius; a negative height digs);
+#   3. every ring adds its height along a circle (a rim round a hollow, since
+#      nothing digs below the floor);
+#   4. every ridge adds a flat-topped wall: its height inside, falling to 0
+#      over face_width at its edge, with a crown and some crest noise on top;
+#   5. every noise adds rolling ground, masked away from the town (and, for
+#      the foothills, towards the plate's edge);
+#   6. every plateau raises the vertex to its top inside its rect, and along a
+#      ramp outside an edge;
+#   7. every cut lowers the vertex to its floor, its walls rising at
+#      wall_slope outside its half width;
+#   8. the rim adds a wall round the plate's edge, its top broken into peaks;
+#   9. the result is floored at 0 and rounded to 0.0001 m.
 #
 # A slope steeper than 55 degrees is no floor (a body slides off it) and one
 # steeper than 60 is a face (the server refuses a step up it). At 10 m cells a
-# feature narrower than two cells is sampled at its grid vertices only, which
-# is why the ridge's height and the pass's width below are what they are.
+# face is a rise of more than 17.4 m from one grid row to the next, which is
+# why the ridge's and the rim's faces are as wide and as high as they are.
 
-grid_size = 40          # 40 x 40 cells of 10 m: the 400 m plate
+grid_size = 400         # 400 x 400 cells of 10 m: the 4 km plate
 cell_size = 10.0
+# The town and its walls stand on ground at 0 out to this far from the origin.
+town_flat_radius = 150.0
 
-# The broad rise the Sunken Barrow is "below"; the Ossuary stands on it.
+# --- The western hills ------------------------------------------------------
+
+# The broad massif the Sunken Barrow is dug into; the Ossuary stands on its
+# crest. About 13 degrees at its steepest.
 [[hill]]
 name = "the western hills"
-center = [-160.0, 0.0]
-radius = 70.0
-height = 25.0
+center = [-1550.0, 0.0]
+radius = 700.0
+height = 110.0
 
-# A pit dug into the western hills: the barrow zombies and the Undying in it,
-# its walls about 30 to 40 degrees (floors), so they climb out after a player.
+[[hill]]
+name = "the Ossuary crest"
+center = [-1760.0, 100.0]
+radius = 260.0
+height = 28.0
+
+# The pit "dug to hold something": 45 m deep with a floor 180 m across, its
+# walls about 32 to 40 degrees (floors), so the barrow's dead climb out after
+# a player. The zombies stand at its middle, the Undying at its west end.
 [[hill]]
 name = "the Sunken Barrow"
-center = [-150.0, -6.0]
-radius = 18.0
-height = -12.0
+center = [-1480.0, -60.0]
+radius = 200.0
+flat_radius = 90.0
+height = -45.0
 
-# The bandits' lookout.
+# --- North of the town --------------------------------------------------------
+
+# The bandits' lookout. Its radius keeps it clear of the ridge's foot (z = 790):
+# the knoll that met the old ridge lifted its face into a slope people climbed.
 [[hill]]
 name = "the bandit knoll"
-center = [-58.0, 60.0]
-radius = 25.0
-height = 8.0
+center = [-600.0, 640.0]
+radius = 140.0
+height = 22.0
 
-# Bat Hollow: a hollow on flat ground needs ground round it to be lower than,
-# since nothing is composed below the floor, so it is a low rise (to about a
-# metre and a half) with the hollow dug back out of its middle.
-[[hill]]
+# Bat Hollow: a hollow on the plain needs ground round it to be lower than, so
+# it is a ring 9 m high with the plain's own level inside it.
+[[ring]]
 name = "Bat Hollow's rim"
-center = [3.0, 48.0]
-radius = 20.0
-height = 4.0
+center = [-130.0, 540.0]
+radius = 75.0
+width = 45.0
+height = 9.0
 
-[[hill]]
-name = "Bat Hollow"
-center = [3.0, 48.0]
-radius = 14.0
-height = -4.0
+# The Greywood ridge: a wall 62 m high and 220 m through, 2.6 km long, between
+# the town's side and the wood's. Its line z = 900 is a grid row and its faces
+# are 30 m wide, so each face is three rows of 20.7 m: 64 degrees. Nobody
+# stands on its crest.
+[[ridge]]
+name = "the Greywood ridge"
+from = [-1300.0, 900.0]
+to = [1300.0, 900.0]
+half_width = 110.0
+face_width = 30.0
+height = 62.0
+crown = 8.0
+crest_noise = 14.0
 
-# The Broken Crypt's bowl north of the ridge, made the same way.
-[[hill]]
-name = "the crypt's bowl rim"
-center = [2.0, 118.0]
-radius = 32.0
-height = 5.0
-
-[[hill]]
+# The Broken Crypt's bowl in the wood: a ring 18 m high round the crypt.
+[[ring]]
 name = "the crypt's bowl"
-center = [2.0, 118.0]
-radius = 20.0
-height = -5.0
+center = [20.0, 1250.0]
+radius = 150.0
+width = 70.0
+height = 18.0
+
+# The wood's floor climbs north towards the mountains.
+[[hill]]
+name = "the Greywood rise"
+center = [0.0, 2100.0]
+radius = 900.0
+height = 70.0
+
+[[hill]]
+name = "the western wood's rise"
+center = [-1150.0, 1700.0]
+radius = 500.0
+height = 40.0
+
+[[hill]]
+name = "the eastern wood's rise"
+center = [1200.0, 1600.0]
+radius = 450.0
+height = 35.0
+
+# --- East, south --------------------------------------------------------------
 
 [[hill]]
 name = "the spiders' rise"
-center = [110.0, 2.0]
-radius = 30.0
-height = 6.0
+center = [1130.0, 40.0]
+radius = 240.0
+height = 20.0
+
+[[hill]]
+name = "the festering mound"
+center = [640.0, -620.0]
+radius = 130.0
+height = 10.0
 
 [[hill]]
 name = "the old rocks"
-center = [3.0, -72.0]
-radius = 22.0
-height = 6.0
+center = [40.0, -780.0]
+radius = 180.0
+height = 25.0
 
+# The gnolls' high ground: a shelf 30 m up with a top 260 m across.
 [[hill]]
 name = "the war camp's shelf"
-center = [2.0, -150.0]
-radius = 40.0
-height = 8.0
+center = [20.0, -1520.0]
+radius = 310.0
+flat_radius = 130.0
+height = 30.0
 
-# The Greywood edge: a wall between the bats' side and the crypt's. Its line
-# z = 85 falls between two grid rows, which sample it at a quarter in from its
-# crest, so a height of 24 makes a crest of 17.8 m whose sides are faces (61
-# degrees); at 16 they were 50 degree floors anyone could walk over.
-[[ridge]]
-name = "the Greywood ridge"
-from = [-120.0, 85.0]
-to = [120.0, 85.0]
-half_width = 15.0
-height = 24.0
+# --- The rolling ground ---------------------------------------------------------
 
-# The Wraith Gate's high ground: the west edge the one real cliff (18 m over
-# one cell, 61 degrees; a fall from its lip costs 40% of max HP), the south and
-# north edges 30 m ramps (31 degrees).
+# Nothing in four kilometres is level except the town: low swells everywhere,
+# longer ones further out. calm_radius to full_radius is the fade from the
+# town's flat ground (calm_radius is two cells past town_flat_radius, so no
+# triangle that reaches into the town has a raised corner).
+[[noise]]
+name = "the swells"
+seed = 11
+wavelength = 240.0
+amplitude = 3.5
+calm_radius = 170.0
+full_radius = 380.0
+
+[[noise]]
+name = "the long rises"
+seed = 23
+wavelength = 700.0
+amplitude = 9.0
+calm_radius = 320.0
+full_radius = 800.0
+
+# Foothills under the rim, so the mountains do not start from a ruled line.
+# edge_from to edge_to is the fade in, measured as the rim measures (the
+# larger of |x| and |z|).
+[[noise]]
+name = "the foothills"
+seed = 37
+wavelength = 300.0
+amplitude = 42.0
+edge_from = 1520.0
+edge_to = 1930.0
+
+# --- The Wraith Gate ------------------------------------------------------------
+
+# The plateau: 60 m up, its west edge the one real cliff (60 m over one cell;
+# a fall from its lip kills), the north and south edges 120 m ramps (27
+# degrees), its east side running into the rim.
 [[plateau]]
 name = "the Wraith Gate plateau"
-rect = [150.0, -40.0, 200.0, 30.0]
-height = 18.0
-ramps = { west = 0.0, south = 30.0, north = 30.0, east = 0.0 }
+rect = [1450.0, -450.0, 2000.0, 350.0]
+height = 60.0
+ramps = { west = 0.0, south = 120.0, north = 120.0, east = 0.0 }
 
-# The way north through the ridge. Wide enough to take the grid columns at
-# x = -10, 0 and 10, so the pass has a floor 20 m wide; at a half width of 6
-# only x = 0 was cut and the pass was a notch of 50 degree walls.
+# --- The pass ---------------------------------------------------------------------
+
+# The way north through the ridge: a floor 60 m wide between walls that rise
+# at 72 degrees.
 [[cut]]
 name = "the pass"
-from = [0.0, 60.0]
-to = [0.0, 110.0]
-half_width = 12.0
+from = [0.0, 770.0]
+to = [0.0, 1030.0]
+half_width = 30.0
 floor = 0.0
+wall_slope = 3.0
 
-# High ground round the plate so nobody walks off it: from 0 at 180 m from the
-# centre to 40 m at the edge, 63 degrees, a face. At 30 m it was 56, which the
-# server's 60 degree climb limit lets a modified client climb; at 36 the war
-# camp's shelf, still a metre up where the rim begins, left its cells at 59.
+# --- The rim ----------------------------------------------------------------------
+
+# Mountains round the plate so nobody walks off it: 160 m over the last 70 m
+# (66 degrees, a face, with room for the foothills to slope the other way
+# under it), its top raised by up to peak_noise of that again in peaks
+# peak_wavelength apart.
 [[rim]]
-start_at = 180.0
-height = 40.0
+start_at = 1930.0
+height = 160.0
+peak_noise = 0.45
+peak_wavelength = 170.0
+
+# --- Ground the report holds ---------------------------------------------------------
+
+# Places nobody may be able to walk to: the report fails if a walk from the
+# town reaches one.
+[[unreachable]]
+name = "the ridge's crest, west"
+point = [-700.0, 900.0]
+
+[[unreachable]]
+name = "the ridge's crest, east"
+point = [700.0, 900.0]
+
+[[unreachable]]
+name = "the ridge's crest above the pass"
+point = [60.0, 900.0]

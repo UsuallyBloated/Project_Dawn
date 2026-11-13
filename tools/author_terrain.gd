@@ -1,9 +1,9 @@
 extends SceneTree
 
-# Terrain author (the first hills, docs/design/first_hills_plan.md): composes
-# the zone's relief from data/terrain_features.toml into the TerrainMesh's
-# heights in scenes/world.tscn, after a report that fails on ground a camp or
-# an NPC could not stand on.
+# Terrain author: composes the zone's relief from data/terrain_features.toml
+# into the TerrainMesh's heights in scenes/world.tscn, after a report that
+# fails on ground a camp or an NPC could not stand on, and paints the ground
+# texture (roads, farms, forest floor) from data/zone_layout.gd.
 #
 # Run from the client repo root:
 #   godot --headless --path . -s tools/author_terrain.gd -- <server data dir>
@@ -15,17 +15,21 @@ extends SceneTree
 # The report: for every camp spawn and the four corners of its jitter square,
 # and for every NPC, the steepest slope under it (FAIL past 55 degrees, the
 # steepest floor a body stands on, fall.rs::FLOOR_MAX_ANGLE_DEG); the town
-# square and the NPC row (FAIL if any ground there is not at 0); the steepest
-# grade on the straight line from the town to each camp (WARN past 30
-# degrees: a route that bends round a feature is fine); the rim's height round
-# the plate's edge; and how much of the ground is floor, too steep to stand on
-# (55 to 60 degrees: a body slides, a step up is still allowed) and face (past
-# 60: a step up is refused). Nothing is written when the report fails.
+# (FAIL if any ground inside town_flat_radius is not at 0); the steepest grade
+# on the straight line from the town to each camp (WARN past 30 degrees: a
+# route that bends round a feature is fine); the rim's height round the
+# plate's edge; how much of the ground is floor, too steep to stand on (55 to
+# 60 degrees: a body slides, a step up is still allowed) and face (past 60: a
+# step up is refused); how far each set piece in data/zone_layout.gd stands
+# from the camp it dresses (WARN past 80 m); and who can walk where: a walk
+# from the town must reach every camp spawn, and must reach neither the
+# plate's outer edge nor any point the features file lists as unreachable.
+# Nothing is written when the report fails.
 #
-# What it writes: the TerrainMesh node's grid_size, cell_size and heights, and
-# the bodies of the three terrain subresources (the mesh, its material and the
-# collider), which a TerrainMesh built from the new heights produces through
-# Godot's own text saver. Every other byte of the scene is left alone. Then run
+# What it writes: the TerrainMesh node's grid_size, cell_size and heights
+# (the node builds its meshes and colliders from them at load), and the paint
+# texture at PAINT_PATH. Every other byte of the scene is left alone. Then run
+# `godot --headless --path . --import` (the paint is an imported texture),
 # tools/export_terrain.gd (with the path) and tools/check_terrain_lockstep.gd.
 #
 # Exit code 0 when written (or a clean report with --report-only), 1 when the
@@ -34,9 +38,10 @@ extends SceneTree
 
 const FEATURES_PATH := "res://data/terrain_features.toml"
 const WORLD_SCENE_PATH := "res://scenes/world.tscn"
-const TERRAIN_SCRIPT := "res://scripts/terrain_mesh.gd"
+const PAINT_PATH := "res://assets/textures/environment/zone_paint.png"
 const DEFAULT_SERVER_DATA := "F:/Projects/server/crates/projectdawn-server/data"
 const Exporter := preload("res://tools/export_terrain.gd")
+const Layout := preload("res://data/zone_layout.gd")
 
 # The steepest floor a body (a player's or a mob's) stands on, fall.rs.
 const FLOOR_MAX_ANGLE_DEG := 55.0
@@ -44,28 +49,19 @@ const FLOOR_MAX_ANGLE_DEG := 55.0
 const SLOPE_LIMIT_DEG := 60.0
 # A route from the town steeper than this is worth a look.
 const ROUTE_WARN_DEG := 30.0
-# The town: the safe square round the origin and the NPC row, which stay flat.
-const TOWN_RADIUS := 10.0
-const NPC_ROW_Z := 5.0
-const NPC_ROW_X0 := -5.0
-const NPC_ROW_X1 := 11.0
+# A set piece further than this from its camp's nearest spawn has drifted.
+const SITE_WARN_M := 80.0
+const DEFAULT_TOWN_FLAT_RADIUS := 10.0
 const DEFAULT_CAMP_RADIUS := 3.0
 # A height closer to 0 than this is 0 (float noise in the composition).
 const FLAT_EPSILON := 0.0001
-# Every height is rounded to this. Godot's Mesh.create_trimesh_shape snaps each
-# vertex to 0.0001 m as it builds the collider, so the client walks on rounded
-# heights whatever the mesh holds; rounding first makes the snap change nothing,
-# and the server then samples exactly the triangles the client collides with.
+# Every height is rounded to this, so the text the scene and the server's file
+# carry is short and both sides read back the same 32-bit number.
 const HEIGHT_STEP := 0.0001
+# The paint texture: this many pixels a side over the whole plate.
+const PAINT_SIZE := 2048
 
-# The subresources the scene keeps the built terrain in.
-const MESH_SECTION := "[sub_resource type=\"ArrayMesh\" id=\"ArrayMesh_jka67\"]"
-const MATERIAL_SECTION := "[sub_resource type=\"StandardMaterial3D\" id=\"StandardMaterial3D_r3fl7\"]"
-const MATERIAL_ID := "StandardMaterial3D_r3fl7"
-const COLLIDER_SECTION := "[sub_resource type=\"ConcavePolygonShape3D\" id=\"ConcavePolygonShape3D_i5arm\"]"
 const TERRAIN_NODE_HEADER := "[node name=\"TerrainMesh\" type=\"Node3D\" parent=\".\"]"
-const SCRATCH_MESH := "user://author_terrain_mesh.tres"
-const SCRATCH_SHAPE := "user://author_terrain_shape.tres"
 
 
 func _initialize() -> void:
@@ -102,13 +98,16 @@ func _run(data_dir: String, report_only: bool) -> int:
 	}
 	terrain["heights"] = compose(features, terrain)
 
-	var fails := report(terrain, camps, npcs)
+	var fails := report(terrain, features, camps, npcs)
 	if fails > 0:
 		print("\n%d FAIL(s): nothing written. Move or soften the feature, never the camp." % fails)
 		return 1
 	if report_only:
 		print("\nReport clean (--report-only: nothing written).")
 		return 0
+	var paint_code := _write_paint(terrain)
+	if paint_code != 0:
+		return paint_code
 	return _write_scene(terrain)
 
 
@@ -217,35 +216,116 @@ static func compose(features: Dictionary, terrain: Dictionary) -> PackedFloat32A
 	var cell: float = terrain["cell_size"]
 	var origin: Vector3 = terrain["origin"]
 	var half := gs * cell * 0.5
+	var noises := make_noises(features)
 	var heights := PackedFloat32Array()
 	heights.resize((gs + 1) * (gs + 1))
 	for iz in gs + 1:
 		for ix in gs + 1:
 			var p := Vector2(origin.x - half + ix * cell, origin.z - half + iz * cell)
-			heights[iz * (gs + 1) + ix] = snappedf(height_at(features, p, half), HEIGHT_STEP)
+			heights[iz * (gs + 1) + ix] = snappedf(height_at(features, noises, p, half), HEIGHT_STEP)
 	return heights
 
 
-static func height_at(features: Dictionary, p: Vector2, half: float) -> float:
+# A noise source of the given wavelength, whose values n01() reads as 0 to 1.
+static func _noise(seed_value: int, wavelength: float, octaves: int) -> FastNoiseLite:
+	var n := FastNoiseLite.new()
+	n.seed = seed_value
+	n.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	n.frequency = 1.0 / maxf(wavelength, 1.0)
+	n.fractal_type = FastNoiseLite.FRACTAL_FBM
+	n.fractal_octaves = octaves
+	return n
+
+
+static func n01(noise: FastNoiseLite, x: float, y: float) -> float:
+	return clampf(noise.get_noise_2d(x, y) * 0.5 + 0.5, 0.0, 1.0)
+
+
+# The noise sources the composition uses: one per [[noise]] entry, one for the
+# ridges' crests and one for the rim's peaks.
+static func make_noises(features: Dictionary) -> Dictionary:
+	var layers: Array = []
+	for f in features.get("noise", []):
+		layers.append(_noise(int(f.get("seed", 1)), float(f["wavelength"]), 2))
+	var peak_wavelength := 170.0
+	for f in features.get("rim", []):
+		peak_wavelength = float(f.get("peak_wavelength", peak_wavelength))
+	return {"layers": layers, "crest": _noise(101, 95.0, 2), "rim": _noise(202, peak_wavelength, 2)}
+
+
+static func height_at(features: Dictionary, noises: Dictionary, p: Vector2, half: float) -> float:
 	var h := 0.0
 	for f in features.get("hill", []):
 		var d := p.distance_to(_v2(f["center"]))
-		if d < f["radius"]:
-			h += float(f["height"]) * smoothstep01(1.0 - d / f["radius"])
+		var radius: float = f["radius"]
+		if d < radius:
+			var flat: float = f.get("flat_radius", 0.0)
+			var t := 1.0 if d <= flat else 1.0 - (d - flat) / (radius - flat)
+			h += float(f["height"]) * smoothstep01(t)
+	for f in features.get("ring", []):
+		var t := 1.0 - absf(p.distance_to(_v2(f["center"])) - float(f["radius"])) / float(f["width"])
+		if t > 0.0:
+			h += float(f["height"]) * smoothstep01(t)
 	for f in features.get("ridge", []):
-		var d := segment_distance(p, _v2(f["from"]), _v2(f["to"]))
-		if d < f["half_width"]:
-			h += float(f["height"]) * smoothstep01(1.0 - d / f["half_width"])
+		h += _ridge_height(f, noises, p)
+	var layers: Array = noises["layers"]
+	var noise_features: Array = features.get("noise", [])
+	for i in noise_features.size():
+		var f: Dictionary = noise_features[i]
+		var mask := 1.0
+		if f.has("full_radius"):
+			var calm: float = f.get("calm_radius", 0.0)
+			mask *= smoothstep01(clampf((p.length() - calm) / (float(f["full_radius"]) - calm), 0.0, 1.0))
+		if f.has("edge_to"):
+			var from: float = f.get("edge_from", 0.0)
+			mask *= smoothstep01(clampf((maxf(absf(p.x), absf(p.y)) - from) / (float(f["edge_to"]) - from), 0.0, 1.0))
+		if mask > 0.0:
+			h += float(f["amplitude"]) * mask * n01(layers[i], p.x, p.y)
 	for f in features.get("plateau", []):
 		h = maxf(h, _plateau_height(f, p))
 	for f in features.get("cut", []):
-		if segment_distance(p, _v2(f["from"]), _v2(f["to"])) <= f["half_width"]:
+		var d := segment_distance(p, _v2(f["from"]), _v2(f["to"]))
+		var half_width: float = f["half_width"]
+		var wall: float = f.get("wall_slope", 0.0)
+		if d <= half_width:
 			h = minf(h, f["floor"])
+		elif wall > 0.0:
+			h = minf(h, float(f["floor"]) + (d - half_width) * wall)
 	for f in features.get("rim", []):
 		var r := maxf(absf(p.x), absf(p.y))
-		if r > f["start_at"]:
-			h = maxf(h, float(f["height"]) * (r - f["start_at"]) / (half - f["start_at"]))
+		var start: float = f["start_at"]
+		if r > start:
+			# The peaks vary along the edge only, never across it: a peak that
+			# changed with r would flatten the face somewhere.
+			var on_x_side := absf(p.x) >= absf(p.y)
+			var along := p.y if on_x_side else p.x
+			var side := 0.0 if on_x_side else 5000.0
+			if (p.x if on_x_side else p.y) < 0.0:
+				side += 10000.0
+			var peaks := 1.0 + float(f.get("peak_noise", 0.0)) * n01(noises["rim"], along, side)
+			h += float(f["height"]) * peaks * (r - start) / (half - start)
 	return maxf(h, 0.0)
+
+
+# A ridge's height at p: its height inside, falling in a straight line to 0
+# over face_width at its edge (the face), plus on its flat top a crown that
+# swells towards the middle and noise that breaks the skyline. The top's extras
+# are 0 at the lip, so the faces stay the slope face_width makes them.
+static func _ridge_height(f: Dictionary, noises: Dictionary, p: Vector2) -> float:
+	var d := segment_distance(p, _v2(f["from"]), _v2(f["to"]))
+	var half_width: float = f["half_width"]
+	if d >= half_width:
+		return 0.0
+	var height: float = f["height"]
+	var face: float = f.get("face_width", 0.0)
+	if face <= 0.0:
+		return height * smoothstep01(1.0 - d / half_width)
+	var top := half_width - face
+	if d > top:
+		return height * (half_width - d) / face
+	var inside := smoothstep01(1.0 - d / top)
+	return height + inside * (float(f.get("crown", 0.0))
+		+ float(f.get("crest_noise", 0.0)) * n01(noises["crest"], p.x, p.y))
 
 
 # A plateau's height at p: its top inside the rect; a ramp falling to 0 over
@@ -344,7 +424,7 @@ static func _jitter_square(p: Vector2, r: float) -> Array:
 
 
 # Prints the report; returns the number of FAILs.
-static func report(terrain: Dictionary, camps: Array, npcs: Array) -> int:
+static func report(terrain: Dictionary, features: Dictionary, camps: Array, npcs: Array) -> int:
 	var fails := 0
 	var gs: int = terrain["grid_size"]
 	var cell: float = terrain["cell_size"]
@@ -359,7 +439,7 @@ static func report(terrain: Dictionary, camps: Array, npcs: Array) -> int:
 		var bad := steep > FLOOR_MAX_ANGLE_DEG
 		if bad:
 			fails += 1
-		print("  %-4s %-28s (%6.1f, %6.1f)  ground %5.1f m, steepest %4.1f deg" % [
+		print("  %-4s %-28s (%7.1f, %7.1f)  ground %6.1f m, steepest %4.1f deg" % [
 			"FAIL" if bad else "ok", c["name"], p.x, p.y, Exporter.ground_at(terrain, p.x, p.y), steep])
 
 	print("\nNPCs:")
@@ -370,27 +450,23 @@ static func report(terrain: Dictionary, camps: Array, npcs: Array) -> int:
 		var bad := steep > FLOOR_MAX_ANGLE_DEG or absf(h - float(terrain["floor_y"])) > FLAT_EPSILON
 		if bad:
 			fails += 1
-		print("  %-4s %-28s (%6.1f, %6.1f)  ground %5.1f m, steepest %4.1f deg" % ["FAIL" if bad else "ok", n["name"], p.x, p.y, h, steep])
+		print("  %-4s %-28s (%7.1f, %7.1f)  ground %6.1f m, steepest %4.1f deg" % ["FAIL" if bad else "ok", n["name"], p.x, p.y, h, steep])
 
-	# The town square and the NPC row, every metre: all at the floor.
+	# The town, every other metre: all at the floor.
+	var town_radius := int(features.get("town_flat_radius", DEFAULT_TOWN_FLAT_RADIUS))
 	var town_bad := 0
 	var town_points := 0
-	for ix in range(-int(TOWN_RADIUS), int(TOWN_RADIUS) + 1):
-		for iz in range(-int(TOWN_RADIUS), int(TOWN_RADIUS) + 1):
-			var p := Vector2(origin.x + ix, origin.z + iz)
-			if Vector2(ix, iz).length() > TOWN_RADIUS:
+	for ix in range(-town_radius, town_radius + 1, 2):
+		for iz in range(-town_radius, town_radius + 1, 2):
+			if Vector2(ix, iz).length() > town_radius:
 				continue
 			town_points += 1
-			if not _flat_at(terrain, p):
+			if not _flat_at(terrain, Vector2(origin.x + ix, origin.z + iz)):
 				town_bad += 1
-	for ix in range(int(NPC_ROW_X0), int(NPC_ROW_X1) + 1):
-		town_points += 1
-		if not _flat_at(terrain, Vector2(ix, NPC_ROW_Z)):
-			town_bad += 1
 	if town_bad > 0:
 		fails += 1
-	print("\n  %-4s the town square (radius %d m) and the NPC row: %d of %d points off the floor" % [
-		"FAIL" if town_bad > 0 else "ok", int(TOWN_RADIUS), town_bad, town_points])
+	print("\n  %-4s the town (radius %d m): %d of %d points off the floor" % [
+		"FAIL" if town_bad > 0 else "ok", town_radius, town_bad, town_points])
 
 	print("\nRoutes from the town, the straight line to each camp's first spawn, every metre (WARN past %d degrees):" % int(ROUTE_WARN_DEG))
 	var seen := {}
@@ -405,49 +481,345 @@ static func report(terrain: Dictionary, camps: Array, npcs: Array) -> int:
 		for i in steps + 1:
 			var q := start.lerp(target, float(i) / steps)
 			worst = maxf(worst, Exporter.slope_deg_at(terrain, q.x, q.y))
-		print("  %-4s %-28s steepest %4.1f deg" % ["WARN" if worst > ROUTE_WARN_DEG else "", c["name"], worst])
+		print("  %-4s %-28s %5d m, steepest %4.1f deg" % ["WARN" if worst > ROUTE_WARN_DEG else "", c["name"], steps, worst])
 
 	# The rim: the ground round the plate's edge, every metre.
 	var rim_min := INF
+	var rim_max := 0.0
 	var edge := half - 0.001
 	for i in range(int(-half), int(half) + 1):
 		for q in [Vector2(i, -edge), Vector2(i, edge), Vector2(-edge, i), Vector2(edge, i)]:
-			rim_min = minf(rim_min, Exporter.ground_at(terrain, origin.x + q.x, origin.z + q.y))
-	print("\nThe rim: the lowest ground round the plate's edge is %.1f m (north %.1f, south %.1f, east %.1f, west %.1f at the middle)." % [
-		rim_min,
-		Exporter.ground_at(terrain, origin.x, origin.z + edge), Exporter.ground_at(terrain, origin.x, origin.z - edge),
-		Exporter.ground_at(terrain, origin.x + edge, origin.z), Exporter.ground_at(terrain, origin.x - edge, origin.z)])
+			var g := Exporter.ground_at(terrain, origin.x + q.x, origin.z + q.y)
+			rim_min = minf(rim_min, g)
+			rim_max = maxf(rim_max, g)
+	print("\nThe rim: the ground round the plate's edge runs from %.1f m to %.1f m." % [rim_min, rim_max])
 
-	# Every triangle, by class: the centroid's slope is the triangle's.
+	fails += _report_sites(camps)
+	fails += _report_walk(terrain, features, camps)
+	return fails
+
+
+# Each set piece in the layout against the camp of the same name: a set piece
+# with no camp, or one that has drifted from its camp's spawns, is a WARN (the
+# dressing is scenery, so never a FAIL).
+static func _report_sites(camps: Array) -> int:
+	print("\nSet pieces (data/zone_layout.gd SITES) against their camps (WARN past %d m):" % int(SITE_WARN_M))
+	for site_name in Layout.SITES:
+		var at: Vector2 = Layout.SITES[site_name]
+		var nearest := INF
+		for c in camps:
+			var camp_name: String = c["name"]
+			if camp_name == site_name or camp_name.begins_with(site_name) or site_name.begins_with(camp_name):
+				nearest = minf(nearest, at.distance_to(c["pos"]))
+		if nearest == INF:
+			print("  WARN %-24s no camp of that name in zone_camps.toml" % site_name)
+		else:
+			print("  %-4s %-24s %5.1f m from its nearest spawn" % ["WARN" if nearest > SITE_WARN_M else "ok", site_name, nearest])
+	return 0
+
+
+# Who can walk where. Every triangle is a place; a walker moves between two
+# that share a corner. The server's rule (terrain.rs::slope_ok) refuses a step
+# that rises onto ground past SLOPE_LIMIT_DEG, so a face is entered only from
+# above, and from a face (which no body stands on, fall.rs) the only way is
+# down. Starting in the town: every camp spawn must be reached, and neither
+# the plate's outer row of cells nor any [[unreachable]] point may be.
+static func _report_walk(terrain: Dictionary, features: Dictionary, camps: Array) -> int:
+	var gs: int = terrain["grid_size"]
+	var cell: float = terrain["cell_size"]
+	var origin: Vector3 = terrain["origin"]
+	var heights: PackedFloat32Array = terrain["heights"]
+	var half := gs * cell * 0.5
+	var row := gs + 1
+	var limit := tan(deg_to_rad(SLOPE_LIMIT_DEG))
+	var floor_limit := tan(deg_to_rad(FLOOR_MAX_ANGLE_DEG))
+	var tri_count := gs * gs * 2
+	var is_face := PackedByteArray()
+	is_face.resize(tri_count)
+	var mid := PackedFloat32Array()
+	mid.resize(tri_count)
 	var floors := 0
 	var slides := 0
 	var faces := 0
-	var slide_at: Array = []
-	for iz in gs:
-		for ix in gs:
-			var x0 := origin.x - half + ix * cell
-			var z0 := origin.z - half + iz * cell
-			for centroid in [Vector2(x0 + cell / 3.0, z0 + cell / 3.0), Vector2(x0 + cell * 2.0 / 3.0, z0 + cell * 2.0 / 3.0)]:
-				var a := Exporter.slope_deg_at(terrain, centroid.x, centroid.y)
-				if a <= FLOOR_MAX_ANGLE_DEG:
-					floors += 1
-				elif a <= SLOPE_LIMIT_DEG:
-					slides += 1
-					if slide_at.size() < 6:
-						slide_at.append("(%d, %d) %.1f deg" % [int(centroid.x), int(centroid.y), a])
-				else:
+	for cz in gs:
+		for cx in gs:
+			var i := cz * row + cx
+			var h00 := heights[i]
+			var h10 := heights[i + 1]
+			var h01 := heights[i + row]
+			var h11 := heights[i + row + 1]
+			var t := (cz * gs + cx) * 2
+			var lower := Vector2(h10 - h00, h01 - h00).length() / cell
+			var upper := Vector2(h11 - h01, h11 - h10).length() / cell
+			mid[t] = (h00 + h10 + h01) / 3.0
+			mid[t + 1] = (h10 + h11 + h01) / 3.0
+			for pair in [[t, lower], [t + 1, upper]]:
+				var slope: float = pair[1]
+				if slope > limit:
+					is_face[pair[0]] = 1
 					faces += 1
+				elif slope > floor_limit:
+					slides += 1
+				else:
+					floors += 1
 	print("\nTriangles: %d floor, %d too steep to stand on but climbable (%d to %d deg), %d face." % [
 		floors, slides, int(FLOOR_MAX_ANGLE_DEG), int(SLOPE_LIMIT_DEG), faces])
-	if slides > 0:
-		print("  WARN a modified client can step up a %d to %d degree slope the honest body slides off: %s%s" % [
-			int(FLOOR_MAX_ANGLE_DEG), int(SLOPE_LIMIT_DEG), ", ".join(slide_at), " ..." if slides > slide_at.size() else ""])
+
+	# The triangles that share a corner with a cell's lower and upper triangle,
+	# as (dx, dz, which) offsets.
+	var around := [_corner_neighbours(0), _corner_neighbours(1)]
+	var reached := PackedByteArray()
+	reached.resize(tri_count)
+	var queue := PackedInt32Array()
+	queue.resize(tri_count)
+	var head := 0
+	var tail := 0
+	var start := _triangle_at(terrain, Vector2(origin.x, origin.z))
+	reached[start] = 1
+	queue[tail] = start
+	tail += 1
+	while head < tail:
+		var t := queue[head]
+		head += 1
+		var which := t & 1
+		var c := t >> 1
+		var cx := c % gs
+		var cz := c / gs
+		var from_face := is_face[t] == 1
+		var from_mid := mid[t]
+		for n in around[which]:
+			var nx: int = cx + n[0]
+			var nz: int = cz + n[1]
+			if nx < 0 or nz < 0 or nx >= gs or nz >= gs:
+				continue
+			var u: int = (nz * gs + nx) * 2 + n[2]
+			if reached[u] == 1:
+				continue
+			# Onto a face, or off one: downhill only.
+			if (from_face or is_face[u] == 1) and mid[u] > from_mid:
+				continue
+			reached[u] = 1
+			queue[tail] = u
+			tail += 1
+	print("A walk from the town reaches %d of %d triangles (%.1f%% of the plate)." % [tail, tri_count, 100.0 * tail / tri_count])
+
+	var fails := 0
+	var stranded := {}
+	for c in camps:
+		var p: Vector2 = c["pos"]
+		if reached[_triangle_at(terrain, p)] == 0:
+			stranded[c["name"]] = true
+	for camp_name in stranded:
+		fails += 1
+		print("  FAIL no walk from the town reaches %s" % camp_name)
+	if stranded.is_empty():
+		print("  ok   every camp spawn can be walked to")
+
+	var escaped := 0
+	for cz in gs:
+		for cx in gs:
+			if cx == 0 or cz == 0 or cx == gs - 1 or cz == gs - 1:
+				var t := (cz * gs + cx) * 2
+				if reached[t] == 1 or reached[t + 1] == 1:
+					escaped += 1
+	if escaped > 0:
+		fails += 1
+	print("  %-4s the plate's outer row of cells: %d reached" % ["FAIL" if escaped > 0 else "ok", escaped])
+
+	for u in features.get("unreachable", []):
+		var p := _v2(u["point"])
+		var hit := reached[_triangle_at(terrain, p)] == 1
+		if hit:
+			fails += 1
+		print("  %-4s %s (%d, %d, ground %.1f m) %s" % [
+			"FAIL" if hit else "ok", u.get("name", "a point"), int(p.x), int(p.y),
+			Exporter.ground_at(terrain, p.x, p.y), "can be walked to" if hit else "cannot be walked to"])
 	return fails
+
+
+# The index of the triangle a point is in: (cell z * grid + cell x) * 2, plus 1
+# for the upper triangle (the one without the cell's first corner).
+static func _triangle_at(terrain: Dictionary, p: Vector2) -> int:
+	var gs: int = terrain["grid_size"]
+	var cell: float = terrain["cell_size"]
+	var origin: Vector3 = terrain["origin"]
+	var half := gs * cell * 0.5
+	var fx := clampf((p.x - origin.x + half) / cell, 0.0, gs - 0.001)
+	var fz := clampf((p.y - origin.z + half) / cell, 0.0, gs - 0.001)
+	var cx := int(fx)
+	var cz := int(fz)
+	var upper := 1 if (fx - cx) + (fz - cz) > 1.0 else 0
+	return (cz * gs + cx) * 2 + upper
+
+
+# A triangle's corners as grid offsets from its cell: the lower one has the
+# cell's first corner, the upper one its last.
+static func _corners(which: int) -> Array:
+	if which == 0:
+		return [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)]
+	return [Vector2i(1, 0), Vector2i(1, 1), Vector2i(0, 1)]
+
+
+# Every other triangle that shares a corner with this one, as [dx, dz, which].
+static func _corner_neighbours(which: int) -> Array:
+	var mine := _corners(which)
+	var out: Array = []
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			for other in 2:
+				if dx == 0 and dz == 0 and other == which:
+					continue
+				for c in _corners(other):
+					if mine.has(c + Vector2i(dx, dz)):
+						out.append([dx, dz, other])
+						break
+	return out
 
 
 static func _flat_at(terrain: Dictionary, p: Vector2) -> bool:
 	return absf(Exporter.ground_at(terrain, p.x, p.y) - float(terrain["floor_y"])) <= FLAT_EPSILON \
 		and Exporter.slope_deg_at(terrain, p.x, p.y) <= FLAT_EPSILON
+
+
+# --- The ground paint ----------------------------------------------------
+
+# Paints data/zone_layout.gd's ground onto one texture over the whole plate:
+# the broad patches, the worn ground under the camps, the farm strips, then the
+# roads on top. Alpha is how much of the paint shows over the shader's own
+# ground colour; pixel (px, py) is the point (-half + (px + 0.5) * m, the same
+# for z), so the shader samples it at xz / size + 0.5.
+func _write_paint(terrain: Dictionary) -> int:
+	var extent := int(terrain["grid_size"]) * float(terrain["cell_size"])
+	var half := extent * 0.5
+	var mpp := extent / PAINT_SIZE
+	var data := PackedByteArray()
+	data.resize(PAINT_SIZE * PAINT_SIZE * 4)
+	# Unpainted pixels are clear, but hold a grass colour: the texture filter
+	# blends a patch's edge with its neighbours, and black would rim it.
+	for i in range(0, data.size(), 4):
+		data[i] = 66
+		data[i + 1] = 102
+		data[i + 2] = 41
+	var mottle := _noise(303, 55.0, 3)
+
+	for patch in Layout.GROUND_PATCHES:
+		_paint_patch(data, half, mpp, mottle, patch)
+	for site_name in Layout.SITE_GROUND:
+		var entry: Array = Layout.SITE_GROUND[site_name]
+		_paint_patch(data, half, mpp, mottle, {
+			"center": Layout.SITES[site_name], "radius": entry[0], "color": entry[1],
+			"feather": float(entry[0]) * 0.6, "strength": 0.7, "mottle": 0.5})
+	for field in Layout.FIELDS:
+		_paint_field(data, half, mpp, field)
+	for road in Layout.ROADS:
+		_paint_road(data, half, mpp, mottle, road)
+
+	var image := Image.create_from_data(PAINT_SIZE, PAINT_SIZE, false, Image.FORMAT_RGBA8, data)
+	var path := ProjectSettings.globalize_path(PAINT_PATH)
+	if image.save_png(path) != OK:
+		printerr("Cannot write %s." % path)
+		return 3
+	print("\nPainted %s (%d px a side, %.2f m a pixel)." % [PAINT_PATH, PAINT_SIZE, mpp])
+	return 0
+
+
+# Lays `color` at opacity `a` over what pixel `i` holds.
+static func _over(data: PackedByteArray, i: int, color: Color, a: float) -> void:
+	if a <= 0.004:
+		return
+	var da := data[i + 3] / 255.0
+	var keep := da * (1.0 - a)
+	var out_a := a + keep
+	data[i] = int(clampf((color.r * a + data[i] / 255.0 * keep) / out_a, 0.0, 1.0) * 255.0)
+	data[i + 1] = int(clampf((color.g * a + data[i + 1] / 255.0 * keep) / out_a, 0.0, 1.0) * 255.0)
+	data[i + 2] = int(clampf((color.b * a + data[i + 2] / 255.0 * keep) / out_a, 0.0, 1.0) * 255.0)
+	data[i + 3] = int(clampf(out_a, 0.0, 1.0) * 255.0)
+
+
+# The pixel range [from, to) that covers the world span lo..hi on one axis.
+static func _pixel_span(lo: float, hi: float, half: float, mpp: float) -> Vector2i:
+	return Vector2i(clampi(int((lo + half) / mpp), 0, PAINT_SIZE), clampi(int(ceil((hi + half) / mpp)) + 1, 0, PAINT_SIZE))
+
+
+static func _paint_patch(data: PackedByteArray, half: float, mpp: float, mottle: FastNoiseLite, patch: Dictionary) -> void:
+	var color: Color = patch["color"]
+	var feather: float = maxf(patch.get("feather", 1.0), 0.01)
+	var strength: float = patch.get("strength", 1.0)
+	var mottled: float = patch.get("mottle", 0.0)
+	var is_rect := patch.has("rect")
+	var rect: Rect2 = patch.get("rect", Rect2())
+	var center: Vector2 = patch.get("center", Vector2.ZERO)
+	var radius: float = patch.get("radius", 0.0)
+	if not is_rect:
+		rect = Rect2(center - Vector2(radius, radius), Vector2(radius, radius) * 2.0)
+	var xs := _pixel_span(rect.position.x, rect.end.x, half, mpp)
+	var zs := _pixel_span(rect.position.y, rect.end.y, half, mpp)
+	for py in range(zs.x, zs.y):
+		var z := -half + (py + 0.5) * mpp
+		for px in range(xs.x, xs.y):
+			var x := -half + (px + 0.5) * mpp
+			var inside: float
+			if is_rect:
+				inside = minf(minf(x - rect.position.x, rect.end.x - x), minf(z - rect.position.y, rect.end.y - z))
+			else:
+				inside = radius - Vector2(x, z).distance_to(center)
+			if inside <= 0.0:
+				continue
+			var a := strength * smoothstep01(clampf(inside / feather, 0.0, 1.0))
+			if mottled > 0.0:
+				a *= lerpf(1.0, smoothstep01(clampf(n01(mottle, x, z) * 1.6 - 0.3, 0.0, 1.0)), mottled)
+			_over(data, (py * PAINT_SIZE + px) * 4, color, a)
+
+
+# A farm strip: its crop's colour with a furrow every fourth pixel row.
+static func _paint_field(data: PackedByteArray, half: float, mpp: float, field: Dictionary) -> void:
+	var rect: Rect2 = field["rect"]
+	var crop: Color = field["color"]
+	var xs := _pixel_span(rect.position.x, rect.end.x, half, mpp)
+	var zs := _pixel_span(rect.position.y, rect.end.y, half, mpp)
+	for py in range(zs.x, zs.y):
+		var z := -half + (py + 0.5) * mpp
+		if z < rect.position.y or z > rect.end.y:
+			continue
+		var color := Layout.COLOR_FURROW if py % 4 == 0 else (crop.darkened(0.12) if py % 4 == 2 else crop)
+		for px in range(xs.x, xs.y):
+			var x := -half + (px + 0.5) * mpp
+			if x < rect.position.x or x > rect.end.x:
+				continue
+			_over(data, (py * PAINT_SIZE + px) * 4, color, 0.95)
+
+
+static func _paint_road(data: PackedByteArray, half: float, mpp: float, mottle: FastNoiseLite, road: Dictionary) -> void:
+	var pts := Layout.road_points(road)
+	var half_width: float = float(road["width"]) * 0.5
+	# The road fades out over this much past its edge.
+	var soft := 2.5
+	var reach := half_width + soft
+	for s in pts.size() - 1:
+		var a := pts[s]
+		var b := pts[s + 1]
+		var xs := _pixel_span(minf(a.x, b.x) - reach, maxf(a.x, b.x) + reach, half, mpp)
+		var zs := _pixel_span(minf(a.y, b.y) - reach, maxf(a.y, b.y) + reach, half, mpp)
+		for py in range(zs.x, zs.y):
+			var z := -half + (py + 0.5) * mpp
+			for px in range(xs.x, xs.y):
+				var x := -half + (px + 0.5) * mpp
+				var d := segment_distance(Vector2(x, z), a, b)
+				if d >= reach:
+					continue
+				var alpha := 0.93 * (1.0 - smoothstep01(clampf((d - half_width + 1.0) / (soft + 1.0), 0.0, 1.0)))
+				var i := (py * PAINT_SIZE + px) * 4
+				# Segments overlap at their joints: never darken a pixel twice.
+				if data[i + 3] / 255.0 >= alpha and _is_road_pixel(data, i):
+					continue
+				var shade := lerpf(0.9, 1.08, n01(mottle, x * 3.0, z * 3.0))
+				_over(data, i, Color(Layout.COLOR_ROAD.r * shade, Layout.COLOR_ROAD.g * shade, Layout.COLOR_ROAD.b * shade), alpha)
+
+
+# Whether a pixel already holds road colour (within the mottle's range of it).
+static func _is_road_pixel(data: PackedByteArray, i: int) -> bool:
+	var c := Layout.COLOR_ROAD
+	return absf(data[i] / 255.0 - c.r) < 0.08 and absf(data[i + 1] / 255.0 - c.g) < 0.08 and absf(data[i + 2] / 255.0 - c.b) < 0.08
 
 
 # --- Writing the scene ---------------------------------------------------
@@ -461,51 +833,10 @@ func _write_scene(terrain: Dictionary) -> int:
 	var text := f.get_as_text()
 	f.close()
 
-	# A TerrainMesh built from the new heights, outside any tree: the mesh,
-	# its material and the collider exactly as the node makes them at runtime.
-	var node: Node3D = load(TERRAIN_SCRIPT).new()
-	node.grid_size = terrain["grid_size"]
-	node.cell_size = terrain["cell_size"]
-	node.heights = terrain["heights"]
-	node._ensure_children()
-	node._rebuild()
-	var mesh: Mesh = (node.get_node("TerrainVisual") as MeshInstance3D).mesh
-	var shape: Shape3D = (node.get_node("TerrainBody/TerrainCol") as CollisionShape3D).shape
-	if ResourceSaver.save(mesh, SCRATCH_MESH) != OK or ResourceSaver.save(shape, SCRATCH_SHAPE) != OK:
-		printerr("Cannot save the built mesh and collider to user://.")
-		node.free()
-		return 3
-	node.free()
-	var mesh_text := FileAccess.get_file_as_string(SCRATCH_MESH)
-	var shape_text := FileAccess.get_file_as_string(SCRATCH_SHAPE)
-
-	# The saved mesh holds its material as its one sub_resource, then the mesh.
-	var sub_ids := _section_headers(mesh_text, "[sub_resource ")
-	if sub_ids.size() != 1:
-		printerr("The saved mesh has %d sub-resources, expected its material alone." % sub_ids.size())
-		return 3
-	var saved_material_header: String = sub_ids[0]
-	var saved_material_id := saved_material_header.get_slice("id=\"", 1).get_slice("\"", 0)
-	var material_body := _section_body(mesh_text, saved_material_header)
-	var mesh_body := _section_body(mesh_text, "[resource]").replace(
-		"SubResource(\"%s\")" % saved_material_id, "SubResource(\"%s\")" % MATERIAL_ID)
-	var shape_body := _section_body(shape_text, "[resource]")
-	if material_body.is_empty() or mesh_body.is_empty() or shape_body.is_empty():
-		printerr("Could not read the saved mesh, material or collider.")
-		return 3
-
-	var out := text
-	for pair in [[MATERIAL_SECTION, material_body], [MESH_SECTION, mesh_body], [COLLIDER_SECTION, shape_body]]:
-		var replaced := _replace_section_body(out, pair[0], pair[1])
-		if replaced.is_empty():
-			printerr("The scene has no section %s." % pair[0])
-			return 3
-		out = replaced
-	out = _replace_node_properties(out, terrain)
+	var out := _replace_node_properties(text, terrain)
 	if out.is_empty():
 		printerr("The scene's TerrainMesh node is not in the shape this tool writes.")
 		return 3
-
 	var w := FileAccess.open(scene_file, FileAccess.WRITE)
 	if w == null:
 		printerr("Cannot write %s." % scene_file)
@@ -514,49 +845,15 @@ func _write_scene(terrain: Dictionary) -> int:
 	w.close()
 
 	# Read it back the way the exporter does.
-	var reread: PackedScene = ResourceLoader.load(WORLD_SCENE_PATH, "", ResourceLoader.CACHE_MODE_IGNORE)
-	if reread == null:
-		printerr("The written scene does not load.")
+	var reread := Exporter.read_scene(WORLD_SCENE_PATH)
+	if reread.has("error") or (reread["heights"] as PackedFloat32Array).size() != (terrain["heights"] as PackedFloat32Array).size():
+		printerr("The written scene does not read back: %s" % reread.get("error", "the heights differ in number"))
 		return 3
-	print("\nWrote %d heights (%dx%d cells of %s m), the mesh and the collider into %s." % [
+	print("Wrote %d heights (%dx%d cells of %s m) into %s." % [
 		(terrain["heights"] as PackedFloat32Array).size(), terrain["grid_size"], terrain["grid_size"],
 		str(terrain["cell_size"]), WORLD_SCENE_PATH])
-	print("Next: tools/export_terrain.gd -- <server data dir>/terrain.toml, then tools/check_terrain_lockstep.gd -- <server data dir>.")
+	print("Next: godot --headless --path . --import, then tools/export_terrain.gd -- <server data dir>/terrain.toml, then tools/check_terrain_lockstep.gd -- <server data dir>.")
 	return 0
-
-
-# Every section header line in a text resource that begins with `prefix`.
-static func _section_headers(text: String, prefix: String) -> Array:
-	var out: Array = []
-	for line in text.split("\n"):
-		if line.begins_with(prefix):
-			out.append(line)
-	return out
-
-
-# The lines of a section after its header, up to the blank line before the
-# next section (or the end), without the trailing blank lines.
-static func _section_body(text: String, header: String) -> String:
-	var at := text.find(header + "\n")
-	if at < 0:
-		return ""
-	var start := at + header.length() + 1
-	var next := text.find("\n[", start)
-	var body := text.substr(start, (next if next >= 0 else text.length()) - start)
-	return body.strip_edges(false, true)
-
-
-# `text` with the body of the section under `header` replaced, or "" if the
-# section is not there.
-static func _replace_section_body(text: String, header: String, body: String) -> String:
-	var at := text.find(header + "\n")
-	if at < 0:
-		return ""
-	var start := at + header.length() + 1
-	var next := text.find("\n\n[", start)
-	if next < 0:
-		return ""
-	return text.substr(0, start) + body + text.substr(next)
 
 
 # `text` with the TerrainMesh node's grid_size, cell_size and heights lines

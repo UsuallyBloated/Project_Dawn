@@ -61,9 +61,10 @@ func _initialize() -> void:
 
 
 # The terrain as the scene holds it: {grid_size, cell_size, origin, floor_y,
-# heights, collider (the TerrainCol triangles, local to the node), npcs
+# heights, floor_layer (the Floor body's collision layers), npcs
 # ([{name, pos}])}, or {error}. Reads the PackedScene's state, so nothing in
-# the scene runs.
+# the scene runs. The colliders are not in the scene: TerrainMesh builds them
+# from the heights at load (build_terrain below makes the same node).
 static func read_scene(scene_path: String) -> Dictionary:
 	var packed := load(scene_path) as PackedScene
 	if packed == null:
@@ -80,7 +81,7 @@ static func read_scene(scene_path: String) -> Dictionary:
 		"origin": Vector3.ZERO,
 		"floor_y": 0.0,
 		"heights": PackedFloat32Array(),
-		"collider": PackedVector3Array(),
+		"floor_layer": 1,
 		"npcs": [],
 	}
 	defaults.free()
@@ -108,12 +109,10 @@ static func read_scene(scene_path: String) -> Dictionary:
 				out["origin"] = t.origin
 			if props.has("heights"):
 				out["heights"] = PackedFloat32Array(props["heights"])
-		elif name == "TerrainCol" and path.begins_with("./" + TERRAIN_NODE):
-			var shape = props.get("shape")
-			if shape is ConcavePolygonShape3D:
-				out["collider"] = (shape as ConcavePolygonShape3D).data
 		elif name == FLOOR_NODE and path == "./" + FLOOR_NODE:
 			found_floor = true
+			if props.has("collision_layer"):
+				out["floor_layer"] = int(props["collision_layer"])
 			if props.has("transform"):
 				var t: Transform3D = props["transform"]
 				if not t.basis.is_equal_approx(Basis.IDENTITY):
@@ -147,6 +146,19 @@ static func read_scene(scene_path: String) -> Dictionary:
 		else:
 			return {"error": "a %dx%d grid needs %d heights, the scene holds %d" % [gs, gs, (gs + 1) * (gs + 1), heights.size()]}
 	return out
+
+
+# The scene's ground as the game builds it: a TerrainMesh with the scene's
+# grid and heights, its chunks and colliders built, at the scene's origin. Not
+# in any tree; the caller adds it to one (for physics) or frees it.
+static func build_terrain(scene: Dictionary) -> Node3D:
+	var node: Node3D = load(TERRAIN_SCRIPT).new()
+	node.grid_size = scene["grid_size"]
+	node.cell_size = scene["cell_size"]
+	node.heights = scene["heights"]
+	node.position = scene["origin"]
+	node.rebuild()
+	return node
 
 
 static func _node_props(state: SceneState, i: int) -> Dictionary:
