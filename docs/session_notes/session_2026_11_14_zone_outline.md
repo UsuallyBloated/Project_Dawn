@@ -106,9 +106,17 @@ marker) replace `_build_road_ends`. Milestones use `ZoneLayout.well_inside`.
 - The far fog tints the range tan; the 60 m cliff at the foot is unbroken all the way round.
 - `systems_overview.md`'s terrain paragraphs still wait on the zone's tick.
 
-## 7. To ship
+## 7. Merged and exported
 
-Fast-forward `feat/zone-outline` into `fix/xp-leveling-overflow` in both repos, all checks in
-the main checkout, a release export, then the R720: `git pull`, build, stop, the SQL
-statement, `cp`, start, and a boot line reading `dev_cmds=false` and `hash a9942be36dff`.
-Then `zone_4km_checklist.md`, section 7 with the rest.
+Both deploy branches fast-forwarded to `feat/zone-outline` and pushed by name (server
+`9a7e0fa`, client `7c7a810`). In the main client checkout the editor's uncommitted change to
+`zone_paint.png.import` was restored first (the branch carries the fixed import). All 16
+checks there against the merged server. The export: `[BuildStamp] stamped 7c7a810`,
+`--export-release`, the exported build booting clean; `builds/ProjectDawn-alpha-7c7a810.zip`
+(37,797,923 bytes), which replaces `68c3e13`.
+
+**Left for the user:** the R720 (`git pull`, build, stop, the SQL statement from the To-Do
+entry, `cp`, start; the boot line must read `dev_cmds=false` and `terrain=400x400 cells of
+10 m, floor 0, hash a9942be36dff`), sending `7c7a810`, and `zone_4km_checklist.md` with its
+section 7. Until the R720 runs `9a7e0fa`, a game run from this checkout or this zip stands on
+ground the server does not have (the floating mobs of the morning, the other way round).

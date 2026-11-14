@@ -3399,8 +3399,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   old process's last health line read `slope_refusals=308`, the old edge refusing steps 180 m
   from the square, which was the "invisible wall" reported that morning with the floating mobs:
   a new client on the old server).
-  **The outline, the roads and the doors BUILT 2026-11-14, pending the redeploy and the
-  playtest** (user, on the outline sketches at https://claude.ai/artifact/HFL7DK4yvDe1SjkGPrXF91:
+  **The outline, the roads and the doors BUILT, MERGED AND EXPORTED 2026-11-14, pending the
+  redeploy and the playtest** (both deploy branches fast-forwarded and pushed, server `9a7e0fa`,
+  client `7c7a810`; the export `builds/ProjectDawn-alpha-7c7a810.zip`, stamped `7c7a810`, a
+  release export, which replaces `68c3e13` as the zip for the door; the zip and the redeploy go
+  together, since either side alone stands people on the other's ground; user, on the outline sketches at https://claude.ai/artifact/HFL7DK4yvDe1SjkGPrXF91:
   "outline: Two basins with arms", "i prefered the way Greywood Ridge is designed in the B
   option", "making the roads mor interesting. Winding between and avoiding points of interest",
   "south door: Sounds good", "Go ahead!"; server `9a7e0fa`, client `8c09944`, built on
