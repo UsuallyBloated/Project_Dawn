@@ -3394,6 +3394,94 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   water; the world reads mirrored against the comp's map (+Z north with +X east puts east on
   the left when facing north); `systems_overview.md`'s terrain paragraphs move with the tick;
   the planner's page is republished at the merge.
+  **DEPLOYED 2026-11-14** (the user's redeploy; R720 boot line `build="162c151" dev_cmds=false
+  terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f`, `ledger check mismatches=0`; the
+  old process's last health line read `slope_refusals=308`, the old edge refusing steps 180 m
+  from the square, which was the "invisible wall" reported that morning with the floating mobs:
+  a new client on the old server).
+  **The outline, the roads and the doors BUILT 2026-11-14, pending the redeploy and the
+  playtest** (user, on the outline sketches at https://claude.ai/artifact/HFL7DK4yvDe1SjkGPrXF91:
+  "outline: Two basins with arms", "i prefered the way Greywood Ridge is designed in the B
+  option", "making the roads mor interesting. Winding between and avoiding points of interest",
+  "south door: Sounds good", "Go ahead!"; server `9a7e0fa`, client `8c09944`, built on
+  `feat/zone-outline` in both repos; `zone_4km_checklist.md` §7; session note
+  `session_2026_11_14_zone_outline.md`; both sides move together, no wire change, no
+  migration; **the boot line must read `terrain=400x400 cells of 10 m, floor 0, hash
+  a9942be36dff`**). **The edge:** the walkable world is two basins the mountains close round,
+  joined only by the pass (`data/zone_layout.gd` `BASINS`, 8.25 square km of the plate's 16, so
+  the same 54 spawns stand at 6.5 a square km against 3.6): the town's basin with an east arm
+  (the road's door at its end), a vale that holds the gnoll war camp, and the barrow hills
+  running up into the range; north of the ridge the Greywood, a shelf with one arm up to the
+  north door. The ridge runs from mountain to mountain. No camp, hill or cliff moved.
+  `tools/author_terrain.gd` marks each grid vertex inside or outside the edge (a ridge's own
+  footprint counts as inside), takes each outside vertex's distance to the nearest inside one
+  (an exact distance transform) and raises it: 30 m in the first 10 (72 degrees, so every
+  triangle with a corner on each side of the edge is a face whatever the ground under it does),
+  a 60 m cliff at the foot, then the flank climbing to between 180 and 440 m, with crags; the
+  square rim is gone.
+  The ground paint turns to rock outside the edge and the shader lays bare rock above the hills
+  and snow on the tops; nothing is scattered outside (`ZoneLayout.inside`). **The roads** run
+  into no camp: the north road bends east of Bat Hollow and swings east round the Broken
+  Crypt's bowl (it climbed the bowl's wall and ran through the crypt, 12 m from its middle; now
+  204 m); the south road passes west of Rotfang's rocks and round the foot of the war camp's
+  shelf to a new south door (it ran through the den at 2 m and ended inside the camp; now 227
+  and 294 m); the barrow track skirts the bone fields and stops at an overlook on the hill
+  between the barrow's pit (329 m) and the Ossuary (403 m) (it ended on the pit's wall); the
+  east road keeps its line past the wagon wreck and runs under the Wraith Gate cliff. Three
+  doors (north fallen trees, east rockslide, south the gnolls' stake barricade) and the
+  overlook's waystones are set pieces. **The pass:** its floor is at the level of the ground
+  at its mouths (6 m); cut to 0 it was a trench with an 8 m step at the south mouth and a 16 m
+  bank at 58 degrees at the north one. **Server:** `terrain.toml` re-exported;
+  `nobody_climbs_out_over_the_rim` becomes `nobody_walks_out_of_the_zone` (the slope rule read
+  over every triangle from the town must reach about half the plate and none of its outer
+  rows; then walkers with the real `player_step`, three from every walked triangle beside
+  unreached ground (more than 3,000 in all), heading for it and 45 degrees either side, never
+  stand on ground the walk did not reach), and `a_gap_in_the_mountains_is_a_way_out` plants a level corridor
+  behind the east door and requires the same reading to see it. Suites: server 411 unit and
+  184 world, clippy and fmt clean; client 16 checks and the zone probes. **Exploit lens:** the
+  edge is the server's own compiled ground, so a modified client walks the server's mountains,
+  not its own; the foot is a face on every boundary triangle by construction and by test, the
+  author's report fails on any walked triangle outside the edge, and nothing behind the foot
+  is reachable, so its shape is free; scenery still never collides (L2). **Found on the way:**
+  `check_zone_scenery.gd`'s SCATTER rules read flora positions back from the MultiMeshes,
+  which the headless renderer returns as identity, so they tested each batch's origin and
+  nothing else since the zone was built; `ZoneFlora` keeps what it planted and the check reads
+  that (16,350 things now, the Greywood being a third of its old size). The Godot editor had
+  switched the ground paint to VRAM compression in the main checkout (uncommitted); its import
+  now has `detect_3d` off. **At the redeploy, one statement during the stop** (a character
+  saved or bound where the mountains now stand would log in on top of them, and the only way
+  down is a lethal fall): `sqlite3 /opt/projectdawn/world.db "UPDATE characters SET pos_x=0,
+  pos_y=0, pos_z=0, bind_x=NULL, bind_y=NULL, bind_z=NULL; UPDATE corpses SET pos_x=0,
+  pos_z=20;"` (everyone back to the square and bound there; old corpses beside it). No server
+  rule was written for it (the no-fix rule for older characters). **Flagged, not built:** the
+  far fog tints the range tan (a scene setting from the first build); the mountains' foot is
+  one unbroken cliff 60 m high, which reads as a wall up close in the arms; mob count, view
+  distance, server obstacles and water as before.
+- [ ] **The compass is mirrored: facing north, east is on your left** *(user, 2026-11-14: "If
+  the Greywood ridge is North, then the gnoll raider camp is currently to the west, when it
+  should be to the east. Please confirm before changing any thing.")*. **Confirmed the same
+  day, nothing changed.** The ridge is at +Z and the gnoll raiders at +X; in a right-handed
+  engine, facing +Z puts +X on the left, so against a real compass anchored on "the ridge is
+  north" the gnolls are west. The game's own labels still call +X east (`/sense`, the east
+  road, the sunrise), by the 2026-09-27 ruling "+Z is north, +X is east", whose note in
+  `autoloads/sense_heading.gd` already recorded the mirror as "invisible in game". It was, on a
+  flat world; with a ridge, roads and a map it shows, and the comp's map (north up, east right)
+  cannot be built on those two labels without it. **The fix is to mirror the whole world
+  once**; the player sees the same world either way and only the numbers differ: (1) north
+  becomes -Z, so x still grows east and z grows going south (Godot's own layout, the editor's
+  top view then matches the comp's map; my recommendation), or (2) east becomes -X, so z still
+  grows north and x grows going west (how EverQuest's `/loc` printed it: y north, x west).
+  About a day: every position on both sides (the features, the layout and its roads and
+  edge, the camps, the NPC row, the scenery's hand-set places and yaws, the sun's path, the
+  sense ring, the tests' coordinates, the checklists' `/loc` numbers), a new terrain file, a
+  redeploy with a new zip, and the saved positions, binds and corpses mirrored by hand in the
+  same stop. **The user asked back (2026-11-14): "isnt Z indicative of altitude and XY are
+  latitude/longitude?"**: in EverQuest, yes (`/loc` printed y, x, z with z the height); in
+  Godot the height is Y and the ground is X and Z, and our `/loc` prints x, y, z in that
+  order. `/loc` could print EQ's order and letters whatever the engine's axes are, a display
+  change of a few lines. **Waits on the user: mirror or not, which numbering, and whether
+  `/loc` reads the EQ way.** Best decided before the door: afterwards the friends will have
+  learned the mirrored world.
 - [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
   a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
   height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at

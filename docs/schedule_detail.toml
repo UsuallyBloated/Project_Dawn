@@ -855,6 +855,39 @@ waits_on = ["b58", "o23"]
 done_when = "The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f; the export log reads stamped with the merged sha and no -debug mark."
 
 [[row]]
+id = "b59"
+week = "w6"
+lane = "build"
+day = "Sat Nov 14"
+what = "The zone's outline, from the user's answers on the outline sketches (two basins with arms, the ridge mountain to mountain, the roads winding past the camps, a south door): mountains raised outside the walkable edge with a face at their foot all the way round, in place of the square rim; the four roads re-routed so none runs into a camp; three doors and an overlook as set pieces; the pass's floor raised to the ground at its mouths; the server's test that nobody walks out of the zone rewritten for any outline, with a planted-gap twin."
+who = "Claude"
+days = 1.0
+done_when = "Both branches pushed; zone_4km_checklist.md section 7 written."
+
+[[row]]
+id = "o25"
+week = "w7"
+lane = "operate"
+day = "Sat Nov 14 for the merge and the export; the redeploy when everyone is off, Mon Nov 16 at the latest"
+what = "The outline reaches the game: feat/zone-outline merged into the deploy branch in both repos, a release export, the R720 pulled, built and restarted with one SQL statement during the stop (everyone back to the town square and bound there, old corpses beside it: a character saved where the mountains now stand would log in on top of them). This zip replaces 68c3e13 as the one for the door, and the R720 refuses nothing: but an older client against the new server stands people on the wrong ground, so the zip and the redeploy go together."
+who = "Claude for the merge and the export; user over SSH for the redeploy"
+hours = 1.0
+needs = ["everyone logged out for the redeploy", "the R720 over SSH"]
+waits_on = ["b59"]
+done_when = "The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash a9942be36dff; the export log reads stamped with the merged sha and no -debug mark."
+
+[[row]]
+id = "d12"
+week = "w6"
+lane = "decide"
+day = "by Mon Nov 16 (before the last zip)"
+what = "The compass: the world is a mirror image of the comp's map (facing north, east is on the left; confirmed 11-14). Fix it by mirroring the world once, or leave it; if fixed, which way the numbers run (z growing south, the recommendation, or x growing west as EverQuest's /loc did); and whether /loc prints EverQuest's order (north-south, east-west, height)."
+who = "user"
+by = 2026-11-16
+blocks = "About a day of work, a new terrain file, one more redeploy and one more zip; after the door the friends will have learned the mirrored world."
+done_when = "Answered on the To-Do entry 'The compass is mirrored'."
+
+[[row]]
 id = "v62"
 week = "w7"
 lane = "verify"
@@ -863,8 +896,8 @@ checklist = "zone_4km_checklist.md"
 what = "The 4 km zone walked: the town and its four gates, the ground the server stands everyone on (the barrow's pit, the ridge's faces, the pass, the plateau's ramp and its lethal cliff, the mountains at the edge), every camp at its set piece, a quest per giver, the bigger world's rules (a far death and the run back, Gate, the group share range, a partner out of view and back), and how it runs and looks (frame rate, pop-in, night, dusk). Two seats for the partner rows."
 who = "user at a desk, a second seat for part"
 hours = 2.0
-needs = ["the zone build on the R720 and in the export (o24)", "a GM account for the cliff row"]
-waits_on = ["o24"]
+needs = ["the outline build on the R720 and in the export (o25)", "a GM account for the cliff row", "a second seat for one row of section 7"]
+waits_on = ["o24", "o25"]
 done_when = "Every row marked; a finding that needs a fix gets a To-Do line the same day, and the zip the friends receive (p6) is the one the sheet was run on or a later one."
 
 [[row]]
