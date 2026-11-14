@@ -113,5 +113,9 @@ is written for character sheets.
 
 ## Results
 
-Meshy saves each image under `meshy_downloads/starting_area/<task>/`. Which ones are kept, and
-where, is the user's call.
+Meshy refused every call on 2026-11-13 (its API needs a paid plan; see
+`meshy_asset_pipeline.md`), so the user runs the prompts through Gemini by hand, attaching the
+named comp PNG where one is listed. Agreed drop: `Project_Dawn_Source/concept_art/starting_area/`
+as `01_town_from_east_road.png` through `08_wraith_gate.png`. Once they are there, the next
+step is a review of each against the style bible's section 1 (one saturated accent, no
+brushwork) and its comp. Which ones are kept is the user's call.
