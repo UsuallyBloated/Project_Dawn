@@ -4,7 +4,8 @@
 // tint (grass low, grey-brown high), bare rock on anything too steep to stand
 // on (so a face reads as a face), then the zone's paint texture (roads, farms,
 // forest floor, camp clearings; tools/author_terrain.gd writes it), then a
-// little noise so a kilometre of grass is not one flat colour.
+// little noise so a kilometre of grass is not one flat colour. Above the
+// hills the mountains are bare rock whatever their slope, and their tops snow.
 shader_type spatial;
 
 uniform vec3 low_color : source_color = vec3(0.40, 0.47, 0.25);
@@ -13,6 +14,14 @@ uniform vec3 high_color : source_color = vec3(0.53, 0.49, 0.38);
 uniform vec3 dry_color : source_color = vec3(0.52, 0.50, 0.29);
 uniform vec3 rock_color : source_color = vec3(0.47, 0.45, 0.42);
 uniform vec3 rock_dark : source_color = vec3(0.33, 0.32, 0.31);
+uniform vec3 snow_color : source_color = vec3(0.86, 0.88, 0.91);
+// Nothing grows above alpine_top; the ground thins to rock from alpine_from.
+// (The western hills top out near 175 m.) Snow lies from about snow_from up,
+// on anything a little less than sheer.
+uniform float alpine_from = 190.0;
+uniform float alpine_top = 250.0;
+uniform float snow_from = 300.0;
+uniform float snow_top = 360.0;
 // The height tint runs from low_color at 0 to high_color at tint_top metres.
 uniform float tint_top = 110.0;
 // The paint texture covers the whole plate, centred on the terrain's origin.
@@ -48,6 +57,7 @@ void fragment() {
 	// world_normal.y is the cosine of the slope: 0.82 at 35 degrees, 0.57 at
 	// 55 (the steepest floor), 0.5 at 60 (a face).
 	float rock = smoothstep(0.80, 0.60, world_normal.y);
+	rock = max(rock, smoothstep(alpine_from, alpine_top, world_pos.y + (coarse - 0.5) * 30.0));
 	// Rock: mottled by the noise at two scales, with faint horizontal bands
 	// (strata) that fade out where they would be thinner than a pixel.
 	float patchy = texture(detail_noise, xz * 0.0013 + vec2(world_pos.y * 0.002)).r;
@@ -56,7 +66,8 @@ void fragment() {
 	float band_fade = clamp(1.0 - fwidth(band) * 2.5, 0.0, 1.0);
 	stone *= mix(1.0, mix(0.91, 1.04, step(0.5, fract(band))), band_fade);
 
-	ALBEDO = mix(ground, stone, rock);
+	float snow = smoothstep(snow_from, snow_top, world_pos.y + (coarse - 0.5) * 50.0) * smoothstep(0.42, 0.72, world_normal.y);
+	ALBEDO = mix(mix(ground, stone, rock), snow_color * mix(0.94, 1.0, fine), snow);
 	ROUGHNESS = 0.95;
 	SPECULAR = 0.08;
 }

@@ -28,7 +28,7 @@ const TOWN_PIECES := ["Walls", "Houses", "Square", "Farms", "Barn", "Mill", "Mil
 const LANDMARK_PIECES := [
 	"Pass", "WardStones", "BarrowDoor", "Ossuary", "WraithGate", "WraithGateLight", "BrokenCrypt",
 	"GnollRaiderCamp", "WagonWreck", "GnollWarCamp", "GrethsTent", "BanditOutpost", "Bonepile",
-	"ShallowGraves", "Dens", "FesteringMound", "SpiderCopse", "RoadEnds", "Milestones",
+	"ShallowGraves", "Dens", "FesteringMound", "SpiderCopse", "Doors", "Overlook", "Milestones",
 ]
 const FLORA_MIN := 15000
 const FLORA_MAX := 70000
@@ -131,7 +131,7 @@ func _check_scatter(world: Node, terrain: TerrainMesh) -> void:
 		var flat := Vector2(p.x, p.z)
 		if flat.length() < ZoneLayout.TOWN_CLEARING:
 			in_town += 1
-		if maxf(absf(p.x), absf(p.z)) > ZoneLayout.RIM_START:
+		if not ZoneLayout.inside(flat):
 			on_rim += 1
 		if absf(p.y - terrain.height_at(p.x, p.z)) > GROUND_SLACK:
 			off_ground += 1
@@ -140,21 +140,17 @@ func _check_scatter(world: Node, terrain: TerrainMesh) -> void:
 		if i % 8 == 0 and ZoneLayout.road_clearance(flat, curves) < 0.0:
 			on_road += 1
 	_check(in_town == 0, "SCATTER nothing is planted inside the town (%d)" % in_town)
-	_check(on_rim == 0, "SCATTER nothing is planted on the rim (%d)" % on_rim)
+	_check(on_rim == 0, "SCATTER nothing is planted outside the edge, on the mountains (%d)" % on_rim)
 	_check(on_road == 0, "SCATTER nothing is planted on a road (%d of the sample)" % on_road)
 	_check(off_ground == 0, "SCATTER everything stands on the ground (%d do not)" % off_ground)
 
 
 # The world position of every near-mesh flora instance, in build order.
+# Where the flora planted everything. The node keeps the list: under the
+# headless renderer a MultiMesh's instances read back as identity, so reading
+# them here would test every batch's origin and nothing else.
 func _flora_points(flora: ZoneFlora) -> PackedVector3Array:
-	var out := PackedVector3Array()
-	for child in flora.get_children():
-		var mmi := child as MultiMeshInstance3D
-		if mmi == null or String(mmi.name).ends_with("_far"):
-			continue
-		for i in mmi.multimesh.instance_count:
-			out.append(mmi.position + mmi.multimesh.get_instance_transform(i).origin)
-	return out
+	return flora.planted().duplicate()
 
 
 func _check_pieces(world: Node) -> void:
@@ -169,8 +165,8 @@ func _check_pieces(world: Node) -> void:
 		_check(missing.is_empty(), "PIECES %s built all %d of its pieces%s" % [pair[0], (pair[1] as Array).size(), "" if missing.is_empty() else "; missing: " + ", ".join(missing)])
 	for site_name in ZoneLayout.SITES:
 		var at: Vector2 = ZoneLayout.SITES[site_name]
-		if maxf(absf(at.x), absf(at.y)) > ZoneLayout.RIM_START:
-			_check(false, "PIECES the site %s is on the plate" % site_name)
+		if not ZoneLayout.inside(at):
+			_check(false, "PIECES the site %s is inside the edge" % site_name)
 
 
 func _check_budget(world: Node) -> void:

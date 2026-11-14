@@ -41,7 +41,8 @@ func _build() -> void:
 	_build_dens()
 	_build_festering_mound()
 	_build_spider_copse()
-	_build_road_ends()
+	_build_doors()
+	_build_overlook()
 	_build_milestones()
 
 
@@ -489,28 +490,57 @@ func _build_spider_copse() -> void:
 
 # --- The roads -----------------------------------------------------------
 
-# Where the roads leave the zone the way is shut: a rockslide across the
-# east road with a cart under it, great fallen trees across the north road.
-func _build_road_ends() -> void:
+# Where a road meets the mountains the way on is shut, each door in its own
+# way: a rockslide across the east road with a cart under it, great fallen
+# trees across the north road, and the gnolls' own barricade of sharpened
+# stakes across the south road, below their camp.
+func _build_doors() -> void:
 	var b := LowPoly.new(231)
 	var rng := _rng(231)
-	var east := ZoneLayout.EAST_ROAD_END
+	var east := ZoneLayout.EAST_DOOR
 	for i in 16:
-		var p := east + Vector2(rng.randf_range(-6, 12), rng.randf_range(-13, 13))
+		var p := east + Vector2(rng.randf_range(-12, 6), rng.randf_range(-13, 13))
 		var s := rng.randf_range(1.6, 4.6)
 		b.blob(stand(p, rng.randf() * TAU, s * 0.5), Vector3(1.2, 0.9, 1.1) * s, 0.3, ZoneProps.STONE_DARK.lightened(0.06))
-	b.box(stand(east + Vector2(-9, -2), 0.5) * Transform3D(Basis(Vector3(0, 0, 1), 0.25), Vector3(0, 0.3, 0)), Vector3(1.9, 0.8, 3.6), ZoneProps.TIMBER_PALE)
-	ZoneProps.signpost(b, stand(east + Vector2(-14, 5), 2.2))
-	var north := ZoneLayout.NORTH_ROAD_END
+	b.box(stand(east + Vector2(-15, -2), 0.5) * Transform3D(Basis(Vector3(0, 0, 1), 0.25), Vector3(0, 0.3, 0)), Vector3(1.9, 0.8, 3.6), ZoneProps.TIMBER_PALE)
+	ZoneProps.signpost(b, stand(east + Vector2(-22, 5), 2.2))
+	var north := ZoneLayout.NORTH_DOOR
 	for i in 4:
-		var p := north + Vector2(rng.randf_range(-9, 9), rng.randf_range(-6, 3))
+		var p := north + Vector2(rng.randf_range(-9, 9), rng.randf_range(-8, 1))
 		b.column(stand(p, rng.randf() * TAU, 1.0) * Transform3D(Basis(Vector3.RIGHT, PI * 0.5 + rng.randf_range(-0.1, 0.1)), Vector3.ZERO), 1.0, 0.7, rng.randf_range(12, 20), 6, ZoneProps.TIMBER.darkened(0.15))
 	for i in 7:
-		var p := north + Vector2(rng.randf_range(-12, 12), rng.randf_range(-4, 6))
+		var p := north + Vector2(rng.randf_range(-12, 12), rng.randf_range(-6, 4))
 		var s := rng.randf_range(1.2, 3.4)
 		b.blob(stand(p, rng.randf() * TAU, s * 0.5), Vector3(1.2, 0.9, 1.1) * s, 0.3, ZoneProps.STONE_DARK)
-	ZoneProps.signpost(b, stand(north + Vector2(5, -12), 0.4))
-	add_piece(b, "RoadEnds", 1500.0)
+	ZoneProps.signpost(b, stand(north + Vector2(5, -16), 0.4))
+	var south := ZoneLayout.SOUTH_DOOR
+	# Two rows of stakes leaning up the road, a few boulders rolled in behind.
+	for row in 2:
+		for i in 13:
+			var p := south + Vector2((i - 6) * 1.7 + rng.randf_range(-0.3, 0.3), 5.0 - row * 2.4 + rng.randf_range(-0.4, 0.4))
+			ZoneProps.stake(b, stand(p, PI + rng.randf_range(-0.2, 0.2)), rng.randf_range(2.6, 3.8), 0.55)
+	for i in 6:
+		var p := south + Vector2(rng.randf_range(-11, 11), rng.randf_range(-7, 0))
+		var s := rng.randf_range(1.4, 3.2)
+		b.blob(stand(p, rng.randf() * TAU, s * 0.5), Vector3(1.2, 0.9, 1.1) * s, 0.3, ZoneProps.STONE_DARK)
+	ZoneProps.totem(b, stand(south + Vector2(-13, 9), 0.3), 5.0)
+	ZoneProps.totem(b, stand(south + Vector2(13, 8), -0.3), 4.4)
+	add_piece(b, "Doors", 1500.0)
+
+
+# The end of the barrow track: a ring of low waystones on the hill's shoulder
+# and one tall marker, with the barrow's pit below and the Ossuary above.
+func _build_overlook() -> void:
+	var b := LowPoly.new(236)
+	var rng := _rng(236)
+	var at := ZoneLayout.OVERLOOK
+	for i in 7:
+		var angle := i * TAU / 7.0 + rng.randf_range(-0.15, 0.15)
+		var p := at + Vector2.from_angle(angle) * rng.randf_range(6.5, 8.0)
+		ZoneProps.standing_stone(b, stand(p, rng.randf() * TAU), rng.randf_range(0.7, 1.1), rng.randf_range(1.1, 1.9), rng.randf_range(-0.12, 0.12), ZoneProps.STONE_PALE.darkened(0.12))
+	ZoneProps.standing_stone(b, stand(at + Vector2(-3.0, -1.5), 0.6), 1.3, 4.6, 0.06)
+	ZoneProps.signpost(b, stand(at + Vector2(6.0, 3.0), 2.6))
+	add_piece(b, "Overlook", 900.0)
 
 
 # A stone every MILESTONE_GAP metres along each road, on its right-hand edge.
@@ -528,7 +558,7 @@ func _build_milestones() -> void:
 			while walked < length:
 				var along := (c - a) / length
 				var p := a + along * walked + Vector2(along.y, -along.x) * half
-				if maxf(absf(p.x), absf(p.y)) < ZoneLayout.RIM_START and p.length() > ZoneLayout.TOWN_HALF + 20.0:
+				if ZoneLayout.well_inside(p, 12.0) and p.length() > ZoneLayout.TOWN_HALF + 20.0:
 					b.column(stand(p, atan2(-along.y, along.x)), 0.42, 0.34, 1.15, 5, ZoneProps.STONE_PALE.darkened(0.1))
 				walked += MILESTONE_GAP
 			walked -= length

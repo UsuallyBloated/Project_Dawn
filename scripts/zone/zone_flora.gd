@@ -53,6 +53,9 @@ var _meshes: Dictionary = {}
 var _block_grid: Dictionary = {}
 var _curves: Array = []
 var _grown_fields: Array[Rect2] = []
+# Where everything was planted (world positions), for tools/check_zone_scenery.gd:
+# a MultiMesh cannot be read back under the headless renderer.
+var _planted := PackedVector3Array()
 
 
 func _ready() -> void:
@@ -67,6 +70,7 @@ func build() -> void:
 	for child in get_children():
 		remove_child(child)
 		child.free()
+	_planted.clear()
 	var started := Time.get_ticks_msec()
 	_build_block_grid()
 	var clump := FastNoiseLite.new()
@@ -127,9 +131,10 @@ func _note_block(lo: Vector2, hi: Vector2, entry: Array) -> void:
 
 
 func _is_blocked(p: Vector2) -> bool:
-	if maxf(absf(p.x), absf(p.y)) > ZoneLayout.RIM_START:
-		return true
 	if p.length_squared() < ZoneLayout.TOWN_CLEARING * ZoneLayout.TOWN_CLEARING:
+		return true
+	# Nothing grows on the mountains: the wood and the plain stop at the edge.
+	if not ZoneLayout.inside(p):
 		return true
 	for rect in _grown_fields:
 		if rect.has_point(p):
@@ -218,6 +223,11 @@ func _scatter(region: Dictionary, terrain: TerrainMesh, clump: FastNoiseLite, bu
 
 # One (cell, kind) bucket as a MultiMesh at the cell's middle, and a second
 # one of the kind's far mesh past its `near` distance.
+# Where everything stands, in the order it was planted.
+func planted() -> PackedVector3Array:
+	return _planted
+
+
 func _emit(key: String, bucket: Dictionary, terrain: TerrainMesh) -> void:
 	var kind: String = bucket["kind"]
 	var info: Dictionary = KINDS[kind]
@@ -236,6 +246,8 @@ func _emit(key: String, bucket: Dictionary, terrain: TerrainMesh) -> void:
 		mm.instance_count = placements.size()
 		for i in placements.size():
 			var xf: Transform3D = placements[i]
+			if not far:
+				_planted.append(terrain.position + xf.origin)
 			xf.origin += terrain.position - origin
 			mm.set_instance_transform(i, xf)
 			mm.set_instance_color(i, tints[i])

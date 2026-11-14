@@ -174,7 +174,9 @@ climbs nothing a player cannot and gives up on a target above a face, taking no 
 it is held there or walks home (it cannot answer), and nothing targeted
 reaches through the terrain: a spell, an arrow, an AoE's reach or an idle mob's notice. A fall is the server's too: it begins where
 the ground drops away under a step, lands on the server's ground and costs what the height
-says, and neither a Quit nor a port mid-air gets out of the landing. Why: a modified client
+says, and neither a Quit nor a port mid-air gets out of the landing. And the walkable
+world is closed: the mountains outside its edge are a face at their foot all the way
+round, so nobody walks out of the zone or off the plate. Why: a modified client
 that sent its own height, walked up a cliff, cast from behind a hill, or never reported a
 fall.
 Held by: `micro_steps_climb_no_face`, `a_step_up_a_face_too_steep_to_climb_is_refused`,
@@ -184,7 +186,8 @@ Held by: `micro_steps_climb_no_face`, `a_step_up_a_face_too_steep_to_climb_is_re
 `a_walk_off_a_ten_metre_ledge_costs_a_fifth_of_max_hp`,
 `a_quit_in_mid_air_still_takes_the_landing`,
 `a_fall_to_zero_leaves_the_corpse_where_the_body_landed`,
-`a_diagonal_climbs_no_face`, `nobody_climbs_out_over_the_rim`,
+`a_diagonal_climbs_no_face`, `nobody_walks_out_of_the_zone`,
+`a_gap_in_the_mountains_is_a_way_out`,
 `a_mob_at_a_face_stops_and_gives_up`,
 `a_mob_at_a_face_gives_up_and_walks_home`,
 `a_mob_held_below_a_face_evades_until_it_is_home`,

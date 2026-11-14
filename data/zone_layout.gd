@@ -18,23 +18,78 @@ extends RefCounted
 const ZONE_SIZE := 4000.0
 # The town wall's line: a square this far from the origin on each side.
 const TOWN_HALF := 90.0
-# Past this (the larger of |x| and |z|) the rim's faces begin: no scenery.
-const RIM_START := 1925.0
+
+# --- The edge ------------------------------------------------------------------
+
+# The walkable world: two basins the mountains close round, joined only by the
+# pass through the Greywood ridge. Each basin's points are the corners of its
+# edge, rounded by basin_outline(); its first and last points are the two sides
+# of the pass's mouth, so each closes along the ridge's foot. Everything outside
+# both (and off the ridge itself) is mountain: tools/author_terrain.gd raises
+# it, and no scenery is scattered there. Scenery reads inside().
+const BASINS := [
+	{"name": "the town's basin", "points": [
+		Vector2(30, 790), Vector2(1180, 790), Vector2(1290, 790), Vector2(1430, 740), Vector2(1580, 575),
+		# The Wraith Gate plateau, its east side under the mountains.
+		Vector2(1850, 400), Vector2(1890, 0), Vector2(1865, -420), Vector2(1740, -580),
+		# The east arm, the road's door at its end.
+		Vector2(1810, -700), Vector2(1900, -830), Vector2(1900, -975),
+		Vector2(1660, -1010), Vector2(1420, -900), Vector2(1220, -940),
+		# The mountains between the east arm and the war camp's vale.
+		Vector2(900, -960), Vector2(600, -1080), Vector2(530, -1300), Vector2(570, -1600), Vector2(410, -1800),
+		# The war camp's vale, the south door at its foot.
+		Vector2(80, -1870), Vector2(-300, -1800), Vector2(-420, -1560), Vector2(-360, -1250), Vector2(-520, -1020),
+		Vector2(-800, -830), Vector2(-1120, -740), Vector2(-1500, -770), Vector2(-1780, -610),
+		# The barrow hills, running up into the range.
+		Vector2(-1900, -280), Vector2(-1900, 260), Vector2(-1770, 580),
+		Vector2(-1500, 740), Vector2(-1290, 790), Vector2(-1180, 790), Vector2(-30, 790)]},
+	{"name": "the Greywood", "points": [
+		Vector2(-30, 1010), Vector2(-1180, 1010), Vector2(-1290, 1010),
+		Vector2(-1330, 1200), Vector2(-1180, 1400), Vector2(-900, 1500), Vector2(-600, 1520),
+		Vector2(-330, 1520), Vector2(-170, 1600),
+		# The north arm, the road's door at its end.
+		Vector2(-140, 1890), Vector2(140, 1890),
+		Vector2(165, 1600), Vector2(330, 1500), Vector2(700, 1470), Vector2(1000, 1450),
+		Vector2(1220, 1330), Vector2(1330, 1180),
+		Vector2(1290, 1010), Vector2(1180, 1010), Vector2(30, 1010)]},
+]
+# Where the roads leave the zone, each against the mountains at the end of an
+# arm (ten metres in from the edge, where the face begins): ways to zones that
+# do not exist yet, shut for now.
+const NORTH_DOOR := Vector2(0, 1880)
+const EAST_DOOR := Vector2(1890, -902)
+const SOUTH_DOOR := Vector2(98, -1838)
+# Where the barrow track stops: a shoulder of the western hills with the
+# Sunken Barrow's pit below it and the Ossuary on the crest above.
+const OVERLOOK := Vector2(-1370, 250)
 
 # --- Roads ---------------------------------------------------------------------
 
 # Each road's points are its corners; road_points() rounds them into a curve.
+# A road passes its camps at a distance (where a traveller sees them from it)
+# and never runs into one; the author's report measures each against the camps.
 const ROADS := [
 	{"name": "the east road", "width": 7.0, "points": [
-		Vector2(90, 0), Vector2(500, -50), Vector2(1000, -190), Vector2(1380, -620),
-		Vector2(1880, -900), Vector2(1940, -932)]},
+		# Past the raiders' wagon wreck, south of the Spider Copse, then along
+		# under the Wraith Gate cliff and round the plateau's ramp to the door.
+		Vector2(90, 0), Vector2(280, 10), Vector2(470, -30), Vector2(680, -150), Vector2(900, -290),
+		Vector2(1120, -300), Vector2(1300, -400), Vector2(1390, -640), Vector2(1620, -760), EAST_DOOR]},
 	{"name": "the north road", "width": 6.0, "points": [
-		Vector2(0, 90), Vector2(20, 420), Vector2(0, 760), Vector2(0, 1040),
-		Vector2(10, 1220), Vector2(0, 1880), Vector2(0, 1940)]},
+		# East of Bat Hollow, straight through the pass (it is 60 m wide), then
+		# east round the Broken Crypt's bowl and up the arm to the door.
+		Vector2(0, 90), Vector2(70, 250), Vector2(100, 430), Vector2(50, 610), Vector2(0, 730), Vector2(0, 770),
+		Vector2(0, 1030), Vector2(40, 1046), Vector2(150, 1070), Vector2(265, 1160), Vector2(305, 1260),
+		Vector2(245, 1420), Vector2(100, 1540), Vector2(0, 1660), NORTH_DOOR]},
 	{"name": "the barrow track", "width": 4.0, "points": [
-		Vector2(-90, 0), Vector2(-600, -20), Vector2(-1100, -60), Vector2(-1340, -60)]},
-	{"name": "the mill road", "width": 5.0, "points": [
-		Vector2(0, -90), Vector2(20, -420), Vector2(70, -740), Vector2(20, -1420)]},
+		# Out by the farm lane, north of the bone fields, up the hills to the overlook.
+		Vector2(-90, 0), Vector2(-170, -38), Vector2(-260, -50), Vector2(-450, -34), Vector2(-640, 60), Vector2(-800, 200),
+		Vector2(-960, 290), Vector2(-1130, 330), Vector2(-1270, 300), OVERLOOK]},
+	{"name": "the south road", "width": 5.0, "points": [
+		# By the mill, west of Rotfang's rocks, then round the foot of the war
+		# camp's shelf (the gnolls look down on it) to the door.
+		Vector2(0, -90), Vector2(-30, -250), Vector2(40, -400), Vector2(-70, -560), Vector2(-170, -740),
+		Vector2(-170, -880), Vector2(-40, -1050), Vector2(150, -1180), Vector2(310, -1320), Vector2(370, -1500),
+		Vector2(310, -1650), Vector2(190, -1740), Vector2(115, -1800), SOUTH_DOOR]},
 ]
 
 # --- Ground colours (the paint texture) -------------------------------------------
@@ -52,6 +107,8 @@ const COLOR_CAMP_DIRT := Color(0.44, 0.37, 0.27)
 const COLOR_SICK_GROUND := Color(0.34, 0.39, 0.20)
 const COLOR_BARROW_EARTH := Color(0.27, 0.25, 0.21)
 const COLOR_PLATEAU_STONE := Color(0.45, 0.43, 0.41)
+# The mountains outside the edge: bare rock from the foot up.
+const COLOR_MOUNTAIN_ROCK := Color(0.40, 0.39, 0.37)
 
 # The farm strips west of the walls: Rect2(x, z, width, depth), furrows along x.
 const FIELDS := [
@@ -144,8 +201,6 @@ const BARROW_MOUTH := Vector2(-1612, -60)
 const OSSUARY_RUIN := Vector2(-1765, 105)
 const BROKEN_CRYPT := Vector2(20, 1262)
 const WAGON_WRECK := Vector2(470, -30)
-const EAST_ROAD_END := Vector2(1925, -924)
-const NORTH_ROAD_END := Vector2(0, 1925)
 # The pass through the ridge: its floor's half width and where it runs.
 const PASS_X := 0.0
 const PASS_HALF_WIDTH := 30.0
@@ -202,17 +257,55 @@ const SITE_CLEARINGS := {
 }
 const EXTRA_CLEARINGS := [
 	[MILL, 22.0], [WRAITH_GATE_ARCH, 40.0], [BARROW_MOUTH, 30.0], [OSSUARY_RUIN, 50.0],
-	[WAGON_WRECK, 10.0], [EAST_ROAD_END, 26.0], [NORTH_ROAD_END, 22.0],
+	[WAGON_WRECK, 10.0], [EAST_DOOR, 26.0], [NORTH_DOOR, 22.0], [SOUTH_DOOR, 22.0], [OVERLOOK, 16.0],
 ]
 # Nor inside the town's walls and the fields' fences.
 const TOWN_CLEARING := 150.0
 
+# How many times a basin's corners are cut into a curve.
+const BASIN_ROUNDING := 3
 
-# A road's corners rounded into a curve (Chaikin's corner cutting, twice), its
-# two ends kept where they are.
-static func road_points(road: Dictionary) -> PackedVector2Array:
-	var pts := PackedVector2Array(road["points"])
-	for pass_no in 2:
+static var _outlines: Array[PackedVector2Array] = []
+
+
+# A basin's edge as a closed polygon: its corners rounded (Chaikin's corner
+# cutting, its two ends kept, so the side along the ridge's foot stays straight).
+static func basin_outline(basin: Dictionary) -> PackedVector2Array:
+	return _cut_corners(PackedVector2Array(basin["points"]), BASIN_ROUNDING)
+
+
+# Every basin's edge, rounded once and kept.
+static func basin_outlines() -> Array[PackedVector2Array]:
+	if _outlines.is_empty():
+		for basin in BASINS:
+			_outlines.append(basin_outline(basin))
+	return _outlines
+
+
+# Whether a point is on the walkable side of the edge: in a basin, or in the
+# pass between them. (The ridge's crest is neither; nothing stands there.)
+static func inside(p: Vector2) -> bool:
+	if absf(p.x - PASS_X) <= PASS_HALF_WIDTH and p.y >= PASS_SOUTH_Z and p.y <= PASS_NORTH_Z:
+		return true
+	for outline in basin_outlines():
+		if Geometry2D.is_point_in_polygon(p, outline):
+			return true
+	return false
+
+
+# Whether a point and everything within `margin` of it is inside (tested at the
+# point and eight points round it, which is enough for scenery).
+static func well_inside(p: Vector2, margin: float) -> bool:
+	if not inside(p):
+		return false
+	for i in 8:
+		if not inside(p + Vector2.from_angle(i * TAU / 8.0) * margin):
+			return false
+	return true
+
+
+static func _cut_corners(pts: PackedVector2Array, passes: int) -> PackedVector2Array:
+	for pass_no in passes:
 		var next := PackedVector2Array()
 		next.append(pts[0])
 		for i in pts.size() - 1:
@@ -221,6 +314,12 @@ static func road_points(road: Dictionary) -> PackedVector2Array:
 		next.append(pts[pts.size() - 1])
 		pts = next
 	return pts
+
+
+# A road's corners rounded into a curve (Chaikin's corner cutting, twice), its
+# two ends kept where they are.
+static func road_points(road: Dictionary) -> PackedVector2Array:
+	return _cut_corners(PackedVector2Array(road["points"]), 2)
 
 
 # The distance from a point to the nearest road's centre line, less that road's
