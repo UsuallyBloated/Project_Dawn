@@ -3460,6 +3460,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   far fog tints the range tan (a scene setting from the first build); the mountains' foot is
   one unbroken cliff 60 m high, which reads as a wall up close in the arms; mob count, view
   distance, server obstacles and water as before.
+  **DEPLOYED 2026-11-14 21:07 UTC** (R720 boot line `build="9a7e0fa" dev_cmds=false
+  terrain=400x400 cells of 10 m, floor 0, hash a9942be36dff`, nobody online at the stop,
+  `saved=0 unsaved=0`, `ledger check mismatches=0`; the user's character logged in at the town
+  square on the `7c7a810` zip); `zone_4km_checklist.md` is runnable now, section 7 with it.
 - [ ] **The compass is mirrored: facing north, east is on your left** *(user, 2026-11-14: "If
   the Greywood ridge is North, then the gnoll raider camp is currently to the west, when it
   should be to the east. Please confirm before changing any thing.")*. **Confirmed the same

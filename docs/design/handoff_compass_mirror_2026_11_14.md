@@ -11,11 +11,12 @@ on 2026-11-14; verify an anchor again before you edit it.
 |---|---|---|---|
 | On the deploy branches (`fix/xp-leveling-overflow`), pushed | `9a7e0fa` | `7c7a810` (records after it) | `a9942be36dff` |
 | The zip for the door | | `builds/ProjectDawn-alpha-7c7a810.zip` | |
-| Running on the R720 when this was written | `162c151` | | `35a3f1a15f4f` |
+| Running on the R720 since 2026-11-14 21:07 UTC | `9a7e0fa` | | `a9942be36dff` |
 
 The outline build (two basins with arms, mountains, winding roads, three doors) is merged and
-exported. **Ask the user whether the R720 has been redeployed** before assuming either hash;
-the boot line says (`journalctl -u projectdawn -n 20 --no-pager`). A client and a server on
+exported, and the user redeployed the R720 onto it the same evening (boot line read, ledger
+clean, their character in the town square). Still read the boot line before assuming a hash
+(`journalctl -u projectdawn -n 20 --no-pager`). A client and a server on
 different terrain hashes stand people on the wrong ground (floating mobs, steps refused in
 open country). The zip and the redeploy always go together.
 
