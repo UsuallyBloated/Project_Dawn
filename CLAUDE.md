@@ -3820,6 +3820,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   dummies for a bystander, leaves the bystander's warder, reports the count, writes one
   audit row; a Smite at a removed id is refused) that fails on a no-op despawn, and a
   headless probe of both button paths that fails on the old button.
+- [ ] **GM flight: Minecraft Creative-mode movement for geometry tests** *(user, 2026-11-15:
+  "the ability to fly and quickly would be very helpful in these geometry tests")*.
+  **DESIGNED 2026-11-15: `docs/design/handoff_gm_flight.md`; all eight calls (its section 9)
+  DECIDED the same day as recommended** (user: "sounds good" to 1 to 7, and to 8, "lets get it
+  done"). The shape: a `fly <m/s>` / `fly off` sub-command of the
+  existing `GmCommand` line (dev-gated, one audit row per toggle) and the vertical riding the
+  existing `Move.direction.y`, so no protocol change and the door zip is unaffected; the server
+  integrates the flight in 3D, clamped above its own ground, inside the plate and under a
+  ceiling, and saves a flier at the ground under it; mobs ignore a flier and a flier cannot
+  fight; any server move ends flight with a `Teleport`. The client flies its body on Space,
+  Shift and Ctrl (double-tap Space to toggle, as in Minecraft) and needs a sequence-keyed
+  reconciler, since the walking one would snap the body back on every Position at flight speed.
 
 ### UI polish
 - [x] **Sticky chat channel, WoW style** — **DONE + playtested 2026-10-27**
