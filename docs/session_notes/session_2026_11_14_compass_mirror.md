@@ -99,15 +99,34 @@ until the direction was derived from the two constants.
   south); the town from the south-west with the tower on the east wall north of the gate; the
   Wraith Gate's arch lit at its lip; the barrow door glowing in the pit's west wall.
 
-## 7. Flagged, not changed
+## 7. The review pass
+
+`/code-review` on the branch, 13 findings. Fixed: the redeploy SQL now mirrors the saved
+facing too (`yaw` becomes PI - yaw; the client seeds the body's facing from it since 11-09)
+and leaves a one-row `compass_mirrored` table so running it twice changes nothing (tested
+twice on a copy of the dev database); the six NPC nodes turned to face the square again (an
+identity basis at z = -5 faced away from it); two server unit tests in `npcs.rs` and two
+flat-town assertions in `height.rs` still stood on the old NPC row; `/loc` printed `-0.0` on
+an axis; `/location raw` did not work; `commands.md` still said the author only warns on a
+drifted set piece; the town's signposts (half pointed back at the town before the mirror and
+the other half after it) all point out along their roads now; the compass check's ridge
+search takes the clearly higher side instead of failing when both sides have high ground;
+`PASS_SOUTH_Z` / `PASS_NORTH_Z` renamed `PASS_SOUTH` / `PASS_NORTH` (they hold map north
+values); the vertex-to-map expression the heights and the edge both read is one helper.
+Not changed: `ZoneProps.wall` still puts merlons on a run's left, so a new wall's winding
+decides its side (both callers say so in a comment); the smoke's drift direction is a world
+vector (it now drifts south-east, which nobody authored either way); the mill's sails sit on
+the east-west axis, which the mirror leaves alone.
+
+## 8. Flagged, not changed
 
 - Pieces turn but never mirror: an asymmetric piece keeps its own handedness.
 - The pass's west mouth shows one long dark facet where a diagonal now runs across the corner.
 - The redeploy needs the SQL in the To-Do entry during the stop, after a `.backup`: every
-  saved position and bind mirrored with the world, and every corpse. No server code for older
-  characters (the standing rule).
+  saved position, bind and facing mirrored with the world, and every corpse. No server code
+  for older characters (the standing rule).
 
-## 8. Records
+## 9. Records
 
 CLAUDE.md's compass entry; `docs/reference/invariants.md` rule L3; `commands.md` (`/loc`,
 `/loc raw`, the compass check); `docs/design/location_command.md` revised; the tester sheets'

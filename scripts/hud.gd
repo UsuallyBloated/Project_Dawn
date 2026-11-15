@@ -1536,7 +1536,7 @@ func _handle_chat_input(text: String) -> void:
 			BardSongs.stop_singing()
 		return
 
-	if lower == "/loc" or lower == "/location" or lower == "/loc raw":
+	if lower in ["/loc", "/location", "/loc raw", "/location raw"]:
 		# EverQuest's position print (docs/design/location_command.md): north,
 		# then west, then height, so a larger first number is further north
 		# and a larger second one further west, as EQ printed it (user,
@@ -1547,13 +1547,13 @@ func _handle_chat_input(text: String) -> void:
 		# dead on purpose: a corpse run is exactly when you want it.
 		if is_instance_valid(_player):
 			var p: Vector3 = _player.global_position
-			if lower == "/loc raw":
+			if lower.ends_with(" raw"):
 				CombatLog.add_line(
 					"Your world position is %.1f, %.1f, %.1f (x, y, z)." % [p.x, p.y, p.z],
 					CombatLog.MsgType.INFO)
 			else:
 				CombatLog.add_line(
-					"Your location is %.1f, %.1f, %.1f (north, west, height)." % [-p.z, -p.x, p.y],
+					"Your location is %.1f, %.1f, %.1f (north, west, height)." % [_loc_number(-p.z), _loc_number(-p.x), _loc_number(p.y)],
 					CombatLog.MsgType.INFO)
 		else:
 			# A triage tool must never be silent — say why there is no
@@ -1840,6 +1840,11 @@ func _handle_chat_input(text: String) -> void:
 		return
 
 	CombatLog.add_line("Unknown command: %s" % text, CombatLog.MsgType.INFO)
+
+# A /loc number to one decimal, never "-0.0" (/loc negates two of the axes, and a
+# body a hair south of the line would otherwise print a minus on a zero).
+static func _loc_number(v: float) -> float:
+	return snappedf(v, 0.1) + 0.0
 
 # The display name an NPC node carries, for /con (the client holds no server
 # ids for NPCs). `npc_name` first: the vendor and banker labels carry a role

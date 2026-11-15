@@ -3504,7 +3504,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   hill. The client: `ZoneDressing`'s `ground` / `on_ground` / `stand` (the choke point for the
   town and the set pieces), the flora sampling the ground at the world point, the graves' wall
   boxes, the town's and the crypt's walls drawn the other way round so their merlons stay
-  outside, the six NPC nodes at z = -5, `SenseHeading`'s ring (rotation.y = 0 faces North),
+  outside, the six NPC nodes at z = -5 and turned to face the square again, `SenseHeading`'s ring (rotation.y = 0 faces North),
   `tools/author_terrain.gd` (the vertex read at its map point; the report converting every map
   point and printing world coordinates; a set piece drifted 80 m from its camp is now a FAIL,
   the check that catches a half-mirrored pair; the paint painted on the map and flipped once
@@ -3513,7 +3513,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   a script that counted them, `terrain.toml` re-exported, five tests' positions mirrored (the
   camp-pull constants, the plateau ramp perch, the compiled terrain's ridge and pass, the gap
   test's corridor) and one hard-coded walk derived from the constants instead; no code change.
-  `/loc` prints `north, west, height` (`-z, -x, y`), `/loc raw` the world's `x, y, z`. The sun
+  `/loc` prints `north, west, height` (`-z, -x, y`, never `-0.0`), `/loc raw` (or `/location raw`) the world's `x, y, z`. The town's four signposts now all point out along their roads (half had pointed back at the town, before and after the mirror). The sun
   needed nothing (it arcs east to west with no north-south lean). New check
   `tools/check_compass.gd` (in `check_all.ps1`, rule L3): the ridge read from the scene's
   ground is where `/sense` says North, the server's Gnoll Raider Camp is on the right facing
@@ -3521,10 +3521,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   at the server's camp; it failed on the old world at the chirality row, and on a mirrored
   client against the unmirrored server at the set-piece row. Suites: server 411 unit and 184
   world, fmt and clippy clean; client 17 checks, the zone probes. **At the redeploy, during the
-  stop, after a `.backup`:** `sudo -u projectdawn sqlite3 /opt/projectdawn/world.db "UPDATE
-  characters SET pos_z = -pos_z, bind_z = -bind_z; UPDATE corpses SET pos_z = -pos_z;"` (every
-  saved position mirrored with the world; no server code for older characters, the standing
-  rule). **Flagged:** pieces turn but never mirror, so an asymmetric piece keeps its own
+  stop, after a `.backup`,** one statement mirrors every saved position, bind, facing and
+  corpse with the world, and leaves a one-row `compass_mirrored` table so a second run (a
+  repeated stop-and-start) changes nothing (tested twice on a copy of the dev database):
+  `sudo -u projectdawn sqlite3 /opt/projectdawn/world.db "BEGIN; UPDATE characters SET pos_z =
+  -pos_z, bind_z = -bind_z, yaw = 3.141592653589793 - yaw WHERE NOT EXISTS (SELECT 1 FROM
+  sqlite_master WHERE type = 'table' AND name = 'compass_mirrored'); UPDATE corpses SET pos_z =
+  -pos_z WHERE NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name =
+  'compass_mirrored'); CREATE TABLE IF NOT EXISTS compass_mirrored (at TEXT NOT NULL); INSERT
+  INTO compass_mirrored (at) SELECT datetime('now') WHERE NOT EXISTS (SELECT 1 FROM
+  compass_mirrored); COMMIT;"` (one line when pasted; no server code for older characters,
+  the standing rule). **Flagged:** pieces turn but never mirror, so an asymmetric piece keeps its own
   handedness (a banner, a door's rubble); the triangle diagonals do not mirror, so a few faces
   changed shape (the pass's west mouth shows one long facet), and the report barely moved
   (8.81 square km inside both times; 51.1% of the triangles walked to against 51.2%; 9,423

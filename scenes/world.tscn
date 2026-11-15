@@ -94,35 +94,35 @@ script = ExtResource("5_hotbar")
 script = ExtResource("6_levelup")
 
 [node name="GeneralMerchant" parent="." instance=ExtResource("13_dialog")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -5)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 5, 0, -5)
 npc_name = "Elara"
 npc_title = "General Merchant"
 vendor_name = "Elara — General Merchant"
 vendor_type = "General Merchant"
 
 [node name="Provisioner" parent="." instance=ExtResource("13_dialog")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -5)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 8, 0, -5)
 npc_name = "Brom"
 npc_title = "Provisioner"
 vendor_name = "Brom — Provisioner"
 vendor_type = "Provisioner"
 
 [node name="AldricTheGuard" parent="." instance=ExtResource("13_dialog")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -5)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 2, 0, -5)
 npc_name = "Aldric the Guard"
 npc_title = "Town Watch"
 
 [node name="SisterMaelis" parent="." instance=ExtResource("13_dialog")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -5)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -2, 0, -5)
 npc_name = "Sister Maelis"
 npc_title = "Soul Binder"
 
 [node name="ThaliaTheBanker" parent="." instance=ExtResource("14_banker")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, -5)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 11, 0, -5)
 banker_name = "Thalia Mourne — Banker"
 
 [node name="Blacksmith" parent="." instance=ExtResource("10_vendor")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -5)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -5, 0, -5)
 vendor_name = "Hadrik — Blacksmith"
 vendor_type = "Blacksmith"
 

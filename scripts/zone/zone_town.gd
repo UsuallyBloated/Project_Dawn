@@ -86,8 +86,10 @@ func _build_walls() -> void:
 	add_piece(b, "Walls")
 
 	var signs := LowPoly.new(12)
+	# Each sign's long board (its local +x) points out along its road: on the map
+	# the yaw that turns +x to the angle a is PI - a.
 	for at in [Vector2(h + 16, 7), Vector2(7, h + 16), Vector2(-h - 16, -6), Vector2(-7, -h - 16)]:
-		ZoneProps.signpost(signs, stand(at, at.angle()))
+		ZoneProps.signpost(signs, stand(at, PI - at.angle()))
 	add_piece(signs, "Signposts", 400.0)
 
 

@@ -190,8 +190,9 @@ One visit each: the mobs stand at the set piece, on the ground, and fight normal
 > the mountains.
 
 - [ ] **Log in where you logged out (any character from before the redeploy)** → you stand
-      on the ground in the same place relative to the town, the camps and the roads as before;
-      not in a mountain and not in the air. Your bind still returns you there. notes:
+      on the ground in the same place relative to the town, the camps and the roads as before,
+      facing the same way; not in a mountain and not in the air. Your bind still returns you
+      there. notes:
 - [ ] **In the town square, face the Greywood ridge (the wall with the pass in it) and type
       `/sense`** → "North" (with the skill high enough to be sure). The Gnoll Raider Camp's
       road, the east road with the tall tower by its gate, leaves on your right. notes:
@@ -206,7 +207,8 @@ One visit each: the mobs stand at the set piece, on the ground, and fight normal
       and the Greywood beyond the ridge to the north are where the map has them, and on the
       same side of each other. notes:
 - [ ] **Walk the town's walls from outside** → the battlements are on the outer side of every
-      wall; the gates and the tower stand as before. notes:
+      wall; the gates and the tower stand as before; the NPCs face the square; each signpost
+      outside a gate points its long board out along the road. notes:
 - [ ] **Two seats: both log in, group, and kill something at the Bonepile** → the partner sees
       you where you are and the mob where it is; nobody floats or stands inside the ground.
       notes:

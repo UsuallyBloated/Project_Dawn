@@ -229,6 +229,12 @@ static func _v2(a: Array) -> Vector2:
 	return Vector2(float(a[0]), float(a[1]))
 
 
+# The map point a grid vertex reads: the vertex's world (x, z) on the map. The
+# heights and the edge mask both read it, so they agree on every vertex.
+static func vertex_map_point(origin: Vector3, half: float, cell: float, ix: int, iz: int) -> Vector2:
+	return Layout.to_map_xz(Vector2(origin.x - half + ix * cell, origin.z - half + iz * cell))
+
+
 # The heights, row-major by world z then x, as the TerrainMesh stores them.
 # The features are on the map, so each vertex is read at its map point.
 static func compose(features: Dictionary, terrain: Dictionary) -> PackedFloat32Array:
@@ -244,7 +250,7 @@ static func compose(features: Dictionary, terrain: Dictionary) -> PackedFloat32A
 	for iz in gs + 1:
 		for ix in gs + 1:
 			var i := iz * (gs + 1) + ix
-			var p := Layout.to_map_xz(Vector2(origin.x - half + ix * cell, origin.z - half + iz * cell))
+			var p := vertex_map_point(origin, half, cell, ix, iz)
 			var h := height_at(features, noises, p, half)
 			if not outside.is_empty() and outside[i] > 0.0:
 				for f in mountains:
@@ -270,7 +276,7 @@ static func edge_distances(features: Dictionary, terrain: Dictionary) -> Diction
 	inside.resize(row * row)
 	for iz in row:
 		for ix in row:
-			var p := Layout.to_map_xz(Vector2(origin.x - half + ix * cell, origin.z - half + iz * cell))
+			var p := vertex_map_point(origin, half, cell, ix, iz)
 			var is_in := Layout.inside(p)
 			if not is_in:
 				for f in features.get("ridge", []):

@@ -240,11 +240,12 @@ const BARROW_MOUTH := Vector2(-1612, -60)
 const OSSUARY_RUIN := Vector2(-1765, 105)
 const BROKEN_CRYPT := Vector2(20, 1262)
 const WAGON_WRECK := Vector2(470, -30)
-# The pass through the ridge: its floor's half width and where it runs.
+# The pass through the ridge: its floor's half width and where it runs (east of
+# its middle, and north of the town at its two mouths, map values like all here).
 const PASS_X := 0.0
 const PASS_HALF_WIDTH := 30.0
-const PASS_SOUTH_Z := 790.0
-const PASS_NORTH_Z := 1010.0
+const PASS_SOUTH := 790.0
+const PASS_NORTH := 1010.0
 
 # --- Flora --------------------------------------------------------------------------
 
@@ -324,7 +325,7 @@ static func basin_outlines() -> Array[PackedVector2Array]:
 # Whether a point is on the walkable side of the edge: in a basin, or in the
 # pass between them. (The ridge's crest is neither; nothing stands there.)
 static func inside(p: Vector2) -> bool:
-	if absf(p.x - PASS_X) <= PASS_HALF_WIDTH and p.y >= PASS_SOUTH_Z and p.y <= PASS_NORTH_Z:
+	if absf(p.x - PASS_X) <= PASS_HALF_WIDTH and p.y >= PASS_SOUTH and p.y <= PASS_NORTH:
 		return true
 	for outline in basin_outlines():
 		if Geometry2D.is_point_in_polygon(p, outline):

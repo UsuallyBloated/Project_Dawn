@@ -91,7 +91,7 @@ func _build_pass() -> void:
 	var b := LowPoly.new(101)
 	var glow := LowPoly.new(102)
 	var half := ZoneLayout.PASS_HALF_WIDTH - 4.0
-	for z in [ZoneLayout.PASS_SOUTH_Z - 6.0, ZoneLayout.PASS_NORTH_Z + 6.0]:
+	for z in [ZoneLayout.PASS_SOUTH - 6.0, ZoneLayout.PASS_NORTH + 6.0]:
 		for sx in [-1.0, 1.0]:
 			var at := Vector2(ZoneLayout.PASS_X + sx * half, z)
 			b.box(stand(at), Vector3(2.0, 4.2, 2.0), ZoneProps.STONE_DARK)
@@ -99,9 +99,9 @@ func _build_pass() -> void:
 			glow.cone(stand(at, 0.0, 4.9), 0.7, 1.7, 5, ZoneProps.FLAME)
 			add_light(on_ground(at, 6.0), ZoneProps.FLAME, 3.0, 26.0, true)
 	for sx in [-1.0, 1.0]:
-		var at := Vector2(ZoneLayout.PASS_X + sx * (half + 10.0), ZoneLayout.PASS_SOUTH_Z - 34.0)
+		var at := Vector2(ZoneLayout.PASS_X + sx * (half + 10.0), ZoneLayout.PASS_SOUTH - 34.0)
 		ZoneProps.standing_stone(b, stand(at, sx * 0.4), 3.0, 11.0, sx * 0.05)
-	ZoneProps.signpost(b, stand(Vector2(ZoneLayout.PASS_X + 9.0, ZoneLayout.PASS_SOUTH_Z - 46.0), 0.3))
+	ZoneProps.signpost(b, stand(Vector2(ZoneLayout.PASS_X + 9.0, ZoneLayout.PASS_SOUTH - 46.0), 0.3))
 	add_piece(b, "Pass", 2600.0)
 	add_glow(glow, "PassFires", 3.0, 2600.0)
 

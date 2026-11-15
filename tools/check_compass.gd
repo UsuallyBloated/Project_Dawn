@@ -32,6 +32,8 @@ const RIDGE_SEARCH_X := [-900.0, -500.0, 500.0, 900.0]
 const RIDGE_SEARCH_FROM := 600.0
 const RIDGE_SEARCH_TO := 1150.0
 const RIDGE_MIN_HEIGHT := 45.0
+# The ridge's side must stand this much higher than the other side's highest.
+const RIDGE_MARGIN := 15.0
 const RAIDER_CAMP := "Gnoll Raider Camp"
 
 var _fails := 0
@@ -115,7 +117,8 @@ func _run() -> void:
 
 
 # +1 when the ridge is at +Z of the town, -1 at -Z, 0 when neither side has it:
-# the side whose highest ground along the search lines is the ridge's height.
+# the side whose ground along every search line reaches the ridge's height,
+# well above the other side's.
 func _ridge_side(terrain: Dictionary) -> int:
 	# For each side, the lowest of the search lines' highest points: the ridge
 	# is high on every line, a lone hill on one.
@@ -128,11 +131,10 @@ func _ridge_side(terrain: Dictionary) -> int:
 				peak = maxf(peak, Exporter.ground_at(terrain, x, s * d))
 				d += 10.0
 			best[s] = minf(best[s], peak)
-	var north_high: bool = best[1] >= RIDGE_MIN_HEIGHT
-	var south_high: bool = best[-1] >= RIDGE_MIN_HEIGHT
-	if north_high == south_high:
+	var side := 1 if best[1] > best[-1] else -1
+	if best[side] < RIDGE_MIN_HEIGHT or best[side] - best[-side] < RIDGE_MARGIN:
 		return 0
-	return 1 if north_high else -1
+	return side
 
 
 # What /sense prints, as a direction word, for a body facing `dir` (world).
