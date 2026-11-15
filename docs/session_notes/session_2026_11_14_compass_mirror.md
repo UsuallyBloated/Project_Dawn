@@ -149,3 +149,17 @@ CLAUDE.md's compass entry; `docs/reference/invariants.md` rule L3; `commands.md`
 positions as the new `/loc` prints them (`CHECKLIST_FOR_TESTERS.md` rows 6, 20 and 24,
 `README_FOR_TESTERS.md`, `pre_door_check_checklist.md` section 9, `zone_4km_checklist.md`'s
 table and section 7) and `zone_4km_checklist.md` section 8, the compass rows.
+
+## 11. The redeploy (2026-11-15)
+
+Deployed 13:47 UTC: boot line `build="27d5ea7" dev_cmds=false terrain=400x400 cells of 10 m,
+floor 0, hash 6bedde1c663e`, nobody online at the stop, `saved=0 unsaved=0`, 11 corpses loaded,
+`ledger check mismatches=0`. The backup taken before the SQL is
+`/opt/projectdawn/world.db.pre-compass`.
+
+One slip on the way, no harm done: the first pass skipped the pull and the build, so the `cp`
+copied the old binary back in and the server started at 13:34 as `9a7e0fa` on the database the
+SQL had already mirrored. Nobody connected in the four minutes before it was stopped again, so
+nothing was written in the wrong frame, and the SQL was not run a second time (its marker table
+would have made a second run do nothing anyway). The lesson for the runbook: check the build's
+sha (`git log -1`) before the `cp`, not after the start.

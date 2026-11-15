@@ -3542,6 +3542,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   changed shape (the pass's west mouth shows one long facet), and the report barely moved
   (8.81 square km inside both times; 51.1% of the triangles walked to against 51.2%; 9,423
   faces against 9,335; the steepest road 15.2 degrees both times).
+  **DEPLOYED 2026-11-15 13:47 UTC** (R720 boot line `build="27d5ea7" dev_cmds=false
+  terrain=400x400 cells of 10 m, floor 0, hash 6bedde1c663e`, nobody online at the stop,
+  `saved=0 unsaved=0`, 11 corpses loaded, `ledger check mismatches=0`; the backup taken before
+  the SQL is `/opt/projectdawn/world.db.pre-compass`). The first start, at 13:34, ran the old
+  binary (the pull and build had been skipped, so the `cp` copied `9a7e0fa` back in) on the
+  already-mirrored database for four minutes with nobody connected, so nothing was written;
+  the SQL was not run twice. `zone_4km_checklist.md` (sections 7 and 8) is runnable now on
+  the `fd17ff1` zip.
 - [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
   a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
   height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at
