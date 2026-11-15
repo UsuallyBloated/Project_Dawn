@@ -58,16 +58,16 @@ func _build_walls() -> void:
 	var tower_lo := TOWER_AT.y - TOWER_WIDTH * 0.5
 	var tower_hi := TOWER_AT.y + TOWER_WIDTH * 0.5
 	# Each run is drawn so its merlons face out (ZoneProps.wall puts them on
-	# the run's left).
+	# the run's left): clockwise round the town, as the map shows it.
 	var runs := [
-		# East wall, south to north, broken by the gate and the watchtower.
-		[Vector2(h, -h), Vector2(h, -g)], [Vector2(h, g), Vector2(h, tower_lo)], [Vector2(h, tower_hi), Vector2(h, h)],
-		# North wall, east to west.
-		[Vector2(h, h), Vector2(g, h)], [Vector2(-g, h), Vector2(-h, h)],
-		# West wall, north to south.
-		[Vector2(-h, h), Vector2(-h, g)], [Vector2(-h, -g), Vector2(-h, -h)],
-		# South wall, west to east.
-		[Vector2(-h, -h), Vector2(-g, -h)], [Vector2(g, -h), Vector2(h, -h)],
+		# East wall, north to south, broken by the watchtower and the gate.
+		[Vector2(h, h), Vector2(h, tower_hi)], [Vector2(h, tower_lo), Vector2(h, g)], [Vector2(h, -g), Vector2(h, -h)],
+		# South wall, east to west.
+		[Vector2(h, -h), Vector2(g, -h)], [Vector2(-g, -h), Vector2(-h, -h)],
+		# West wall, south to north.
+		[Vector2(-h, -h), Vector2(-h, -g)], [Vector2(-h, g), Vector2(-h, h)],
+		# North wall, west to east.
+		[Vector2(-h, h), Vector2(-g, h)], [Vector2(g, h), Vector2(h, h)],
 	]
 	for run in runs:
 		ZoneProps.wall(b, on_ground(run[0]), on_ground(run[1]), WALL_HEIGHT, WALL_THICK)

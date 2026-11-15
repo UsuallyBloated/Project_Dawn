@@ -8,14 +8,53 @@ extends RefCounted
 # read by three things: tools/author_terrain.gd paints the ground texture from
 # it, scripts/zone/zone_flora.gd scatters trees and stones from it, and
 # scripts/zone/zone_town.gd and zone_landmarks.gd build the town and the camps'
-# dressing on it. Coordinates are Vector2(x east, z north) in metres, from the
-# composition sketches (docs/design/starting_area_comp_sketches.html).
+# dressing on it. Coordinates are map points, Vector2(east, north) in metres,
+# from the composition sketches (docs/design/starting_area_comp_sketches.html);
+# to_world() says where a map point is in the world.
 #
 # All of it is scenery: nothing here collides or reaches the server. The
-# server's camps are in its zone_camps.toml; the author's report warns when a
+# server's camps are in its zone_camps.toml; the author's report fails when a
 # SITES entry has drifted away from the camp it dresses.
 
 const ZONE_SIZE := 4000.0
+
+# --- The map and the world -----------------------------------------------------
+
+# North is the world's -Z and east its +X (the compass, decided 2026-11-14).
+# Godot is right-handed, so this is the one way round that puts east on the
+# right of a body facing north, as on the map; until then the zone stood the
+# other way round, a mirror image of its map. Every map point and map facing
+# reaches the world through these, so the map stays the authoring frame
+# (tools/check_compass.gd holds the result).
+
+# The world position of a map point, `height` metres up.
+static func to_world(p: Vector2, height: float = 0.0) -> Vector3:
+	return Vector3(p.x, height, -p.y)
+
+
+# The world (x, z) of a map point: what TerrainMesh.height_at() and the
+# server's files take.
+static func to_world_xz(p: Vector2) -> Vector2:
+	return Vector2(p.x, -p.y)
+
+
+# The map point of a world position.
+static func to_map(v: Vector3) -> Vector2:
+	return Vector2(v.x, -v.z)
+
+
+# The map point of a world (x, z).
+static func to_map_xz(q: Vector2) -> Vector2:
+	return Vector2(q.x, -q.y)
+
+
+# The world's turn for a map facing. A map yaw turns a thing's front (-z) to
+# the map direction (-sin yaw, -cos yaw), as the authoring code reckons it; the
+# world yaw that faces the same way on the ground is PI - yaw.
+static func yaw_to_world(yaw: float) -> float:
+	return PI - yaw
+
+
 # The town wall's line: a square this far from the origin on each side.
 const TOWN_HALF := 90.0
 

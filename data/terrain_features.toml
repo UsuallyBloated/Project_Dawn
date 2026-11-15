@@ -4,8 +4,9 @@
 # scenes/world.tscn, reports the slope under every camp spawn and NPC and who
 # can walk where, and paints the ground texture from data/zone_layout.gd;
 # tools/export_terrain.gd then writes the server's terrain.toml from the scene.
-# Coordinates are x east, z north, metres; heights are above the floor at
-# y = 0, and nothing is composed below it.
+# Coordinates are map points, x east and z north, metres (in the world north
+# is -Z: ZoneLayout.to_world); heights are above the floor at y = 0, and
+# nothing is composed below it.
 #
 # Composition, at every grid vertex, in this order:
 #   1. start at 0;

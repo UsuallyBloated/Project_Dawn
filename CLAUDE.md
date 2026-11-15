@@ -3489,6 +3489,46 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   change of a few lines. **Waits on the user: mirror or not, which numbering, and whether
   `/loc` reads the EQ way.** Best decided before the door: afterwards the friends will have
   learned the mirrored world.
+  **DECIDED 2026-11-14 (user, on the handoff's two questions: "yes, please" to both): mirror
+  the world with north = -Z, and `/loc` the EverQuest way. BUILT the same night, pending the
+  merge, the redeploy with its SQL, the zip and the playtest** (on `feat/compass-mirror` in both
+  repos, from the deploy tips; `zone_4km_checklist.md` §8; session note
+  `session_2026_11_14_compass_mirror.md`; **the boot line must read `terrain=400x400 cells of
+  10 m, floor 0, hash 6bedde1c663e`**). The ruling of 2026-09-27 ("+Z is north") is replaced:
+  north is the world's -Z and east its +X, so facing north, east is on your right, as on the
+  comp. **One mapping, the authored data unchanged:** `ZoneLayout.to_world` / `to_world_xz` /
+  `to_map` / `to_map_xz` / `yaw_to_world` (`PI - yaw`) carry every map point and map facing
+  into the world; `data/zone_layout.gd` and `data/terrain_features.toml` keep their numbers
+  (rewriting them would not mirror: the noise is sampled at the map point and the plateau's
+  ramps are keyed by compass name), so the ground is the exact mirror of the old one, hill for
+  hill. The client: `ZoneDressing`'s `ground` / `on_ground` / `stand` (the choke point for the
+  town and the set pieces), the flora sampling the ground at the world point, the graves' wall
+  boxes, the town's and the crypt's walls drawn the other way round so their merlons stay
+  outside, the six NPC nodes at z = -5, `SenseHeading`'s ring (rotation.y = 0 faces North),
+  `tools/author_terrain.gd` (the vertex read at its map point; the report converting every map
+  point and printing world coordinates; a set piece drifted 80 m from its camp is now a FAIL,
+  the check that catches a half-mirrored pair; the paint painted on the map and flipped once
+  before the mountains' rock), the zone tools' viewpoints and drop points, and the top view
+  north-up. The server: every z in `zone_camps.toml` (54 spawns) and `npcs.toml` (6) negated by
+  a script that counted them, `terrain.toml` re-exported, five tests' positions mirrored (the
+  camp-pull constants, the plateau ramp perch, the compiled terrain's ridge and pass, the gap
+  test's corridor) and one hard-coded walk derived from the constants instead; no code change.
+  `/loc` prints `north, west, height` (`-z, -x, y`), `/loc raw` the world's `x, y, z`. The sun
+  needed nothing (it arcs east to west with no north-south lean). New check
+  `tools/check_compass.gd` (in `check_all.ps1`, rule L3): the ridge read from the scene's
+  ground is where `/sense` says North, the server's Gnoll Raider Camp is on the right facing
+  it, the map's frame reaches the world the same way round, and the raiders' set piece stands
+  at the server's camp; it failed on the old world at the chirality row, and on a mirrored
+  client against the unmirrored server at the set-piece row. Suites: server 411 unit and 184
+  world, fmt and clippy clean; client 17 checks, the zone probes. **At the redeploy, during the
+  stop, after a `.backup`:** `sudo -u projectdawn sqlite3 /opt/projectdawn/world.db "UPDATE
+  characters SET pos_z = -pos_z, bind_z = -bind_z; UPDATE corpses SET pos_z = -pos_z;"` (every
+  saved position mirrored with the world; no server code for older characters, the standing
+  rule). **Flagged:** pieces turn but never mirror, so an asymmetric piece keeps its own
+  handedness (a banner, a door's rubble); the triangle diagonals do not mirror, so a few faces
+  changed shape (the pass's west mouth shows one long facet), and the report barely moved
+  (8.81 square km inside both times; 51.1% of the triangles walked to against 51.2%; 9,423
+  faces against 9,335; the steepest road 15.2 degrees both times).
 - [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
   a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
   height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at

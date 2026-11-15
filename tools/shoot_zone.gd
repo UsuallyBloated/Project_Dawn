@@ -12,7 +12,8 @@ extends SceneTree
 #
 # hour is the time of day (0 to 24, default 17: late afternoon, the comps'
 # light). With no shot names every viewpoint in SHOTS is taken. A shot is
-# [name, eye, look-at]; eye heights are metres above the ground there.
+# [name, eye, look-at] in world x, y, z (what /loc raw prints; north is -z);
+# eye heights are metres above the ground there.
 
 const WORLD_SCENE := "res://scenes/world.tscn"
 const SIZE := Vector2i(1600, 900)
@@ -22,34 +23,34 @@ const SETTLE_FRAMES := 12
 
 const SHOTS := [
 	# The four composition sketches.
-	["a_town_from_east_road", Vector3(330, 2.0, -34), Vector3(60, 14, 0)],
-	["b_the_pass", Vector3(8, 2.0, 640), Vector3(0, 30, 900)],
-	["c_sunken_barrow", Vector3(-1300, 3.0, -40), Vector3(-1600, 0, -60)],
-	["d_wraith_gate", Vector3(1300, 2.0, -150), Vector3(1506, 76, -40)],
+	["a_town_from_east_road", Vector3(330, 2.0, 34), Vector3(60, 14, 0)],
+	["b_the_pass", Vector3(8, 2.0, -640), Vector3(0, 30, -900)],
+	["c_sunken_barrow", Vector3(-1300, 3.0, 40), Vector3(-1600, 0, 60)],
+	["d_wraith_gate", Vector3(1300, 2.0, 150), Vector3(1506, 76, 40)],
 	# The town.
-	["town_square", Vector3(-26, 1.8, -14), Vector3(30, 6, 24)],
-	["town_from_above", Vector3(-150, 110, -170), Vector3(0, 0, 0)],
-	["town_west_farms", Vector3(-470, 3.0, -60), Vector3(-90, 8, 0)],
+	["town_square", Vector3(-26, 1.8, 14), Vector3(30, 6, -24)],
+	["town_from_above", Vector3(-150, 110, 170), Vector3(0, 0, 0)],
+	["town_west_farms", Vector3(-470, 3.0, 60), Vector3(-90, 8, 0)],
 	# Camps and set pieces.
-	["gnoll_raider_camp", Vector3(500, 3.0, 20), Vector3(565, 3, 72)],
-	["east_road_and_flats", Vector3(420, 14.0, -90), Vector3(900, 0, -120)],
-	["bonepile", Vector3(-180, 2.0, 90), Vector3(-222, 1, 128)],
-	["bandit_outpost", Vector3(-520, 2.0, 560), Vector3(-600, 8, 640)],
-	["bat_hollow", Vector3(-60, 3.0, 470), Vector3(-140, -2, 560)],
-	["spider_copse", Vector3(1010, 2.0, 0), Vector3(1140, 8, 50)],
-	["broken_crypt", Vector3(10, 4.0, 1130), Vector3(20, 2, 1262)],
-	["greywood_road", Vector3(4, 1.8, 1070), Vector3(8, 6, 1400)],
-	["gnoll_war_camp", Vector3(-70, 4.0, -1400), Vector3(30, 2, -1540)],
-	["ossuary", Vector3(-1640, 3.0, 20), Vector3(-1765, 14, 105)],
-	["wraith_gate_top", Vector3(1620, 2.0, -110), Vector3(1506, 16, -40)],
-	["mill", Vector3(-10, 2.0, -350), Vector3(60, 8, -420)],
-	["rotfang_den", Vector3(10, 2.0, -720), Vector3(52, 0, -820)],
-	["festering_mound", Vector3(570, 2.0, -560), Vector3(640, 2, -620)],
+	["gnoll_raider_camp", Vector3(500, 3.0, -20), Vector3(565, 3, -72)],
+	["east_road_and_flats", Vector3(420, 14.0, 90), Vector3(900, 0, 120)],
+	["bonepile", Vector3(-180, 2.0, -90), Vector3(-222, 1, -128)],
+	["bandit_outpost", Vector3(-520, 2.0, -560), Vector3(-600, 8, -640)],
+	["bat_hollow", Vector3(-60, 3.0, -470), Vector3(-140, -2, -560)],
+	["spider_copse", Vector3(1010, 2.0, 0), Vector3(1140, 8, -50)],
+	["broken_crypt", Vector3(10, 4.0, -1130), Vector3(20, 2, -1262)],
+	["greywood_road", Vector3(4, 1.8, -1070), Vector3(8, 6, -1400)],
+	["gnoll_war_camp", Vector3(-70, 4.0, 1400), Vector3(30, 2, 1540)],
+	["ossuary", Vector3(-1640, 3.0, -20), Vector3(-1765, 14, -105)],
+	["wraith_gate_top", Vector3(1620, 2.0, 110), Vector3(1506, 16, 40)],
+	["mill", Vector3(-10, 2.0, 350), Vector3(60, 8, 420)],
+	["rotfang_den", Vector3(10, 2.0, 720), Vector3(52, 0, 820)],
+	["festering_mound", Vector3(570, 2.0, 560), Vector3(640, 2, 620)],
 	# The whole plate.
-	["overview_from_south", Vector3(0, 900, -2600), Vector3(0, 0, 100)],
-	["overview_top", Vector3(0, 3600, -1), Vector3(0, 0, 0)],
+	["overview_from_south", Vector3(0, 900, 2600), Vector3(0, 0, -100)],
+	["overview_top", Vector3(0, 3600, 1), Vector3(0, 0, 0)],
 	["west_from_town_wall", Vector3(-100, 14, 0), Vector3(-1500, 60, 0)],
-	["north_from_town_wall", Vector3(0, 14, 100), Vector3(0, 40, 900)],
+	["north_from_town_wall", Vector3(0, 14, -100), Vector3(0, 40, -900)],
 ]
 
 
@@ -120,7 +121,8 @@ func _run() -> void:
 			eye.y += terrain.height_at(eye.x, eye.z)
 			target.y += terrain.height_at(target.x, target.z)
 		camera.global_position = eye
-		camera.look_at(target, Vector3.UP if absf((target - eye).normalized().y) < 0.99 else Vector3.BACK)
+		# Looking straight down, north (-z) is the top of the picture, as on the map.
+		camera.look_at(target, Vector3.UP if absf((target - eye).normalized().y) < 0.99 else Vector3.FORWARD)
 		for i in SETTLE_FRAMES:
 			await process_frame
 		var image := root.get_texture().get_image()

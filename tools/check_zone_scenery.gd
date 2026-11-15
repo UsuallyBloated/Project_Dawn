@@ -128,7 +128,7 @@ func _check_scatter(world: Node, terrain: TerrainMesh) -> void:
 	var off_ground := 0
 	for i in first.size():
 		var p := first[i]
-		var flat := Vector2(p.x, p.z)
+		var flat := ZoneLayout.to_map(p)
 		if flat.length() < ZoneLayout.TOWN_CLEARING:
 			in_town += 1
 		if not ZoneLayout.inside(flat):

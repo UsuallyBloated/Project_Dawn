@@ -13,26 +13,33 @@ bigger world opened a hole.
 `feat/zone-4km`. An older client against this server walks on the old 400 m ground while the
 server stands it on the new one.
 
-| Place | Level | Where (x east, z north) | Run from the town |
-|---|---|---|---|
-| Bonepile | 1 | (-220, 120) | 50 s |
-| Wolf Run | 1 | (280, -200) | 1 min 10 s |
-| Rat Warrens | 2 | (150, 120) | 40 s |
-| Shallow Graves | 3 | (400, 330) | 1 min 45 s |
-| Gnoll Raider Camp | 3 | (560, 70) | 1 min 50 s |
-| Boar Thicket | 4 | (-420, -340) | 1 min 50 s |
-| Bat Hollow, Sable's roost | 4 | (-130, 540), (-180, 640) | 1 min 50 s |
-| Bandit Outpost | 5 | (-600, 640) | 2 min 55 s |
-| Rotfang's Den | 5 | (60, -800) | 2 min 40 s |
-| Festering Mound | 6 | (640, -620) | 3 min |
-| Spider Copse, the Crawler's burrow | 7 | (1120, 60), (1210, -10) | 3 min 45 s |
-| The Broken Crypt | 9 | (20, 1250) | 4 min 10 s |
-| Gnoll War Camp, Greth's tent | 10 | (20, -1500), (40, -1620) | 5 min |
-| The Sunken Barrow, the Undying | 12 | (-1480, -60), (-1560, -60) | 5 min |
-| Ossuary | 14 | (-1740, 90) | 5 min 50 s |
-| Wraith Gate | 16 | (1570, -40), on the plateau | 5 min 15 s |
+**Since the compass build (2026-11-14, section 8), run every section on it:** the zone was a
+mirror image of its map until then, so the ground, the camps and the doors all moved across
+the north-south line. The R720's boot line must read `terrain=400x400 cells of 10 m, floor 0,
+hash 6bedde1c663e`, and the zip must be the one exported from the compass build.
 
-Tip: `/loc` prints where you stand, paste-ready. A GM's Test Panel has Fling 5 m and 20 m for
+| Place | Level | Where (`/loc`: north, west) | Run from the town |
+|---|---|---|---|
+| Bonepile | 1 | (120, 220) | 50 s |
+| Wolf Run | 1 | (-200, -280) | 1 min 10 s |
+| Rat Warrens | 2 | (120, -150) | 40 s |
+| Shallow Graves | 3 | (330, -400) | 1 min 45 s |
+| Gnoll Raider Camp | 3 | (70, -560) | 1 min 50 s |
+| Boar Thicket | 4 | (-340, 420) | 1 min 50 s |
+| Bat Hollow, Sable's roost | 4 | (540, 130), (640, 180) | 1 min 50 s |
+| Bandit Outpost | 5 | (640, 600) | 2 min 55 s |
+| Rotfang's Den | 5 | (-800, -60) | 2 min 40 s |
+| Festering Mound | 6 | (-620, -640) | 3 min |
+| Spider Copse, the Crawler's burrow | 7 | (60, -1120), (-10, -1210) | 3 min 45 s |
+| The Broken Crypt | 9 | (1250, -20) | 4 min 10 s |
+| Gnoll War Camp, Greth's tent | 10 | (-1500, -20), (-1620, -40) | 5 min |
+| The Sunken Barrow, the Undying | 12 | (-60, 1480), (-60, 1560) | 5 min |
+| Ossuary | 14 | (90, 1740) | 5 min 50 s |
+| Wraith Gate | 16 | (-40, -1570), on the plateau | 5 min 15 s |
+
+Tip: `/loc` prints where you stand as EverQuest did: metres north, then west, then height
+(negative is south or east); `/loc raw` prints the world's x, y, z, paste-ready for the
+server's files. A GM's Test Panel has Fling 5 m and 20 m for
 the fall rows. Server journal anchors: `terrain=` on the boot line, `world health` (its
 `slope_refusals` should stay 0 for honest play on floors), `Attack rejected`, `kill credit
 granted`.
@@ -67,11 +74,11 @@ granted`.
   the ground the whole way. notes:
 - [ ] **In the pit, fight a Barrow Zombie** → it stands on the pit's floor, reaches you, and
   follows you up the pit's wall if you back up it. notes:
-- [ ] **Walk at the Greywood ridge's face** (anywhere along z = 790) → you stop at its foot;
+- [ ] **Walk at the Greywood ridge's face** (anywhere `/loc`'s first number is 790) → you stop at its foot;
   holding forward does nothing; no climbing by zigzag or by jumping. notes:
-- [ ] **Take the pass north** (x = 0, z = 790 to 1010) → a flat road between two walls, into
+- [ ] **Take the pass north** (`/loc` 790 to 1010 north, 0 west) → a flat road between two walls, into
   the wood; the walls cannot be climbed from inside either. notes:
-- [ ] **Climb the Wraith Gate plateau by its north ramp** (from about (1700, 470)) → a steady
+- [ ] **Climb the Wraith Gate plateau by its north ramp** (from about `/loc` 470, -1700) → a steady
   climb to the top; the arch stands at the cliff's lip with its light. notes:
 - [ ] **GM: walk off the plateau's west cliff** (60 m) → you die; "You hit the ground hard"
   for your whole health; the corpse lies at the cliff's foot; loot it back. notes:
@@ -137,21 +144,21 @@ One visit each: the mobs stand at the set piece, on the ground, and fight normal
 
 > Needs the zip exported from the outline build and the R720's boot line reading
 > `terrain=400x400 cells of 10 m, floor 0, hash a9942be36dff`. The zone is now two basins the
-> mountains close round, joined only by the pass; the old square edge is gone. `/loc` prints
-> x, y, z (x east, z north).
+> mountains close round, joined only by the pass; the old square edge is gone. Positions are
+> as `/loc` prints them since the compass build (section 8): north, west.
 
 - [ ] **Leave by the north gate and follow the road to its end** → it bends east of Bat Hollow,
       runs the pass with no dip going in and no bank coming out (the floor is level with the
       ground now), swings east round the Broken Crypt's bowl with the crypt in view on your
-      left, and ends at fallen trees under the mountains (about x 0, z 1880). notes:
+      left, and ends at fallen trees under the mountains (`/loc` about 1880, 0). notes:
 - [ ] **The east road to its end** → past the raiders' wagon wreck, south of the Spider Copse,
       along under the Wraith Gate cliff with the arch above you, and into a narrowing arm that
-      ends at a rockslide (about x 1890, z -900). notes:
+      ends at a rockslide (`/loc` about -900, -1890). notes:
 - [ ] **The south road to its end** → by the mill, west of Rotfang's rocks, then round the foot
       of the war camp's shelf with the gnolls above you on your right, ending at a barricade of
-      sharpened stakes (about x 98, z -1838). notes:
+      sharpened stakes (`/loc` about -1838, -98). notes:
 - [ ] **The barrow track to its end** → out by the lane between the fields, north of the bone
-      fields, up the hill to a ring of waystones (about x -1370, z 250) with the barrow's pit
+      fields, up the hill to a ring of waystones (`/loc` about 250, 1370) with the barrow's pit
       below you and the Ossuary on the crest above. notes:
 - [ ] **On each road, watch the camps you pass** → nothing comes for you from the road: Rotfang's
       den, the war camp and the Broken Crypt are each about 200 m off it. notes:
@@ -159,8 +166,8 @@ One visit each: the mobs stand at the set piece, on the ground, and fight normal
       arm, the war camp's vale, a corner of the Greywood, the barrow hills' west side** → the
       foot is a cliff you do not climb; `/loc` stops moving outward; you slide along it at most.
       notes:
-- [ ] **Try to go round the ridge: follow its south foot east past x 1300, then west past
-      x -1300** → the mountains meet the ridge at both ends; the pass is the only way north.
+- [ ] **Try to go round the ridge: follow its south foot east until `/loc`'s second number passes
+      -1300, then west until it passes 1300** → the mountains meet the ridge at both ends; the pass is the only way north.
       notes:
 - [ ] **At each door, walk into the rocks, the trees, the stakes** → the pieces are scenery (you
       pass through them); the cliff behind them stops you. notes:
@@ -174,6 +181,35 @@ One visit each: the mobs stand at the set piece, on the ground, and fight normal
       mountains. notes:
 - [ ] The journal: `slope_refusals` on the `world health` lines only for the minutes someone
       pushed at a cliff; no `ERROR`; `ledger check mismatches=0`. notes:
+
+## 8 — The compass (2026-11-14)
+
+> The world is now its map the right way round: north is -z, east +x, so facing north, east is
+> on your right, as on the comp. Needs the boot line `hash 6bedde1c663e` and the compass zip.
+> At the redeploy every saved position was mirrored with the world, so nobody logs in inside
+> the mountains.
+
+- [ ] **Log in where you logged out (any character from before the redeploy)** → you stand
+      on the ground in the same place relative to the town, the camps and the roads as before;
+      not in a mountain and not in the air. Your bind still returns you there. notes:
+- [ ] **In the town square, face the Greywood ridge (the wall with the pass in it) and type
+      `/sense`** → "North" (with the skill high enough to be sure). The Gnoll Raider Camp's
+      road, the east road with the tall tower by its gate, leaves on your right. notes:
+- [ ] **Face the east gate (the one by the tall tower) and `/sense`** → "East"; the sun rises
+      behind that gate in the morning. notes:
+- [ ] **`/loc` in the square, then walk north towards the pass and `/loc` again** → the first
+      number grows going north; walking east the second number falls (it counts west, as
+      EverQuest's did); the third is your height. notes:
+- [ ] **`/loc raw`** → "Your world position is x, y, z"; walking north, its z falls. notes:
+- [ ] **Hold the comp map beside the game (`docs/design/starting_area_comp_sketches.html`)** →
+      every camp, the barrow to the west, the Wraith Gate to the east, the war camp to the south
+      and the Greywood beyond the ridge to the north are where the map has them, and on the
+      same side of each other. notes:
+- [ ] **Walk the town's walls from outside** → the battlements are on the outer side of every
+      wall; the gates and the tower stand as before. notes:
+- [ ] **Two seats: both log in, group, and kill something at the Bonepile** → the partner sees
+      you where you are and the mob where it is; nobody floats or stands inside the ground.
+      notes:
 
 ## Notes / observations
 -

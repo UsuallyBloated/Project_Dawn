@@ -222,3 +222,13 @@ client's body and not the server's would leave the player drawn in one place and
 in another, and the next correction would pull them through it. When the server learns
 obstacles, both sides get them together, with their own check.
 Held by: `check_zone_scenery.gd`
+
+### L3. The world is its map, the right way round
+The zone is authored on a map (north up, east right) and reaches the world through one
+mapping (`ZoneLayout.to_world`: north is the world's -Z, east its +X). Facing north, east is
+on the right; `/sense` names the directions the map names; the client's set pieces stand at
+the server's camps.
+Why: Godot is right-handed, so a world with north at +Z is the map's mirror image (the zone
+stood that way until 2026-11-14). A half-mirrored pair, the client's ground one way and the
+server's camps the other, puts every mob where the zone shows nothing.
+Held by: `check_compass.gd`

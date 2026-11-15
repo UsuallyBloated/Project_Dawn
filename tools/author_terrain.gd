@@ -12,6 +12,12 @@ extends SceneTree
 # The server data dir is where zone_camps.toml and npcs.toml live (the report
 # needs them); always pass it, since the default is the deploy checkout.
 #
+# Two frames meet here. The features file and data/zone_layout.gd are a map
+# (x east, z north); the scene's heights, the paint and the server's files are
+# the world, where north is -Z (ZoneLayout.to_world). The composition reads
+# each vertex at its map point, and the report converts every map point to the
+# world and prints world coordinates (what /loc raw prints).
+#
 # The report: for every camp spawn and the four corners of its jitter square,
 # and for every NPC, the steepest slope under it (FAIL past 55 degrees, the
 # steepest floor a body stands on, fall.rs::FLOOR_MAX_ANGLE_DEG); the town
@@ -22,7 +28,7 @@ extends SceneTree
 # each road's steepest grade and the nearest it comes to a camp; how much of
 # the ground is floor, too steep to stand on (55 to 60 degrees: a body slides,
 # a step up is still allowed) and face (past 60: a step up is refused); how far
-# each set piece in data/zone_layout.gd stands from the camp it dresses (WARN
+# each set piece in data/zone_layout.gd stands from the camp it dresses (FAIL
 # past 80 m); and who can walk where: a walk from the town must reach every
 # camp spawn, and must reach neither the plate's outer edge, nor any triangle
 # wholly outside the walkable edge, nor any point the features file lists as
@@ -51,8 +57,9 @@ const FLOOR_MAX_ANGLE_DEG := 55.0
 const SLOPE_LIMIT_DEG := 60.0
 # A route from the town steeper than this is worth a look.
 const ROUTE_WARN_DEG := 30.0
-# A set piece further than this from its camp's nearest spawn has drifted.
-const SITE_WARN_M := 80.0
+# A set piece further than this from its camp's nearest spawn has drifted
+# (tools/check_compass.gd reads it too).
+const SITE_DRIFT_M := 80.0
 const DEFAULT_TOWN_FLAT_RADIUS := 10.0
 const DEFAULT_CAMP_RADIUS := 3.0
 # A height closer to 0 than this is 0 (float noise in the composition).
@@ -222,7 +229,8 @@ static func _v2(a: Array) -> Vector2:
 	return Vector2(float(a[0]), float(a[1]))
 
 
-# The heights, row-major by z then x, as the TerrainMesh stores them.
+# The heights, row-major by world z then x, as the TerrainMesh stores them.
+# The features are on the map, so each vertex is read at its map point.
 static func compose(features: Dictionary, terrain: Dictionary) -> PackedFloat32Array:
 	var gs: int = terrain["grid_size"]
 	var cell: float = terrain["cell_size"]
@@ -236,7 +244,7 @@ static func compose(features: Dictionary, terrain: Dictionary) -> PackedFloat32A
 	for iz in gs + 1:
 		for ix in gs + 1:
 			var i := iz * (gs + 1) + ix
-			var p := Vector2(origin.x - half + ix * cell, origin.z - half + iz * cell)
+			var p := Layout.to_map_xz(Vector2(origin.x - half + ix * cell, origin.z - half + iz * cell))
 			var h := height_at(features, noises, p, half)
 			if not outside.is_empty() and outside[i] > 0.0:
 				for f in mountains:
@@ -262,7 +270,7 @@ static func edge_distances(features: Dictionary, terrain: Dictionary) -> Diction
 	inside.resize(row * row)
 	for iz in row:
 		for ix in row:
-			var p := Vector2(origin.x - half + ix * cell, origin.z - half + iz * cell)
+			var p := Layout.to_map_xz(Vector2(origin.x - half + ix * cell, origin.z - half + iz * cell))
 			var is_in := Layout.inside(p)
 			if not is_in:
 				for f in features.get("ridge", []):
@@ -691,16 +699,18 @@ static func _report_roads(terrain: Dictionary, camps: Array) -> int:
 				var q := a.lerp(b, float(k) / steps)
 				var r := a.lerp(b, float(k + 1) / steps)
 				var run := q.distance_to(r)
-				var deg := rad_to_deg(atan(absf(Exporter.ground_at(terrain, r.x, r.y) - Exporter.ground_at(terrain, q.x, q.y)) / run))
+				var qw := Layout.to_world_xz(q)
+				var rw := Layout.to_world_xz(r)
+				var deg := rad_to_deg(atan(absf(Exporter.ground_at(terrain, rw.x, rw.y) - Exporter.ground_at(terrain, qw.x, qw.y)) / run))
 				if deg > steepest:
 					steepest = deg
-					steep_at = q
+					steep_at = qw
 				if not Layout.inside(q) and q.distance_to(end) > 30.0:
 					outside += run
 		var nearest := INF
 		var nearest_name := ""
 		for c in camps:
-			var cp: Vector2 = c["pos"]
+			var cp := Layout.to_map_xz(c["pos"])
 			for i in pts.size() - 1:
 				var d := segment_distance(cp, pts[i], pts[i + 1])
 				if d < nearest:
@@ -719,12 +729,15 @@ static func _report_roads(terrain: Dictionary, camps: Array) -> int:
 
 
 # Each set piece in the layout against the camp of the same name: a set piece
-# with no camp, or one that has drifted from its camp's spawns, is a WARN (the
-# dressing is scenery, so never a FAIL).
+# with no camp is a WARN (it may dress a place no mob holds); one that has
+# drifted from its camp's spawns is a FAIL, since a camp and its dressing apart
+# (a camp moved, or a map and the server's files the opposite way round) puts
+# the mobs where the zone shows nothing.
 static func _report_sites(camps: Array) -> int:
-	print("\nSet pieces (data/zone_layout.gd SITES) against their camps (WARN past %d m):" % int(SITE_WARN_M))
+	print("\nSet pieces (data/zone_layout.gd SITES) against their camps (FAIL past %d m):" % int(SITE_DRIFT_M))
+	var fails := 0
 	for site_name in Layout.SITES:
-		var at: Vector2 = Layout.SITES[site_name]
+		var at := Layout.to_world_xz(Layout.SITES[site_name])
 		var nearest := INF
 		for c in camps:
 			var camp_name: String = c["name"]
@@ -733,8 +746,11 @@ static func _report_sites(camps: Array) -> int:
 		if nearest == INF:
 			print("  WARN %-24s no camp of that name in zone_camps.toml" % site_name)
 		else:
-			print("  %-4s %-24s %5.1f m from its nearest spawn" % ["WARN" if nearest > SITE_WARN_M else "ok", site_name, nearest])
-	return 0
+			var drifted := nearest > SITE_DRIFT_M
+			if drifted:
+				fails += 1
+			print("  %-4s %-24s %5.1f m from its nearest spawn" % ["FAIL" if drifted else "ok", site_name, nearest])
+	return fails
 
 
 # Who can walk where. Every triangle is a place; a walker moves between two
@@ -867,7 +883,7 @@ static func _report_walk(terrain: Dictionary, features: Dictionary, camps: Array
 			"FAIL" if climbed > 0 else "ok", climbed, "" if climbed == 0 else " (one is at %d, %d)" % [int(example.x), int(example.y)]])
 
 	for u in features.get("unreachable", []):
-		var p := _v2(u["point"])
+		var p := Layout.to_world_xz(_v2(u["point"]))
 		var hit := reached[_triangle_at(terrain, p)] == 1
 		if hit:
 			fails += 1
@@ -926,8 +942,10 @@ static func _flat_at(terrain: Dictionary, p: Vector2) -> bool:
 # Paints data/zone_layout.gd's ground onto one texture over the whole plate:
 # the broad patches, the worn ground under the camps, the farm strips, then the
 # roads on top. Alpha is how much of the paint shows over the shader's own
-# ground colour; pixel (px, py) is the point (-half + (px + 0.5) * m, the same
-# for z), so the shader samples it at xz / size + 0.5.
+# ground colour. It is painted on the map (pixel (px, py) the map point
+# (-half + (px + 0.5) * m, the same for north)) and then flipped top to bottom,
+# so that pixel (px, py) is the world point (-half + (px + 0.5) * m, the same
+# for z) and the shader samples it at world xz / size + 0.5.
 func _write_paint(terrain: Dictionary) -> int:
 	var extent := int(terrain["grid_size"]) * float(terrain["cell_size"])
 	var half := extent * 0.5
@@ -953,9 +971,14 @@ func _write_paint(terrain: Dictionary) -> int:
 		_paint_field(data, half, mpp, field)
 	for road in Layout.ROADS:
 		_paint_road(data, half, mpp, mottle, road)
-	_clear_mountain_paint(data, terrain, half, mpp)
 
+	# From the map to the world (north is -z), then the mountains' rock, which
+	# reads the world-indexed edge grid.
 	var image := Image.create_from_data(PAINT_SIZE, PAINT_SIZE, false, Image.FORMAT_RGBA8, data)
+	image.flip_y()
+	data = image.get_data()
+	_clear_mountain_paint(data, terrain, half, mpp)
+	image = Image.create_from_data(PAINT_SIZE, PAINT_SIZE, false, Image.FORMAT_RGBA8, data)
 	var path := ProjectSettings.globalize_path(PAINT_PATH)
 	if image.save_png(path) != OK:
 		printerr("Cannot write %s." % path)
@@ -1014,7 +1037,7 @@ static func _over(data: PackedByteArray, i: int, color: Color, a: float) -> void
 	data[i + 3] = int(clampf(out_a, 0.0, 1.0) * 255.0)
 
 
-# The pixel range [from, to) that covers the world span lo..hi on one axis.
+# The pixel range [from, to) that covers the map span lo..hi on one axis.
 static func _pixel_span(lo: float, hi: float, half: float, mpp: float) -> Vector2i:
 	return Vector2i(clampi(int((lo + half) / mpp), 0, PAINT_SIZE), clampi(int(ceil((hi + half) / mpp)) + 1, 0, PAINT_SIZE))
 

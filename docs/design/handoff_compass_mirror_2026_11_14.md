@@ -1,5 +1,12 @@
 # Handoff: the compass mirror, and what is left on the 4 km zone (2026-11-14)
 
+> **Done the same night (Opus 5.5):** the user answered yes to both questions and the mirror
+> was built as section 3 describes, with `/loc` the EverQuest way. What was built, and where
+> it went differently from this plan (one test walked a hard-coded direction; the top view
+> needed north at the top; the sun needed nothing), is in
+> `docs/session_notes/session_2026_11_14_compass_mirror.md`. Section 5's smaller items stay
+> open.
+
 For the session that picks this up. Read `CLAUDE.md` first (the rules there are in force), then
 `docs/session_notes/session_2026_11_14_zone_outline.md` and
 `docs/session_notes/session_2026_11_13_zone_4km.md`. Everything below was read in the source

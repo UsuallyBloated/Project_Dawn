@@ -38,6 +38,7 @@ $serverSrc = "crates/projectdawn-server/src"
 $serverPaths = @{
     "check_active_skill_lockstep.gd" = "$serverData/active_skills.toml"
     "check_character_lockstep.gd"    = "$serverSrc/char_data.rs"
+    "check_compass.gd"               = $serverData
     "check_constant_lockstep.gd"     = $serverSrc
     "check_discipline_lockstep.gd"   = "$serverSrc/world/skills.rs"
     "check_faction_lockstep.gd"      = "$serverData/factions.toml"

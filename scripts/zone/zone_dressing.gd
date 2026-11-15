@@ -57,19 +57,24 @@ func _process(delta: float) -> void:
 
 # --- The ground ----------------------------------------------------------
 
+# The subclasses place everything by map point and map facing
+# (data/zone_layout.gd); these three are where a map point becomes a world one.
+
 # The ground's height at a map point.
 func ground(p: Vector2) -> float:
-	return _terrain.height_at(p.x, p.y)
+	var q := ZoneLayout.to_world_xz(p)
+	return _terrain.height_at(q.x, q.y)
 
 
-# A map point standing on the ground, `lift` metres up.
+# A map point standing on the ground, `lift` metres up (a world position).
 func on_ground(p: Vector2, lift: float = 0.0) -> Vector3:
-	return Vector3(p.x, _terrain.height_at(p.x, p.y) + lift, p.y)
+	return ZoneLayout.to_world(p, ground(p) + lift)
 
 
-# A transform on the ground at a map point, turned `yaw` radians.
+# A transform on the ground at a map point, its front (-z) turned `yaw`
+# radians on the map (see ZoneLayout.yaw_to_world).
 func stand(p: Vector2, yaw: float = 0.0, lift: float = 0.0) -> Transform3D:
-	return LowPoly.at(on_ground(p, lift), yaw)
+	return LowPoly.at(on_ground(p, lift), ZoneLayout.yaw_to_world(yaw))
 
 
 # --- Nodes ---------------------------------------------------------------

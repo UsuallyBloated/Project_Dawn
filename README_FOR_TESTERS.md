@@ -233,7 +233,7 @@ got, and **Tab** in an empty chat line addresses it for you.
 | Command | What it does |
 |---|---|
 | `/con` | Consider your target: how its faction regards you, and how the fight would go |
-| `/loc` | Your position, for bug reports and for meeting up |
+| `/loc` | Your position, for bug reports and for meeting up: metres north, then west, then height, as EverQuest printed it (negative is south or east). `/loc raw` gives the world's x, y, z |
 | `/ping` | Round trip to the server and packet loss, for lag reports |
 | `/camp` | Sit first; a 30-second logout to the desktop, the EverQuest way |
 | `/pet attack`, `/pet follow`, `/pet guard`, `/pet back` | Pet commands; the pet window has buttons for them |

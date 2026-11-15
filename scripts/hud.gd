@@ -1536,17 +1536,25 @@ func _handle_chat_input(text: String) -> void:
 			BardSongs.stop_singing()
 		return
 
-	if lower == "/loc" or lower == "/location":
-		# EQ-style position print (docs/design/location_command.md). Printed
-		# x, y, z — NOT EQ's Y-first — so the line pastes straight into
-		# zone_camps.toml / npcs.toml. Coordinates only (user, 2026-10-09):
-		# which way you face is the Sense Heading skill's job, on /sense.
-		# Works while dead on purpose: a corpse run is exactly when you want it.
+	if lower == "/loc" or lower == "/location" or lower == "/loc raw":
+		# EverQuest's position print (docs/design/location_command.md): north,
+		# then west, then height, so a larger first number is further north
+		# and a larger second one further west, as EQ printed it (user,
+		# 2026-11-14). North is the world's -z and east its +x
+		# (ZoneLayout.to_world). `/loc raw` prints the world's x, y, z, which
+		# paste straight into zone_camps.toml / npcs.toml. Coordinates only
+		# (user, 2026-10-09): which way you face is /sense's job. Works while
+		# dead on purpose: a corpse run is exactly when you want it.
 		if is_instance_valid(_player):
 			var p: Vector3 = _player.global_position
-			CombatLog.add_line(
-				"Your location is %.1f, %.1f, %.1f (x, y, z)." % [p.x, p.y, p.z],
-				CombatLog.MsgType.INFO)
+			if lower == "/loc raw":
+				CombatLog.add_line(
+					"Your world position is %.1f, %.1f, %.1f (x, y, z)." % [p.x, p.y, p.z],
+					CombatLog.MsgType.INFO)
+			else:
+				CombatLog.add_line(
+					"Your location is %.1f, %.1f, %.1f (north, west, height)." % [-p.z, -p.x, p.y],
+					CombatLog.MsgType.INFO)
 		else:
 			# A triage tool must never be silent — say why there is no
 			# answer instead of swallowing the command.

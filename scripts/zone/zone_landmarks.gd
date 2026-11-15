@@ -224,7 +224,9 @@ func _build_crypt() -> void:
 				continue
 			var p0 := at + a.lerp(c, float(i) / pieces)
 			var p1 := at + a.lerp(c, float(i + 0.86) / pieces)
-			ZoneProps.wall(b, on_ground(p0), on_ground(p1), rng.randf_range(1.6, 6.5), 1.3, MOSSY_STONE)
+			# Drawn backwards round the corners, so the merlons (on a run's
+			# left) stand on the outside.
+			ZoneProps.wall(b, on_ground(p1), on_ground(p0), rng.randf_range(1.6, 6.5), 1.3, MOSSY_STONE)
 		b.column(stand(at + a), 1.1, 0.9, rng.randf_range(4.0, 8.0), 6, MOSSY_STONE.lightened(0.06))
 	for i in 6:
 		var p := at + Vector2(-6.0 if i % 2 == 0 else 6.0, -9.0 + (i / 2) * 9.0)
@@ -386,7 +388,7 @@ func _build_graves() -> void:
 				continue
 			var a: Vector2 = at + (corners[side] as Vector2).lerp(corners[(side + 1) % 4], i / 5.0)
 			var c: Vector2 = at + (corners[side] as Vector2).lerp(corners[(side + 1) % 4], (i + 0.8) / 5.0)
-			b.box(LowPoly.at((on_ground(a) + on_ground(c)) * 0.5, atan2(-(c.y - a.y), c.x - a.x)), Vector3(a.distance_to(c), rng.randf_range(0.6, 1.3), 0.7), MOSSY_STONE)
+			b.box(LowPoly.at((on_ground(a) + on_ground(c)) * 0.5, ZoneLayout.yaw_to_world(atan2(-(c.y - a.y), c.x - a.x))), Vector3(a.distance_to(c), rng.randf_range(0.6, 1.3), 0.7), MOSSY_STONE)
 	var gate := at + Vector2(0, -44)
 	for sx in [-1.0, 1.0]:
 		b.box(stand(gate + Vector2(sx * 2.2, 0)), Vector3(0.4, 3.4, 0.4), ZoneProps.TIMBER)

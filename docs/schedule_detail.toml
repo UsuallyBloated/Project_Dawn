@@ -876,16 +876,30 @@ needs = ["everyone logged out for the redeploy", "the R720 over SSH"]
 waits_on = ["b59"]
 done_when = "The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash a9942be36dff; the export log reads stamped with the merged sha and no -debug mark."
 
+# d12 (the compass) was answered on 2026-11-14 ("yes, please" to both: mirror the world with
+# north = -Z, and /loc the EverQuest way). The row left the plan; b60 and o26 carry the work.
+
 [[row]]
-id = "d12"
+id = "b60"
 week = "w6"
-lane = "decide"
-day = "by Mon Nov 16 (before the last zip)"
-what = "The compass: the world is a mirror image of the comp's map (facing north, east is on the left; confirmed 11-14). Fix it by mirroring the world once, or leave it; if fixed, which way the numbers run (z growing south, the recommendation, or x growing west as EverQuest's /loc did); and whether /loc prints EverQuest's order (north-south, east-west, height)."
-who = "user"
-by = 2026-11-16
-blocks = "About a day of work, a new terrain file, one more redeploy and one more zip; after the door the friends will have learned the mirrored world."
-done_when = "Answered on the To-Do entry 'The compass is mirrored'."
+lane = "build"
+day = "Sat Nov 14 (night)"
+what = "The compass mirror, from the user's two answers: one map-to-world mapping in the zone layout (north is -Z), the authored data unchanged so the ground is the exact mirror of the old one; the scenery, the terrain author, the NPC nodes and /sense through it; the server's camps, NPCs and terrain mirrored with five tests' positions; /loc printing north, west, height and /loc raw the world; a compass check (rule L3) that fails on a mirrored world and on a half-mirrored pair."
+who = "Claude"
+days = 1.0
+done_when = "Both branches pushed; zone_4km_checklist.md section 8 written."
+
+[[row]]
+id = "o26"
+week = "w7"
+lane = "operate"
+day = "Sun Nov 15 for the merge and the export; the redeploy when everyone is off, Mon Nov 16 at the latest"
+what = "The compass reaches the game: feat/compass-mirror merged into the deploy branch in both repos, every check on the merged pair, a release export, and the R720 pulled, built and restarted with one SQL statement during the stop after a backup (every saved position, bind and corpse mirrored with the world). This zip replaces 7c7a810 as the one for the door; the zip and the redeploy go together, since either side alone stands people on the other's ground."
+who = "Claude for the merge and the export; user over SSH for the redeploy"
+hours = 1.0
+needs = ["everyone logged out for the redeploy", "the R720 over SSH", "a backup of world.db before the SQL"]
+waits_on = ["b60", "o25"]
+done_when = "The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash 6bedde1c663e; the export log reads stamped with the merged sha and no -debug mark."
 
 [[row]]
 id = "v62"
@@ -896,8 +910,8 @@ checklist = "zone_4km_checklist.md"
 what = "The 4 km zone walked: the town and its four gates, the ground the server stands everyone on (the barrow's pit, the ridge's faces, the pass, the plateau's ramp and its lethal cliff, the mountains at the edge), every camp at its set piece, a quest per giver, the bigger world's rules (a far death and the run back, Gate, the group share range, a partner out of view and back), and how it runs and looks (frame rate, pop-in, night, dusk). Two seats for the partner rows."
 who = "user at a desk, a second seat for part"
 hours = 2.0
-needs = ["the outline build on the R720 and in the export (o25)", "a GM account for the cliff row", "a second seat for one row of section 7"]
-waits_on = ["o24", "o25"]
+needs = ["the compass build on the R720 and in the export (o26)", "a GM account for the cliff row", "a second seat for one row of section 7 and one of section 8"]
+waits_on = ["o24", "o25", "o26"]
 done_when = "Every row marked; a finding that needs a fix gets a To-Do line the same day, and the zip the friends receive (p6) is the one the sheet was run on or a later one."
 
 [[row]]

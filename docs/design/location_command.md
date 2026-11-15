@@ -7,6 +7,14 @@ load-bearing once the big-world track starts: content authoring (`zone_camps.tom
 you when it broke"), and the height-model playtests (reporting Y) all want a way to
 read a position off the screen.*
 
+> **Revised 2026-11-14 (user): `/loc` prints the EverQuest way.** With the compass mirror
+> (north is now the world's -Z; "The compass is mirrored", CLAUDE.md), the user chose EQ's
+> order: `Your location is 120.0, 220.0, 0.3 (north, west, height).`, which is `-z, -x, y`
+> of the world. `/loc raw` keeps the paste-ready form for the authoring files:
+> `Your world position is -220.0, 0.3, -120.0 (x, y, z).` The rest of this note is the
+> 2026-09-25 design as built then (x, y, z with +Z north); its departure from EQ's order is
+> what the revision undoes.
+
 ## What it does
 
 Typing `/loc` in chat prints the player's current position to the System channel:

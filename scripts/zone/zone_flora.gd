@@ -195,7 +195,9 @@ func _scatter(region: Dictionary, terrain: TerrainMesh, clump: FastNoiseLite, bu
 			continue
 		if _is_blocked(p):
 			continue
-		if terrain.slope_at(p.x, p.y) > MAX_SLOPE:
+		# The scatter is a map's (p is east, north); the ground is the world's.
+		var w := ZoneLayout.to_world_xz(p)
+		if terrain.slope_at(w.x, w.y) > MAX_SLOPE:
 			continue
 		var kind: String = names[names.size() - 1]
 		for k in totals.size():
@@ -209,25 +211,25 @@ func _scatter(region: Dictionary, terrain: TerrainMesh, clump: FastNoiseLite, bu
 		if info.get("tumble", false):
 			basis = basis * Basis(Vector3.RIGHT, (squash - 1.0) * 3.0)
 		basis = basis.scaled(Vector3(s, s * squash, s))
-		var ground := terrain.height_at(p.x, p.y) - float(info["sink"]) * s
-		var cell := Vector2i(int(floor(p.x / CELL)), int(floor(p.y / CELL)))
+		var ground := terrain.height_at(w.x, w.y) - float(info["sink"]) * s
+		var cell := Vector2i(int(floor(w.x / CELL)), int(floor(w.y / CELL)))
 		var key := "%d,%d,%s" % [cell.x, cell.y, kind]
 		if not buckets.has(key):
 			buckets[key] = {"cell": cell, "kind": kind, "xf": [], "tint": PackedColorArray()}
 		var bucket: Dictionary = buckets[key]
-		bucket["xf"].append(Transform3D(basis, Vector3(p.x, ground, p.y)))
+		bucket["xf"].append(Transform3D(basis, Vector3(w.x, ground, w.y)))
 		bucket["tint"].append(Color(tint + warm, tint, tint - warm))
 		planted += 1
 	return planted
 
 
-# One (cell, kind) bucket as a MultiMesh at the cell's middle, and a second
-# one of the kind's far mesh past its `near` distance.
-# Where everything stands, in the order it was planted.
+# Where everything stands (world positions), in the order it was planted.
 func planted() -> PackedVector3Array:
 	return _planted
 
 
+# One (cell, kind) bucket as a MultiMesh at the (world) cell's middle, and a
+# second one of the kind's far mesh past its `near` distance.
 func _emit(key: String, bucket: Dictionary, terrain: TerrainMesh) -> void:
 	var kind: String = bucket["kind"]
 	var info: Dictionary = KINDS[kind]

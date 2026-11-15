@@ -12,7 +12,7 @@ extends SceneTree
 const WORLD_SCENE := "res://scenes/world.tscn"
 # How far the body's height may be from the ground's under it.
 const STAND_TOLERANCE := 0.08
-# Where the body is dropped, and what the place is.
+# Where the body is dropped (map points, east and north), and what the place is.
 const DROPS := [
 	[Vector2(60, 60), "a chunk's middle, in the town"],
 	[Vector2(400, 400), "the seam where four chunks meet"],
@@ -71,7 +71,7 @@ func _run() -> void:
 	_check(absf(ride) < 1.5, "at the height of the town's ground")
 
 	for drop in DROPS:
-		var at: Vector2 = drop[0]
+		var at := ZoneLayout.to_world_xz(drop[0])
 		var ground: float = terrain.height_at(at.x, at.y)
 		player.velocity = Vector3.ZERO
 		player.global_position = Vector3(at.x, ground + ride + 2.0, at.y)
