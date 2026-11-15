@@ -109,6 +109,71 @@ flight comes with a `Teleport` (or a death), and the client ends flight on any T
   edits in the same files; the auto-mode classifier refused it, rightly. The mutations were
   made and undone with Edit instead.
 
+## 5b. The review pass (server)
+
+`/code-review` on the server branch, seven findings, five real and fixed (server, the
+commit after `5a0cf7e`):
+
+- **A flier could fight through its pet.** The flying gate refused the GM's own swing, cast
+  and skill, but a Necromancer GM could `/pet attack` from the air, or the pet pre-pass
+  would hand the pet the owner's `last_attacked_enemy` for 10 s after takeoff, and the
+  pet's hits put the owner hate token on a mob that could never reach them; `award_kill`
+  credits pet kills to the owner. Now the takeoff clears the owner's last-attacked fields
+  (as a port does), drops every owned pet's target (fanned as `EntityTarget None`), the
+  flying gate refuses a `/pet attack` with the flying line (the other pet commands stand),
+  and a flier counts as hidden for the owner token. Test
+  `a_fliers_pet_stands_down_and_cannot_be_sent`.
+- **A Bard's song kept pulsing from the air** (Aria of Dismay slowing a mob from a body it
+  cannot answer): the takeoff stops the song (`stop_song`), beside the hate wipe.
+- **A flier in a group took XP shares** (alive and within 200 m holds at altitude):
+  `xp_eligible` excludes a flier. Test `a_flier_in_a_group_takes_no_xp_share`.
+- **Ending flight left the flight-shaped direction in place**: a `fly off` after a Move of
+  (2, -1, 0) had the on-foot step integrate it at twice the run speed for the 500 ms
+  stale-move window. `PerConnection::end_flight` (the one way a flight ends: `teleport_to`,
+  the death branch, the fling, `fly off`) cuts the direction back to a walk, no vertical and
+  at most a full run. This also answers the review's "four hand-written places" finding:
+  the state has one choke point.
+- **The pet follow distance was 3D**: a pet under a hovering owner never "arrived", and
+  the stuck clock warped it to where it already stood every 8 s. The follow distance is on
+  the ground (XZ) now, for every pet (an owner on a ledge it has warped to benefits too).
+- The redundant `flight.as_mut()` inside an arm already guarded by `is_flying()`: the
+  match is on `(speed, conn.flight.as_mut())` now.
+
+Each of the two new tests was run with its rule disabled and failed. Suite 412 unit, 191
+world; fmt and clippy clean.
+
+## 5c. The review pass (client)
+
+`/code-review` on the client branch, ten findings, all addressed:
+
+- **The reconciler re-measured the same error on every Position inside a round trip.** A
+  correction applied to the body was never folded into the predictions still waiting for
+  their Position, so a 5 m error at 100 ms was paid about twice and a snap was repeated
+  whole on every echo. Every applied correction (a snap, and each blended share) now shifts
+  every waiting prediction. The probe gained the scenario that shows it: the server holds
+  the body at an edge the client flies past, Positions arriving every tick; with the shift
+  disabled the body ran off to millions of metres in 71 snaps, with it the body overshoots
+  by a round trip plus the bands while the key is held and comes to rest at the edge within
+  a few centimetres once released.
+- **The bands were sized by the boost key's state when the Position arrived**, not the
+  speed the echoed Move flew at: `record` takes the speed now, and a Move holding still
+  records 0, so a resting body has a hair of dead band (`STILL_DEAD_BAND` 0.05 m) and a
+  stop's small residual blends out instead of snapping (`STILL_SNAP_BAND` 3 m). Found on
+  the way: the probe's own `t` accumulated float drift, so its stop fell a frame late; it
+  counts whole frames now.
+- **A cast begun on the ground ran out in the air**: `start_flight` cancels a running cast
+  (and the client's song state), as a step would.
+- **A dead flier hung in the air on the client** (the dead branch applies no gravity):
+  `_on_died_in_flight` puts the body on the ground under it, as the server's death sweep
+  does (a probe check).
+- **`/pet attack` had no local refusal**: `PetManager.command_attack` takes
+  `Combat.refuse_if_flying()` like the swing, the cast and the skill.
+- The sent speed is rounded to a tenth and kept as sent (a probe check); the terrain is
+  looked up once a frame; the refusal line is said once per flight (the dead gate's rule);
+  the terrain group name is `TerrainMesh.GROUP`; the HUD line's offset and colour are
+  constants at the top of `hud.gd`. The label stays imperative (one Label, built on the
+  first takeoff); a `.tscn` node is the theming pass's call.
+
 ## 6. Exploit lens
 
 Rows 1 to 15 of the handoff's ledger, as built: a plain account's `fly` is silence and no

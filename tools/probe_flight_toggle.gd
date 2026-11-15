@@ -92,8 +92,22 @@ func _run() -> void:
 
 	_gm_lines.clear()
 	player.start_flight(25.0)
+	Input.action_press("jump")
+	await _wait_physics(20)
+	Input.action_release("jump")
+	_check(player.global_position.y > 4.0, "up again (y %.2f)" % player.global_position.y)
 	root.get_node("/root/PlayerDeath").player_died.emit()
 	_check(not player.is_flying and _gm_lines == ["fly 25.0"], "a death ends the flight, nothing more is sent")
+	_check(absf(player.global_position.y) < 0.01,
+		"and the body is put on the ground under it, as the server's is (y %.3f)" % player.global_position.y)
+
+	# A speed is sent to a tenth and kept as sent, so the prediction, the HUD
+	# and the server fly the same number.
+	_gm_lines.clear()
+	player.start_flight(12.34)
+	_check(_gm_lines == ["fly 12.3"] and is_equal_approx(player.fly_speed, 12.3),
+		"a speed is rounded to the tenth sent (%s, %.2f)" % [_gm_lines, player.fly_speed])
+	player.stop_flight()
 
 	_gm_lines.clear()
 	player.start_flight(25.0)

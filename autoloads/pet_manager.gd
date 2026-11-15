@@ -119,6 +119,10 @@ func command_follow() -> void:
 func command_attack(target = null) -> void:
 	if not has_pet():
 		return
+	# A GM in flight fights through nothing, a pet included; the server refuses
+	# the same way for a client that sends anyway.
+	if Combat.refuse_if_flying():
+		return
 	if target == null:
 		target = Combat.current_target
 	if target == null or not is_instance_valid(target):

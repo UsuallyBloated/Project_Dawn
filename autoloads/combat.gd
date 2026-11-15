@@ -48,17 +48,25 @@ func is_player_seated() -> bool:
 func is_player_flying() -> bool:
 	return is_instance_valid(_player) and _player.is_flying
 
-## For a swing, a cast or a skill: true while flying, with the server's own
-## line, so the caller refuses before anything is sent, announced or put on
-## cooldown. The server refuses the same way for a client that sends anyway.
+# Said "You cannot do that while flying." during this flight already (the
+# dead gate's rule: once, not a line per press).
+var _told_flying := false
+
+## For a swing, a cast, a skill or a pet attack: true while flying, with the
+## server's own line said once per flight, so the caller refuses before
+## anything is sent, announced or put on cooldown. The server refuses the same
+## way for a client that sends anyway.
 func refuse_if_flying() -> bool:
 	if not is_player_flying():
 		return false
-	CombatLog.add_line(FLYING_LINE, CombatLog.MsgType.INFO)
+	if not _told_flying:
+		CombatLog.add_line(FLYING_LINE, CombatLog.MsgType.INFO)
+		_told_flying = true
 	return true
 
 # Taking off disengages auto-attack: no swing goes out from the air.
 func on_flight_started() -> void:
+	_told_flying = false
 	if is_auto_attacking:
 		is_auto_attacking = false
 		auto_attack_toggled.emit(false)

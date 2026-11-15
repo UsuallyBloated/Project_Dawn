@@ -555,8 +555,10 @@ func start_flight(speed: float) -> void:
 			"Flight speed must be between %d and %d m/s." % [int(MIN_FLY_SPEED), int(MAX_FLY_SPEED)],
 			CombatLog.MsgType.INFO)
 		return
-	fly_speed = speed
-	Net.broadcast_gm_command("fly %.1f" % speed)
+	# The speed the server flies is the one sent, to a tenth; the prediction
+	# and the HUD use the same number.
+	fly_speed = snappedf(speed, 0.1)
+	Net.broadcast_gm_command("fly %.1f" % fly_speed)
 	if is_flying:
 		flight_changed.emit(true, fly_speed)
 		return
@@ -566,6 +568,11 @@ func start_flight(speed: float) -> void:
 	_autorun = false
 	if state != PlayerState.STANDING:
 		_enter_state(PlayerState.STANDING)
+	# A cast or a song begun on the ground ends at takeoff, as a step would
+	# end it (the server refuses the release and stops the song itself).
+	if Spells.is_casting():
+		Spells.cancel_cast()
+	BardSongs.stop_singing()
 	_fly_recon.reset()
 	Combat.on_flight_started()
 	flight_changed.emit(true, fly_speed)
@@ -592,7 +599,14 @@ func _on_world_teleport(pos: Vector3) -> void:
 	_fly_recon.reset()
 
 func _on_died_in_flight() -> void:
+	if not is_flying:
+		return
+	# The server's death sweep put the body on the ground under it; the dead
+	# branch of _physics_process applies no gravity, so the body is put there
+	# here or it would hang in the air over its own corpse.
 	stop_flight(false)
+	global_position.y = _fly_ground_at(global_position.x, global_position.z)
+	_server_pos_target = global_position
 
 # One physics frame of flight: WASD in the body's facing, jump up, fly_down
 # down, fly_boost for twice the speed; the body moves itself (no gravity, no
@@ -626,13 +640,12 @@ func _fly_tick(delta: float, chat_focused: bool) -> void:
 	var dir_sent := direction * boost
 
 	var p := global_position + direction * fly_speed * boost * delta
-	var ground := _fly_ground_at(p.x, p.z)
 	var terrain := _fly_terrain()
 	if terrain != null:
 		var half: float = terrain.grid_size * terrain.cell_size * 0.5
 		p.x = clampf(p.x, terrain.global_position.x - half, terrain.global_position.x + half)
 		p.z = clampf(p.z, terrain.global_position.z - half, terrain.global_position.z + half)
-		ground = _fly_ground_at(p.x, p.z)
+	var ground := _ground_of(terrain, p.x, p.z)
 	p.y = clampf(p.y, ground, maxf(FLY_CEILING, ground))
 	global_position = p
 
@@ -649,8 +662,13 @@ func _fly_tick(delta: float, chat_focused: bool) -> void:
 			if seq >= 0:
 				# The Position echoing this sequence is fanned after the tick
 				# that integrated it, so the prediction is this body one server
-				# tick further along the direction it just sent.
-				_fly_recon.record(seq, global_position + dir_sent * fly_speed * MOVE_SEND_INTERVAL)
+				# tick further along the direction it just sent, at the speed
+				# this Move flies at (the bands are sized by it: a body holding
+				# still has no tick jitter, so its band is a hair).
+				var moving := fly_speed * boost if direction != Vector3.ZERO else 0.0
+				_fly_recon.record(seq,
+					global_position + dir_sent * fly_speed * MOVE_SEND_INTERVAL,
+					moving)
 		global_position += _fly_recon.step(delta)
 
 	# Held down into the ground: the landing. The client decides it and tells
@@ -659,12 +677,14 @@ func _fly_tick(delta: float, chat_focused: bool) -> void:
 		stop_flight()
 
 func _fly_terrain() -> TerrainMesh:
-	return get_tree().get_first_node_in_group("terrain") as TerrainMesh
+	return get_tree().get_first_node_in_group(TerrainMesh.GROUP) as TerrainMesh
 
 # The ground under a world point: the zone's TerrainMesh where there is one
 # (its `height_at` is local to the node), the floor at 0 otherwise.
 func _fly_ground_at(x: float, z: float) -> float:
-	var terrain := _fly_terrain()
+	return _ground_of(_fly_terrain(), x, z)
+
+func _ground_of(terrain: TerrainMesh, x: float, z: float) -> float:
 	if terrain == null:
 		return 0.0
 	return terrain.height_at(x - terrain.global_position.x, z - terrain.global_position.z) \
@@ -685,8 +705,7 @@ func _on_world_position(id: int, pos: Vector3, _vel: Vector3, yaw: float, sequen
 		# In flight the error is measured against the prediction for this very
 		# sequence, in all three axes (scripts/fly_reconciler.gd); the walking
 		# lerp below would snap the body back on every Position at speed.
-		var boosted := fly_speed * (FLY_BOOST if Input.is_action_pressed("fly_boost") else 1.0)
-		global_position += _fly_recon.observe(sequence, pos, boosted)
+		global_position += _fly_recon.observe(sequence, pos)
 		_server_pos_target = global_position
 		return
 

@@ -13,6 +13,9 @@ const _HudPetPanel          := preload("res://scripts/hud_pet_panel.gd")
 const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
 # The hunger window sits this far below the player's information bar.
 const HUNGER_PANEL_GAP := 4.0
+# The GM flight line ("Flying N m/s") at the top centre while a flight lasts.
+const FLIGHT_LABEL_TOP := 8.0
+const FLIGHT_LABEL_COLOR := Color(0.55, 0.80, 1.0)
 const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
 # Dev Test Panel, mounted on demand by `/testpanel` (world.gd also mounts it at
 # world entry for GMs).
@@ -90,6 +93,9 @@ var _bank_window: Panel = null
 var _group_panel = null
 var _pet_panel = null
 var _hunger_panel: Control = null
+# GM flight: the line at the top of the screen while it lasts, so the state
+# is never a guess. Built on the first takeoff.
+var _flight_label: Label = null
 var _track_window: TrackWindow = null
 var _spell_book: Panel = null
 var _quest_journal: Panel = null
@@ -641,18 +647,14 @@ func _connect_player_state() -> void:
 	if _player.has_signal("flight_changed"):
 		_player.flight_changed.connect(_on_flight_changed)
 
-# GM flight (docs/design/handoff_gm_flight.md): a line at the top of the screen
-# while it lasts, so the state is never a guess.
-var _flight_label: Label = null
-
 func _on_flight_changed(flying: bool, speed: float) -> void:
 	if _flight_label == null:
 		_flight_label = Label.new()
 		_flight_label.name = "FlightLabel"
 		_flight_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-		_flight_label.offset_top = 8.0
+		_flight_label.offset_top = FLIGHT_LABEL_TOP
 		_flight_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_flight_label.add_theme_color_override("font_color", Color(0.55, 0.80, 1.0))
+		_flight_label.add_theme_color_override("font_color", FLIGHT_LABEL_COLOR)
 		_flight_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(_flight_label)
 	_flight_label.text = "Flying %d m/s" % int(round(speed))

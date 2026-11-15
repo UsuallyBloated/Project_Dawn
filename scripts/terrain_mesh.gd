@@ -20,6 +20,9 @@ const COLLISION_LAYERS := 3
 const TERRAIN_SHADER := preload("res://assets/materials/terrain.gdshader")
 const VISUAL_NODE := "TerrainVisual"
 const BODY_NODE := "TerrainBody"
+# The group the one ground in a scene joins; the player's flight finds it by
+# this name (player.gd `_fly_terrain`).
+const GROUP := "terrain"
 # The detail noise the shader mottles the ground with: a small seamless tile.
 const DETAIL_NOISE_SIZE := 256
 const DETAIL_NOISE_SEED := 847
@@ -55,7 +58,7 @@ var _index_cache: Dictionary = {}
 
 func _ready() -> void:
 	# The one ground in the scene: the player's flight clamps to it by group.
-	add_to_group("terrain")
+	add_to_group(GROUP)
 	rebuild()
 
 

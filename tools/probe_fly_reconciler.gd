@@ -55,9 +55,10 @@ func _run() -> void:
 	# corrections are measured against (the server runs the same track a
 	# latency late, starting and stopping late, so the two agree).
 	var truth_x := 0.0
-	while t < 5.0:
-		if flying and t >= stop_at:
-			flying = false
+	# Whole frames, so the stop falls on a frame and `t` carries no float drift.
+	for frame in range(300):
+		t = frame * DT
+		flying = t < stop_at - DT * 0.5
 		if flying:
 			body.x += SPEED * DT
 			truth_x += SPEED * DT
@@ -67,7 +68,7 @@ func _run() -> void:
 			var dir_x := 1.0 if flying else 0.0
 			# As player.gd records it: one server tick along the direction sent,
 			# since the echoing Position is fanned after the tick that took it.
-			recon.record(seq, body + Vector3(dir_x * SPEED * TICK, 0.0, 0.0))
+			recon.record(seq, body + Vector3(dir_x * SPEED * TICK, 0.0, 0.0), dir_x * SPEED)
 			moves_in_flight.append([t + LATENCY, seq, dir_x])
 		while next_tick <= t:
 			var taken: Array = []
@@ -87,32 +88,97 @@ func _run() -> void:
 				delivered.append(p)
 		for p in delivered:
 			positions_in_flight.erase(p)
-			body += recon.observe(p[1], Vector3(p[2], 0.0, 0.0), SPEED)
+			body += recon.observe(p[1], Vector3(p[2], 0.0, 0.0))
 		body += recon.step(DT)
 		var err: float = absf(body.x - truth_x)
 		if t > 0.5:
 			worst_error = maxf(worst_error, err)
 		if t > 4.5:
 			settled_error = err
-		t += DT
 	_check(recon.snaps == 0, "no snap through 3 s at 100 m/s with 100 ms of latency (%d)" % recon.snaps)
 	_check(worst_error < SPEED * TICK * 3.0,
 		"the body never strays more than three ticks of travel from its own track (worst %.2f m)" % worst_error)
 	_check(settled_error < 1.0, "after the stop the body settles within a metre (%.2f m)" % settled_error)
 
-	# A real divergence (the server held the body at a plate edge the client
-	# flew past) past the snap band is applied whole.
+	# The server holds the body (a plate edge the client flew past): the same
+	# stream, with the server's x capped at the edge. The body must come to
+	# rest at the edge, not oscillate (the review's finding: with the
+	# predictions still in flight unmoved, every Position inside one round
+	# trip re-measured the same error and re-applied it).
+	var r_edge := FlyReconciler.new()
+	var edge_body := Vector3.ZERO
+	var edge_x := 150.0
+	var e_t := 0.0
+	var e_seq := 0
+	var e_next_send := 0.0
+	var e_moves: Array = []
+	var e_positions: Array = []
+	var e_server := 0.0
+	var e_dir := 0.0
+	var e_seq_taken := 0
+	var e_next_tick := 0.013
+	var e_worst_past := 0.0
+	var e_settled := -1.0
+	for frame in range(360):
+		e_t = frame * DT
+		if frame < 240:
+			edge_body.x += SPEED * DT
+		if e_t >= e_next_send:
+			e_next_send += TICK
+			e_seq += 1
+			var d := 1.0 if frame < 240 else 0.0
+			r_edge.record(e_seq, edge_body + Vector3(d * SPEED * TICK, 0.0, 0.0), d * SPEED)
+			e_moves.append([e_t + LATENCY, e_seq, d])
+		while e_next_tick <= e_t:
+			var taken: Array = []
+			for m in e_moves:
+				if m[0] <= e_next_tick:
+					taken.append(m)
+			for m in taken:
+				e_moves.erase(m)
+				e_seq_taken = m[1]
+				e_dir = m[2]
+			e_server = minf(e_server + e_dir * SPEED * TICK, edge_x)
+			e_positions.append([e_next_tick + LATENCY, e_seq_taken, e_server])
+			e_next_tick += TICK
+		var delivered: Array = []
+		for p in e_positions:
+			if p[0] <= e_t:
+				delivered.append(p)
+		for p in delivered:
+			e_positions.erase(p)
+			edge_body += r_edge.observe(p[1], Vector3(p[2], 0.0, 0.0))
+		edge_body += r_edge.step(DT)
+		if e_t > 2.0:
+			e_worst_past = maxf(e_worst_past, edge_body.x - edge_x)
+		if e_t > 5.5:
+			e_settled = absf(edge_body.x - edge_x)
+	# While the key is held into the edge the body is pulled back as fast as it
+	# flies on: a round trip of travel before the first correction, the dead
+	# band, and the blend's equilibrium (it closes 63% a tick against 5 m a
+	# tick of flying). In the game the client clamps to the same plate, so this
+	# only happens where the two grounds disagree.
+	_check(e_worst_past < SPEED * (LATENCY + 4.0 * TICK),
+		"held at an edge, the body overshoots by at most a round trip plus the bands (%.1f m)" % e_worst_past)
+	_check(e_settled < 0.1, "and comes to rest at the edge once the key is released (%.3f m off)" % e_settled)
+	_check(r_edge.snaps <= 1, "with at most one snap (%d)" % r_edge.snaps)
+
+	# A real divergence past the snap band is applied whole, and the
+	# predictions still waiting move with it, so the next echo measures none.
 	var r2 := FlyReconciler.new()
-	r2.record(10, Vector3(300.0, 20.0, 0.0))
-	var snap := r2.observe(10, Vector3(200.0, 20.0, 0.0), 100.0)
+	r2.record(10, Vector3(300.0, 20.0, 0.0), 100.0)
+	r2.record(11, Vector3(305.0, 20.0, 0.0), 100.0)
+	var snap := r2.observe(10, Vector3(200.0, 20.0, 0.0))
 	_check(snap.is_equal_approx(Vector3(-100.0, 0.0, 0.0)), "a 100 m divergence is applied whole (%s)" % snap)
 	_check(r2.snaps == 1 and r2.step(DT) == Vector3.ZERO, "and nothing is left to blend")
+	_check(r2.observe(11, Vector3(205.0, 20.0, 0.0)) == Vector3.ZERO and r2.snaps == 1,
+		"the next echo, measured against the shifted prediction, snaps nothing")
 
 	# A moderate error (between the bands) blends out over the next frames and
 	# lands within a hair of the whole correction.
 	var r3 := FlyReconciler.new()
-	r3.record(1, Vector3(0.0, 50.0, 0.0))
-	var at_once := r3.observe(1, Vector3(0.0, 40.0, 0.0), 25.0)
+	r3.record(1, Vector3(0.0, 50.0, 0.0), 25.0)
+	var at_once := r3.observe(1, Vector3(0.0, 40.0, 0.0))
 	var total := Vector3.ZERO
 	for _i in range(60):
 		total += r3.step(DT)
@@ -121,8 +187,8 @@ func _run() -> void:
 
 	# A tick of jitter is ignored; a sequence never recorded is ignored.
 	var r4 := FlyReconciler.new()
-	r4.record(1, Vector3(10.0, 0.0, 0.0))
-	_check(r4.observe(1, Vector3(11.0, 0.0, 0.0), 25.0) == Vector3.ZERO and r4.step(DT) == Vector3.ZERO,
+	r4.record(1, Vector3(10.0, 0.0, 0.0), 25.0)
+	_check(r4.observe(1, Vector3(11.0, 0.0, 0.0)) == Vector3.ZERO and r4.step(DT) == Vector3.ZERO,
 		"an error inside the dead band changes nothing")
-	_check(r4.observe(99, Vector3(500.0, 0.0, 0.0), 25.0) == Vector3.ZERO,
+	_check(r4.observe(99, Vector3(500.0, 0.0, 0.0)) == Vector3.ZERO,
 		"a sequence never recorded changes nothing")
