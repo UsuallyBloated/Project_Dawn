@@ -3464,6 +3464,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   terrain=400x400 cells of 10 m, floor 0, hash a9942be36dff`, nobody online at the stop,
   `saved=0 unsaved=0`, `ledger check mismatches=0`; the user's character logged in at the town
   square on the `7c7a810` zip); `zone_4km_checklist.md` is runnable now, section 7 with it.
+  **Superseded the same night by the compass build** (the entry directly below): the zip to send
+  is `fd17ff1`, and after its redeploy the boot line reads `hash 6bedde1c663e`; run the sheet
+  on that pair.
 - [ ] **The compass is mirrored: facing north, east is on your left** *(user, 2026-11-14: "If
   the Greywood ridge is North, then the gnoll raider camp is currently to the west, when it
   should be to the east. Please confirm before changing any thing.")*. **Confirmed the same
@@ -3490,9 +3493,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `/loc` reads the EQ way.** Best decided before the door: afterwards the friends will have
   learned the mirrored world.
   **DECIDED 2026-11-14 (user, on the handoff's two questions: "yes, please" to both): mirror
-  the world with north = -Z, and `/loc` the EverQuest way. BUILT the same night, pending the
-  merge, the redeploy with its SQL, the zip and the playtest** (on `feat/compass-mirror` in both
-  repos, from the deploy tips; `zone_4km_checklist.md` §8; session note
+  the world with north = -Z, and `/loc` the EverQuest way. BUILT, MERGED AND EXPORTED the same
+  night, pending the redeploy with its SQL and the playtest** (built on `feat/compass-mirror` in
+  both repos; both deploy branches fast-forwarded and pushed, server `27d5ea7`, client `fd17ff1`;
+  the export `builds/ProjectDawn-alpha-fd17ff1.zip`, stamped `fd17ff1`, a release export, which
+  replaces `7c7a810` as the zip for the door; the zip and the redeploy go together, since either
+  side alone stands people on the other's ground; `zone_4km_checklist.md` §8; session note
   `session_2026_11_14_compass_mirror.md`; **the boot line must read `terrain=400x400 cells of
   10 m, floor 0, hash 6bedde1c663e`**). The ruling of 2026-09-27 ("+Z is north") is replaced:
   north is the world's -Z and east its +X, so facing north, east is on your right, as on the

@@ -118,7 +118,23 @@ decides its side (both callers say so in a comment); the smoke's drift direction
 vector (it now drifts south-east, which nobody authored either way); the mill's sails sit on
 the east-west axis, which the mirror leaves alone.
 
-## 8. Flagged, not changed
+## 8. Merged and exported
+
+Both deploy branches fast-forwarded to `feat/compass-mirror` and pushed by name, with the
+feature branches (server `27d5ea7`, client `fd17ff1`); the main checkouts were clean at the
+deploy tips first. In the main client checkout: a reimport, then all 17 checks against the
+merged server. The export: `[BuildStamp] stamped fd17ff1`, `--export-release`, the exported
+build booting clean headless, the hand-copied `gdext_net.dll` identical to the source build (no
+wire change); `builds/ProjectDawn-alpha-fd17ff1.zip` (37,804,837 bytes), which replaces
+`7c7a810`.
+
+**Left for the user:** the R720: everyone logged out; `git pull` and `cargo build --release`
+as `projectdawn`; `systemctl stop`; a `.backup` of `world.db`; the guarded SQL from the To-Do
+entry; the `cp`; `systemctl start`; the boot line must read `dev_cmds=false` and
+`terrain=400x400 cells of 10 m, floor 0, hash 6bedde1c663e`. Then sending `fd17ff1`, and
+`zone_4km_checklist.md` section 8 (and section 7, still unplayed).
+
+## 9. Flagged, not changed
 
 - Pieces turn but never mirror: an asymmetric piece keeps its own handedness.
 - The pass's west mouth shows one long dark facet where a diagonal now runs across the corner.
@@ -126,7 +142,7 @@ the east-west axis, which the mirror leaves alone.
   saved position, bind and facing mirrored with the world, and every corpse. No server code
   for older characters (the standing rule).
 
-## 9. Records
+## 10. Records
 
 CLAUDE.md's compass entry; `docs/reference/invariants.md` rule L3; `commands.md` (`/loc`,
 `/loc raw`, the compass check); `docs/design/location_command.md` revised; the tester sheets'

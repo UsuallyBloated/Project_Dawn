@@ -132,7 +132,7 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 19: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 19<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Sat Nov 14<span class="stat-sub">repo 655e702</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Sat Nov 14<span class="stat-sub">repo fd17ff1</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">43.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
 <div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">71.55 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
@@ -1565,7 +1565,7 @@
 <tr>
 <td class="id">o26</td>
 <td><span class="chip operate">Operate</span></td>
-<td class="what"><span class="day">Sun Nov 15 for the merge and the export; the redeploy when everyone is off, Mon Nov 16 at the latest</span>The compass reaches the game: feat/compass-mirror merged into the deploy branch in both repos, every check on the merged pair, a release export, and the R720 pulled, built and restarted with one SQL statement during the stop after a backup (every saved position, bind and corpse mirrored with the world). This zip replaces 7c7a810 as the one for the door; the zip and the redeploy go together, since either side alone stands people on the other&#x27;s ground.</td>
+<td class="what"><span class="day">Sun Nov 15 for the merge and the export; the redeploy when everyone is off, Mon Nov 16 at the latest</span>(Merged and exported 11-14: server 27d5ea7, client fd17ff1, builds/ProjectDawn-alpha-fd17ff1.zip stamped fd17ff1, a release export. Left: the redeploy with its SQL and the send.) The compass reaches the game: feat/compass-mirror merged into the deploy branch in both repos, every check on the merged pair, a release export, and the R720 pulled, built and restarted with one SQL statement during the stop after a backup (every saved position, bind and corpse mirrored with the world). This zip replaces 7c7a810 as the one for the door; the zip and the redeploy go together, since either side alone stands people on the other&#x27;s ground.</td>
 <td>Claude for the merge and the export; user over SSH for the redeploy</td>
 <td class="needs"><ul><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li><li>a backup of world.db before the SQL</li></ul></td>
 <td class="time">1 h</td>
@@ -1672,5 +1672,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-14 at repo 655e702</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-14 at repo fd17ff1</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>
