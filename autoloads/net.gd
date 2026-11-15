@@ -527,11 +527,15 @@ func is_gm() -> bool:
 # Send a Move intent. Server clamps the direction to unit length. Sequence
 # is auto-incremented; out-of-order packets are dropped server-side. `yaw` is
 # the body's facing (PD_W0029), which the server relays to peers as sent.
-func send_movement(direction: Vector3, jumping: bool = false, yaw: float = 0.0) -> void:
+# Returns the Move's sequence number (the one the server echoes on the Position
+# it fans for it), or -1 when nothing was sent. A GM in flight keys its
+# prediction by it (scripts/fly_reconciler.gd).
+func send_movement(direction: Vector3, jumping: bool = false, yaw: float = 0.0) -> int:
 	if _state != State.CONNECTED_APP:
-		return
+		return -1
 	_move_sequence += 1
 	send_move(_move_sequence, direction, jumping, yaw)
+	return _move_sequence
 
 # Track 6: Sit / Stand intents — server uses them to scale regen rates
 # server-side. Movement auto-stands on either side, so a dropped Stand
@@ -869,6 +873,11 @@ func broadcast_gm_command(line: String) -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_gm_command(line)
+	gm_line_sent.emit(line)
+
+# A GM line left for the server (`broadcast_gm_command`): what the headless
+# probes read, since the wire layer's own send is not observable in-process.
+signal gm_line_sent(line: String)
 
 # Track 13.3 — unequip paperdoll slot into (dst_location, dst_slot).
 # Server swaps on dst-occupied.

@@ -40,6 +40,10 @@ const REBINDABLE_ACTIONS: Array[Dictionary] = [
 	{id = "toggle_autorun",    label = "Autorun",           category = "Movement", default_key = KEY_BACKSLASH},
 	{id = "toggle_crouch",     label = "Crouch",            category = "Movement", default_key = KEY_X},
 	{id = "toggle_sit",        label = "Sit / Rest",        category = "Movement", default_key = KEY_Z},
+	# GM flight (docs/design/handoff_gm_flight.md): Minecraft's sneak and sprint.
+	# Held, not toggled, so neither can share Crouch's X. Only a GM's body reads them.
+	{id = "fly_down",          label = "Fly Down (GM)",     category = "Movement", default_key = KEY_SHIFT},
+	{id = "fly_boost",         label = "Fly Boost (GM)",    category = "Movement", default_key = KEY_CTRL},
 ]
 
 # Audio (0.0 – 1.0 linear)

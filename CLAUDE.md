@@ -3832,6 +3832,29 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   fight; any server move ends flight with a `Teleport`. The client flies its body on Space,
   Shift and Ctrl (double-tap Space to toggle, as in Minecraft) and needs a sequence-keyed
   reconciler, since the walking one would snap the body back on every Position at flight speed.
+  **BUILT 2026-11-15 (both halves), pending the redeploy, a client build and the playtest**
+  (`feat/gm-flight` in both repos, from the deploy tips: server `5a0cf7e`, client with this
+  entry; `gm_flight_checklist.md`, 28 rows; session note `session_2026_11_15_gm_flight.md`).
+  As designed, every call as recommended. Server: `PerConnection.flight`, the `fly` branch of
+  `GmCommand` (`parse_fly_arg`, the dead refused there since the line is whitelisted for the
+  dead, one audit row per toggle), the Move handler keeping a flier's vertical clamped to
+  `FLY_BOOST`, the flying gate (a swing dropped, a cast and a skill refused privately with
+  "You cannot do that while flying."), the flight branch of the movement step (3D at the
+  flier's speed, `Terrain::clamp_to_plate`, the ground, `FLY_CEILING`), fliers out of the
+  mobs' target list, the takeoff's hate wipe, `saved_pos` (the ground below), `teleport_to`
+  (every server move ends flight), `fall::harmless_drop` for `fly off`. Five integration tests
+  in `tests/world/flight.rs`, each failing with its rule disabled; 412 unit, 189 world. Client:
+  `FlyReconciler` (sequence-keyed, the prediction advanced one tick along the direction sent,
+  since the echoing Position is fanned after the tick that took it; a dead band of 1.5 ticks,
+  a snap past 8), `player.gd`'s `_fly_tick`, `start_flight` / `stop_flight` / `toggle_flight`,
+  the double tap, the Teleport and death hooks; `/fly`, the HUD line, the Test Panel row,
+  `fly_down` (Shift) and `fly_boost` (Ctrl); the local refusals in Combat, Spells, Skills.
+  Probes `probe_fly_reconciler.gd` (no correction at all through 3 s at 100 m/s with 100 ms
+  each way) and `probe_flight_toggle.gd` (17 checks); the five lockstep pairs; all 17 checks
+  green against the branch's server. **Deploy shape:** the server half is wire-compatible with
+  every client in the field (the door zip included) and can merge and redeploy any time; the
+  client half stays out of the door zip (it rewrites `player.gd`'s movement) and reaches the
+  user through the editor or a personal export until the bump after the door.
 
 ### UI polish
 - [x] **Sticky chat channel, WoW style** — **DONE + playtested 2026-10-27**

@@ -638,6 +638,25 @@ func _connect_player_state() -> void:
 	_player = players[0]
 	if _player.has_signal("state_changed"):
 		_player.state_changed.connect(_on_player_state_changed)
+	if _player.has_signal("flight_changed"):
+		_player.flight_changed.connect(_on_flight_changed)
+
+# GM flight (docs/design/handoff_gm_flight.md): a line at the top of the screen
+# while it lasts, so the state is never a guess.
+var _flight_label: Label = null
+
+func _on_flight_changed(flying: bool, speed: float) -> void:
+	if _flight_label == null:
+		_flight_label = Label.new()
+		_flight_label.name = "FlightLabel"
+		_flight_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+		_flight_label.offset_top = 8.0
+		_flight_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_flight_label.add_theme_color_override("font_color", Color(0.55, 0.80, 1.0))
+		_flight_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_flight_label)
+	_flight_label.text = "Flying %d m/s" % int(round(speed))
+	_flight_label.visible = flying
 
 # ── Process ───────────────────────────────────────────────────────────────────
 
@@ -1534,6 +1553,28 @@ func _handle_chat_input(text: String) -> void:
 		# out on their own.
 		if Net.stop_song():
 			BardSongs.stop_singing()
+		return
+
+	# GM flight (docs/design/handoff_gm_flight.md): `/fly` at the default speed,
+	# `/fly <m/s>`, `/fly off`. The body does it (player.gd), and tells the
+	# server on the GM line, where the gate and the audit are. A non-GM is told
+	# there is nothing here for them, as /testpanel does.
+	if lower == "/fly" or lower.begins_with("/fly "):
+		if not Net.is_gm():
+			CombatLog.add_line("Flight is not available.", CombatLog.MsgType.INFO)
+			return
+		if not is_instance_valid(_player):
+			CombatLog.add_line("You have no body to fly right now.", CombatLog.MsgType.INFO)
+			return
+		var arg := lower.substr("/fly".length()).strip_edges()
+		if arg == "off":
+			_player.stop_flight()
+		elif arg == "":
+			_player.start_flight(_player.fly_speed)
+		elif arg.is_valid_float():
+			_player.start_flight(float(arg))
+		else:
+			CombatLog.add_line("Usage: /fly [m/s] or /fly off", CombatLog.MsgType.INFO)
 		return
 
 	if lower in ["/loc", "/location", "/loc raw", "/location raw"]:

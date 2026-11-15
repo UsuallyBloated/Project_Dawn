@@ -13,6 +13,9 @@ const MELEE_RANGE             := 3.0
 const RANGED_RANGE            := 25.0
 # The server's line for a bow with an empty quiver (`tick/melee.rs`).
 const NO_AMMUNITION_LINE      := "You have no ammunition."
+# The server's line for a GM in flight who swings, casts or uses a skill
+# (`handlers.rs::FLYING_REFUSAL`).
+const FLYING_LINE             := "You cannot do that while flying."
 const EVASION_PER_AGI         := 0.005
 const EVASION_MAX             := 0.50
 const CRIT_PER_DEX            := 0.003
@@ -40,6 +43,26 @@ func register_player(node: Node3D) -> void:
 
 func is_player_seated() -> bool:
 	return is_instance_valid(_player) and _player.state == PlayerCharacter.PlayerState.SITTING
+
+# GM flight (docs/design/handoff_gm_flight.md): a flier does not fight.
+func is_player_flying() -> bool:
+	return is_instance_valid(_player) and _player.is_flying
+
+## For a swing, a cast or a skill: true while flying, with the server's own
+## line, so the caller refuses before anything is sent, announced or put on
+## cooldown. The server refuses the same way for a client that sends anyway.
+func refuse_if_flying() -> bool:
+	if not is_player_flying():
+		return false
+	CombatLog.add_line(FLYING_LINE, CombatLog.MsgType.INFO)
+	return true
+
+# Taking off disengages auto-attack: no swing goes out from the air.
+func on_flight_started() -> void:
+	if is_auto_attacking:
+		is_auto_attacking = false
+		auto_attack_toggled.emit(false)
+		_sync_auto_attack_timer()
 
 func unregister_player() -> void:
 	_player = null
@@ -127,8 +150,8 @@ func target_server_id(node) -> int:
 	return 0
 
 func toggle_auto_attack() -> void:
-	# Switching it on is refused while dead; switching it off never is.
-	if not is_auto_attacking and PlayerDeath.refuse_if_dead():
+	# Switching it on is refused while dead or flying; switching it off never is.
+	if not is_auto_attacking and (PlayerDeath.refuse_if_dead() or refuse_if_flying()):
 		return
 	is_auto_attacking = not is_auto_attacking
 	auto_attack_toggled.emit(is_auto_attacking)

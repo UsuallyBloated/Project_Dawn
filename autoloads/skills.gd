@@ -39,7 +39,7 @@ func setup_for_class(_player_class: String) -> void:
 	skills_changed.emit()
 
 func use_skill(skill: SkillData) -> bool:
-	if PlayerDeath.refuse_if_dead():
+	if PlayerDeath.refuse_if_dead() or Combat.refuse_if_flying():
 		return false
 	if Combat.is_player_seated():
 		CombatLog.add_line("You cannot use skills while sitting.", CombatLog.MsgType.INFO)

@@ -54,6 +54,8 @@ var _index_cache: Dictionary = {}
 
 
 func _ready() -> void:
+	# The one ground in the scene: the player's flight clamps to it by group.
+	add_to_group("terrain")
 	rebuild()
 
 

@@ -105,6 +105,7 @@ Parsed in `scripts/hud.gd::_handle_chat_input`. Press Enter to open chat, type t
 |---|---|
 | `/sit`, `/stand` | Sit / stand. |
 | `/camp`, `/camp cancel` | Sit-gated ~30s logout to desktop; cancels on stand/move/damage. |
+| **[GM]** `/fly [m/s]`, `/fly off` | GM flight (docs/design/handoff_gm_flight.md): Minecraft's Creative movement for geometry tests. `/fly` lifts you at 25 m/s (1 to 100 with a number; `/fly 50` in flight changes speed); Space climbs, Shift (Fly Down) descends, Ctrl (Fly Boost) doubles the speed; descending into the ground lands, as does `/fly off` (a harmless fall) and a double-tap of Space. The server flies the body (its `fly` GM line, one audit row per toggle) and holds it above its own ground, on the plate and under 1,000 m; mobs ignore a flier and a flier cannot swing, cast or use a skill. A fling, a death and every server move of the body end it; a logout in the air saves you on the ground below. Test Panel: Fly 10 / 25 / 50 / 100, Land. Since 2026-11-15. |
 
 ### Pet
 | Command | Effect |
@@ -185,6 +186,7 @@ Fixed keys (in code):
 | `Enter` | Open / send chat. |
 | `Tab` (chat line open) | Cycle tell reply targets: an empty line becomes `/tell <newest sender> `, and on a tell it moves to the next older sender, keeping the message. With the chat line closed, Tab is still Cycle Target (rebindable). |
 | `1`–`0` | Hotbar slots 1-10. |
+| `Space` twice (GM) | Toggle flight (`/fly`); in flight Space climbs. `Shift` descends and `Ctrl` boosts (the rebindable Fly Down and Fly Boost actions, read only by a GM's body in flight). |
 | `Alt` + `1`–`0` | Spell-bar slots. |
 | `F2` | Target group member 1. |
 | Right-click (tap) | **World interact**: talk / vendor / bank on an NPC, loot a corpse or bag, inspect another player, mine a vein, use a station, skin a dead mob. A right-*drag* is still the camera. The old proximity-F interact is retired — the cursor must be on the object, deliberately (bot resistance). |

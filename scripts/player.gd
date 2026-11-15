@@ -12,6 +12,18 @@ const JUMP_VELOCITY = 7.0
 # and what the landing costs; the body here only draws the fall.
 const FLOOR_MAX_ANGLE_DEG = 55.0
 const FLOOR_SNAP_LENGTH = 0.5
+# GM flight (docs/design/handoff_gm_flight.md): Minecraft's Creative-mode
+# movement for geometry tests. The server flies the body (its `fly <m/s>`
+# command on the GM line, the vertical on the Move's direction); these five
+# are its numbers, held in lockstep by tools/check_constant_lockstep.gd, so the
+# body here predicts what the server will do and no more.
+const DEFAULT_FLY_SPEED = 25.0
+const MIN_FLY_SPEED = 1.0
+const MAX_FLY_SPEED = 100.0
+const FLY_BOOST = 2.0
+const FLY_CEILING = 1000.0
+# Two jump presses this close together toggle flight (Minecraft's gesture).
+const FLY_DOUBLE_TAP_SECS = 0.3
 const MOUSE_SENSITIVITY = 0.003
 # Pixels the cursor must travel with the left button held before a click turns
 # into a camera-orbit drag. Below this, a left press is a target-select click.
@@ -69,6 +81,16 @@ const MOVE_SEND_INTERVAL := 0.05
 # flag, once, however many frames pass before it is sent. The server relays
 # it to the players who can see us as a one-shot and moves nobody for it.
 var _jump_pending := false
+
+# GM flight. `is_flying` is the client's copy of the server's flight state: set
+# by this body's own request (`start_flight` / `stop_flight` send the GM line),
+# and cleared by anything the server does to the body (a Teleport, a death),
+# which is what keeps the two in step without a confirmation message.
+var is_flying := false
+var fly_speed: float = DEFAULT_FLY_SPEED
+var _fly_recon := FlyReconciler.new()
+var _last_jump_tap_at: float = -1.0
+signal flight_changed(flying: bool, speed: float)
 
 enum PlayerState { STANDING, CROUCHING, SITTING }
 
@@ -158,6 +180,10 @@ func _ready() -> void:
 	Combat.register_player(self)
 	Regen.register_player(self)
 	Net.world_position.connect(_on_world_position)
+	# Everything the server does to this body ends a flight (a respawn, a port,
+	# a resurrection summon, a fling all arrive as a Teleport; a death as HP 0).
+	Net.world_teleport.connect(_on_world_teleport)
+	PlayerDeath.player_died.connect(_on_died_in_flight)
 
 func _exit_tree() -> void:
 	Combat.unregister_player()
@@ -308,6 +334,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			_update_view_visibility()
 			get_viewport().set_input_as_handled()
 	if event is InputEventKey and event.pressed and not event.echo:
+		# Two jump presses inside FLY_DOUBLE_TAP_SECS toggle a GM's flight; a
+		# single press is the jump (or the climb, in flight) as before.
+		if event.is_action("jump") and Net.is_gm():
+			var now := Time.get_ticks_msec() / 1000.0
+			if _last_jump_tap_at >= 0.0 and now - _last_jump_tap_at <= FLY_DOUBLE_TAP_SECS:
+				_last_jump_tap_at = -1.0
+				toggle_flight()
+			else:
+				_last_jump_tap_at = now
 		if event.is_action("toggle_crouch"):
 			if state == PlayerState.STANDING:
 				_enter_state(PlayerState.CROUCHING)
@@ -376,6 +411,9 @@ func _physics_process(delta: float) -> void:
 	if PlayerDeath.is_dead:
 		velocity = Vector3.ZERO
 		move_and_slide()
+		return
+	if is_flying:
+		_fly_tick(delta, chat_focused)
 		return
 	# Both buttons held → run forward, steered by the right-button mouselook.
 	var mouse_run := is_camera_active and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
@@ -493,6 +531,145 @@ func _physics_process(delta: float) -> void:
 		var blend_z := lerpf(global_position.z, _server_pos_target.z, blend)
 		global_position = Vector3(blend_x, global_position.y, blend_z)
 
+# ── GM flight ─────────────────────────────────────────────────────────────────
+
+# Whether this body may take to the air: a GM account (display gating; the
+# server's gate is the rule), alive, in the world and past the first Position.
+func can_fly() -> bool:
+	return Net.is_gm() and not PlayerDeath.is_dead and Net.is_app_ready() and _received_first_pos
+
+func toggle_flight() -> void:
+	if is_flying:
+		stop_flight()
+	else:
+		start_flight(fly_speed)
+
+# Take to the air at `speed` m/s (or change speed in flight). The server is
+# told first (`fly <m/s>`, dev-gated and audited there); the body then flies
+# itself and predicts what the server does.
+func start_flight(speed: float) -> void:
+	if not can_fly():
+		return
+	if not (is_finite(speed) and speed >= MIN_FLY_SPEED and speed <= MAX_FLY_SPEED):
+		CombatLog.add_line(
+			"Flight speed must be between %d and %d m/s." % [int(MIN_FLY_SPEED), int(MAX_FLY_SPEED)],
+			CombatLog.MsgType.INFO)
+		return
+	fly_speed = speed
+	Net.broadcast_gm_command("fly %.1f" % speed)
+	if is_flying:
+		flight_changed.emit(true, fly_speed)
+		return
+	is_flying = true
+	velocity = Vector3.ZERO
+	_jump_pending = false
+	_autorun = false
+	if state != PlayerState.STANDING:
+		_enter_state(PlayerState.STANDING)
+	_fly_recon.reset()
+	Combat.on_flight_started()
+	flight_changed.emit(true, fly_speed)
+
+# Land: the server is told (`fly off`) unless the server itself ended the
+# flight (a Teleport, a death), and the body falls on its own gravity from
+# where it is, as the server's harmless fall does.
+func stop_flight(tell_server: bool = true) -> void:
+	if not is_flying:
+		return
+	is_flying = false
+	velocity = Vector3.ZERO
+	_fly_recon.reset()
+	if tell_server:
+		Net.broadcast_gm_command("fly off")
+	flight_changed.emit(false, fly_speed)
+
+func _on_world_teleport(pos: Vector3) -> void:
+	# Net._on_teleport has already put the body at `pos`; the walking
+	# reconciler must aim there too, or it would pull the body back toward
+	# the track it was on before the teleport.
+	stop_flight(false)
+	_server_pos_target = pos
+	_fly_recon.reset()
+
+func _on_died_in_flight() -> void:
+	stop_flight(false)
+
+# One physics frame of flight: WASD in the body's facing, jump up, fly_down
+# down, fly_boost for twice the speed; the body moves itself (no gravity, no
+# move_and_slide: scenery is never a body, L2) and is held above the ground,
+# on the plate and under the ceiling, the server's own clamps. Descending into
+# the ground lands (Minecraft Java). Then the Move, carrying the vertical and
+# the boost as the direction's length, and the flight reconciler's correction.
+func _fly_tick(delta: float, chat_focused: bool) -> void:
+	var mouse_run := is_camera_active and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	var direction := Vector3.ZERO
+	var descending := false
+	if not chat_focused:
+		if Input.is_action_pressed("move_forward"):
+			direction -= transform.basis.z
+		if Input.is_action_pressed("move_backward"):
+			direction += transform.basis.z
+		if Input.is_action_pressed("move_left"):
+			direction -= transform.basis.x
+		if Input.is_action_pressed("move_right"):
+			direction += transform.basis.x
+		if Input.is_action_pressed("jump"):
+			direction += Vector3.UP
+		if Input.is_action_pressed("fly_down"):
+			direction -= Vector3.UP
+			descending = true
+	if mouse_run:
+		direction -= transform.basis.z
+	var boost := FLY_BOOST if (not chat_focused and Input.is_action_pressed("fly_boost")) else 1.0
+	if direction != Vector3.ZERO:
+		direction = direction.normalized()
+	var dir_sent := direction * boost
+
+	var p := global_position + direction * fly_speed * boost * delta
+	var ground := _fly_ground_at(p.x, p.z)
+	var terrain := _fly_terrain()
+	if terrain != null:
+		var half: float = terrain.grid_size * terrain.cell_size * 0.5
+		p.x = clampf(p.x, terrain.global_position.x - half, terrain.global_position.x + half)
+		p.z = clampf(p.z, terrain.global_position.z - half, terrain.global_position.z + half)
+		ground = _fly_ground_at(p.x, p.z)
+	p.y = clampf(p.y, ground, maxf(FLY_CEILING, ground))
+	global_position = p
+
+	if not is_look_active and (is_camera_active or direction != Vector3.ZERO):
+		var recenter := 1.0 - exp(-CAM_YAW_RECENTER_RATE * delta)
+		_cam_yaw = lerp_angle(_cam_yaw, 0.0, recenter)
+		_apply_camera_pivot()
+
+	if Net.is_app_ready() and _received_first_pos:
+		_move_send_accum += delta
+		if _move_send_accum >= MOVE_SEND_INTERVAL:
+			_move_send_accum -= MOVE_SEND_INTERVAL
+			var seq := Net.send_movement(dir_sent, false, rotation.y)
+			if seq >= 0:
+				# The Position echoing this sequence is fanned after the tick
+				# that integrated it, so the prediction is this body one server
+				# tick further along the direction it just sent.
+				_fly_recon.record(seq, global_position + dir_sent * fly_speed * MOVE_SEND_INTERVAL)
+		global_position += _fly_recon.step(delta)
+
+	# Held down into the ground: the landing. The client decides it and tells
+	# the server; the server never lands a flier on its own.
+	if descending and p.y <= ground + 0.01:
+		stop_flight()
+
+func _fly_terrain() -> TerrainMesh:
+	return get_tree().get_first_node_in_group("terrain") as TerrainMesh
+
+# The ground under a world point: the zone's TerrainMesh where there is one
+# (its `height_at` is local to the node), the floor at 0 otherwise.
+func _fly_ground_at(x: float, z: float) -> float:
+	var terrain := _fly_terrain()
+	if terrain == null:
+		return 0.0
+	return terrain.height_at(x - terrain.global_position.x, z - terrain.global_position.z) \
+			+ terrain.global_position.y
+
 func _on_world_position(id: int, pos: Vector3, _vel: Vector3, yaw: float, sequence: int) -> void:
 	# Track 2 — own-player reconciliation only. Other-player replication is Track 3.
 	if id != Net.get_player_id():
@@ -503,6 +680,15 @@ func _on_world_position(id: int, pos: Vector3, _vel: Vector3, yaw: float, sequen
 	if sequence <= _last_server_seq and _received_first_pos:
 		return
 	_last_server_seq = sequence
+
+	if is_flying and _received_first_pos:
+		# In flight the error is measured against the prediction for this very
+		# sequence, in all three axes (scripts/fly_reconciler.gd); the walking
+		# lerp below would snap the body back on every Position at speed.
+		var boosted := fly_speed * (FLY_BOOST if Input.is_action_pressed("fly_boost") else 1.0)
+		global_position += _fly_recon.observe(sequence, pos, boosted)
+		_server_pos_target = global_position
+		return
 
 	if not _received_first_pos:
 		# First broadcast wins: server's DB-loaded spawn may differ from

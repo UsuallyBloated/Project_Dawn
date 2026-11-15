@@ -108,7 +108,7 @@ func spell_range_text(spell: SpellData) -> String:
 	return ""
 
 func cast_spell(spell: SpellData) -> bool:
-	if PlayerDeath.refuse_if_dead():
+	if PlayerDeath.refuse_if_dead() or Combat.refuse_if_flying():
 		return false
 	if _casting != null:
 		return false

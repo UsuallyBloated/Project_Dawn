@@ -27,6 +27,9 @@ const C_TEXT   := Color(0.75, 0.70, 0.60, 1.00)
 const C_DIE    := Color(0.70, 0.15, 0.15, 1.00)
 # The Fling buttons' heights, in metres.
 const FLING_HEIGHTS: Array[float] = [5.0, 20.0]
+# The Fly buttons' speeds, m/s (docs/design/handoff_gm_flight.md).
+const FLY_SPEEDS: Array[float] = [10.0, 25.0, 50.0, 100.0]
+const C_FLY    := Color(0.25, 0.45, 0.75, 1.00)
 
 var _body: VBoxContainer
 var _toggle_btn: Button
@@ -189,6 +192,14 @@ func _build_resources_section() -> void:
 		var fling_btn := _make_btn("Fling %d m" % int(height), C_DIE)
 		fling_btn.pressed.connect(_fling.bind(height))
 		_sec_resources.add_child(fling_btn)
+
+	for speed in FLY_SPEEDS:
+		var fly_btn := _make_btn("Fly %d m/s" % int(speed), C_FLY)
+		fly_btn.pressed.connect(_fly.bind(speed))
+		_sec_resources.add_child(fly_btn)
+	var land_btn := _make_btn("Land", C_FLY)
+	land_btn.pressed.connect(_fly.bind(0.0))
+	_sec_resources.add_child(land_btn)
 
 	var xp_btn := _make_btn("Grant 250 XP", Color(0.30, 0.45, 0.60, 1.0))
 	xp_btn.pressed.connect(_grant_test_xp)
@@ -612,6 +623,19 @@ func _fling(height: float) -> void:
 		Net.call("send_dev_fling", height)
 	else:
 		CombatLog.add_line("TestPanel: this build's wire layer cannot fling.", CombatLog.MsgType.INFO)
+
+# GM flight (docs/design/handoff_gm_flight.md): the body flies itself and tells
+# the server on the GM line; 0 lands. The same path as /fly and the double tap.
+func _fly(speed: float) -> void:
+	if not _require_connection():
+		return
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return
+	if speed <= 0.0:
+		player.stop_flight()
+	else:
+		player.start_flight(speed)
 
 func _trigger_death() -> void:
 	# The server owns HP and every death, so this asks it for a dev DamageSelf
