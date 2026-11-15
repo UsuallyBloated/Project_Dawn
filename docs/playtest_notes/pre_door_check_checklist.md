@@ -160,11 +160,12 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       100% every login, the slider still reading 125%); the login screen looks as before;
       Apply at 100% afterwards puts it back. notes:
 
-## 9 — The Monday build (the ammo slot, the knoll, the Selos' lines; needs `ProjectDawn-alpha-68c3e13.zip` and the R720 redeployed on server `162c151`, its boot line reading `terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f`)
+## 9 — The Monday build (the ammo slot, the knoll, the Selos' lines; needs `ProjectDawn-alpha-fd17ff1.zip` and the R720 on server `27d5ea7`, its boot line reading `terrain=400x400 cells of 10 m, floor 0, hash 6bedde1c663e`; live since 2026-11-15)
 
 > **The build changed the evening this section was written (2026-11-13):** the 4 km starting
-> zone merged on top of the ammo slot, so the zip is `68c3e13` (not `f5b8b24`), the server is
-> `162c151` (not `d3cceef`) and the terrain hash is the zone's. Every camp is about ten times
+> zone merged on top of the ammo slot, then the outline and the compass mirror on top of that
+> (2026-11-14), so the zip is `fd17ff1` (not `f5b8b24`), the server is `27d5ea7` (not
+> `d3cceef`) and the terrain hash is the compass build's. Every camp is about ten times
 > further from the town than these rows' authors had in mind: the wolves are a minute's run
 > out of the east gate (`/loc` about -200, -280: since the compass build it prints north, west). The zone has its own sheet,
 > `zone_4km_checklist.md`.

@@ -173,3 +173,10 @@ the ridge closed at both ends; the doors as scenery with the cliff behind; the r
 square and the Greywood. Left on the sheet: section 7's two-seat row, the GM fling-and-relog
 row and the journal row, and sections 1 to 6 and 8. The entry stays open.
 
+The journal for that sitting (17:43 to 18:11 UTC) passed section 7's journal row too:
+`slope_refusals` 0 every minute until 18:03, then 213, 161, 362, 39 and 598 in the minutes at
+the mountains and the ridge's foot, 0 between; no error. The same tail shows the Selos' cold
+sing (17:51:45, GHOTTT, Selos' memorized at 17:51:31 with no song before it); the server logs
+only the release, so the answer waits on the client's `debug.log`. The pre-door sheet's
+section 9 heading named the `68c3e13` build; it names `fd17ff1` now.
+

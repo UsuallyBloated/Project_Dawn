@@ -179,8 +179,11 @@ One visit each: the mobs stand at the set piece, on the ground, and fight normal
 - [ ] **(GM) `Fling 20 m` beside the mountains; then log out standing against the cliff and log
       back in** → you land where you stood and log in where you stood; nothing puts you on the
       mountains. notes:
-- [ ] The journal: `slope_refusals` on the `world health` lines only for the minutes someone
-      pushed at a cliff; no `ERROR`; `ledger check mismatches=0`. notes:
+- [x] The journal: `slope_refusals` on the `world health` lines only for the minutes someone
+      pushed at a cliff; no `ERROR`; `ledger check mismatches=0`. notes: 2026-11-15 17:43 to
+      18:11 UTC (GHOTTT, the section's one-seat rows): 0 every minute until 18:03, then 213,
+      161, 362, 39 and 598 in the minutes spent at the mountains and the ridge's foot, 0
+      between; no ERROR or WARN; the ledger check 0 at the boot of 13:47.
 
 ## 8 — The compass (2026-11-14)
 

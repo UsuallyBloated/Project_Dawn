@@ -3553,9 +3553,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   compass build, the same afternoon as the redeploy: the four roads walked to their doors with
   the camps left alone from the road, the mountains' foot held in four places, the ridge closed
   at both ends so the pass is the only way north, the doors passed through as scenery with the
-  cliff behind them, the range seen from the square and from inside the Greywood). Still to
-  run: section 7's two-seat row, the GM fling-and-relog row and the journal row, and sections
-  1 to 6 and 8.
+  cliff behind them, the range seen from the square and from inside the Greywood), **and the
+  journal row** (`slope_refusals` only in the minutes at the cliffs, no error). Still to run:
+  section 7's two-seat row and the GM fling-and-relog row, and sections 1 to 6 and 8.
 - [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
   a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
   height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at
