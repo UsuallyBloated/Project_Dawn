@@ -147,31 +147,31 @@ One visit each: the mobs stand at the set piece, on the ground, and fight normal
 > mountains close round, joined only by the pass; the old square edge is gone. Positions are
 > as `/loc` prints them since the compass build (section 8): north, west.
 
-- [ ] **Leave by the north gate and follow the road to its end** → it bends east of Bat Hollow,
+- [x] **Leave by the north gate and follow the road to its end** → it bends east of Bat Hollow,
       runs the pass with no dip going in and no bank coming out (the floor is level with the
       ground now), swings east round the Broken Crypt's bowl with the crypt in view on your
       left, and ends at fallen trees under the mountains (`/loc` about 1880, 0). notes:
-- [ ] **The east road to its end** → past the raiders' wagon wreck, south of the Spider Copse,
+- [x] **The east road to its end** → past the raiders' wagon wreck, south of the Spider Copse,
       along under the Wraith Gate cliff with the arch above you, and into a narrowing arm that
       ends at a rockslide (`/loc` about -900, -1890). notes:
-- [ ] **The south road to its end** → by the mill, west of Rotfang's rocks, then round the foot
+- [x] **The south road to its end** → by the mill, west of Rotfang's rocks, then round the foot
       of the war camp's shelf with the gnolls above you on your right, ending at a barricade of
       sharpened stakes (`/loc` about -1838, -98). notes:
-- [ ] **The barrow track to its end** → out by the lane between the fields, north of the bone
+- [x] **The barrow track to its end** → out by the lane between the fields, north of the bone
       fields, up the hill to a ring of waystones (`/loc` about 250, 1370) with the barrow's pit
       below you and the Ossuary on the crest above. notes:
-- [ ] **On each road, watch the camps you pass** → nothing comes for you from the road: Rotfang's
+- [x] **On each road, watch the camps you pass** → nothing comes for you from the road: Rotfang's
       den, the war camp and the Broken Crypt are each about 200 m off it. notes:
-- [ ] **Run at the mountains and hold forward, then zigzag, in four places: the end of the east
+- [x] **Run at the mountains and hold forward, then zigzag, in four places: the end of the east
       arm, the war camp's vale, a corner of the Greywood, the barrow hills' west side** → the
       foot is a cliff you do not climb; `/loc` stops moving outward; you slide along it at most.
       notes:
-- [ ] **Try to go round the ridge: follow its south foot east until `/loc`'s second number passes
+- [x] **Try to go round the ridge: follow its south foot east until `/loc`'s second number passes
       -1300, then west until it passes 1300** → the mountains meet the ridge at both ends; the pass is the only way north.
       notes:
-- [ ] **At each door, walk into the rocks, the trees, the stakes** → the pieces are scenery (you
+- [x] **At each door, walk into the rocks, the trees, the stakes** → the pieces are scenery (you
       pass through them); the cliff behind them stops you. notes:
-- [ ] **Look round from the town square and from inside the Greywood** → mountains on every
+- [x] **Look round from the town square and from inside the Greywood** → mountains on every
       side, bare rock with snow on the tops, no trees and no forest floor on them, no strip of
       sky under them. notes:
 - [ ] **Two seats: one stands still at a door, the other watches them from 50 m** → the partner
