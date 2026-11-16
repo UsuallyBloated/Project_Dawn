@@ -3467,6 +3467,35 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Superseded the same night by the compass build** (the entry directly below): the zip to send
   is `fd17ff1`, and after its redeploy the boot line reads `hash 6bedde1c663e`; run the sheet
   on that pair.
+  **Rolling hills BUILT 2026-11-16, pending the user's call on timing (the door zip or after
+  the door), the redeploy with a new zip, and the playtest** (user: "Do you think you could add
+  rolling hills? right now the sight line allows a player to see across the entire flat land",
+  then "12, 25, 35. Also have variation between those or everything will look static.";
+  `feat/rolling-hills` in both repos, client `dfbda40` + `260f42c`, server `86aa72a` + `a3b226d`; session note
+  `session_2026_11_16_rolling_hills.md`; both sides move together, no wire change, no
+  migration and no SQL, since a login, a respawn and a saved corpse all land on the ground as
+  it is now; **the boot line must read `terrain=400x400 cells of 10 m, floor 0, hash
+  f569ade0c331`**). Three layers of rolling ground in place of the old 3.5 m and 9 m ones:
+  swells about 12 m every 280 m, rolls about 25 m every 650 m and broad rises about 35 m every
+  1,300 m, each varied by a broad noise of its own from half to one and a half times its
+  height, so stretches of meadow alternate with hill country; the town stays flat. The plateau
+  and the pass now shape the ground before the rolling ground is laid over them
+  (`tools/author_terrain.gd`, `rolling_at`), so the Wraith Gate cliff keeps a 58 m drop and
+  the pass floor follows the ground at its mouths (its floor is 0 under the noise, and the cut
+  ends at the ridge's north foot so its rounded ends lie on level base ground; two earlier cuts
+  left a bank at a mouth).
+  Measured from 60 standing players: 79% of the ground within 250 m is in sight (89% before),
+  39% at 250 to 500 m (62%), 30% at 500 m to 1 km (44%). The author report is clean (every
+  camp spawn and NPC on a floor, the roads at most 17.3 degrees, nobody walks out of the zone);
+  camps now stand as high as 148 m (the Ossuary), and the highest walkable ground is 151 m,
+  under the shader's rock line at 190 m. Server: the compiled-terrain test holds the cliff by its
+  drop and walks the line through the pass every 2 m for a step past 30 degrees (it caught
+  both earlier cuts); the plateau-ramp perch test moved 14 m down the
+  ramp (the wall at its old perch grew to about 30 m, which put the dummy past Smite's reach);
+  412 unit and 191 world green, fmt and clippy clean; all 17 client checks and the zone probes
+  green. **What changes in play:** line of sight is the server's rule, so a swell now blocks a
+  spell, an arrow and an idle mob noticing you. Not built: the GM flight client is on its own
+  branch, so the hills branch is walked on foot.
 - [ ] **The compass is mirrored: facing north, east is on your left** *(user, 2026-11-14: "If
   the Greywood ridge is North, then the gnoll raider camp is currently to the west, when it
   should be to the east. Please confirm before changing any thing.")*. **Confirmed the same

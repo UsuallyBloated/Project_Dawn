@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 19: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 19<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Sun Nov 15<span class="stat-sub">repo a863f5a</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Nov 16<span class="stat-sub">repo 39dd53c</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">44.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">74.8 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">44.75 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">75.8 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -1539,9 +1539,19 @@
 <section>
 <h2><span class="week-head"><span>The door, a week later</span><span class="when">W7 &middot; November 16 to 22</span></span></h2>
 <p class="lede">Added November 13: the user held the invites back on the 12th, so the door is Thursday the 19th. Early in the week the pre-door rerun&#x27;s last rows run on the zip, then the share links, the zip and the players&#x27; checklist go out to all four (the plan&#x27;s own advice from October: the network part settled days before the evening), and Thursday evening the door opens.</p>
-<div class="week-meta"><span>the user's time: 17 h</span><span>Claude build days: 0</span></div>
+<div class="week-meta"><span>the user's time: 18 h</span><span>Claude build days: 0.5</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
+<tr>
+<td class="id">b62</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Mon Nov 16</span>Rolling hills, from the user&#x27;s sizes (about 12, 25 and 35 m, each varied across the map so meadow and hill country alternate): three layers of rolling ground laid over every other feature, so the Wraith Gate cliff and the pass keep their shapes and a crest now usually hides what lies past it. On feat/rolling-hills in both repos; the server suite, every client check and the zone probes green.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">0.5 Claude days</td>
+<td class="id"></td>
+<td class="done">Both branches pushed; the author report clean; how far a standing player sees, measured before and after.<span class="ref">To-Do entry: <code>The starting zone at 4 km</code></span></td>
+</tr>
 <tr>
 <td class="id">o8</td>
 <td><span class="chip operate">Operate</span></td>
@@ -1591,6 +1601,16 @@
 <td class="time">1 h</td>
 <td class="id">b60, o25</td>
 <td class="done">The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash 6bedde1c663e; the export log reads stamped with the merged sha and no -debug mark.</td>
+</tr>
+<tr class="tent">
+<td class="id">o28</td>
+<td><span class="chip operate">Operate</span><span class="chip tent">tentative</span></td>
+<td class="what"><span class="day">Mon Nov 16 or Tue Nov 17 if it rides the door zip; otherwise the first build after the door</span>The hills reach the game: feat/rolling-hills merged into the deploy branch in both repos, every check on the merged pair, a release export, and the R720 pulled, built and restarted (no SQL: logins, respawns and corpses all land on the ground as it is). If it rides the door, its zip replaces fd17ff1 for p6. The zip and the redeploy go together, since either side alone stands people on the other&#x27;s ground.</td>
+<td>Claude for the merge and the export; user over SSH for the redeploy</td>
+<td class="needs"><ul><li>the user&#x27;s call: the door zip or after the door</li><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li></ul></td>
+<td class="time">1 h</td>
+<td class="id">b62</td>
+<td class="done">The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331; the export log reads stamped with the merged sha and no -debug mark.<span class="ref">To-Do entry: <code>The starting zone at 4 km</code></span></td>
 </tr>
 <tr>
 <td class="id">v62</td>
@@ -1702,5 +1722,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-15 at repo a863f5a</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-16 at repo 39dd53c</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>
