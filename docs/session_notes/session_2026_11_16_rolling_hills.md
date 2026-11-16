@@ -156,3 +156,7 @@ The redeploy, by the user: the host commands in CLAUDE.md, no SQL; the boot line
 `build="a3b226d" dev_cmds=false terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331`.
 `zone_4km_checklist.md` (its header, the pass row now "rises and falls with the ground",
 sections 7 and 8) and `pre_door_check_checklist.md` §9 name the new pair.
+
+**Deployed 2026-11-16 22:34 UTC** by the user: boot line `build="a3b226d" dev_cmds=false
+terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331`; nobody online at the stop
+(`saved=0 unsaved=0`); 14 corpses loaded; `ledger check mismatches=0`.

@@ -3512,6 +3512,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   change), **which replaces `fd17ff1` as the zip for the door**. The zip and the redeploy go
   together; no SQL. `zone_4km_checklist.md` (its header, the pass row, sections 7 and 8) and
   `pre_door_check_checklist.md` §9 name the new pair; section 7's passed rows are walked again.
+  **DEPLOYED 2026-11-16 22:34 UTC** (R720 boot line `build="a3b226d" dev_cmds=false
+  terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331`, nobody online at the stop,
+  `saved=0 unsaved=0`, 14 corpses loaded, `ledger check mismatches=0`); the zip to send is
+  `397e207`, and both sheets are runnable on that pair.
 - [ ] **The compass is mirrored: facing north, east is on your left** *(user, 2026-11-14: "If
   the Greywood ridge is North, then the gnoll raider camp is currently to the west, when it
   should be to the east. Please confirm before changing any thing.")*. **Confirmed the same
