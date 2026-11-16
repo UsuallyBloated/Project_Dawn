@@ -132,10 +132,10 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 19: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 19<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Sun Nov 15<span class="stat-sub">repo 4cd1fcf</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Sun Nov 15<span class="stat-sub">repo a863f5a</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">43.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">71.55 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">44.25 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">74.8 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -1431,7 +1431,7 @@
 <section>
 <h2><span class="week-head"><span>The door, on a Thursday</span><span class="when">W6 &middot; November 9 to 15</span></span></h2>
 <p class="lede">Added November 5: the friends are busy on Sunday the 8th, so the door is Thursday the 12th, and the user spent the four days on the November bump rather than holding it until after. The bump&#x27;s sheets finish early in the week, the pre-door check runs again on the build the friends will hold, the last zip goes out, and Thursday evening the door opens. Redrawn November 13: the sheets, the rerun, the last zip and the players&#x27; checklist happened, but the invites had not gone out, so the door moved to the next Thursday and the week ends with the zip made and unsent.</p>
-<div class="week-meta"><span>the user's time: 2.5 h</span><span>Claude build days: 4.25</span></div>
+<div class="week-meta"><span>the user's time: 2.75 h</span><span>Claude build days: 5.25</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -1485,6 +1485,26 @@
 <td class="done">Both branches pushed; zone_4km_checklist.md section 8 written.</td>
 </tr>
 <tr>
+<td class="id">b61</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Sun Nov 15</span>GM flight, the user&#x27;s tool for walking the 4 km zone (Minecraft&#x27;s Creative-mode flying, for a GM account only): /fly and Space twice to take off, Space up, Shift down, Ctrl twice the speed; the server flies the body above its own ground, on the plate and under a 1,000 m ceiling, saves it on the ground below, hides it from mobs and lets it fight nothing. Both halves built and reviewed on feat/gm-flight; no wire change, so the server half is safe against the door zip and the client half stays out of it until the bump after the door.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">Both branches pushed; gm_flight_checklist.md written.<span class="ref">To-Do entry: <code>GM flight: Minecraft Creative-mode movement for geometry tests</code></span></td>
+</tr>
+<tr>
+<td class="id">o27</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Sun Nov 15 (evening; 02:29 UTC on the 16th)</span>(Deployed 11-16 02:29 UTC, boot line build 8d1dc67.) GM flight&#x27;s server half reaches the R720: the server deploy branch fast-forwarded to feat/gm-flight (8d1dc67, the compass build 27d5ea7 plus the flight), pulled, built and restarted with the usual stop, cp and start; no migration, no SQL. No wire change, so the door zip fd17ff1 connects as before and a player sees nothing new.</td>
+<td>user at a desk (the fast-forward on the dev box, then the R720 over SSH); Claude writes the commands</td>
+<td class="needs"><ul><li>everyone logged out</li><li>the R720 over SSH</li></ul></td>
+<td class="time">0.25 h</td>
+<td class="id">b61, o26</td>
+<td class="done">The boot line shows build=8d1dc67, dev_cmds=false and hash 6bedde1c663e.<span class="ref">To-Do entry: <code>GM flight: Minecraft Creative-mode movement for geometry tests</code></span></td>
+</tr>
+<tr>
 <td class="id">o22</td>
 <td><span class="chip operate">Operate</span><span class="chip ms">The pre-door check</span></td>
 <td class="what"><span class="day">Mon Nov 9, night, to Tue Nov 10, morning</span>The fixes the master sheet and the user&#x27;s answers produced on 11-09 reach the game before the pre-door rerun: the server at e358270 (a charmed pet that dies as its charm runs out is no longer handed back as a loot-dropping mob; a weapon proc writes a journal line; a pet&#x27;s owner is on the mob&#x27;s hate list from the pet&#x27;s first swing, decided the same night) redeployed on the R720 with the usual stop, cp and start; the client at d524ecd (the own body&#x27;s facing seeded from the server at login; the swing re-timed after a weapon swap with no target) exported RELEASE, stamped, and zipped. Claude makes the export the same night; the user runs the redeploy and sends the zip.</td>
@@ -1519,7 +1539,7 @@
 <section>
 <h2><span class="week-head"><span>The door, a week later</span><span class="when">W7 &middot; November 16 to 22</span></span></h2>
 <p class="lede">Added November 13: the user held the invites back on the 12th, so the door is Thursday the 19th. Early in the week the pre-door rerun&#x27;s last rows run on the zip, then the share links, the zip and the players&#x27; checklist go out to all four (the plan&#x27;s own advice from October: the network part settled days before the evening), and Thursday evening the door opens.</p>
-<div class="week-meta"><span>the user's time: 14 h</span><span>Claude build days: 0</span></div>
+<div class="week-meta"><span>the user's time: 17 h</span><span>Claude build days: 0</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
@@ -1581,6 +1601,16 @@
 <td class="time">2 h</td>
 <td class="id">o24, o25, o26</td>
 <td class="done">Every row marked; a finding that needs a fix gets a To-Do line the same day, and the zip the friends receive (p6) is the one the sheet was run on or a later one.<span class="ref">checklist: <a href="playtest_notes/zone_4km_checklist.md"><code>zone_4km_checklist.md</code></a></span></td>
+</tr>
+<tr>
+<td class="id">v63</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Mon Nov 16 to Tue Nov 17, beside v62</span>GM flight tried from the Godot editor on the flight branch, the tool the zone sheet&#x27;s ground rows (v62) can be walked with: taking off and steering, where a flier is held (the ground, the ceiling, the plate&#x27;s edge), landing, what ends a flight, mobs ignoring a flier and a flier unable to fight, and walking unchanged. The client half reaches the friends only with the bump after the door.</td>
+<td>user at a desk, a second seat optional</td>
+<td class="needs"><ul><li>checklist gm_flight_checklist.md (on branch feat/gm-flight until the merge): 30 rows to run, 2 of them in a two-seat section</li><li>the R720 on 8d1dc67 (o27)</li><li>the Godot editor on the flight branch&#x27;s worktree (Project_Dawn-zone)</li><li>a GM account</li><li>a second seat for section 6 (optional)</li></ul></td>
+<td class="time">3 h</td>
+<td class="id">o27</td>
+<td class="done">Every row marked; a finding gets a To-Do line the same day.<span class="ref">checklist: <a href="playtest_notes/gm_flight_checklist.md"><code>gm_flight_checklist.md</code></a></span><span class="ref">To-Do entry: <code>GM flight: Minecraft Creative-mode movement for geometry tests</code></span></td>
 </tr>
 <tr>
 <td class="id">v61</td>
@@ -1672,5 +1702,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-15 at repo 4cd1fcf</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-15 at repo a863f5a</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

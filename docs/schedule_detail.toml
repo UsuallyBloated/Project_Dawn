@@ -890,6 +890,30 @@ days = 1.0
 done_when = "Both branches pushed; zone_4km_checklist.md section 8 written."
 
 [[row]]
+id = "b61"
+week = "w6"
+lane = "build"
+day = "Sun Nov 15"
+what = "GM flight, the user's tool for walking the 4 km zone (Minecraft's Creative-mode flying, for a GM account only): /fly and Space twice to take off, Space up, Shift down, Ctrl twice the speed; the server flies the body above its own ground, on the plate and under a 1,000 m ceiling, saves it on the ground below, hides it from mobs and lets it fight nothing. Both halves built and reviewed on feat/gm-flight; no wire change, so the server half is safe against the door zip and the client half stays out of it until the bump after the door."
+who = "Claude"
+days = 1.0
+done_when = "Both branches pushed; gm_flight_checklist.md written."
+todo = "GM flight: Minecraft Creative-mode movement for geometry tests"
+
+[[row]]
+id = "o27"
+week = "w6"
+lane = "operate"
+day = "Sun Nov 15 (evening; 02:29 UTC on the 16th)"
+what = "(Deployed 11-16 02:29 UTC, boot line build 8d1dc67.) GM flight's server half reaches the R720: the server deploy branch fast-forwarded to feat/gm-flight (8d1dc67, the compass build 27d5ea7 plus the flight), pulled, built and restarted with the usual stop, cp and start; no migration, no SQL. No wire change, so the door zip fd17ff1 connects as before and a player sees nothing new."
+who = "user at a desk (the fast-forward on the dev box, then the R720 over SSH); Claude writes the commands"
+hours = 0.25
+needs = ["everyone logged out", "the R720 over SSH"]
+waits_on = ["b61", "o26"]
+done_when = "The boot line shows build=8d1dc67, dev_cmds=false and hash 6bedde1c663e."
+todo = "GM flight: Minecraft Creative-mode movement for geometry tests"
+
+[[row]]
 id = "o26"
 week = "w7"
 lane = "operate"
@@ -913,6 +937,20 @@ hours = 2.0
 needs = ["the compass build on the R720 and in the export (o26)", "a GM account for the cliff row", "a second seat for one row of section 7 and one of section 8"]
 waits_on = ["o24", "o25", "o26"]
 done_when = "Every row marked; a finding that needs a fix gets a To-Do line the same day, and the zip the friends receive (p6) is the one the sheet was run on or a later one."
+
+[[row]]
+id = "v63"
+week = "w7"
+lane = "verify"
+day = "Mon Nov 16 to Tue Nov 17, beside v62"
+checklist = "gm_flight_checklist.md"
+checklist_branch = "feat/gm-flight"
+what = "GM flight tried from the Godot editor on the flight branch, the tool the zone sheet's ground rows (v62) can be walked with: taking off and steering, where a flier is held (the ground, the ceiling, the plate's edge), landing, what ends a flight, mobs ignoring a flier and a flier unable to fight, and walking unchanged. The client half reaches the friends only with the bump after the door."
+who = "user at a desk, a second seat optional"
+needs = ["the R720 on 8d1dc67 (o27)", "the Godot editor on the flight branch's worktree (Project_Dawn-zone)", "a GM account", "a second seat for section 6 (optional)"]
+waits_on = ["o27"]
+done_when = "Every row marked; a finding gets a To-Do line the same day."
+todo = "GM flight: Minecraft Creative-mode movement for geometry tests"
 
 [[row]]
 id = "v61"
