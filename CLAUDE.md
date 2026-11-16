@@ -3834,7 +3834,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   reconciler, since the walking one would snap the body back on every Position at flight speed.
   **BUILT 2026-11-15 (both halves), pending the redeploy, a client build and the playtest**
   (`feat/gm-flight` in both repos, from the deploy tips: server `5a0cf7e` + the review pass
-  `8d1dc67`, client with this entry; `gm_flight_checklist.md`, 28 rows; session note
+  `8d1dc67`, client `a414978` + the review pass `73cfd8e`; `gm_flight_checklist.md`, 30 rows; session note
   `session_2026_11_15_gm_flight.md`, its 5b and 5c the two review passes).
   As designed, every call as recommended. Server: `PerConnection.flight`, the `fly` branch of
   `GmCommand` (`parse_fly_arg`, the dead refused there since the line is whitelisted for the
@@ -3863,6 +3863,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   every client in the field (the door zip included) and can merge and redeploy any time; the
   client half stays out of the door zip (it rewrites `player.gd`'s movement) and reaches the
   user through the editor or a personal export until the bump after the door.
+  **Server half MERGED AND DEPLOYED 2026-11-16 02:29 UTC** (the server deploy branch
+  fast-forwarded to `8d1dc67`; R720 boot line `build="8d1dc67" dev_cmds=false
+  terrain=400x400 cells of 10 m, floor 0, hash 6bedde1c663e`, nobody online at the stop,
+  `saved=0 unsaved=0`). No wire change, so the door zip `fd17ff1` connects as before and a
+  player sees nothing new. The client half stays on `feat/gm-flight`: fly from the Godot
+  editor in `F:\Projects\Project_Dawn-zone`, which `gm_flight_checklist.md` runs on (planner
+  row v63).
 
 ### UI polish
 - [x] **Sticky chat channel, WoW style** — **DONE + playtested 2026-10-27**

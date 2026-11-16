@@ -189,7 +189,7 @@ Held by: `micro_steps_climb_no_face`, `a_step_up_a_face_too_steep_to_climb_is_re
 `a_walk_off_a_ten_metre_ledge_costs_a_fifth_of_max_hp`,
 `a_quit_in_mid_air_still_takes_the_landing`,
 `a_fall_to_zero_leaves_the_corpse_where_the_body_landed`,
-`a_flier_is_held_above_the_ground_on_the_plate_and_under_the_ceiling` (on feat/gm-flight),
+`a_flier_is_held_above_the_ground_on_the_plate_and_under_the_ceiling`,
 `a_diagonal_climbs_no_face`, `nobody_walks_out_of_the_zone`,
 `a_gap_in_the_mountains_is_a_way_out`,
 `a_mob_at_a_face_stops_and_gives_up`,
@@ -205,8 +205,8 @@ them from being anyone else's.
 Held by: `is_gm_gates_dev_commands`, `gm_commands_are_audited_only_when_authorized`,
 `gm_command_burst_is_recorded_whole`, `death_broadcast_is_a_dev_command`,
 `a_flung_gm_lands_for_the_formulas_damage`,
-`a_gm_flies_where_it_steers_and_lands_unhurt` (on feat/gm-flight),
-`mobs_forget_a_flier_and_a_flier_cannot_fight` (on feat/gm-flight)
+`a_gm_flies_where_it_steers_and_lands_unhurt`,
+`mobs_forget_a_flier_and_a_flier_cannot_fight`
 
 ## Client and server agree
 

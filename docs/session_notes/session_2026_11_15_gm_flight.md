@@ -199,4 +199,21 @@ clients and the door zip are untouched (they never send `fly` and always send y 
 CLAUDE.md's To-Do entry (World systems, "GM flight"); `docs/reference/invariants.md` (A5
 gained the flight line and a holder; D1 two holders, tagged `(on feat/gm-flight)` until the
 merge); `docs/reference/commands.md` (`/fly`, the keys, the Test Panel row);
-`docs/playtest_notes/gm_flight_checklist.md` (28 rows); this note and its README row.
+`docs/playtest_notes/gm_flight_checklist.md` (30 rows); this note and its README row.
+
+## 9. The server half deployed
+
+The server deploy branch was fast-forwarded to `8d1dc67` on the dev box and pushed (Claude's
+own attempt at the fast-forward was refused by the permission check, so the user ran it). A
+first restart of the R720 (00:11:38 UTC on Nov 16) came up on `27d5ea7` again, because the
+push had not happened yet: the R720 builds what GitHub's deploy branch holds, nothing else.
+The second, after the push (02:29:59 UTC): boot line `build="8d1dc67" dev_cmds=false
+terrain=400x400 cells of 10 m, floor 0, hash 6bedde1c663e`, 14 corpses loaded, nobody online
+at the stop (`saved=0 unsaved=0`). No migration, no SQL, no wire change: the door zip
+`fd17ff1` connects as before. The client half stays on this branch until the bump after the
+door; the sitting runs from the editor in this worktree.
+
+Records: the To-Do entry, the same text on both client branches so the later merge is clean;
+the three server holders' `(on feat/gm-flight)` tags dropped from `invariants.md` (the tests
+are on the server deploy branch now); the pre-door sheet's section 9 names `8d1dc67`; the
+planner gained b61 (the build), o27 (this redeploy) and v63 (the flight sheet).
