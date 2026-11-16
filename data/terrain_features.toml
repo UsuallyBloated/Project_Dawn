@@ -225,14 +225,17 @@ ramps = { west = 0.0, south = 120.0, north = 120.0, east = 0.0 }
 
 # The way north through the ridge: a floor 60 m wide between walls that rise
 # at 72 degrees. The cut is made before the rolling ground is laid on, with
-# its floor at the plain's own level (0, the hills' and ridges' base at its
-# mouths), so the pass floor follows the rolling ground and meets the road at
-# each mouth without a step; cut to 0 after the rolling ground, it was a
-# trench with a bank at each end.
+# its floor at the plain's level (0), and runs from the plain south of the
+# ridge (z = 770) to the ridge's north foot (z = 1010), so its rounded ends lie
+# on level base ground: the floor then follows the rolling ground and meets
+# the road at each mouth without a step. (Run 20 m further north, its end
+# reached into the crypt's bowl rim and cut a bank there; at floor 6 the floor
+# dropped off the ridge's north foot; the server's compiled-terrain test walks
+# the line through the pass and fails on a step.)
 [[cut]]
 name = "the pass"
 from = [0.0, 770.0]
-to = [0.0, 1030.0]
+to = [0.0, 1010.0]
 half_width = 30.0
 floor = 0.0
 wall_slope = 3.0
