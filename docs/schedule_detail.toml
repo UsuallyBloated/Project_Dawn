@@ -966,6 +966,31 @@ waits_on = ["v60", "o23"]
 done_when = "Every row of the sheet marked; a server fix redeploys, a client fix means one more zip before p6."
 
 [[row]]
+id = "b62"
+week = "w7"
+lane = "build"
+day = "Mon Nov 16"
+what = "Rolling hills, from the user's sizes (about 12, 25 and 35 m, each varied across the map so meadow and hill country alternate): three layers of rolling ground laid over every other feature, so the Wraith Gate cliff and the pass keep their shapes and a crest now usually hides what lies past it. On feat/rolling-hills in both repos; the server suite, every client check and the zone probes green."
+who = "Claude"
+days = 0.5
+done_when = "Both branches pushed; the author report clean; how far a standing player sees, measured before and after."
+todo = "The starting zone at 4 km"
+
+[[row]]
+id = "o28"
+week = "w7"
+lane = "operate"
+day = "Mon Nov 16 or Tue Nov 17 if it rides the door zip; otherwise the first build after the door"
+tentative = true
+what = "The hills reach the game: feat/rolling-hills merged into the deploy branch in both repos, every check on the merged pair, a release export, and the R720 pulled, built and restarted (no SQL: logins, respawns and corpses all land on the ground as it is). If it rides the door, its zip replaces fd17ff1 for p6. The zip and the redeploy go together, since either side alone stands people on the other's ground."
+who = "Claude for the merge and the export; user over SSH for the redeploy"
+hours = 1.0
+needs = ["the user's call: the door zip or after the door", "everyone logged out for the redeploy", "the R720 over SSH"]
+waits_on = ["b62"]
+done_when = "The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331; the export log reads stamped with the merged sha and no -debug mark."
+todo = "The starting zone at 4 km"
+
+[[row]]
 id = "p6"
 week = "w7"
 lane = "people"
