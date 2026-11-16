@@ -132,7 +132,7 @@
 <p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 19: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
 <div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 19<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Nov 16<span class="stat-sub">repo 39dd53c</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Mon Nov 16<span class="stat-sub">repo 397e207</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
 <div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">44.75 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
 <div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">75.8 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
@@ -1602,12 +1602,12 @@
 <td class="id">b60, o25</td>
 <td class="done">The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash 6bedde1c663e; the export log reads stamped with the merged sha and no -debug mark.</td>
 </tr>
-<tr class="tent">
+<tr>
 <td class="id">o28</td>
-<td><span class="chip operate">Operate</span><span class="chip tent">tentative</span></td>
-<td class="what"><span class="day">Mon Nov 16 or Tue Nov 17 if it rides the door zip; otherwise the first build after the door</span>The hills reach the game: feat/rolling-hills merged into the deploy branch in both repos, every check on the merged pair, a release export, and the R720 pulled, built and restarted (no SQL: logins, respawns and corpses all land on the ground as it is). If it rides the door, its zip replaces fd17ff1 for p6. The zip and the redeploy go together, since either side alone stands people on the other&#x27;s ground.</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Mon Nov 16 (the merge and the export); the redeploy before v61 and v62</span>The hills reach the game, in the door zip (the user&#x27;s call): feat/rolling-hills merged into the deploy branch in both repos (server a3b226d, client 397e207), every check on the merged pair, a release export (builds/ProjectDawn-alpha-397e207.zip, which replaces fd17ff1 for p6), and the R720 pulled, built and restarted (no SQL: logins, respawns and corpses all land on the ground as it is). The zip and the redeploy go together, since either side alone stands people on the other&#x27;s ground.</td>
 <td>Claude for the merge and the export; user over SSH for the redeploy</td>
-<td class="needs"><ul><li>the user&#x27;s call: the door zip or after the door</li><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li></ul></td>
+<td class="needs"><ul><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li></ul></td>
 <td class="time">1 h</td>
 <td class="id">b62</td>
 <td class="done">The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331; the export log reads stamped with the merged sha and no -debug mark.<span class="ref">To-Do entry: <code>The starting zone at 4 km</code></span></td>
@@ -1619,7 +1619,7 @@
 <td>user at a desk, a second seat for part</td>
 <td class="needs"><ul><li>checklist zone_4km_checklist.md: 48 rows to run</li><li>the compass build on the R720 and in the export (o26)</li><li>a GM account for the cliff row</li><li>a second seat for one row of section 7 and one of section 8</li></ul></td>
 <td class="time">2 h</td>
-<td class="id">o24, o25, o26</td>
+<td class="id">o24, o25, o26, o28</td>
 <td class="done">Every row marked; a finding that needs a fix gets a To-Do line the same day, and the zip the friends receive (p6) is the one the sheet was run on or a later one.<span class="ref">checklist: <a href="playtest_notes/zone_4km_checklist.md"><code>zone_4km_checklist.md</code></a></span></td>
 </tr>
 <tr>
@@ -1639,7 +1639,7 @@
 <td>user at a desk</td>
 <td class="needs"><ul><li>checklist pre_door_check_checklist.md: 20 rows to run</li><li>the Monday zip</li><li>the R720 on the ammo-slot build</li></ul></td>
 <td class="time">1.5 h</td>
-<td class="id">v60, o23</td>
+<td class="id">v60, o23, o28</td>
 <td class="done">Every row of the sheet marked; a server fix redeploys, a client fix means one more zip before p6.<span class="ref">checklist: <a href="playtest_notes/pre_door_check_checklist.md"><code>pre_door_check_checklist.md</code></a></span></td>
 </tr>
 <tr>
@@ -1722,5 +1722,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-16 at repo 39dd53c</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-16 at repo 397e207</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

@@ -3467,8 +3467,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Superseded the same night by the compass build** (the entry directly below): the zip to send
   is `fd17ff1`, and after its redeploy the boot line reads `hash 6bedde1c663e`; run the sheet
   on that pair.
-  **Rolling hills BUILT 2026-11-16, pending the user's call on timing (the door zip or after
-  the door), the redeploy with a new zip, and the playtest** (user: "Do you think you could add
+  **Rolling hills BUILT 2026-11-16, MERGED AND EXPORTED the same day for the door zip, pending
+  the redeploy and the playtest** (user: "Do you think you could add
   rolling hills? right now the sight line allows a player to see across the entire flat land",
   then "12, 25, 35. Also have variation between those or everything will look static.";
   `feat/rolling-hills` in both repos, client `dfbda40` + `260f42c`, server `86aa72a` + `a3b226d`; session note
@@ -3496,6 +3496,22 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   green. **What changes in play:** line of sight is the server's rule, so a swell now blocks a
   spell, an arrow and an idle mob noticing you. Not built: the GM flight client is on its own
   branch, so the hills branch is walked on foot.
+  **Reviewed before the merge** (the user asked; session note §10): the camera, flight, fling,
+  falls, the edge, perches, the landmarks' visibility from the town and the roads, and spell
+  sight lines all checked on both grounds (a sight line inside 30 m blocked 1.4% of the time,
+  1.2% before; no new face beside walkable ground but six triangles on the plateau ramps'
+  sides). Two visual effects, both left as they are: a set piece stands at one anchor point, so
+  on a slope it floats or sinks up to about a metre at a corner (worst, the Wraith Gate arch's
+  stone base, -1.0 to +0.7 m); and the plateau ramps' side walls are about 5 m taller (8.6 m at
+  the very bottom, about 16% of max HP to step off). **DECIDED 2026-11-16 (user): "they will
+  go into the door zip." Merged the same day** (both deploy branches fast-forwarded to
+  `feat/rolling-hills` and pushed: server `a3b226d`, client `397e207`, the deploy branch's
+  records merged into the hills branch first); all 17 client checks green against the merged
+  server; **the export `builds/ProjectDawn-alpha-397e207.zip`** (stamped `397e207`, a release
+  export from the clean hills worktree, booting clean headless, the DLL unchanged: no wire
+  change), **which replaces `fd17ff1` as the zip for the door**. The zip and the redeploy go
+  together; no SQL. `zone_4km_checklist.md` (its header, the pass row, sections 7 and 8) and
+  `pre_door_check_checklist.md` §9 name the new pair; section 7's passed rows are walked again.
 - [ ] **The compass is mirrored: facing north, east is on your left** *(user, 2026-11-14: "If
   the Greywood ridge is North, then the gnoll raider camp is currently to the west, when it
   should be to the east. Please confirm before changing any thing.")*. **Confirmed the same

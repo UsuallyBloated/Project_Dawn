@@ -13,10 +13,14 @@ bigger world opened a hole.
 `feat/zone-4km`. An older client against this server walks on the old 400 m ground while the
 server stands it on the new one.
 
-**Since the compass build (2026-11-14, section 8), run every section on it:** the zone was a
-mirror image of its map until then, so the ground, the camps and the doors all moved across
-the north-south line. The R720's boot line must read `terrain=400x400 cells of 10 m, floor 0,
-hash 6bedde1c663e`, and the zip must be the one exported from the compass build.
+**Since the compass build (2026-11-14, section 8):** the zone was a mirror image of its map
+until then, so the ground, the camps and the doors all moved across the north-south line.
+
+**Since the rolling hills (2026-11-16), run every section on that build:** the open ground
+rolls in swells of about 12, 25 and 35 m, and the plateau and the pass ride on them. The R720's
+boot line must read `terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331`, and the zip
+must be `ProjectDawn-alpha-397e207.zip`. Section 7's rows passed on the flat compass ground on
+2026-11-15 and are walked again on this one.
 
 | Place | Level | Where (`/loc`: north, west) | Run from the town |
 |---|---|---|---|
@@ -76,8 +80,9 @@ granted`.
   follows you up the pit's wall if you back up it. notes:
 - [ ] **Walk at the Greywood ridge's face** (anywhere `/loc`'s first number is 790) → you stop at its foot;
   holding forward does nothing; no climbing by zigzag or by jumping. notes:
-- [ ] **Take the pass north** (`/loc` 790 to 1010 north, 0 west) → a flat road between two walls, into
-  the wood; the walls cannot be climbed from inside either. notes:
+- [ ] **Take the pass north** (`/loc` 790 to 1010 north, 0 west) → a road between two walls that rises and
+  falls with the ground, no bank or step at either mouth, into the wood; the walls cannot be
+  climbed from inside either. notes:
 - [ ] **Climb the Wraith Gate plateau by its north ramp** (from about `/loc` 470, -1700) → a steady
   climb to the top; the arch stands at the cliff's lip with its light. notes:
 - [ ] **GM: walk off the plateau's west cliff** (60 m) → you die; "You hit the ground hard"
@@ -146,6 +151,10 @@ One visit each: the mobs stand at the set piece, on the ground, and fight normal
 > `terrain=400x400 cells of 10 m, floor 0, hash a9942be36dff`. The zone is now two basins the
 > mountains close round, joined only by the pass; the old square edge is gone. Positions are
 > as `/loc` prints them since the compass build (section 8): north, west.
+>
+> The nine one-seat rows and the journal row passed on 2026-11-15 on the compass ground (hash
+> `6bedde1c663e`). Since the rolling hills (2026-11-16, hash `f569ade0c331`) they are walked
+> again: the mountains' foot now rises from rolling ground, and the pass's floor follows it.
 
 - [x] **Leave by the north gate and follow the road to its end** → it bends east of Bat Hollow,
       runs the pass with no dip going in and no bank coming out (the floor is level with the
@@ -188,7 +197,8 @@ One visit each: the mobs stand at the set piece, on the ground, and fight normal
 ## 8 — The compass (2026-11-14)
 
 > The world is now its map the right way round: north is -z, east +x, so facing north, east is
-> on your right, as on the comp. Needs the boot line `hash 6bedde1c663e` and the compass zip.
+> on your right, as on the comp. Needs the compass build or a later one (since
+> 2026-11-16 the rolling hills: boot line `hash f569ade0c331`, zip `397e207`).
 > At the redeploy every saved position was mirrored with the world, so nobody logs in inside
 > the mountains.
 
