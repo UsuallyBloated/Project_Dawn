@@ -10,7 +10,9 @@ charmed one comes back hostile), and a charm no longer wipes the record of who h
 branch 2026-11-17; the boot line reads `build="f388b96"` and `roamers=on`). Everything but
 section 7's quest text works on the client testers already hold (the door zip `397e207`); the
 quest text needs a client build from `b73a6a9` or later. No protocol change, no migration, no
-SQL.
+SQL. **Deployed 2026-11-17 16:55 UTC:** the R720's journal read `build="f388b96" dev_cmds=false roamers=on`
+and then `wandering wildlife roamers=on slots=66 animals=84 roam_map_share=51.1%`, so the two
+Setup rows can be marked from that paste.
 
 | Band | Where (from the town) | Animals (level; temper) |
 |---|---|---|

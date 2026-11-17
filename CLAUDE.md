@@ -2173,7 +2173,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `a_second_charm_drops_the_first_which_turns_on_the_caster` (fails with the release removed)
   and `a_new_pet_replaces_the_old_and_a_charmed_one_comes_back_angry` (a summoned pet, a
   living charmed one and a dead charmed one); the 18 pet integration tests green. Rule C3 in
-  `invariants.md`.
+  `invariants.md`. **DEPLOYED 2026-11-17 16:55 UTC** with the wildlife build (R720 boot line
+  `build="f388b96" dev_cmds=false roamers=on`); `wandering_wildlife_checklist.md` section 9 is
+  runnable now.
 - [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
   ticked on the integration test** (server `f58b796`,
   `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
@@ -3731,6 +3733,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   stunned leader's followers keep following; wanderers stand still on an empty server and are
   placed afresh at a restart; a pack split by a cliff can stay split for a while; no species
   shape or tint on the client.
+  **DEPLOYED 2026-11-17 16:55 UTC** (R720 boot line `build="f388b96" dev_cmds=false roamers=on
+  terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331`, then `wandering wildlife
+  roamers=on slots=66 animals=84 roam_map_share=51.1%`; nobody online at the stop, `saved=0
+  unsaved=0`, 14 corpses loaded, `ledger check mismatches=0`);
+  `wandering_wildlife_checklist.md` is runnable now on the door zip `397e207`.
 - [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
   a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
   height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at

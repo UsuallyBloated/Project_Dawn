@@ -187,3 +187,29 @@ and hand you the redeploy"): "go ahead".
 
 **Not done:** the redeploy (the user's, over SSH) and `wandering_wildlife_checklist.md`.
 Nothing is ticked.
+
+## 7. The redeploy, 2026-11-17 16:55 UTC
+
+The user redeployed and pasted the journal. Read from it:
+
+- The stop at 16:54:04 was clean and nobody was online: `connections=0 pending_saves=0`,
+  `world closed saved=0 unsaved=0`. The old process (`a3b226d`) had run 18 h 19 min.
+- The boot line at 16:55:06: `build="f388b96" dev_cmds=false roamers=on
+  terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331` (the rolling hills' ground,
+  unchanged, as expected: the wildlife build touches no terrain).
+- `wandering wildlife roamers=on slots=66 animals=84 roam_map_share=51.1%`: the same slots,
+  head count and roam map share as the dev box, so the host compiled the same ground and
+  the same table.
+- `loaded persisted corpses count=14`, `ledger swept carried=0 deleted=0`, `ledger check
+  mismatches=0`.
+- The rate-limit warning is the standing one (`PD_NO_RATE_LIMIT=1` on the private tailnet).
+
+Recorded: DEPLOYED on both To-Do entries, the design doc, the index, planner row o29, the
+wildlife checklist's header and the pre-door sheet's section 9 header (which named
+`a3b226d`). The planner page republished. `wandering_wildlife_checklist.md` is runnable now
+on the door zip; nothing is ticked.
+
+One thing the redeploy changes for the other sheets: anyone walking to a camp now crosses
+ground with animals on it (field rats within 6 m by the town, wolf pairs past 450 m), so a
+pre-door or zone row that walks out may pick up a fight the row's author did not have in
+mind. `PD_NO_ROAMERS=1` and a restart removes them for a sitting if that gets in the way.

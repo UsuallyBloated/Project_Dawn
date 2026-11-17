@@ -5,7 +5,9 @@ three times against the code by Opus and a fourth time by Fable (section 10); **
 (night, unattended) on `feat/wandering-wildlife` in both repos; MERGED AND PUSHED 2026-11-17
 (user: "go ahead"): both deploy branches fast-forwarded, server `f388b96`, client `b73a6a9`**
 (section 11 is the as-built summary; where it differs from the body the body has been
-corrected in place). Pending the redeploy and `wandering_wildlife_checklist.md`.
+corrected in place). **DEPLOYED 2026-11-17 16:55 UTC** (R720 boot line
+`build="f388b96" dev_cmds=false roamers=on`, then `wandering wildlife roamers=on slots=66
+animals=84 roam_map_share=51.1%`). Pending `wandering_wildlife_checklist.md`.
 **Asked for (user, 2026-11-15):** "We need wandering NPCs to fill the open spaces. Wolves,
 bears, snakes, rats etc."
 
@@ -627,7 +629,10 @@ A fourth pass (Fable, 2026-11-16, before and during the build):
 `feat/wandering-wildlife` in `F:\Projects\Project_Dawn-wildlife` (`b73a6a9`: the rat quest's
 target and text, the night hours named in `time_of_day.gd` with their lockstep pair, the docs
 and the checklist). **Merged 2026-11-17:** both deploy branches fast-forwarded to those commits
-and pushed, all 17 client checks green on the merged pair; not yet deployed.
+and pushed, all 17 client checks green on the merged pair. **Deployed 2026-11-17 16:55 UTC:**
+the R720's boot line read `build="f388b96" dev_cmds=false roamers=on` and its
+`wandering wildlife` line `slots=66 animals=84 roam_map_share=51.1%`, the same numbers as the
+dev box.
 
 **Deploy shape:** the server half needs no client change, no wire change and no migration: it
 reaches players with a redeploy and works with the door zip. The client half is cosmetic (a
