@@ -3738,6 +3738,27 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   roamers=on slots=66 animals=84 roam_map_share=51.1%`; nobody online at the stop, `saved=0
   unsaved=0`, 14 corpses loaded, `ledger check mismatches=0`);
   `wandering_wildlife_checklist.md` is runnable now on the door zip `397e207`.
+- [ ] **Obstacle collision: walls, trees and set pieces that stop a body** *(user, 2026-11-17:
+  "Currently players are able to run through structures and trees etc.. We need something for
+  collision. Can you write a plan for this? or perhaps Godot has something built in?")*.
+  **DESIGNED 2026-11-17: `docs/design/obstacle_collision.md`, eight decisions waiting on the
+  user (its section 9), nothing built.** Godot's built-in collision (a `StaticBody3D` per wall
+  and trunk) would stop the client's body only: the server moves every player from the
+  direction sent, so it would walk the player through the wall and the client would snap after
+  it (invariant L2), and a modified client deletes its own walls. The shape: every solid thing
+  declares a flat footprint (a circle or a turned box, a column of any height, so nothing is
+  stood on or jumped over); one exporter writes them to the server's `data/obstacles.toml`
+  (compiled in, hash and boot line, as the terrain) and to the client's own copy; one rule on
+  both sides (a body inside a footprint grown by its radius is moved out the shortest way,
+  which is a slide), the GDScript port held to the Rust by a fixtures check; every placement
+  (login, port, summon, spawn, landing) goes to the nearest free point. Counted today: 13,349
+  trees and 860 boulders planted, a walled town with four 9 m gates and about 35 buildings,
+  twenty set pieces. Slices: 0 the data and checks with nothing colliding; 1 players stop; 2
+  walls and buildings block sight; 3 mobs and pets collide (slide, with the existing 8 s
+  give-up and evade for a mob a wall holds; no pathfinder); 4 the camera stops at buildings
+  (the one job Godot's own collision gets). No wire change, no migration; both sides move
+  together from slice 1. Closes the wall half of exploit-audit finding 10 (b). Recommended
+  after the door.
 - [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
   a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
   height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at

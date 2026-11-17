@@ -10,10 +10,11 @@ extends ZoneDressing
 # Elara's stall, Brom's shop front and Thalia's bank. Outside the walls: the
 # fenced farm strips, a barn, and the windmill on the south road.
 #
-# Placeholder shapes, scenery only (see zone_dressing.gd): nothing collides,
-# so the walls are walked through until the server knows obstacles. The NPCs
-# themselves are nodes in world.tscn at the server's positions (npcs.toml);
-# this script only dresses the ground round them.
+# Placeholder shapes (see zone_dressing.gd). The walls, the houses and the
+# fences stand in a body's way through the zone's obstacle data, so the gates
+# are the ways in and each fenced field has a gateway. The NPCs themselves are
+# nodes in world.tscn at the server's positions (npcs.toml); this script only
+# dresses the ground round them.
 
 const WALL_HEIGHT := 6.5
 const WALL_THICK := 2.4
@@ -31,6 +32,11 @@ const HOUSE_LOTS := [
 	Vector2(55, 59), Vector2(77, 68), Vector2(42, 80),
 ]
 const MILL_BLADE_SPEED := 0.4
+# A fence is built in stretches this long, each standing on its own ground, so
+# it follows a slope and is a fence all the way along.
+const FENCE_STRETCH := 3.0
+# The gateway left in each field's fence, on the side nearest the town.
+const FIELD_GATEWAY := 4.0
 
 var _mill_blades: Node3D
 
@@ -211,8 +217,15 @@ func _build_farms() -> void:
 	for field in ZoneLayout.FIELDS:
 		var r: Rect2 = (field["rect"] as Rect2).grow(2.0)
 		var corners := [r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)]
+		# The side whose middle is nearest the town gets the gateway.
+		var gate_side := 0
 		for i in 4:
-			ZoneProps.fence(b, on_ground(corners[i]), on_ground(corners[(i + 1) % 4]))
+			var mid: Vector2 = (corners[i] + corners[(i + 1) % 4]) * 0.5
+			var best: Vector2 = (corners[gate_side] + corners[(gate_side + 1) % 4]) * 0.5
+			if mid.length_squared() < best.length_squared():
+				gate_side = i
+		for i in 4:
+			_fence_run(b, corners[i], corners[(i + 1) % 4], FIELD_GATEWAY if i == gate_side else 0.0)
 		# A stook of sheaves at one corner.
 		b.cone(stand(r.position + Vector2(5, 5)), 1.6, 2.6, 6, ZoneProps.ROOF_THATCH)
 		b.cone(stand(r.end - Vector2(6, 4)), 1.3, 2.2, 6, ZoneProps.ROOF_THATCH)
@@ -228,6 +241,19 @@ func _build_farms() -> void:
 	ZoneProps.house(barn, stand(Vector2(-205, -82), -PI * 0.5), 14.0, 9.0, 5.0, 4.4, 1, ZoneProps.ROOF_THATCH)
 	ZoneProps.shed(barn, stand(Vector2(-192, -100)), 7.0, 5.0, 2.6, 1.8, ZoneProps.ROOF_THATCH)
 	add_piece(barn, "Barn", 2500.0)
+
+
+# A fence from `a` to `c` (map points) in stretches that each stand on their
+# own ground, with a gap `gateway` metres wide in its middle (0 for none).
+func _fence_run(b: LowPoly, a: Vector2, c: Vector2, gateway: float) -> void:
+	var length := a.distance_to(c)
+	var stretches := maxi(1, int(round(length / FENCE_STRETCH)))
+	for k in stretches:
+		var from := float(k) / stretches
+		var to := float(k + 1) / stretches
+		if gateway > 0.0 and (to * length) > (length - gateway) * 0.5 and (from * length) < (length + gateway) * 0.5:
+			continue
+		ZoneProps.fence(b, on_ground(a.lerp(c, from)), on_ground(a.lerp(c, to)))
 
 
 func _build_mill() -> void:

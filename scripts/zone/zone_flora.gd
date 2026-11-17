@@ -9,10 +9,11 @@ extends Node3D
 # of one kind are one MultiMesh, so 25,000 trees are a few hundred draw calls,
 # and a far tree is a five-triangle cone until the camera is near.
 #
-# Scenery only: nothing here collides, and the server knows none of it (it
-# knows the ground). Keep it that way until the server has obstacles: a trunk
-# the client stopped at the server would walk through, and the two would
-# disagree about where the player stands.
+# Drawn only: no node here is a physics body. What stops a player at a trunk
+# or a boulder is the zone's obstacle data (zone_obstacles.gd), which the
+# server holds too; tools/export_obstacles.gd makes it from what is planted
+# here (`placed_kinds`, `placed_transforms`) and each kind's solids
+# (`kind_volumes`).
 
 # The scatter is bucketed into squares this wide; each is culled as one.
 const CELL := 400.0
@@ -56,6 +57,9 @@ var _grown_fields: Array[Rect2] = []
 # Where everything was planted (world positions), for tools/check_zone_scenery.gd:
 # a MultiMesh cannot be read back under the headless renderer.
 var _planted := PackedVector3Array()
+# The kind and the world transform of everything planted, in the same order.
+var _placed_kinds := PackedStringArray()
+var _placed_transforms: Array[Transform3D] = []
 
 
 func _ready() -> void:
@@ -71,6 +75,8 @@ func build() -> void:
 		remove_child(child)
 		child.free()
 	_planted.clear()
+	_placed_kinds.clear()
+	_placed_transforms.clear()
 	var started := Time.get_ticks_msec()
 	_build_block_grid()
 	var clump := FastNoiseLite.new()
@@ -228,6 +234,21 @@ func planted() -> PackedVector3Array:
 	return _planted
 
 
+# The kind of everything planted, and its world transform, in that same order.
+func placed_kinds() -> PackedStringArray:
+	return _placed_kinds
+
+
+func placed_transforms() -> Array[Transform3D]:
+	return _placed_transforms
+
+
+# The solids a kind's near mesh is made of (LowPoly.volumes), in the mesh's
+# own space: what one planted thing puts in a body's way.
+static func kind_volumes(kind: String) -> Array:
+	return _build(kind).volumes()
+
+
 # One (cell, kind) bucket as a MultiMesh at the (world) cell's middle, and a
 # second one of the kind's far mesh past its `near` distance.
 func _emit(key: String, bucket: Dictionary, terrain: TerrainMesh) -> void:
@@ -250,6 +271,8 @@ func _emit(key: String, bucket: Dictionary, terrain: TerrainMesh) -> void:
 			var xf: Transform3D = placements[i]
 			if not far:
 				_planted.append(terrain.position + xf.origin)
+				_placed_kinds.append(kind)
+				_placed_transforms.append(Transform3D(xf.basis, terrain.position + xf.origin))
 			xf.origin += terrain.position - origin
 			mm.set_instance_transform(i, xf)
 			mm.set_instance_color(i, tints[i])
@@ -275,6 +298,11 @@ func _mesh(mesh_name: String) -> Mesh:
 
 
 static func _build_mesh(mesh_name: String) -> Mesh:
+	return _build(mesh_name).mesh()
+
+
+# The builder holding one kind's solids (its mesh, and what they record).
+static func _build(mesh_name: String) -> LowPoly:
 	var b := LowPoly.new(hash(mesh_name))
 	var up := Vector3.UP
 	match mesh_name:
@@ -333,4 +361,4 @@ static func _build_mesh(mesh_name: String) -> Mesh:
 			b.blob(LowPoly.at(Vector3(0.3, 0.28, 1.7)), Vector3(0.34, 0.3, 0.4), 0.12, BONE)
 		_:
 			push_error("ZoneFlora: no mesh called %s" % mesh_name)
-	return b.mesh()
+	return b

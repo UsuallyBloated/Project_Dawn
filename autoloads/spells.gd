@@ -485,18 +485,24 @@ func _target_out_of_reach(spell: SpellData) -> bool:
 		return false
 	return pair[0].global_position.distance_to(pair[1].global_position) > spell.reach()
 
-# True when the terrain stands between the caster and the target of a checked
-# cast. Both ends are the feet raised by LOS_HEIGHT, as the server's can_see
-# raises them; the ray asks for the terrain layer alone.
+# True when the terrain, or anything that stands on it, is between the caster
+# and the target of a checked cast. Both ends are the feet raised by
+# LOS_HEIGHT, as the server's can_see raises them. The ground is asked with a
+# ray on the terrain layer alone; a wall, a trunk, a rock or a crown with the
+# zone's obstacle data and the server's own rule for it (zone_obstacles.gd).
 func _target_out_of_sight(spell: SpellData) -> bool:
 	var pair := _checked_target(spell)
 	if pair.is_empty():
 		return false
 	var up := Vector3(0.0, LOS_HEIGHT, 0.0)
-	var params := PhysicsRayQueryParameters3D.create(
-		pair[0].global_position + up, pair[1].global_position + up, TERRAIN_LAYER_MASK)
+	var from := pair[0].global_position + up
+	var to := pair[1].global_position + up
+	var params := PhysicsRayQueryParameters3D.create(from, to, TERRAIN_LAYER_MASK)
 	params.collide_with_areas = false
-	return not pair[0].get_world_3d().direct_space_state.intersect_ray(params).is_empty()
+	if not pair[0].get_world_3d().direct_space_state.intersect_ray(params).is_empty():
+		return true
+	var obstacles := ZoneObstacles.shared()
+	return obstacles != null and obstacles.sight_blocked(from, to)
 
 # The server refused a cast that had ALREADY completed here
 # (target out of reach or gone, a spell the server has no effect for). It took

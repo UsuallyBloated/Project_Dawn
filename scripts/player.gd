@@ -117,6 +117,10 @@ var _heading_train_accum: float = 0.0
 
 # Track 2 — server-authoritative movement state.
 var _server_pos_target: Vector3 = Vector3.ZERO
+# What stands on the ground (trees, rocks, walls): the zone's obstacle data
+# and the server's own rule for it, run on this body so it stops where the
+# server will stop it. Null when the data did not load.
+var _obstacles: ZoneObstacles
 var _last_server_seq: int = -1
 var _received_first_pos: bool = false
 var _move_send_accum: float = 0.0
@@ -141,6 +145,7 @@ func _ready() -> void:
 	# Swap the capsule for the local player's race model (no-op for races
 	# without a custom model). Remote peers do the same from their own race.
 	RaceModel.apply(visual, PlayerStats.race)
+	_obstacles = ZoneObstacles.shared()
 
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	spring_arm.spring_length = THIRD_PERSON_DISTANCE
@@ -480,6 +485,9 @@ func _physics_process(delta: float) -> void:
 			Net.send_movement(server_dir, _jump_pending, rotation.y)
 			_jump_pending = false
 
+	# Where the body stood when this frame began (after any snap the server
+	# sent between frames): the start of the step the obstacles judge below.
+	var frame_start := Vector2(global_position.x, global_position.z)
 	move_and_slide()
 
 	# Track 2 — blend horizontal position toward server truth. Local prediction
@@ -492,6 +500,17 @@ func _physics_process(delta: float) -> void:
 		var blend_x := lerpf(global_position.x, _server_pos_target.x, blend)
 		var blend_z := lerpf(global_position.z, _server_pos_target.z, blend)
 		global_position = Vector3(blend_x, global_position.y, blend_z)
+
+	# What stands on the ground. The frame's whole movement (the step above and
+	# the blend, which pulls in a straight line that can cut through a trunk)
+	# is judged by the server's own rule: turned aside or stopped at a tree, a
+	# rock or a wall, the body sliding along it. The server does the same to
+	# the step it takes for this player, so the two agree; this is only the
+	# picture. No scenery is a physics body (invariant L2).
+	if _obstacles != null:
+		var held := _obstacles.resolve(frame_start, Vector2(global_position.x, global_position.z), ZoneObstacles.BODY_RADIUS)
+		if _obstacles.last_deflected:
+			global_position = Vector3(held.x, global_position.y, held.y)
 
 func _on_world_position(id: int, pos: Vector3, _vel: Vector3, yaw: float, sequence: int) -> void:
 	# Track 2 — own-player reconciliation only. Other-player replication is Track 3.

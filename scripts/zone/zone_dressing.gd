@@ -5,8 +5,11 @@ extends Node3D
 # The shared half of the zone's set pieces (zone_town.gd, zone_landmarks.gd):
 # where the ground is, how a built LowPoly mesh becomes a node, and the three
 # things that are not meshes: a fire's light, its flicker and a column of
-# smoke. Everything a subclass builds is scenery: it stands on the
-# TerrainMesh's ground, collides with nothing, and the server knows none of it.
+# smoke. Everything a subclass builds stands on the TerrainMesh's ground and
+# is drawn only: no node here is a physics body. What stops a player is the
+# zone's obstacle data (zone_obstacles.gd), exported from the solids every
+# piece added through `add_piece` recorded (`volumes()`); a glow (fire, magic
+# light) is added through `add_glow` and stands in nobody's way.
 
 const SMOKE_COLOR := Color(0.62, 0.60, 0.57, 0.30)
 # Lights are dropped past this distance, fading over the stretch before it.
@@ -20,6 +23,8 @@ var _terrain: TerrainMesh
 var _flames: Array = []
 var _smoke_mesh: QuadMesh
 var _clock := 0.0
+# The solids of every piece added so far (LowPoly.volumes), in this node's space.
+var _volumes: Array = []
 
 
 func _ready() -> void:
@@ -43,6 +48,11 @@ func _ready() -> void:
 # The subclass builds its pieces here.
 func _build() -> void:
 	pass
+
+
+# Every solid this node's pieces are made of, for tools/export_obstacles.gd.
+func volumes() -> Array:
+	return _volumes
 
 
 func _process(delta: float) -> void:
@@ -85,6 +95,7 @@ func add_piece(b: LowPoly, piece_name: String, range_end: float = 0.0) -> MeshIn
 		return null
 	var mi := b.instance(piece_name, range_end)
 	add_child(mi)
+	_volumes.append_array(b.volumes())
 	return mi
 
 
