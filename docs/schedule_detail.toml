@@ -890,6 +890,30 @@ days = 1.0
 done_when = "Both branches pushed; zone_4km_checklist.md section 8 written."
 
 [[row]]
+id = "b61"
+week = "w6"
+lane = "build"
+day = "Sun Nov 15"
+what = "GM flight, the user's tool for walking the 4 km zone (Minecraft's Creative-mode flying, for a GM account only): /fly and Space twice to take off, Space up, Shift down, Ctrl twice the speed; the server flies the body above its own ground, on the plate and under a 1,000 m ceiling, saves it on the ground below, hides it from mobs and lets it fight nothing. Both halves built and reviewed on feat/gm-flight; no wire change, so the server half is safe against the door zip and the client half stays out of it until the bump after the door."
+who = "Claude"
+days = 1.0
+done_when = "Both branches pushed; gm_flight_checklist.md written."
+todo = "GM flight: Minecraft Creative-mode movement for geometry tests"
+
+[[row]]
+id = "o27"
+week = "w6"
+lane = "operate"
+day = "Sun Nov 15 (evening; 02:29 UTC on the 16th)"
+what = "(Deployed 11-16 02:29 UTC, boot line build 8d1dc67.) GM flight's server half reaches the R720: the server deploy branch fast-forwarded to feat/gm-flight (8d1dc67, the compass build 27d5ea7 plus the flight), pulled, built and restarted with the usual stop, cp and start; no migration, no SQL. No wire change, so the door zip fd17ff1 connects as before and a player sees nothing new."
+who = "user at a desk (the fast-forward on the dev box, then the R720 over SSH); Claude writes the commands"
+hours = 0.25
+needs = ["everyone logged out", "the R720 over SSH"]
+waits_on = ["b61", "o26"]
+done_when = "The boot line shows build=8d1dc67, dev_cmds=false and hash 6bedde1c663e."
+todo = "GM flight: Minecraft Creative-mode movement for geometry tests"
+
+[[row]]
 id = "o26"
 week = "w7"
 lane = "operate"
@@ -911,8 +935,22 @@ what = "The 4 km zone walked: the town and its four gates, the ground the server
 who = "user at a desk, a second seat for part"
 hours = 2.0
 needs = ["the compass build on the R720 and in the export (o26)", "a GM account for the cliff row", "a second seat for one row of section 7 and one of section 8"]
-waits_on = ["o24", "o25", "o26"]
+waits_on = ["o24", "o25", "o26", "o28"]
 done_when = "Every row marked; a finding that needs a fix gets a To-Do line the same day, and the zip the friends receive (p6) is the one the sheet was run on or a later one."
+
+[[row]]
+id = "v63"
+week = "w7"
+lane = "verify"
+day = "Mon Nov 16 to Tue Nov 17, beside v62"
+checklist = "gm_flight_checklist.md"
+checklist_branch = "feat/gm-flight"
+what = "GM flight tried from the Godot editor on the flight branch, the tool the zone sheet's ground rows (v62) can be walked with: taking off and steering, where a flier is held (the ground, the ceiling, the plate's edge), landing, what ends a flight, mobs ignoring a flier and a flier unable to fight, and walking unchanged. The client half reaches the friends only with the bump after the door."
+who = "user at a desk, a second seat optional"
+needs = ["the R720 on 8d1dc67 (o27)", "the Godot editor on the flight branch's worktree (Project_Dawn-zone)", "a GM account", "a second seat for section 6 (optional)"]
+waits_on = ["o27"]
+done_when = "Every row marked; a finding gets a To-Do line the same day."
+todo = "GM flight: Minecraft Creative-mode movement for geometry tests"
 
 [[row]]
 id = "v61"
@@ -924,19 +962,137 @@ what = "The pre-door rerun's last rows, on a fresh plain account on the Monday z
 who = "user at a desk"
 hours = 1.5
 needs = ["the Monday zip", "the R720 on the ammo-slot build"]
-waits_on = ["v60", "o23"]
+waits_on = ["v60", "o23", "o28"]
 done_when = "Every row of the sheet marked; a server fix redeploys, a client fix means one more zip before p6."
+
+[[row]]
+id = "b62"
+week = "w7"
+lane = "build"
+day = "Mon Nov 16"
+what = "Rolling hills, from the user's sizes (about 12, 25 and 35 m, each varied across the map so meadow and hill country alternate): three layers of rolling ground laid over every other feature, so the Wraith Gate cliff and the pass keep their shapes and a crest now usually hides what lies past it. On feat/rolling-hills in both repos; the server suite, every client check and the zone probes green."
+who = "Claude"
+days = 0.5
+done_when = "Both branches pushed; the author report clean; how far a standing player sees, measured before and after."
+todo = "The starting zone at 4 km"
+
+[[row]]
+id = "o28"
+week = "w7"
+lane = "operate"
+day = "Mon Nov 16 (the merge and the export); the redeploy before v61 and v62"
+what = "The hills reach the game, in the door zip (the user's call): feat/rolling-hills merged into the deploy branch in both repos (server a3b226d, client 397e207), every check on the merged pair, a release export (builds/ProjectDawn-alpha-397e207.zip, which replaces fd17ff1 for p6), and the R720 pulled, built and restarted (no SQL: logins, respawns and corpses all land on the ground as it is). The zip and the redeploy go together, since either side alone stands people on the other's ground."
+who = "Claude for the merge and the export; user over SSH for the redeploy"
+hours = 1.0
+needs = ["everyone logged out for the redeploy", "the R720 over SSH"]
+waits_on = ["b62"]
+done_when = "The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331; the export log reads stamped with the merged sha and no -debug mark."
+todo = "The starting zone at 4 km"
+
+[[row]]
+id = "b63"
+week = "w7"
+lane = "build"
+day = "Mon Nov 16 (night)"
+what = "Wandering wildlife: animals that live in a region instead of at a spawn point, to fill the open ground between the camps. 70 by day in five level bands (rats and grass snakes by the town, wolf packs, bears and vipers further out) and 14 at night (bats, shades); they walk short legs and pause, notice players as they pass, go home to where a fight began, and wolves keep to a pack. With it the user's pet rule: one pet at a time, and a charmed creature let go comes back hostile. Built on feat/wandering-wildlife in both repos; merged into the deploy branches on Nov 17 (row o29). Server only: no zip, no SQL, and an off switch (PD_NO_ROAMERS=1)."
+who = "Claude"
+days = 1.0
+done_when = "Both branches committed; the server suite and every client check green; each rule's planted fault caught by a test; the design doc and the session note say what was built."
+todo = "Wandering wildlife to fill the open ground"
+
+# d12 (the wandering wildlife before the door; the id reused after the compass) was answered
+# on 2026-11-17 ("go ahead": push, merge and redeploy before Thursday). The row left the plan;
+# o29 and v64 carry the work.
+
+[[row]]
+id = "o29"
+week = "w7"
+lane = "operate"
+day = "Tue Nov 17 (merged, pushed and deployed 16:55 UTC)"
+what = "(Merged and pushed 11-17: server f388b96, client b73a6a9, both deploy branches fast-forwarded, all 17 client checks green on the merged pair. Deployed 11-17 16:55 UTC: the R720's boot line reads build=f388b96, dev_cmds=false and roamers=on, then wandering wildlife slots=66 animals=84; nobody was online at the stop.) The animals reach the game: feat/wandering-wildlife pushed and merged into the deploy branch in both repos, every check on the merged pair, and the R720 pulled, built and restarted. No SQL and no new zip: the door zip (397e207) works with it as it is; the client branch carries only a quest line's text and tooling."
+who = "Claude for the merge; user over SSH for the redeploy"
+hours = 0.5
+needs = ["everyone logged out for the redeploy", "the R720 over SSH"]
+waits_on = ["b63"]
+done_when = "The boot line shows build=f388b96, dev_cmds=false and roamers=on, and the next line reads wandering wildlife slots=66 animals=84."
+todo = "Wandering wildlife to fill the open ground"
+
+[[row]]
+id = "v64"
+week = "w7"
+lane = "verify"
+day = "Tue Nov 17 or Wed Nov 18 (runnable since the redeploy of Nov 17, 16:55 UTC)"
+checklist = "wandering_wildlife_checklist.md"
+what = "The wandering wildlife walked: animals in each band and that they walk, being noticed in passing and the passive ones leaving you alone, the short walk home after a pull, loot and quest credit (wolves count, field rats do not), packs fighting together and refilling, respawns never beside you, bats and shades at night and gone by day, the off switch, and one pet at a time with a charmed creature coming back hostile."
+who = "user at a desk, a second seat for two sections"
+hours = 3.0
+needs = ["the R720 on the wildlife build (o29)", "a GM account", "an Enchanter and a Necromancer for section 9", "a second seat for sections 5 and 9"]
+waits_on = ["o29"]
+done_when = "Every row marked; a finding gets a To-Do line the same day; if the animals misbehave before the door, PD_NO_ROAMERS=1 in the server's .env and a restart turns them off."
+todo = "Wandering wildlife to fill the open ground"
+
+[[row]]
+id = "b64"
+week = "w7"
+lane = "build"
+day = "Tue Nov 17"
+what = "Obstacle collision (the user asked on the 17th, answered the plan's eight calls and said to build it now): trees, bushes, rocks, walls, houses, tents, fences and everything else solid stop a body, block a spell or an arrow when they stand in the line, and the camera stops at walls and buildings. The server decides all of it and the client runs the same rule on the same data, so a modified client walks into the server's walls. Monsters and pets are stopped by the same things and walk round a wall. Nothing can be stood on or jumped over yet. Built on feat/obstacles in both repos, then reviewed (ten findings, nine fixed)."
+who = "Claude"
+days = 1.0
+done_when = "Both branches committed; the server suite and every client check green; each rule's test fails with the rule switched off; the design doc and the session note say what was built."
+todo = "Obstacle collision: trees, rocks, walls and set pieces"
+
+[[row]]
+id = "o30"
+week = "w7"
+lane = "operate"
+day = "Tue Nov 17 (merged, pushed and exported); the redeploy before v65 and before the zip goes out (p6)"
+what = "(Merged and pushed 11-17 on the user's go: server 87c58fe, client a1a154e, all 19 client checks green on the merged pair; a release export, builds/ProjectDawn-alpha-a1a154e.zip, booted and checked from inside the export.) Collision reaches the game: the R720 pulled, built and restarted, and the new zip is the one for the door. It replaces 54ca951 and 397e207 and also carries group-mates' levels. The zip and the redeploy go together: the new zip on the old server pulls a body through every tree, the old zip on the new server pulls it back at every tree. No SQL."
+who = "Claude for the merge and the export; user over SSH for the redeploy"
+hours = 0.5
+needs = ["everyone logged out for the redeploy", "the R720 over SSH"]
+waits_on = ["b64"]
+done_when = "The boot line shows build=87c58fe, dev_cmds=false, roamers=on and obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4."
+todo = "Obstacle collision: trees, rocks, walls and set pieces"
+
+[[row]]
+id = "v65"
+week = "w7"
+lane = "verify"
+day = "Tue Nov 17 or Wed Nov 18, after the redeploy (o30). Sections 1, 2, 4 and 5 first if time is short before Thursday."
+checklist = "obstacle_collision_checklist.md"
+what = "Collision walked: the town's walls, gates and houses, the wood, what cannot be jumped, casting past and through things, monsters and pets coming round walls and trees, logging in and arriving beside things, the camera, and a second seat's view of it. The Test Panel's Obstacle Outlines button draws every boundary. This is the largest change to how a body moves since the hills and nobody has walked it yet, so it wants a sitting before the friends hold the zip."
+who = "user at a desk, a second seat for sections 5 and 8"
+hours = 5.5
+needs = ["the R720 on the collision build (o30)", "the zip a1a154e on every seat", "a GM account", "a caster and a pet class", "a second seat for sections 5 and 8"]
+waits_on = ["o30"]
+done_when = "Every row marked; a finding gets a To-Do line the same day; anything a friend would be stuck on or pulled through is fixed or the zip is held."
+todo = "Obstacle collision: trees, rocks, walls and set pieces"
+
+[[row]]
+id = "v66"
+week = "w7"
+lane = "verify"
+day = "Tue Nov 17 or Wed Nov 18, after the redeploy (o30)"
+checklist = "group_levels_checklist.md"
+what = "Group-mates' levels and classes on the group panel (built and merged on the 17th by another session, in the same zip and the same redeploy as collision): each member's row reads its level and class, never Lv 0, and follows a level gained while grouped."
+who = "user at a desk, a second seat"
+hours = 1.0
+needs = ["the R720 on the new build (o30)", "the zip a1a154e on both seats", "two accounts in one group"]
+waits_on = ["o30"]
+done_when = "Every row marked; a finding gets a To-Do line the same day."
+todo = "Other players' levels"
 
 [[row]]
 id = "p6"
 week = "w7"
 lane = "people"
 day = "Tue Nov 17"
-what = "The share links, the Monday zip (the players' checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday."
+what = "The share links, the zip (builds/ProjectDawn-alpha-a1a154e.zip since Nov 17, the players' checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday. The zip works only with the R720 on the collision build (o30)."
 who = "user at a desk, friends"
 hours = 1.0
-needs = ["a share link from the Tailscale admin console (share the machine, never the tailnet: inviting_a_player.md step 2)", "the zip in builds/"]
-waits_on = ["v61"]
+needs = ["a share link from the Tailscale admin console (share the machine, never the tailnet: inviting_a_player.md step 2)", "the zip in builds/", "the R720 redeployed (o30)"]
+waits_on = ["v61", "o30"]
 done_when = "All four shares accepted in the admin console; each friend's /version reads the Monday zip's stamp."
 
 # ---------------------------------------------------------------------------------------

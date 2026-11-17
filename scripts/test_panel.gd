@@ -200,6 +200,9 @@ func _build_resources_section() -> void:
 	var land_btn := _make_btn("Land", C_FLY)
 	land_btn.pressed.connect(_fly.bind(0.0))
 	_sec_resources.add_child(land_btn)
+	var outlines_btn := _make_btn("Obstacle Outlines", Color(0.60, 0.25, 0.20, 1.0))
+	outlines_btn.pressed.connect(_toggle_obstacle_outlines)
+	_sec_resources.add_child(outlines_btn)
 
 	var xp_btn := _make_btn("Grant 250 XP", Color(0.30, 0.45, 0.60, 1.0))
 	xp_btn.pressed.connect(_grant_test_xp)
@@ -616,6 +619,14 @@ func _full_heal() -> void:
 # lets the ordinary fall rule land them, so a landing can be seen anywhere,
 # the flat world included (5 m costs 7.5% of max HP, 20 m 45%). Called by
 # name so a wire layer without the send costs these buttons, not the panel.
+
+# Shows or hides the wire outlines of the zone's obstacle data (what stops a
+# body and blocks a cast), drawn over the scenery. A view only: client-side,
+# nothing is sent.
+func _toggle_obstacle_outlines() -> void:
+	var showing := ZoneObstacleOutlines.toggle(get_tree().current_scene)
+	CombatLog.add_line("Obstacle outlines %s (red stops a body, blue blocks sight only)." % ("on" if showing else "off"), CombatLog.MsgType.INFO)
+
 func _fling(height: float) -> void:
 	if not _require_connection():
 		return

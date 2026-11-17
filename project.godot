@@ -85,3 +85,4 @@ enabled=PackedStringArray("res://addons/procedural_dungeon/plugin.cfg", "res://a
 
 3d_physics/layer_1="bodies"
 3d_physics/layer_2="terrain"
+3d_physics/layer_5="camera_blockers"

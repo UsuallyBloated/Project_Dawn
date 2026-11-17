@@ -16,12 +16,13 @@
 #      nothing digs below the floor);
 #   4. every ridge adds a flat-topped wall: its height inside, falling to 0
 #      over face_width at its edge, with a crown and some crest noise on top;
-#   5. every noise adds rolling ground, masked away from the town (and, for
-#      the foothills, towards the plate's edge);
-#   6. every plateau raises the vertex to its top inside its rect, and along a
+#   5. every plateau raises the vertex to its top inside its rect, and along a
 #      ramp outside an edge;
-#   7. every cut lowers the vertex to its floor, its walls rising at
+#   6. every cut lowers the vertex to its floor, its walls rising at
 #      wall_slope outside its half width;
+#   7. every noise adds rolling ground on top of all that, masked away from
+#      the town (and, for the foothills, towards the plate's edge), its
+#      height varied across the map by its own broad noise;
 #   8. the mountains rise outside the walkable edge (see [[mountains]]);
 #   9. the result is floored at 0 and rounded to 0.0001 m.
 #
@@ -151,25 +152,52 @@ height = 30.0
 
 # --- The rolling ground ---------------------------------------------------------
 
-# Nothing in four kilometres is level except the town: low swells everywhere,
-# longer ones further out. calm_radius to full_radius is the fade from the
-# town's flat ground (calm_radius is two cells past town_flat_radius, so no
-# triangle that reaches into the town has a raised corner).
+# Nothing in four kilometres is level except the town: rolling ground
+# everywhere, laid over every other feature (the plateau and the pass ride on
+# it, so the cliff and the pass keep their shapes), in three sizes the user
+# chose on 2026-11-16: swells about 12 m high, rolls about 25 m and broad rises
+# about 35 m, so a crest usually hides what is past it (sight lines of one or
+# two swells, about the 120 to 240 m the server draws players and mobs at).
+# Each layer's height varies across the map by its own broad noise, from
+# (1 - vary) to (1 + vary) times its amplitude, so one stretch is meadow and
+# the next is hill country. The noise uses about half of its 0 to 1 range in
+# practice, so a layer's typical crest-to-trough is about its amplitude times
+# the variation there. calm_radius to full_radius is the fade from the town's
+# flat ground (calm_radius past town_flat_radius, so no triangle that reaches
+# into the town has a raised corner).
 [[noise]]
 name = "the swells"
 seed = 11
-wavelength = 240.0
-amplitude = 3.5
+wavelength = 280.0
+octaves = 3
+amplitude = 12.0
+vary = 0.5
+vary_seed = 111
+vary_wavelength = 1100.0
 calm_radius = 170.0
-full_radius = 380.0
+full_radius = 420.0
 
 [[noise]]
-name = "the long rises"
+name = "the rolls"
 seed = 23
-wavelength = 700.0
-amplitude = 9.0
+wavelength = 650.0
+amplitude = 25.0
+vary = 0.5
+vary_seed = 123
+vary_wavelength = 1700.0
+calm_radius = 250.0
+full_radius = 700.0
+
+[[noise]]
+name = "the broad rises"
+seed = 29
+wavelength = 1300.0
+amplitude = 35.0
+vary = 0.4
+vary_seed = 129
+vary_wavelength = 2500.0
 calm_radius = 320.0
-full_radius = 800.0
+full_radius = 900.0
 
 # Rolling ground towards the plate's sides, so the far ends of the arms climb
 # to the mountains' feet. edge_from to edge_to is the fade in, measured as the
@@ -196,15 +224,20 @@ ramps = { west = 0.0, south = 120.0, north = 120.0, east = 0.0 }
 # --- The pass ---------------------------------------------------------------------
 
 # The way north through the ridge: a floor 60 m wide between walls that rise
-# at 72 degrees. Its floor is at the level of the ground at its two mouths (the
-# plain is about 8 m up there and the wood's floor about 6), so the road runs
-# into it without a step; cut to 0 it was a trench with a bank at each end.
+# at 72 degrees. The cut is made before the rolling ground is laid on, with
+# its floor at the plain's level (0), and runs from the plain south of the
+# ridge (z = 770) to the ridge's north foot (z = 1010), so its rounded ends lie
+# on level base ground: the floor then follows the rolling ground and meets
+# the road at each mouth without a step. (Run 20 m further north, its end
+# reached into the crypt's bowl rim and cut a bank there; at floor 6 the floor
+# dropped off the ridge's north foot; the server's compiled-terrain test walks
+# the line through the pass and fails on a step.)
 [[cut]]
 name = "the pass"
 from = [0.0, 770.0]
-to = [0.0, 1030.0]
+to = [0.0, 1010.0]
 half_width = 30.0
-floor = 6.0
+floor = 0.0
 wall_slope = 3.0
 
 # --- The mountains ------------------------------------------------------------------

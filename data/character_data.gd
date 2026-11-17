@@ -11,6 +11,26 @@ const CLASSES: Array[String] = [
 	"Paladin", "Shadow Knight", "Necromancer", "Enchanter", "Bard", "Ranger", "Monk", "Witch Hunter"
 ]
 
+# Three-letter class names for tight UI (the group panel). EverQuest's own
+# where a class has an EQ counterpart (Shadow Knight SHD, Beastlord BST);
+# ours for the rest. Every class in CLASSES has an entry, which
+# tools/probe_group_levels.gd checks.
+const CLASS_ABBREV: Dictionary = {
+	"Warrior": "WAR", "Paladin": "PAL", "Shadow Knight": "SHD",
+	"Cleric": "CLR", "Druid": "DRU", "Shaman": "SHM",
+	"Beast Master": "BST", "Rogue": "ROG", "Monk": "MNK",
+	"Ranger": "RNG", "Witch Hunter": "WHT", "Bard": "BRD",
+	"Magician": "MAG", "Wizard": "WIZ", "Sorcerer": "SOR",
+	"Enchanter": "ENC", "Necromancer": "NEC", "Blood Mage": "BLM",
+}
+
+# A class's three-letter name: the table's, or the first three letters
+# upper-cased for a class it does not know yet; "" for no class.
+static func class_abbrev(cls: String) -> String:
+	if CLASS_ABBREV.has(cls):
+		return CLASS_ABBREV[cls]
+	return cls.substr(0, 3).to_upper()
+
 const RACE_DATA: Dictionary = {
 	"Human": {
 		"desc": "Versatile and adaptable. Balanced bonuses across all attributes suit any profession.",

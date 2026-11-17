@@ -163,3 +163,20 @@ SQL had already mirrored. Nobody connected in the four minutes before it was sto
 nothing was written in the wrong frame, and the SQL was not run a second time (its marker table
 would have made a second run do nothing anyway). The lesson for the runbook: check the build's
 sha (`git log -1`) before the `cp`, not after the start.
+
+## 12. Section 7, one seat (2026-11-15)
+
+The user ran `zone_4km_checklist.md` section 7's nine one-seat rows on the compass build the
+same afternoon, every one `[x]` and no notes: the north, east, south roads and the barrow track
+to their doors; nothing coming from the camps along them; the mountains' foot in four places;
+the ridge closed at both ends; the doors as scenery with the cliff behind; the range from the
+square and the Greywood. Left on the sheet: section 7's two-seat row, the GM fling-and-relog
+row and the journal row, and sections 1 to 6 and 8. The entry stays open.
+
+The journal for that sitting (17:43 to 18:11 UTC) passed section 7's journal row too:
+`slope_refusals` 0 every minute until 18:03, then 213, 161, 362, 39 and 598 in the minutes at
+the mountains and the ridge's foot, 0 between; no error. The same tail shows the Selos' cold
+sing (17:51:45, GHOTTT, Selos' memorized at 17:51:31 with no song before it); the server logs
+only the release, so the answer waits on the client's `debug.log`. The pre-door sheet's
+section 9 heading named the `68c3e13` build; it names `fd17ff1` now.
+

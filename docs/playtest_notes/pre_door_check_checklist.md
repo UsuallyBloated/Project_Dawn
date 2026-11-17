@@ -160,11 +160,17 @@ Diagnostics: the in-game console (backtick) shows client errors in red. On the R
       100% every login, the slider still reading 125%); the login screen looks as before;
       Apply at 100% afterwards puts it back. notes:
 
-## 9 — The Monday build (the ammo slot, the knoll, the Selos' lines; needs `ProjectDawn-alpha-68c3e13.zip` and the R720 redeployed on server `162c151`, its boot line reading `terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f`)
+## 9 — The Monday build (the ammo slot, the knoll, the Selos' lines; needs `ProjectDawn-alpha-397e207.zip` and the R720 on server `a3b226d` or later (the compass build `27d5ea7`, GM flight's server half and the rolling hills, which no row here touches; since 2026-11-17 16:55 UTC the R720 runs `f388b96`, the same plus the wandering wildlife), its boot line reading `terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331`)
 
 > **The build changed the evening this section was written (2026-11-13):** the 4 km starting
-> zone merged on top of the ammo slot, so the zip is `68c3e13` (not `f5b8b24`), the server is
-> `162c151` (not `d3cceef`) and the terrain hash is the zone's. Every camp is about ten times
+> zone merged on top of the ammo slot, then the outline and the compass mirror on top of that
+> (2026-11-14), and the rolling hills on top of those (2026-11-16), so the zip is `397e207`
+> (not `f5b8b24` or `fd17ff1`), the server is `a3b226d` (not `d3cceef`; the compass build
+> `27d5ea7` plus GM flight's server half and the rolling hills) and the terrain hash is the
+> rolling hills'. **Since 2026-11-17 the R720 runs `f388b96`:** animals wander the ground
+> between the camps (field rats by the town that notice you within 6 m, wolf pairs past
+> 450 m), so a walk out to a camp can pick up a fight these rows do not mention; their own
+> sheet is `wandering_wildlife_checklist.md`. Every camp is about ten times
 > further from the town than these rows' authors had in mind: the wolves are a minute's run
 > out of the east gate (`/loc` about -200, -280: since the compass build it prints north, west). The zone has its own sheet,
 > `zone_4km_checklist.md`.

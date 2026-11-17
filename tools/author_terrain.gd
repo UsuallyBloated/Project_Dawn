@@ -392,14 +392,19 @@ static func n01(noise: FastNoiseLite, x: float, y: float) -> float:
 # ridges' crests and one for the mountains' peaks.
 static func make_noises(features: Dictionary) -> Dictionary:
 	var layers: Array = []
+	var varies: Array = []
 	for f in features.get("noise", []):
-		layers.append(_noise(int(f.get("seed", 1)), float(f["wavelength"]), 2))
+		layers.append(_noise(int(f.get("seed", 1)), float(f["wavelength"]), int(f.get("octaves", 2))))
+		# A layer that varies has a second, broader noise scaling its height,
+		# so its hills are tall in some stretches and low swells in others.
+		varies.append(_noise(int(f.get("vary_seed", 1)), float(f.get("vary_wavelength", 1.0)), 2)
+			if float(f.get("vary", 0.0)) > 0.0 else null)
 	var crag_wavelength := 260.0
 	var range_wavelength := 900.0
 	for f in features.get("mountains", []):
 		crag_wavelength = float(f.get("crag_wavelength", crag_wavelength))
 		range_wavelength = float(f.get("range_wavelength", range_wavelength))
-	return {"layers": layers, "crest": _noise(101, 95.0, 2),
+	return {"layers": layers, "varies": varies, "crest": _noise(101, 95.0, 2),
 		"peaks": _noise(202, crag_wavelength, 3), "ranges": _noise(203, range_wavelength, 2)}
 
 
@@ -418,19 +423,10 @@ static func height_at(features: Dictionary, noises: Dictionary, p: Vector2, half
 			h += float(f["height"]) * smoothstep01(t)
 	for f in features.get("ridge", []):
 		h += _ridge_height(f, noises, p)
-	var layers: Array = noises["layers"]
-	var noise_features: Array = features.get("noise", [])
-	for i in noise_features.size():
-		var f: Dictionary = noise_features[i]
-		var mask := 1.0
-		if f.has("full_radius"):
-			var calm: float = f.get("calm_radius", 0.0)
-			mask *= smoothstep01(clampf((p.length() - calm) / (float(f["full_radius"]) - calm), 0.0, 1.0))
-		if f.has("edge_to"):
-			var from: float = f.get("edge_from", 0.0)
-			mask *= smoothstep01(clampf((maxf(absf(p.x), absf(p.y)) - from) / (float(f["edge_to"]) - from), 0.0, 1.0))
-		if mask > 0.0:
-			h += float(f["amplitude"]) * mask * n01(layers[i], p.x, p.y)
+	# The plateau and the cut set heights outright, so they shape the ground
+	# before the rolling ground is laid over everything: the plateau's cliff
+	# keeps its height above the ground at its foot, and the pass's floor
+	# follows the ground at its mouths, however high the swells there run.
 	for f in features.get("plateau", []):
 		h = maxf(h, _plateau_height(f, p))
 	for f in features.get("cut", []):
@@ -441,7 +437,35 @@ static func height_at(features: Dictionary, noises: Dictionary, p: Vector2, half
 			h = minf(h, f["floor"])
 		elif wall > 0.0:
 			h = minf(h, float(f["floor"]) + (d - half_width) * wall)
+	h += rolling_at(features, noises, p)
 	return maxf(h, 0.0)
+
+
+# The rolling ground at p: every [[noise]] layer's height there, masked away
+# from the town (and, for the foothills, towards the plate's edge), each one
+# scaled by its own broad variation noise when it has one, so the same layer
+# runs to low swells in one stretch and tall hills in the next.
+static func rolling_at(features: Dictionary, noises: Dictionary, p: Vector2) -> float:
+	var h := 0.0
+	var layers: Array = noises["layers"]
+	var varies: Array = noises["varies"]
+	var noise_features: Array = features.get("noise", [])
+	for i in noise_features.size():
+		var f: Dictionary = noise_features[i]
+		var mask := 1.0
+		if f.has("full_radius"):
+			var calm: float = f.get("calm_radius", 0.0)
+			mask *= smoothstep01(clampf((p.length() - calm) / (float(f["full_radius"]) - calm), 0.0, 1.0))
+		if f.has("edge_to"):
+			var from: float = f.get("edge_from", 0.0)
+			mask *= smoothstep01(clampf((maxf(absf(p.x), absf(p.y)) - from) / (float(f["edge_to"]) - from), 0.0, 1.0))
+		if varies[i] != null:
+			# 1 - vary to 1 + vary times the layer's amplitude, about 1 on average.
+			var vary: float = f["vary"]
+			mask *= 1.0 + vary * (2.0 * smoothstep01(n01(varies[i], p.x, p.y)) - 1.0)
+		if mask > 0.0:
+			h += float(f["amplitude"]) * mask * n01(layers[i], p.x, p.y)
+	return h
 
 
 # A ridge's height at p: its height inside, falling in a straight line to 0

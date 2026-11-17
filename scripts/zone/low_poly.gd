@@ -6,9 +6,17 @@ extends RefCounted
 # meshes made of a few plain solids (boxes, gabled roofs, tapered columns,
 # lumpy spheres). The low-poly look with no art files: each solid is added
 # through a Transform3D, so a wall, a tent or a tree is a dozen calls, and one
-# builder commits to one mesh however many solids went in. Scenery only:
-# nothing built here collides (the server knows the ground, not what stands on
-# it, so a wall the client stopped at the server would walk through).
+# builder commits to one mesh however many solids went in.
+#
+# Nothing built here is a physics body. What stops a player is the zone's
+# obstacle data (scripts/zone/zone_obstacles.gd), which the server holds too,
+# and it is made from what this builder records: every closed solid (a box, a
+# gable, a column, a blob) notes the corners it was built from in `volumes()`,
+# and tools/export_obstacles.gd turns each into a boundary that follows the
+# solid's own shape. Loose triangles and sheets (a banner, a web, a tent's
+# flap) are surfaces, not solids, and record nothing. Set `solid = false`
+# round anything a player is meant to walk on or through (a dais, a flight of
+# steps): it is drawn and records nothing.
 #
 # Usage: var b := LowPoly.new(); b.box(...); b.cone(...); var mesh := b.mesh()
 
@@ -23,6 +31,14 @@ var _count := 0
 # one flat tone. Seeded, so the scenery is the same on every client.
 var _rng := RandomNumberGenerator.new()
 var jitter := 0.06
+# Whether the solids added from here on stand in a body's way (see the header).
+var solid := true
+# One entry per recorded solid: [its corners (PackedVector3Array), how much of
+# its outline blocks a line of sight (1 for a box, less for a shape that
+# tapers: a cone is half as wide on average as its foot)].
+var _volumes: Array = []
+var _capture := PackedVector3Array()
+var _capturing := false
 
 
 func _init(seed_value: int = 1) -> void:
@@ -90,7 +106,27 @@ func _shade(color: Color) -> Color:
 	return Color(clampf(color.r * k, 0.0, 1.0), clampf(color.g * k, 0.0, 1.0), clampf(color.b * k, 0.0, 1.0), color.a)
 
 
+# The solids recorded so far (see `_volumes`), in the builder's own space.
+func volumes() -> Array:
+	return _volumes
+
+
+func _begin_volume() -> void:
+	_capturing = solid
+	_capture = PackedVector3Array()
+
+
+func _end_volume(sight_scale: float) -> void:
+	if _capturing and _capture.size() >= 3:
+		_volumes.append([_capture, sight_scale])
+	_capturing = false
+
+
 func tri(a: Vector3, b: Vector3, c: Vector3, color: Color) -> void:
+	if _capturing:
+		_capture.append(a)
+		_capture.append(b)
+		_capture.append(c)
 	_st.set_color(color)
 	_st.add_vertex(a)
 	_st.set_color(color)
@@ -108,6 +144,7 @@ func quad(a: Vector3, b: Vector3, c: Vector3, d: Vector3, color: Color) -> void:
 # A box standing on its transform's origin: `size.x` by `size.z` on the
 # ground, `size.y` tall. `top` colours its lid (a wall's walk, a table's top).
 func box(xf: Transform3D, size: Vector3, color: Color, top: Variant = null) -> void:
+	_begin_volume()
 	var c := _shade(color)
 	var hx := size.x * 0.5
 	var hz := size.z * 0.5
@@ -121,11 +158,13 @@ func box(xf: Transform3D, size: Vector3, color: Color, top: Variant = null) -> v
 		quad(p[i], p[j], p[j + 4], p[i + 4], c.darkened(0.05 * (i % 2)))
 	quad(p[4], p[5], p[6], p[7], _shade(top) if top != null else c.lightened(0.06))
 	quad(p[3], p[2], p[1], p[0], c.darkened(0.2))
+	_end_volume(1.0)
 
 
 # A gabled roof on its transform's origin: `size.x` wide, `size.z` long, its
 # ridge along z and `size.y` above the eaves.
 func gable(xf: Transform3D, size: Vector3, color: Color, end_color: Variant = null) -> void:
+	_begin_volume()
 	var c := _shade(color)
 	var hx := size.x * 0.5
 	var hz := size.z * 0.5
@@ -140,11 +179,13 @@ func gable(xf: Transform3D, size: Vector3, color: Color, end_color: Variant = nu
 	var ends: Color = _shade(end_color) if end_color != null else c.darkened(0.15)
 	tri(a, b, r0, ends)
 	tri(cc, d, r1, ends)
+	_end_volume(1.0)
 
 
 # A column of `sides` sides standing on its transform's origin, `bottom` wide
 # at its foot and `top` wide at its head (radii; 0 at the head makes a cone).
 func column(xf: Transform3D, bottom: float, top: float, height: float, sides: int, color: Color, cap: Variant = null) -> void:
+	_begin_volume()
 	var c := _shade(color)
 	for i in sides:
 		var a0 := TAU * i / sides
@@ -159,6 +200,9 @@ func column(xf: Transform3D, bottom: float, top: float, height: float, sides: in
 			var t1 := xf * Vector3(cos(a1) * top, height, sin(a1) * top)
 			quad(b0, b1, t1, t0, face)
 			tri(t0, t1, xf * Vector3(0, height, 0), _shade(cap) if cap != null else c.lightened(0.05))
+	# A column that tapers is, on average, as wide as the mean of its two ends.
+	var widest := maxf(bottom, top)
+	_end_volume((bottom + maxf(top, 0.0)) / (2.0 * widest) if widest > 0.0 else 1.0)
 
 
 func cone(xf: Transform3D, radius: float, height: float, sides: int, color: Color) -> void:
@@ -169,6 +213,7 @@ func cone(xf: Transform3D, radius: float, height: float, sides: int, color: Colo
 # `radius` on each axis, every corner pushed in or out by up to `lump` of it.
 # A boulder, a bush, a tree's crown.
 func blob(xf: Transform3D, radius: Vector3, lump: float, color: Color, shade_by_height: float = 0.18) -> void:
+	_begin_volume()
 	var c := _shade(color)
 	var t := (1.0 + sqrt(5.0)) * 0.5
 	var raw: Array[Vector3] = [
@@ -192,6 +237,8 @@ func blob(xf: Transform3D, radius: Vector3, lump: float, color: Color, shade_by_
 		# Faces that look up are lighter, faces that look down darker.
 		var facing := (b - a).cross(cc - a).normalized().dot(up)
 		tri(a, b, cc, c.lightened(shade_by_height * absf(facing)) if facing < 0.0 else c.darkened(shade_by_height * facing))
+	# A ball is widest at its middle; over its height it averages about this.
+	_end_volume(0.8)
 
 
 # A flat sheet between four corners (a banner, a tent flap, a web).

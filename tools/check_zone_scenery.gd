@@ -6,9 +6,11 @@ extends SceneTree
 #
 #   GROUND     the terrain is the chunks its grid makes, one collider each.
 #   COLLIDES   nothing under Flora, Town or Landmarks is a physics body or a
-#              collision shape. The server knows the ground and nothing that
-#              stands on it, so scenery that stopped the client would put the
-#              player in a different place from where the server has them.
+#              collision shape. What stops a body at a tree or a wall is the
+#              zone's obstacle data and the rule the server runs too
+#              (scripts/zone/zone_obstacles.gd, invariant L2); a physics shape
+#              on the scenery would stop the client's body by a second rule
+#              the server does not have.
 #   SCATTER    the flora is the same every time it is built (every client
 #              plants the same wood), stands on the ground, and keeps off the
 #              roads, out of the town and off the rim.

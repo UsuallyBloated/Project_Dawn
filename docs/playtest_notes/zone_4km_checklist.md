@@ -13,10 +13,14 @@ bigger world opened a hole.
 `feat/zone-4km`. An older client against this server walks on the old 400 m ground while the
 server stands it on the new one.
 
-**Since the compass build (2026-11-14, section 8), run every section on it:** the zone was a
-mirror image of its map until then, so the ground, the camps and the doors all moved across
-the north-south line. The R720's boot line must read `terrain=400x400 cells of 10 m, floor 0,
-hash 6bedde1c663e`, and the zip must be the one exported from the compass build.
+**Since the compass build (2026-11-14, section 8):** the zone was a mirror image of its map
+until then, so the ground, the camps and the doors all moved across the north-south line.
+
+**Since the rolling hills (2026-11-16), run every section on that build:** the open ground
+rolls in swells of about 12, 25 and 35 m, and the plateau and the pass ride on them. The R720's
+boot line must read `terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331`, and the zip
+must be `ProjectDawn-alpha-397e207.zip`. Section 7's rows passed on the flat compass ground on
+2026-11-15 and are walked again on this one.
 
 | Place | Level | Where (`/loc`: north, west) | Run from the town |
 |---|---|---|---|
@@ -76,8 +80,9 @@ granted`.
   follows you up the pit's wall if you back up it. notes:
 - [ ] **Walk at the Greywood ridge's face** (anywhere `/loc`'s first number is 790) → you stop at its foot;
   holding forward does nothing; no climbing by zigzag or by jumping. notes:
-- [ ] **Take the pass north** (`/loc` 790 to 1010 north, 0 west) → a flat road between two walls, into
-  the wood; the walls cannot be climbed from inside either. notes:
+- [ ] **Take the pass north** (`/loc` 790 to 1010 north, 0 west) → a road between two walls that rises and
+  falls with the ground, no bank or step at either mouth, into the wood; the walls cannot be
+  climbed from inside either. notes:
 - [ ] **Climb the Wraith Gate plateau by its north ramp** (from about `/loc` 470, -1700) → a steady
   climb to the top; the arch stands at the cliff's lip with its light. notes:
 - [ ] **GM: walk off the plateau's west cliff** (60 m) → you die; "You hit the ground hard"
@@ -146,32 +151,36 @@ One visit each: the mobs stand at the set piece, on the ground, and fight normal
 > `terrain=400x400 cells of 10 m, floor 0, hash a9942be36dff`. The zone is now two basins the
 > mountains close round, joined only by the pass; the old square edge is gone. Positions are
 > as `/loc` prints them since the compass build (section 8): north, west.
+>
+> The nine one-seat rows and the journal row passed on 2026-11-15 on the compass ground (hash
+> `6bedde1c663e`). Since the rolling hills (2026-11-16, hash `f569ade0c331`) they are walked
+> again: the mountains' foot now rises from rolling ground, and the pass's floor follows it.
 
-- [ ] **Leave by the north gate and follow the road to its end** → it bends east of Bat Hollow,
+- [x] **Leave by the north gate and follow the road to its end** → it bends east of Bat Hollow,
       runs the pass with no dip going in and no bank coming out (the floor is level with the
       ground now), swings east round the Broken Crypt's bowl with the crypt in view on your
       left, and ends at fallen trees under the mountains (`/loc` about 1880, 0). notes:
-- [ ] **The east road to its end** → past the raiders' wagon wreck, south of the Spider Copse,
+- [x] **The east road to its end** → past the raiders' wagon wreck, south of the Spider Copse,
       along under the Wraith Gate cliff with the arch above you, and into a narrowing arm that
       ends at a rockslide (`/loc` about -900, -1890). notes:
-- [ ] **The south road to its end** → by the mill, west of Rotfang's rocks, then round the foot
+- [x] **The south road to its end** → by the mill, west of Rotfang's rocks, then round the foot
       of the war camp's shelf with the gnolls above you on your right, ending at a barricade of
       sharpened stakes (`/loc` about -1838, -98). notes:
-- [ ] **The barrow track to its end** → out by the lane between the fields, north of the bone
+- [x] **The barrow track to its end** → out by the lane between the fields, north of the bone
       fields, up the hill to a ring of waystones (`/loc` about 250, 1370) with the barrow's pit
       below you and the Ossuary on the crest above. notes:
-- [ ] **On each road, watch the camps you pass** → nothing comes for you from the road: Rotfang's
+- [x] **On each road, watch the camps you pass** → nothing comes for you from the road: Rotfang's
       den, the war camp and the Broken Crypt are each about 200 m off it. notes:
-- [ ] **Run at the mountains and hold forward, then zigzag, in four places: the end of the east
+- [x] **Run at the mountains and hold forward, then zigzag, in four places: the end of the east
       arm, the war camp's vale, a corner of the Greywood, the barrow hills' west side** → the
       foot is a cliff you do not climb; `/loc` stops moving outward; you slide along it at most.
       notes:
-- [ ] **Try to go round the ridge: follow its south foot east until `/loc`'s second number passes
+- [x] **Try to go round the ridge: follow its south foot east until `/loc`'s second number passes
       -1300, then west until it passes 1300** → the mountains meet the ridge at both ends; the pass is the only way north.
       notes:
-- [ ] **At each door, walk into the rocks, the trees, the stakes** → the pieces are scenery (you
+- [x] **At each door, walk into the rocks, the trees, the stakes** → the pieces are scenery (you
       pass through them); the cliff behind them stops you. notes:
-- [ ] **Look round from the town square and from inside the Greywood** → mountains on every
+- [x] **Look round from the town square and from inside the Greywood** → mountains on every
       side, bare rock with snow on the tops, no trees and no forest floor on them, no strip of
       sky under them. notes:
 - [ ] **Two seats: one stands still at a door, the other watches them from 50 m** → the partner
@@ -179,13 +188,17 @@ One visit each: the mobs stand at the set piece, on the ground, and fight normal
 - [ ] **(GM) `Fling 20 m` beside the mountains; then log out standing against the cliff and log
       back in** → you land where you stood and log in where you stood; nothing puts you on the
       mountains. notes:
-- [ ] The journal: `slope_refusals` on the `world health` lines only for the minutes someone
-      pushed at a cliff; no `ERROR`; `ledger check mismatches=0`. notes:
+- [x] The journal: `slope_refusals` on the `world health` lines only for the minutes someone
+      pushed at a cliff; no `ERROR`; `ledger check mismatches=0`. notes: 2026-11-15 17:43 to
+      18:11 UTC (GHOTTT, the section's one-seat rows): 0 every minute until 18:03, then 213,
+      161, 362, 39 and 598 in the minutes spent at the mountains and the ridge's foot, 0
+      between; no ERROR or WARN; the ledger check 0 at the boot of 13:47.
 
 ## 8 — The compass (2026-11-14)
 
 > The world is now its map the right way round: north is -z, east +x, so facing north, east is
-> on your right, as on the comp. Needs the boot line `hash 6bedde1c663e` and the compass zip.
+> on your right, as on the comp. Needs the compass build or a later one (since
+> 2026-11-16 the rolling hills: boot line `hash f569ade0c331`, zip `397e207`).
 > At the redeploy every saved position was mirrored with the world, so nobody logs in inside
 > the mountains.
 

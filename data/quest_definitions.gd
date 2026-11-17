@@ -60,7 +60,7 @@ const ALL: Dictionary = {
 		"level_req": 1,
 		"reward_tier": "trivial",
 		"objectives": [
-			{"text": "Kill rats in the cellar", "type": "kill", "target": "Rat", "count_needed": 8}
+			{"text": "Kill plague rats at the Rat Warrens", "type": "kill", "target": "Plague Rat", "count_needed": 8}
 		],
 		"item_rewards": [],
 		"giver_npc": "Brom",

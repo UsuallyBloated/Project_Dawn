@@ -112,6 +112,14 @@ starting projectdawn-server auth_bind=0.0.0.0:8765 world_bind=0.0.0.0:7777
 | `world_endpoint` | `100.93.108.112:7777` | Remote players will log in fine and then hang on Enter World. |
 | `db` | `sqlite:///opt/projectdawn/world.db?mode=rwc` | You are running against the wrong database and nobody's characters exist. |
 
+`roamers` (builds with wandering wildlife) reads `on` unless `PD_NO_ROAMERS=1` is set. It is
+the off switch for the animals that wander between the camps: if they misbehave (something
+walks into town, the tick time on the `world health` line climbs), add the line
+`PD_NO_ROAMERS=1` to `/opt/projectdawn/.env`, restart, and confirm `roamers=off`; the camps are
+untouched. Remove the line and restart to bring them back. A second line at world start,
+`wandering wildlife roamers=on slots=66 animals=84 roam_map_share=51.1%`, says how many the
+table holds.
+
 The presence of the `dev_cmds` field at all also tells you the build is recent. It arrived in
 commit `a765573`; a binary without it predates every Phase 1 exploit gate.
 

@@ -17,6 +17,14 @@ signal hour_changed(hour: int)
 const DAY_DURATION := 1200.0
 const START_HOUR   := 8.0    # the local clock's start, before any server hour
 
+# Night: the sky is fully dark from NIGHT_START_HOUR through midnight to
+# NIGHT_END_HOUR, and fades over TWILIGHT_HOURS either side. LOCKSTEP with the
+# server's `NIGHT_START_HOUR` / `NIGHT_END_HOUR` (`world/clock.rs`): the night
+# animals of its roam table are out exactly while it looks like night here.
+const NIGHT_START_HOUR := 21.0
+const NIGHT_END_HOUR   := 5.0
+const TWILIGHT_HOURS   := 2.0
+
 # Following the server. An error up to SNAP_THRESHOLD is absorbed by running
 # the clock fast or slow, so the sun never visibly steps; anything larger (the
 # first send after login, a Test Panel slider drag) is a straight jump.
@@ -166,12 +174,12 @@ func _apply() -> void:
 
 func night_factor() -> float:
 	var hour := time_of_day * 24.0
-	if hour < 5.0 or hour > 21.0:
+	if hour < NIGHT_END_HOUR or hour > NIGHT_START_HOUR:
 		return 1.0
-	if hour < 7.0:
-		return 1.0 - smoothstep(5.0, 7.0, hour)
-	if hour > 19.0:
-		return smoothstep(19.0, 21.0, hour)
+	if hour < NIGHT_END_HOUR + TWILIGHT_HOURS:
+		return 1.0 - smoothstep(NIGHT_END_HOUR, NIGHT_END_HOUR + TWILIGHT_HOURS, hour)
+	if hour > NIGHT_START_HOUR - TWILIGHT_HOURS:
+		return smoothstep(NIGHT_START_HOUR - TWILIGHT_HOURS, NIGHT_START_HOUR, hour)
 	return 0.0
 
 func _dawn_dusk_factor() -> float:

@@ -9,9 +9,12 @@ extends ZoneDressing
 # is built from the prop kit (zone_props.gd) on the ground at its place in
 # data/zone_layout.gd, so a set piece follows its SITES entry.
 #
-# Placeholder shapes, scenery only (see zone_dressing.gd): they tell a player
-# where they are and what lives there, they collide with nothing, and the
-# mobs themselves are the server's (zone_camps.toml).
+# Placeholder shapes (see zone_dressing.gd): they tell a player where they are
+# and what lives there, and the mobs themselves are the server's
+# (zone_camps.toml). Every solid here stands in a body's way through the
+# zone's obstacle data, except what is built with `solid = false`: a dais or
+# a flight of steps is a floor the camp's mobs stand on, and the server has no
+# floors above the ground yet, so those are drawn and walked through.
 
 # How far a camp's dressing is drawn, and a landmark meant to be seen from
 # across the zone (0: always).
@@ -161,7 +164,10 @@ func _build_ossuary() -> void:
 	for i in 3:
 		var p := _around(at, 13.0, i * TAU / 3.0 + 0.5)
 		ZoneProps.arch(b, stand(p, i * TAU / 3.0 + 0.5), 9.0, 6.0, 1.6, 1.8, BONE_STONE.darkened(0.06), 7)
+	# The dais the spires stand on: a floor, not an obstacle.
+	b.solid = false
 	b.column(stand(at), 30.0, 28.0, 0.9, 12, BONE_STONE.darkened(0.18))
+	b.solid = true
 	for i in 12:
 		var p := _around(at, rng.randf_range(8, 40), rng.randf() * TAU)
 		b.blob(stand(p, rng.randf() * TAU, 0.3), Vector3(1.3, 0.9, 1.1) * rng.randf_range(0.7, 1.6), 0.25, BONE_STONE)
@@ -182,8 +188,11 @@ func _build_wraith_gate() -> void:
 	# The arch runs north to south, so its opening faces west and east.
 	var xf := stand(at, PI * 0.5)
 	ZoneProps.arch(b, xf, span, pier, 6.0, 7.0, ZoneProps.STONE_DARK, 11)
+	# The steps under the arch: a floor, not an obstacle.
+	b.solid = false
 	for step in 3:
 		b.box(xf.translated_local(Vector3(0, 0, 0)), Vector3(span + 18.0 - step * 4.0, 0.6 * (step + 1), 16.0 - step * 3.0), ZoneProps.STONE_DARK.lightened(0.04 * step))
+	b.solid = true
 	for i in 6:
 		var p := at + Vector2(rng.randf_range(-34, 34), rng.randf_range(-44, 44))
 		if absf(p.y - at.y) < 18.0 and absf(p.x - at.x) < 8.0:
@@ -236,8 +245,11 @@ func _build_crypt() -> void:
 			b.column(stand(p), 0.7, 0.6, rng.randf_range(2.5, 6.0), 6, ZoneProps.STONE_PALE.darkened(0.15))
 	b.box(stand(at), Vector3(1.6, 1.1, 3.2), ZoneProps.STONE_DARK)
 	b.box(stand(at + Vector2(1.0, 0.4), 0.35, 0.7) * Transform3D(Basis(Vector3(0, 0, 1), -0.5), Vector3.ZERO), Vector3(1.8, 0.25, 3.4), ZoneProps.STONE_DARK.lightened(0.08))
+	# The two steps up to the crypt's door: a floor, not an obstacle.
+	b.solid = false
 	b.box(stand(at + Vector2(0, -19.0)), Vector3(4.0, 0.5, 3.0), MOSSY_STONE)
 	b.box(stand(at + Vector2(0, -22.0)), Vector3(4.0, 0.25, 3.0), MOSSY_STONE)
+	b.solid = true
 	add_piece(b, "BrokenCrypt", 1800.0)
 
 

@@ -25,7 +25,7 @@ menu. The hotbar is 1 to 0; the spell gems are Alt+1 to Alt+0. The full list is 
 
 - [ ] **1. Tailscale is connected and `ping 100.93.108.112` answers** → replies, not timeouts. notes:
 - [ ] **2. Set the server to `100.93.108.112:8765` and Register** → you are logged straight in, no error. notes:
-- [ ] **3. Create a character, Play, then Enter World** → you stand in the town square wearing a ragged shirt, ragged pants and a trainee's weapon, every bar full. The town has a wall with a gate on each side and a road out of each gate. (The walls, houses and trees are placeholder scenery: you can walk through them, and that is not a bug.) Mountains ring the whole zone and are the edge of the world for now; the roads north, east and south end where the way through them is blocked. notes:
+- [ ] **3. Create a character, Play, then Enter World** → you stand in the town square wearing a ragged shirt, ragged pants and a trainee's weapon, every bar full. The town has a wall with a gate on each side and a road out of each gate. (The walls, houses, trees and rocks are solid: you stop at them and slide along them, and they block spells. Report anything you get stuck on or pulled through, with a `/loc`.) Mountains ring the whole zone and are the edge of the world for now; the roads north, east and south end where the way through them is blocked. notes:
 - [ ] **4. Type `/version` in chat** → it prints the build; copy the first word to the top of this sheet. notes:
 
 ## 2. The first fight
@@ -39,7 +39,7 @@ menu. The hotbar is 1 to 0; the spell gems are Alt+1 to Alt+0. The full list is 
 
 ## 3. Together
 
-- [ ] **11. `/invite Name` (or target them and press Invite on the group panel)** → their panel reads GROUP (Invited); they press the button or type `/accept` → both of you see each other's health, mana and stamina bars. notes:
+- [ ] **11. `/invite Name` (or target them and press Invite on the group panel)** → their panel reads GROUP (Invited); they press the button or type `/accept` → both of you see each other's health, mana and stamina bars, and each other's level and class beside the name (like "12 WAR"). notes:
 - [ ] **12. Kill something as a group** → each of you gets an XP line. With `/autosplit on`, looted coin splits across the group. notes:
 - [ ] **13. `/g hello`, then `/tell Name hi`** → the group line reaches the group, the tell reaches only them, and their `/r` answers you. notes:
 - [ ] **14. Jump where a friend can see you, up close and from far off** → they see the hop, as far away as they can see your body at all. notes:
