@@ -217,7 +217,9 @@ Held by: `a_direction_held_through_a_house_ends_at_its_face` (on feat/obstacles)
 `a_line_through_a_solid_is_blocked_and_one_over_it_is_not` (on feat/obstacles),
 `the_four_gates_are_open_and_the_wall_beside_them_is_not` (on feat/obstacles),
 `nothing_in_the_zone_closes_a_pocket_a_body_could_be_put_in` (on feat/obstacles),
-`a_file_round_trips_and_a_damaged_one_is_refused` (on feat/obstacles)
+`a_file_round_trips_and_a_damaged_one_is_refused` (on feat/obstacles),
+`a_body_moved_out_of_a_solid_is_stood_on_a_floor` (on feat/obstacles),
+`a_line_from_inside_a_crown_sees_out_and_other_solids_still_block` (on feat/obstacles)
 
 ### D1. Dev tools are gated and audited, or refused
 A dev command runs only for a GM account or a dev-mode server, and only if its audit row
@@ -284,7 +286,10 @@ cliff, A5). A tree on the way costs it a step aside and never makes it immune. W
 with a gap too narrow for a mob, or a spot a mob pushes at forever, is a place to kill from
 in safety.
 Held by: `a_mob_walks_round_a_house_to_its_target` (on feat/obstacles),
+`a_mob_rounds_a_long_wall_to_a_target_close_behind_it` (on feat/obstacles),
 `a_mob_slides_round_a_trunk_and_never_evades` (on feat/obstacles),
+`a_mob_glancing_along_a_wall_is_not_held` (on feat/obstacles),
+`a_clean_second_ends_the_stuck_clock` (on feat/obstacles),
 `a_mob_in_a_dead_end_evades_and_gives_up` (on feat/obstacles)
 
 ## Client and server agree

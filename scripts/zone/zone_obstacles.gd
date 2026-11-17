@@ -507,6 +507,14 @@ func _line_meets(i: int, a: Vector3, b: Vector3) -> bool:
 			if t0 > t1:
 				return false
 		p = q
+	var base := _base[i]
+	var top := _top[i]
+	# A line that begins or ends inside this prism is not blocked by it: a body
+	# under a tree on a slope has its eye inside the crown, and sees out as it
+	# is seen. (No body is ever inside a prism that stands in its way; this is
+	# crowns, roofs and lintels.) Every other prism on the line still blocks.
+	if (t0 == 0.0 and a.y > base and a.y < top) or (t1 == 1.0 and b.y > base and b.y < top):
+		return false
 	var y0 := a.y + (b.y - a.y) * t0
 	var y1 := a.y + (b.y - a.y) * t1
-	return maxf(y0, y1) > _base[i] and minf(y0, y1) < _top[i]
+	return maxf(y0, y1) > base and minf(y0, y1) < top

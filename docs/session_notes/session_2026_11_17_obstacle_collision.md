@@ -64,8 +64,8 @@ own collision is used for the camera only.
 
 ## 4. Verification
 
-- Server: `cargo test` 476 unit (1 ignored, as before) and 201 world, clippy `-D warnings`
-  and fmt clean. 36 tests are new. Run with the rule off, the four player and sight
+- Server: `cargo test` 481 unit (1 ignored, as before) and 201 world, clippy `-D warnings`
+  and fmt clean. 41 tests are new. Run with the rule off, the four player and sight
   integration tests, the house test (detour off) and the spawn test (`place` removed) fail.
 - One earlier full run had `roam::a_wanderer_goes_home_to_where_its_fight_began` fail ("the
   wolf never walked 15 m" inside its 40 s). I was compiling in the same directory at the
@@ -81,10 +81,38 @@ own collision is used for the camera only.
   animals, no error.
 - **Not verified:** nobody has walked the zone. No screenshot was looked at.
 
+## 4b. The review pass
+
+`/code-review high` on the server branch: ten findings, each checked against the code.
+
+1. **The wall-follow never rounded a wall with its target close behind it.** A step toward
+   the target that slides always slides back to the point nearest the target, so the mob
+   dithered at the 30 degree line, evaded and gave up: anyone could shed any mob at a fence.
+   Fixed: a held mob scouts both ways along the wall and takes the shorter, and keeps to the
+   wall until 3 m of its run at the goal is clear.
+2. **One bump on a tree started the stuck clock for good** (only a metre gained ended it), so
+   a chase through a wood ended 8 s later. Fixed: a second of steps taken as aimed ends it.
+   I had flagged this as a residual; the reviewer was right that it was a defect.
+3. **A sight line from inside a crown was blocked by that crown.** A small pine's crown
+   starts about 1.3 m up, so on any upslope beside the trunk the eye is inside it: 653 trees
+   had such a spot, where nothing could be cast and no mob would notice. Fixed on both
+   sides: a line that begins or ends inside a prism is not blocked by it.
+4. A ported pet was dropped 1.5 m east with no check. Fixed (walked, as at a summon).
+5. `place` could stand a moved body on a face. Fixed: it prefers a floor.
+6. Corpses were not placed clear at load. Fixed.
+7. The rule's lookups allocate on every pass. Not fixed; a residual in the design.
+8. Two handles for one set of obstacles. Fixed: the ground's is the only one.
+9. `prism()` read the sight scale back as 1. Fixed.
+10. A comment parted from its module by rustfmt's reordering. Fixed.
+
+After the fixes: 481 unit and 201 world tests, clippy clean, the client's replay of the
+regenerated fixtures 0 differ.
+
 ## 5. Commits (local, unpushed)
 
 - Server `feat/obstacles`: `84dcf63` (players, placements, sight, the file and fixtures),
-  `2b9e3df` (mobs, pets, spawns), `6343924` (only a held step starts the stuck clock).
+  `2b9e3df` (mobs, pets, spawns), `6343924` (only a held step starts the stuck clock), then
+  the review pass.
 - Client `feat/obstacles`: `396b47b` (the bake, the rule, the body, the checks), then the
   camera, the outline view, the probes and the records in the commit after it.
 

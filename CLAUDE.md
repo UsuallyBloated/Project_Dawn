@@ -3767,9 +3767,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `can_leave`: login, respawn, ports, the resurrection summon, camp, dev and wanderer spawns; a
   pet is summoned on its owner's side of a wall), the ground carries the obstacles so every
   sight check includes them, and mobs and pets use the same rule at the same radius: a held
-  step is tried turned to one side and the other, so a mob follows a wall to its end and comes
-  round (no pathfinder), and only a held step feeds the stuck clock and the evade rule (after
-  1 s it takes no damage, after 8 s it gives up, as below a cliff). Client: the player's body
+  mob scouts both ways along the wall, sets off the shorter and keeps to the wall until 3 m of
+  its run at the goal is clear, so it comes round (no pathfinder); only a step that does not
+  get on with it feeds the stuck clock and the evade rule (after 1 s it takes no damage, after
+  8 s it gives up, as below a cliff), and a second of clean steps ends the clock, so a wood
+  sheds no mob. A sight line that begins or ends inside a prism is not blocked by it (a body
+  beside a small tree on a slope has its eye in the crown). Client: the player's body
   runs the rule after the blend toward the server; a cast is refused before the bar when a
   solid is in the line; 630 big solids are camera blockers on physics layer 5, which only the
   spring arm reads (click targeting unchanged); the Test Panel's **Obstacle Outlines** draws
@@ -3782,10 +3785,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   camera's layer and the body's are apart) and `check_obstacle_rule.gd` (the server's answers
   for 600 steps, 150 placements and 400 sight lines, replayed through the GDScript rule; it
   caught a slip in the port the day it was written), both in `check_all.ps1` (19 checks
-  green); thirteen constant pairs. Tests: server 476 unit and 201 world, clippy and fmt clean
-  (36 new: the rule, the file, the real zone's gates, spawns and pockets, mobs round a house
-  and a trunk, five with a real client); each player, sight, mob and spawn test was run
-  against the rule switched off and failed. Rules A6, C5 and a rewritten L2 in
+  green); thirteen constant pairs. Tests: server 481 unit and 201 world, clippy and fmt clean
+  (41 new: the rule, the file, the real zone's gates, spawns and pockets, mobs round a house,
+  a long wall and a trunk, five with a real client); each player, sight, mob and spawn test
+  was run against the rule switched off and failed. **Reviewed the same day** (`/code-review`,
+  ten findings, nine fixed: the first wall-follow never rounded a wall with its target close
+  behind it, one bump on a tree ended a chase 8 s later, and a crown blinded a body standing
+  under it on a slope, at 653 trees; session note 4b). Rules A6, C5 and a rewritten L2 in
   `invariants.md` (tagged `(on feat/obstacles)` until the merge). Closes the wall half of
   exploit-audit finding 10 (b). **Exploit lens:** the server takes every step itself; a
   hand-edited file fails its hash at boot; one body radius for everything, so nowhere a player
@@ -3794,8 +3800,8 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   slide plus the grace; a building sheds a chasing mob in 8 s if it finds no way round; a
   space sealed between solids and a cliff is not found by the pocket test (the road doors).
   **Flagged:** a body run square into a flat face stops until it steers, and a low-poly trunk
-  has five or six flat faces; a kited mob held once at a trunk and never gaining a metre gives
-  up 8 s later; the obstacle file is rewritten whole (2.2 MB in each repo) on every scenery
+  has five or six flat faces; the rule's lookups allocate on every pass (unmeasured in play);
+  the obstacle file is rewritten whole (2.2 MB in each repo) on every scenery
   change, and `export_obstacles.gd` must be run after any scenery or terrain edit; at the
   merge, the GM flight client's flying body must skip the obstacle step, and the
   `(on feat/obstacles)` tags come off; nobody has walked the zone with it yet; no planner row

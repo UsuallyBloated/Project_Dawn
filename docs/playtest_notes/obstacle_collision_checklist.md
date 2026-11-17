@@ -61,12 +61,15 @@ its tree, rock or wall is the finding; note where (`/loc`).
 - [ ] **Cast at a mob with a tall bush or a big boulder between you** → refused; over a gravestone, a fence or a small rock it lands. notes:
 - [ ] **On flat ground in the wood, cast at a mob 20 m off under the trees** → lands (the line passes under the crowns). notes:
 - [ ] **From high ground, cast down at a mob under a tree's crown** → refused when the crown is in the line. Does this feel right, or too strict? notes:
+- [ ] **Stand right beside a small tree on a slope, uphill of its trunk, and cast at something in the open** → it casts (your eye is inside the crown there; you see out of the tree you stand under). notes:
 - [ ] **Fire a bow at a mob behind a wall** → the arrow misses (and is spent); no damage. notes:
 - [ ] **Stand behind a house from an idle mob, inside its aggro range** → it does not notice you until it can see you. notes:
 
 ## 5 — Mobs and pets (second seat helps)
 - [ ] **Pull a mob and run behind a single tree** → it slides round the tree and keeps coming; your hits on it land (no "evades"). notes:
 - [ ] **Pull a mob and stand directly behind a house from it** → it walks along the wall, comes round the corner and attacks. While it is going round, attacks on it may read "evades". notes:
+- [ ] **Pull a mob and stand a few metres behind the middle of a long fence or wall** → it goes along it by the shorter way and comes round; it does not dither in front of you. notes:
+- [ ] **Run from a mob through the wood for half a minute, staying just ahead** → it keeps chasing past the trees; it does not give up a few seconds after bumping one. notes:
 - [ ] **Pull a mob to the town wall from outside and stand inside, away from a gate** → it cannot reach you: after about a second it is evading, after about eight it gives up and walks home, healing. It is never killed through the wall. notes:
 - [ ] **Fight a camp's mobs in among their own tents and walls** → fights work; mobs do not hang on their own scenery for long. Note any camp where they do. notes:
 - [ ] **Watch the camps for a few minutes** → no mob stands inside a tent, a rock or a wall. notes:

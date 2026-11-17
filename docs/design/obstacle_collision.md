@@ -148,11 +148,14 @@ which is why the rule runs after it.
 
 ### 4.5 Placements
 
-`Obstacles::place` (clear, then on the ground) at: a login's saved position, a respawn, a
-port's destination, the resurrection summon, a camp spawn (the mob's home becomes where it
-stands), a dev spawn. A wanderer appears only at a spot that `stands`. A summoned pet's
-1.5 m east of its owner is a walk from the owner, so with a wall at the owner's shoulder the
-pet is on the owner's side.
+`Obstacles::place` at: a login's saved position, a respawn, a port's destination, the
+resurrection summon, a camp spawn (the mob's home becomes where it stands), a dev spawn, a
+corpse at load. A point a body can already be put at is never moved; one that must move
+goes to the nearest point that is clear, that a body can walk away from, and that is a
+floor (moved out of a rock at a cliff's foot, a body is not stood on the cliff). A wanderer
+appears only at a spot that `stands`. A pet's 1.5 m east of its owner, at a summon and at a
+port, is a walk from the owner, so with a wall at the owner's shoulder the pet is on the
+owner's side.
 
 ### 4.6 Sight
 
@@ -161,17 +164,35 @@ to each nearby prism's outline, and is blocked if it is between the prism's base
 anywhere inside it. A caster on high ground sees over a house; nobody sees through one. A
 trunk, a rock and a crown block as a wall does (the user's call).
 
+A line that begins or ends **inside** a prism is not blocked by that prism (every other one
+on the line still blocks). A small pine's crown starts about 1.3 m above its own ground, so
+a body a step uphill of the trunk has its eye inside it; without this rule that body could
+cast at nothing and nothing could notice it (the review found such a spot at 653 trees).
+No body is ever inside a prism that stands in its way, so this is crowns, roofs and lintels.
+
 ### 4.7 Mobs and pets
 
 `Entity::step_on` runs `resolve` at the players' radius, so a mob fits wherever a player
-does. A step held to less than half its way (`DETOUR_BELOW`) is tried again turned 45 and
-90 degrees to one side, then the other, keeping to the side it last went: the mob walks
-along a wall to its end and comes round. There is no pathfinder.
+does. There is no pathfinder; this is what gets a mob round a wall:
 
-Only a held step counts against a mob (the stuck clock and the evade rule that already
-existed for a mob below a cliff): a glance off a trunk or a slide along a shallow wall is
-the chase going on. A mob that is held, or following a wall, is evading after one second
-and gives up after eight with no metre gained. So a wall never gives a free kill.
+- A step held to less than half its way (`DETOUR_BELOW`) is tried turned 45 and 90 degrees
+  to each side. Where both sides move, the mob looks up to 24 m along the wall each way
+  (`scout_way_round`) and sets off the shorter.
+- It then keeps on along the wall, bending with it, until 3 m of the straight line to its
+  goal is clear (`DETOUR_LOOKAHEAD`, `Obstacles::run_clear`), and only then turns for the
+  goal. Turning back as soon as a step toward the goal slides is what the first version
+  did, and it never rounded a wall with its target close behind: the slide always leads
+  back to the point nearest the target. The review found that; the house test had passed
+  only because its target stood 17 m off.
+- A wall that ends in a corner sends it the other way.
+
+Only a step that does not get on with it counts against a mob (the stuck clock and the
+evade rule that already existed for a mob below a cliff): a glance off a trunk or a slide
+along a shallow wall is the chase going on. A mob that is held, or walking along a wall, is
+evading after one second and gives up after eight with no metre gained. A second of steps
+all taken as aimed ends the clock (`STUCK_CLEAN_SECS`), so one bump on a tree does not end
+a chase eight seconds later. So a wall never gives a free kill, and a wood does not shed a
+mob.
 
 Wanderers slide round trunks on their legs; a leg ends at anything that holds it.
 
@@ -229,7 +250,13 @@ the other way round walks through them and snaps. One export, one redeploy.
 - A closed space sealed between solids and a **cliff** is not found by the pocket test (it
   looks only at solids). The three road doors stand against the mountains, and a wanderer
   could in principle be given a spot behind one.
-- The airborne branch and GM-flight landing have no integration test.
+- The airborne branch, GM-flight landing and a ported pet's placement have no integration
+  test.
+- A body moved out of a solid goes out the nearest way, which can be the far side of a thin
+  wall. It happens only when the scenery changed under a saved position or a spawn.
+- The rule gathers its nearby prisms afresh on every pass (the review's efficiency note):
+  a few dozen small allocations per obstructed step. Unmeasured in play; the `world health`
+  line will show it if it matters.
 
 ---
 
@@ -243,13 +270,14 @@ rewritten whole on every scenery change, as `terrain.toml` is.
 
 ## 8. Tests
 
-Server (`cargo test`: 476 unit, 201 world, all passing; clippy and fmt clean):
-- `world/obstacles.rs`: 21 tests on the rule, the file, sight and the fixtures.
+Server (`cargo test`: 481 unit, 201 world, all passing; clippy and fmt clean):
+- `world/obstacles.rs`: 24 tests on the rule, the file, sight, placement and the fixtures.
 - `world/obstacles_content.rs`: 5 on the real zone (people and arrival points free, spawns
   near free ground, the four gates open and the wall shut, no pocket, the pocket search
   itself).
-- `world/entity.rs`: 4 on mobs (round a house, round a trunk without evading, a glance is
-  not held, a dead end evades and gives up); `world/spawn_points.rs`: 1.
+- `world/entity.rs`: 6 on mobs (round a house, round a long wall to a target close behind
+  it from either side, round a trunk without evading, a glance is not held, a dead end
+  evades and gives up, a clean second ends the clock); `world/spawn_points.rs`: 1.
 - `tests/world/obstacles.rs`: 5 with a real client (a held direction ends at a house, a
   slide round a trunk, a login inside a solid, a Smite through a house, a pet at a wall).
 
@@ -289,7 +317,16 @@ town side (a fence all the way round is a sealed box).
 
 ---
 
-## 10. What changed from the first plan
+## 10. What changed from the first plan, and in the review
+
+A `/code-review` pass on the server branch (2026-11-17) reported ten findings; all were
+checked against the code and nine fixed (server `feat/obstacles`, the commit after
+`6343924`): the wall-follow that never rounded a wall with its target close behind it; the
+stuck clock that one bump on a tree started for good; a sight line from inside a crown
+blocked by that crown; a ported pet dropped past a wall; placement onto a face; corpses
+not placed clear at load; two handles for one set of obstacles; a sight scale read back as
+1; a comment parted from its module. The tenth (allocations in the rule's lookups) is a
+residual above.
 
 - **Prisms from the geometry, not hand-declared circles and boxes** (the user's question 3).
 - **Everything blocks**, and trees and rocks block sight (answers 2 and 4).
