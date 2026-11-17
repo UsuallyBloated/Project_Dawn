@@ -5,9 +5,13 @@ Read this, then `docs/design/obstacle_collision.md` (the design as built) and
 `docs/session_notes/session_2026_11_17_obstacle_collision.md`.
 
 > **Worked off the same day by the same session** (the budget came back): section 3's items
-> 1 to 3 are done (the records, planner rows b64, o30 and v65, the memory). What is still
-> open is section 2 (the user's redeploy), section 3's items 4 and 5 (record the boot line;
-> triage the checklist), and sections 4 and 5, which stay true.
+> 1 and 3 are done (the records, the memory), and item 2 in part: planner rows b64, o30, v65
+> and v66 (the group-levels sheet, which no row scheduled) are in `docs/schedule_detail.toml`
+> and both generated files are regenerated and committed. **The published planner page is
+> NOT republished**: the publish step requires reading the live page and the new one in full
+> (about 320 KB), and that was left for the user's word. What is still open: that republish,
+> section 2 (the user's redeploy), section 3's items 4 and 5 (record the boot line; triage
+> the checklist), and sections 4 and 5, which stay true.
 
 ## 1. Where things stand (all verified before this was written)
 

@@ -160,6 +160,9 @@ read `build="87c58fe" dev_cmds=false roamers=on`, the terrain hash unchanged
 
 The session ran out of budget between the export and the records;
 `docs/design/handoff_obstacle_collision_2026_11_17.md` was written for the next session, and
-this session then finished what it lists (the records, the planner rows b64, o30 and v65, the
-memory) itself.
+this session then finished what it lists itself: the records, the memory, and planner rows
+b64, o30, v65 and v66 (the last for `group_levels_checklist.md`, which the generator reported
+as unscheduled), with both planner files regenerated. The published planner page was not
+republished: the publish step needs the live page and the new one read in full, about 320 KB,
+and that spend was left for the user's word.
 
