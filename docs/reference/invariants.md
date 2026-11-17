@@ -204,22 +204,22 @@ on its owner's side of a wall. Nothing targeted reaches through a solid: every s
 asks the ground, and the ground carries what stands on it. And nothing in the zone closes
 ground a body could be put on and never leave. Why: a modified client that walked through
 a wall, a cast or a pet sent through one, a body or a mob put where nothing can reach it.
-Held by: `a_direction_held_through_a_house_ends_at_its_face` (on feat/obstacles),
-`a_body_slides_round_a_trunk_and_carries_on` (on feat/obstacles),
-`the_largest_step_crosses_nothing` (on feat/obstacles),
-`a_body_squeezed_between_solids_is_never_squirted_across_one` (on feat/obstacles),
-`random_walks_never_end_inside_anything` (on feat/obstacles),
-`a_body_is_never_put_in_a_gap_it_cannot_leave` (on feat/obstacles),
-`a_login_inside_a_solid_lands_beside_it` (on feat/obstacles),
-`a_spawn_under_scenery_stands_beside_it` (on feat/obstacles),
-`a_pet_summoned_at_a_wall_appears_on_its_owners_side` (on feat/obstacles),
-`a_spell_through_a_house_is_refused_and_lands_round_the_corner` (on feat/obstacles),
-`a_line_through_a_solid_is_blocked_and_one_over_it_is_not` (on feat/obstacles),
-`the_four_gates_are_open_and_the_wall_beside_them_is_not` (on feat/obstacles),
-`nothing_in_the_zone_closes_a_pocket_a_body_could_be_put_in` (on feat/obstacles),
-`a_file_round_trips_and_a_damaged_one_is_refused` (on feat/obstacles),
-`a_body_moved_out_of_a_solid_is_stood_on_a_floor` (on feat/obstacles),
-`a_line_from_inside_a_crown_sees_out_and_other_solids_still_block` (on feat/obstacles)
+Held by: `a_direction_held_through_a_house_ends_at_its_face`,
+`a_body_slides_round_a_trunk_and_carries_on`,
+`the_largest_step_crosses_nothing`,
+`a_body_squeezed_between_solids_is_never_squirted_across_one`,
+`random_walks_never_end_inside_anything`,
+`a_body_is_never_put_in_a_gap_it_cannot_leave`,
+`a_login_inside_a_solid_lands_beside_it`,
+`a_spawn_under_scenery_stands_beside_it`,
+`a_pet_summoned_at_a_wall_appears_on_its_owners_side`,
+`a_spell_through_a_house_is_refused_and_lands_round_the_corner`,
+`a_line_through_a_solid_is_blocked_and_one_over_it_is_not`,
+`the_four_gates_are_open_and_the_wall_beside_them_is_not`,
+`nothing_in_the_zone_closes_a_pocket_a_body_could_be_put_in`,
+`a_file_round_trips_and_a_damaged_one_is_refused`,
+`a_body_moved_out_of_a_solid_is_stood_on_a_floor`,
+`a_line_from_inside_a_crown_sees_out_and_other_solids_still_block`
 
 ### D1. Dev tools are gated and audited, or refused
 A dev command runs only for a GM account or a dev-mode server, and only if its audit row
@@ -285,12 +285,12 @@ eight seconds with no way found it gives up on that target (the rule for a mob b
 cliff, A5). A tree on the way costs it a step aside and never makes it immune. Why: a wall
 with a gap too narrow for a mob, or a spot a mob pushes at forever, is a place to kill from
 in safety.
-Held by: `a_mob_walks_round_a_house_to_its_target` (on feat/obstacles),
-`a_mob_rounds_a_long_wall_to_a_target_close_behind_it` (on feat/obstacles),
-`a_mob_slides_round_a_trunk_and_never_evades` (on feat/obstacles),
-`a_mob_glancing_along_a_wall_is_not_held` (on feat/obstacles),
-`a_clean_second_ends_the_stuck_clock` (on feat/obstacles),
-`a_mob_in_a_dead_end_evades_and_gives_up` (on feat/obstacles)
+Held by: `a_mob_walks_round_a_house_to_its_target`,
+`a_mob_rounds_a_long_wall_to_a_target_close_behind_it`,
+`a_mob_slides_round_a_trunk_and_never_evades`,
+`a_mob_glancing_along_a_wall_is_not_held`,
+`a_clean_second_ends_the_stuck_clock`,
+`a_mob_in_a_dead_end_evades_and_gives_up`
 
 ## Client and server agree
 
@@ -316,7 +316,7 @@ wall that stopped the client's body and not the server's, or stood in a differen
 would leave the player drawn in one place and standing in another, and the next correction
 would pull them through it.
 Held by: `check_obstacle_lockstep.gd`, `check_obstacle_rule.gd`, `check_zone_scenery.gd`,
-`the_rule_fixtures_are_current` (on feat/obstacles)
+`the_rule_fixtures_are_current`
 
 ### L3. The world is its map, the right way round
 The zone is authored on a map (north up, east right) and reaches the world through one
