@@ -9,8 +9,10 @@ caster from casting"; yes to mobs, to bodies passing through each other and to t
 "build it now, please. I believe in you."
 
 **Outcome:** built on `feat/obstacles` in both repos (worktrees
-`F:\Projects\Project_Dawn-obstacles`, `F:\Projects\server-obstacles`), committed locally.
-**Not pushed, not merged, not deployed, not playtested.** The design as built is
+`F:\Projects\Project_Dawn-obstacles`, `F:\Projects\server-obstacles`), then, on the user's
+"lets go for it", **merged into both deploy branches, pushed and exported** (server
+`87c58fe`, client `a1a154e`, `builds/ProjectDawn-alpha-a1a154e.zip`; section 8). **Not
+deployed on the R720, not playtested.** The design as built is
 `docs/design/obstacle_collision.md`; the sheet is `obstacle_collision_checklist.md`.
 
 ## 1. The answer on Godot's built-in collision
@@ -108,7 +110,7 @@ own collision is used for the camera only.
 After the fixes: 481 unit and 201 world tests, clippy clean, the client's replay of the
 regenerated fixtures 0 differ.
 
-## 5. Commits (local, unpushed)
+## 5. Commits
 
 - Server `feat/obstacles`: `84dcf63` (players, placements, sight, the file and fixtures),
   `2b9e3df` (mobs, pets, spawns), `6343924` (only a held step starts the stuck clock), then
@@ -118,8 +120,7 @@ regenerated fixtures 0 differ.
 
 ## 6. Not done
 
-- No merge, no push, no export, no redeploy: the user's call (the door is 2026-11-19).
-- No planner row in `docs/schedule_detail.toml`; the page was not regenerated.
+- The R720 redeploy (the user's, with the zip, together) and the playtest.
 - `systems_overview.md` is untouched until the playtest ticks.
 - Standing on things and hopping over low ones; a pathfinder; interiors (design 4.9).
 - The GM flight client branch is not merged here: its flying body must skip the obstacle
@@ -132,3 +133,33 @@ client deploy branch to `1a8e898`, then `063f3f5`, during this session. This bra
 from `063f3f5` (client) and `7e0095f` (server), so it carries that work. My first plan and
 its records were uncommitted in the main checkout; they were moved onto this branch and the
 main checkout left clean.
+
+## 8. Merged, exported, and the deploy shape
+
+On the user's "lets go for it" (to the question of when to merge):
+
+- Both deploy branches were at this branch's cut points, so both merges were fast-forwards:
+  server `7e0095f` to `87c58fe`, client `063f3f5` to `00f5c5d` (the branch with its
+  `(on feat/obstacles)` tags dropped from the rules), then `a1a154e` (the tester README and
+  checklist: they told testers that walking through walls and trees was not a bug). Pushed,
+  with `feat/obstacles` in both repos.
+- `check_all.ps1` on the merged main checkouts: 19 of 19.
+- The export, `--export-release` from the main checkout clean at `a1a154e`:
+  `[BuildStamp] stamped a1a154e`, not a debug export, the DLL the group-levels one (md5
+  `097ace2a`, PD_W0031; this work changes nothing on the wire). The first export was made
+  before the push and its stamp read "+5 unpushed"; it was made again after the push.
+- The exported build boots headless (300 frames, exit 0, no error line) and passes
+  `tools/probe_obstacle_walk.gd` run from inside the export: the obstacle data is in the pack
+  (the export preset's include filter is what ships it; the exe grew by 2.2 MB).
+- The zip `builds/ProjectDawn-alpha-a1a154e.zip` (39,425,944 bytes: the exe, the console exe,
+  the DLL, the tester README and the players' checklist) replaces `54ca951` and `397e207`.
+
+Both sides together: the redeploy and the new zip. No migration, no SQL. The boot line must
+read `build="87c58fe" dev_cmds=false roamers=on`, the terrain hash unchanged
+(`f569ade0c331`), and `obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4`.
+
+The session ran out of budget between the export and the records;
+`docs/design/handoff_obstacle_collision_2026_11_17.md` was written for the next session, and
+this session then finished what it lists (the records, the planner rows b64, o30 and v65, the
+memory) itself.
+

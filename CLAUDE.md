@@ -3746,10 +3746,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   fast-forwarded and pushed, server `87c58fe`, client `a1a154e`; the export
   `builds/ProjectDawn-alpha-a1a154e.zip`, stamped `a1a154e`, a release export, which replaces
   `54ca951`. Pending the R720 redeploy (both sides together; boot line `build="87c58fe"`,
-  `obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4`) and the playtest. The
-  rest of the records pass (this entry's body, the planner, the memory) is in
-  `docs/design/handoff_obstacle_collision_2026_11_17.md`**
-  (worktrees `F:\Projects\Project_Dawn-obstacles` and `F:\Projects\server-obstacles`; design as
+  `obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4`) and the playtest**
+  (planner rows b64, o30 and v65; built on `feat/obstacles` in both repos, worktrees
+  `F:\Projects\Project_Dawn-obstacles` and `F:\Projects\server-obstacles`; design as
   built: `docs/design/obstacle_collision.md`; `obstacle_collision_checklist.md`; session note
   `session_2026_11_17_obstacle_collision.md`; no wire change, no DLL rebuild, no migration, no
   SQL). Godot's built-in collision would stop the client's body only: the server moves every
@@ -3797,7 +3796,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   ten findings, nine fixed: the first wall-follow never rounded a wall with its target close
   behind it, one bump on a tree ended a chase 8 s later, and a crown blinded a body standing
   under it on a slope, at 653 trees; session note 4b). Rules A6, C5 and a rewritten L2 in
-  `invariants.md` (tagged `(on feat/obstacles)` until the merge). Closes the wall half of
+  `invariants.md`. Closes the wall half of
   exploit-audit finding 10 (b). **Exploit lens:** the server takes every step itself; a
   hand-edited file fails its hash at boot; one body radius for everything, so nowhere a player
   fits and a mob does not; a mob that cannot reach its target is immune after a second.
@@ -3807,10 +3806,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Flagged:** a body run square into a flat face stops until it steers, and a low-poly trunk
   has five or six flat faces; the rule's lookups allocate on every pass (unmeasured in play);
   the obstacle file is rewritten whole (2.2 MB in each repo) on every scenery
-  change, and `export_obstacles.gd` must be run after any scenery or terrain edit; at the
-  merge, the GM flight client's flying body must skip the obstacle step, and the
-  `(on feat/obstacles)` tags come off; nobody has walked the zone with it yet; no planner row
-  was added.
+  change, and `export_obstacles.gd` must be run after any scenery or terrain edit; when the
+  GM flight client (`feat/gm-flight`) merges, its flying body must skip the obstacle step in
+  `player.gd`; nobody has walked the zone with it yet. The tester README and checklist in the
+  zip now say scenery is solid and blocks spells (they said walking through it was not a bug).
+  The exported build was booted headless and passes `probe_obstacle_walk.gd` from inside the
+  export, so the obstacle data is in the pack.
 - [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
   a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
   height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at

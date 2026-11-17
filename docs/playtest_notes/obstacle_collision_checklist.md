@@ -7,8 +7,8 @@ through.
 
 **Both sides must move together.** A new client on the old server is pulled through every
 tree; an old client on the new server is pulled back at every tree. Build prerequisite:
-both `feat/obstacles` branches merged, a fresh export, and the R720 redeployed. No wire
-change, no migration, no SQL.
+the zip `ProjectDawn-alpha-a1a154e.zip` (or later) on every seat, and the R720 redeployed on
+`87c58fe` (or later). No wire change of its own, no migration, no SQL.
 
 | Thing | Where to see it |
 |---|---|
@@ -22,7 +22,7 @@ Tip: turn **Obstacle Outlines** on first and leave it on. A boundary that does n
 its tree, rock or wall is the finding; note where (`/loc`).
 
 ## Setup
-- [ ] Both `feat/obstacles` branches merged; fresh export; R720 redeployed. notes:
+- [ ] The R720 redeployed on `87c58fe` or later; every seat on the zip `a1a154e` or later (`/version`). notes:
 - [ ] Boot line shows `dev_cmds=false` and the `obstacles=` hash; `debug.log` shows the same hash. notes:
 - [ ] A GM character (for the Test Panel) and, for sections 5 and 7, a second seat. notes:
 

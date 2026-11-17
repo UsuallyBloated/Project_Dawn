@@ -1032,15 +1032,67 @@ done_when = "Every row marked; a finding gets a To-Do line the same day; if the 
 todo = "Wandering wildlife to fill the open ground"
 
 [[row]]
+id = "b64"
+week = "w7"
+lane = "build"
+day = "Tue Nov 17"
+what = "Obstacle collision (the user asked on the 17th, answered the plan's eight calls and said to build it now): trees, bushes, rocks, walls, houses, tents, fences and everything else solid stop a body, block a spell or an arrow when they stand in the line, and the camera stops at walls and buildings. The server decides all of it and the client runs the same rule on the same data, so a modified client walks into the server's walls. Monsters and pets are stopped by the same things and walk round a wall. Nothing can be stood on or jumped over yet. Built on feat/obstacles in both repos, then reviewed (ten findings, nine fixed)."
+who = "Claude"
+days = 1.0
+done_when = "Both branches committed; the server suite and every client check green; each rule's test fails with the rule switched off; the design doc and the session note say what was built."
+todo = "Obstacle collision: trees, rocks, walls and set pieces"
+
+[[row]]
+id = "o30"
+week = "w7"
+lane = "operate"
+day = "Tue Nov 17 (merged, pushed and exported); the redeploy before v65 and before the zip goes out (p6)"
+what = "(Merged and pushed 11-17 on the user's go: server 87c58fe, client a1a154e, all 19 client checks green on the merged pair; a release export, builds/ProjectDawn-alpha-a1a154e.zip, booted and checked from inside the export.) Collision reaches the game: the R720 pulled, built and restarted, and the new zip is the one for the door. It replaces 54ca951 and 397e207 and also carries group-mates' levels. The zip and the redeploy go together: the new zip on the old server pulls a body through every tree, the old zip on the new server pulls it back at every tree. No SQL."
+who = "Claude for the merge and the export; user over SSH for the redeploy"
+hours = 0.5
+needs = ["everyone logged out for the redeploy", "the R720 over SSH"]
+waits_on = ["b64"]
+done_when = "The boot line shows build=87c58fe, dev_cmds=false, roamers=on and obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4."
+todo = "Obstacle collision: trees, rocks, walls and set pieces"
+
+[[row]]
+id = "v65"
+week = "w7"
+lane = "verify"
+day = "Tue Nov 17 or Wed Nov 18, after the redeploy (o30). Sections 1, 2, 4 and 5 first if time is short before Thursday."
+checklist = "obstacle_collision_checklist.md"
+what = "Collision walked: the town's walls, gates and houses, the wood, what cannot be jumped, casting past and through things, monsters and pets coming round walls and trees, logging in and arriving beside things, the camera, and a second seat's view of it. The Test Panel's Obstacle Outlines button draws every boundary. This is the largest change to how a body moves since the hills and nobody has walked it yet, so it wants a sitting before the friends hold the zip."
+who = "user at a desk, a second seat for sections 5 and 8"
+hours = 5.5
+needs = ["the R720 on the collision build (o30)", "the zip a1a154e on every seat", "a GM account", "a caster and a pet class", "a second seat for sections 5 and 8"]
+waits_on = ["o30"]
+done_when = "Every row marked; a finding gets a To-Do line the same day; anything a friend would be stuck on or pulled through is fixed or the zip is held."
+todo = "Obstacle collision: trees, rocks, walls and set pieces"
+
+[[row]]
+id = "v66"
+week = "w7"
+lane = "verify"
+day = "Tue Nov 17 or Wed Nov 18, after the redeploy (o30)"
+checklist = "group_levels_checklist.md"
+what = "Group-mates' levels and classes on the group panel (built and merged on the 17th by another session, in the same zip and the same redeploy as collision): each member's row reads its level and class, never Lv 0, and follows a level gained while grouped."
+who = "user at a desk, a second seat"
+hours = 1.0
+needs = ["the R720 on the new build (o30)", "the zip a1a154e on both seats", "two accounts in one group"]
+waits_on = ["o30"]
+done_when = "Every row marked; a finding gets a To-Do line the same day."
+todo = "Other players' levels"
+
+[[row]]
 id = "p6"
 week = "w7"
 lane = "people"
 day = "Tue Nov 17"
-what = "The share links, the Monday zip (the players' checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday."
+what = "The share links, the zip (builds/ProjectDawn-alpha-a1a154e.zip since Nov 17, the players' checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday. The zip works only with the R720 on the collision build (o30)."
 who = "user at a desk, friends"
 hours = 1.0
-needs = ["a share link from the Tailscale admin console (share the machine, never the tailnet: inviting_a_player.md step 2)", "the zip in builds/"]
-waits_on = ["v61"]
+needs = ["a share link from the Tailscale admin console (share the machine, never the tailnet: inviting_a_player.md step 2)", "the zip in builds/", "the R720 redeployed (o30)"]
+waits_on = ["v61", "o30"]
 done_when = "All four shares accepted in the admin console; each friend's /version reads the Monday zip's stamp."
 
 # ---------------------------------------------------------------------------------------

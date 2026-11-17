@@ -1,10 +1,10 @@
 # Obstacle collision: trees, rocks, walls and set pieces that stop a body
 
 **Status:** designed 2026-11-17 and, on the user's answers the same day ("build it now,
-please"), **BUILT 2026-11-17 on `feat/obstacles` in both repos** (worktrees
-`F:\Projects\Project_Dawn-obstacles` and `F:\Projects\server-obstacles`; committed locally,
-not pushed, not merged). Pending the user's call on the merge, then an export and a redeploy
-together, then `docs/playtest_notes/obstacle_collision_checklist.md`.
+please"), **BUILT 2026-11-17 on `feat/obstacles` in both repos; MERGED, PUSHED AND EXPORTED
+the same day (user: "lets go for it")**: both deploy branches fast-forwarded, server
+`87c58fe`, client `a1a154e`; the zip `builds/ProjectDawn-alpha-a1a154e.zip`. Pending the
+R720 redeploy (with the zip, together) and `docs/playtest_notes/obstacle_collision_checklist.md`.
 **Asked for (user, 2026-11-17):** "Currently players are able to run through structures and
 trees etc.. We need something for collision. Can you write a plan for this? or perhaps Godot
 has something built in?"
@@ -343,12 +343,15 @@ residual above.
 
 ## 11. Before it ships
 
-1. Merge `feat/obstacles` in both repos (the user's call; the deploy branches are untouched).
-   On the client, the GM flight branch's flying body must skip the obstacle step when the
-   two meet (`player.gd`): flight ignores obstacles on the server.
-2. Drop the `(on feat/obstacles)` tags in `docs/reference/invariants.md`.
-3. Export the client and redeploy the server together. The boot line must read
-   `obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4`, and the client's
-   `debug.log` the same hash.
+1. **Done 2026-11-17:** `feat/obstacles` merged into the deploy branch in both repos and
+   pushed (server `87c58fe`, client `a1a154e`); the branch tags dropped from
+   `docs/reference/invariants.md`; all 19 checks on the merged pair; a release export,
+   `builds/ProjectDawn-alpha-a1a154e.zip`, booted headless and passing the body probe from
+   inside the export; the tester README and checklist say scenery is solid.
+2. **The user's:** redeploy the R720 and send the zip, together. The boot line must read
+   `build="87c58fe"` and `obstacles=33199 prisms (19580 walk, 31012 sight), hash
+   f97d25964ce4`, and a client's `debug.log` the same hash.
+3. When the GM flight client (`feat/gm-flight`) merges, its flying body must skip the
+   obstacle step in `player.gd`: flight ignores obstacles on the server.
 4. After any later scenery or terrain change: `export_obstacles.gd`, commit both files,
    `check_all.ps1`.

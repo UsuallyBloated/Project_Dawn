@@ -4,6 +4,11 @@
 Read this, then `docs/design/obstacle_collision.md` (the design as built) and
 `docs/session_notes/session_2026_11_17_obstacle_collision.md`.
 
+> **Worked off the same day by the same session** (the budget came back): section 3's items
+> 1 to 3 are done (the records, planner rows b64, o30 and v65, the memory). What is still
+> open is section 2 (the user's redeploy), section 3's items 4 and 5 (record the boot line;
+> triage the checklist), and sections 4 and 5, which stay true.
+
 ## 1. Where things stand (all verified before this was written)
 
 | Thing | State |
