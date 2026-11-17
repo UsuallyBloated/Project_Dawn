@@ -2136,6 +2136,44 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   drops, and the corpse sweep despawns the body), failing on the previous code at the
   hand-back. Server only, no export. **DEPLOYED 2026-11-10 14:56 UTC** (R720 boot line `build="e358270" dev_cmds=false`,
   nobody online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0` at the boot).
+- [ ] **A caster can hold any number of charmed mobs at once** *(found 2026-11-16 verifying
+  the user's rule during the wandering-wildlife review)*. The user's rule: "If someone casts
+  charm on a second creature, the charm on the first creature should drop immediately, and when
+  a creature comes out of charm it should be aggressive towards the caster." The second half
+  already holds (every charm ending goes through `pet_life::return_charmed_mob`, which calls
+  `turn_on(charmer)`). The first does not: the `PET_CHARM` arm in `tick/casting.rs` never
+  looks for a pet the caster already has, so an Enchanter can keep charming and hold a
+  private army. Also found: a summon cast with a charm up kills the charmed mob
+  (`summon_pet_for_owner` marks the first owned pet Dead) instead of handing it back. Fix
+  designed as step 0 of the wildlife build (`docs/design/wandering_wildlife.md` §3.10): the
+  charm arm hands back every charmed pet the caster owns, hostile to the caster, before making
+  the new pet; a test charms A then B and fails on the current arm. **DECIDED 2026-11-16
+  (user): the same rule covers every pairing**: a new pet replaces the old one, and a charmed
+  one is handed back angry (a charm with a summoned pet out dismisses it; a summon with a
+  charmed pet out hands the charmed mob back hostile instead of killing it). One helper in
+  `pet_life.rs` called by the charm arm and `summon_pet_for_owner`. No class has both a charm
+  and a summon today (charmers: Enchanter, Bard; summons: Necromancer, the Beast Master's
+  warder), so the cross pairings are covered by a unit test until one does; flagged for that
+  day: a warder's own respawn would hand a Beast Master's charm back. Not built.
+  **BUILT 2026-11-16 (night), MERGED AND PUSHED 2026-11-17 with the wildlife build, pending
+  the redeploy and the playtest** (server `c1758f0`, on the deploy branch under `f388b96`;
+  `wandering_wildlife_checklist.md` section 9). `pet_life::release_owned_pets` dismisses the
+  owner's living summoned pet and hands back each living charmed one hostile;
+  `pet_life::charm_mob` (the charm arm's body, moved beside `summon_pet_for_owner`) and
+  `summon_pet_for_owner` both call it first. **Corrected in the build: nothing in play could
+  stack charms today**, because each charm spell's cooldown is at least its duration (Charm
+  60 s and 60 s, Siren's Song 45 s against 30 s); only the data prevented it, and the rule now
+  holds whatever the data says. Two things the fourth review added: only LIVING pets are
+  released (a charmed pet that has died is the corpse sweep's; handed back at 0 HP it drops the
+  mob's loot for no fight, the Sable faucet again), and **the mob's damage ledger rides the
+  charm** (`Entity::charm_ledger`, given back by `released_from_charm`, cleared by `wipe_hate`):
+  before, a charm wiped the record of who had hurt a mob and kept its wounds, so charming a
+  nearly dead mob and letting it go took the kill from whoever did the work. Tests (unit, at
+  the helpers, since no cast can reach the pairings today):
+  `a_second_charm_drops_the_first_which_turns_on_the_caster` (fails with the release removed)
+  and `a_new_pet_replaces_the_old_and_a_charmed_one_comes_back_angry` (a summoned pet, a
+  living charmed one and a dead charmed one); the 18 pet integration tests green. Rule C3 in
+  `invariants.md`.
 - [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
   ticked on the integration test** (server `f58b796`,
   `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
@@ -3605,6 +3643,94 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   cliff behind them, the range seen from the square and from inside the Greywood), **and the
   journal row** (`slope_refusals` only in the minutes at the cliffs, no error). Still to run:
   section 7's two-seat row and the GM fling-and-relog row, and sections 1 to 6 and 8.
+- [ ] **Wandering wildlife to fill the open ground** *(user, 2026-11-15: "We need wandering NPCs
+  to fill the open spaces. Wolves, bears, snakes, rats etc.")*. **DESIGNED 2026-11-15:
+  `docs/design/wandering_wildlife.md`, eight decisions waiting on the user (its section 9),
+  nothing built.** Today every one of the 54 spawns stands on its spot (`tick_idle` only scans).
+  The shape: a roam table (`data/zone_roam.toml` since the review; species, a region circle or ring, count,
+  respawn, temperament, pack size); the test-only walkable flood fill (`terrain_content.rs::
+  walk_from_town`) moved to runtime; spawn spots drawn walkable and clear of the town (150 m),
+  every camp (60 m) and every player (60 m); roaming inside `Idle` (pause, a 20 to 80 m leg at
+  0.4 of the mob's speed, the same scan on the way), so a roamer is never evading; the leash
+  home rewritten to where a fight began; passive animals need no code (`aggro = 0` with a leash
+  of at least 35 m, enforced at load). Proposed population 70 animals in five level bands
+  following the camp rings (rats and grass snakes by town, wolf packs, bears and vipers further
+  out), 124 mobs in all. Found while reading: the Snake and Bear loot tables and all their
+  items already exist; quest kills match by substring, so a wandering wolf counts for the wolf
+  quests (decision 6). Server only: no wire change, no export, no migration. Slices: the
+  roamers (about a day), wolf packs with pack-scoped social aggro, then optional night spawns
+  and new species.
+  **ALL EIGHT DECIDED 2026-11-16 (user), recorded in the design's §9:** as recommended, except
+  no camp clearance (roamers may spawn and walk through camps); wolves count for the wolf
+  quests, rats do not (the rat quest's target becomes `"Plague Rat"` on both sides; the same
+  read found that "Rattlesnake" would have counted as a rat and rolled rat loot, so the snake
+  is a Prairie Adder); build now, before the door (server only, the zip unaffected); night
+  animals in scope: bats and ghosts. Build-ready; not built.
+  **REVIEWED three times against the code 2026-11-16 and corrected in the design** (its §10 lists
+  each finding and where it was fixed). The ones that would have shipped wrong: adders and
+  vipers matched no loot table and no beast word (no snake loot, coin like a humanoid), fixed
+  by adding `adder` and `viper` to `loot.rs`'s rules with a load check over every name; a home
+  reset in `transition` would fire on a charm ending in town, so it lives in `tick_idle`'s
+  acquire paths only; the integration harness runs the real camp file, so a `Config::roamers`
+  switch keeps roamers out of every test but their own. Also added: the spawner gets player
+  positions and per-slot member counts (packs refill rather than wait for the last member); a
+  roam map of floors reachable both ways, and roam steps refused onto a face in either
+  direction (mobs never fall, so they could walk down cliffs); a stray rule (idle, outside its
+  region, unseen for 120 s, respawned in region); night as 21:00 to 05:00 in lockstep with the
+  client's sky, with Bat, Wandering Shade and Barrow Shade numbers; a `PD_NO_ROAMERS=1`
+  off switch for the R720. The third pass: a slot's head count includes its charmed members
+  (else charm, wait for the refill, release: a charm-and-wait farm); social aggro only to a
+  packmate whose leash reaches the target; the roam data in its own file, since the client
+  tools' camp parser would read appended entries as part of the last camp. Still build-ready;
+  not built.
+  **Reviewed a fourth time (Fable) and BUILT 2026-11-16 (night, unattended; user: "what can you
+  run tonight? go ahead"); MERGED AND PUSHED 2026-11-17 (user: "go ahead"), pending the
+  redeploy and the playtest** (built on `feat/wandering-wildlife` in both repos; both deploy
+  branches fast-forwarded and pushed: server `f388b96`, client `b73a6a9`, all 17 client checks
+  green on the merged pair; `wandering_wildlife_checklist.md`, 39 rows; the design's section
+  10 has the fourth review's table and section 11 the as-built summary). The review's corrections: the stray rule cut (every fight ends with the
+  walk home, and home is ground the roamer stood on in its region); no roam stuck clock (a
+  refused step ends the leg at once); snare applied by hand (`move_speed` carries none); the
+  clock-driven work in the spawn step (the AI step sleeps on an empty server); packs held
+  together (social aggro moves the joiner's home and is asked every tick; a follower regathers
+  on its leader); regions take a z band (a ring round the town crosses the ridge). What exists:
+  `world/roam_map.rs` (the floors reachable from the town without crossing a face in either
+  direction, 55 degrees, shared edges: 51.1% of the plate; the one answer to where a wanderer
+  may appear, where a leg may end and whether a roam step may be taken); `world/roam.rs` and
+  `data/zone_roam.toml` (66 slots: 70 animals by day, 30 of them wolves in 12 packs, and 14 at
+  night; a region is a circle, a ring round the town and a z band, with the 150 m town
+  clearance part of every region; unknown keys and a passive mob without a 35 m leash are
+  refused at load); the spawner's roam slots (a slot counts heads by looking at the world,
+  charmed members included; a pack is refilled beside its leader when no player is within
+  60 m of it; a night slot waits for dusk); `Entity::tick_roam` (inside Idle, after the idle
+  scan; pause 5 to 25 s, a leg of 20 to 80 m at 0.4 of its speed, every step onto the roam
+  map), `roam_fight_began` (home becomes where the fight began, set when it picks a target
+  while idle or joins a packmate's fight, never by a charm ending) and `join_pack_fight`;
+  packs (the leader is the lowest id, read fresh each tick; followers stand within 4 m, amble
+  after it, run past 12 m, and never take a line through the town); night (`clock::is_night`,
+  21:00 to 05:00, the pair `NIGHT_START_HOUR` / `NIGHT_END_HOUR` in lockstep with the client's
+  sky; a night animal that is idle, unhurt and unseen by day is removed and its slot waits for
+  dusk); `adder` and `viper` in `loot.rs`; the rat quest's target `"Plague Rat"` on both sides
+  (the client's objective text now names the Rat Warrens); `Config::roamers`
+  (`PD_NO_ROAMERS=1`, boot line `roamers=on|off`, and a `wandering wildlife slots=66
+  animals=84 roam_map_share=51.1%` line at world start) and `Config::roam_table` for the
+  harness, which runs with roaming off except in `tests/world/roam.rs`. Tests: 31 unit and
+  four integration (a wanderer seen walking its region; home is where the fight began, not the
+  first spawn; six respawns in a row past 60 m of a player; a passive packmate joining its
+  smitten packmate's fight), 19 planted faults each caught; the suite 445 unit and 195 world,
+  fmt and clippy clean, all 17 client checks green against the branch; the real binary booted
+  with roaming on and off. Rules C1 to C4 in `invariants.md`. **Calls
+  made in the build, the user's to overrule:** Field Rats stay aggressive but see only 6 m (a
+  level 1 has 17 to 28 HP and their ring holds the three starter camps; one line makes them
+  passive); the far reaches (the war camp's vale, the barrow hills, the east arm) are one ring
+  region past 1,350 m. **Deploy shape:** the server half needs no zip, no SQL and no client
+  change: the usual redeploy, the boot line reading `build="f388b96"` and `roamers=on`, then
+  `wandering wildlife slots=66 animals=84`; `PD_NO_ROAMERS=1` in the server's `.env` and a
+  restart turns the animals off. The client half (the rat quest's objective text and tooling)
+  rides the next zip; the door zip `397e207` works without it. **Flagged, not built:** a
+  stunned leader's followers keep following; wanderers stand still on an empty server and are
+  placed afresh at a restart; a pack split by a cliff can stay split for a while; no species
+  shape or tint on the client.
 - [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
   a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
   height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at

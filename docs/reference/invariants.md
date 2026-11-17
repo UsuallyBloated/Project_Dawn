@@ -210,10 +210,10 @@ of it is ever within 150 m of the town's middle: not a spawn spot, not the end o
 leg's line, not a pack follower's line to its leader, and never the home a fight or a charm
 leaves it with. A chase can still bring one in, as it can a camp mob, and it walks home after.
 Why: an aggressive animal that settled among the vendors would kill everyone who logs in there.
-Held by: `a_wanderer_never_chooses_ground_inside_the_town_ring` (on feat/wandering-wildlife),
-`a_follower_keeps_to_its_leader_and_never_cuts_through_the_town` (on feat/wandering-wildlife),
-`a_wanderers_home_is_where_its_fight_began_and_never_where_a_charm_ended` (on feat/wandering-wildlife),
-`a_line_through_the_town_is_refused_and_one_round_it_is_not` (on feat/wandering-wildlife)
+Held by: `a_wanderer_never_chooses_ground_inside_the_town_ring`,
+`a_follower_keeps_to_its_leader_and_never_cuts_through_the_town`,
+`a_wanderers_home_is_where_its_fight_began_and_never_where_a_charm_ended`,
+`a_line_through_the_town_is_refused_and_one_round_it_is_not`
 
 ### C2. A wanderer stays on ground it can walk back from
 Wanderers appear and walk only on the roam map: floors reachable from the town without
@@ -221,10 +221,10 @@ crossing a face, in either direction. A mob never falls and the slope rule refus
 that rises onto a face, so without this an animal would walk down a cliff into a pocket it can
 never leave, or out onto a perch. Why: a mob somewhere no path leads is a mob nobody can reach
 or one that can be hit from where it cannot answer.
-Held by: `a_roam_step_onto_a_face_is_refused_going_down_as_well_as_up` (on feat/wandering-wildlife),
-`a_pit_reachable_only_downhill_is_not_roamable` (on feat/wandering-wildlife),
-`a_face_is_never_roamable_and_the_ground_behind_it_is_not_reached` (on feat/wandering-wildlife),
-`an_idle_wanderer_off_the_map_steps_onto_its_home` (on feat/wandering-wildlife)
+Held by: `a_roam_step_onto_a_face_is_refused_going_down_as_well_as_up`,
+`a_pit_reachable_only_downhill_is_not_roamable`,
+`a_face_is_never_roamable_and_the_ground_behind_it_is_not_reached`,
+`an_idle_wanderer_off_the_map_steps_onto_its_home`
 
 ### C3. One pet at a time, and a charm takes nothing from anyone
 A new pet replaces the old one: a summoned pet is dismissed, a charmed one is handed back as
@@ -234,9 +234,9 @@ for the charm's life. Why: each is a way a charm paid for nothing. A dead pet ha
 dropped its loot with no fight; a charm that wiped the damage record took the kill from
 whoever did the work; a slot that refilled during a charm held one mob more after it, every
 cast.
-Held by: `a_second_charm_drops_the_first_which_turns_on_the_caster` (on feat/wandering-wildlife),
-`a_new_pet_replaces_the_old_and_a_charmed_one_comes_back_angry` (on feat/wandering-wildlife),
-`a_charmed_member_holds_its_head_so_a_charm_never_overfills_a_slot` (on feat/wandering-wildlife),
+Held by: `a_second_charm_drops_the_first_which_turns_on_the_caster`,
+`a_new_pet_replaces_the_old_and_a_charmed_one_comes_back_angry`,
+`a_charmed_member_holds_its_head_so_a_charm_never_overfills_a_slot`,
 `a_charmed_pet_that_dies_as_its_charm_runs_out_is_not_handed_back`
 
 ### C4. A respawn is never handed to whoever waits for it
@@ -245,9 +245,9 @@ and a pack short of members is refilled without waiting for its last one to die.
 that appears beside the player who killed it is a farm, one that appears on a fight is a
 death nobody earned, and a pack that waits for its last member can be kept out of the world
 by anyone who leaves one alive.
-Held by: `a_respawn_never_lands_beside_a_player` (on feat/wandering-wildlife),
-`a_wanderer_appears_in_its_region_clear_of_every_body` (on feat/wandering-wildlife),
-`a_pack_is_refilled_beside_its_leader_while_one_member_lives` (on feat/wandering-wildlife)
+Held by: `a_respawn_never_lands_beside_a_player`,
+`a_wanderer_appears_in_its_region_clear_of_every_body`,
+`a_pack_is_refilled_beside_its_leader_while_one_member_lives`
 
 ## Client and server agree
 

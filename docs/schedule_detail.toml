@@ -990,6 +990,48 @@ done_when = "The boot line shows dev_cmds=false and terrain=400x400 cells of 10 
 todo = "The starting zone at 4 km"
 
 [[row]]
+id = "b63"
+week = "w7"
+lane = "build"
+day = "Mon Nov 16 (night)"
+what = "Wandering wildlife: animals that live in a region instead of at a spawn point, to fill the open ground between the camps. 70 by day in five level bands (rats and grass snakes by the town, wolf packs, bears and vipers further out) and 14 at night (bats, shades); they walk short legs and pause, notice players as they pass, go home to where a fight began, and wolves keep to a pack. With it the user's pet rule: one pet at a time, and a charmed creature let go comes back hostile. Built on feat/wandering-wildlife in both repos; merged into the deploy branches on Nov 17 (row o29). Server only: no zip, no SQL, and an off switch (PD_NO_ROAMERS=1)."
+who = "Claude"
+days = 1.0
+done_when = "Both branches committed; the server suite and every client check green; each rule's planted fault caught by a test; the design doc and the session note say what was built."
+todo = "Wandering wildlife to fill the open ground"
+
+# d12 (the wandering wildlife before the door; the id reused after the compass) was answered
+# on 2026-11-17 ("go ahead": push, merge and redeploy before Thursday). The row left the plan;
+# o29 and v64 carry the work.
+
+[[row]]
+id = "o29"
+week = "w7"
+lane = "operate"
+day = "Tue Nov 17 (merged and pushed; the redeploy is next, any time before the door)"
+what = "(Merged and pushed 11-17: server f388b96, client b73a6a9, both deploy branches fast-forwarded, all 17 client checks green on the merged pair. Not yet deployed.) The animals reach the game: feat/wandering-wildlife pushed and merged into the deploy branch in both repos, every check on the merged pair, and the R720 pulled, built and restarted. No SQL and no new zip: the door zip (397e207) works with it as it is; the client branch carries only a quest line's text and tooling."
+who = "Claude for the merge; user over SSH for the redeploy"
+hours = 0.5
+needs = ["everyone logged out for the redeploy", "the R720 over SSH"]
+waits_on = ["b63"]
+done_when = "The boot line shows build=f388b96, dev_cmds=false and roamers=on, and the next line reads wandering wildlife slots=66 animals=84."
+todo = "Wandering wildlife to fill the open ground"
+
+[[row]]
+id = "v64"
+week = "w7"
+lane = "verify"
+day = "Tue Nov 17 or Wed Nov 18, after o29's redeploy"
+checklist = "wandering_wildlife_checklist.md"
+what = "The wandering wildlife walked: animals in each band and that they walk, being noticed in passing and the passive ones leaving you alone, the short walk home after a pull, loot and quest credit (wolves count, field rats do not), packs fighting together and refilling, respawns never beside you, bats and shades at night and gone by day, the off switch, and one pet at a time with a charmed creature coming back hostile."
+who = "user at a desk, a second seat for two sections"
+hours = 3.0
+needs = ["the R720 on the wildlife build (o29)", "a GM account", "an Enchanter and a Necromancer for section 9", "a second seat for sections 5 and 9"]
+waits_on = ["o29"]
+done_when = "Every row marked; a finding gets a To-Do line the same day; if the animals misbehave before the door, PD_NO_ROAMERS=1 in the server's .env and a restart turns them off."
+todo = "Wandering wildlife to fill the open ground"
+
+[[row]]
 id = "p6"
 week = "w7"
 lane = "people"

@@ -6,10 +6,11 @@ they pass, fight with the AI every mob has, and go home to where the fight began
 in packs. Also in this build: one pet at a time (a new charm or summon releases the old pet; a
 charmed one comes back hostile), and a charm no longer wipes the record of who hurt a mob.
 
-**Build prerequisite:** the server redeployed from the build that carries
-`feat/wandering-wildlife` (the boot line reads `roamers=on`). Everything but section 7's quest
-text works on the client testers already hold; the quest text needs a client build from the
-same branch. No protocol change, no migration.
+**Build prerequisite:** the server redeployed at `f388b96` or later (merged into the deploy
+branch 2026-11-17; the boot line reads `build="f388b96"` and `roamers=on`). Everything but
+section 7's quest text works on the client testers already hold (the door zip `397e207`); the
+quest text needs a client build from `b73a6a9` or later. No protocol change, no migration, no
+SQL.
 
 | Band | Where (from the town) | Animals (level; temper) |
 |---|---|---|
