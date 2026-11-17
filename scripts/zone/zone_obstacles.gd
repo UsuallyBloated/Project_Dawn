@@ -99,6 +99,17 @@ static func shared() -> ZoneObstacles:
 		_shared = load_file(FILE_PATH, problem)
 		if _shared == null:
 			push_error("ZoneObstacles: %s. Nothing in the zone will stop this client's body." % ", ".join(problem))
+		# In the log beside the build stamp: the server's boot line prints the
+		# same twelve digits for its copy, so a client and a server holding
+		# different obstacles can be told apart from two logs. (The autoload
+		# is looked up, never named: tools load this script with no autoloads.)
+		var tree := Engine.get_main_loop() as SceneTree
+		var debug_log: Node = tree.root.get_node_or_null("/root/DebugLog") if tree != null else null
+		if debug_log != null:
+			if _shared != null:
+				debug_log.info("ZoneObstacles: %d prisms, hash %s" % [_shared.size(), _shared.hash_hex()])
+			else:
+				debug_log.error("ZoneObstacles: %s" % ", ".join(problem))
 	return _shared
 
 
@@ -250,6 +261,19 @@ func corners_of(i: int) -> PackedVector2Array:
 # The WALK prisms whose outline comes within `reach` of `p`, lowest index first.
 func walk_near(p: Vector2, reach: float) -> PackedInt32Array:
 	return _gather(_walk_cells, p.x - reach, p.y - reach, p.x + reach, p.y + reach)
+
+
+# Every prism, of either kind, with a corner's cell inside the box from
+# (x0, z0) to (x1, z1): what the dev outline view draws.
+func prisms_near(x0: float, z0: float, x1: float, z1: float) -> PackedInt32Array:
+	var found := _gather(_walk_cells, x0, z0, x1, z1)
+	found.append_array(_gather(_sight_cells, x0, z0, x1, z1))
+	found.sort()
+	var out := PackedInt32Array()
+	for v in found:
+		if out.is_empty() or out[out.size() - 1] != v:
+			out.append(v)
+	return out
 
 
 func _gather(cells: Dictionary, x0: float, z0: float, x1: float, z1: float) -> PackedInt32Array:

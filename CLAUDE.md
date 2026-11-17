@@ -3738,27 +3738,68 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   roamers=on slots=66 animals=84 roam_map_share=51.1%`; nobody online at the stop, `saved=0
   unsaved=0`, 14 corpses loaded, `ledger check mismatches=0`);
   `wandering_wildlife_checklist.md` is runnable now on the door zip `397e207`.
-- [ ] **Obstacle collision: walls, trees and set pieces that stop a body** *(user, 2026-11-17:
-  "Currently players are able to run through structures and trees etc.. We need something for
-  collision. Can you write a plan for this? or perhaps Godot has something built in?")*.
-  **DESIGNED 2026-11-17: `docs/design/obstacle_collision.md`, eight decisions waiting on the
-  user (its section 9), nothing built.** Godot's built-in collision (a `StaticBody3D` per wall
-  and trunk) would stop the client's body only: the server moves every player from the
-  direction sent, so it would walk the player through the wall and the client would snap after
-  it (invariant L2), and a modified client deletes its own walls. The shape: every solid thing
-  declares a flat footprint (a circle or a turned box, a column of any height, so nothing is
-  stood on or jumped over); one exporter writes them to the server's `data/obstacles.toml`
-  (compiled in, hash and boot line, as the terrain) and to the client's own copy; one rule on
-  both sides (a body inside a footprint grown by its radius is moved out the shortest way,
-  which is a slide), the GDScript port held to the Rust by a fixtures check; every placement
-  (login, port, summon, spawn, landing) goes to the nearest free point. Counted today: 13,349
-  trees and 860 boulders planted, a walled town with four 9 m gates and about 35 buildings,
-  twenty set pieces. Slices: 0 the data and checks with nothing colliding; 1 players stop; 2
-  walls and buildings block sight; 3 mobs and pets collide (slide, with the existing 8 s
-  give-up and evade for a mob a wall holds; no pathfinder); 4 the camera stops at buildings
-  (the one job Godot's own collision gets). No wire change, no migration; both sides move
-  together from slice 1. Closes the wall half of exploit-audit finding 10 (b). Recommended
-  after the door.
+- [ ] **Obstacle collision: trees, rocks, walls and set pieces that stop a body** *(user,
+  2026-11-17: "Currently players are able to run through structures and trees etc.. We need
+  something for collision. Can you write a plan for this? or perhaps Godot has something built
+  in?")*. **DESIGNED AND BUILT 2026-11-17 (user, on the eight calls: "build it now, please"),
+  on `feat/obstacles` in both repos, committed locally, NOT pushed and NOT merged; pending the
+  user's call on the merge, then an export and a redeploy together, then the playtest**
+  (worktrees `F:\Projects\Project_Dawn-obstacles` and `F:\Projects\server-obstacles`; design as
+  built: `docs/design/obstacle_collision.md`; `obstacle_collision_checklist.md`; session note
+  `session_2026_11_17_obstacle_collision.md`; no wire change, no DLL rebuild, no migration, no
+  SQL). Godot's built-in collision would stop the client's body only: the server moves every
+  player from the direction sent, so it would walk the player through the wall and the client
+  would snap after it, and a modified client deletes its own walls. So the server holds the
+  obstacles. **The user's calls:** everything solid blocks (the first plan left bushes, bones,
+  fences and clutter out); boundaries mirror each object's own geometry; a tree or a rock that
+  is in the line blocks a cast; mobs and pets collide; bodies still pass through each other;
+  the camera stops at walls and buildings, not trees. **What exists:** every closed solid the
+  `LowPoly` builder makes records its corners; `ZoneObstacleBake` turns each, and every planted
+  tree, bush, boulder and bone, into a prism (its outline from above, its base and top);
+  `tools/export_obstacles.gd` writes the same bytes to the client's `data/zone_obstacles.bin`
+  and the server's `data/obstacles.bin` (33,199 prisms, 2.2 MB, compiled in, hash checked,
+  boot line `obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4`). One rule on
+  both sides (`world/obstacles.rs`, `scripts/zone/zone_obstacles.gd`): a step is taken in 0.1 m
+  pieces and a body inside an outline grown by its radius is moved out the shortest way, a
+  slide; no piece may move a body much further than it asked, which makes crossing a solid
+  impossible whatever the scenery. The server resolves every player step (on the ground and in
+  the air), every placement stands clear and out of any gap it could not leave (`place`,
+  `can_leave`: login, respawn, ports, the resurrection summon, camp, dev and wanderer spawns; a
+  pet is summoned on its owner's side of a wall), the ground carries the obstacles so every
+  sight check includes them, and mobs and pets use the same rule at the same radius: a held
+  step is tried turned to one side and the other, so a mob follows a wall to its end and comes
+  round (no pathfinder), and only a held step feeds the stuck clock and the evade rule (after
+  1 s it takes no damage, after 8 s it gives up, as below a cliff). Client: the player's body
+  runs the rule after the blend toward the server; a cast is refused before the bar when a
+  solid is in the line; 630 big solids are camera blockers on physics layer 5, which only the
+  spring arm reads (click targeting unchanged); the Test Panel's **Obstacle Outlines** draws
+  every prism (red stops a body, blue blocks sight only). For walking a prism is a column:
+  **nothing is stood on or jumped over** (the data carries real heights, so that is an added
+  rule later, with the server simulating the jump). Floors (the Ossuary's dais, the Wraith
+  Gate's and the crypt's steps) are built `solid = false`. Scenery changed: fences follow the
+  ground in 3 m stretches and each field has a 4 m gateway on its town side. Checks:
+  `check_obstacle_lockstep.gd` (the three copies are one file; every preset ships it; the
+  camera's layer and the body's are apart) and `check_obstacle_rule.gd` (the server's answers
+  for 600 steps, 150 placements and 400 sight lines, replayed through the GDScript rule; it
+  caught a slip in the port the day it was written), both in `check_all.ps1` (19 checks
+  green); thirteen constant pairs. Tests: server 476 unit and 201 world, clippy and fmt clean
+  (36 new: the rule, the file, the real zone's gates, spawns and pockets, mobs round a house
+  and a trunk, five with a real client); each player, sight, mob and spawn test was run
+  against the rule switched off and failed. Rules A6, C5 and a rewritten L2 in
+  `invariants.md` (tagged `(on feat/obstacles)` until the merge). Closes the wall half of
+  exploit-audit finding 10 (b). **Exploit lens:** the server takes every step itself; a
+  hand-edited file fails its hash at boot; one body radius for everything, so nowhere a player
+  fits and a mob does not; a mob that cannot reach its target is immune after a second.
+  **Residuals, none a free kill:** a mob sliding along a long low fence is damageable for the
+  slide plus the grace; a building sheds a chasing mob in 8 s if it finds no way round; a
+  space sealed between solids and a cliff is not found by the pocket test (the road doors).
+  **Flagged:** a body run square into a flat face stops until it steers, and a low-poly trunk
+  has five or six flat faces; a kited mob held once at a trunk and never gaining a metre gives
+  up 8 s later; the obstacle file is rewritten whole (2.2 MB in each repo) on every scenery
+  change, and `export_obstacles.gd` must be run after any scenery or terrain edit; at the
+  merge, the GM flight client's flying body must skip the obstacle step, and the
+  `(on feat/obstacles)` tags come off; nobody has walked the zone with it yet; no planner row
+  was added.
 - [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
   a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
   height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at

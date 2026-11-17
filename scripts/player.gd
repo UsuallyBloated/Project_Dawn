@@ -146,6 +146,10 @@ func _ready() -> void:
 	# without a custom model). Remote peers do the same from their own race.
 	RaceModel.apply(visual, PlayerStats.race)
 	_obstacles = ZoneObstacles.shared()
+	# The camera stops at walls and buildings (zone_camera_blockers.gd): shapes
+	# on a layer of their own that the spring arm reads and this body does not.
+	ZoneCameraBlockers.ensure(get_tree().current_scene)
+	spring_arm.collision_mask |= ZoneCameraBlockers.LAYER
 
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	spring_arm.spring_length = THIRD_PERSON_DISTANCE

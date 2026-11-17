@@ -1,396 +1,317 @@
-# Obstacle collision: walls, trees and set pieces that stop a body
+# Obstacle collision: trees, rocks, walls and set pieces that stop a body
 
-**Status:** designed 2026-11-17; eight decisions waiting on the user (section 9); nothing built.
+**Status:** designed 2026-11-17 and, on the user's answers the same day ("build it now,
+please"), **BUILT 2026-11-17 on `feat/obstacles` in both repos** (worktrees
+`F:\Projects\Project_Dawn-obstacles` and `F:\Projects\server-obstacles`; committed locally,
+not pushed, not merged). Pending the user's call on the merge, then an export and a redeploy
+together, then `docs/playtest_notes/obstacle_collision_checklist.md`.
 **Asked for (user, 2026-11-17):** "Currently players are able to run through structures and
 trees etc.. We need something for collision. Can you write a plan for this? or perhaps Godot
 has something built in?"
 
-Short answer: Godot does have collision built in, and it is the wrong tool for the main job
-here. In this game the server moves every body, so the server has to know what is solid.
-The plan is to describe each solid thing as a flat footprint (a circle or a box), give the
-same footprints to both sides from one exported file, and run the same small rule on both
-sides. Godot's own collision gets one job at the end: keeping the camera out of buildings.
+Everything solid in the zone now stops a body, blocks a line of sight, and (for the big
+things) stops the camera. The server decides all of it. This document is the design as it
+was built; section 9 has the user's answers and section 10 what differs from the first plan.
 
 ---
 
-## 1. What exists (read in both repos on 2026-11-17)
+## 1. Does Godot have this built in?
 
-| Piece | Where | What it means here |
-|---|---|---|
-| The player's body | `scenes/player.tscn`, `scripts/player.gd` | A `CharacterBody3D`, capsule radius 0.4 m, height 2.0 m, moved by `move_and_slide`. It collides with the terrain and nothing else. |
-| Who decides position | `player.gd`, server `world/tick/movement.rs` | The client sends a direction 20 times a second (`Net.send_movement`). The server integrates it (`run_movement`) at its own speed and fans the Position. The client's body is a prediction. |
-| Reconciliation | `player.gd::_on_world_position`, `_physics_process` | After `move_and_slide`, X and Z are blended toward the server's last position (17.3 a second); past 1.0 m apart the body snaps. Y is never reconciled. The blend sets the position directly, with no collision test. |
-| The server's step | `world/terrain.rs::player_step`, `world/fall.rs` | The step on the ground (shorter uphill, refused onto a face past 60 degrees), a fall branch for a body in the air, a flight branch for a GM. The largest step a player takes in one tick is 0.4125 m (`RUN_SPEED` 5.0, the strongest speed buff 1.65, `TICK_DT` 50 ms; speed buffs do not stack, `buffs::speed_mult` takes the largest). |
-| Mobs and pets | `world/entity.rs` | Straight lines to the target, each step through `step_on` (the slope rule, then pinned to the ground). A mob held with no progress gives up after `MOB_STUCK_SECS` (8 s) and is evading while held (`is_evading`: nothing damages it). Wanderers walk legs in `tick_roam`. No pathfinding. |
-| Sight | `world/terrain.rs::can_see`; client `Spells` (ray on physics layer 2) | Terrain only. Gates every targeted spell, ranged attack, AoE victim, song pulse and the idle mob's scan. |
-| The scenery | `scripts/zone/` (`zone_flora.gd`, `zone_town.gd`, `zone_landmarks.gd`, `zone_props.gd`, `low_poly.gd`) | Built in code at load, placeholder shapes. The flora plants 16,363 things: 13,349 trees (pine 8,323, tall pine 3,517, dead tree 616, dark tree 530, broadleaf 363), 860 boulders, and 2,154 bushes, scrub and bones (counted with a headless build today). The town is a walled square 180 m across with four 9 m gates, five towers, about 35 buildings and the mill; the landmarks are twenty set pieces at the camps. |
-| The rule that forbids collision today | `docs/reference/invariants.md` L2, `tools/check_zone_scenery.gd` (COLLIDES) | "What the server does not know never stops a body": no scenery node may be a physics body. The rule's own last line: "When the server learns obstacles, both sides get them together, with their own check." This plan is that. |
-| The ground's export | `tools/export_terrain.gd`, server `data/terrain.toml`, `tools/check_terrain_lockstep.gd` | The pattern to copy: the client's scene is the source, an exporter writes the server's file, the file is compiled in with a SHA-256 that refuses a hand edit, the boot line names it, and a check fails when the two sides differ. |
-| The open audit finding | To-Do, "Exploit-audit finding 10 residuals", part (b) | "Movement has a speed cap but no server-side collision, so a modified client clips through walls at legal speed." There are no walls on the server to clip through yet; this plan is where that finding closes. |
-
----
-
-## 2. Does Godot have this built in?
-
-Yes. A `StaticBody3D` with a `CollisionShape3D` on every wall and trunk would stop the
-player's body on the client in an afternoon, because the player is already a
-`CharacterBody3D` and `move_and_slide` slides along whatever it meets. Three reasons it
-cannot be the answer by itself:
+Yes: a `StaticBody3D` with a `CollisionShape3D` on every wall and trunk would stop the
+player's body on the client, since the player is already a `CharacterBody3D`. It cannot be
+the answer by itself, for three reasons:
 
 1. **The server moves the body.** A Move carries the direction held, not where the body got
-   to. With a wall only on the client, the client's body stops at the wall while the server
-   walks the player through it; a moment later the two are more than a metre apart and the
-   client snaps through the wall to where the server has it. That is exactly what invariant
-   L2 describes, and why the scenery was built without bodies.
-2. **A modified client deletes its own walls.** Anything only the client enforces is a
-   suggestion. Walls matter for sight, for where a mob can reach a player and for where a
-   player can hide, so they have to be the server's.
-3. **The server's world is flat footprints, and a 3D body has a top.** The server keeps an
-   X, a Z and the ground under them; the jump is cosmetic. A real 3D collider on the client
-   can be landed on (a boulder on a hillside, a low wall, a tree's collider from a cliff
-   above), and a body standing on top of something the server treats as solid is a body the
-   server keeps dragging off. Making every client collider "tall enough" fixes that and
-   breaks clicking and the camera above every roof.
+   to. With a wall only on the client, the client's body stops while the server walks the
+   player through; a moment later the two are a metre apart and the client snaps through
+   the wall to where the server has it.
+2. **A modified client deletes its own walls.** Walls matter for sight, for where a mob can
+   reach a player and for where a player can hide, so they have to be the server's.
+3. **The server's world has no height above the ground.** It keeps an x, a z and the ground
+   under them; the jump is cosmetic. A 3D collider on the client has a top a body can land
+   on, and a body standing on something the server treats as solid is a body the server
+   keeps dragging off.
 
-So the server needs the obstacles, and once it has them the client's half is the same rule
-run early so the picture agrees. The rule is about sixty lines; porting it is cheaper and
-more exact than making Godot's solver imitate it.
-
-**Where Godot's built-in collision does fit:** the camera. A `SpringArm3D` already pulls the
-camera in when the ground is behind the player. True-height box bodies on walls and
-buildings, on a layer only the camera reads, keep the camera from looking through a house
-(slice 4).
-
-**Also considered, and rejected:** a physics engine on the server (Rapier) fed the scene's
-meshes. Two different solvers never agree exactly at a contact, the project has already paid
-for that kind of mirroring once (the uphill step was measured off the client's body and
-copied), and nothing in a 2D footprint world needs a solver.
+So the server holds the obstacles and runs the rule, and the client runs the same rule on
+the same data so its picture agrees. Godot's own collision has one job: the camera (4.8).
 
 ---
 
-## 3. The design in one paragraph
+## 2. The design in one paragraph
 
-Every solid thing in the zone declares a **footprint**: a circle (a trunk, a boulder, a
-standing stone, the mill) or a box turned to any angle (a wall run, a house, a tower, a gate
-pier, a tent). A footprint is a column of any height: nothing can be stood on or jumped
-over. One exporter builds the scene headless and writes all footprints to one file; the
-server compiles it in beside the terrain, hash and boot line included, and the client loads
-the same data. One rule, written twice (Rust and GDScript) and checked against each other:
-after a step, a body whose centre is inside a footprint grown by the body's radius is moved
-out the shortest way, which is a slide along the surface. The server applies it to every
-player step, so a modified client walks into the server's walls. The client applies it to
-its own body so the two agree. Every way a body is placed without walking (login, teleport,
-port, summon, spawn, landing) puts it at the nearest free point. Later slices let walls and
-buildings block sight, make mobs and pets obey the same rule, and stop the camera at
-buildings.
+Every solid of the scenery records its own corners as it is built. A bake turns each into a
+**prism**: its outline seen from above (the convex hull of its corners), with the height of
+its lowest and highest point. One exporter writes all prisms to one file, the same bytes for
+the client and the server. One rule, written in Rust and in GDScript and checked against
+each other: a step is taken in short pieces, and after each, a body whose centre is inside
+a prism's outline grown by the body's radius is moved out the shortest way, which is a
+slide along the surface. The server applies it to every step it takes for a player, a mob
+or a pet; the client applies it to its own body. Every way a body is put somewhere without
+walking goes to the nearest point clear of everything that it can also walk away from. A
+line of sight is blocked where it passes through a prism between its base and its top.
+
+---
+
+## 3. What exists (both repos, branch `feat/obstacles`)
+
+| Piece | Where | What it does |
+|---|---|---|
+| Solids record themselves | client `scripts/zone/low_poly.gd` (`volumes()`) | Every closed solid the builder makes (box, gable, column, blob) notes its corners and how much of its outline blocks sight (1 for a box, less for a shape that tapers). Loose sheets and triangles (banners, webs) record nothing. `solid = false` round a floor (a dais, steps). |
+| The scenery hands them over | `zone_dressing.gd` (`add_piece`), `zone_flora.gd` (`placed_kinds`, `placed_transforms`, `kind_volumes`) | The town and the landmarks give every solid of every piece; the flora gives each planted thing's kind and transform. Glows (fire, magic light) are added another way and record nothing. |
+| The bake | `scripts/zone/zone_obstacle_bake.gd` | Each solid becomes a prism: outline (convex hull, millimetre grid), base, top, flags. A planted thing is at most two prisms: its foot (trunk, bush, boulder) and its crown. |
+| The file | client `data/zone_obstacles.bin`, server `crates/projectdawn-server/data/obstacles.bin` | Header, 32-bit floats, SHA-256 trailer. 33,199 prisms, 2.2 MB: 19,580 stand in a body's way, 31,012 block sight. Hash `f97d25964ce4`. |
+| The rule, server | `world/obstacles.rs` | `resolve` (a step), `clear_of` / `place` (a placement), `can_leave` / `stands`, `sight_blocked`. Compiled in (`include_bytes!`), hash checked, on the boot line. |
+| The rule, client | `scripts/zone/zone_obstacles.gd` | The same functions on the same file. |
+| Players | server `world/tick/movement.rs`; client `scripts/player.gd` | The server resolves the step the terrain allowed, on the ground and in the air. The client resolves each frame's whole movement, after the blend toward the server. |
+| Placements | server `Obstacles::place` | Login, respawn, ports, the resurrection summon, camp and dev spawns. A wanderer's spot must `stands` (`RoamMap::spot_ok`). A pet's 1.5 m beside its owner is walked, not jumped. |
+| Sight | server `Terrain::can_see`; client `Spells._target_out_of_sight` | The ground carries its obstacles (`Terrain::with_obstacles`), so every existing sight check includes them: targeted spells, heals, ranged attacks, AoE victims, song pulses, the idle mob's scan. |
+| Mobs and pets | server `Entity::step_on`, `roam_step` | The same rule at the same radius; a held step is tried turned to one side and the other (4.7). |
+| Camera | client `scripts/zone/zone_camera_blockers.gd` | 630 big solids as real shapes on physics layer 5, read by the spring arm only. |
+| Dev view | client `scripts/zone/zone_obstacle_outlines.gd`, Test Panel "Obstacle Outlines" | Every prism near the camera drawn over the scenery: red stops a body, blue blocks sight only. |
+
+No wire change, no DLL rebuild, no migration, no SQL.
 
 ---
 
 ## 4. The pieces
 
-### 4.1 Footprints
+### 4.1 What is solid
 
-Two shapes, both in world X and Z:
+A prism **stands in a body's way** (`WALK`) when it comes down to within 1.0 m of the ground
+under it and rises at least 0.3 m above it. So a crown, a roof's overhang, a gate's lintel
+and an arch's span do not, and anything under shin height is stepped over. Everything else
+does: trunks, bushes, scrub, boulders, bones, walls, towers, gate piers, houses, sheds'
+posts, tents, palisade stakes, standing stones, spires, fences, barrels, crates, signposts,
+banner poles, gravestones (the user's call: everything blocks).
 
-- **Circle:** centre and radius.
-- **Box:** centre, half width, half depth, yaw. Carries a `top` (the world height of its
-  highest point) for the sight rule in 4.8; the walk ignores it.
+A prism **blocks sight** (`SIGHT`) when it is at least 0.3 m wide at its narrowest and has
+0.3 m of itself above the ground: a trunk, a rock, a bush, a wall, a crown, a roof. A
+banner's pole and a fence's rail do not. A tapering shape is drawn in for sight (a cone to
+half its width, a ball to four fifths), so a crown's thin top does not block what a player
+can plainly see past.
 
-Where they come from: the code that draws a thing also declares its footprint, so the two
-cannot drift apart silently.
+For walking a prism is a column of any height: nothing is stood on or jumped over (4.9).
 
-- `LowPoly` gains two recording calls, `solid_circle(xf, radius)` and
-  `solid_box(xf, width, depth, top)`. They draw nothing; they add to a list on the builder.
-- `ZoneProps` calls them inside the props that are solid (`house`, `wall`, `tower`, `gate`
-  for its two piers and never its opening, `shed`, `tent`, `standing_stone`, `spire`, `arch`
-  for its piers), so every house anywhere gets its footprint from the one function.
-- `ZoneDressing.add_piece` collects a builder's footprints as it adds the mesh.
-- `ZoneFlora` records a circle for each planted tree and each tall boulder, from the kind's
-  trunk radius times the instance's scale.
+**Floors are not obstacles.** The Ossuary's dais, the Wraith Gate's steps and the crypt's
+two steps are built with `solid = false`: the camps' mobs stand on them, and the server has
+no floors above the ground. They are drawn and walked through, as before.
 
-When authored models replace the placeholders, a model's prop function keeps declaring the
-footprint. A building with a doorway and a room becomes several thin boxes with a gap; that
-works in this model for anything on one floor.
+### 4.2 The file, the export and the checks
 
-### 4.2 What collides
+- `tools/export_obstacles.gd` builds the world headless, bakes, reads the result back as the
+  game will, and writes the same bytes to both repos. Run it after any change to the
+  scenery or the ground; always pass the server path.
+- The client collides from the exported file, not from its live scatter: if a machine ever
+  planted one tree differently, the worst case is a tree drawn off its collider, never a
+  client and a server that disagree about where a body stands.
+- `tools/check_obstacle_lockstep.gd` (in `check_all.ps1`): the scenery bakes to the client's
+  file; the client's file is the server's; a second bake is the same bytes; the file loads;
+  every export preset ships it; the camera's blockers are on a layer the body does not read.
+- `tools/check_obstacle_rule.gd` (in `check_all.ps1`): the server's tests write
+  `data/obstacle_rule_fixtures.txt` (a small scenery, and the rule's answers for 600 steps,
+  150 placements and 400 sight lines); the client replays them through its GDScript rule and
+  fails on any that differ. It caught a slip in the port on its first day.
+- `tools/check_constant_lockstep.gd` holds the rule's thirteen numbers equal.
 
-The test for "solid": taller than a person, so nobody expects to hop onto it.
+### 4.3 The rule
 
-| Collides | Footprint | Notes |
-|---|---|---|
-| Trees (all five kinds, 13,349) | circle at the trunk's foot radius times scale: 0.24 to 0.75 m | The crown does not collide. A floor on the radius (0.3 m) is a knob. |
-| Boulders about 1.5 m and taller | circle, about 1.1 m times scale | Roughly a third of the 860 by the size curve; the exporter's report gives the count. Smaller rocks are stepped through, as now. |
-| Town wall runs, corner towers, the watchtower | boxes | The four gate openings (9 m) stay clear. |
-| Gate piers | two boxes a gate | |
-| Houses, the shop, the bank, the inn, the barn, sheds | one box each | No interiors; a house is solid. |
-| The mill, the well | circles | |
-| Tents, palisade stakes, standing stones 1.5 m and taller, spires, arch piers, the crypt's wall stubs, the Wraith Gate's piers, the wagon wreck | circles and boxes | The crypt's walls run from 1.6 to 6.5 m: all solid. |
+`resolve(from, to, radius)`:
 
-| Does not collide | Why |
-|---|---|
-| Bushes, scrub, bones, gravestones, milestones, the overlook's small waystones | Low. |
-| Fences round the farm strips | Low; a solid fence would be an invisible wall above a rail, and nothing can be jumped (decision 2 can flip this). |
-| Barrels, crates, the stall, signposts, banners, campfires | Clutter. |
-| The three doors (fallen trees, rockslide, stake barricade) | They stand against the mountains' foot, which already stops a body. |
+1. With nothing near the step, the step is taken whole (`to` comes back untouched, so open
+   ground behaves exactly as it did).
+2. Otherwise the step is taken in pieces of at most `SUBSTEP` (0.1 m). After each, every
+   nearby prism pushes the point out the shortest way (through the nearest edge, or round
+   the nearest corner), up to four passes.
+3. A piece ends the step where the body last stood free if the point cannot be settled, or
+   if settling moved it more than `PIECE_STRETCH` (1.5) times the piece. That cap is what
+   makes crossing a solid impossible whatever the scenery: to stand free on the far side of
+   even a sheet of paper a body's centre has to travel twice its radius.
 
-### 4.3 The file, the export and the checks
+`clear_of(p)` returns the nearest point where a body `stands`: free of every solid **and**
+able to walk 3 m away in some direction (`can_leave`). Thousands of scattered rocks and
+trunks close a few gaps a body fits in and cannot leave; nothing is ever put in one.
 
-- `tools/export_obstacles.gd` (client): builds `world.tscn` headless as
-  `check_zone_scenery.gd` does, gathers every footprint, rounds to a millimetre, sorts them
-  in a fixed order, and writes two outputs from the same list: the server's
-  `data/obstacles.toml` and a packed resource in the client repo that the game loads. It
-  takes the server root as a parameter, as `check_all.ps1 -ServerRoot` does, so a worktree
-  never writes into the deploy checkout by accident.
-- **The client collides from the exported data, not from its own live scatter.** The scatter
-  is seeded and has always come out the same, but if one machine ever planted one tree
-  differently, colliding from the file means the worst case is a tree drawn a little off its
-  collider, never a client and server that disagree about where a body stands.
-- The server compiles the file in (`include_str!`, as `terrain.toml`), refuses a file whose
-  hash does not match, and the boot line gains
-  `obstacles=<circles> circles, <boxes> boxes, hash <12 hex>`.
-- **The export's report** (it fails the export, like the terrain author's report): every
-  camp spawn and its jitter corners, every NPC, every safe-area arrival point and the
-  starter spawn are clear of every footprint by a body's radius; each of the four gates is
-  open; no gap between two footprints is wider than zero and narrower than a body (a gap is
-  either walkable or closed); nothing solid stands on a road; the counts by kind.
-- `tools/check_obstacle_lockstep.gd` (in `check_all.ps1`): the scenery built now equals the
-  client's packed data equals the server's file. It is the "own check" L2 promises.
-- `tools/check_obstacle_rule.gd` (in `check_all.ps1`): the GDScript rule against the Rust
-  rule. A server test writes a fixtures file (a few thousand random steps and sight lines
-  with the answers the Rust code gave, regenerated and compared on every `cargo test`); the
-  client check runs its port over the same cases and fails on any answer more than a tenth
-  of a millimetre off.
+A body run square into a flat face stops until it steers, on a trunk's face as on a wall:
+the boundary is the solid's own shape.
 
-### 4.4 The rule
+### 4.4 Players
 
-`resolve(from, to, radius)` returns where the step ends and whether anything deflected it.
+Server, on the ground: the terrain's step, then `resolve`, then the slope rule once more on
+the result (a rock at a cliff's foot must not push a body up the cliff; such a step is not
+taken). In the air: the same `resolve`, so a falling body comes down beside a trunk or a
+house, never in one. A standing body found inside a solid is put out. GM flight ignores
+obstacles in the air and lands beside them.
 
-1. The step is taken in pieces no longer than `OBSTACLE_SUBSTEP` (0.2 m), so no speed
-   carries a body across a thin footprint between two looks. A load check holds every
-   footprint, grown by the smallest body, thicker than twice that.
-2. After each piece, for every footprint near the point (a 10 m grid finds them; a cell of
-   the Greywood holds about one tree): if the point is inside the footprint grown by
-   `radius`, move it out the shortest way. For a circle that is along the line from the
-   centre; for a box, out through the nearest face, or round the nearest corner. Up to four
-   passes, so a corner between two walls settles.
-3. A point still inside something after the passes goes back to the last free point: the
-   step ends there.
+Client: `move_and_slide` on the ground, the blend toward the server, then `resolve` on the
+frame's whole movement. The blend pulls in a straight line that can cut through a trunk,
+which is why the rule runs after it.
 
-Moving out the shortest way removes the part of the step that went into the surface and
-keeps the part along it, which is what sliding is. Anything not finite stays where it was.
+### 4.5 Placements
 
-### 4.5 The server: players (slice 1)
+`Obstacles::place` (clear, then on the ground) at: a login's saved position, a respawn, a
+port's destination, the resurrection summon, a camp spawn (the mob's home becomes where it
+stands), a dev spawn. A wanderer appears only at a spot that `stands`. A summoned pet's
+1.5 m east of its owner is a walk from the owner, so with a wall at the owner's shoulder the
+pet is on the owner's side.
 
-- New `world/obstacles.rs` beside `terrain.rs`: the parsed file, the grid, `resolve`,
-  `clear_of` (4.7) and, in slice 2, the sight test.
-- `run_movement`, grounded branch: the terrain step as today, then `resolve` from the old
-  position to the terrain's answer with `PLAYER_RADIUS` (0.4, a lockstep pair with the
-  client's capsule), then the slope rule once more on the final point. If the deflected
-  point breaks the slope rule (a tree at a cliff's foot pushing a body onto the face), the
-  player stays. The final position always satisfies both rules.
-- Airborne branch: the same `resolve` on the horizontal step, and again after the fall's
-  slide down a face. A footprint is a column, so a falling body cannot land on a roof or in
-  a trunk.
-- Flight (GM, audited): ignores footprints in the air, as it ignores the slope rule; ending
-  a flight lands at the nearest free point.
-- The dead and the linkdead do not walk; nothing changes for them.
+### 4.6 Sight
 
-### 4.6 The client: prediction (slice 1)
+`Terrain::can_see` asks the terrain and then `Obstacles::sight_blocked`: the line is clipped
+to each nearby prism's outline, and is blocked if it is between the prism's base and top
+anywhere inside it. A caster on high ground sees over a house; nobody sees through one. A
+trunk, a rock and a crown block as a wall does (the user's call).
 
-- A small script holding the packed footprints, the same grid and the GDScript `resolve`.
-- `player.gd`, each physics frame: `move_and_slide` (the ground, as today), the blend toward
-  the server (as today), then `resolve` on the frame's whole movement. Running it after the
-  blend matters: the blend moves the body in a straight line toward the server's slightly
-  older position, and a straight line between two points on either side of a trunk passes
-  through the trunk.
-- No scenery node becomes a physics body for the walk. `check_zone_scenery.gd`'s COLLIDES
-  rule stays, reworded in slice 4 to "no scenery body is on a layer the player's body
-  reads".
-- A dev view (a Test Panel toggle) draws the footprints near the player as outlines, so a GM
-  can fly the zone and see every collider against its mesh.
-- The client's hash of its obstacle data goes in the `debug.log` header beside the build
-  stamp, so a client and a server on different obstacle files can be told apart from a log.
+### 4.7 Mobs and pets
 
-### 4.7 Placement: nothing ever stands inside (slice 1)
+`Entity::step_on` runs `resolve` at the players' radius, so a mob fits wherever a player
+does. A step held to less than half its way (`DETOUR_BELOW`) is tried again turned 45 and
+90 degrees to one side, then the other, keeping to the side it last went: the mob walks
+along a wall to its end and comes round. There is no pathfinder.
 
-`clear_of(x, z, radius)` returns the nearest free point (the point itself when it is free).
-It is applied wherever a body is put somewhere without walking there. These are the sites
-the height model already pins to the ground: a login's saved position, `teleport_to` (Gate,
-Succor, Evacuate, the resurrection summon, a respawn at the bind), the end of a GM's flight
-or fling, a pet's summon and its warp to its owner, a mob's spawn and a wanderer's spawn
-spot, a charmed mob handed back. A corpse or a bag lies where a body stood, so it is never
-inside. This is a general rule, not a fix for old characters: any later scenery edit can
-put a footprint where somebody logged out.
+Only a held step counts against a mob (the stuck clock and the evade rule that already
+existed for a mob below a cliff): a glance off a trunk or a slide along a shallow wall is
+the chase going on. A mob that is held, or following a wall, is evading after one second
+and gives up after eight with no metre gained. So a wall never gives a free kill.
 
-### 4.8 Sight (slice 2)
+Wanderers slide round trunks on their legs; a leg ends at anything that holds it.
 
-`can_see` gains one test after the terrain's: the line between the two points is blocked
-when it crosses a **box** below the box's `top`. A caster on the plateau still sees over a
-house; nobody sees through one. Trees and boulders never block (a trunk is thinner than a
-body, and EverQuest's did not). Everything that reads `can_see` today follows without
-change: targeted spells, heals, ranged attacks, AoE victims, song pulses, the idle mob's
-scan. The client's pre-check before a cast gets the same test (the GDScript port, held by
-the fixtures), so an honest player is refused before the bar with the server's line.
+### 4.8 The camera
 
-Sight comes before mobs on purpose. While only players collide, a mob walks through a wall
-to reach whoever hit it, so a wall protects nobody. Once mobs collide, a wall that did not
-block sight would be a place to cast from.
+`ZoneCameraBlockers` builds a `ConvexPolygonShape3D` for each walk prism at least 4 m² from
+above and 2.5 m tall (630 of them: walls, towers, houses, tents, great rocks; no trees) on
+physics layer 5. The spring arm reads that layer. The player's body does not, and click
+rays do not, so targeting is unchanged.
 
-### 4.9 Mobs and pets (slice 3)
+### 4.9 What is not built
 
-- `Entity::step_on` runs `resolve` with `MOB_RADIUS` before the slope rule. `MOB_RADIUS` is
-  never larger than `PLAYER_RADIUS` (a test holds it), so there is no gap a player fits
-  through and a mob does not.
-- A circle never holds a mob: it slides round a trunk or a rock and carries on.
-- A box can: a mob pressed square against a wall with its target straight behind it makes
-  no progress. The rule that exists for a mob held below a cliff covers it unchanged in
-  shape: a deflected step counts as a refused one for the stuck clock, the mob is evading
-  after the 1 s grace (swings are an Evade, hostile spells are refused at no cost, DoTs
-  deal nothing), and after 8 s it forgets that target, turns on the next attacker it can
-  reach, or walks home and heals. A pet held from its owner warps to them, as now.
-- A wanderer's leg ends when a step makes no progress; its spawn spots and its packmates'
-  refill spots go through `clear_of`.
-- Mob spawns are checked clear by the export's report, and `clear_of` holds at run time.
-- **No pathfinder.** Mobs keep walking straight lines and sliding. The town wall is
-  therefore a real refuge from anything that does not follow through a gate, and a house
-  can shed a chasing mob after 8 s. Outrunning a mob past its leash already does the same,
-  and the evade rule means neither pays a kill. Walking round buildings properly is its own
-  later item (section 10).
-
-One thing to settle with tests during the build: a mob rounding the largest boulders may go
-more than a second without coming a metre closer and would read as evading for a moment.
-The progress measure for a slide may need to count distance along the surface.
-
-### 4.10 The camera (slice 4)
-
-True-height `StaticBody3D` boxes for walls and buildings (not trees, which would make the
-camera jump in a wood), built from the same footprints, on a new physics layer that the
-`SpringArm3D` reads and the player's body does not. Whether left-click targeting should
-also stop at a wall is a small follow-up to decide then.
+- **Standing on things, hopping over low ones.** The data carries every solid's real base
+  and top, so this is an added rule (the server simulating the jump and treating tops as
+  floors), not a rebuild. It changes core movement and every rock becomes somewhere a mob
+  cannot follow, so it wants its own design.
+- **A pathfinder.** Mobs go round what one wall-follow gets them round.
+- **Interiors.** A house is solid.
 
 ---
 
 ## 5. What does not change
 
-- The wire. No protocol bump, no DLL rebuild, no migration, no SQL.
-- Players, mobs and pets still pass through each other (decision 6). A body can never block
-  a gate.
-- The jump stays cosmetic; falls stay the server's.
-- The terrain, the slope rule, the roam map and the mountains' edge.
-- Range checks. A vendor, a banker and a corpse are still reached by distance alone; a wall
-  between does not matter.
+The wire; ranges (a vendor, a banker and a corpse are reached by distance alone); players,
+mobs and pets passing through each other; the jump being cosmetic; the terrain, the slope
+rule and the mountains' edge; click targeting.
 
-Both sides move together: a new server with an old client rubber-bands at every tree, and
-the other way round walks through them for a tick and snaps back. One export, one redeploy,
-as with every terrain change.
+Both sides move together: a new server with an old client is pulled back at every tree, and
+the other way round walks through them and snaps. One export, one redeploy.
 
 ---
 
 ## 6. Exploit ledger
 
-| # | Attack | Answer |
-|---|---|---|
-| 1 | A modified client ignores walls and trees | The server integrates every step and applies `resolve` itself; the client is pulled back. Test: a client holding a direction through a house never has a Position beyond its near face. |
-| 2 | Cross a thin footprint in one tick at high speed | The step is the server's (0.41 m at most on foot) and is taken in 0.2 m pieces; a load check holds every grown footprint thicker than that. Flight is a GM's, audited, and lands through `clear_of`. |
-| 3 | Get placed inside something (a bind, a port, a summon, a login) | Every placement goes through `clear_of`. A body found inside anyway is moved to the nearest edge on its next step, never left stuck and never let through to the far side by choice of direction. |
-| 4 | A pocket: a closed space or a too-narrow gap that traps a body or hides one | The export refuses a gap narrower than a body that is not closed, and refuses a spawn, NPC or arrival point that is not clear. |
-| 5 | Stand where a mob cannot fit | `MOB_RADIUS` is at most `PLAYER_RADIUS`, held by a test. |
-| 6 | Stand where a mob cannot reach (behind a wall) and kill it | Slice 2 blocks spells and arrows through boxes. What can still be seen and not reached is the cliff case: the mob is evading after 1 s and home after 8. Same residual as the perch, same knob. |
-| 7 | Hold a mob on a wall so a group-mate hits it freely | It is evading while held; after 8 s it turns on the next attacker it can reach (the existing give-up rule). |
-| 8 | Cast, shoot or sing through a wall; an AoE through a wall | Slice 2: every one of them already asks `can_see`. |
-| 9 | Hand-edit the server's obstacle file | Refused at boot by the hash, as the terrain's is. |
-| 10 | Edit the client's obstacle data | Only that client's picture changes; the server's answer stands and the client snaps to it. |
-| 11 | Land on a roof or a crown from a cliff, or log out mid-fall over one | A footprint is a column: the falling step is resolved too, so the body comes down beside it. |
-| 12 | Use a push-out to gain ground (run at a corner to be shot round it) | A push never moves a body further than it was inside, and the slope rule is asked again on the final point; a body cannot be pushed up a face. |
-| 13 | Farm a mob that spawned inside its own camp's tent or wall | The export refuses the layout; `clear_of` at spawn holds it at run time. |
-| 14 | Shed aggro at a building | Possible after slice 3 (8 s). No reward attached: the mob heals at home, and running past the leash already does it. Flagged for the pathing item. |
+| # | Attack | Answer | Held by |
+|---|---|---|---|
+| 1 | A modified client ignores walls and trees | The server takes the step and resolves it itself. | `a_direction_held_through_a_house_ends_at_its_face` |
+| 2 | Cross a thin solid at speed, or by being squeezed between two | Pieces of 0.1 m and the `PIECE_STRETCH` cap. | `the_largest_step_crosses_nothing`, `a_body_squeezed_between_solids_is_never_squirted_across_one`, `random_walks_never_end_inside_anything` |
+| 3 | Get placed inside something | Every placement goes through `place`; a body found inside is put out at the nearest edge. | `a_login_inside_a_solid_lands_beside_it`, `placing_a_body_stands_it_clear_and_on_the_ground` |
+| 4 | Be placed in, or spawn a mob in, a gap nothing can leave | `stands` refuses gaps under 3 m across; the zone holds no larger pocket. | `a_body_is_never_put_in_a_gap_it_cannot_leave`, `nothing_in_the_zone_closes_a_pocket_a_body_could_be_put_in` |
+| 5 | Stand where a mob cannot fit | One body radius for everything. | `Entity::step_on` uses `BODY_RADIUS` |
+| 6 | Stand where a mob cannot reach and kill it | Solids block sight; a held mob evades after 1 s and gives up after 8. | `a_spell_through_a_house_is_refused_and_lands_round_the_corner`, `a_mob_in_a_dead_end_evades_and_gives_up` |
+| 7 | Cast, shoot, sing or AoE through a wall | Every sight check asks the ground, which carries the obstacles. | `a_line_through_a_solid_is_blocked_and_one_over_it_is_not` |
+| 8 | Send a pet through a wall by summoning beside it | The pet's spot is walked from the owner. | `a_pet_summoned_at_a_wall_appears_on_its_owners_side` |
+| 9 | Hand-edit either copy of the file | The server refuses a file that fails its hash at boot; an edited client file changes only that client's picture. | `a_file_round_trips_and_a_damaged_one_is_refused` |
+| 10 | Land on a roof from a cliff, or quit mid-fall over one | A prism is a column: the falling step is resolved too. | the airborne branch of `run_movement` (no test of its own) |
+| 11 | Wall the town off, or seal a camp, by a scenery mistake | The zone's own tests. | `the_four_gates_are_open_and_the_wall_beside_them_is_not`, `every_camp_spawn_is_on_or_beside_free_ground`, `the_towns_people_and_every_arrival_point_stand_on_free_ground` |
+
+**Known residuals, none a free kill:**
+- A mob sliding along a long low fence toward the point nearest its target is damageable
+  for that slide plus the one-second grace, then immune. The same size of window as the
+  cliff's.
+- A building sheds a chasing mob in eight seconds if the mob finds no way round. Running
+  past its leash already does that.
+- A closed space sealed between solids and a **cliff** is not found by the pocket test (it
+  looks only at solids). The three road doors stand against the mountains, and a wanderer
+  could in principle be given a spot behind one.
+- The airborne branch and GM-flight landing have no integration test.
 
 ---
 
 ## 7. Cost
 
-- Server: per mover per tick, a grid lookup and a handful of distance tests. With 100 mobs
-  and a few players this is small beside the tick's work (a median of 0.5 to 0.8 ms when
-  measured on 2026-11-02, before the wildlife); the `world health` line will show it.
-- Client: the same lookup once a physics frame for one body. The camera slice adds a few
-  hundred static boxes.
-- Data: about 13,700 circles and a few hundred boxes; the TOML is a few hundred KB beside a
-  2.3 MB terrain file.
+Server: a grid lookup and a few polygon tests per mover per tick; the suite's world tests
+run in the time they did. Client: one lookup a frame. The file is 2.2 MB in each repo and is
+rewritten whole on every scenery change, as `terrain.toml` is.
 
 ---
 
-## 8. Slices, tests and records
+## 8. Tests
 
-Each slice is its own commit pair with its own tests, each test failing with its rule
-disabled, and a row set in `obstacle_collision_checklist.md`.
+Server (`cargo test`: 476 unit, 201 world, all passing; clippy and fmt clean):
+- `world/obstacles.rs`: 21 tests on the rule, the file, sight and the fixtures.
+- `world/obstacles_content.rs`: 5 on the real zone (people and arrival points free, spawns
+  near free ground, the four gates open and the wall shut, no pocket, the pocket search
+  itself).
+- `world/entity.rs`: 4 on mobs (round a house, round a trunk without evading, a glance is
+  not held, a dead end evades and gives up); `world/spawn_points.rs`: 1.
+- `tests/world/obstacles.rs`: 5 with a real client (a held direction ends at a house, a
+  slide round a trunk, a login inside a solid, a Smite through a house, a pet at a wall).
 
-| Slice | What | Ships | Rough size |
-|---|---|---|---|
-| 0 | Footprints declared on the scenery, the exporter and its report, the server's file with hash and boot line, the lockstep check, the dev outline view. **Nothing collides.** | No behaviour change; could merge any time. | a day |
-| 1 | The rule on both sides, players stop, placement through `clear_of`, the fixtures check, L2 rewritten, a new invariant ("nothing stands inside an obstacle; a body's position is the server's"). | Export and redeploy together. | a day or two |
-| 2 | Boxes block sight on both sides. | Export and redeploy together. | a day |
-| 3 | Mobs and pets collide; the stuck and evade rules read a deflection; wanderers. | Server only. | a day or two |
-| 4 | The camera stops at walls and buildings. | Client only. | half a day |
+Run against a server with no obstacles, the four player and sight integration tests fail;
+with the detour switched off the house test fails; with the spawn's `place` removed the
+spawn test fails.
 
-Tests, by kind:
+Client: `check_all.ps1` 19 checks passing (two new); `tools/probe_obstacle_walk.gd` (the
+real body rests at 9.600 m against a face at 10, as the server does; slides round a trunk;
+the camera's blockers pull the camera in and let the body through);
+`tools/probe_cast_sight.gd` gained the obstacle cases.
 
-- **Unit (server):** circle and box push-out; a slide keeps the part along the surface; a
-  corner between two boxes settles; the largest step crosses nothing; a point inside goes to
-  the nearest edge; a non-finite step stays; the same input gives the same output.
-- **Compiled content (server, beside `terrain_content.rs`):** every spawn, NPC and arrival
-  point clear; a walker with the real `player_step` passes each of the four gates both
-  ways; a walker held at any heading into the town wall never ends inside it; every camp is
-  still reached from the town.
-- **Integration:** a player run at a trunk stops at it and slides round; a direction held
-  through a house ends at its face; a port landing on a footprint lands beside it; (slice 2)
-  a Smite through a house is refused at no cost and lands from the open side; (slice 3) a
-  mob slides round a trunk to its target, and a mob held on a wall is evading, then gives
-  up.
-- **Client:** `check_obstacle_lockstep.gd`, `check_obstacle_rule.gd`, and a probe that walks
-  the real body headless into a trunk and a wall and compares where it rests with the
-  server's rule.
-
-Records with the build: `invariants.md` (L2 reworded, the new rule, L1's holders),
-`commands.md` (the two tools and the outline toggle), the session note, this To-Do entry;
-`systems_overview.md` on the tick.
+**Not verified:** nobody has walked the zone with it. The checklist is the evidence.
 
 ---
 
-## 9. Decisions for the user
+## 9. The user's answers (2026-11-17)
 
-1. **The approach:** footprints the server holds, one rule on both sides, Godot's physics
-   bodies not used for walking. *Recommended: yes.*
-2. **What collides:** the two tables in 4.2 (trees, tall boulders, walls, towers, gate
-   piers, buildings, tents, tall stones; not bushes, bones, fences or clutter).
-   *Recommended: as the tables; say which rows to flip.*
-3. **Nothing can be stood on or jumped over:** every obstacle is a column, so no roofs, no
-   wall walks, no hopping onto a rock. *Recommended: yes for now.* Real height is the same
-   later work as caves and stacked floors.
-4. **Walls and buildings block spells, arrows and a mob's sight** unless the line passes
-   over the top; trees and rocks never do. *Recommended: yes.*
-5. **Mobs and pets collide too,** by the same rule, with the existing give-up and evade
-   rules for a mob a wall holds, and no pathfinder yet. *Recommended: yes, as slice 3.* The
-   cheaper alternative is that mobs keep walking through everything, which is safe and
-   looks wrong.
-6. **Players, mobs and pets still pass through each other.** *Recommended: yes*, unchanged;
-   a body that blocks is a griefing tool at every gate.
-7. **The camera stops at walls and buildings, not at trees.** *Recommended: yes, last.*
-8. **Timing:** after the door. The zip closes today and this changes how every body moves
-   on both sides. Slice 0 changes no behaviour and can be built at any point; slice 1 rides
-   the first bump after Nov 19. *Recommended: yes.*
+1. The approach (server-held outlines, one rule both sides): taken as yes with "build it
+   now".
+2. What blocks: "looks good, but the items listed as 'Does not block' should also block."
+   Everything solid blocks.
+3. Nothing stood on or jumped over: "can we not just mirror the geometry of the object to
+   create the boundary for the object?" Done for the outline and for sight (every boundary
+   is computed from the solid's own corners, with its real base and top). Standing on and
+   hopping over are 4.9.
+4. Sight: "if the tree or rock block visibility, they should prevent the caster from
+   casting." Everything wide enough blocks, crowns included.
+5. Mobs and pets collide: yes.
+6. Bodies pass through each other: yes.
+7. The camera stops at walls and buildings, not trees: yes.
+8. Timing: "build it now, please. I believe in you."
+
+Three calls made in the build, the user's to overrule: things under 0.3 m are stepped over;
+fire, magic light, cloth and webs block nothing; each fenced field has a 4 m gateway on its
+town side (a fence all the way round is a sealed box).
 
 ---
 
-## 10. Flagged, not in this plan
+## 10. What changed from the first plan
 
-- **Pathing round buildings.** A mob that walks round a house instead of giving up at it.
-  The boxes are few (hundreds), so steering by box corners is tractable; it wants its own
-  design with the dungeons, where it stops being optional.
-- **Interiors, upper floors, bridges, wall walks.** Need real height on the server.
-- **Per-creature body sizes.** One `MOB_RADIUS` for now; a bear and a rat are the same
-  width to a tree.
-- **Players blocking players.** Not planned (decision 6).
-- **The server telling the client its ground and obstacle hashes at connect,** so a
-  mismatched pair is reported on screen instead of found in a log. A wire addition; it
-  could ride any later bump.
-- **Left-click targeting through walls.** With slice 4.
+- **Prisms from the geometry, not hand-declared circles and boxes** (the user's question 3).
+- **Everything blocks**, and trees and rocks block sight (answers 2 and 4).
+- **Mobs walk round walls** (a held step is tried to each side). The plan had them push and
+  give up.
+- **`can_leave`**: found by the zone's own test, which showed one fenced field sealed and
+  some forty tiny gaps between scattered rocks and trunks.
+- **Fences follow the ground** in 3 m stretches (a 94 m level rail floated over dips and was
+  a fence in some places and not others).
+- **The file is binary**, with its hash as a trailer.
+- **The obstacles ride on the terrain** on the server, so no sight check can forget them.
+
+---
+
+## 11. Before it ships
+
+1. Merge `feat/obstacles` in both repos (the user's call; the deploy branches are untouched).
+   On the client, the GM flight branch's flying body must skip the obstacle step when the
+   two meet (`player.gd`): flight ignores obstacles on the server.
+2. Drop the `(on feat/obstacles)` tags in `docs/reference/invariants.md`.
+3. Export the client and redeploy the server together. The boot line must read
+   `obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4`, and the client's
+   `debug.log` the same hash.
+4. After any later scenery or terrain change: `export_obstacles.gd`, commit both files,
+   `check_all.ps1`.

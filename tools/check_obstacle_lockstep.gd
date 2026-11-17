@@ -13,6 +13,10 @@ extends SceneTree
 #   LOADS    the file loads as the game loads it.
 #   EXPORT   export_presets.cfg ships the file (it is no Godot resource, so
 #            an export leaves it out unless the include filter names it).
+#   CAMERA   the camera's blockers (scripts/zone/zone_camera_blockers.gd) are
+#            on a layer the player's body does not read: the one set of
+#            physics shapes made from the scenery stops the camera and
+#            nothing else.
 #
 # The server moves every player, so a client holding different obstacles
 # shows a body stopping at things the server walks it through, and the next
@@ -93,6 +97,15 @@ func _run() -> void:
 			if line.contains(file_name) or line.contains("*.bin"):
 				shipped += 1
 	_check(preset_count > 0 and shipped == preset_count, "EXPORT every export preset's include filter ships %s (%d of %d)" % [file_name, shipped, preset_count])
+
+	var player: CharacterBody3D = load("res://scenes/player.tscn").instantiate()
+	_check(player.collision_mask & ZoneCameraBlockers.LAYER == 0 and player.collision_layer & ZoneCameraBlockers.LAYER == 0,
+		"CAMERA the player's body neither reads nor sits on the camera blockers' layer (mask %d, layer %d)" % [player.collision_mask, player.collision_layer])
+	player.free()
+	var blockers := ZoneCameraBlockers.ensure(world)
+	var body := world.get_node_or_null(ZoneCameraBlockers.NODE_NAME) as StaticBody3D
+	_check(body != null and body.collision_layer == ZoneCameraBlockers.LAYER and body.collision_mask == 0 and blockers > 50,
+		"CAMERA the blockers are built on their own layer alone (%d solids)" % blockers)
 
 	print("%d failure(s)" % _fails)
 	quit(1 if _fails > 0 else 0)

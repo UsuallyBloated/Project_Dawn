@@ -193,6 +193,32 @@ Held by: `micro_steps_climb_no_face`, `a_step_up_a_face_too_steep_to_climb_is_re
 `a_mob_held_below_a_face_evades_until_it_is_home`,
 `a_mob_below_the_plateau_ramp_gives_up_on_a_player_on_its_edge`
 
+### A6. What stands on the ground stops a body and a line of sight, and it is the server's
+The zone's trees, rocks, walls and set pieces are solids the server holds (the client's
+scenery, baked and compiled in). The server takes every step itself and turns it aside or
+stops it at a solid, so a client that ignores its own obstacles is held at the server's. No
+step crosses a solid, however fast or however squeezed. Everything put somewhere without
+walking there (a login, a respawn, a port, a resurrection summon, a spawn, a landing) stands
+at a point clear of every solid that a body can also walk away from, and a pet is summoned
+on its owner's side of a wall. Nothing targeted reaches through a solid: every sight check
+asks the ground, and the ground carries what stands on it. And nothing in the zone closes
+ground a body could be put on and never leave. Why: a modified client that walked through
+a wall, a cast or a pet sent through one, a body or a mob put where nothing can reach it.
+Held by: `a_direction_held_through_a_house_ends_at_its_face` (on feat/obstacles),
+`a_body_slides_round_a_trunk_and_carries_on` (on feat/obstacles),
+`the_largest_step_crosses_nothing` (on feat/obstacles),
+`a_body_squeezed_between_solids_is_never_squirted_across_one` (on feat/obstacles),
+`random_walks_never_end_inside_anything` (on feat/obstacles),
+`a_body_is_never_put_in_a_gap_it_cannot_leave` (on feat/obstacles),
+`a_login_inside_a_solid_lands_beside_it` (on feat/obstacles),
+`a_spawn_under_scenery_stands_beside_it` (on feat/obstacles),
+`a_pet_summoned_at_a_wall_appears_on_its_owners_side` (on feat/obstacles),
+`a_spell_through_a_house_is_refused_and_lands_round_the_corner` (on feat/obstacles),
+`a_line_through_a_solid_is_blocked_and_one_over_it_is_not` (on feat/obstacles),
+`the_four_gates_are_open_and_the_wall_beside_them_is_not` (on feat/obstacles),
+`nothing_in_the_zone_closes_a_pocket_a_body_could_be_put_in` (on feat/obstacles),
+`a_file_round_trips_and_a_damaged_one_is_refused` (on feat/obstacles)
+
 ### D1. Dev tools are gated and audited, or refused
 A dev command runs only for a GM account or a dev-mode server, and only if its audit row
 was queued; one that cannot be recorded is refused. A refused attempt writes nothing and
@@ -249,6 +275,18 @@ Held by: `a_respawn_never_lands_beside_a_player`,
 `a_wanderer_appears_in_its_region_clear_of_every_body`,
 `a_pack_is_refilled_beside_its_leader_while_one_member_lives`
 
+### C5. A mob is as wide as a player, and one that cannot reach its target takes no damage
+A mob or a pet is stopped by the same solids as a player, at the same body radius, so there
+is nowhere a player fits and a mob does not. A mob held at a wall tries to walk round it;
+while its steps are not going as aimed, past a second's grace, it takes no damage, and after
+eight seconds with no way found it gives up on that target (the rule for a mob below a
+cliff, A5). A tree on the way costs it a step aside and never makes it immune. Why: a wall
+with a gap too narrow for a mob, or a spot a mob pushes at forever, is a place to kill from
+in safety.
+Held by: `a_mob_walks_round_a_house_to_its_target` (on feat/obstacles),
+`a_mob_slides_round_a_trunk_and_never_evades` (on feat/obstacles),
+`a_mob_in_a_dead_end_evades_and_gives_up` (on feat/obstacles)
+
 ## Client and server agree
 
 ### L1. A number both sides hold has a check
@@ -259,16 +297,21 @@ thing and gets another.
 Held by: `check_spell_lockstep.gd`, `check_item_lockstep.gd`, `check_vendor_lockstep.gd`,
 `check_active_skill_lockstep.gd`, `check_character_lockstep.gd`, `check_constant_lockstep.gd`,
 `check_discipline_lockstep.gd`, `check_faction_lockstep.gd`, `check_skill_table_lockstep.gd`,
-`check_wire_layer.gd`, `check_terrain_lockstep.gd`, `check_terrain_sight.gd`
+`check_wire_layer.gd`, `check_terrain_lockstep.gd`, `check_terrain_sight.gd`,
+`check_obstacle_lockstep.gd`, `check_obstacle_rule.gd`
 
-### L2. What the server does not know never stops a body
-The server knows the ground and nothing that stands on it. The town's walls, the trees and
-every set piece of the zone are scenery on the client, and none of it is a physics body.
-Why: the client sends a direction and the server moves the player; a wall that stopped the
-client's body and not the server's would leave the player drawn in one place and standing
-in another, and the next correction would pull them through it. When the server learns
-obstacles, both sides get them together, with their own check.
-Held by: `check_zone_scenery.gd`
+### L2. What stops a body is one set of data and one rule, the same on both sides
+The zone's obstacles are exported once from the scenery and held as the same bytes by the
+client and the server; the rule that turns a step aside at them is written once on each
+side, and the client's copy gives the server's answers. What stops the client's body is that
+rule on that data and nothing else: no scenery node is a physics body the player's body
+reads (the one set of physics shapes made from the scenery, the camera's blockers, is on a
+layer of its own). Why: the client sends a direction and the server moves the player; a
+wall that stopped the client's body and not the server's, or stood in a different place,
+would leave the player drawn in one place and standing in another, and the next correction
+would pull them through it.
+Held by: `check_obstacle_lockstep.gd`, `check_obstacle_rule.gd`, `check_zone_scenery.gd`,
+`the_rule_fixtures_are_current` (on feat/obstacles)
 
 ### L3. The world is its map, the right way round
 The zone is authored on a map (north up, east right) and reaches the world through one

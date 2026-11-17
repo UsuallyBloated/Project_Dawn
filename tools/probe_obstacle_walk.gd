@@ -4,8 +4,10 @@ extends SceneTree
 # run at a house and at a tree trunk. It must rest where the server's rule
 # rests a body (its centre the body's radius from the wall), slide round the
 # trunk without ever standing inside it, and pick the zone's real obstacle
-# data up when it enters the scene. No scenery is a physics body: what stops
-# the body is scripts/zone/zone_obstacles.gd, the server's own rule.
+# data up when it enters the scene. What stops the body is
+# scripts/zone/zone_obstacles.gd, the server's own rule, never a physics
+# shape: the one set of shapes made from the scenery (the camera's blockers)
+# pulls the camera in and lets the body through.
 # Exits 1 on any miss. Run:
 #   godot --headless --path . -s tools/probe_obstacle_walk.gd
 
@@ -116,6 +118,40 @@ func _run() -> void:
 		"turned aside by no more than the trunk and the body are wide (%.2f m)" % widest)
 	walker._autorun = false
 	walker.queue_free()
+
+	# 3. The camera's blockers stop the camera and never the body. A box on
+	# their layer stands 1.5 m behind a body: the spring arm is pulled in.
+	# Moved in front of the body, the body runs straight through it (shapes
+	# stop no body; the rule does), and the arm is at full length again.
+	var open_ground := ZoneObstacles.from_bytes(ZoneObstacles.encode_file(0, PackedFloat32Array()))
+	var viewer := _body_at(40.0, open_ground)
+	var blocker := StaticBody3D.new()
+	blocker.collision_layer = ZoneCameraBlockers.LAYER
+	blocker.collision_mask = 0
+	var box := CollisionShape3D.new()
+	var box_shape := BoxShape3D.new()
+	box_shape.size = Vector3(2.0, 4.0, 4.0)
+	box.shape = box_shape
+	blocker.add_child(box)
+	root.add_child(blocker)
+	blocker.global_position = Vector3(38.5, 2.0, 0.0)
+	await _wait_physics(10)
+	var arm: SpringArm3D = viewer.spring_arm
+	_check(arm.collision_mask & ZoneCameraBlockers.LAYER != 0, "the spring arm reads the camera blockers' layer")
+	_check(arm.get_hit_length() < arm.spring_length - 1.0,
+		"a blocker behind the body pulls the camera in (%.2f of %.2f m)" % [arm.get_hit_length(), arm.spring_length])
+	blocker.global_position = Vector3(43.0, 2.0, 0.0)
+	await _wait_physics(5)
+	viewer._autorun = true
+	await _wait_physics(120)
+	_check(viewer.global_position.x > 46.0,
+		"the body runs straight through a camera blocker (x %.2f)" % viewer.global_position.x)
+	viewer._autorun = false
+	blocker.queue_free()
+	await _wait_physics(10)
+	_check(absf(arm.get_hit_length() - arm.spring_length) < 0.05,
+		"with nothing behind it the camera is at full length (%.2f)" % arm.get_hit_length())
+	viewer.queue_free()
 
 	print("")
 	print("%d failed" % _fails if _fails > 0 else "all passed")
