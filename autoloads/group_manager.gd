@@ -111,7 +111,9 @@ func _on_world_group_invited(from_id: int, from_name: String) -> void:
 func _on_world_group_notice(text: String) -> void:
 	CombatLog.add_line(text, CombatLog.MsgType.INFO)
 
-func _on_world_group_roster(_group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray, p_loot_mode: int) -> void:
+# The server re-sends the roster whenever membership changes and whenever a
+# member's level moves, carrying every member's level and class (PD_W0031).
+func _on_world_group_roster(_group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray, p_loot_mode: int, member_levels: PackedInt32Array, member_classes: PackedStringArray) -> void:
 	if member_ids.is_empty():
 		# Group dissolved or we got kicked.
 		_clear_group()
@@ -120,16 +122,24 @@ func _on_world_group_roster(_group_id: int, leader_id: int, member_ids: PackedIn
 	leader_peer_id = leader_id
 	is_leader = (Net.get_player_id() == leader_id)
 	in_group = true
+	# A member already shown keeps their bars, so a re-sent roster (a level
+	# change, a loot-mode change) does not blink them to empty before the
+	# server's resource seed arrives; a new member starts empty until it does.
+	var known: Dictionary = {}
+	for m in members:
+		known[m.get("peer_id")] = m
 	members.clear()
 	for i in member_ids.size():
 		var nm := member_names[i] if i < member_names.size() else ""
+		var prev: Dictionary = known.get(member_ids[i], {})
 		members.append({
 			"peer_id": member_ids[i],
 			"name": nm,
-			"level": 0,
-			"hp": 0.0, "max_hp": 0.0,
-			"mp": 0.0, "max_mp": 0.0,
-			"sta": 0.0, "max_sta": 0.0,
+			"level": member_levels[i] if i < member_levels.size() else 0,
+			"class": member_classes[i] if i < member_classes.size() else "",
+			"hp": prev.get("hp", 0.0), "max_hp": prev.get("max_hp", 0.0),
+			"mp": prev.get("mp", 0.0), "max_mp": prev.get("max_mp", 0.0),
+			"sta": prev.get("sta", 0.0), "max_sta": prev.get("max_sta", 0.0),
 		})
 	group_updated.emit(true)
 
@@ -202,6 +212,7 @@ func _local_stats() -> Dictionary:
 		"peer_id": pid,
 		"name": PlayerStats.player_name,
 		"level": PlayerStats.level,
+		"class": PlayerStats.player_class,
 		"hp": PlayerStats.hp, "max_hp": PlayerStats.max_hp,
 		"mp": PlayerStats.mp, "max_mp": PlayerStats.max_mp,
 		"sta": PlayerStats.stamina, "max_sta": PlayerStats.max_stamina,

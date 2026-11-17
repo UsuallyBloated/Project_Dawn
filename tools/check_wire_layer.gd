@@ -19,6 +19,10 @@ const SIGNALS: Array[String] = ["time_of_day", "kick_retry_after", "entity_repla
 const METHODS: Array[String] = ["rtt_ms", "packet_loss", "send_dev_despawn_enemies",
 	"send_memorize_start", "send_memorize_finish", "send_forget_spell", "send_seed_spell_gems", "send_use_skill",
 	"send_stop_song", "send_consider", "send_dev_set_faction", "send_dev_fling"]
+# Signals whose argument count grew: Net's handler takes the new count, so a
+# DLL emitting the old one fails at every emit. PD_W0031 gave group_roster the
+# members' levels and classes.
+const SIGNAL_ARGS: Dictionary = {"group_roster": 7}
 
 
 func _init() -> void:
@@ -29,6 +33,16 @@ func _init() -> void:
 		print("%s  signal %s" % ["OK     " if ok else "MISSING", sig])
 		if not ok:
 			missing.append("signal " + sig)
+	for sig in SIGNAL_ARGS:
+		var want: int = SIGNAL_ARGS[sig]
+		var got := -1
+		for info in client.get_signal_list():
+			if info["name"] == sig:
+				got = (info["args"] as Array).size()
+		var ok := got == want
+		print("%s  signal %s takes %d arguments (DLL: %d)" % ["OK     " if ok else "STALE  ", sig, want, got])
+		if not ok:
+			missing.append("signal %s arguments" % sig)
 	for method in METHODS:
 		var ok := client.has_method(method)
 		print("%s  method %s" % ["OK     " if ok else "MISSING", method])

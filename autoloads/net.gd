@@ -254,10 +254,12 @@ signal world_bank_item_snapshot(shared: bool, slots: PackedInt32Array, item_path
 signal world_camp_update(remaining_secs: int, active: bool)
 # Track 6 sub-task 5 — group state from the server.
 # group_invited: someone is asking us to join their group.
-# group_roster: the group we belong to has a new membership snapshot
-# (empty member arrays = the group dissolved or we were kicked).
+# group_roster: the group we belong to has a new membership snapshot, also
+# re-sent when a member's level changes (empty member arrays = the group
+# dissolved or we were kicked). Levels and classes (full names) are parallel
+# to the ids since PD_W0031.
 signal world_group_invited(from_id: int, from_name: String)
-signal world_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray, loot_mode: int)
+signal world_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray, loot_mode: int, member_levels: PackedInt32Array, member_classes: PackedStringArray)
 # damage_shield_trigger: a player's Thorns / Spellshield reflected
 # damage back at an attacker. defender = the player whose shield fired.
 signal world_damage_shield_trigger(defender: int, attacker: int, amount: int, shield_name: String)
@@ -1458,8 +1460,8 @@ func _on_camp_update(remaining_secs: int, active: bool) -> void:
 func _on_group_invited(from_id: int, from_name: String) -> void:
 	world_group_invited.emit(from_id, from_name)
 
-func _on_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray, loot_mode: int) -> void:
-	world_group_roster.emit(group_id, leader_id, member_ids, member_names, loot_mode)
+func _on_group_roster(group_id: int, leader_id: int, member_ids: PackedInt64Array, member_names: PackedStringArray, loot_mode: int, member_levels: PackedInt32Array, member_classes: PackedStringArray) -> void:
+	world_group_roster.emit(group_id, leader_id, member_ids, member_names, loot_mode, member_levels, member_classes)
 
 func _on_damage_shield_trigger(defender: int, attacker: int, amount: int, shield_name: String) -> void:
 	world_damage_shield_trigger.emit(defender, attacker, amount, shield_name)

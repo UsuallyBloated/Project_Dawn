@@ -39,7 +39,7 @@ menu. The hotbar is 1 to 0; the spell gems are Alt+1 to Alt+0. The full list is 
 
 ## 3. Together
 
-- [ ] **11. `/invite Name` (or target them and press Invite on the group panel)** → their panel reads GROUP (Invited); they press the button or type `/accept` → both of you see each other's health, mana and stamina bars. notes:
+- [ ] **11. `/invite Name` (or target them and press Invite on the group panel)** → their panel reads GROUP (Invited); they press the button or type `/accept` → both of you see each other's health, mana and stamina bars, and each other's level and class beside the name (like "12 WAR"). notes:
 - [ ] **12. Kill something as a group** → each of you gets an XP line. With `/autosplit on`, looted coin splits across the group. notes:
 - [ ] **13. `/g hello`, then `/tell Name hi`** → the group line reaches the group, the tell reaches only them, and their `/r` answers you. notes:
 - [ ] **14. Jump where a friend can see you, up close and from far off** → they see the hop, as far away as they can see your body at all. notes:

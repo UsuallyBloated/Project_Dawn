@@ -155,8 +155,9 @@ func _build_member_row(member: Dictionary) -> Dictionary:
 	name_lbl.clip_text = true
 	name_row.add_child(name_lbl)
 
+	# "12 WAR": the member's level and three-letter class, both the server's.
 	var lv_lbl := Label.new()
-	lv_lbl.text = "Lv %d" % member.get("level", 1)
+	lv_lbl.text = member_level_text(member)
 	lv_lbl.add_theme_font_size_override("font_size", 10)
 	lv_lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
 	name_row.add_child(lv_lbl)
@@ -195,6 +196,16 @@ func _build_member_row(member: Dictionary) -> Dictionary:
 	bar_row.add_child(sta_bar)
 
 	return {"panel": row, "hp_bar": hp_bar, "mp_bar": mp_bar, "sta_bar": sta_bar}
+
+# The level-and-class text a member row shows: "12 WAR", or the level alone
+# when the class is unknown, or nothing before the server has said a level
+# (never "Lv 0").
+static func member_level_text(member: Dictionary) -> String:
+	var level: int = member.get("level", 0)
+	if level <= 0:
+		return ""
+	var abbrev := CharacterData.class_abbrev(member.get("class", ""))
+	return ("%d %s" % [level, abbrev]) if abbrev != "" else str(level)
 
 func _on_action_pressed() -> void:
 	if GroupManager.pending_invite_from != 0:
