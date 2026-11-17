@@ -3812,6 +3812,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   zip now say scenery is solid and blocks spells (they said walking through it was not a bug).
   The exported build was booted headless and passes `probe_obstacle_walk.gd` from inside the
   export, so the obstacle data is in the pack.
+  **DEPLOYED 2026-11-17 22:21 UTC** with the group levels (R720 boot line `build="87c58fe"
+  dev_cmds=false roamers=on`, `obstacles=33199 prisms (19580 walk, 31012 sight), hash
+  f97d25964ce4`, nobody online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`);
+  the zip to send is `a1a154e`, and `obstacle_collision_checklist.md` is runnable now.
 - [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
   a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
   height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at
@@ -4558,6 +4562,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   death's de-level each reach the partner, an ungrouped player beside them is sent nothing;
   fails with the re-send step removed and with the roster sent to everyone) and
   `tools/probe_group_levels.gd`. Not built: a level relay to players in view, `/who`, `/anon`.
+  **DEPLOYED 2026-11-17 22:21 UTC** with the obstacle collision on top (R720 boot line
+  `build="87c58fe" dev_cmds=false`); the zip carrying both is `a1a154e` (it replaces
+  `54ca951`), and `group_levels_checklist.md` is runnable on it.
 - [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
