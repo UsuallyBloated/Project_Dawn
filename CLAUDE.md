@@ -3741,9 +3741,14 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 - [ ] **Obstacle collision: trees, rocks, walls and set pieces that stop a body** *(user,
   2026-11-17: "Currently players are able to run through structures and trees etc.. We need
   something for collision. Can you write a plan for this? or perhaps Godot has something built
-  in?")*. **DESIGNED AND BUILT 2026-11-17 (user, on the eight calls: "build it now, please"),
-  on `feat/obstacles` in both repos, committed locally, NOT pushed and NOT merged; pending the
-  user's call on the merge, then an export and a redeploy together, then the playtest**
+  in?")*. **DESIGNED AND BUILT 2026-11-17 (user, on the eight calls: "build it now, please");
+  MERGED, PUSHED AND EXPORTED the same day (user: "lets go for it"): both deploy branches
+  fast-forwarded and pushed, server `87c58fe`, client `a1a154e`; the export
+  `builds/ProjectDawn-alpha-a1a154e.zip`, stamped `a1a154e`, a release export, which replaces
+  `54ca951`. Pending the R720 redeploy (both sides together; boot line `build="87c58fe"`,
+  `obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4`) and the playtest. The
+  rest of the records pass (this entry's body, the planner, the memory) is in
+  `docs/design/handoff_obstacle_collision_2026_11_17.md`**
   (worktrees `F:\Projects\Project_Dawn-obstacles` and `F:\Projects\server-obstacles`; design as
   built: `docs/design/obstacle_collision.md`; `obstacle_collision_checklist.md`; session note
   `session_2026_11_17_obstacle_collision.md`; no wire change, no DLL rebuild, no migration, no
