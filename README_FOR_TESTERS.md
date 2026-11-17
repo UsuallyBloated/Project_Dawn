@@ -122,9 +122,13 @@ This is the single biggest thing to know before you play.
 - **The world is big now.** The nearest monsters are under a minute's run from the town
   gates, the furthest five or six minutes, and a road leaves each gate. Bind your soul with Sister
   Maelis before you go far: a death far out is a long walk back to your corpse.
-- **You can walk through the walls, the houses and the trees.** They are placeholder
-  scenery for now and nothing stops you; the ground, the cliffs and the mountains at the
-  edge are real. Not a bug, and not worth reporting.
+- **Walls, houses, trees and rocks are solid.** You stop at them and slide along them; use
+  the town's gates. They also block spells and arrows: a cast at something behind a tree or
+  a house says `You cannot see your target.` and costs nothing, so step to one side. Nothing
+  can be climbed, stood on or jumped over yet, a low fence included. Monsters are stopped by
+  the same things; one that cannot get to you `evades` your attacks until it can, or gives
+  up and walks home. This is new, so **do** report anything you get stuck on, pulled through
+  or pulled back at, with a `/loc`.
 - **You need food and water.** Hunger and thirst tick down slowly (a loaf of bread lasts
   about 48 minutes, a flask of water about 36), and the game eats and drinks from your bags
   on its own, so keep some in them. Out of food your health stops regenerating, out of
