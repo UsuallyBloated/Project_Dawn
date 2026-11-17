@@ -4464,6 +4464,26 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   carries no level); a player's level reaches others only in `EntitySpawn`, and `LevelUp` goes to
   the player alone, so a level gained in view is never seen. Shape: a level on the group state
   and a level relay to the players who can see the leveller (a wire addition, so a bump day).
+  **Designed 2026-11-16: `docs/design/peer_levels.md`** (three shapes; it also found the group
+  panel showing "Lv 0" for every member but yourself). **DECIDED 2026-11-17 (user): "Players
+  should see the class and level of their group mates. Class should be abbreviated by using
+  three letters. Warrior = WAR and Necromancer = NEC"** (the note's shape A plus the class; the
+  target frame keeps the 2026-05-12 rule, no peer level there). **BUILT, MERGED AND EXPORTED the
+  same day, pending the redeploy and the playtest** (server `58332bb` + the review pass
+  `7e0095f`, client `54ca951`, both on the deploy branches; PD_W0031; the zip
+  `builds/ProjectDawn-alpha-54ca951.zip` replaces `397e207`, refused by the new server, so the
+  redeploy and the send go together; `group_levels_checklist.md`; session note
+  `session_2026_11_17_group_levels.md`). `GroupRoster`'s members are `GroupMember { id, name,
+  level, class }`; `progression::award_xp` marks a level move and a tick step after the death
+  sweep re-sends that member's group roster (up and down); every live roster goes through
+  `handlers::fan_current_roster`, every ended one through `fan_group_ended`. The panel shows
+  "12 WAR" (`CharacterData.CLASS_ABBREV`: EQ's letters where a class has an EQ counterpart, WHT,
+  SOR and BLM for ours; nothing before a level is known, never "Lv 0"); a re-sent roster keeps
+  known bars; `check_wire_layer.gd` reports a DLL with the old argument count. Tests: the
+  integration test `group_mates_see_each_others_level_and_class_both_ways` (a level-up and a
+  death's de-level each reach the partner, an ungrouped player beside them is sent nothing;
+  fails with the re-send step removed and with the roster sent to everyone) and
+  `tools/probe_group_levels.gd`. Not built: a level relay to players in view, `/who`, `/anon`.
 - [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
