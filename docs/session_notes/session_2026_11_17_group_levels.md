@@ -76,8 +76,16 @@ The roster reaches the group's members only (the test pins it). What a player le
 their group-mates are, which they chose to group with. A GM's repeated XP grants could
 re-send rosters, but those go through the dev-command bucket, and only to the GM's own group.
 
-## 5. Deploy shape
+## 5. Merged, exported, and the deploy shape
 
-Both sides together: the server redeploy (the boot line's `build=` names the merged sha) and
-a new zip. Neither works with the other's previous build. No migration and no SQL. The DLL
-must be rebuilt for the export (`check_wire_layer.gd` refuses the old one).
+Server `58332bb` + the review pass `7e0095f`; client `54ca951`. Both deploy branches were
+fast-forwarded to them and pushed (`feat/group-levels` pushed too). The export, from the levels
+worktree clean at `54ca951`: `[BuildStamp] stamped 54ca951`, `--export-release`, the DLL built
+from `server-levels` beside it, booting clean headless (300 frames, exit 0). The zip
+`builds/ProjectDawn-alpha-54ca951.zip` (37,831,865 bytes; the exe, the console exe, the DLL, the
+tester README and the players' checklist) replaces `397e207`. The main checkout's
+`addons/gdext_net/gdext_net.dll` and `builds/` carry the new DLL.
+
+Both sides together: the server redeploy and the new zip. Neither works with the other's
+previous build. No migration and no SQL. The boot line must read `build="7e0095f"
+dev_cmds=false`, with the terrain hash unchanged (`f569ade0c331`) and `roamers=on`.
