@@ -48,6 +48,13 @@ empty `world.db` there.
 it (`Remove-Item Env:\PD_DEV_CMDS`) or set anything else. In PowerShell, bare `null`/`false` are not
 literals (use `$null`/`$false` or a string).
 
+**`PD_NO_ROAMERS`** set to exactly `"1"` turns the wandering wildlife off: the roam table
+(`data/zone_roam.toml`) is not loaded and only the camps spawn. The boot line says
+`roamers=on` or `roamers=off`, and a `wandering wildlife` line at world start gives the slots,
+the animals and the roam map's share of the plate. It exists as the way back, without a rebuild,
+if the wilds misbehave. To see the roam map and each region's room while authoring the table:
+`cargo test -p projectdawn-server --lib print_the_roam_map -- --ignored --nocapture`.
+
 ---
 
 ## 2. Client (Godot 4.4)

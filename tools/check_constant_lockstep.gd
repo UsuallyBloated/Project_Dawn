@@ -33,6 +33,8 @@ const DEFAULT_SERVER_SRC := "F:/Projects/server/crates/projectdawn-server/src"
 const PAIRS := [
 	# server file,         server constant,           client script,                     client constant,          relation
 	["world/clock.rs",      "DAY_LENGTH_SECS",         "res://autoloads/time_of_day.gd",   "DAY_DURATION",           "eq"],
+	["world/clock.rs",      "NIGHT_START_HOUR",        "res://autoloads/time_of_day.gd",   "NIGHT_START_HOUR",       "eq"],
+	["world/clock.rs",      "NIGHT_END_HOUR",          "res://autoloads/time_of_day.gd",   "NIGHT_END_HOUR",         "eq"],
 	["world/hunger.rs",     "HUNGRY_AT_SECS",          "res://scripts/hud_hunger_panel.gd", "HUNGRY_AT_SECS",        "eq"],
 	["world/encumbrance.rs", "COIN_WEIGHT",            "res://autoloads/encumbrance.gd",   "COIN_WEIGHT",            "eq"],
 	["world/encumbrance.rs", "BASE_CAPACITY",          "res://autoloads/encumbrance.gd",   "BASE_CAPACITY",          "eq"],
