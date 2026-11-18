@@ -68,3 +68,16 @@ every later round read the pass and fail counts before committing.
 CLAUDE.md's housekeeping entry (R1 and R2 done); the assessment's R2 row and new §8.5; this
 note and the index; memory. No redeploy (the change rides the next one), no client change,
 no wire change.
+
+## 5. The hosting merge-forward (the same afternoon; user: "go ahead")
+
+`feat/public-hosting` brought up to the deploy branches in both repos, the branch's
+convention: server `f0fbab4` (35 commits in; one conflict, `main.rs`'s boot line, where each
+side adds a field, `require_invite` and `obstacles`, both kept; fmt and clippy clean, 719
+tests green in the hosting worktree) and client (79 commits in, a clean merge; all 20 checks
+green against the merged server, the deploy checkout's DLL copied in). Both pushed; both
+hosting branches 0 behind. **A trap for the next worktree:** the client hosting worktree's
+Godot import cache was from its last merge (Nov 5, 6 imported resources against the main
+checkout's 19), and `check_terrain_sight.gd` crawled on it for 25 minutes where it takes
+seconds; a headless `godot --headless --path . --import` (five seconds) before `check_all`
+fixes it. Recorded in the worktrees memory.
