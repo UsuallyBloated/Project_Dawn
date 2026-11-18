@@ -123,7 +123,7 @@ none is a friends-build item.
 | # | What | When | Size | Why it pays |
 |---|---|---|---|---|
 | R1 | **Delete the 25 dead functions** after a glance at each (`Languages.hear_language` is the hook the open language item names; deleting it loses nothing, git has it, and the item's text already says it is not called). **DONE 2026-11-18** (two commits on the deploy branch; `session_2026_11_18_r1_dead_code.md`): 20 deleted with what only they used (the `SlotRef` and `Vec3` helper constants, crafting's XP constants and map, and the whole `MobileCharacter` script, whose two subclasses left with the offline code). Five kept on the user's read of the list: `DebugLog.combat` (a documented log level the console colours), the three `Languages` functions (unfinished, not dead: the wiring item), and `fail_quest` (for the failable quests to come), each with a comment saying so. The floating XP number, whose options checkbox existed and did nothing, was wired to `xp_gained` instead of deleted (off by default). All 19 checks and 24 probes green after. The lesson for the next sweep: "defined, never called" is the lower bound; a function waiting on an unbuilt feature is unfinished, and the glance is for telling the two apart. | Any quiet hour; one commit. | Small | No dead code is the rule; a dead wire send (`broadcast_split_stack`) is a trap for the next reader. |
-| R2 | **`apply_casts` into one function per target-type arm** (`cast_enemy`, `cast_ally`, `cast_pet_charm`, ...), same file, moves only, the pre-flight's `ResolvedTarget` already the seam. ~~Then `handle_message` by message family the same way.~~ **Re-analyzed 2026-11-18 (section 8): the cast half stands, about a day, the 580-line prelude untouched, a `CastContext` lent to each arm, biggest arm first, after the door and in a window with no branch on the file. The handler half is dropped: its 1,930 lines are 77 arms averaging 25, a family split buys nothing to read and conflicts with `feat/public-hosting`; its four arms over 80 lines move out when next touched, and the three dead wire intents come off at the next bump.** | One function per sitting, as its own commit, in a quiet window after the door, before the next spell feature. | About a day | The next spell feature and every review of one gets a 200-line read instead of 1,950. |
+| R2 | **`apply_casts` into one function per target-type arm** (`cast_enemy`, `cast_ally`, `cast_pet_charm`, ...), same file, moves only, the pre-flight's `ResolvedTarget` already the seam. ~~Then `handle_message` by message family the same way.~~ **DONE 2026-11-18 (section 8.5; server `09b03ff` to `2ddfe7b`, eleven commits, each token-compared and suite-green).** **Re-analyzed 2026-11-18 (section 8): the cast half stands, about a day, the 580-line prelude untouched, a `CastContext` lent to each arm, biggest arm first, after the door and in a window with no branch on the file. The handler half is dropped: its 1,930 lines are 77 arms averaging 25, a family split buys nothing to read and conflicts with `feat/public-hosting`; its four arms over 80 lines move out when next touched, and the three dead wire intents come off at the next bump.** | One function per sitting, as its own commit, in a quiet window after the door, before the next spell feature. | About a day | The next spell feature and every review of one gets a 200-line read instead of 1,950. |
 | R3 | **A `RemoteEntityManager` base** under the five `remote_*_manager.gd` (and a `RemoteEntity` base under the three remote scripts), lifting the identical bodies. | When the remote animation-state channel (the jump relay's successor) next touches them. | Half a day | Removes about a dozen copies; the next per-entity message lands once. |
 | R4 | **`_handle_chat_input` as a command table** (`Dictionary` of name to Callable, each command its own small function). | The next time a command is added. | An hour | 475 lines become a table and twenty short functions; the audit's "does a prefix swallow" question becomes a lookup. |
 | R5 | **New windows as `.tscn`, existing ones left alone** until the deferred UI theming pass, which is the one moment converting them earns its cost. | The theming pass. | Per window | Already the rule; stated here so nobody converts a working window on its own. |
@@ -257,3 +257,24 @@ sensitivity, one that fails alone has a cause).
    first commit, since it is the one design choice in the pass.
 
 The R2 row in section 5 is amended to point here.
+
+### 8.5 Built (2026-11-18, the same day; user: "Lets go ahead with R2")
+
+The cast half as 8.4 says, on the server deploy branch, `09b03ff` to `2ddfe7b` plus the
+header commit: a Copy `CastContext` (what the prelude decided: the intent, the spell as
+cast, the resolved target, the caster's id, position and INT, the costs, the damage type,
+the clock and the audience) and a `CastWorld` (the `WorldState` fields the arms borrow,
+reborrowed per cast), each arm a `cast_<type>` function taking both by value and
+destructuring what it uses. Eleven commits, biggest first (ENEMY 401, PORT 178, ALLY 155,
+AOE 94, SUMMON_ITEM 91, SELF 80, PET_SUMMON 72, PET_CHARM 67, BIND 56, CORPSE 44, PET_HEAL
+39, the default 32), each body extracted by a script from its line range (never retyped) and
+then compared with the original with whitespace, commas and braces removed: every one
+token-identical, the only differences the arm-level `continue`s that are `return`s in a
+function (and one trailing `continue` at the end of SUMMON_ITEM's body, a needless `return`
+clippy asks to drop). The context structs grew a field only when an arm read it; `max_hp`
+and `side`, which the name count had suggested, turned out to be an arm's own local and a
+word in a comment. `apply_casts` is 672 lines now, all prelude and the twelve-line match.
+The suite ran green after every commit (481 unit, 201 world, clippy and fmt clean); one run
+found a fourth flaky roam test, which passed alone and got the sibling's 60 m region
+(`d003fd2`, test code only). No behaviour change; no redeploy needed (it rides the next one).
+
