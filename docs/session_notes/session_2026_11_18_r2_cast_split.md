@@ -81,3 +81,12 @@ Godot import cache was from its last merge (Nov 5, 6 imported resources against 
 checkout's 19), and `check_terrain_sight.gd` crawled on it for 25 minutes where it takes
 seconds; a headless `godot --headless --path . --import` (five seconds) before `check_all`
 fixes it. Recorded in the worktrees memory.
+
+## 6. The worktree prune (the same afternoon; user: "lets proceed")
+
+Twenty-two worktrees at fully merged tips removed, eleven in each repo (the client's
+agent worktree from the offline removal among them, and the server's two `target-gdext/`
+build dirs with theirs), after a status read of each: nothing uncommitted beyond Godot's
+`.uid` by-products and that build output. Kept: the two deploy checkouts, both `-hosting`
+(unmerged until cutover) and the client `-zone` (`feat/gm-flight`, the flight client).
+The merged branches stay; they cost nothing and hold the history.
