@@ -297,6 +297,7 @@ func _run() -> void:
 
 	_table()
 	_silent_commands()
+	_tables_are_sound()
 	_no_body()
 
 	if _dump:
@@ -349,6 +350,61 @@ func _silent_commands() -> void:
 			and said[0].begins_with("INFO|Debug console: "), "/console toggles the debug console and says so")
 	_type("/console")
 	_check(console.visible == console_was, "/console again puts it back")
+
+# The two lookup tables themselves (hud_chat_commands.gd). A command that
+# prints nothing with no world to act on (the pet commands, /camp cancel,
+# /stopsong) cannot be told from its neighbour by what comes back, so those
+# are held by the function their key names.
+const SILENT_HANDLERS := {
+	"/camp cancel": "_cmd_camp_cancel",
+	"/pet follow": "_cmd_pet_follow",
+	"/pet guard": "_cmd_pet_guard",
+	"/pet passive": "_cmd_pet_passive",
+	"/pet sit": "_cmd_pet_passive",
+	"/pet dismiss": "_cmd_pet_dismiss",
+	"/pet attack": "_cmd_pet_attack",
+	"/pet back": "_cmd_pet_back",
+	"/stopsong": "_cmd_stopsong",
+}
+
+func _tables_are_sound() -> void:
+	var commands = _hud._chat_commands
+	var exact: Dictionary = commands._exact
+	var with_args: Dictionary = commands._with_args
+	var wrong: Array[String] = []
+	for key in SILENT_HANDLERS:
+		var handler: Callable = exact.get(key, Callable())
+		if not handler.is_valid() or String(handler.get_method()) != SILENT_HANDLERS[key]:
+			wrong.append(key)
+	_check(wrong.is_empty(), "each command that prints nothing is run by its own function%s"
+		% ("" if wrong.is_empty() else " (not so: %s)" % str(wrong)))
+
+	var malformed: Array[String] = []
+	var dead: Array[String] = []
+	for table in [exact, with_args]:
+		for key in table:
+			var k := String(key)
+			if k != k.to_lower() or k != k.strip_edges() or not k.begins_with("/") or k.contains("  "):
+				malformed.append(k)
+			if not (table[key] as Callable).is_valid():
+				dead.append(k)
+	for key in with_args:
+		if String(key).contains(" "):
+			malformed.append(String(key))
+	_check(malformed.is_empty(), "every table key is a lowered command as it arrives%s"
+		% ("" if malformed.is_empty() else " (not so: %s)" % str(malformed)))
+	_check(dead.is_empty(), "every table key names a function that exists%s"
+		% ("" if dead.is_empty() else " (not so: %s)" % str(dead)))
+
+	# A whole-line command with a word after its first ("/camp cancel") must
+	# not begin with a first-word command, or the two would answer one line.
+	var shadowed: Array[String] = []
+	for key in exact:
+		var k := String(key)
+		if k.contains(" ") and with_args.has(k.substr(0, k.find(" "))):
+			shadowed.append(k)
+	_check(shadowed.is_empty(), "no whole-line command is shadowed by a first-word one%s"
+		% ("" if shadowed.is_empty() else " (shadowed: %s)" % str(shadowed)))
 
 # With no body in the world (the instant before it spawns, or after it is
 # freed) a command says so or does nothing; it never errors.
