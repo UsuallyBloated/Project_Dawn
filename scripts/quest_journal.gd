@@ -1,184 +1,36 @@
 extends DraggablePanel
 
-const W := 520.0
-const H := 380.0
-
 var _tab_active: bool = true  # true = Active, false = Completed
 var _selected_quest_id: String = ""
 
-var _active_btn: Button = null
-var _completed_btn: Button = null
-var _list_vbox: VBoxContainer = null
-var _title_lbl: Label = null
-var _desc_lbl: Label = null
-var _status_lbl: Label = null
-var _obj_vbox: VBoxContainer = null
-var _empty_lbl: Label = null
-var _abandon_btn: Button = null
+@onready var _close_btn: Button = $TitleRow/CloseBtn
+@onready var _active_btn: Button = $TabRow/ActiveBtn
+@onready var _completed_btn: Button = $TabRow/CompletedBtn
+@onready var _list_vbox: VBoxContainer = $Split/LeftPanel/LeftScroll/List
+@onready var _empty_lbl: Label = $Split/LeftPanel/EmptyLbl
+@onready var _title_lbl: Label = $Split/RightPanel/RightScroll/RightVBox/TitleLbl
+@onready var _desc_lbl: Label = $Split/RightPanel/RightScroll/RightVBox/DescLbl
+@onready var _status_lbl: Label = $Split/RightPanel/RightScroll/RightVBox/StatusLbl
+@onready var _obj_vbox: VBoxContainer = $Split/RightPanel/RightScroll/RightVBox/ObjVBox
+@onready var _abandon_btn: Button = $Split/RightPanel/RightScroll/RightVBox/AbandonBtn
 
+# The frame is scenes/quest_journal.tscn (title row, the two tab buttons, the
+# split with the list and the detail pane); this script fills both panes.
 func _ready() -> void:
-	_build_ui()
+	_close_btn.pressed.connect(func() -> void: visible = false)
+	_active_btn.pressed.connect(_switch_tab.bind(true))
+	_completed_btn.pressed.connect(_switch_tab.bind(false))
+	# Abandon (active quests only). Server forgets progress; re-accepting
+	# starts from zero. Confirmed by a combat-log line, not a dialog.
+	_abandon_btn.pressed.connect(_on_abandon_pressed)
 	QuestManager.quest_added.connect(_on_quests_changed)
 	QuestManager.quest_updated.connect(_on_quests_changed)
 	QuestManager.quest_completed.connect(_on_quests_changed)
 	QuestManager.quest_failed.connect(_on_quests_changed)
 	QuestManager.quest_removed.connect(_on_quests_changed)
 	visibility_changed.connect(_on_visibility_changed)
-
-func _build_ui() -> void:
-	set_anchors_preset(Control.PRESET_CENTER)
-	offset_left   = -W * 0.5
-	offset_top    = -H * 0.5
-	offset_right  =  W * 0.5
-	offset_bottom =  H * 0.5
-
-	theme_type_variation = &"WindowPanel"
-
-	# Title bar
-	var title_row := HBoxContainer.new()
-	title_row.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	title_row.offset_top    = 10.0
-	title_row.offset_bottom = 36.0
-	title_row.offset_left   = 12.0
-	title_row.offset_right  = -12.0
-	add_child(title_row)
-
-	var title := Label.new()
-	title.text = "Quest Journal"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.theme_type_variation = &"TitleLabel"
-	title.add_theme_font_size_override("font_size", 15)
-	title_row.add_child(title)
-
-	var close_btn := Button.new()
-	close_btn.text = "✕"
-	close_btn.flat = true
-	close_btn.pressed.connect(func() -> void: visible = false)
-	title_row.add_child(close_btn)
-
-	# Tab buttons
-	var tab_row := HBoxContainer.new()
-	tab_row.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	tab_row.offset_top    = 40.0
-	tab_row.offset_bottom = 66.0
-	tab_row.offset_left   = 12.0
-	tab_row.offset_right  = -12.0
-	tab_row.add_theme_constant_override("separation", 4)
-	add_child(tab_row)
-
-	_active_btn = _make_tab_btn("Active")
-	_active_btn.pressed.connect(_switch_tab.bind(true))
-	tab_row.add_child(_active_btn)
-
-	_completed_btn = _make_tab_btn("Completed")
-	_completed_btn.pressed.connect(_switch_tab.bind(false))
-	tab_row.add_child(_completed_btn)
-
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	tab_row.add_child(spacer)
-
-	# Two-panel split
-	var split := HSplitContainer.new()
-	split.set_anchors_preset(Control.PRESET_FULL_RECT)
-	split.offset_top    = 70.0
-	split.offset_left   = 12.0
-	split.offset_right  = -12.0
-	split.offset_bottom = -12.0
-	split.split_offset  = 0
-	add_child(split)
-
-	# Left: quest list
-	var left_panel := Panel.new()
-	left_panel.custom_minimum_size = Vector2(160.0, 0.0)
-	left_panel.theme_type_variation = &"SectionPanel"
-	split.add_child(left_panel)
-
-	var left_scroll := ScrollContainer.new()
-	left_scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
-	left_scroll.offset_left = 4; left_scroll.offset_top = 4
-	left_scroll.offset_right = -4; left_scroll.offset_bottom = -4
-	left_panel.add_child(left_scroll)
-
-	_list_vbox = VBoxContainer.new()
-	_list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_list_vbox.add_theme_constant_override("separation", 2)
-	left_scroll.add_child(_list_vbox)
-
-	# Right: quest details
-	var right_panel := Panel.new()
-	right_panel.theme_type_variation = &"SectionPanel"
-	split.add_child(right_panel)
-
-	var right_scroll := ScrollContainer.new()
-	right_scroll.set_anchors_preset(Control.PRESET_FULL_RECT)
-	right_scroll.offset_left = 10; right_scroll.offset_top = 10
-	right_scroll.offset_right = -10; right_scroll.offset_bottom = -10
-	right_panel.add_child(right_scroll)
-
-	var right_vbox := VBoxContainer.new()
-	right_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_vbox.add_theme_constant_override("separation", 8)
-	right_scroll.add_child(right_vbox)
-
-	_title_lbl = Label.new()
-	_title_lbl.theme_type_variation = &"TitleLabel"
-	_title_lbl.add_theme_font_size_override("font_size", 13)
-	_title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	right_vbox.add_child(_title_lbl)
-
-	_desc_lbl = Label.new()
-	_desc_lbl.add_theme_font_size_override("font_size", 11)
-	_desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	right_vbox.add_child(_desc_lbl)
-
-	# "Ready to turn in" callout (PD_W0024: rewards pay at the turn-in NPC).
-	_status_lbl = Label.new()
-	_status_lbl.theme_type_variation = &"TitleLabel"
-	_status_lbl.add_theme_font_size_override("font_size", 11)
-	_status_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_status_lbl.visible = false
-	right_vbox.add_child(_status_lbl)
-
-	var obj_header := Label.new()
-	obj_header.text = "Objectives"
-	obj_header.theme_type_variation = &"TitleLabel"
-	obj_header.add_theme_font_size_override("font_size", 11)
-	right_vbox.add_child(obj_header)
-
-	_obj_vbox = VBoxContainer.new()
-	_obj_vbox.add_theme_constant_override("separation", 4)
-	right_vbox.add_child(_obj_vbox)
-
-	# Abandon (active quests only). Server forgets progress; re-accepting
-	# starts from zero. Confirmed by a combat-log line, not a dialog.
-	_abandon_btn = Button.new()
-	_abandon_btn.text = "Abandon Quest"
-	_abandon_btn.custom_minimum_size = Vector2(120.0, 24.0)
-	_abandon_btn.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	_abandon_btn.add_theme_font_size_override("font_size", 11)
-	_abandon_btn.visible = false
-	_abandon_btn.pressed.connect(_on_abandon_pressed)
-	right_vbox.add_child(_abandon_btn)
-
-	_empty_lbl = Label.new()
-	_empty_lbl.text = "No quests."
-	_empty_lbl.add_theme_font_size_override("font_size", 11)
-	_empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_empty_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_empty_lbl.set_anchors_preset(Control.PRESET_CENTER)
-	_empty_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_panel.add_child(_empty_lbl)
-
 	_refresh_tab_buttons()
 	_rebuild_list()
-
-func _make_tab_btn(label: String) -> Button:
-	var btn := Button.new()
-	btn.text = label
-	btn.custom_minimum_size = Vector2(80.0, 24.0)
-	btn.add_theme_font_size_override("font_size", 11)
-	return btn
 
 func _switch_tab(to_active: bool) -> void:
 	_tab_active = to_active

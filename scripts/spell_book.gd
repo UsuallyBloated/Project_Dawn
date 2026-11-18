@@ -1,7 +1,6 @@
 class_name SpellBook
 extends DraggablePanel
 
-const C_BG   := Color(0.07, 0.06, 0.04, 0.95)
 const C_ROW  := Color(0.12, 0.10, 0.07, 1.00)
 const C_HOVER := Color(0.20, 0.16, 0.10, 1.00)
 # Track 16.1 — gold-tinted highlight to mark the spell currently
@@ -10,7 +9,12 @@ const C_HOVER := Color(0.20, 0.16, 0.10, 1.00)
 const C_MEMORIZE := Color(0.30, 0.22, 0.06, 1.00)
 const ROW_H  := 28
 
-var _vbox: VBoxContainer = null
+@onready var _close_btn: Button = $Outer/Header/CloseBtn
+@onready var _tabs: TabContainer = $Outer/Tabs
+@onready var _vbox: VBoxContainer = $Outer/Tabs/Spells/Scroll/List
+@onready var _col_row: HBoxContainer = $Outer/Tabs/Spells/ColRow
+@onready var _skills_vbox: VBoxContainer = $Outer/Tabs/Skills/Scroll/List
+@onready var _skill_cols: HBoxContainer = $Outer/Tabs/Skills/ColRow
 var _rows: Array = []
 # row data: {bg, normal_style, hover_style, memorize_style, spell, hovered}
 var _row_data: Array = []
@@ -18,8 +22,6 @@ var _row_data: Array = []
 # Pure casters see only Spells, pure melee only Skills, hybrids (Paladin,
 # Ranger, Shadow Knight...) both — a Warrior looking for Shield Bash in a
 # spells-only book was the report that motivated this.
-var _tabs: TabContainer = null
-var _skills_vbox: VBoxContainer = null
 var _skill_rows: Array = []
 
 func _ready() -> void:
@@ -31,100 +33,16 @@ func _ready() -> void:
 	_rebuild()
 	_rebuild_skills()
 
+# The frame is scenes/spell_book.tscn (header, the two tabs with their hint,
+# column row and list); this script writes the column headers and the rows.
 func _build() -> void:
-	custom_minimum_size = Vector2(300, 320)
-	position = Vector2(220, 80)
-
-	theme_type_variation = &"WindowPanel"
-
-	var outer := VBoxContainer.new()
-	outer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	outer.add_theme_constant_override("separation", 4)
-	outer.offset_left = 8; outer.offset_top = 8
-	outer.offset_right = -8; outer.offset_bottom = -8
-	add_child(outer)
-
-	var header := HBoxContainer.new()
-	outer.add_child(header)
-
-	var title := Label.new()
-	title.text = "Spellbook"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.add_theme_font_size_override("font_size", 14)
-	title.theme_type_variation = &"TitleLabel"
-	header.add_child(title)
-
-	var close_btn := Button.new()
-	close_btn.text = "✕"
-	close_btn.flat = true
-	close_btn.pressed.connect(func(): visible = false)
-	header.add_child(close_btn)
-
-	outer.add_child(HSeparator.new())
-
-	_tabs = TabContainer.new()
-	_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	outer.add_child(_tabs)
-
-	# ── Spells tab ────────────────────────────────────────────────────────────
-	var spells_tab := VBoxContainer.new()
-	spells_tab.name = "Spells"
-	spells_tab.add_theme_constant_override("separation", 4)
-	_tabs.add_child(spells_tab)
-
-	# Track 16.1 — short usage hint so a player who hasn't read the
-	# release notes still discovers the sit+click+slot flow.
-	var hint := Label.new()
-	hint.text = "Sit, click a spell, then click a Spell Bar slot to memorize."
-	hint.add_theme_font_size_override("font_size", 10)
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	spells_tab.add_child(hint)
-
-	var col_row := HBoxContainer.new()
-	col_row.add_theme_constant_override("separation", 4)
-	spells_tab.add_child(col_row)
-	_add_col_hdr(col_row, "Spell", 0, true)
-	_add_col_hdr(col_row, "MP",   36, false)
-	_add_col_hdr(col_row, "CD",   44, false)
-
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	spells_tab.add_child(scroll)
-
-	_vbox = VBoxContainer.new()
-	_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_vbox.add_theme_constant_override("separation", 2)
-	scroll.add_child(_vbox)
-
-	# ── Skills tab ────────────────────────────────────────────────────────────
-	var skills_tab := VBoxContainer.new()
-	skills_tab.name = "Skills"
-	skills_tab.add_theme_constant_override("separation", 4)
-	_tabs.add_child(skills_tab)
-
-	var skill_hint := Label.new()
-	skill_hint.text = "Click a skill to pick it up, then click an empty hotbar slot to place it. ESC cancels."
-	skill_hint.add_theme_font_size_override("font_size", 10)
-	skill_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	skills_tab.add_child(skill_hint)
-
-	var skill_cols := HBoxContainer.new()
-	skill_cols.add_theme_constant_override("separation", 4)
-	skills_tab.add_child(skill_cols)
-	_add_col_hdr(skill_cols, "Skill", 0, true)
-	_add_col_hdr(skill_cols, "ST",   36, false)
-	_add_col_hdr(skill_cols, "CD",   44, false)
-
-	var skill_scroll := ScrollContainer.new()
-	skill_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	skill_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	skills_tab.add_child(skill_scroll)
-
-	_skills_vbox = VBoxContainer.new()
-	_skills_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_skills_vbox.add_theme_constant_override("separation", 2)
-	skill_scroll.add_child(_skills_vbox)
+	_close_btn.pressed.connect(func(): visible = false)
+	_add_col_hdr(_col_row, "Spell", 0, true)
+	_add_col_hdr(_col_row, "MP",   36, false)
+	_add_col_hdr(_col_row, "CD",   44, false)
+	_add_col_hdr(_skill_cols, "Skill", 0, true)
+	_add_col_hdr(_skill_cols, "ST",   36, false)
+	_add_col_hdr(_skill_cols, "CD",   44, false)
 
 func _add_col_hdr(parent: HBoxContainer, text: String, min_w: float, expand: bool) -> void:
 	var lbl := Label.new()

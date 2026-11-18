@@ -6,9 +6,6 @@ extends DraggablePanel
 # outcome). The SELL list walks the base slots and the bags, and since
 # 2026-10-30 leads with the item in hand, which sells from the cursor.
 
-const W := 520.0
-const H := 440.0
-
 enum Mode { BUY, SELL }
 
 var _mode: Mode = Mode.BUY
@@ -17,22 +14,29 @@ var _vendor_type: String = ""
 var _stock: Array[String] = []          # item_name strings for BUY
 var _sell_items: Array = []             # inventory slots for SELL
 
-var _title_lbl: Label = null
-var _coins_lbl: Label = null
-var _buy_tab: Button = null
-var _sell_tab: Button = null
-var _list_vbox: VBoxContainer = null
+@onready var _title_lbl: Label = $Root/Header/TitleLbl
+@onready var _coins_lbl: Label = $Root/Header/CoinsLbl
+@onready var _close_btn: Button = $Root/Header/CloseBtn
+@onready var _buy_tab: Button = $Root/Tabs/BuyTab
+@onready var _sell_tab: Button = $Root/Tabs/SellTab
+@onready var _list_vbox: VBoxContainer = $Root/Body/ListScroll/List
+@onready var _detail_vbox: VBoxContainer = $Root/Body/DetailScroll/Detail
+@onready var _result_lbl: Label = $Root/Footer/ResultLbl
 var _list_btns: Array[Button] = []
-var _detail_vbox: VBoxContainer = null
 var _qty_label: Label = null
 var _action_btn: Button = null
-var _result_lbl: Label = null
 
 var _selected_index: int = -1
 var _qty: int = 1
 
+# The frame is scenes/vendor_window.tscn (header with the coin line, the Buy
+# and Sell tabs, the list and detail panes, the result line); this script
+# fills the list and the detail pane and sends the intents.
 func _ready() -> void:
-	_build_ui()
+	_coins_lbl.text = _coins_text()
+	_close_btn.pressed.connect(func(): visible = false)
+	_buy_tab.pressed.connect(func(): _set_mode(Mode.BUY))
+	_sell_tab.pressed.connect(func(): _set_mode(Mode.SELL))
 	PlayerStats.coins_changed.connect(_on_coins_changed)
 	Inventory.inventory_changed.connect(_on_inventory_changed)
 	VendorManager.vendor_closed.connect(func(): visible = false)
@@ -47,109 +51,6 @@ func open_for(vname: String, vtype: String) -> void:
 		_stock.append(iname)
 	_set_mode(Mode.BUY)
 	visible = true
-
-# ── UI construction ───────────────────────────────────────────────────────────
-
-func _build_ui() -> void:
-	size = Vector2(W, H)
-	var vp := get_viewport_rect().size
-	position = Vector2((vp.x - W) * 0.5, (vp.y - H) * 0.5)
-
-	theme_type_variation = &"WindowPanel"
-
-	var root := VBoxContainer.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 8; root.offset_top = 8
-	root.offset_right = -8; root.offset_bottom = -8
-	root.add_theme_constant_override("separation", 6)
-	add_child(root)
-
-	_build_header(root)
-	root.add_child(HSeparator.new())
-	_build_tabs(root)
-	root.add_child(HSeparator.new())
-	_build_body(root)
-	root.add_child(HSeparator.new())
-	_build_footer(root)
-
-func _build_header(parent: VBoxContainer) -> void:
-	var row := HBoxContainer.new()
-	parent.add_child(row)
-
-	_title_lbl = Label.new()
-	_title_lbl.text = "Merchant"
-	_title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_title_lbl.theme_type_variation = &"TitleLabel"
-	_title_lbl.add_theme_font_size_override("font_size", 14)
-	row.add_child(_title_lbl)
-
-	_coins_lbl = Label.new()
-	_coins_lbl.text = _coins_text()
-	_coins_lbl.add_theme_color_override("font_color", UITheme.C_COINS)
-	_coins_lbl.add_theme_font_size_override("font_size", 12)
-	row.add_child(_coins_lbl)
-
-	var close := Button.new()
-	close.text = "✕"
-	close.flat = true
-	close.pressed.connect(func(): visible = false)
-	row.add_child(close)
-
-func _build_tabs(parent: VBoxContainer) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 4)
-	parent.add_child(row)
-
-	_buy_tab = UITheme.make_button("Buy")
-	_buy_tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_buy_tab.pressed.connect(func(): _set_mode(Mode.BUY))
-	row.add_child(_buy_tab)
-
-	_sell_tab = UITheme.make_button("Sell")
-	_sell_tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_sell_tab.pressed.connect(func(): _set_mode(Mode.SELL))
-	row.add_child(_sell_tab)
-
-func _build_body(parent: VBoxContainer) -> void:
-	var body := HBoxContainer.new()
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 6)
-	parent.add_child(body)
-
-	var list_scroll := ScrollContainer.new()
-	list_scroll.custom_minimum_size = Vector2(175, 0)
-	list_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	body.add_child(list_scroll)
-
-	_list_vbox = VBoxContainer.new()
-	_list_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_list_vbox.add_theme_constant_override("separation", 2)
-	list_scroll.add_child(_list_vbox)
-
-	body.add_child(VSeparator.new())
-
-	var detail_scroll := ScrollContainer.new()
-	detail_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	body.add_child(detail_scroll)
-
-	_detail_vbox = VBoxContainer.new()
-	_detail_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_detail_vbox.add_theme_constant_override("separation", 6)
-	detail_scroll.add_child(_detail_vbox)
-
-func _build_footer(parent: VBoxContainer) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	parent.add_child(row)
-
-	_result_lbl = Label.new()
-	_result_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_result_lbl.add_theme_font_size_override("font_size", 12)
-	_result_lbl.clip_text = true
-	row.add_child(_result_lbl)
 
 # ── Mode switching ────────────────────────────────────────────────────────────
 

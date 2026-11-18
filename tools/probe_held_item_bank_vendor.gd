@@ -77,7 +77,7 @@ func _run() -> void:
 	_check(asked.size() == 3, "a left click with an empty hand asks nothing")
 
 	# ── The merchant ────────────────────────────────────────────────────────
-	var vendor = load("res://scripts/vendor_window.gd").new()
+	var vendor = load("res://scenes/vendor_window.tscn").instantiate()
 	hud.add_child(vendor)
 	await process_frame
 	vendor.open_for("Brom", "no_such_vendor_type")

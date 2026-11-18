@@ -1,8 +1,8 @@
 extends CanvasLayer
 
 const _OptionsScreenScript  := preload("res://scripts/options_screen.gd")
-const _CraftingWindowScript := preload("res://scripts/crafting_window.gd")
-const _VendorWindowScript   := preload("res://scripts/vendor_window.gd")
+const _CraftingWindowScene  := preload("res://scenes/crafting_window.tscn")
+const _VendorWindowScene    := preload("res://scenes/vendor_window.tscn")
 const _BankWindowScript     := preload("res://scripts/bank_window.gd")
 const _HudDeathScreen       := preload("res://scripts/hud_death_screen.gd")
 const _HudDisconnectNoticeScene := preload("res://scenes/hud_disconnect_notice.tscn")
@@ -16,8 +16,8 @@ const HUNGER_PANEL_GAP := 4.0
 const _HudGroupPanelScene   := preload("res://scenes/hud_group_panel.tscn")
 const _HudChatCommands      := preload("res://scripts/hud_chat_commands.gd")
 const _TrackWindowScene     := preload("res://scenes/track_window.tscn")
-const _SpellBookScript      := preload("res://scripts/spell_book.gd")
-const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
+const _SpellBookScene       := preload("res://scenes/spell_book.tscn")
+const _QuestJournalScene    := preload("res://scenes/quest_journal.tscn")
 const _DialogueWindowScene  := preload("res://scenes/dialogue_window.tscn")
 const _InspectWindowScene   := preload("res://scenes/inspect_window.tscn")
 const _TradeWindowScene     := preload("res://scenes/trade_window.tscn")
@@ -219,13 +219,11 @@ func _build_components() -> void:
 	_track_window = _TrackWindowScene.instantiate()
 	add_child(_track_window)
 
-	_spell_book = _SpellBookScript.new()
-	_spell_book.visible = false
+	_spell_book = _SpellBookScene.instantiate()
 	add_child(_spell_book)
 	_watch_window(_spell_book)
 
-	_quest_journal = _QuestJournalScript.new()
-	_quest_journal.visible = false
+	_quest_journal = _QuestJournalScene.instantiate()
 	add_child(_quest_journal)
 	_watch_window(_quest_journal)
 
@@ -416,7 +414,7 @@ func _build_options_screen() -> void:
 	_watch_window(_options_screen)
 
 func _build_crafting_window() -> void:
-	_crafting_window = _CraftingWindowScript.new()
+	_crafting_window = _CraftingWindowScene.instantiate()
 	_crafting_window.visible = false
 	add_child(_crafting_window)
 	_watch_window(_crafting_window)
@@ -431,7 +429,7 @@ func _build_crafting_window() -> void:
 			CombatLog.MsgType.INFO))
 
 func _build_vendor_window() -> void:
-	_vendor_window = _VendorWindowScript.new()
+	_vendor_window = _VendorWindowScene.instantiate()
 	_vendor_window.visible = false
 	add_child(_vendor_window)
 	_watch_window(_vendor_window)
