@@ -1,4 +1,4 @@
-extends Node
+extends "res://autoloads/remote_entity_manager.gd"
 
 # RemotePetManager — Track 11. Visual replication of every server-spawned
 # player-owned pet in the current zone. Mirrors RemoteEnemyManager's
@@ -24,8 +24,6 @@ const REMOTE_PET_SCENE := preload("res://scenes/remote_pet.tscn")
 # Rust crate; this constant must stay in sync.
 const PET_ID_BASE: int = 3_000_000_000
 
-var _spawn_data: Dictionary = {}   # int pet_id -> spawn dict
-var _by_id: Dictionary = {}        # int pet_id -> RemotePet node
 var _last_scene: Node = null
 var _needs_rehydrate: bool = false
 
@@ -54,11 +52,6 @@ func _refresh_all_allegiances_impl() -> void:
 	for rp in _by_id.values():
 		if is_instance_valid(rp) and rp.has_method("refresh_allegiance"):
 			rp.refresh_allegiance()
-
-# Track 21B — public accessor used by the target-of-target frame
-# to resolve a server-sent pet_id back to its RemotePet node.
-func get_by_id(id: int) -> Node:
-	return _by_id.get(id)
 
 func _process(_delta: float) -> void:
 	var scene: Node = get_tree().current_scene
@@ -204,9 +197,6 @@ func _instantiate_into(id: int, scene: Node) -> void:
 	rp.rotation.y = data["yaw"]
 	_by_id[id] = rp
 
-func _scene_hosts_local_player(_scene: Node) -> bool:
-	return get_tree().get_first_node_in_group("player") != null
-
 func _is_pet_id(id: int) -> bool:
 	return id >= PET_ID_BASE
 
@@ -215,10 +205,3 @@ func _is_pet_id(id: int) -> bool:
 func get_pet(id: int) -> Node:
 	return _by_id.get(id)
 
-func clear_all() -> void:
-	for id in _by_id:
-		var rp = _by_id[id]
-		if is_instance_valid(rp):
-			rp.queue_free()
-	_by_id.clear()
-	_spawn_data.clear()

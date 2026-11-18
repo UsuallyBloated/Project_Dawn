@@ -1,4 +1,4 @@
-extends Node
+extends "res://autoloads/remote_entity_manager.gd"
 
 # RemoteLootBagManager — visual + interaction replication for every
 # server-owned loot bag in the current zone. Mirrors RemoteEnemyManager
@@ -15,7 +15,8 @@ extends Node
 #
 # LootBagSpawn carries `(item_path, count)` pairs. We map paths to
 # the local ItemData catalog with load(); the LootBag node only
-# stores the ItemData refs going forward.
+# stores the ItemData refs going forward. `_spawn_data` holds {pos, items:
+# Array[{item, count}]} per bag id.
 
 const LOOT_BAG_SCENE := preload("res://scripts/loot_bag.gd")
 # Mirror of protocol::world::LOOT_BAG_ID_BASE. Authoritative source
@@ -23,8 +24,6 @@ const LOOT_BAG_SCENE := preload("res://scripts/loot_bag.gd")
 # RemoteEnemyManager.
 const LOOT_BAG_ID_BASE: int = 2_000_000_000
 
-var _spawn_data: Dictionary = {}   # bag_id -> {pos, items: Array[{item, count}]}
-var _by_id: Dictionary = {}        # bag_id -> LootBag node
 var _last_scene: Node = null
 var _needs_rehydrate: bool = false
 
@@ -135,13 +134,3 @@ func _materialize_items(paths: PackedStringArray, counts: PackedInt32Array) -> A
 		out.append({"item": item, "count": int(counts[i])})
 	return out
 
-func _scene_hosts_local_player(_scene: Node) -> bool:
-	return get_tree().get_first_node_in_group("player") != null
-
-func clear_all() -> void:
-	for id in _by_id:
-		var bag = _by_id[id]
-		if is_instance_valid(bag):
-			bag.queue_free()
-	_by_id.clear()
-	_spawn_data.clear()

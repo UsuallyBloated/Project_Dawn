@@ -1,4 +1,4 @@
-extends Node
+extends "res://autoloads/remote_entity_manager.gd"
 
 # RemotePlayerManager — visual replication of every other player in the
 # current zone. Listens to Net's coarse signals; manages a dict of
@@ -24,8 +24,6 @@ extends Node
 
 const REMOTE_PLAYER_SCENE := preload("res://scenes/remote_player.tscn")
 
-var _spawn_data: Dictionary = {}   # int char_id -> spawn dict
-var _by_id: Dictionary = {}        # int char_id -> RemotePlayer node
 var _last_scene: Node = null
 # Set when a scene swap drops _by_id; cleared once we've reinstantiated
 # into a scene that actually hosts the local player. Persists across
@@ -56,11 +54,6 @@ func _ready() -> void:
 	# by id partition (< ENEMY_ID_BASE = player) so the two managers
 	# don't collide.
 	Net.world_entity_target.connect(_on_entity_target)
-
-# Track 21B — public accessor used by the target-of-target frame
-# to resolve a peer char_id back to its RemotePlayer node.
-func get_by_id(id: int) -> Node:
-	return _by_id.get(id)
 
 func _process(_delta: float) -> void:
 	var scene: Node = get_tree().current_scene
@@ -554,19 +547,3 @@ func _instantiate_into(id: int, scene: Node) -> void:
 	if data.has("buff_names"):
 		rp.apply_buff_snapshot(data["buff_names"], data["buff_durations"])
 
-# A scene "hosts the local player" once player.gd._ready has run and
-# added the player to the "player" group. Picks out world.tscn (and any
-# future 3D zones that follow the same pattern) without hard-coding a
-# scene path.
-func _scene_hosts_local_player(_scene: Node) -> bool:
-	return get_tree().get_first_node_in_group("player") != null
-
-# Defensive — call before zone swaps if needed. Scene change already
-# frees the children when the parent scene goes away.
-func clear_all() -> void:
-	for id in _by_id:
-		var rp = _by_id[id]
-		if is_instance_valid(rp):
-			rp.queue_free()
-	_by_id.clear()
-	_spawn_data.clear()
