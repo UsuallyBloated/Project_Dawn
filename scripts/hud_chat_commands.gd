@@ -7,8 +7,9 @@ extends Node
 # which judges every request itself; nothing decided here is trusted.
 #
 # To add a command: write `_cmd_<name>(text, lower)`, give it a key in one of
-# the two tables in _init, and add its rows to tools/probe_chat_commands.gd
-# (which holds every command here) and to docs/reference/commands.md.
+# the two tables in _init, and add its rows to tools/check_chat_commands.gd
+# (which holds every command here and fails on one without a row) and to
+# docs/reference/commands.md.
 
 # Dev Test Panel, mounted on demand by `/testpanel` (world.gd also mounts it at
 # world entry for GMs).
@@ -16,10 +17,11 @@ const TEST_PANEL_GD := preload("res://scripts/test_panel.gd")
 
 # The local body, for the commands that act on it or read where it stands.
 var _player: Node3D = null
-var _debug_console: DebugConsole = null
 var _track_window: TrackWindow = null
-# hud.gd's inspect: the window and its range check live there, and a
-# right-click on a player shares it.
+# hud.gd's console toggle (the backtick key shares it) and its inspect (the
+# window and its range check live there, and a right-click on a player
+# shares it).
+var _toggle_debug_console: Callable
 var _inspect_player: Callable
 
 # The command tables (filled in _init): what the player typed to the
@@ -58,8 +60,8 @@ func _init() -> void:
 		"/accept": _cmd_accept, "/accept invite": _cmd_accept,
 		"/leave": _cmd_leave, "/leave group": _cmd_leave,
 		"/loot": _cmd_loot,
-		"/loot rr": _cmd_loot, "/loot roundrobin": _cmd_loot,
-		"/loot ffa": _cmd_loot, "/loot freeforall": _cmd_loot,
+		"/loot rr": _cmd_loot_set, "/loot roundrobin": _cmd_loot_set,
+		"/loot ffa": _cmd_loot_set, "/loot freeforall": _cmd_loot_set,
 		"/autosplit": _cmd_autosplit, "/autosplit on": _cmd_autosplit, "/autosplit off": _cmd_autosplit,
 		"/pvp": _cmd_pvp, "/pvp on": _cmd_pvp, "/pvp off": _cmd_pvp,
 		# The link, the build, the dev tools.
@@ -97,8 +99,8 @@ func _ready() -> void:
 	CombatLog.chat_submitted.connect(_handle_chat_input)
 
 ## The HUD pieces a command toggles or calls, handed over when the HUD builds this.
-func setup(debug_console: DebugConsole, track_window: TrackWindow, inspect_player: Callable) -> void:
-	_debug_console = debug_console
+func setup(toggle_debug_console: Callable, track_window: TrackWindow, inspect_player: Callable) -> void:
+	_toggle_debug_console = toggle_debug_console
 	_track_window = track_window
 	_inspect_player = inspect_player
 
@@ -194,7 +196,8 @@ func _cmd_ooc(text: String, _lower: String) -> void:
 # A tell arrives as `/tell <name> <message>`. A bare `/tell` or `/t` is all
 # that arrives without both, and is told how a tell is written.
 func _cmd_tell(text: String, _lower: String) -> void:
-	var rest := text.substr("/tell ".length())
+	var first_space := text.find(" ")
+	var rest := "" if first_space < 0 else text.substr(first_space + 1)
 	var space_idx := rest.find(" ")
 	if space_idx > 0:
 		_send_tell(rest.substr(0, space_idx), rest.substr(space_idx + 1))
@@ -312,7 +315,7 @@ func _cmd_languages(_text: String, _lower: String) -> void:
 			CombatLog.add_line("  %s — %d%s" % [lang, Languages.skills[lang], active_marker], CombatLog.MsgType.INFO)
 
 func _cmd_lang(text: String, _lower: String) -> void:
-	var lang_name := text.substr(6).strip_edges()
+	var lang_name := text.substr("/lang ".length()).strip_edges()
 	if lang_name == "":
 		CombatLog.add_line("Usage: /lang [language name]", CombatLog.MsgType.INFO)
 	elif Languages.get_skill(lang_name) > 0:
@@ -373,21 +376,19 @@ func _cmd_autosplit(_text: String, lower: String) -> void:
 	Net.broadcast_autosplit(split_on)
 	CombatLog.add_line("Auto-split loot: %s" % ("on" if split_on else "off"), CombatLog.MsgType.INFO)
 
-# Group loot distribution mode (leader only). Bare /loot reports the
-# current mode; /loot rr | ffa sets it. See group_loot_and_coin.md.
-func _cmd_loot(_text: String, lower: String) -> void:
-	if lower == "/loot":
-		CombatLog.add_line("Loot mode: %s. Leader: /loot rr or /loot ffa." % GroupManager.loot_mode_name(), CombatLog.MsgType.INFO)
+# Group loot distribution mode. Bare /loot reports the current mode;
+# /loot rr | ffa sets it (leader only). See group_loot_and_coin.md.
+func _cmd_loot(_text: String, _lower: String) -> void:
+	CombatLog.add_line("Loot mode: %s. Leader: /loot rr or /loot ffa." % GroupManager.loot_mode_name(), CombatLog.MsgType.INFO)
+
+func _cmd_loot_set(_text: String, lower: String) -> void:
+	if not GroupManager.is_leader:
+		CombatLog.add_line("Only the group leader can set the loot mode.", CombatLog.MsgType.INFO)
 		return
-	if lower == "/loot rr" or lower == "/loot roundrobin" or lower == "/loot ffa" or lower == "/loot freeforall":
-		if not GroupManager.is_leader:
-			CombatLog.add_line("Only the group leader can set the loot mode.", CombatLog.MsgType.INFO)
-			return
-		var ffa := lower == "/loot ffa" or lower == "/loot freeforall"
-		var mode := GroupManager.LOOT_FREE_FOR_ALL if ffa else GroupManager.LOOT_ROUND_ROBIN
-		GroupManager.set_loot_mode(mode)
-		CombatLog.add_line("Loot mode set to %s." % ("Free-for-all" if ffa else "Round Robin"), CombatLog.MsgType.INFO)
-		return
+	var ffa := lower == "/loot ffa" or lower == "/loot freeforall"
+	var mode := GroupManager.LOOT_FREE_FOR_ALL if ffa else GroupManager.LOOT_ROUND_ROBIN
+	GroupManager.set_loot_mode(mode)
+	CombatLog.add_line("Loot mode set to %s." % ("Free-for-all" if ffa else "Round Robin"), CombatLog.MsgType.INFO)
 
 # Round trip to the world server, from the wire layer's own ack timing (the
 # UDP path the game plays on, smoothed), with renet's packet-loss estimate.
@@ -460,15 +461,7 @@ func _cmd_testpanel(_text: String, _lower: String) -> void:
 # The in-game debug console, for when its backtick key is not reaching
 # the game window (editor focus, the OS taking the key).
 func _cmd_console(_text: String, _lower: String) -> void:
-	if _debug_console != null:
-		_debug_console.toggle()
-		CombatLog.add_line(
-			"Debug console: %s (%d lines buffered)" % [
-				"ON" if _debug_console.visible else "OFF",
-				DebugLog.recent_lines.size(),
-			],
-			CombatLog.MsgType.INFO,
-		)
+	_toggle_debug_console.call()
 
 # Dev command: damage yourself by an amount, through the server (a dev
 # command there, ignored for a plain account). For testing regen and
@@ -554,7 +547,7 @@ func _sender_name() -> String:
 	return PlayerStats.player_name if PlayerStats.player_name != "" else "You"
 
 # One tell on the wire plus the sender's own echo line (the server does not
-# echo a tell back to its sender). Shared by /tell and /r.
+# echo a tell back to its sender).
 func _send_tell(target_name: String, msg: String) -> void:
 	CombatLog.add_line("You -> %s: %s" % [target_name, msg], CombatLog.MsgType.TELL_OUT)
 	Net.broadcast_chat(Net.CHAT_CHANNEL_TELL, msg, target_name)

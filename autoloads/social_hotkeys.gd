@@ -283,8 +283,8 @@ func _execute_social(sd: Dictionary) -> void:
 		cmd = cmd.replace("%t", target_name).replace("%n", char_name)
 		_execute_command(cmd)
 
-# Each macro line runs exactly as if typed into the chat line: hud.gd's
-# handler sends chat on its channel, runs commands (/sit, /lang, /loc) and
+# Each macro line runs exactly as if typed into the chat line: the chat
+# commands (hud_chat_commands.gd) send chat on its channel, runs commands (/sit, /lang, /loc) and
 # collapses channel commands. Macros used to print their lines locally and
 # send nothing, so a macro's /say was heard by nobody.
 func _execute_command(cmd: String) -> void:

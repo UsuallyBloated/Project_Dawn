@@ -89,6 +89,7 @@ if the wilds misbehave. To see the roam map and each region's room while authori
 | `godot --headless --path . -s tools/check_skill_table_lockstep.gd` | **Skill table lockstep check** (read-only). Compares the weapon, armor and casting skill caps for every class (`world/skills.rs` against the three `data/*_skill_definitions.gd`) and the dual wield levels. Prints DRIFT, SERVER-ONLY and CLIENT-ONLY; exit code 1 on any. Add `-- <path to skills.rs>`. Since 2026-10-25. |
 | `godot --headless --path . -s tools/check_character_lockstep.gd` | **Character lockstep check** (read-only). Compares `char_data.rs` with `data/character_data.gd` and `PlayerStats._hell_mod`: each race's stat bonuses, each class's bonuses and stamina, each class's per-level gains (and the default), and the XP curve's hell modifier at every level 1 to 60. Exit code 1 on drift. Add `-- <path to char_data.rs>`. Since 2026-10-25. |
 | `godot --headless --path . -s tools/check_discipline_lockstep.gd` | **Spell school lockstep check** (read-only). Compares the server's spell-to-casting-skill map (`world/skills.rs`) with the client's `DISCIPLINE` (`data/spell_definitions.gd`); the server trains and rolls fizzles on that skill, and falls back to evocation for an unmapped spell. Exit code 1 on drift. Add `-- <path to skills.rs>`. Since 2026-10-25. |
+| `godot --headless --path . -s tools/check_chat_commands.gd` | **Chat command check** (in `check_all.ps1`). Types every chat command into the real HUD (`scripts/hud_chat_commands.gd`) and compares what the game prints back; the commands that print nothing are held by what they do and by the function their table key names. Fails on a command in the tables with no row. `-- --dump` prints what each input answers today, for writing a row. Exit code 1 on failure. |
 | `godot --headless --path . -s tools/probe_factions.gd` | **Factions client probe**: `Alignment` following the server, the prestige classes, the level names, the `/con` name helper. Exit code 1 on any miss. |
 | `godot --headless --path . -s tools/probe_held_item_bank_vendor.gd` | **Held-item bank and vendor probe** (on `feat/facing` until the bump): the bank window deposits what the cursor holds into the vault clicked, refuses a held bag up front and asks nothing empty-handed; the vendor's SELL list leads with the item in hand, sold from the cursor. 17 checks, exit 1 on any miss. Needs the PD_W0029 DLL in `addons/gdext_net/`. Since 2026-10-30. |
 | `godot --headless --path . -s tools/probe_login_facing.gd` | **Login facing probe**: the player's own body takes its facing from the first server Position and sends no Move until that Position has arrived; later Positions never re-seed it. 8 checks, exit 1 on any miss. Since 2026-11-09. |
@@ -108,7 +109,7 @@ if the wilds misbehave. To see the roam map and each region's room while authori
 
 ## 3. In-game chat commands
 
-Parsed in `scripts/hud.gd::_handle_chat_input`. Press Enter to open chat, type the command.
+Run by `scripts/hud_chat_commands.gd`: two lookup tables, one function per command, every command held by `tools/check_chat_commands.gd`. Press Enter to open chat, type the command.
 
 ### Movement / state
 | Command | Effect |

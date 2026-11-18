@@ -256,7 +256,7 @@ func _build_components() -> void:
 	# The chat line's commands (hud_chat_commands.gd): it answers every
 	# submitted line itself and is handed the HUD pieces a command needs.
 	_chat_commands = _HudChatCommands.new()
-	_chat_commands.setup(_debug_console, _track_window, _inspect_player)
+	_chat_commands.setup(_toggle_debug_console, _track_window, _inspect_player)
 	add_child(_chat_commands)
 
 	_build_tot_frame()
@@ -704,14 +704,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			# rebindable gameplay control. Backtick (`) toggles it; F2 is
 			# now EQ's "target group member 1". `/console` is the fallback.
 			if _debug_console != null:
-				_debug_console.toggle()
-				CombatLog.add_line(
-					"Debug console: %s (%d lines buffered)" % [
-						"ON" if _debug_console.visible else "OFF",
-						DebugLog.recent_lines.size(),
-					],
-					CombatLog.MsgType.INFO,
-				)
+				_toggle_debug_console()
 				get_viewport().set_input_as_handled()
 		elif event.is_action("target_self"):
 			if _self_targeted:
@@ -1342,7 +1335,21 @@ func _on_player_state_changed(new_state: int) -> void:
 	else:
 		_state_label.visible = false
 
-# ── Inspect ───────────────────────────────────────────────────────────────────
+# ── Shared with the chat commands ─────────────────────────────────────────────
+
+# Show or hide the debug console and say which. Shared by the backtick key
+# and `/console` (hud_chat_commands.gd).
+func _toggle_debug_console() -> void:
+	if _debug_console == null:
+		return
+	_debug_console.toggle()
+	CombatLog.add_line(
+		"Debug console: %s (%d lines buffered)" % [
+			"ON" if _debug_console.visible else "OFF",
+			DebugLog.recent_lines.size(),
+		],
+		CombatLog.MsgType.INFO,
+	)
 
 # Open the inspect window on another player. Shared by /inspect
 # (hud_chat_commands.gd) and a right-click on the player

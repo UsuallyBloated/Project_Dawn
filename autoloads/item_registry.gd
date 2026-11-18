@@ -5,7 +5,7 @@ extends Node
 # and loading each .tres file; subsequent lookups are O(1) by lower-case
 # item_name (exact match) or O(n) for substring fuzzy match (n ~ 100).
 #
-# Today's primary consumer is the `/give` chat command in hud.gd — dev
+# Today's primary consumer is the `/give` chat command (hud_chat_commands.gd) — dev
 # workflow to find any item by name (the grant itself is the server's). Future: vendor pricing tables, quest
 # reward indexing, item-stat search tools.
 

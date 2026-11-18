@@ -5,7 +5,7 @@ class_name ChatChannel
 # of the line (`/say `, `/shout `, `/tell Bob `) switches the line to that
 # channel and the command leaves the text; the line stays on it (sticky) until
 # another command moves it. ChatWindow drives the line with `consume`, and
-# hud.gd runs every submitted line through `normalize`, so a channel command
+# hud_chat_commands.gd runs every submitted line through `normalize`, so a channel command
 # never reaches anyone as part of a message (`/say /say hello` says "hello").
 
 const SAY := "say"
@@ -39,7 +39,7 @@ const MAX_CHARS := 250
 ## command counts only once its space is typed and a tell only once the name's
 ## space is; on submit (`at_end` true) the end of the line counts too.
 ## `reply_to` is the last tell sender (`/r`); with none, `/r` is left alone so
-## the hud can say so.
+## the reply command can say so.
 static func consume(text: String, channel: String, target: String, reply_to: String, at_end: bool) -> Dictionary:
 	var rest := text
 	var consumed := false
@@ -78,7 +78,7 @@ static func consume(text: String, channel: String, target: String, reply_to: Str
 		break
 	return {"channel": channel, "target": target, "text": rest, "consumed": consumed}
 
-## The one-line command the hud's handlers understand for `body` on a channel.
+## The one-line command the chat commands understand for `body` on a channel.
 static func command_for(channel: String, target: String, body: String) -> String:
 	match channel:
 		SHOUT:

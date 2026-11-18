@@ -192,7 +192,7 @@ func _connect_signals() -> void:
 	Net.world_chat_message.connect(_on_remote_chat_message)
 
 # Routes inbound Net.world_chat_message to a typed chat line. Outbound
-# echoes (the sender's own line) are still added directly by hud.gd —
+# echoes (the sender's own line) are still added directly by hud_chat_commands.gd —
 # the server doesn't echo back to the sender to avoid double-rendering.
 func _on_remote_chat_message(speaker: String, channel: int, text: String, _lang: String) -> void:
 	match channel:

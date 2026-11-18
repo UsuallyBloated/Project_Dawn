@@ -607,7 +607,7 @@ func broadcast_set_target(target_id: int) -> void:
 # `/tell` recipient; pass "" for the other channels. Server fans
 # `ChatMessage` to recipients (AOI peers for Say, every in-world peer for
 # Shout/Ooc, the single target for Tell). The sender's own echo is added
-# locally by `hud.gd`, not via the server.
+# locally by the chat commands (`hud_chat_commands.gd`), not via the server.
 func broadcast_chat(channel: int, text: String, target_name: String = "") -> void:
 	if _state != State.CONNECTED_APP:
 		return

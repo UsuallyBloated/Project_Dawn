@@ -1,5 +1,5 @@
 extends SceneTree
-# Probe (run headless, exits 1 on failure): every chat command, typed into the
+# Check (run headless, exits 1 on failure; part of check_all.ps1): every chat command, typed into the
 # real HUD, does what it is meant to. Nothing else drives the chat
 # commands (scripts/hud_chat_commands.gd), so this is their net: written
 # against the dispatcher as it stood in hud.gd on 2026-11-18 and kept green
@@ -14,11 +14,13 @@ extends SceneTree
 # table below. The commands that print nothing are held by what they do to
 # the stub body and the windows, and by not being an "Unknown command".
 #
-# Not covered: what a command sends to the server (the probe has no world
+# A command added to the tables fails this until it has a row here.
+#
+# Not covered: what a command sends to the server (there is no world
 # connection, and every send is a request the server judges for itself) and
 # the commands' effects in a live world, which the playtest sheet walks.
-#   godot --headless --path . -s tools/probe_chat_commands.gd
-#   godot --headless --path . -s tools/probe_chat_commands.gd -- --dump
+#   godot --headless --path . -s tools/check_chat_commands.gd
+#   godot --headless --path . -s tools/check_chat_commands.gd -- --dump
 # `--dump` prints what each input produces today, in the table's own form,
 # for writing a new row.
 
@@ -221,6 +223,8 @@ const TABLE := [
 var _fails := 0
 var _dump := false
 var _lines: Array[String] = []
+# The table keys the rows have reached, for the every-command-has-a-row check.
+var _typed: Dictionary = {}
 var _log: Node
 var _hud: CanvasLayer
 var _body: Node3D
@@ -238,14 +242,27 @@ func _initialize() -> void:
 	# first frame.
 	process_frame.connect(_run, CONNECT_ONE_SHOT)
 	create_timer(WATCHDOG_SECS).timeout.connect(func() -> void:
-		print("FAILED  the probe did not finish within %d s" % WATCHDOG_SECS)
+		print("FAILED  the check did not finish within %d s" % WATCHDOG_SECS)
 		quit(1))
 
 # One typed line through the real entry point; what the game printed back.
 func _type(input: String) -> Array[String]:
+	_note_key(input)
 	_lines.clear()
 	_log.chat_submitted.emit(input)
 	return _lines.duplicate()
+
+# Which table key this line will reach, found the way the dispatcher finds it.
+func _note_key(input: String) -> void:
+	var commands = _hud._chat_commands
+	var line: String = ChatChannel.normalize(input, _log.last_tell_sender()).to_lower()
+	if commands._exact.has(line):
+		_typed[line] = true
+		return
+	var space := line.find(" ")
+	var word := line if space < 0 else line.substr(0, space)
+	if commands._with_args.has(word):
+		_typed[word] = true
 
 func _on_line(text: String, type: int) -> void:
 	_lines.append("%s|%s" % [_log.MsgType.keys()[type], text])
@@ -401,15 +418,23 @@ func _tables_are_sound() -> void:
 	_check(dead.is_empty(), "every table key names a function that exists%s"
 		% ("" if dead.is_empty() else " (not so: %s)" % str(dead)))
 
-	# A whole-line command with a word after its first ("/camp cancel") must
-	# not begin with a first-word command, or the two would answer one line.
-	var shadowed: Array[String] = []
+	# A first-word command answers its own bare form (with how it is used),
+	# so the same word in the whole-line table would take that line from it.
+	var in_both: Array[String] = []
 	for key in exact:
-		var k := String(key)
-		if k.contains(" ") and with_args.has(k.substr(0, k.find(" "))):
-			shadowed.append(k)
-	_check(shadowed.is_empty(), "no whole-line command is shadowed by a first-word one%s"
-		% ("" if shadowed.is_empty() else " (shadowed: %s)" % str(shadowed)))
+		if with_args.has(key):
+			in_both.append(String(key))
+	_check(in_both.is_empty(), "no command word is in both tables%s"
+		% ("" if in_both.is_empty() else " (in both: %s)" % str(in_both)))
+
+	# Every command has a row: a new one cannot go in unheld.
+	var unheld: Array[String] = []
+	for table in [exact, with_args]:
+		for key in table:
+			if not _typed.has(key):
+				unheld.append(String(key))
+	_check(unheld.is_empty(), "every command in the tables is typed by a row of this check%s"
+		% ("" if unheld.is_empty() else " (no row for: %s)" % str(unheld)))
 
 # With no body in the world (the instant before it spawns, or after it is
 # freed) a command says so or does nothing; it never errors.
