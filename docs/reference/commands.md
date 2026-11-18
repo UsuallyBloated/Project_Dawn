@@ -174,10 +174,13 @@ Parsed in `scripts/hud.gd::_handle_chat_input`. Press Enter to open chat, type t
 | **[GM]** `/damage <amount>` | Dev self-damage via the server `DamageSelf` path. |
 
 The **Test Panel** (client debug tool) exposes the same dev actions as buttons (Full Heal, Level Up,
-Grant 250 XP, Give Selected Item, Spawn Normal/Named, give-coins). Those routing to the server are
-**[GM]**-gated; buttons like Trigger Death and time-of-day are client-side/legitimate and not gated.
-Note: Full Heal fills the bars optimistically client-side even when the server refuses it (a display
-lie that self-corrects), so it can look like it worked for a non-GM.
+Grant 250 XP, Give Selected Item, Spawn Normal/Named, Despawn All Enemies, give-coins, Trigger
+Death, Fling 5 m / 20 m, the FACTIONS (GM) sliders, and on the flight client Fly / Land). Every
+one of those goes to the server and is **[GM]**-gated and audited there. Client-side and not
+gated: time-of-day, and **Obstacle Outlines** (draws every obstacle prism: red stops a body, blue
+blocks sight only; a view of the client's own copy of the file, which `check_obstacle_lockstep.gd`
+holds equal to the server's). Note: Full Heal fills the bars optimistically client-side even when
+the server refuses it (a display lie that self-corrects), so it can look like it worked for a non-GM.
 
 **Every [GM] command that reaches the server is recorded** in the GM action audit log (read it with
 `admin_report`), and a command that cannot be recorded is refused rather than run. The budget is

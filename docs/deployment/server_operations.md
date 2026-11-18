@@ -101,16 +101,27 @@ The startup line is the important one. **Check it after every start**, because s
 misconfigurations are only visible here:
 
 ```
-starting projectdawn-server auth_bind=0.0.0.0:8765 world_bind=0.0.0.0:7777
+starting projectdawn-server build="87c58fe" auth_bind=0.0.0.0:8765 world_bind=0.0.0.0:7777
   world_endpoint=100.93.108.112:7777 db=sqlite:///opt/projectdawn/world.db?mode=rwc
-  min_client=0.1.0 dev_cmds=false
+  min_client=0.1.0 dev_cmds=false roamers=on
+  terrain="400x400 cells of 10 m, floor 0, hash f569ade0c331"
+  obstacles="33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4"
 ```
+
+(The shape as of 2026-11-17; the `build=` sha, the terrain hash and the obstacle count change
+with each redeploy, and the To-Do entry for a deploy names the values it must read.)
 
 | Field | Must read | If it does not |
 |---|---|---|
 | `dev_cmds` | `false` | **Every player has `/give`, mob spawning and instant levels.** Stop the server. |
 | `world_endpoint` | `100.93.108.112:7777` | Remote players will log in fine and then hang on Enter World. |
 | `db` | `sqlite:///opt/projectdawn/world.db?mode=rwc` | You are running against the wrong database and nobody's characters exist. |
+| `build` | the sha you just deployed | The `cp` was skipped or ran before the stop: the old binary is running (seen 2026-11-15). |
+| `terrain` | the hash the deploy's To-Do entry names | The server stands people on a different ground from the client's: mobs float or sink, an "invisible wall" at the old edge (seen 2026-11-14). |
+| `obstacles` | the hash the deploy's To-Do entry names | Walls and trees stop bodies in different places on the two sides; the client snaps. |
+
+One-time steps already run on the host, never to be repeated: the compass mirror SQL of
+2026-11-15 (guarded by its `compass_mirrored` table; the backup is `world.db.pre-compass`).
 
 `roamers` (builds with wandering wildlife) reads `on` unless `PD_NO_ROAMERS=1` is set. It is
 the off switch for the animals that wander between the camps: if they misbehave (something

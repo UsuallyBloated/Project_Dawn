@@ -68,9 +68,19 @@ exists, and three smaller doc gaps. Those are §3.
 
 | Run | Result |
 |---|---|
-| The whole server suite ten times in a row on `87c58fe` | running at the time of writing; the result is appended below. |
+| The whole server suite ten times in a row on `87c58fe` | Eight runs fully green (481 unit, 201 world each). Run 4: `flight::a_fling_or_a_death_ends_flight` failed at `flight.rs:387`; run 6: `flight::a_flier_is_held_above_the_ground_on_the_plate_and_under_the_ceiling` at `flight.rs:208` and `roam::a_wanderer_walks_its_region_on_its_own` at `roam.rs:154`. Read against the source: both flight assertions want the server's "You take to the air" line inside `gm_line`'s fixed 400 ms `collect_for`, the shape of the ledger sleep that misfired under load on 11-10 (`cef31f0`); the roam test's 30 m region makes a 20 to 80 m leg draw (`pick_leg`, eight tries) fail often, and a failed draw costs the rat a 5 to 25 s pause against the test's 12 s window. Neither is a server fault on the read; the isolation runs (the row below) decide. |
+| The three failing tests alone, five times | The two flight tests passed five of five alone: load sensitivity, the test's fixed window. The roam test failed once in five alone ("got 0.0 m"): the rat stood its whole watch, so the construction cause is real (a 30 m test region against 20 to 80 m legs), not load. The real regions are 400 to 2,000 m across (`zone_roam.toml`), so play never sees it. **FIXED, test code only** (server deploy branch, the commit after `87c58fe`): `gm_line_says` polls up to 3 s for the server's line, the ledger fix's shape; the roam test's region is 60 m and its watch ends the moment the rat has walked 5 m (40 s at most). The four touched tests five of five, then the world suite 201 of 201, fmt clean. Nothing to redeploy: tests do not ship. |
 | A fuzz hour on `87c58fe` | not run (WSL, an hour; the user's call). |
 | The real binary with roamers on, one GM flying over the camps for an hour | not run (needs a seat; the user's call). |
+
+## 4b. The records fixed the same night
+
+H1 (the overview's compass line, now north = -Z and `/loc` the EQ way, pointing at L3), H2
+(the runbook's sample boot line with `build=`, `roamers=`, `terrain=`, `obstacles=`, three
+table rows for what each must read, and the compass SQL recorded as a one-time step already
+run), H3 (the Test Panel list in `commands.md`), H4 (`author_terrain.gd` prints the two
+exports to run after a clean write) were edited the same night; the overview's missing
+paragraphs still land with their ticks. H5 to H7 stay OPEN.
 
 ## 5. What this audit did not do
 

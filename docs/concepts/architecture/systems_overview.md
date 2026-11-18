@@ -827,11 +827,14 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   placement.
 - **Buff/debuff bar:** icons with countdown timers (absorb, HoT, evade, etc.).
 - **`/loc` and the compass** (playtested 2026-10-09, `loc_command_checklist.md`, all five rows):
-  `/loc` (or `/location`) prints your position as `x, y, z` to one decimal, paste-ready for
-  `zone_camps.toml` / `npcs.toml`, free for everyone and working while dead. Coordinates only
-  (user, 2026-10-09): which way you face is the Sense Heading skill's job on `/sense`, whose
-  roll is fuzzy below 75% of its cap. The world compass is settled: **+Z is north, +X is
-  east** (`sense_heading.gd`'s ring, the camp labels and the quest dialogue all agree). Known
+  `/loc` (or `/location`) prints your position the EverQuest way, `north, west, height` to
+  one decimal (since the compass mirror of 2026-11-14; `/loc raw` prints the world's `x, y,
+  z`, paste-ready for `zone_camps.toml` / `npcs.toml`), free for everyone and working while
+  dead. Coordinates only (user, 2026-10-09): which way you face is the Sense Heading skill's
+  job on `/sense`, whose roll is fuzzy below 75% of its cap. The world compass: **north is
+  -Z and east is +X**, so facing north, east is on your right (rule L3 in
+  `docs/reference/invariants.md`, held by `tools/check_compass.gd`; the 2026-09-27 ruling
+  "+Z is north" was replaced by the mirror, user decision 2026-11-14). Known
   quirk: Sense Heading starts at the level-1 cap, so a fresh character always reads exact and
   the skill only shows after leveling; it is also client-local and resets each launch (the
   "L1 cap = starting score" item in the To-Do).

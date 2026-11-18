@@ -1155,6 +1155,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   sheets (`overnight_2026_11_01_checklist.md` §2 and §3 among them) and a second pre-door check
   follow before the last zip goes out.
   Status per finding: the findings doc's §5.
+  **The cross-over audit of 2026-11-17** (user: confirm "no cross-overs or trips" after the ten
+  parallel-session pieces since the bump; plan `docs/security/crossover_audit_plan_2026_11_17.md`,
+  findings `crossover_audit_2026_11_17.md`): every code seam read clean; the trips were records
+  (fixed the same night: the overview's compass line, the runbook's boot line, the Test Panel
+  list, the author tool's "Next" line); three flaky tests found by a ten-run loop and made
+  deterministic (test code only). Open from it: the hosting branch's merge-forward, the eleven
+  worktrees at merged tips, the planner republish, and the fuzz and live-roamers hours. The
+  companion structure assessment (`docs/design/code_structure_assessment_2026_11_17.md`) has six
+  ranked recommendations, nothing built; its R1 (25 dead client functions) and R2 (`apply_casts`
+  and `handle_message` into one function per arm) are the ones with a moment.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
   Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying
