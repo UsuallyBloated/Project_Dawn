@@ -1,8 +1,5 @@
 extends DraggablePanel
 
-const W := 640.0
-const H := 500.0
-
 const BUG_REPORT_URL := "https://discord.gg/xpAv5Ra4aT"
 
 const _AUDIO_CHANNELS := [
@@ -12,7 +9,11 @@ const _AUDIO_CHANNELS := [
 	{id = "ui",     label = "UI Volume"},
 ]
 
-var _tab_container: TabContainer
+@onready var _tab_container: TabContainer = $Tabs
+@onready var _bug_btn: Button = $BtnRow/BugBtn
+@onready var _quit_btn: Button = $BtnRow/QuitBtn
+@onready var _apply_btn: Button = $BtnRow/ApplyBtn
+@onready var _close_btn: Button = $BtnRow/CloseBtn
 
 # Graphics controls
 var _win_mode_btn: OptionButton
@@ -42,64 +43,19 @@ func _ready() -> void:
 
 # ── Build ─────────────────────────────────────────────────────────────────────
 
+# The frame is scenes/options_screen.tscn (title, the tab container, the
+# button row); this script builds the four tabs' contents.
 func _build() -> void:
-	set_anchors_preset(Control.PRESET_CENTER)
-	offset_left   = -W * 0.5
-	offset_top    = -H * 0.5
-	offset_right  =  W * 0.5
-	offset_bottom =  H * 0.5
-
-	theme_type_variation = &"WindowPanel"
-
-	var title := Label.new()
-	title.text = "OPTIONS"
-	title.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	title.offset_top    = 12.0
-	title.offset_bottom = 38.0
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.theme_type_variation = &"TitleLabel"
-	title.add_theme_font_size_override("font_size", 18)
-	add_child(title)
-
-	_tab_container = TabContainer.new()
-	_tab_container.position = Vector2(10.0, 48.0)
-	_tab_container.size = Vector2(W - 20.0, H - 108.0)
-	_style_tabs()
-	add_child(_tab_container)
-
 	_build_graphics_tab()
 	_build_audio_tab()
 	_build_interface_tab()
 	_build_keybinds_tab()
-
-	var btn_row := HBoxContainer.new()
-	btn_row.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	btn_row.offset_left   = -460.0
-	btn_row.offset_top    = -52.0
-	btn_row.offset_right  = -12.0
-	btn_row.offset_bottom = -12.0
-	btn_row.alignment = BoxContainer.ALIGNMENT_END
-	btn_row.add_theme_constant_override("separation", 10)
-	add_child(btn_row)
-
-	var bug_btn := UITheme.make_button("Report a Bug")
-	bug_btn.tooltip_text = "Opens Discord. Attach debug.log from %APPDATA%\\Godot\\app_userdata\\Project_Dawn\\"
-	bug_btn.pressed.connect(_on_report_bug_pressed)
-	btn_row.add_child(bug_btn)
-
-	var quit_btn := UITheme.make_button("Quit Game")
-	quit_btn.pressed.connect(_on_quit_pressed)
-	btn_row.add_child(quit_btn)
-
-	var apply_btn := UITheme.make_button("Apply")
-	apply_btn.pressed.connect(_on_apply)
-	btn_row.add_child(apply_btn)
-
-	var close_btn := UITheme.make_button("Close")
-	close_btn.pressed.connect(func() -> void:
+	_bug_btn.pressed.connect(_on_report_bug_pressed)
+	_quit_btn.pressed.connect(_on_quit_pressed)
+	_apply_btn.pressed.connect(_on_apply)
+	_close_btn.pressed.connect(func() -> void:
 		_cancel_listening()
 		visible = false)
-	btn_row.add_child(close_btn)
 
 func _on_quit_pressed() -> void:
 	Net.leave_session()
@@ -107,33 +63,6 @@ func _on_quit_pressed() -> void:
 
 func _on_report_bug_pressed() -> void:
 	OS.shell_open(BUG_REPORT_URL)
-
-func _style_tabs() -> void:
-	_tab_container.theme_type_variation = &"SectionPanel"
-
-	var sel := StyleBoxFlat.new()
-	sel.bg_color = UITheme.C_PANEL_BG
-	sel.border_color = UITheme.C_GOLDEN_BORDER
-	sel.set_border_width_all(1)
-	sel.border_width_bottom = 0
-	sel.content_margin_left   = 10.0
-	sel.content_margin_right  = 10.0
-	sel.content_margin_top    = 4.0
-	sel.content_margin_bottom = 6.0
-	_tab_container.add_theme_stylebox_override("tab_selected", sel)
-
-	var unsel := StyleBoxFlat.new()
-	unsel.bg_color = UITheme.C_BTN_NORM
-	unsel.border_color = UITheme.C_BORDER
-	unsel.set_border_width_all(1)
-	unsel.content_margin_left   = 10.0
-	unsel.content_margin_right  = 10.0
-	unsel.content_margin_top    = 4.0
-	unsel.content_margin_bottom = 6.0
-	_tab_container.add_theme_stylebox_override("tab_unselected", unsel)
-
-	_tab_container.add_theme_color_override("font_selected_color",   UITheme.C_TITLE)
-	_tab_container.add_theme_color_override("font_unselected_color", UITheme.C_TEXT)
 
 func _make_tab(tab_name: String) -> VBoxContainer:
 	var margin := MarginContainer.new()

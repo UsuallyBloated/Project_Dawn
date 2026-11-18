@@ -18,30 +18,13 @@ const _CC_SPELL_NAMES := {
 	"Spellbreak": "silence",
 }
 
-var _hbox: HBoxContainer = null
+@onready var _hbox: HBoxContainer = $HBox
 # {spell_name -> {label: Label, remaining: float}}
 var _entries: Dictionary = {}
 
+# The strip is scenes/hud_debuff_bar.tscn (above the hotbars, left of
+# centre); this script fills it with the target's debuff icons.
 func _ready() -> void:
-	anchor_left   = 0.0
-	anchor_top    = 1.0
-	anchor_right  = 0.0
-	anchor_bottom = 1.0
-	offset_left   = 320.0
-	offset_right  = 620.0
-	offset_bottom = -152.0
-	offset_top    = -200.0
-	clip_contents = true
-
-	apply_style(Color(0.04, 0.02, 0.02, 0.70), UITheme.C_BORDER)
-
-	_hbox = HBoxContainer.new()
-	_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_hbox.offset_left = 3; _hbox.offset_top = 3
-	_hbox.offset_right = -3; _hbox.offset_bottom = -3
-	_hbox.add_theme_constant_override("separation", 4)
-	add_child(_hbox)
-
 	Net.world_buff_snapshot.connect(_on_buff_snapshot)
 
 func _process(delta: float) -> void:

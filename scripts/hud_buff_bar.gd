@@ -1,32 +1,13 @@
 extends DraggablePanel
 
-var _hbox: HBoxContainer = null
+@onready var _hbox: HBoxContainer = $HBox
 var _timer_labels: Dictionary = {}
 
+# The strip is scenes/hud_buff_bar.tscn: directly below the player stat
+# panel at top-left (left 32, right 342, 8 px under the panel's bottom at
+# 133) and as wide as it; DraggablePanel lets the player move it. This
+# script fills it with the icons.
 func _ready() -> void:
-	# Default position: directly below the player stat panel at top-
-	# left (left=32, right=342, ending at y=133). 8 px gap below the
-	# panel; matches the panel's width (310) for visual alignment.
-	# DraggablePanel lets the player move it at runtime if they want.
-	anchor_left   = 0.0
-	anchor_top    = 0.0
-	anchor_right  = 0.0
-	anchor_bottom = 0.0
-	offset_left   = 32.0
-	offset_right  = 342.0
-	offset_top    = 141.0
-	offset_bottom = 189.0
-	clip_contents = true
-
-	apply_style(Color(0.04, 0.03, 0.02, 0.70), UITheme.C_BORDER)
-
-	_hbox = HBoxContainer.new()
-	_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_hbox.offset_left = 3; _hbox.offset_top = 3
-	_hbox.offset_right = -3; _hbox.offset_bottom = -3
-	_hbox.add_theme_constant_override("separation", 4)
-	add_child(_hbox)
-
 	BuffManager.buffs_changed.connect(_on_buffs_changed)
 	_on_buffs_changed()
 

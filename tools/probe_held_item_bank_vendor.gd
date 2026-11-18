@@ -42,7 +42,7 @@ func _run() -> void:
 	await process_frame
 
 	# ── The bank ────────────────────────────────────────────────────────────
-	var bank = load("res://scripts/bank_window.gd").new()
+	var bank = load("res://scenes/bank_window.tscn").instantiate()
 	hud.add_child(bank)
 	await process_frame
 	var asked: Array = []

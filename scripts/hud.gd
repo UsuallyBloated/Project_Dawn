@@ -1,14 +1,14 @@
 extends CanvasLayer
 
-const _OptionsScreenScript  := preload("res://scripts/options_screen.gd")
+const _OptionsScreenScene   := preload("res://scenes/options_screen.tscn")
 const _CraftingWindowScene  := preload("res://scenes/crafting_window.tscn")
 const _VendorWindowScene    := preload("res://scenes/vendor_window.tscn")
-const _BankWindowScript     := preload("res://scripts/bank_window.gd")
+const _BankWindowScene      := preload("res://scenes/bank_window.tscn")
 const _HudDeathScreen       := preload("res://scripts/hud_death_screen.gd")
 const _HudDisconnectNoticeScene := preload("res://scenes/hud_disconnect_notice.tscn")
 const _HudCastBarScene      := preload("res://scenes/hud_cast_bar.tscn")
-const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
-const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
+const _HudBuffBarScene      := preload("res://scenes/hud_buff_bar.tscn")
+const _HudDebuffBarScene    := preload("res://scenes/hud_debuff_bar.tscn")
 const _HudPetPanelScene     := preload("res://scenes/hud_pet_panel.tscn")
 const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
 # The hunger window sits this far below the player's information bar.
@@ -197,10 +197,10 @@ func _build_components() -> void:
 	var cast_bar := _HudCastBarScene.instantiate()
 	add_child(cast_bar)
 
-	var buff_bar := _HudBuffBar.new()
+	var buff_bar := _HudBuffBarScene.instantiate()
 	add_child(buff_bar)
 
-	var debuff_bar := _HudDebuffBar.new()
+	var debuff_bar := _HudDebuffBarScene.instantiate()
 	add_child(debuff_bar)
 
 	_group_panel = _HudGroupPanelScene.instantiate()
@@ -408,7 +408,7 @@ func _refresh_portrait() -> void:
 # ── Utility windows ───────────────────────────────────────────────────────────
 
 func _build_options_screen() -> void:
-	_options_screen = _OptionsScreenScript.new()
+	_options_screen = _OptionsScreenScene.instantiate()
 	_options_screen.visible = false
 	add_child(_options_screen)
 	_watch_window(_options_screen)
@@ -439,7 +439,7 @@ func _build_vendor_window() -> void:
 # Banker slice 1 — same lifecycle as the vendor window; opens on
 # BankerManager.banker_opened (hud NPC-interact path / BankerNPC proximity).
 func _build_bank_window() -> void:
-	_bank_window = _BankWindowScript.new()
+	_bank_window = _BankWindowScene.instantiate()
 	_bank_window.visible = false
 	add_child(_bank_window)
 	_watch_window(_bank_window)

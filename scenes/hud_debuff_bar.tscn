@@ -1,0 +1,25 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/hud_debuff_bar.gd" id="1_debuffs"]
+
+[node name="DebuffBar" type="Panel"]
+clip_contents = true
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 320.0
+offset_top = -200.0
+offset_right = 620.0
+offset_bottom = -152.0
+theme_type_variation = &"BarStrip"
+script = ExtResource("1_debuffs")
+
+[node name="HBox" type="HBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = -3.0
+offset_bottom = -3.0
+theme_override_constants/separation = 4
