@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=12 format=3]
+[gd_resource type="Theme" load_steps=16 format=3]
 
 ; Project Dawn's UI theme: dark wood and brass (chosen 2026-11-18 from a list
 ; of ten). Deep walnut fields, a brass band round every window, brass titles,
@@ -156,6 +156,54 @@ corner_radius_top_right = 2
 corner_radius_bottom_right = 2
 corner_radius_bottom_left = 2
 
+[sub_resource type="StyleBoxFlat" id="tab_selected"]
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+bg_color = Color(0.2, 0.13, 0.075, 1)
+border_width_left = 1
+border_width_top = 2
+border_width_right = 1
+border_color = Color(0.78, 0.6, 0.26, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+
+[sub_resource type="StyleBoxFlat" id="tab_unselected"]
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+bg_color = Color(0.11, 0.07, 0.04, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_color = Color(0.5, 0.37, 0.15, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+
+[sub_resource type="StyleBoxFlat" id="tab_hovered"]
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+bg_color = Color(0.26, 0.17, 0.09, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_color = Color(0.78, 0.6, 0.26, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+
+[sub_resource type="StyleBoxFlat" id="tab_panel"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+draw_center = false
+border_width_top = 1
+border_color = Color(0.5, 0.37, 0.15, 1)
+
 [sub_resource type="StyleBoxEmpty" id="plain"]
 content_margin_left = 4.0
 content_margin_top = 4.0
@@ -194,6 +242,20 @@ SectionPanel/base_type = &"Panel"
 SectionPanel/styles/panel = SubResource("section")
 SlotCell/base_type = &"Panel"
 SlotCell/styles/panel = SubResource("slot")
+TabBar/colors/font_hovered_color = Color(0.94, 0.78, 0.4, 1)
+TabBar/colors/font_selected_color = Color(0.94, 0.78, 0.4, 1)
+TabBar/colors/font_unselected_color = Color(0.92, 0.84, 0.66, 1)
+TabBar/styles/tab_hovered = SubResource("tab_hovered")
+TabBar/styles/tab_selected = SubResource("tab_selected")
+TabBar/styles/tab_unselected = SubResource("tab_unselected")
+TabContainer/colors/font_hovered_color = Color(0.94, 0.78, 0.4, 1)
+TabContainer/colors/font_selected_color = Color(0.94, 0.78, 0.4, 1)
+TabContainer/colors/font_unselected_color = Color(0.92, 0.84, 0.66, 1)
+TabContainer/styles/panel = SubResource("tab_panel")
+TabContainer/styles/tab_hovered = SubResource("tab_hovered")
+TabContainer/styles/tab_selected = SubResource("tab_selected")
+TabContainer/styles/tab_unselected = SubResource("tab_unselected")
+TabContainer/styles/tabbar_background = SubResource("plain")
 TitleLabel/base_type = &"Label"
 TitleLabel/colors/font_color = Color(0.94, 0.78, 0.4, 1)
 Tooltip/base_type = &"PanelContainer"
