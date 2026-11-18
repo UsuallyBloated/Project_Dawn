@@ -4,12 +4,12 @@ const _Script := preload("res://scripts/damage_number.gd")
 
 func _ready() -> void:
 	PlayerStats.healed.connect(spawn_heal)
-	# XP gain is announced via the chat broker now (CombatLog subscribes
-	# to xp_gained and emits "You gained experience!" / party variant);
-	# the floating number above the player was a leftover from the
-	# pre-multiplayer era and read as visual noise. spawn_xp() and the
-	# floating_text_xp setting are kept so any future "show XP" toggle
-	# can re-subscribe without re-introducing the function.
+	# XP gain is announced in chat (CombatLog subscribes to xp_gained); the
+	# floating number above the player is the "XP Gains" checkbox under
+	# floating text in Options, off by default since it reads as noise to
+	# most. Wired 2026-11-18 (user call); before that the checkbox did nothing.
+	PlayerStats.xp_gained.connect(func(amount: int, _source: String) -> void:
+		spawn_xp(amount))
 
 func spawn_damage(pos: Vector3, amount: int, is_crit: bool) -> void:
 	if not GameSettings.floating_text_enabled or not GameSettings.floating_text_damage:

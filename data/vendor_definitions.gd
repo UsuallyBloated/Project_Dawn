@@ -9,7 +9,7 @@ const ALL: Dictionary = {
 			"Bread Loaf", "Stale Bread", "Crude Ale", "Water Flask",
 			"Empty Bottle", "Empty Vial", "Minor Healing Potion",
 			"Wild Berries", "Wild Fruit", "Wild Mushroom",
-			"Skinning Knife", "Sewing Needle", "Pickaxe",
+			"Skinning Knife", "Sewing Needle", "Pickaxe", "Arrow Bundle",
 		],
 	},
 	"Alchemist": {
@@ -29,6 +29,7 @@ const ALL: Dictionary = {
 			"Metal Bits", "Small Metal Plate", "Small Metal Sheet",
 			"Smithing Hammer", "Ruined Metal Scraps",
 			"Copper Dagger", "Iron Dagger", "Copper Short Sword", "Iron Short Sword",
+			"Hunter's Shortbow",
 			"Copper Chain Vest", "Iron Chain Vest", "Iron Chain Coif",
 			"Iron Chain Boots", "Iron Chain Gloves", "Iron Chain Leggings",
 		],

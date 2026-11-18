@@ -23,6 +23,14 @@
 > than its model's price sets the tripwire. The rules for what goes on a sheet are the style
 > bible's section 9 (`Project_Dawn_Source/concept_art/_style_bible/style_bible.md`). Prices and
 > fields read from docs.meshy.ai's text-to-image and image-to-image pages on 2026-10-20.
+>
+> **The API needs a paid plan even with credits on the account (found 2026-11-13).** Eight
+> image calls were each refused with HTTP 402, "Task creation on the free plan is no longer
+> supported", while the balance read 2,613 (2,513 permanent). Nothing was spent. The user chose
+> not to resubscribe for the batch; the starting-area prompt pack
+> (`starting_area_concept_prompts.md`) went to Gemini instead, the style bible's own 2D route.
+> Open with Meshy: whether permanent credits can be spent at all without a subscription (a
+> support question), and whether the web app still takes a free account's tasks.
 
 How we plan to use Meshy (meshy.ai) to produce 3D models for Project Dawn, starting
 with 2D reference packs that lock the aesthetic before any credits go into 3D.

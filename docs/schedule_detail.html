@@ -128,14 +128,14 @@
 <div class="wrap">
 <header>
 <div class="eyebrow">Project Dawn</div>
-<h1>Six weeks to the first evening your friends play it, <em>one act at a time</em>.</h1>
-<p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 12: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
+<h1>Seven weeks to the first evening your friends play it, <em>one act at a time</em>.</h1>
+<p class="thesis">The schedule you already have says which phase we are in. This page says what happens in each of the weeks between now and November 19: every checklist sitting, build step, redeploy, export, decision and friend session, with who does it, what it needs, how long it takes and what it waits on. It is generated from the project files, so the counts are read, not typed.</p>
 <div class="stats">
-<div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 12<span class="stat-sub">the only fixed date here</span></div></div>
-<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Thu Nov 5<span class="stat-sub">repo da83ea8</span></div></div>
+<div class="stat"><div class="stat-k">Target</div><div class="stat-v hi">Nov 19<span class="stat-sub">the only fixed date here</span></div></div>
+<div class="stat"><div class="stat-k">Reconciled</div><div class="stat-v">Tue Nov 17<span class="stat-sub">repo b0a07e7</span></div></div>
 <div class="stat"><div class="stat-k">Verification debt</div><div class="stat-v">78 rows<span class="stat-sub">in 7 checklists, 4 need a second seat; all runnable now</span></div></div>
-<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">39 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
-<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">69.8 h<span class="stat-sub">scheduled over 6 weeks, against about 30 a week</span></div></div>
+<div class="stat"><div class="stat-k">Build lane</div><div class="stat-v">46.75 days<span class="stat-sub">of Claude time, 0 of them waiting on the spell batch approval</span></div></div>
+<div class="stat"><div class="stat-k">The user's time</div><div class="stat-v">86.3 h<span class="stat-sub">scheduled over 7 weeks, against about 30 a week</span></div></div>
 </div>
 <div class="rule-note"><p><b>This page carries no status.</b> It says what happens, who does it, what it needs, how long it takes, what it waits on, and where the result gets written down. Whether a row passed lives in the checklist it names or in the To-Do entry it names, never here. The open-row counts are the size of the sitting still to run, read from the checklist files when this page was generated. They are not a verdict.</p></div>
 </header>
@@ -147,7 +147,7 @@
 <div class="ms"><div class="when">Thu Oct 22</div><div class="name">Trade live</div><div class="means">The same evening as Bind and Gate: one protocol bump carries both, so testers change clients once.</div></div>
 <div class="ms"><div class="when">Thu Nov 5</div><div class="name">The November bump live</div><div class="means">The hills, the facing, the held-item cursor, the server split and the offline-free client on the hosted server and in the zip the friends hold: one protocol bump. Moved in front of the door on November 5 (user), when the door slipped to the 12th; it had been waiting until after it.</div></div>
 <div class="ms"><div class="when">Tue Nov 10</div><div class="name">The pre-door check</div><div class="means">A fresh character plays the starter book for 45 minutes on the exact build the friends will hold. First run November 3 on the pre-bump build (row v16); run again on the bump build (row v60) before the last zip goes out. Replaces the four-friend rehearsal of October 31 (user, 2026-11-03).</div></div>
-<div class="ms"><div class="when">Thu Nov 12</div><div class="name">The door opens</div><div class="means">The full friend group&#x27;s first evening. The only fixed date on this page. Thursday November 12 since November 5 (the friends were busy on Sunday the 8th).</div></div>
+<div class="ms"><div class="when">Thu Nov 19</div><div class="name">The door opens</div><div class="means">The full friend group&#x27;s first evening. The only fixed date on this page. Thursday November 19 since November 13 (the invites had not gone out, so the user held them a week); November 12 since November 5 before that (the friends were busy on Sunday the 8th).</div></div>
 </div></section>
 <section><h2>How to read the weeks</h2>
 <p class="lede">Five lanes. Each row is one act that can be checked afterwards: one checklist sitting, one build step, one redeploy, one friend session, one decision. The time column is the user's hours, or Claude's build days, or the date a decision starts to block something. A row with a dashed edge is tentative: it waits on an approval or a decision.</p>
@@ -307,7 +307,7 @@
 <td><span class="chip build">Build</span></td>
 <td class="what"><span class="day">Oct 12</span>Public hosting, slices 1 to 3 (docs/design/public_hosting_plan.md): the login socket hardened for a public port, invite codes and the invite tool, the world address as a name with a clean restart when it moves, intent budgets; the client connecting over wss with an invite field. Built on feat/public-hosting in both repos, off the deploy branches until cutover.</td>
 <td>Claude unattended</td>
-<td class="needs"><ul><li>checklist public_hosting_checklist.md: 27 rows to run</li></ul></td>
+<td class="needs"><ul><li>checklist public_hosting_checklist.md: 29 rows to run</li></ul></td>
 <td class="time">1.5 Claude days</td>
 <td class="id"></td>
 <td class="done">Both suites green on feat/public-hosting and pushed; the To-Do entry says BUILT. Done only when public_hosting_checklist.md is filled on cutover day.<span class="ref">checklist: <a href="playtest_notes/public_hosting_checklist.md"><code>public_hosting_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Public-host hardening checklist (mandatory before any exposure beyond Tailscale)</code></span></td>
@@ -805,7 +805,7 @@
 <td><span class="chip verify">Verify</span><span class="chip tent">tentative</span></td>
 <td class="what">Cutover evening: redeploy from the hosting branch, export, an invite per tester, the zip and the code sent, the Tailscale shares removed, the minimum client version raised; then the cutover checklist with a tester outside the home network. Candidate: the Oct 22 bump day, so testers change clients once.</td>
 <td>user, one tester outside</td>
-<td class="needs"><ul><li>checklist public_hosting_checklist.md: 27 rows to run</li></ul></td>
+<td class="needs"><ul><li>checklist public_hosting_checklist.md: 29 rows to run</li></ul></td>
 <td class="time">2.5 h</td>
 <td class="id">oh4</td>
 <td class="done">public_hosting_checklist.md filled.<span class="ref">checklist: <a href="playtest_notes/public_hosting_checklist.md"><code>public_hosting_checklist.md</code></a></span></td>
@@ -991,10 +991,10 @@
 <tr>
 <td class="id">d11</td>
 <td><span class="chip decide">Decide</span></td>
-<td class="what"><span class="day">by Thu Nov 12 (the first is best answered before the bump&#x27;s redeploy)</span>Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later.<span class="blocks"><b>Blocks:</b> Slice 0 (one server handler now, the Test Panel&#x27;s death button with the export); slice 1 waits on the server height model.</span></td>
+<td class="what"><span class="day">by Thu Nov 19 (the first is best answered before the bump&#x27;s redeploy)</span>Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later.<span class="blocks"><b>Blocks:</b> Slice 0 (one server handler now, the Test Panel&#x27;s death button with the export); slice 1 waits on the server height model.</span></td>
 <td>user</td>
 <td class="needs">nothing</td>
-<td class="time">by Thu Nov 12</td>
+<td class="time">by Thu Nov 19</td>
 <td class="id"></td>
 <td class="done">Each of the five answered on the Housekeeping audit To-Do entry.</td>
 </tr>
@@ -1083,36 +1083,26 @@
 <section>
 <h2><span class="week-head"><span>Slack, fixes, and the door</span><span class="when">W5 &middot; November 2 to 8</span></span></h2>
 <p class="lede">Drawn as a light week: fixes from the pre-door check, the rest of the group onboarded once the build was final, and Sunday evening. Redrawn November 5: the door moved to the next Thursday, and the November bump (the hills, the facing, the held-item cursor, the server split, the offline-free client) moved to Thursday the 5th, the day the date moved, instead of waiting until after the door, so the week&#x27;s second half is the bump day and its sheets.</p>
-<div class="week-meta"><span>the user's time: 15.8 h</span><span>Claude build days: 5.25</span></div>
+<div class="week-meta"><span>the user's time: 9.05 h</span><span>Claude build days: 5.25</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
 <td class="id">d7</td>
 <td><span class="chip decide">Decide</span></td>
-<td class="what"><span class="day">by Thu Nov 12</span>Phase 5&#x27;s four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in.<span class="blocks"><b>Blocks:</b> The &quot;after the door opens&quot; list below becoming a dated plan.</span></td>
+<td class="what"><span class="day">by Thu Nov 19</span>Phase 5&#x27;s four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in.<span class="blocks"><b>Blocks:</b> The &quot;after the door opens&quot; list below becoming a dated plan.</span></td>
 <td>user and planner</td>
 <td class="needs">nothing</td>
-<td class="time">by Thu Nov 12</td>
+<td class="time">by Thu Nov 19</td>
 <td class="id"></td>
 <td class="done">Answers recorded in the plan doc; its bullet list freezes; one row joins schedule.md section 7.</td>
 </tr>
 <tr>
-<td class="id">d8</td>
-<td><span class="chip decide">Decide</span></td>
-<td class="what"><span class="day">by Thu Nov 12</span>docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it.<span class="blocks"><b>Blocks:</b> Nothing.</span></td>
-<td>user</td>
-<td class="needs">nothing</td>
-<td class="time">by Thu Nov 12</td>
-<td class="id"></td>
-<td class="done">One line in CLAUDE.md saying which.</td>
-</tr>
-<tr>
 <td class="id">d10</td>
 <td><span class="chip decide">Decide</span></td>
-<td class="what"><span class="day">by Thu Nov 12</span>The factions and alignment design&#x27;s nine decisions (docs/design/factions_and_alignment.md, section 6): the first six factions and the hit rule, who gets a kill&#x27;s hits (the XP rule or EQ&#x27;s hate list), the nine level thresholds, the v1 refusals (vendors at Dubious, quest givers at Apprehensive), alignment seeded from the class start, the Paladin and Shadow Knight off-side penalty kept on the server, no starting standings by race in v1, the mob and quest values, no GM freeze.<span class="blocks"><b>Blocks:</b> The factions build (a migration and a bump), on the after-the-door strip.</span></td>
+<td class="what"><span class="day">by Thu Nov 19</span>The factions and alignment design&#x27;s nine decisions (docs/design/factions_and_alignment.md, section 6): the first six factions and the hit rule, who gets a kill&#x27;s hits (the XP rule or EQ&#x27;s hate list), the nine level thresholds, the v1 refusals (vendors at Dubious, quest givers at Apprehensive), alignment seeded from the class start, the Paladin and Shadow Knight off-side penalty kept on the server, no starting standings by race in v1, the mob and quest values, no GM freeze.<span class="blocks"><b>Blocks:</b> The factions build (a migration and a bump), on the after-the-door strip.</span></td>
 <td>user</td>
 <td class="needs">nothing</td>
-<td class="time">by Thu Nov 12</td>
+<td class="time">by Thu Nov 19</td>
 <td class="id"></td>
 <td class="done">Each of the nine answered on the Faction system To-Do entry.</td>
 </tr>
@@ -1341,7 +1331,7 @@
 <td><span class="chip verify">Verify</span><span class="chip ms">The pre-door check</span></td>
 <td class="what"><span class="day">Tue Nov 3 to Thu Nov 5</span>The pre-door check: a fresh character plays the starter book for 45 minutes on the exact build the friends will hold (the phase 4 checklist&#x27;s fresh-character row is the model). Anything odd gets a To-Do line the same day.</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 2 rows to run</li><li>the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch&#x27;s)</li><li>the R720 redeployed with the starting kit (user 2026-11-03) and the new zip from the same day</li></ul></td>
+<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 20 rows to run</li><li>the build the friends will hold (the bump waits until after the 8th, so it is the deploy branch&#x27;s)</li><li>the R720 redeployed with the starting kit (user 2026-11-03) and the new zip from the same day</li></ul></td>
 <td class="time">1 h</td>
 <td class="id"></td>
 <td class="done">Findings filed in the To-Do; no new ERROR lines in the server log.<span class="ref">checklist: <a href="playtest_notes/pre_door_check_checklist.md"><code>pre_door_check_checklist.md</code></a></span></td>
@@ -1355,16 +1345,6 @@
 <td class="time">2 h</td>
 <td class="id">o7</td>
 <td class="done">Each re-run row filled in its checklist.</td>
-</tr>
-<tr>
-<td class="id">v40</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Nov 6 to Sun Nov 8, the same sitting as v59</span>Two seats: one turns in place, strafes and backs up while the other watches the body turn; the facing survives a relog.</td>
-<td>user at a desk, two seats</td>
-<td class="needs"><ul><li>checklist remote_facing_checklist.md: 12 rows to run</li><li>the November bump live (o20)</li><li>second seat (two-boxing works)</li></ul></td>
-<td class="time">0.25 h</td>
-<td class="id">b39, o20</td>
-<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/remote_facing_checklist.md"><code>remote_facing_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Other players never turn</code></span></td>
 </tr>
 <tr>
 <td class="id">v44</td>
@@ -1385,16 +1365,6 @@
 <td class="time">0.75 h</td>
 <td class="id">o17</td>
 <td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/haste_limiter_and_cast_relay_checklist.md"><code>haste_limiter_and_cast_relay_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Client-decided outcomes</code></span></td>
-</tr>
-<tr>
-<td class="id">v49</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Nov 6 to Mon Nov 9</span>One seat beside the banker and Brom: a lifted stack lands in the vault clicked (personal or shared), merges into a same-item stack, is refused when the vault is full or the item is a bag; the merchant&#x27;s list leads with what is in hand and sells from it, a held full pouch refused; the old paths unchanged; the ledger rows and the balance in admin_report.</td>
-<td>user at a desk</td>
-<td class="needs"><ul><li>checklist held_item_bank_and_vendor_checklist.md: 19 rows to run</li><li>the November bump live (o20)</li><li>a Small Pouch with something in it</li></ul></td>
-<td class="time">0.75 h</td>
-<td class="id">b49, b39, o20</td>
-<td class="done">Every row filled.<span class="ref">checklist: <a href="playtest_notes/held_item_bank_and_vendor_checklist.md"><code>held_item_bank_and_vendor_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Held-item bank and vendor interactions</code></span></td>
 </tr>
 <tr>
 <td class="id">v50</td>
@@ -1456,63 +1426,93 @@
 <td class="id"></td>
 <td class="done">Row 60 filled.<span class="ref">checklist: <a href="playtest_notes/regen_model_checklist.md"><code>regen_model_checklist.md</code></a></span></td>
 </tr>
-<tr>
-<td class="id">v56</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">after o19</span>Three minutes online: three world health lines with about 1,200 ticks each and nothing over budget; a checkpoint shows; nothing logged once everyone is out.</td>
-<td>user at a desk</td>
-<td class="needs"><ul><li>checklist overnight_2026_11_01_checklist.md: 4 rows to run</li><li>the redeploy (o19)</li></ul></td>
-<td class="time">0.1 h</td>
-<td class="id">o19</td>
-<td class="done">Section 1 filled.<span class="ref">checklist: <a href="playtest_notes/overnight_2026_11_01_checklist.md"><code>overnight_2026_11_01_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
-</tr>
-<tr>
-<td class="id">v58</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Nov 6 to Sun Nov 8, after o20, with v57</span>The height model&#x27;s regression sheet: movement, combat and spells, camps and pets, death, corpses and ports, the NPC services, all reading as before (the town and the camps sit on floors; the hills ride the same merge, so the sheet&#x27;s header says what changed); the boot line naming the ground; check_all.ps1 with the terrain checks.</td>
-<td>user at a desk, one seat (two for section 6)</td>
-<td class="needs"><ul><li>checklist height_model_checklist.md: 24 rows to run, 1 of them in a two-seat section</li><li>the November bump live (o20)</li></ul></td>
-<td class="time">0.75 h</td>
-<td class="id">o20</td>
-<td class="done">Every section filled.<span class="ref">checklist: <a href="playtest_notes/height_model_checklist.md"><code>height_model_checklist.md</code></a></span><span class="ref">To-Do entry: <code>The server height model</code></span></td>
-</tr>
-<tr>
-<td class="id">v59</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Nov 6 to Sun Nov 8, after v58</span>The first hills sheet: the look and the town, the routes out and the pass, fighting on the hills, the Wraith Gate cliff and a death from it, sight through the terrain at the cliff, the Sunken Barrow and the rim, the Fling tool, the evade below a face, and two seats for a mob that gives up below the cliff and a pet that warps to its owner.</td>
-<td>user at a desk, one seat for most of it, two for sections 5 and 9, a GM account</td>
-<td class="needs"><ul><li>checklist first_hills_checklist.md: 41 rows to run, 13 of them in a two-seat section</li><li>the November bump live (o20)</li><li>second seat (two-boxing works)</li></ul></td>
-<td class="time">3.9 h</td>
-<td class="id">o20, b55</td>
-<td class="done">Every section filled.<span class="ref">checklist: <a href="playtest_notes/first_hills_checklist.md"><code>first_hills_checklist.md</code></a></span><span class="ref">To-Do entry: <code>The server height model</code></span></td>
-</tr>
-<tr>
-<td class="id">v57</td>
-<td><span class="chip verify">Verify</span></td>
-<td class="what"><span class="day">Fri Nov 6 to Mon Nov 9, after o20</span>Ordinary play on the split server (a fight, casts, a group, the merchant and bank, a trade, a death, a camp) with a clean journal, and the client without the offline game: the login and lobby, your own group row, a pet&#x27;s fight with a clean console, the Test Panel&#x27;s tools, the bag window.</td>
-<td>user at a desk, two seats, a GM account</td>
-<td class="needs"><ul><li>checklist overnight_2026_11_01_checklist.md: 4 rows to run</li><li>the November bump live (o20)</li><li>second seat (two-boxing works)</li></ul></td>
-<td class="time">1 h</td>
-<td class="id">o20</td>
-<td class="done">Sections 2 and 3 filled.<span class="ref">checklist: <a href="playtest_notes/overnight_2026_11_01_checklist.md"><code>overnight_2026_11_01_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Housekeeping audit 2026-10-23</code></span></td>
-</tr>
 </tbody></table></div>
 </section>
 <section>
 <h2><span class="week-head"><span>The door, on a Thursday</span><span class="when">W6 &middot; November 9 to 15</span></span></h2>
-<p class="lede">Added November 5: the friends are busy on Sunday the 8th, so the door is Thursday the 12th, and the user spent the four days on the November bump rather than holding it until after. The bump&#x27;s sheets finish early in the week, the pre-door check runs again on the build the friends will hold, the last zip goes out, and Thursday evening the door opens.</p>
-<div class="week-meta"><span>the user's time: 8 h</span><span>Claude build days: 0</span></div>
+<p class="lede">Added November 5: the friends are busy on Sunday the 8th, so the door is Thursday the 12th, and the user spent the four days on the November bump rather than holding it until after. The bump&#x27;s sheets finish early in the week, the pre-door check runs again on the build the friends will hold, the last zip goes out, and Thursday evening the door opens. Redrawn November 13: the sheets, the rerun, the last zip and the players&#x27; checklist happened, but the invites had not gone out, so the door moved to the next Thursday and the week ends with the zip made and unsent.</p>
+<div class="week-meta"><span>the user's time: 2.75 h</span><span>Claude build days: 5.25</span></div>
 <div class="scroll"><table>
 <thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
 <tr>
-<td class="id">o8</td>
-<td><span class="chip operate">Operate</span></td>
-<td class="what"><span class="day">Thu Nov 12, afternoon</span>Health and backup check, dev_cmds=false confirmed, the console open for the evening.</td>
-<td>user at a desk</td>
+<td class="id">b56</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Thu Nov 12</span>The players&#x27; checklist: CHECKLIST_FOR_TESTERS.md, 27 boxes in first-evening order for the friends, each row saying what should happen, ticked in Notepad and pasted back in Discord; the tester README points at it; the 919671b zip remade with both inside, the game files unchanged (verified by hash).</td>
+<td>Claude</td>
 <td class="needs">nothing</td>
-<td class="time">0.5 h</td>
+<td class="time">0.25 Claude days</td>
+<td class="id">o21</td>
+<td class="done">builds/ProjectDawn-alpha-919671b.zip holds the sheet and the README that points at it.</td>
+</tr>
+<tr>
+<td class="id">b57</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Fri Nov 13</span>The ammo slot (user: into the zip): EquipSlot::Ammo on the wire (PD_W0030), an ammo item type that fits it alone, the Arrow Bundle counted in arrows, every bow shot taking one on the server (a ledger row) and an empty quiver firing nothing, on both sides with the paperdoll&#x27;s Ammo cell; Elara sells arrows and Hadrik the bow. The bandit knoll moved south so the ridge&#x27;s face is a face again (terrain.toml re-exported). Three debug lines for the Selos&#x27; question.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id">b56</td>
+<td class="done">Both repos committed and pushed; the server suite, clippy and all 21 client probes green; the item, vendor and terrain lockstep checks green.</td>
+</tr>
+<tr>
+<td class="id">b58</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Fri Nov 13</span>The starting zone at 4 km, from the composition sketches: the ground rebuilt as data (the western hills, the Greywood ridge and its pass, the Wraith Gate plateau, mountains round the edge) and drawn in chunks; the same 20 camps and 54 spawns moved about ten times further out; a walled town, a planted wood of 40,000 trees and a set piece at every camp, all placeholder shapes built in code. On feat/zone-4km in both repos; the server suite, all 16 client checks and the probes green.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
 <td class="id"></td>
-<td class="done">All checks pass.</td>
+<td class="done">Both branches pushed; zone_4km_checklist.md written.</td>
+</tr>
+<tr>
+<td class="id">b59</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Sat Nov 14</span>The zone&#x27;s outline, from the user&#x27;s answers on the outline sketches (two basins with arms, the ridge mountain to mountain, the roads winding past the camps, a south door): mountains raised outside the walkable edge with a face at their foot all the way round, in place of the square rim; the four roads re-routed so none runs into a camp; three doors and an overlook as set pieces; the pass&#x27;s floor raised to the ground at its mouths; the server&#x27;s test that nobody walks out of the zone rewritten for any outline, with a planted-gap twin.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">Both branches pushed; zone_4km_checklist.md section 7 written.</td>
+</tr>
+<tr>
+<td class="id">b60</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Sat Nov 14 (night)</span>The compass mirror, from the user&#x27;s two answers: one map-to-world mapping in the zone layout (north is -Z), the authored data unchanged so the ground is the exact mirror of the old one; the scenery, the terrain author, the NPC nodes and /sense through it; the server&#x27;s camps, NPCs and terrain mirrored with five tests&#x27; positions; /loc printing north, west, height and /loc raw the world; a compass check (rule L3) that fails on a mirrored world and on a half-mirrored pair.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">Both branches pushed; zone_4km_checklist.md section 8 written.</td>
+</tr>
+<tr>
+<td class="id">b61</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Sun Nov 15</span>GM flight, the user&#x27;s tool for walking the 4 km zone (Minecraft&#x27;s Creative-mode flying, for a GM account only): /fly and Space twice to take off, Space up, Shift down, Ctrl twice the speed; the server flies the body above its own ground, on the plate and under a 1,000 m ceiling, saves it on the ground below, hides it from mobs and lets it fight nothing. Both halves built and reviewed on feat/gm-flight; no wire change, so the server half is safe against the door zip and the client half stays out of it until the bump after the door.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">Both branches pushed; gm_flight_checklist.md written.<span class="ref">To-Do entry: <code>GM flight: Minecraft Creative-mode movement for geometry tests</code></span></td>
+</tr>
+<tr>
+<td class="id">o27</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Sun Nov 15 (evening; 02:29 UTC on the 16th)</span>(Deployed 11-16 02:29 UTC, boot line build 8d1dc67.) GM flight&#x27;s server half reaches the R720: the server deploy branch fast-forwarded to feat/gm-flight (8d1dc67, the compass build 27d5ea7 plus the flight), pulled, built and restarted with the usual stop, cp and start; no migration, no SQL. No wire change, so the door zip fd17ff1 connects as before and a player sees nothing new.</td>
+<td>user at a desk (the fast-forward on the dev box, then the R720 over SSH); Claude writes the commands</td>
+<td class="needs"><ul><li>everyone logged out</li><li>the R720 over SSH</li></ul></td>
+<td class="time">0.25 h</td>
+<td class="id">b61, o26</td>
+<td class="done">The boot line shows build=8d1dc67, dev_cmds=false and hash 6bedde1c663e.<span class="ref">To-Do entry: <code>GM flight: Minecraft Creative-mode movement for geometry tests</code></span></td>
+</tr>
+<tr>
+<td class="id">o22</td>
+<td><span class="chip operate">Operate</span><span class="chip ms">The pre-door check</span></td>
+<td class="what"><span class="day">Mon Nov 9, night, to Tue Nov 10, morning</span>The fixes the master sheet and the user&#x27;s answers produced on 11-09 reach the game before the pre-door rerun: the server at e358270 (a charmed pet that dies as its charm runs out is no longer handed back as a loot-dropping mob; a weapon proc writes a journal line; a pet&#x27;s owner is on the mob&#x27;s hate list from the pet&#x27;s first swing, decided the same night) redeployed on the R720 with the usual stop, cp and start; the client at d524ecd (the own body&#x27;s facing seeded from the server at login; the swing re-timed after a weapon swap with no target) exported RELEASE, stamped, and zipped. Claude makes the export the same night; the user runs the redeploy and sends the zip.</td>
+<td>Claude for the export; user over SSH for the redeploy and for sending</td>
+<td class="needs"><ul><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li><li>the export log reading stamped e0d0c65 with no -debug mark (it does)</li></ul></td>
+<td class="time">0.5 h</td>
+<td class="id">o20</td>
+<td class="done">The boot line shows build=e358270 (or later) and dev_cmds=false; the zip ProjectDawn-alpha-e0d0c65.zip (made 11-09 night, stamped e0d0c65: the planner commit after d524ecd, game files identical) is sent; pre_door_check_checklist.md section 8 is runnable.</td>
 </tr>
 <tr>
 <td class="id">o21</td>
@@ -1529,30 +1529,218 @@
 <td><span class="chip verify">Verify</span><span class="chip ms">The pre-door check</span></td>
 <td class="what"><span class="day">Tue Nov 10</span>The pre-door check again, on the build the friends will now hold: a fresh character plays the starter book for 45 minutes on the bump build, hills and all (the November 3 run was on the pre-bump build). Marked in place as a second run. Anything odd gets a To-Do line the same day; a server fix redeploys, a client fix means one more zip (o21).</td>
 <td>user at a desk</td>
-<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 2 rows to run</li><li>the bump build on the R720 and in the zip (o20)</li><li>the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run</li></ul></td>
+<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 20 rows to run</li><li>the bump build on the R720 and in the zip (o20)</li><li>the bump sheets run first (v57, v58, v59, v40, v49), so a fix found there is in before this run</li><li>the 11-09 fixes on the R720 and in the export (o22), so its section 8 can run</li></ul></td>
 <td class="time">1 h</td>
-<td class="id">o20, v58, v59</td>
+<td class="id">o20, o22</td>
 <td class="done">Every row marked for the second run; no new ERROR lines in the server log.<span class="ref">checklist: <a href="playtest_notes/pre_door_check_checklist.md"><code>pre_door_check_checklist.md</code></a></span></td>
+</tr>
+</tbody></table></div>
+</section>
+<section>
+<h2><span class="week-head"><span>The door, a week later</span><span class="when">W7 &middot; November 16 to 22</span></span></h2>
+<p class="lede">Added November 13: the user held the invites back on the 12th, so the door is Thursday the 19th. Early in the week the pre-door rerun&#x27;s last rows run on the zip, then the share links, the zip and the players&#x27; checklist go out to all four (the plan&#x27;s own advice from October: the network part settled days before the evening), and Thursday evening the door opens.</p>
+<div class="week-meta"><span>the user's time: 28.5 h</span><span>Claude build days: 2.5</span></div>
+<div class="scroll"><table>
+<thead><tr><th>Id</th><th>Lane</th><th>What</th><th>Who</th><th>Needs</th><th>Time</th><th>Waits on</th><th>Done when (look it up in)</th></tr></thead><tbody>
+<tr>
+<td class="id">b62</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Mon Nov 16</span>Rolling hills, from the user&#x27;s sizes (about 12, 25 and 35 m, each varied across the map so meadow and hill country alternate): three layers of rolling ground laid over every other feature, so the Wraith Gate cliff and the pass keep their shapes and a crest now usually hides what lies past it. On feat/rolling-hills in both repos; the server suite, every client check and the zone probes green.</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">0.5 Claude days</td>
+<td class="id"></td>
+<td class="done">Both branches pushed; the author report clean; how far a standing player sees, measured before and after.<span class="ref">To-Do entry: <code>The starting zone at 4 km</code></span></td>
+</tr>
+<tr>
+<td class="id">b63</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Mon Nov 16 (night)</span>Wandering wildlife: animals that live in a region instead of at a spawn point, to fill the open ground between the camps. 70 by day in five level bands (rats and grass snakes by the town, wolf packs, bears and vipers further out) and 14 at night (bats, shades); they walk short legs and pause, notice players as they pass, go home to where a fight began, and wolves keep to a pack. With it the user&#x27;s pet rule: one pet at a time, and a charmed creature let go comes back hostile. Built on feat/wandering-wildlife in both repos; merged into the deploy branches on Nov 17 (row o29). Server only: no zip, no SQL, and an off switch (PD_NO_ROAMERS=1).</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">Both branches committed; the server suite and every client check green; each rule&#x27;s planted fault caught by a test; the design doc and the session note say what was built.<span class="ref">To-Do entry: <code>Wandering wildlife to fill the open ground</code></span></td>
+</tr>
+<tr>
+<td class="id">b64</td>
+<td><span class="chip build">Build</span></td>
+<td class="what"><span class="day">Tue Nov 17</span>Obstacle collision (the user asked on the 17th, answered the plan&#x27;s eight calls and said to build it now): trees, bushes, rocks, walls, houses, tents, fences and everything else solid stop a body, block a spell or an arrow when they stand in the line, and the camera stops at walls and buildings. The server decides all of it and the client runs the same rule on the same data, so a modified client walks into the server&#x27;s walls. Monsters and pets are stopped by the same things and walk round a wall. Nothing can be stood on or jumped over yet. Built on feat/obstacles in both repos, then reviewed (ten findings, nine fixed).</td>
+<td>Claude</td>
+<td class="needs">nothing</td>
+<td class="time">1 Claude day</td>
+<td class="id"></td>
+<td class="done">Both branches committed; the server suite and every client check green; each rule&#x27;s test fails with the rule switched off; the design doc and the session note say what was built.<span class="ref">To-Do entry: <code>Obstacle collision: trees, rocks, walls and set pieces</code></span></td>
+</tr>
+<tr>
+<td class="id">o8</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Thu Nov 19, afternoon</span>Health and backup check, dev_cmds=false confirmed, the console open for the evening.</td>
+<td>user at a desk</td>
+<td class="needs">nothing</td>
+<td class="time">0.5 h</td>
+<td class="id"></td>
+<td class="done">All checks pass.</td>
+</tr>
+<tr>
+<td class="id">o23</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Mon Nov 16</span>(The build named here was superseded the same evening by o24: the zone merged on top, so the server is 162c151, the zip is 68c3e13 and the boot line&#x27;s terrain hash is 35a3f1a15f4f.) The Monday build out: the R720 pulled, built and restarted on the ammo-slot server (its boot line reading hash 5324d5d0c754), the client exported with the rebuilt DLL and zipped with the two documents inside; the old zip refused by the protocol id, so nobody keeps it.</td>
+<td>user at a desk</td>
+<td class="needs"><ul><li>the server pushed</li><li>the export in builds/</li></ul></td>
+<td class="time">0.5 h</td>
+<td class="id">b57</td>
+<td class="done">The boot line names the new build and hash; builds/ holds the new zip; /version on a fresh install reads its stamp.</td>
+</tr>
+<tr>
+<td class="id">o24</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Fri Nov 13 for the merge and the export; Mon Nov 16 for the redeploy</span>(Merged and exported 11-13: both deploy branches at the merged build, server 162c151 and client 68c3e13; builds/ProjectDawn-alpha-68c3e13.zip stamped 68c3e13, a release export. Left: the redeploy and the send.) The 4 km zone reaches the game: feat/zone-4km merged into the deploy branch in both repos (the branch already carries the ammo slot, so the merge is a fast-forward), which replaces the Monday build of o23 if it lands first: one zip and one redeploy carry both, and the boot line&#x27;s terrain hash is the zone&#x27;s, not o23&#x27;s, every check run on the merged pair, a RELEASE export stamped and zipped, and the server redeployed on the R720 with the usual stop, cp and start. Both sides move together: a client from before the merge walks the old ground on the new server.</td>
+<td>Claude for the merge and the export; user over SSH for the redeploy</td>
+<td class="needs"><ul><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li><li>the ammo slot on the deploy branch (it is: merged into feat/zone-4km on 11-13)</li></ul></td>
+<td class="time">1 h</td>
+<td class="id">b58, o23</td>
+<td class="done">The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f; the export log reads stamped with the merged sha and no -debug mark.</td>
+</tr>
+<tr>
+<td class="id">o25</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Sat Nov 14 for the merge and the export; the redeploy when everyone is off, Mon Nov 16 at the latest</span>(Merged and exported 11-14: server 9a7e0fa, client 7c7a810, builds/ProjectDawn-alpha-7c7a810.zip stamped 7c7a810, a release export. Deployed 11-14 21:07 UTC; superseded the same night by o26.) The outline reaches the game: feat/zone-outline merged into the deploy branch in both repos, a release export, the R720 pulled, built and restarted with one SQL statement during the stop (everyone back to the town square and bound there, old corpses beside it: a character saved where the mountains now stand would log in on top of them). This zip replaces 68c3e13 as the one for the door, and the R720 refuses nothing: but an older client against the new server stands people on the wrong ground, so the zip and the redeploy go together.</td>
+<td>Claude for the merge and the export; user over SSH for the redeploy</td>
+<td class="needs"><ul><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li></ul></td>
+<td class="time">1 h</td>
+<td class="id">b59</td>
+<td class="done">The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash a9942be36dff; the export log reads stamped with the merged sha and no -debug mark.</td>
+</tr>
+<tr>
+<td class="id">o26</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Sun Nov 15 for the merge and the export; the redeploy when everyone is off, Mon Nov 16 at the latest</span>(Merged and exported 11-14: server 27d5ea7, client fd17ff1, builds/ProjectDawn-alpha-fd17ff1.zip stamped fd17ff1, a release export. Deployed 11-15 13:47 UTC with its SQL, boot line hash 6bedde1c663e. Left: the send.) The compass reaches the game: feat/compass-mirror merged into the deploy branch in both repos, every check on the merged pair, a release export, and the R720 pulled, built and restarted with one SQL statement during the stop after a backup (every saved position, bind and corpse mirrored with the world). This zip replaces 7c7a810 as the one for the door; the zip and the redeploy go together, since either side alone stands people on the other&#x27;s ground.</td>
+<td>Claude for the merge and the export; user over SSH for the redeploy</td>
+<td class="needs"><ul><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li><li>a backup of world.db before the SQL</li></ul></td>
+<td class="time">1 h</td>
+<td class="id">b60, o25</td>
+<td class="done">The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash 6bedde1c663e; the export log reads stamped with the merged sha and no -debug mark.</td>
+</tr>
+<tr>
+<td class="id">o28</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Mon Nov 16 (the merge and the export); the redeploy before v61 and v62</span>The hills reach the game, in the door zip (the user&#x27;s call): feat/rolling-hills merged into the deploy branch in both repos (server a3b226d, client 397e207), every check on the merged pair, a release export (builds/ProjectDawn-alpha-397e207.zip, which replaces fd17ff1 for p6), and the R720 pulled, built and restarted (no SQL: logins, respawns and corpses all land on the ground as it is). The zip and the redeploy go together, since either side alone stands people on the other&#x27;s ground.</td>
+<td>Claude for the merge and the export; user over SSH for the redeploy</td>
+<td class="needs"><ul><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li></ul></td>
+<td class="time">1 h</td>
+<td class="id">b62</td>
+<td class="done">The boot line shows dev_cmds=false and terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331; the export log reads stamped with the merged sha and no -debug mark.<span class="ref">To-Do entry: <code>The starting zone at 4 km</code></span></td>
+</tr>
+<tr>
+<td class="id">o29</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Tue Nov 17 (merged, pushed and deployed 16:55 UTC)</span>(Merged and pushed 11-17: server f388b96, client b73a6a9, both deploy branches fast-forwarded, all 17 client checks green on the merged pair. Deployed 11-17 16:55 UTC: the R720&#x27;s boot line reads build=f388b96, dev_cmds=false and roamers=on, then wandering wildlife slots=66 animals=84; nobody was online at the stop.) The animals reach the game: feat/wandering-wildlife pushed and merged into the deploy branch in both repos, every check on the merged pair, and the R720 pulled, built and restarted. No SQL and no new zip: the door zip (397e207) works with it as it is; the client branch carries only a quest line&#x27;s text and tooling.</td>
+<td>Claude for the merge; user over SSH for the redeploy</td>
+<td class="needs"><ul><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li></ul></td>
+<td class="time">0.5 h</td>
+<td class="id">b63</td>
+<td class="done">The boot line shows build=f388b96, dev_cmds=false and roamers=on, and the next line reads wandering wildlife slots=66 animals=84.<span class="ref">To-Do entry: <code>Wandering wildlife to fill the open ground</code></span></td>
+</tr>
+<tr>
+<td class="id">o30</td>
+<td><span class="chip operate">Operate</span></td>
+<td class="what"><span class="day">Tue Nov 17 (merged, pushed and exported); the redeploy before v65 and before the zip goes out (p6)</span>(Merged and pushed 11-17 on the user&#x27;s go: server 87c58fe, client a1a154e, all 19 client checks green on the merged pair; a release export, builds/ProjectDawn-alpha-a1a154e.zip, booted and checked from inside the export.) Collision reaches the game: the R720 pulled, built and restarted, and the new zip is the one for the door. It replaces 54ca951 and 397e207 and also carries group-mates&#x27; levels. The zip and the redeploy go together: the new zip on the old server pulls a body through every tree, the old zip on the new server pulls it back at every tree. No SQL.</td>
+<td>Claude for the merge and the export; user over SSH for the redeploy</td>
+<td class="needs"><ul><li>everyone logged out for the redeploy</li><li>the R720 over SSH</li></ul></td>
+<td class="time">0.5 h</td>
+<td class="id">b64</td>
+<td class="done">The boot line shows build=87c58fe, dev_cmds=false, roamers=on and obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4.<span class="ref">To-Do entry: <code>Obstacle collision: trees, rocks, walls and set pieces</code></span></td>
+</tr>
+<tr>
+<td class="id">v62</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Mon Nov 16 to Tue Nov 17</span>The 4 km zone walked: the town and its four gates, the ground the server stands everyone on (the barrow&#x27;s pit, the ridge&#x27;s faces, the pass, the plateau&#x27;s ramp and its lethal cliff, the mountains at the edge), every camp at its set piece, a quest per giver, the bigger world&#x27;s rules (a far death and the run back, Gate, the group share range, a partner out of view and back), and how it runs and looks (frame rate, pop-in, night, dusk). Two seats for the partner rows.</td>
+<td>user at a desk, a second seat for part</td>
+<td class="needs"><ul><li>checklist zone_4km_checklist.md: 48 rows to run</li><li>the compass build on the R720 and in the export (o26)</li><li>a GM account for the cliff row</li><li>a second seat for one row of section 7 and one of section 8</li></ul></td>
+<td class="time">2 h</td>
+<td class="id">o24, o25, o26, o28</td>
+<td class="done">Every row marked; a finding that needs a fix gets a To-Do line the same day, and the zip the friends receive (p6) is the one the sheet was run on or a later one.<span class="ref">checklist: <a href="playtest_notes/zone_4km_checklist.md"><code>zone_4km_checklist.md</code></a></span></td>
+</tr>
+<tr>
+<td class="id">v63</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Mon Nov 16 to Tue Nov 17, beside v62</span>GM flight tried from the Godot editor on the flight branch, the tool the zone sheet&#x27;s ground rows (v62) can be walked with: taking off and steering, where a flier is held (the ground, the ceiling, the plate&#x27;s edge), landing, what ends a flight, mobs ignoring a flier and a flier unable to fight, and walking unchanged. The client half reaches the friends only with the bump after the door.</td>
+<td>user at a desk, a second seat optional</td>
+<td class="needs"><ul><li>checklist gm_flight_checklist.md (on branch feat/gm-flight until the merge): 30 rows to run, 2 of them in a two-seat section</li><li>the R720 on 8d1dc67 (o27)</li><li>the Godot editor on the flight branch&#x27;s worktree (Project_Dawn-zone)</li><li>a GM account</li><li>a second seat for section 6 (optional)</li></ul></td>
+<td class="time">3 h</td>
+<td class="id">o27</td>
+<td class="done">Every row marked; a finding gets a To-Do line the same day.<span class="ref">checklist: <a href="playtest_notes/gm_flight_checklist.md"><code>gm_flight_checklist.md</code></a></span><span class="ref">To-Do entry: <code>GM flight: Minecraft Creative-mode movement for geometry tests</code></span></td>
+</tr>
+<tr>
+<td class="id">v61</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Mon Nov 16</span>The pre-door rerun&#x27;s last rows, on a fresh plain account on the Monday zip: the NPC capsules (section 1), the Wolf Threat turn-in with room in the bags, Restless Bones at level 2 and the Raiders at 3 (section 4), section 8&#x27;s six rows (the login facing seed, the swing re-time, the charm hand-back, the pet-owner hate token, the weapon proc line, the UI scale row), and section 9&#x27;s eleven (the ammo slot, the knoll, the Selos&#x27; lines).</td>
+<td>user at a desk</td>
+<td class="needs"><ul><li>checklist pre_door_check_checklist.md: 20 rows to run</li><li>the Monday zip</li><li>the R720 on the ammo-slot build</li></ul></td>
+<td class="time">1.5 h</td>
+<td class="id">v60, o23, o28</td>
+<td class="done">Every row of the sheet marked; a server fix redeploys, a client fix means one more zip before p6.<span class="ref">checklist: <a href="playtest_notes/pre_door_check_checklist.md"><code>pre_door_check_checklist.md</code></a></span></td>
+</tr>
+<tr>
+<td class="id">v64</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Tue Nov 17 or Wed Nov 18 (runnable since the redeploy of Nov 17, 16:55 UTC)</span>The wandering wildlife walked: animals in each band and that they walk, being noticed in passing and the passive ones leaving you alone, the short walk home after a pull, loot and quest credit (wolves count, field rats do not), packs fighting together and refilling, respawns never beside you, bats and shades at night and gone by day, the off switch, and one pet at a time with a charmed creature coming back hostile.</td>
+<td>user at a desk, a second seat for two sections</td>
+<td class="needs"><ul><li>checklist wandering_wildlife_checklist.md: 39 rows to run, 4 of them in a two-seat section</li><li>the R720 on the wildlife build (o29)</li><li>a GM account</li><li>an Enchanter and a Necromancer for section 9</li><li>a second seat for sections 5 and 9</li></ul></td>
+<td class="time">3 h</td>
+<td class="id">o29</td>
+<td class="done">Every row marked; a finding gets a To-Do line the same day; if the animals misbehave before the door, PD_NO_ROAMERS=1 in the server&#x27;s .env and a restart turns them off.<span class="ref">checklist: <a href="playtest_notes/wandering_wildlife_checklist.md"><code>wandering_wildlife_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Wandering wildlife to fill the open ground</code></span></td>
+</tr>
+<tr>
+<td class="id">v65</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Tue Nov 17 or Wed Nov 18, after the redeploy (o30). Sections 1, 2, 4 and 5 first if time is short before Thursday.</span>Collision walked: the town&#x27;s walls, gates and houses, the wood, what cannot be jumped, casting past and through things, monsters and pets coming round walls and trees, logging in and arriving beside things, the camera, and a second seat&#x27;s view of it. The Test Panel&#x27;s Obstacle Outlines button draws every boundary. This is the largest change to how a body moves since the hills and nobody has walked it yet, so it wants a sitting before the friends hold the zip.</td>
+<td>user at a desk, a second seat for sections 5 and 8</td>
+<td class="needs"><ul><li>checklist obstacle_collision_checklist.md: 57 rows to run, 13 of them in a two-seat section</li><li>the R720 on the collision build (o30)</li><li>the zip a1a154e on every seat</li><li>a GM account</li><li>a caster and a pet class</li><li>a second seat for sections 5 and 8</li></ul></td>
+<td class="time">5.5 h</td>
+<td class="id">o30</td>
+<td class="done">Every row marked; a finding gets a To-Do line the same day; anything a friend would be stuck on or pulled through is fixed or the zip is held.<span class="ref">checklist: <a href="playtest_notes/obstacle_collision_checklist.md"><code>obstacle_collision_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Obstacle collision: trees, rocks, walls and set pieces</code></span></td>
+</tr>
+<tr>
+<td class="id">v66</td>
+<td><span class="chip verify">Verify</span></td>
+<td class="what"><span class="day">Tue Nov 17 or Wed Nov 18, after the redeploy (o30)</span>Group-mates&#x27; levels and classes on the group panel (built and merged on the 17th by another session, in the same zip and the same redeploy as collision): each member&#x27;s row reads its level and class, never Lv 0, and follows a level gained while grouped.</td>
+<td>user at a desk, a second seat</td>
+<td class="needs"><ul><li>checklist group_levels_checklist.md: 11 rows to run</li><li>the R720 on the new build (o30)</li><li>the zip a1a154e on both seats</li><li>two accounts in one group</li></ul></td>
+<td class="time">1 h</td>
+<td class="id">o30</td>
+<td class="done">Every row marked; a finding gets a To-Do line the same day.<span class="ref">checklist: <a href="playtest_notes/group_levels_checklist.md"><code>group_levels_checklist.md</code></a></span><span class="ref">To-Do entry: <code>Other players&#x27; levels</code></span></td>
 </tr>
 <tr>
 <td class="id">p4</td>
 <td><span class="chip people">People</span></td>
-<td class="what"><span class="day">Mon Nov 9 to Wed Nov 11</span>Onboard every friend not yet onboarded (the four named in d4 among them), each with the bump build (inviting_a_player.md, steps 2 to 5). Half an hour each; the count is the user&#x27;s call, and may be nobody.</td>
+<td class="what"><span class="day">Tue Nov 17 to Wed Nov 18</span>Onboard every friend not yet onboarded (the four named in d4 among them), each with the bump build (inviting_a_player.md, steps 2 to 5). Half an hour each; the count is the user&#x27;s call, and may be nobody.</td>
 <td>user at a desk, friends</td>
-<td class="needs"><ul><li>the bump zip (o20), so nobody receives two zips</li></ul></td>
+<td class="needs"><ul><li>the share links, the zip and the post already sent (p6)</li></ul></td>
 <td class="time">1.5 h</td>
-<td class="id">o20</td>
+<td class="id">p6</td>
 <td class="done">Each account appears in the account list without a [GM] tag.</td>
 </tr>
 <tr>
 <td class="id">p5</td>
 <td><span class="chip people">People</span><span class="chip ms">The door opens</span></td>
-<td class="what"><span class="day">Thu Nov 12, evening</span>The door opens: the full group&#x27;s first evening.</td>
+<td class="what"><span class="day">Thu Nov 19, evening</span>The door opens: the full group&#x27;s first evening.</td>
 <td>user at a desk, friends</td>
 <td class="needs">nothing</td>
 <td class="time">4 h</td>
 <td class="id">p4, o8</td>
 <td class="done">A session note records it; the phase 5 row in schedule.md section 7 reads started, and this page retires into the To-Do per the schedule&#x27;s own rule.</td>
+</tr>
+<tr>
+<td class="id">p6</td>
+<td><span class="chip people">People</span></td>
+<td class="what"><span class="day">Tue Nov 17</span>The share links, the zip (builds/ProjectDawn-alpha-a1a154e.zip since Nov 17, the players&#x27; checklist inside) and the Discord post go to all four friends, two days before the evening, so the network part and the install are settled by Thursday. The zip works only with the R720 on the collision build (o30).</td>
+<td>user at a desk, friends</td>
+<td class="needs"><ul><li>a share link from the Tailscale admin console (share the machine, never the tailnet: inviting_a_player.md step 2)</li><li>the zip in builds/</li><li>the R720 redeployed (o30)</li></ul></td>
+<td class="time">1 h</td>
+<td class="id">v61, o30</td>
+<td class="done">All four shares accepted in the admin console; each friend&#x27;s /version reads the Monday zip&#x27;s stamp.</td>
 </tr>
 </tbody></table></div>
 </section>
@@ -1563,10 +1751,9 @@
 <tr><td class="time">Mon Oct 19</td><td class="what">The bump day is FIXED: Thursday October 22, evening (confirmed by the user 2026-10-07). What remains is telling every tester holding the October 5 zip that their client is refused at login from that evening (the host raises the minimum client version), a week ahead, and sending the new zip within the hour.</td><td>user (the phone is fine)</td><td class="needs">Nothing now; the date is set. The telling is the people half.</td></tr>
 <tr><td class="time">Sun Oct 25</td><td class="what">The EQ parity audit&#x27;s eight recommendations (docs/design/eq_parity_audit.md, section 8): the inflation is on the player&#x27;s side at levels 1 to 10 and almost nowhere else. Worst first: EQ&#x27;s hit point and mana formula (a level 1 Warrior at 32 HP instead of 200), the level 1 to 10 spells reshaped to EQ&#x27;s lines, the regeneration buffs to P99&#x27;s figures and levels, Haste to 30%, low-level mob hit points toward P99&#x27;s, the rest left alone; whether a second pass on mana costs and cast times is wanted.</td><td>user</td><td class="needs">The data edits (a build row once decided). Not the Oct 22 bump: the audit changes numbers, not the wire, so it can ship on any later redeploy and export.</td></tr>
 <tr><td class="time">Sun Nov 1</td><td class="what">Trade range: keep 10 m or tighten it. Flagged as far when decided; the first trade sitting is the evidence.</td><td>user (the phone is fine)</td><td class="needs">Nothing. A one-constant change if it moves.</td></tr>
-<tr><td class="time">Thu Nov 12</td><td class="what">Phase 5&#x27;s four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in.</td><td>user and planner</td><td class="needs">The &quot;after the door opens&quot; list below becoming a dated plan.</td></tr>
-<tr><td class="time">Thu Nov 12</td><td class="what">docs/deployment/ stays untracked, or joins the repo. CLAUDE.md links it as canonical while git ignores it.</td><td>user</td><td class="needs">Nothing.</td></tr>
-<tr><td class="time">Thu Nov 12</td><td class="what">The factions and alignment design&#x27;s nine decisions (docs/design/factions_and_alignment.md, section 6): the first six factions and the hit rule, who gets a kill&#x27;s hits (the XP rule or EQ&#x27;s hate list), the nine level thresholds, the v1 refusals (vendors at Dubious, quest givers at Apprehensive), alignment seeded from the class start, the Paladin and Shadow Knight off-side penalty kept on the server, no starting standings by race in v1, the mob and quest values, no GM freeze.</td><td>user</td><td class="needs">The factions build (a migration and a bump), on the after-the-door strip.</td></tr>
-<tr><td class="time">Thu Nov 12</td><td class="what">Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later.</td><td>user</td><td class="needs">Slice 0 (one server handler now, the Test Panel&#x27;s death button with the export); slice 1 waits on the server height model.</td></tr>
+<tr><td class="time">Thu Nov 19</td><td class="what">Phase 5&#x27;s four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in.</td><td>user and planner</td><td class="needs">The &quot;after the door opens&quot; list below becoming a dated plan.</td></tr>
+<tr><td class="time">Thu Nov 19</td><td class="what">The factions and alignment design&#x27;s nine decisions (docs/design/factions_and_alignment.md, section 6): the first six factions and the hit rule, who gets a kill&#x27;s hits (the XP rule or EQ&#x27;s hate list), the nine level thresholds, the v1 refusals (vendors at Dubious, quest givers at Apprehensive), alignment seeded from the class start, the Paladin and Shadow Knight off-side penalty kept on the server, no starting standings by race in v1, the mob and quest values, no GM freeze.</td><td>user</td><td class="needs">The factions build (a migration and a bump), on the after-the-door strip.</td></tr>
+<tr><td class="time">Thu Nov 19</td><td class="what">Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later.</td><td>user</td><td class="needs">Slice 0 (one server handler now, the Test Panel&#x27;s death button with the export); slice 1 waits on the server height model.</td></tr>
 </tbody></table></div></section>
 <section><h2>Open rows this plan does not schedule</h2>
 <p class="lede">Read from the checklist folder when this page was generated. A recent one (touched in the last 30 days) needs a row above or a reason. An older one is a candidate for the week-5 triage, which decides whether it is retired, superseded, or worth a re-run.</p>
@@ -1587,7 +1774,7 @@
 <tr><td class="what"><b>Historical gaps of three to ten days</b></td><td class="needs">About a week of drift per six, already seen twice.</td><td class="needs">Build steps are laid out at half the plan&#x27;s pace, the schedule&#x27;s own rule.</td></tr>
 </tbody></table></div></section>
 <section><h2>Assumptions</h2>
-<ul class="plain"><li>A checklist row takes about six minutes to run, so a sitting of 15 to 20 rows is one and a half to two hours. <i>Source: This project&#x27;s own sittings (handoff note, 2026-10-05); phase 4&#x27;s 28 rows ran across five sittings.</i></li><li>A redeploy costs the user about fifteen minutes and takes the world down for about two minutes. Everyone online loses up to a minute of progress, so people log out first. <i>Source: docs/deployment/server_operations.md; the 2026-10-05 redeploy was down about two minutes.</i></li><li>An export plus zipping and sending it costs about an hour of the user&#x27;s time. No export has been timed; this is a guess. <i>Source: Assumption.</i></li><li>Build steps are laid out at roughly half the pace the plan file estimates, with a review pass folded into each. That is the schedule&#x27;s own rule (two-week windows for work measured at three days), because the history holds real gaps of three and ten days. <i>Source: docs/schedule.md section 1; docs/design/spell_batch_plan_2026_10_05.md step estimates.</i></li><li>Onboarding one friend costs the user about thirty minutes (share link, zip, README, check the account list), plus the friend&#x27;s own install time. <i>Source: docs/deployment/inviting_a_player.md, steps 2 to 5.</i></li><li>The user has about thirty hours a week. Weeks here never schedule more than half of it, because the pile of unverified work has been the recurring risk, not a shortage of plans. <i>Source: docs/schedule.md header.</i></li><li>Every date here except November 12 is a proposal. The milestones were placed by working back from November 8 at the measured pace with the fifth week left as slack; on November 5 the door moved to Thursday November 12 (the friends are busy on the 8th) and the user put the November bump in front of it, so a sixth week holds the door. <i>Source: The handoff&#x27;s instruction; docs/schedule.md section 1.</i></li></ul>
+<ul class="plain"><li>A checklist row takes about six minutes to run, so a sitting of 15 to 20 rows is one and a half to two hours. <i>Source: This project&#x27;s own sittings (handoff note, 2026-10-05); phase 4&#x27;s 28 rows ran across five sittings.</i></li><li>A redeploy costs the user about fifteen minutes and takes the world down for about two minutes. Everyone online loses up to a minute of progress, so people log out first. <i>Source: docs/deployment/server_operations.md; the 2026-10-05 redeploy was down about two minutes.</i></li><li>An export plus zipping and sending it costs about an hour of the user&#x27;s time. No export has been timed; this is a guess. <i>Source: Assumption.</i></li><li>Build steps are laid out at roughly half the pace the plan file estimates, with a review pass folded into each. That is the schedule&#x27;s own rule (two-week windows for work measured at three days), because the history holds real gaps of three and ten days. <i>Source: docs/schedule.md section 1; docs/design/spell_batch_plan_2026_10_05.md step estimates.</i></li><li>Onboarding one friend costs the user about thirty minutes (share link, zip, README, check the account list), plus the friend&#x27;s own install time. <i>Source: docs/deployment/inviting_a_player.md, steps 2 to 5.</i></li><li>The user has about thirty hours a week. Weeks here never schedule more than half of it, because the pile of unverified work has been the recurring risk, not a shortage of plans. <i>Source: docs/schedule.md header.</i></li><li>Every date here except November 19 is a proposal. The milestones were placed by working back from November 8 at the measured pace with the fifth week left as slack; on November 5 the door moved to Thursday November 12 (the friends are busy on the 8th) and the user put the November bump in front of it, so a sixth week holds the door. On November 13 it moved a fourth time, to Thursday November 19: the invites had not gone out, and the week sends the share links early and runs the last pre-door rows, so a seventh week holds the door. <i>Source: The handoff&#x27;s instruction; docs/schedule.md section 1.</i></li></ul>
 </section>
 <section><h2>Words used here</h2><div class="two-col">
 <div><b>The R720.</b> The physical server in the basement that runs the game for everyone. Reachable only over Tailscale, a private network each tester joins once.</div>
@@ -1605,5 +1792,5 @@
 <p class="plain">Claude regenerates this page in every session that changes a To-Do status or a checklist, as part of the session workflow. The procedure:</p>
 <ol class="steps"><li>Run <code>python tools/schedule_detail.py</code> from the repo root. It stops with an error if any row names a checklist or To-Do entry that no longer exists.</li><li>Read its report. An unscheduled checklist with open rows, or a scheduled checklist with none left, means the plan file needs a row added, moved or removed. Edit it and rerun.</li><li>Commit the plan file with both generated files, and republish this page at its link.</li></ol>
 </section>
-<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-05 at repo da83ea8</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
+<footer><span>Project Dawn</span><span>Week by week to the friends build</span><span>Generated 2026-11-17 at repo b0a07e7</span><span>Plan: docs/schedule_detail.toml</span><span>Phases: schedule.html</span><span>Published copy: <a href="https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM">https://claude.ai/artifact/8V2D15TKBpYd88miTmTfhM</a></span></footer>
 </div>

@@ -124,6 +124,10 @@ stale "200 arrows" from before the item became a bundle. The mass itself is righ
 **Ruling: Option A — weight 1.0 kept, `stack_size` 200→20 applied** (full stack =
 400 arrows = 20.0).
 
+*Superseded 2026-11-13 by the ammo slot (user: one arrow per shot): the stack unit is one
+arrow, Option B after all. Weight 0.1 and 1 copper per arrow; a full bundle of twenty is 2.0
+and 20 copper; the name stays "Arrow Bundle", its count the arrows left.*
+
 ### 5. Quick confirms (one-liners — edit the number if you disagree)
 
 - **Cursed Femur 7.0** — lore says "unnaturally heavy"; this makes it the heaviest 1H

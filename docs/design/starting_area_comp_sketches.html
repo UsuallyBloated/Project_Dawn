@@ -1,0 +1,293 @@
+<title>Starting Area Comps</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: one column of survey sheets. Each sheet is a drawing with a short caption; the page chrome stays quiet so the drawings carry the colour. */
+:root{
+  --bg:#f3f4ef; --panel:#ffffff; --fg:#1f241d; --muted:#5d6658; --line:#d5d9cd; --accent:#3f6b3a; --new:#8a5a1c;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#151a15; --panel:#1d231c; --fg:#e6eadf; --muted:#9ba694; --line:#343c31; --accent:#8fbf83; --new:#d9a55a; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#151a15; --panel:#1d231c; --fg:#e6eadf; --muted:#9ba694; --line:#343c31; --accent:#8fbf83; --new:#d9a55a; color-scheme:dark }
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--display);font-size:30px;line-height:1.15;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-size:20px;margin:0;text-wrap:balance}
+p{margin:0;max-width:68ch}
+.lede{color:var(--muted)}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.scroll{overflow-x:auto}
+.scroll svg{display:block;width:100%;min-width:860px;height:auto}
+.scene svg{display:block;width:100%;height:auto;border-radius:3px}
+.scenes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:20px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.fact{border-left:3px solid var(--accent);padding-left:10px}
+.fact b{font-family:var(--display);font-size:22px;display:block;font-variant-numeric:tabular-nums}
+.fact span{color:var(--muted);font-size:13px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);font-size:14px}
+th{color:var(--muted);font-weight:500;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+td.n,th.n{text-align:right}
+.new{color:var(--new);font-weight:600}
+ul{margin:0;padding-left:20px;max-width:68ch}
+li{margin-block:4px}
+.cap{color:var(--muted);font-size:13px}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <h1>The starting area at 4 km: composition sketches</h1>
+    <p class="lede">A proposal, drawn by code. Nothing in the game has changed. Every named place comes from the camp file, the hills file and the NPC dialogue; the sizes, the roads and the items marked <span class="new">new</span> are first proposals for you to accept or change.</p>
+  </header>
+
+  <section class="sheet">
+    <h2>The scale</h2>
+    <div class="facts">
+      <div class="fact"><b>4 x 4 km</b><span>proposed zone, centred on the town</span></div>
+      <div class="fact"><b>100x</b><span>the area of today's 400 m plate</span></div>
+      <div class="fact"><b>about 2.3x</b><span>the area of EQ's West Karana (4.6 x 1.5 km)</span></div>
+      <div class="fact"><b>13 min</b><span>edge to edge at a run (5 m/s)</span></div>
+    </div>
+    <p>4 km is the largest size our own research (zone_size_limits.md) calls "build freely": full float precision in Godot, and the server's cost follows mob count, not area. Up to 8 km is possible with a rendering pass, but a starter zone that takes half an hour to cross would strand new players.</p>
+  </section>
+
+  <section class="sheet">
+    <h2>Sheet 1. The zone map</h2>
+    <div class="scroll" id="map"></div>
+    <p class="cap">North is up (+Z), east is right (+X). The dashed square in the middle is the whole world as it is built today. Dashed rings are running time from the town gate.</p>
+  </section>
+
+  <section class="sheet">
+    <h2>Sheet 2. Elevation profiles</h2>
+    <div class="scroll" id="prof"></div>
+    <p class="cap">Heights drawn at twice true scale. A fall of 42 m is lethal under the fall rule, so the Wraith Gate cliff (60 m) and the ridge faces (70 m) kill; the barrow's walls stay walkable slopes so its dead can climb out after you, as they do today.</p>
+  </section>
+
+  <section class="sheet">
+    <h2>Sheet 3. Scene blockouts</h2>
+    <p class="cap">Flat shapes for composition and palette only. Muted earth colours with one saturated accent per scene, late afternoon light.</p>
+    <div class="scenes">
+
+      <figure class="scene" style="margin:0">
+        <svg viewBox="0 0 800 450" role="img" aria-label="The town seen from the east road">
+          <defs><linearGradient id="skyA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ea3a8"/><stop offset="1" stop-color="#f0cf98"/></linearGradient></defs>
+          <rect width="800" height="450" fill="url(#skyA)"/>
+          <circle cx="330" cy="212" r="26" fill="#f7e3b4"/>
+          <polygon points="0,210 60,180 130,200 210,170 300,196 420,176 520,198 640,172 730,194 800,180 800,260 0,260" fill="#a59a90"/>
+          <path d="M120,250 Q330,150 560,250 Z" fill="#84806a"/>
+          <polygon points="318,186 322,170 326,186 332,174 336,188" fill="#e4dcc6"/>
+          <polygon points="560,236 800,214 800,256 560,256" fill="#3d4a3a"/>
+          <rect y="246" width="800" height="204" fill="#7d8757"/>
+          <polygon points="60,262 200,256 210,268 70,276" fill="#b5a86a"/><polygon points="30,284 190,274 204,288 40,300" fill="#9c9a5c"/>
+          <rect x="250" y="222" width="320" height="44" fill="#a69679"/>
+          <path d="M250,222 h20 v-8 h20 v8 h20 v-8 h20 v8 h20 v-8 h20 v8 h20 v-8 h20 v8 h20 v-8 h20 v8 h20 v-8 h20 v8 h20 v-8 h20 v8 h20 v-8 h20 v8" fill="none" stroke="#8a7b62" stroke-width="3"/>
+          <polygon points="285,222 305,200 325,222" fill="#7b5a45"/><polygon points="470,222 495,198 520,222" fill="#7b5a45"/><polygon points="335,222 350,206 365,222" fill="#6b4e3d"/>
+          <rect x="430" y="150" width="34" height="116" fill="#948569"/><polygon points="424,150 447,120 470,150" fill="#6b4e3d"/>
+          <rect x="445" y="100" width="2" height="22" fill="#3a3a32"/><polygon points="447,100 472,106 447,113" fill="#3f8a46"/>
+          <path d="M385,266 v-26 a15,15 0 0 1 30,0 v26 Z" fill="#3a3229"/>
+          <polygon points="388,266 412,266 560,450 210,450" fill="#bca882"/>
+          <rect y="400" width="800" height="50" fill="#4f5e3a" opacity=".55"/>
+          <rect x="610" y="330" width="4" height="50" fill="#4a3c2e"/><rect x="596" y="334" width="34" height="9" fill="#6a5640"/>
+          <g fill="#2c2a26"><circle cx="352" cy="352" r="5"/><rect x="348" y="357" width="8" height="20"/></g>
+          <g font-family="Inter,sans-serif" font-size="12" fill="#23261f"><text x="476" y="140">watchtower</text><text x="352" y="296" fill="#f4eedd">east gate</text><text x="250" y="166">western hills, 1.5 km off</text><text x="640" y="208">Greywood ridge</text><text x="366" y="372">traveller, for scale</text></g>
+        </svg>
+        <figcaption class="cap">A. The town from the east road, looking west. A low stone wall, the old watchtower, a handful of roofs, farm strips outside. Accent: the green banner.</figcaption>
+      </figure>
+
+      <figure class="scene" style="margin:0">
+        <svg viewBox="0 0 800 450" role="img" aria-label="The pass through the Greywood ridge">
+          <defs><linearGradient id="skyB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa6a4"/><stop offset="1" stop-color="#d8d2bd"/></linearGradient></defs>
+          <rect width="800" height="450" fill="url(#skyB)"/>
+          <polygon points="300,300 340,150 380,190 420,140 460,185 500,160 520,300" fill="#4a5a4c"/>
+          <polygon points="320,300 360,200 400,230 440,196 480,232 505,300" fill="#33443a"/>
+          <rect x="300" y="262" width="220" height="40" fill="#c9cfc4" opacity=".55"/>
+          <polygon points="0,80 110,60 200,96 290,84 340,300 0,330" fill="#746a5c"/>
+          <polygon points="200,96 290,84 340,300 262,306" fill="#5d5449"/>
+          <polygon points="800,70 700,54 600,92 520,82 478,300 800,330" fill="#7b7163"/>
+          <polygon points="600,92 520,82 478,300 548,306" fill="#61584c"/>
+          <polygon points="0,300 340,292 478,292 800,300 800,450 0,450" fill="#77815a"/>
+          <polygon points="396,296 424,296 560,450 250,450" fill="#b3a27f"/>
+          <g fill="#3f4c3a"><polygon points="90,330 104,286 118,330"/><polygon points="150,350 166,300 182,350"/><polygon points="680,340 696,292 712,340"/><polygon points="730,360 748,306 766,360"/></g>
+          <g stroke="#3b2f55" stroke-width="2.5" fill="none"><path d="M120,170 l8,6 l8,-6"/><path d="M160,150 l7,5 l7,-5"/><path d="M190,186 l8,6 l8,-6"/><path d="M140,206 l6,5 l6,-5"/></g>
+          <g fill="#2a2823"><circle cx="420" cy="352" r="5"/><rect x="416" y="357" width="8" height="20"/></g><circle cx="430" cy="350" r="4" fill="#e9a23b"/>
+          <g font-family="Inter,sans-serif" font-size="12" fill="#1f211c"><text x="20" y="52">ridge crest, 70 m</text><text x="356" y="130" fill="#1f2a22">the Greywood</text><text x="536" y="392">the north road</text><text x="96" y="140">Bat Hollow's bats</text><text x="360" y="322" fill="#f1ecd9">the pass, 60 m wide</text></g>
+        </svg>
+        <figcaption class="cap">B. The pass, looking north. Two cliff faces, one gap, and the dark wood behind it. Accent: the torch.</figcaption>
+      </figure>
+
+      <figure class="scene" style="margin:0">
+        <svg viewBox="0 0 800 450" role="img" aria-label="The Sunken Barrow in the western hills">
+          <defs><linearGradient id="skyC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8d94a0"/><stop offset="1" stop-color="#e2b98c"/></linearGradient>
+          <radialGradient id="glowC"><stop offset="0" stop-color="#b8f07a" stop-opacity=".9"/><stop offset="1" stop-color="#b8f07a" stop-opacity="0"/></radialGradient></defs>
+          <rect width="800" height="450" fill="url(#skyC)"/>
+          <polygon points="0,150 120,120 260,140 400,96 560,128 700,104 800,130 800,220 0,220" fill="#9b8f86"/>
+          <path d="M0,230 Q400,70 800,210 V450 H0 Z" fill="#7f7a62"/>
+          <g fill="#e6dfca"><polygon points="372,132 380,84 388,132"/><polygon points="392,136 402,70 412,136"/><polygon points="416,136 424,92 432,136"/><rect x="366" y="130" width="72" height="10"/></g>
+          <ellipse cx="400" cy="290" rx="290" ry="92" fill="#5f5a49"/>
+          <ellipse cx="400" cy="300" rx="220" ry="66" fill="#4c4739"/>
+          <ellipse cx="400" cy="310" rx="140" ry="40" fill="#3a362c"/>
+          <circle cx="400" cy="312" r="60" fill="url(#glowC)"/>
+          <path d="M384,322 v-18 a16,14 0 0 1 32,0 v18 Z" fill="#1c1b17"/><rect x="378" y="298" width="44" height="6" fill="#8a8473"/>
+          <g fill="#8d8776"><rect x="118" y="262" width="10" height="34"/><rect x="214" y="222" width="10" height="30"/><rect x="560" y="218" width="10" height="32"/><rect x="668" y="258" width="10" height="34"/><polygon points="300,206 334,210 332,218 298,214"/></g>
+          <path d="M0,390 Q400,350 800,392 V450 H0 Z" fill="#6c6a52"/>
+          <g stroke="#e3dcc8" stroke-width="3" fill="none" stroke-linecap="round"><path d="M90,420 q10,-30 30,-4"/><path d="M104,422 q10,-24 26,-2"/><path d="M620,416 q12,-32 34,-4"/><path d="M700,430 l30,-8"/><path d="M250,432 l26,6"/></g>
+          <g fill="#2a2823"><circle cx="500" cy="374" r="5"/><rect x="496" y="379" width="8" height="20"/></g>
+          <g font-family="Inter,sans-serif" font-size="12" fill="#1f211c"><text x="446" y="96">the Ossuary on the crest</text><text x="430" y="342" fill="#e9f2d6">the barrow mouth</text><text x="40" y="254">ward stones, some fallen</text><text x="60" y="446" fill="#f1ecd9">the bone fields</text><text x="610" y="300" fill="#efe9d6">pit, 320 m across, 45 m deep</text></g>
+        </svg>
+        <figcaption class="cap">C. The Sunken Barrow from its east rim. "Dug to hold something": a terraced pit ringed by failing ward stones. Accent: the sick green light at the door.</figcaption>
+      </figure>
+
+      <figure class="scene" style="margin:0">
+        <svg viewBox="0 0 800 450" role="img" aria-label="The Wraith Gate on its plateau">
+          <defs><linearGradient id="skyD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5f6e86"/><stop offset="1" stop-color="#cfc6b2"/></linearGradient>
+          <radialGradient id="glowD"><stop offset="0" stop-color="#7fe6ee" stop-opacity=".95"/><stop offset="1" stop-color="#7fe6ee" stop-opacity="0"/></radialGradient></defs>
+          <rect width="800" height="450" fill="url(#skyD)"/>
+          <polygon points="0,120 90,96 200,118 330,88 470,112 600,84 720,108 800,92 800,180 0,180" fill="#8b8790"/>
+          <polygon points="0,150 800,150 800,360 0,360" fill="#665e55"/>
+          <g fill="#574f47"><polygon points="60,150 130,150 110,360 40,360"/><polygon points="250,150 300,150 330,360 270,360"/><polygon points="470,150 540,150 520,360 450,360"/><polygon points="660,150 700,150 730,360 680,360"/></g>
+          <g fill="#746b60"><polygon points="150,150 210,150 200,360 170,360"/><polygon points="380,150 420,150 410,360 370,360"/><polygon points="580,150 620,150 630,360 590,360"/></g>
+          <circle cx="400" cy="112" r="56" fill="url(#glowD)"/>
+          <path d="M360,150 v-58 a40,40 0 0 1 80,0 v58 h-16 v-56 a24,24 0 0 0 -48,0 v56 Z" fill="#3e3a3a"/>
+          <g fill="#cfeff2" opacity=".8"><path d="M300,146 q6,-30 14,0 Z"/><path d="M500,146 q7,-36 16,0 Z"/><path d="M560,148 q5,-24 12,0 Z"/></g>
+          <polygon points="0,352 800,352 800,450 0,450" fill="#77805c"/>
+          <g fill="#3d4a38"><polygon points="30,400 52,330 74,400"/><polygon points="84,420 104,356 124,420"/></g>
+          <g stroke="#d9d6cc" stroke-width="1" fill="none" opacity=".7"><path d="M20,340 l50,30 M40,330 l40,44 M24,372 l60,-20"/></g>
+          <g fill="#23211e"><circle cx="400" cy="372" r="4"/><rect x="397" y="376" width="6" height="15"/></g>
+          <g font-family="Inter,sans-serif" font-size="12" fill="#f1ecd9"><text x="452" y="74" fill="#1c2430">the Wraith Gate</text><text x="560" y="260">the cliff, 60 m, the one fall that kills</text><text x="412" y="388" fill="#1f211c">you</text><text x="130" y="410" fill="#1f211c">last webs of the Spider Copse</text></g>
+        </svg>
+        <figcaption class="cap">D. The Wraith Gate from the flats below, looking east. A wall of rock with one arch on top; the ramps up are a long walk north or south. Accent: the cold light in the arch.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sheet">
+    <h2>Distances, today and proposed</h2>
+    <div class="scroll"><table><thead><tr><th>Place</th><th class="n">Level</th><th class="n">Today</th><th class="n">Proposed</th><th class="n">Run from the gate</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <p class="cap">Distances are from the town centre. Run time is at the server's 5 m/s; Spirit of Wolf and bard speed shorten it.</p>
+  </section>
+
+  <section class="sheet">
+    <h2>What this would cost to build, and what is still yours to decide</h2>
+    <ul>
+      <li><b>More mobs, or it is empty.</b> Today's 54 spawn points spread over 16 square km would be a walk through nothing. Each camp wants several times its spawns, with roaming wildlife between camps. Mob count is the server's real cost, so this is the number to budget.</li>
+      <li><b>Terrain in chunks.</b> The ground is one mesh and one collider today. At 4 km it must be split into chunks, and the server's ground file grows with it. The zone-size research already names this.</li>
+      <li><b>Draw distance.</b> Fog, shadow distance and prop visibility ranges need setting on purpose, so the ridge and the hills read from the town.</li>
+      <li><b class="new">New on these sheets:</b> the roads and where they leave the zone (east to the capital, north into the Greywood), the farms west of the walls, the mill as a windmill, the wall around the town, and every height. The dialogue implies most of them; none has been decided.</li>
+      <li><b>Not drawn:</b> water. A river or a lake would give the zone a second landmark, but no document mentions one, so it is your call.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function(){
+var S=0.25, X=function(x){return 500+x*S}, Y=function(z){return 500-z*S};
+var seed=7; function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
+var camps=[
+ ["Bonepile",1,22,-220,120,"e",0],["Wolf Run",1,29,280,-200,"e",0],["Rat Warrens",2,30,150,120,"n",0],
+ ["Shallow Graves",3,46,400,330,"n",0],["Gnoll Raider Camp",3,46,560,70,"n",0],["Boar Thicket",4,48,-420,-340,"s",0],
+ ["Bat Hollow",4,44,-130,540,"w",0],["Sable's roost",4,54,-180,640,"e",1],["Bandit Outpost",5,76,-600,640,"n",0],
+ ["Rotfang's Den",5,76,60,-800,"e",1],["Festering Mound",6,81,640,-620,"s",0],["Spider Copse",7,104,1120,60,"n",0],
+ ["The Crawler's burrow",7,116,1210,-10,"s",1],["The Broken Crypt",9,118,20,1250,"e",0],["Gnoll War Camp",10,148,20,-1500,"w",0],
+ ["Greth's tent",10,158,40,-1620,"e",1],["The Sunken Barrow",12,146,-1480,-60,"s",0],["The Undying",12,156,-1560,-60,"n",1],
+ ["Ossuary",14,168,-1740,90,"n",0],["Wraith Gate",16,178,1720,-40,"s",0]];
+function tier(l){return l<=2?"#efe9cf":l<=4?"#e6c86e":l<=6?"#de9c4c":l<=9?"#d06c3e":l<=12?"#ad423c":"#7a2f55"}
+var o=[];
+o.push('<svg viewBox="0 0 1000 1000" role="img" aria-label="Map of the proposed 4 km starting area">');
+o.push('<defs><radialGradient id="hill"><stop offset="0" stop-color="#7b6c57" stop-opacity=".95"/><stop offset=".6" stop-color="#7b6c57" stop-opacity=".55"/><stop offset="1" stop-color="#7b6c57" stop-opacity="0"/></radialGradient><radialGradient id="pit"><stop offset="0" stop-color="#2f2b24" stop-opacity=".9"/><stop offset="1" stop-color="#2f2b24" stop-opacity="0"/></radialGradient></defs>');
+o.push('<rect width="1000" height="1000" fill="#6d6150"/><rect x="30" y="30" width="940" height="940" rx="10" fill="#647f4e" stroke="#6d6150" stroke-opacity=".55" stroke-width="16"/>');
+function circ(x,z,r,f,extra){o.push('<circle cx="'+X(x)+'" cy="'+Y(z)+'" r="'+r*S+'" fill="'+f+'" '+(extra||'')+'/>')}
+[[-1550,0,650],[-600,640,170],[40,-780,180],[20,-1520,310],[1130,40,240],[640,-620,130]].forEach(function(h){circ(h[0],h[1],h[2],"url(#hill)")});
+// plateau
+o.push('<rect x="'+X(1450)+'" y="'+Y(350)+'" width="'+430*S+'" height="'+800*S+'" fill="#7b6c57"/>');
+o.push('<rect x="'+X(1450)+'" y="'+Y(470)+'" width="'+430*S+'" height="'+120*S+'" fill="#7b6c57" opacity=".45"/><rect x="'+X(1450)+'" y="'+Y(-450)+'" width="'+430*S+'" height="'+120*S+'" fill="#7b6c57" opacity=".45"/>');
+o.push('<line x1="'+X(1450)+'" y1="'+Y(350)+'" x2="'+X(1450)+'" y2="'+Y(-450)+'" stroke="#2f2b24" stroke-width="3"/>');
+for(var z=-430;z<350;z+=40){o.push('<line x1="'+X(1450)+'" y1="'+Y(z)+'" x2="'+(X(1450)-7)+'" y2="'+Y(z)+'" stroke="#2f2b24" stroke-width="1.2"/>')}
+// stipples
+var i,x,zz;
+for(i=0;i<170;i++){x=380+rnd()*620;zz=-250+rnd()*580;circ(x,zz,7,"#9a978c",'opacity=".7"')}
+for(i=0;i<90;i++){x=-1200+rnd()*340;zz=-230+rnd()*400;circ(x,zz,6,"#e9e2cd",'opacity=".8"')}
+// farms
+[[-400,40],[-330,-60],[-260,60],[-420,-130],[-300,-150]].forEach(function(f,k){o.push('<rect x="'+X(f[0])+'" y="'+Y(f[1])+'" width="'+90*S+'" height="'+60*S+'" fill="'+(k%2?"#b9ad6c":"#a3a160")+'" opacity=".85"/>')});
+// trees
+for(i=0;i<1200;i++){x=-1860+rnd()*3720;zz=960+rnd()*900;if(Math.abs(x)<28)continue;if(Math.hypot(x-20,zz-1250)<150)continue;circ(x,zz,14,"#33482f",'opacity=".85"')}
+for(i=0;i<140;i++){x=-1300+rnd()*2600;zz=640+rnd()*200;if(Math.abs(x)<40)continue;circ(x,zz,11,"#3d5435",'opacity=".7"')}
+for(i=0;i<45;i++){var a=rnd()*6.283,r=rnd()*210;circ(1150+Math.cos(a)*r,40+Math.sin(a)*r,12,"#33482f",'opacity=".85"')}
+for(i=0;i<34;i++){a=rnd()*6.283;r=rnd()*150;circ(-420+Math.cos(a)*r,-340+Math.sin(a)*r,9,"#536b3c",'opacity=".8"')}
+// ridge with the pass
+[[-1300,-150],[150,1300]].forEach(function(s){o.push('<line x1="'+X(s[0])+'" y1="'+Y(900)+'" x2="'+X(s[1])+'" y2="'+Y(900)+'" stroke="#5f5446" stroke-width="'+220*S+'" stroke-linecap="round"/><line x1="'+X(s[0])+'" y1="'+Y(900)+'" x2="'+X(s[1])+'" y2="'+Y(900)+'" stroke="#8f8370" stroke-width="3" stroke-dasharray="1 5" stroke-linecap="round"/>')});
+// pits
+[[-1480,-60,170],[-130,540,110],[20,1250,170]].forEach(function(p){circ(p[0],p[1],p[2],"url(#pit)")});
+// roads
+function road(pts,w){o.push('<polyline points="'+pts.map(function(p){return X(p[0])+','+Y(p[1])}).join(' ')+'" fill="none" stroke="#cdb98d" stroke-width="'+w+'" stroke-linejoin="round" stroke-linecap="round"/>')}
+road([[90,0],[500,-50],[1000,-190],[1380,-620],[1880,-900],[2000,-960]],3.2);
+road([[0,90],[20,420],[0,900],[10,1220],[0,1880],[0,2000]],3.2);
+road([[-90,0],[-600,-20],[-1100,-60],[-1340,-60]],2);
+road([[0,-90],[20,-420],[70,-740],[20,-1440]],2);
+// travel rings
+[[300,"1 min"],[600,"2 min"],[900,"3 min"],[1500,"5 min"]].forEach(function(t){o.push('<circle cx="500" cy="500" r="'+t[0]*S+'" fill="none" stroke="#f3efe0" stroke-opacity=".5" stroke-width="1" stroke-dasharray="4 5"/><text x="'+(500+t[0]*S*0.7071+4)+'" y="'+(500+t[0]*S*0.7071+10)+'" font-size="10" fill="#f3efe0" opacity=".85">'+t[1]+'</text>')});
+// today's plate
+o.push('<rect x="'+X(-200)+'" y="'+Y(200)+'" width="100" height="100" fill="none" stroke="#fff3b0" stroke-width="1.6" stroke-dasharray="6 4"/>');
+// town
+o.push('<rect x="'+X(-90)+'" y="'+Y(90)+'" width="45" height="45" rx="6" fill="#b3a385" stroke="#3a342b" stroke-width="1.6"/><rect x="'+(X(40)-3)+'" y="'+(Y(40)-3)+'" width="6" height="6" fill="#3a342b"/>');
+function txt(x,y,s,size,anchor,fill,w){o.push('<text x="'+x+'" y="'+y+'" font-size="'+size+'" text-anchor="'+(anchor||"start")+'" fill="'+(fill||"#fbf7ea")+'" font-weight="'+(w||500)+'" stroke="#20231c" stroke-width="2.6" stroke-opacity=".75" paint-order="stroke" stroke-linejoin="round">'+s+'</text>')}
+// mill
+o.push('<path d="M'+(X(20)-5)+','+(Y(-420)-5)+' l10,10 m0,-10 l-10,10" stroke="#f3efe0" stroke-width="1.8"/>');
+txt(X(20)+9,Y(-420)+4,"the mill",10.5);
+// region labels
+txt(X(0),Y(1560),"THE GREYWOOD",15,"middle","#dfe9d2",600);
+txt(X(-700),Y(900)+4,"the Greywood ridge, 70 m",10.5,"middle");
+txt(X(0)+22,Y(900)+4,"the pass",10.5);
+txt(X(700),Y(-190),"GNOLL FLATS",13,"middle","#ece7d6",600);
+txt(X(-1030),Y(230),"the bone fields",10.5,"middle");
+txt(X(-1550),Y(430),"THE WESTERN HILLS",13,"middle","#f1e9d6",600);
+txt(X(-1550),Y(380)+4,"rising to 110 m",10,"middle");
+txt(X(1665),Y(250),"plateau, 60 m",10.5,"middle");
+txt(X(1450)-10,Y(-300),"cliff",10,"end");
+txt(X(-360),Y(-190)+12,"farms",10.5,"middle");
+txt(X(1000),Y(-190)+16,"the east road",10.5,"middle","#f4e7c2");
+txt(X(1880)-6,Y(-900)+16,"to the capital",10.5,"end","#f4e7c2");
+txt(X(0)+8,Y(1760)+4,"deeper into the Greywood",10.5,"start","#f4e7c2");
+txt(500,24,"the rim: mountains to 150 m, no way over",10.5,"middle");
+txt(X(-200),Y(-200)+13,"the whole world today (400 m)",10.5,"start","#fff3b0",600);
+txt(500,Y(-90)+13,"VALDIS",12,"middle","#fff",600);
+// camps
+camps.forEach(function(c){var px=X(c[3]),py=Y(c[4]),f=tier(c[1]);
+ if(c[6]){o.push('<rect x="'+(px-4.5)+'" y="'+(py-4.5)+'" width="9" height="9" transform="rotate(45 '+px+' '+py+')" fill="'+f+'" stroke="#20231c" stroke-width="1.4"/>')}
+ else{o.push('<circle cx="'+px+'" cy="'+py+'" r="5.5" fill="'+f+'" stroke="#20231c" stroke-width="1.4"/>')}
+ var lab=c[0]+" · L"+c[1],d=c[5];
+ if(d=="e")txt(px+9,py+4,lab,11,"start");else if(d=="w")txt(px-9,py+4,lab,11,"end");else if(d=="n")txt(px,py-9,lab,11,"middle");else txt(px,py+17,lab,11,"middle")});
+// legend, scale, north
+o.push('<g transform="translate(46,890)"><rect x="-8" y="-18" width="330" height="82" rx="4" fill="#20231c" opacity=".72"/>');
+[["1-2","#efe9cf"],["3-4","#e6c86e"],["5-6","#de9c4c"],["7-9","#d06c3e"],["10-12","#ad423c"],["14-16","#7a2f55"]].forEach(function(t,k){o.push('<circle cx="'+(8+k*52)+'" cy="0" r="5.5" fill="'+t[1]+'" stroke="#20231c"/><text x="'+(17+k*52)+'" y="4" font-size="10.5" fill="#fbf7ea">'+t[0]+'</text>')});
+o.push('<text x="2" y="24" font-size="10.5" fill="#fbf7ea">camp level; a diamond is a named mob\'s den</text>');
+o.push('<line x1="2" y1="46" x2="127" y2="46" stroke="#fbf7ea" stroke-width="2"/><line x1="2" y1="41" x2="2" y2="51" stroke="#fbf7ea" stroke-width="2"/><line x1="127" y1="41" x2="127" y2="51" stroke="#fbf7ea" stroke-width="2"/><text x="136" y="50" font-size="10.5" fill="#fbf7ea">500 m, 1 min 40 s at a run</text></g>');
+o.push('<g transform="translate(930,80)"><polygon points="0,-26 8,6 0,0 -8,6" fill="#fbf7ea" stroke="#20231c"/><text x="0" y="22" font-size="12" text-anchor="middle" fill="#fbf7ea" font-weight="600" stroke="#20231c" stroke-width="2.4" paint-order="stroke">N</text></g>');
+o.push('</svg>');
+document.getElementById('map').innerHTML=o.join('');
+
+// profiles
+var we=[[-2000,150],[-1900,122],[-1740,108],[-1650,100],[-1600,72],[-1560,58],[-1480,60],[-1400,76],[-1340,95],[-1200,60],[-1050,25],[-900,5],[-800,0],[900,0],[1000,8],[1130,20],[1260,8],[1350,0],[1449,0],[1451,60],[1880,60],[1920,100],[2000,150]];
+var sn=[[-2000,150],[-1900,90],[-1800,32],[-1620,30],[-1400,28],[-1250,5],[-1100,0],[-900,5],[-780,25],[-660,4],[-560,0],[440,0],[480,10],[540,2],[600,10],[650,0],[1050,5],[1110,18],[1250,3],[1390,22],[1600,35],[1850,60],[1920,100],[2000,150]];
+var ridge=[[790,0],[820,62],[900,70],[980,62],[1010,0]];
+function prof(pts,base){return pts.map(function(p){return (500+p[0]*S)+','+(base-p[1]*0.5)}).join(' ')}
+var p=['<svg viewBox="0 0 1000 300" role="img" aria-label="West to east and south to north elevation profiles">'];
+function lab(x,y,s,a){p.push('<text x="'+x+'" y="'+y+'" font-size="11" text-anchor="'+(a||"middle")+'" fill="currentColor">'+s+'</text>')}
+[[we,120,"West to east, through the town"],[sn,270,"South to north, along the roads"]].forEach(function(r,k){var b=r[1];
+ p.push('<polygon points="0,'+b+' '+prof(r[0],b)+' 1000,'+b+'" fill="#7b6c57" opacity=".8"/><line x1="0" y1="'+b+'" x2="1000" y2="'+b+'" stroke="currentColor" stroke-opacity=".4"/>');
+ p.push('<line x1="450" y1="'+(b+7)+'" x2="550" y2="'+(b+7)+'" stroke="#c9a227" stroke-width="3"/>');
+ p.push('<text x="4" y="'+(b-104)+'" font-size="12" font-weight="600" fill="currentColor">'+r[2]+'</text>');
+ if(k==1){p.push('<polyline points="'+prof(ridge,b)+'" fill="none" stroke="currentColor" stroke-dasharray="4 3" stroke-opacity=".8"/>')}});
+lab(65,62,"Ossuary");lab(130,104,"barrow pit");lab(500,112,"town");lab(782,104,"spiders' rise");lab(916,82,"Wraith Gate plateau");lab(857,112,"60 m cliff","end");
+lab(120,246,"war camp shelf");lab(305,250,"old rocks");lab(500,262,"town");lab(635,254,"Bat Hollow");lab(725,228,"ridge (dashed), the road takes the pass");lab(812,254,"crypt bowl");lab(925,236,"Greywood");
+lab(500,142,"gold bar: today's 400 m world");
+p.push('</svg>');
+var pe=document.getElementById('prof');pe.style.color='var(--fg)';pe.innerHTML=p.join('');
+
+// table
+var rows=camps.map(function(c){var d=Math.round(Math.hypot(c[3],c[4])/10)*10,s=Math.round(d/5),m=Math.floor(s/60),q=s%60;
+ return '<tr><td>'+c[0]+'</td><td class="n">'+c[1]+'</td><td class="n">'+c[2]+' m</td><td class="n">'+d.toLocaleString()+' m</td><td class="n">'+m+' min '+(q<10?'0':'')+q+' s</td></tr>'});
+document.getElementById('rows').innerHTML=rows.join('');
+})();
+</script>

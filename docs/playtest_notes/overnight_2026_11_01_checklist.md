@@ -9,15 +9,19 @@ into one module per step; nothing should behave differently) and the client's
 a regression sweep of ordinary play, since a split that changes nothing has nothing new to
 show; §3 is what the client removal changes on screen.
 
+> **Run through `bump_build_master_checklist.md` (2026-11-06):** §2 and §3's rows are in the
+> master in sitting order, each tagged `O2.n` / `O3.n` by its row number here. Fill the master;
+> the marks are copied back here.
+
 | Thing | Where | Notes |
 |---|---|---|
 | The `world health` line | `journalctl -u projectdawn \| grep "world health"` | once a minute while anyone is in the world: `ticks` (about 1,200), `p50_ms`, `p99_ms`, `max_ms`, `over_budget` (ticks past 50 ms), `checkpoint_max_ms` |
 | A script error on the client | the in-game console (backtick) | red lines; there should be none all evening |
 
 ## Setup
-- [ ] §1: the R720 at the deploy branch's newest build (boot line `build=`, `dev_cmds=false`). notes:
-- [ ] §2 and §3: the bump-day redeploy and the export from the merged branches (the login screen's build stamp). notes:
-- [ ] Two seats for the group rows (two-boxing works); a GM account for the Test Panel rows. notes:
+- [x] §1: the R720 at the deploy branch's newest build (boot line `build=`, `dev_cmds=false`). notes: [11-05 deploy's boot line `build="267065f" dev_cmds=false`, no restart since; the 11-06 and 11-09 sittings ran on it.]
+- [x] §2 and §3: the bump-day redeploy and the export from the merged branches (the login screen's build stamp). notes: [the 11-05 redeploy (`267065f`) and the export of `df4f29c` (game files identical to the `da83ea8` zip's), both seats, 11-06 and 11-09.]
+- [x] Two seats for the group rows (two-boxing works); a GM account for the Test Panel rows. notes: [11-09: two seats (account 1 and the GM account 2), parts D and E of the master.]
 
 ## 1 — The world health line (one seat, after the redeploy)
 - [x] **Log in and play for three minutes** → three `world health` lines, about 1,200 `ticks` each, `over_budget=0` (or a handful), `players_in_world=1`. notes:
@@ -37,15 +41,15 @@ show; §3 is what the client removal changes on screen.
 > `ERROR` line and no panic (`grep -E "ERROR|panic"` from the 16:24 boot). The turning note is
 > expected: facing reaches the server on the bump day.]
 - [x] **Two seats enter the world** → each sees the other, moves and turns. notes: Characters do NOT see eachother turn/spin.
-- [x] **Melee a camp mob to death, loot the corpse** → swings land, the kill pays XP, the loot window takes items. notes:
-- [x] **Cast a heal and a nuke; let one fizzle or get interrupted** → mana and lines as before. notes:
-- [x] **Group the two seats, kill a mob** → the XP share and the group panel bars. notes:
-- [x] **Buy from Brom, sell to him, deposit at the bank and withdraw** → coins and items move as before. notes:
-- [x] **Trade an item between the seats** → the commit lands on both. notes:
-- [x] **Die, respawn, loot the corpse** → gear goes back on. notes:
-- [x] **/camp one seat, close the other with the window X** → the camp logs out; the other lingers about 30 s, as before. notes:
-- [x] **The journal over the sitting** → no `ERROR` line and no panic. notes:  I forgot to start the log.  Let me know how to handle this.
-- [ ] **Read a few journal lines from the sitting** → a line logged while a player's message is handled starts `client{char_id=N account_id=M}:`, and a buy, sell, bank or loot line names the player `char_id=N` (it said `owner=N` or `caster=N` before 2026-11-02). notes:
+- [x] **Melee a camp mob to death, loot the corpse** → swings land, the kill pays XP, the loot window takes items. notes: [11-09, the bump build (master O2.2): PASS.]
+- [x] **Cast a heal and a nuke; let one fizzle or get interrupted** → mana and lines as before. notes: [11-09 (master O2.3): PASS; the journal shows fizzles and interrupts charging as designed.]
+- [x] **Group the two seats, kill a mob** → the XP share and the group panel bars. notes: [11-09, the bump build (master O2.4): PASS; the journal 17:24 to 18:40 UTC: every kill credit from 17:44 `pool=315 per_member=157 members=2`.]
+- [x] **Buy from Brom, sell to him, deposit at the bank and withdraw** → coins and items move as before. notes: [11-06, the bump build (master O2.5): PASS.]
+- [x] **Trade an item between the seats** → the commit lands on both. notes: [11-09 (master O2.6): PASS; the journal: `trade committed a=43 b=36 a_stacks=7` at 17:45:58.]
+- [x] **Die, respawn, loot the corpse** → gear goes back on. notes: [11-09 (master O2.7): PASS; the journal: corpse 2000000049, seven stacks, six put back on at the loot.]
+- [x] **/camp one seat, close the other with the window X** → the camp logs out; the other lingers about 30 s, as before. notes: [11-09 (master O2.8): PASS, the X seat seen standing until it vanished at 30 s; the journal: char 36's X at 18:39:47, `linkdead — body lingers (vulnerable) before reap ... linger_secs=30`, reaped 18:40:17; char 38's `camp window elapsed — client logs out` 18:40:58.]
+- [x] **The journal over the sitting** → no `ERROR` line and no panic. notes:  I forgot to start the log.  Let me know how to handle this. [11-09 (master O2.9): PASS over both sittings, 15:21 to 16:17 and 17:24 to 18:40 UTC, pulled from the R720's journal afterwards (there is nothing to start): no `ERROR`, `WARN` or panic.]
+- [x] **Read a few journal lines from the sitting** → a line logged while a player's message is handled starts `client{char_id=N account_id=M}:`, and a buy, sell, bank or loot line names the player `char_id=N` (it said `owner=N` or `caster=N` before 2026-11-02). notes: [11-09 (master O2.10): PASS; `INFO client{char_id=48 account_id=2}: ...handlers: spell memorized char_id=48 gem=6 spell=Resurrection (Minor)`, and `corpse loot put worn gear back on corpse_id=2000000076 char_id=36 reequipped=6`.]
 
 ## 3 — The client without the offline game (after the export)
 > [Claude, 11-02: run on the `feat/facing` export (`f2ed345`), which still carries the offline
@@ -53,15 +57,15 @@ show; §3 is what the client removal changes on screen.
 > These rows are run again on the bump-day export. The levels note is filed in the To-Do (UI
 > polish, "Other players' levels"); the Healing Light note waits on a screenshot (both sides list
 > it at 10 mana and nothing on the client changes the cost).]
-- [x] **The login screen** → no Offline button. notes:
-- [x] **The lobby** → the character list and Enter World only (no Solo, Host, Join, Test Room, Test Dungeon or Delete Save). Create a character from it as usual. notes:
-- [x] **Grouped with the second seat, look at the group panel** → your own row is marked as you on both seats, and the leader sees the kick and leadership controls on the other member's row, not their own (online both used to key on whichever member had character id 1). notes:  We cant currently see eachother's levels in game.  But you probably already know that.
-- [x] **A pet class: summon a pet, attack a mob, watch the console** → the pet fights; no red line on each hit (online it used to error on every mob hit). notes:
-- [x] **The Test Panel (GM): Spawn Normal, Spawn Named, Despawn All, a GEAR give, Give 1,000 Copper, a faction slider, Take 20 dmg, Full Heal, Trigger Death** → each works as before. The removed buttons (the CHARACTER section, STATS OVERRIDE, ZONE TRAVEL, God Mode, No Cooldowns, Clear All Buffs) are gone. notes:
-- [x] **Open a bag window** → no Destroy button in it; destroying still works by holding the item over the inventory's trash cell. notes:  Destroy button still visible in the bag, destroy button doesnt work.
-- [x] **Eat by hand, drink by hand, sit to regen, sing a song (a Bard)** → all as before; the regen and buff bars follow the server. notes:
-- [x] **/dismount** → not a command any more (nothing can be mounted online). notes:
-- [x] **The console over the whole sitting** → no red script error. notes: Not that i saw.
+- [x] **The login screen** → no Offline button. notes: [11-06, the bump export (master O3.1): PASS.]
+- [x] **The lobby** → the character list and Enter World only (no Solo, Host, Join, Test Room, Test Dungeon or Delete Save). Create a character from it as usual. notes: [11-06, the bump export (master O3.2): PASS.]
+- [x] **Grouped with the second seat, look at the group panel** → your own row is marked as you on both seats, and the leader sees the kick and leadership controls on the other member's row, not their own (online both used to key on whichever member had character id 1). notes:  We cant currently see eachother's levels in game.  But you probably already know that. [11-09, the bump export (master O3.3): PASS.]
+- [x] **A pet class: summon a pet, attack a mob, watch the console** → the pet fights; no red line on each hit (online it used to error on every mob hit). notes: [11-09, the bump export (master O3.4): PASS.]
+- [x] **The Test Panel (GM): Spawn Normal, Spawn Named, Despawn All, a GEAR give, Give 1,000 Copper, a faction slider, Take 20 dmg, Full Heal, Trigger Death** → each works as before. The removed buttons (the CHARACTER section, STATS OVERRIDE, ZONE TRAVEL, God Mode, No Cooldowns, Clear All Buffs) are gone. notes: [11-06, the bump export (master O3.5): PASS.]
+- [x] **Open a bag window** → no Destroy button in it; destroying still works by holding the item over the inventory's trash cell. notes:  Destroy button still visible in the bag, destroy button doesnt work. [11-06, the bump export (master O3.6): the button is gone, PASS.]
+- [x] **Eat by hand, drink by hand, sit to regen, sing a song (a Bard)** → all as before; the regen and buff bars follow the server. notes: [11-06, the bump export (master O3.7): eat, drink, sit and stand PASS; no Bard at the seat, the song not sung.]
+- [x] **/dismount** → not a command any more (nothing can be mounted online). notes: [11-06, the bump export (master O3.8): PASS.]
+- [x] **The console over the whole sitting** → no red script error. notes: Not that i saw. [11-09 (master O3.9), the bump build, two seats: "no red script".]
 
 ## Notes / observations
 - Mana Cost of Healing Light cost reduced from 10 to 8.

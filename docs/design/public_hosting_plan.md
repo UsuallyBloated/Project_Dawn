@@ -10,6 +10,13 @@
 > records resolves to its first IPv4 address, so the port forward's family is the one every
 > token names. Slice 0 is the user's, at their own router; nothing in this plan gives Claude
 > router access.
+> **Merged across the November bump 2026-11-06** (server `df46291`, client `daac86c`; the
+> pre-merge tips kept as `feat/public-hosting-pre-nov`): the branch carries the split, the
+> reformat, the lints and the height model. The restart for a moved address now rides the
+> clean-shutdown stop channel (`world::Stop::AddressChanged`, spawned from `main`) instead of
+> its own signal; the intent budgets classify every intent in an exhaustive match; the invites
+> migration is `0018`. Both suites and all 16 client checks green. The To-Do's public-host
+> entry has the detail.
 
 ## Context
 

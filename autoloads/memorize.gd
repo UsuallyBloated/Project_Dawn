@@ -125,12 +125,6 @@ func commit(slot: int) -> bool:
 	Net.memorize_start(slot, _commit_spell.spell_name)
 	return true
 
-func is_committing() -> bool:
-	return _committing
-
-func get_commit_spell() -> SpellData:
-	return _commit_spell
-
 func get_commit_slot() -> int:
 	return _commit_slot
 

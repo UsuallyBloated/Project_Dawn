@@ -51,6 +51,11 @@ func use_skill(skill: SkillData) -> bool:
 	if skill.target_type == SkillData.TargetType.ENEMY:
 		if not Combat.has_valid_target():
 			return false
+		# A bow skill needs an arrow in the ammo slot (the server refuses it
+		# before the stamina; asked here first so nothing is sent).
+		if skill.damage_multiplier > 0.0 and Combat.wields_ranged_weapon() and Equipment.ammo_count() <= 0:
+			CombatLog.add_line(Combat.NO_AMMUNITION_LINE, CombatLog.MsgType.INFO)
+			return false
 	# The server owns the skill (client-authority audit item 6): the stamina,
 	# the cooldown, the swing times the multiplier, and the effect. The checks
 	# above are an honest pre-flight; the cooldown below is drawn optimistically

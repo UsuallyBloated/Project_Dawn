@@ -56,6 +56,7 @@ func _export_begin(features: PackedStringArray, is_debug: bool, path: String, fl
 	# export time — the runtime UNSTAMPED banner is the real backstop.
 	if str(stamp.get("status", "")) == "ok":
 		var dirty := " DIRTY TREE" if bool(stamp.get("dirty", false)) else ""
-		print("[BuildStamp] stamped %s%s (%s)" % [stamp.get("commit", "?"), dirty, stamp["exported_at"]])
+		var debug := " DEBUG EXPORT" if is_debug else ""
+		print("[BuildStamp] stamped %s%s%s (%s)" % [stamp.get("commit", "?"), dirty, debug, stamp["exported_at"]])
 	else:
 		push_warning("[BuildStamp] UNSTAMPED export: %s" % stamp.get("reason", "unknown"))

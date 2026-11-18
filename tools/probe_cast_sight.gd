@@ -5,8 +5,10 @@ extends SceneTree
 # with the terrain moved away the cast is not refused for sight; and a body
 # on layer 1 alone (a mob, a corpse, another player) between them blocks
 # nothing, since the ray asks for the terrain layer only. Before the check the
-# first case went to the server, which refused it a round trip later. Exits 1
-# on any miss. Run:
+# first case went to the server, which refused it a round trip later. And what
+# stands on the ground blocks as the terrain does (obstacle collision): a wall
+# from the zone's obstacle data between the two refuses the cast, a solid
+# lower than the line does not. Exits 1 on any miss. Run:
 #   godot --headless --path . -s tools/probe_cast_sight.gd
 
 const SIGHT_LINE := "You cannot see your target."
@@ -38,6 +40,16 @@ func _wall(layer: int) -> StaticBody3D:
 	root.add_child(body)
 	return body
 
+# The zone's obstacle data as the game holds it, replaced by `prisms` (each
+# [base, top, corners]) for the probe: the real zone's town stands round the
+# origin, and the probe's line must cross only what the probe put there.
+func _stand(prisms: Array) -> void:
+	var floats := PackedFloat32Array()
+	for q in prisms:
+		floats.append_array(ZoneObstacles.encode_prism(3, q[0], q[1], 1.0, q[2]))
+	ZoneObstacles._shared = ZoneObstacles.from_bytes(ZoneObstacles.encode_file(prisms.size(), floats))
+	ZoneObstacles._shared_tried = true
+
 # Between cases: no global cooldown or spell cooldown left from the last.
 func _reset(spells) -> void:
 	spells._gcd_remaining = 0.0
@@ -46,6 +58,7 @@ func _reset(spells) -> void:
 func _run() -> void:
 	var spells = root.get_node("/root/Spells")
 	var combat = root.get_node("/root/Combat")
+	_stand([])
 	var refusals: Array[String] = []
 	spells.spell_failed.connect(func(reason: String) -> void: refusals.append(reason))
 	var cast_lines: Array[int] = [0]
@@ -95,6 +108,20 @@ func _run() -> void:
 	_check(spells.cast_spell(spell), "a body on layer 1 alone blocks nothing (%s)" % [refusals])
 	spells.cancel_cast()
 	body.free()
+	_reset(spells)
+
+	# What stands on the ground: a wall 4 m high across the line at x = 10.
+	var across := PackedVector2Array([Vector2(9.0, -6.0), Vector2(11.0, -6.0), Vector2(11.0, 6.0), Vector2(9.0, 6.0)])
+	_stand([[0.0, 4.0, across]])
+	refusals.clear()
+	_check(spells.cast_spell(spell) == false, "a cast with a wall of the zone's obstacles between is refused")
+	_check(refusals.has(SIGHT_LINE), "with the same line (%s)" % [refusals])
+	_reset(spells)
+	# The same outline half a metre high (a low rock): the line passes over it.
+	_stand([[0.0, 0.5, across]])
+	refusals.clear()
+	_check(spells.cast_spell(spell), "a solid lower than the line blocks nothing (%s)" % [refusals])
+	spells.cancel_cast()
 
 	print("")
 	quit(_fails)

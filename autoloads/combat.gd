@@ -11,6 +11,8 @@ signal auto_attack_toggled(on: bool)
 
 const MELEE_RANGE             := 3.0
 const RANGED_RANGE            := 25.0
+# The server's line for a bow with an empty quiver (`tick/melee.rs`).
+const NO_AMMUNITION_LINE      := "You have no ammunition."
 const EVASION_PER_AGI         := 0.005
 const EVASION_MAX             := 0.50
 const CRIT_PER_DEX            := 0.003
@@ -153,6 +155,14 @@ func _target_is_attackable() -> bool:
 
 func _sync_auto_attack_timer() -> void:
 	if is_auto_attacking and _target_is_attackable():
+		# Read both intervals fresh before the timers start: a Timer starts on
+		# whatever `wait_time` it holds, and the last fight's swings left the
+		# weapon of that fight in it. A weapon swapped with nothing targeted
+		# (so the equipment hook had no timer to re-time) then paced the next
+		# fight's first interval at the OLD weapon's, and the server dropped
+		# the second swing as too fast (one honest arrow lost, 2026-11-09).
+		_update_attack_interval()
+		_update_offhand_interval()
 		_auto_attack_timer.start()
 		if _is_dual_wielding():
 			_offhand_timer.start()
@@ -182,17 +192,17 @@ func can_dual_wield() -> bool:
 	return at > 0 and PlayerStats.level >= at
 
 func _on_equipment_changed(slot: String, _item) -> void:
-	if slot not in ["weapon", "offhand"] or current_target == null:
+	if slot not in ["weapon", "offhand"]:
 		return
 	# A weapon change re-times the swing from the change: the restarted
-	# timers run the NEW weapon's interval, so the first swing after a swap
-	# is a full interval of that weapon later, which is what the server's
-	# swing-rate limit holds it to (it reads the weapon worn at each swing
-	# and carries nothing across a swap; 2026-10-30). Dual-wield onset/offset
-	# honors the auto-attack toggle; re-syncing both timers keeps the main +
-	# offhand cadence consistent.
-	_update_attack_interval()
-	_update_offhand_interval()
+	# timers run the NEW weapon's interval (the sync reads it before starting
+	# them), so the first swing after a swap is a full interval of that weapon
+	# later, which is what the server's swing-rate limit holds it to (it reads
+	# the weapon worn at each swing and carries nothing across a swap;
+	# 2026-10-30). With nothing targeted the timers stay stopped and the next
+	# fight starts on the new interval. Dual-wield onset/offset honors the
+	# auto-attack toggle; re-syncing both timers keeps the main + offhand
+	# cadence consistent.
 	_sync_auto_attack_timer()
 
 func _on_player_died() -> void:
@@ -236,6 +246,14 @@ func _on_auto_attack() -> void:
 		CombatLog.add_line("Target is out of range.", CombatLog.MsgType.INFO)
 		_update_attack_interval()
 		return
+	# A bow needs an arrow in the ammo slot (the server's rule, 2026-11-13):
+	# with none there is no shot and nothing is sent, said at the swing cadence
+	# as the range line is. The server refuses the same way for a client that
+	# sends anyway.
+	if is_ranged_weapon and Equipment.ammo_count() <= 0:
+		CombatLog.add_line(NO_AMMUNITION_LINE, CombatLog.MsgType.INFO)
+		_update_attack_interval()
+		return
 	# The server rolls the miss (combat.rs): every swing goes out, and a miss
 	# comes back as a Miss (RemotePlayerManager draws it).
 	deal_damage_to_target(calc_damage())
@@ -247,6 +265,11 @@ func _on_auto_attack() -> void:
 	# rolls or sends the proc (the old client-sent proc Attack double-hit and is
 	# dropped by the swing-rate limit anyway).
 	_update_attack_interval()
+
+# Whether the main hand holds a bow: a shot needs an arrow.
+func wields_ranged_weapon() -> bool:
+	var weapon: ItemData = Equipment.equipped.get("weapon")
+	return weapon != null and weapon.is_ranged
 
 func _get_weapon_delay() -> float:
 	var weapon: ItemData = Equipment.equipped.get("weapon")

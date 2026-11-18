@@ -37,9 +37,9 @@ addons/gdext_net/*.pdb
 .claude/skills/security-software/
 .claude/skills/typesafe-ai/
 
-# Host runbooks, kept out of git by decision (they hold host details and test
-# account passwords); see the To-Do "Docs debt" entry.
-docs/deployment/
+# The host runbooks are tracked since 2026-11-13 (user); a test-account credential
+# file, if one is ever written again, stays out by name.
+docs/deployment/test_accounts.md
 
 # The harness makes a worktree per agent here (the tick-split and offline-removal
 # builds ran in one); a registered worktree, never content to commit.

@@ -14,11 +14,12 @@ extends SceneTree
 #   DRIFT     the grid, the origin, the floor, a height or the hash differs
 #             between the scene and the TOML (a scene edit nobody exported, or
 #             a hand-edited TOML).
-#   COLLIDER  the scene's TerrainCol triangles are not the triangles its
-#             heights make (the mesh was edited and never rebuilt, so the
-#             client walks on an older ground than it draws or exports), or a
-#             triangle faces down (wound the wrong way: the ground is culled
-#             from above and a body sinks into the one-sided collider).
+#   COLLIDER  the colliders TerrainMesh builds from the scene's heights are not
+#             the triangles those heights make (a cell missing, doubled or split
+#             on the other diagonal, so the client walks on a ground the server
+#             does not sample), or a triangle faces down (wound the wrong way:
+#             the ground is culled from above and a body sinks into the
+#             one-sided collider).
 #   NPC       an NPC in the server's npcs.toml has no node in the scene, stands
 #             somewhere else in XZ, or does not stand on the ground (5 cm).
 #
@@ -70,7 +71,7 @@ func _initialize() -> void:
 
 	if problems.is_empty():
 		var heights: PackedFloat32Array = scene["heights"]
-		print("Terrain in lockstep: %d heights (%dx%d cells of %s m, floor %s), the collider rebuilt, %d NPCs on the ground." % [
+		print("Terrain in lockstep: %d heights (%dx%d cells of %s m, floor %s), the colliders built from them, %d NPCs on the ground." % [
 			heights.size(), scene["grid_size"], scene["grid_size"], str(scene["cell_size"]), str(scene["floor_y"]), npcs.size()])
 		quit(0)
 		return
@@ -117,48 +118,79 @@ func _check_hash(scene: Dictionary, toml: Dictionary, problems: Array[String]) -
 		problems.append("DRIFT hash: the scene's ground hashes to %s, the server file says %s (a hand edit, or a stale export)" % [want.substr(0, 12), got.substr(0, 12)])
 
 
-# The collider the client walks on must be the triangles its heights make, in
-# the order TerrainMesh._rebuild emits them (two per cell, split from (x1, z0)
-# to (x0, z1)); otherwise the scene draws and exports one ground and collides
-# with another. And every triangle must face up: Godot's front face is the one
-# its corners run clockwise round, its normal (c - a) x (b - a), and a
-# trimesh collides on its front side only.
+# The colliders the client walks on must be the triangles its heights make:
+# two per cell, split from (x1, z0) to (x0, z1), each exactly once, whatever
+# chunk it was built in. The game's own TerrainMesh is built from the scene's
+# heights and every triangle of every chunk's collider is placed in its cell
+# and held to that cell's corners. And every triangle must face up: Godot's
+# front face is the one its corners run clockwise round, its normal
+# (c - a) x (b - a), and a trimesh collides on its front side only.
 func _check_collider(scene: Dictionary, problems: Array[String]) -> void:
-	var data: PackedVector3Array = scene["collider"]
 	var gs: int = scene["grid_size"]
 	var cell: float = scene["cell_size"]
 	var heights: PackedFloat32Array = scene["heights"]
+	var node := Exporter.build_terrain(scene)
+	var data: PackedVector3Array = node.collider_faces()
+	node.free()
 	if data.is_empty():
-		problems.append("COLLIDER the scene's TerrainCol has no triangles: open the scene so TerrainMesh rebuilds, then save it")
+		problems.append("COLLIDER TerrainMesh built no collider triangles from the scene's heights")
 		return
 	var want := gs * gs * 6
 	if data.size() != want:
-		problems.append("COLLIDER the scene's TerrainCol has %d vertices, its heights make %d: rebuild the mesh and save the scene" % [data.size(), want])
+		problems.append("COLLIDER TerrainMesh built %d collider vertices, the heights make %d" % [data.size(), want])
 		return
 	var half := gs * cell * 0.5
 	var row := gs + 1
+	var seen := PackedByteArray()
+	seen.resize(gs * gs * 2)
 	var differing := 0
-	var i := 0
-	for z in gs:
-		for x in gs:
-			var corners := [
-				Vector2i(x, z), Vector2i(x + 1, z), Vector2i(x, z + 1),
-				Vector2i(x + 1, z), Vector2i(x + 1, z + 1), Vector2i(x, z + 1),
-			]
-			for c in corners:
-				var expect := Vector3(-half + c.x * cell, heights[c.y * row + c.x], -half + c.y * cell)
-				if not data[i].is_equal_approx(expect) and data[i].distance_to(expect) > EPSILON:
-					differing += 1
-					if differing <= MAX_LISTED:
-						problems.append("COLLIDER vertex %d is %s, the heights make %s" % [i, data[i], expect])
-				i += 1
-	if differing > MAX_LISTED:
-		problems.append("COLLIDER ... and %d more vertices differ (rebuild the mesh and save the scene)" % (differing - MAX_LISTED))
+	var misplaced := 0
+	var doubled := 0
 	var facing_down := 0
 	for t in range(0, data.size(), 3):
 		var a := data[t]
-		if (data[t + 2] - a).cross(data[t + 1] - a).y <= 0.0:
+		var b := data[t + 1]
+		var c := data[t + 2]
+		if (c - a).cross(b - a).y <= 0.0:
 			facing_down += 1
+		# The cell is the one the triangle's lowest corner on each axis is in;
+		# the upper triangle is the one whose corners sum past that corner by 4
+		# cell sides (the lower one's by 2).
+		var min_x := minf(a.x, minf(b.x, c.x))
+		var min_z := minf(a.z, minf(b.z, c.z))
+		var cx := int(round((min_x + half) / cell))
+		var cz := int(round((min_z + half) / cell))
+		if cx < 0 or cz < 0 or cx >= gs or cz >= gs:
+			misplaced += 1
+			continue
+		var spread := (a.x + b.x + c.x - 3.0 * min_x + a.z + b.z + c.z - 3.0 * min_z) / cell
+		var upper := 1 if spread > 3.0 else 0
+		var corners: Array
+		if upper == 0:
+			corners = [Vector2i(cx, cz), Vector2i(cx + 1, cz), Vector2i(cx, cz + 1)]
+		else:
+			corners = [Vector2i(cx + 1, cz), Vector2i(cx + 1, cz + 1), Vector2i(cx, cz + 1)]
+		var got := [a, b, c]
+		for k in 3:
+			var corner: Vector2i = corners[k]
+			var expect := Vector3(-half + corner.x * cell, heights[corner.y * row + corner.x], -half + corner.y * cell)
+			if got[k].distance_to(expect) > EPSILON and not got[k].is_equal_approx(expect):
+				differing += 1
+				if differing <= MAX_LISTED:
+					problems.append("COLLIDER a triangle's corner in cell (%d, %d) is %s, the heights make %s" % [cx, cz, got[k], expect])
+		var slot := (cz * gs + cx) * 2 + upper
+		if seen[slot] == 1:
+			doubled += 1
+		seen[slot] = 1
+	if differing > MAX_LISTED:
+		problems.append("COLLIDER ... and %d more corners differ" % (differing - MAX_LISTED))
+	if misplaced > 0:
+		problems.append("COLLIDER %d triangles lie outside the grid" % misplaced)
+	if doubled > 0:
+		problems.append("COLLIDER %d triangles were built twice" % doubled)
+	var missing := seen.count(0)
+	if missing > 0:
+		problems.append("COLLIDER %d of the %d triangles the heights make have no collider" % [missing, seen.size()])
 	if facing_down > 0:
 		problems.append("COLLIDER %d of %d triangles face down (wound the wrong way round)" % [facing_down, data.size() / 3])
 

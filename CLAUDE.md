@@ -125,7 +125,7 @@ client fix is not live until they have a fresh build.
 **Every export is stamped automatically** by `addons/build_stamp`, which derives the commit from
 git at export time and injects it into the build. Nothing to remember and nothing to bump by hand.
 A tester's build identifies itself three ways: bottom-right on the login screen, in the `debug.log`
-header, and via `/version`. Two things worth knowing:
+header, and via `/version`. Three things worth knowing:
 - **`UNSTAMPED BUILD` in red on the login screen means the addon is disabled.** Godot silently
   disables an addon whose script fails to load, and rewrites `project.godot` to match, so the
   `[editor_plugins]` enable line must stay committed. A build that can't identify itself is a
@@ -133,6 +133,10 @@ header, and via `/version`. Two things worth knowing:
 - **The stamp fingerprints `gdext_net.dll` separately** from the commit sha, because the DLL is
   gitignored and hand-copied into `builds/`. A client on a clean commit can still carry a stale
   wire layer, which presents as a server bug.
+- **`-debug` after the sha (amber on the login screen) means a DEBUG export.** The editor's
+  Export dialog ticks "Export With Debug" by default; the command on record uses
+  `--export-release`. The game files are identical and the engine is the debug one; never send
+  one (found 2026-11-06, when a debug export read as a normal build).
 
 > Don't modify anything above `F:\Projects\`.
 
@@ -222,7 +226,9 @@ Keep the main model for design, code, and any exploit or verification work.
   ZERO drift. *(The check used to excuse Bard songs' damage and heal fields because their
   pulses were client-side; since the song rework of 2026-10-20 the server carries every song
   field and the exception is gone. Recounted then: 158 client, 142 server, 16 client-only,
-  zero drift.)*
+  zero drift.)* *(Recounted 2026-11-10 with the check: 158 client, 149 server, **9
+  client-only** (the seven zone ports, Exsanguinate, Camouflage), zero drift; the seven
+  prestige spells and the two DoTs joined the server with factions and the spell batch.)*
   `tools/export_spells.gd` (Godot editor) is the intended regen path but is stale.
 - *(Closed 2026-06-22: leveling used to be client-local and provisional. The corpse epic's
   Slice 0 moved XP + leveling server-side — `world/progression.rs::award_xp` is the single
@@ -362,11 +368,11 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
 |---|---|
 | **Progression** | `PlayerStats`, `Alignment`, `Skills`, `Spells`, `WeaponSkills`, `ArmorSkills`, `CastingSkills`, `Memorize`, `SpellBar`, `Regen`, `CharacterSetup` |
 | **Combat** | `Combat`, `BuffManager`, `DamageNumbers`, `PlayerDeath`, `Targeting`, `Loot`, `NetCombatBroadcaster` |
-| **Items / economy** | `Inventory`, `Equipment`, `ItemRegistry`, `VendorManager`, `Crafting`, `StationManager`, `Currency`, `Encumbrance` |
+| **Items / economy** | `Inventory`, `Equipment`, `ItemRegistry`, `VendorManager`, `BankerManager`, `Crafting`, `StationManager`, `Currency`, `Encumbrance` |
 | **Pets / mounts** | `PetManager`, `MountManager` |
 | **World / environment** | `ZoneLoader`, `TimeOfDay`, `VisionSystem`, `SenseHeading` |
 | **Social / quest / UI** | `GroupManager`, `QuestManager`, `DialogueManager`, `CombatLog`, `ChatWindowManager`, `BardSongs`, `Languages`, `SocialHotkeys`, `GameSettings`, `DebugLog` |
-| **Networking (client)** | `Net`, `RemotePlayerManager`, `RemoteEnemyManager`, `RemoteLootBagManager`, `RemotePetManager` |
+| **Networking (client)** | `AuthClient`, `Net`, `RemotePlayerManager`, `RemoteEnemyManager`, `RemoteLootBagManager`, `RemoteCorpseManager`, `RemotePetManager` |
 
 Per-autoload responsibilities and the combat/spell deep dive live in
 `docs/concepts/architecture/systems_overview.md`.
@@ -386,7 +392,6 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 | `data/quest_definitions.gd` | Quest id → objectives, rewards, giver/turn-in NPC |
 | `data/named_mob_definitions.gd` | Boss/named-mob stats, enrage, guaranteed/rare drops |
 | `scripts/spell_data.gd` / `item_data.gd` / `skill_data.gd` | Resource classes |
-| `scripts/mobile_character.gd` | Base for `enemy.gd` + `pet.gd` (shared movement) |
 | `autoloads/passive_skill_tracker.gd` | Base for `WeaponSkills` / `ArmorSkills` / `CastingSkills` |
 
 ---
@@ -394,7 +399,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 ## Where things are documented
 
 - **Current plan, dates & sequencing** → `docs/schedule.md` — the push to a playable friends
-  build (target **2026-11-12**, slipped from 09-14 on 09-09, from 10-05 on 09-27, then from 11-08 on 11-05), with the phases, the critical path, and the velocity the estimates
+  build (target **2026-11-19**, slipped from 09-14 on 09-09, from 10-05 on 09-27, from 11-08 on 11-05, then from 11-12 on 11-13), with the phases, the critical path, and the velocity the estimates
   are measured against. **There is one checkbox list in this project and it's the To-Do below.**
   The schedule holds no boxes: its per-phase bullets are the plan, and its status table is just a
   progress readout of what the To-Do already says. (Restructured 2026-09-09: the schedule's
@@ -601,7 +606,11 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   ALLY heal cast with an enemy targeted should route to the enemy's target (the EQ assist-heal
   pattern) instead of failing on the target type. Server cast resolver change plus the client's
   target-of-target frame as the visible hint.
-- [ ] **Held-item bank and vendor interactions** *(cursor design's carried open question,
+- [x] **Held-item bank and vendor interactions** — **DONE + playtested 2026-11-06 and 11-09**
+  (`held_item_bank_and_vendor_checklist.md`, all 19 rows: every bank and merchant row on 11-06,
+  the `admin_report` card balanced on 11-09; what exists is in systems_overview, Items, "A held
+  item at the bank and the merchant". The three asks from the notes are the vault entry
+  directly below.) *(Original entry:)* *(cursor design's carried open question,
   `cursor_slot_and_reequip.md` §Open questions; audit 2026-09-29)*. Deposit-from-cursor and
   sell-from-cursor were deferred ("place it first"). `SlotRef` has no cursor variant, so both
   are small wire additions plus the `destroy_at`-style guard for a held full bag.
@@ -630,7 +639,35 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Not built: a drag gesture onto the vault (the held item follows the mouse, so the click is
   the drop); eating from the hand has the wire arm and no client affordance. **DEPLOYED
   2026-11-05 with the November bump** (server `267065f`, client `da83ea8`);
-  `held_item_bank_and_vendor_checklist.md` is runnable now.
+  `held_item_bank_and_vendor_checklist.md` is runnable now. **Part A of the master sheet run
+  2026-11-06: 16 of 19 rows PASS** (every bank and merchant row; `admin_report` and the setup
+  rows wait for the end of the sitting). **The last three rows PASSED 2026-11-09** (the card:
+  the books balance over 759 rows, the sitting's `bank_out` and `sell` rows present). Three
+  asks from the notes are the entry directly below.
+- [ ] **The vault in the cursor grammar: lift from the vault, swap on an occupied cell, bags in
+  the bank** *(user, 2026-11-06, on the held-item sheet's rows B1.1, B1.4 and B1.6)*. (a) "I
+  cannot lift a stack of loaves onto the cursor if the loaves are in the vault": a left click on
+  a vault item with an empty hand should lift it, as a bag cell does. `BankWithdrawItem` names a
+  vault slot and no destination (the server places into the bags through the real placer), so it
+  is a wire change (a destination on the intent, or a withdraw-to-cursor intent), the next bump.
+  (b) "I would prefer the items swapped" when the held item is clicked onto an occupied cell:
+  `BankStoreItem` names a vault, not a slot (the server merges, then picks a free slot), so a
+  swap is a slot-targeted store plus the withdraw-to-cursor in ONE step; the same bump. (c) "We
+  need to allow bags in the bank": the server refuses any bag-typed item from anywhere
+  (`tick/banking.rs`, the MVP rule, empty or not) and the client refuses first. An EMPTY bag is
+  small (lift both refusals; no wire change, an export). A bag WITH contents needs the bags map
+  keyed to vault slots (as `CURSOR_BAG_KEY` did for the hand), its contents left out of
+  encumbrance while banked, and a bank UI that opens a banked bag: EQ's bank held bags and
+  opened them. **Decisions (user):** empty bags only or full bags; whether (a) and (b) ride the
+  next bump. Exploit lens: every move stays a server move through the placer, and a swap must be
+  one transaction (never a withdraw that lands beside a store that refuses, leaving two copies or
+  none). **DECIDED 2026-11-09 (user): FULL bags in the bank ("It is by this method the player can
+  expand their vault size": a banked bag's slots are the vault's extra room, EQ's model), and all
+  three ride the next bump.** For the build: the bags map keyed to vault slots as the hand's
+  `CURSOR_BAG_KEY` is, a bag-in-bag ban in the vault as in the bags, the banked contents out of
+  encumbrance, every vault move (store, withdraw, lift, swap) through the placer in one
+  transaction with the ledger rows, the death strip and the NO DROP rule unchanged (a banked bag
+  is the owner's, like the vault), and the bank window opening a banked bag.
 - [ ] **No-drop / no-trade item flag** *(flagged in `inventory_interaction_grammar.md` §8 and by
   the trade design's ledger, which explicitly has no rule "until itemization grows one"; audit
   2026-09-29)*. `ItemData` carries no binding flag; the two account-shared bank slots and the
@@ -648,7 +685,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   lockstep-checked), set on conjured bread and water; every departure stamps
   `characters.logged_out_at`; at the next login 30 minutes or more later the server removes
   every NO RENT stack (inventory, worn, bags, the cursor, both bank vaults); the tooltip leads
-  with "NO RENT". Test: 31 minutes away loses the conjured bread, 10 minutes keeps it, an
+  with "NO RENT" (**seen live 2026-11-09**: the ledger's first `no_rent` row, a Conjured Water
+  removed from NERCO at a login 605,705 s after the logout, in the `admin_report` run after
+  the master sheet's parts D and E). Test: 31 minutes away loses the conjured bread, 10 minutes keeps it, an
   ordinary loaf is never touched, logout stamps the time. **The no-drop / no-trade binding flag
   this entry is about is still open**; NO RENT was the part decided.
   **Rule DECIDED 2026-10-19 (user):** no-drop / no-trade is for items made only for a quest,
@@ -931,7 +970,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   taxes** (user idea 2026-06-18, "revisit later", sparked by the Banker fee mechanic) and a
   **mail system** (server_design.md open question 6, "defer until requested").
 - [ ] **Language system wiring** — `hear_language()` passive gain not yet called from the
-  chat-receive path; needs multiplayer chat RPC + trainer NPCs
+  chat-receive path; needs multiplayer chat RPC + trainer NPCs. (`hear_language`, `garble`
+  and `grant_language` have no caller yet and are kept on purpose, user call 2026-11-18:
+  unfinished, not dead.)
 - [x] **Quest reward item follow-ups** — **STALE ENTRY, CORRECTED + TICKED 2026-10-02: both
   halves were done and playtested, and this entry never caught up.** (a) The **Tarnished
   Silver Ring's AGI +1 not applying** was fixed on 2026-07-14 (client `b1df906`, "Gear stat
@@ -1065,7 +1106,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`); **§1 PASSED 2026-11-02**
   (two seats: about 1,200 ticks a minute, `over_budget=0`, the median tick 0.5 to 0.8 ms and the
   worst 13.3 ms, one checkpoint a minute at 3 to 13 ms, no line once both had logged out). §2
-  and §3 were marked the same day on the pre-bump builds and are run again after the bump. (2) **Phase 2's split BUILT** on server `refactor/tick-split` (from
+  and §3 were marked the same day on the pre-bump builds and are run again after the bump.
+  **Rerun on the bump build 2026-11-06 and 11-09 (the master sheet): every §2 and §3 row
+  PASS** but the console row's rerun, which waits on the tester's word. (2) **Phase 2's split BUILT** on server `refactor/tick-split` (from
   `feat/facing`, eight commits, the suite green after each: 350 unit, 161 world tests):
   `tick.rs`'s 13,820 lines are `tick/`, `run` about 330 lines calling 23 step modules in the
   order they always ran, `WorldState` and `Intents` in `state.rs`, 5 modules of shared rules;
@@ -1113,6 +1156,21 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   sheets (`overnight_2026_11_01_checklist.md` §2 and §3 among them) and a second pre-door check
   follow before the last zip goes out.
   Status per finding: the findings doc's §5.
+  **The cross-over audit of 2026-11-17** (user: confirm "no cross-overs or trips" after the ten
+  parallel-session pieces since the bump; plan `docs/security/crossover_audit_plan_2026_11_17.md`,
+  findings `crossover_audit_2026_11_17.md`): every code seam read clean; the trips were records
+  (fixed the same night: the overview's compass line, the runbook's boot line, the Test Panel
+  list, the author tool's "Next" line); three flaky tests found by a ten-run loop and made
+  deterministic (test code only). Open from it: the hosting branch's merge-forward, the eleven
+  worktrees at merged tips, the planner republish, and the fuzz and live-roamers hours. The
+  companion structure assessment (`docs/design/code_structure_assessment_2026_11_17.md`) has six
+  ranked recommendations; **R1 DONE 2026-11-18** (20 dead client functions deleted, five kept
+  on the user's read as unfinished, the floating XP toggle wired instead; client `9f6c775` +
+  `5940a0b`) and **R2 re-analyzed and DONE 2026-11-18** (the assessment's §8: `apply_casts`'s
+  eleven arms moved into `cast_*` functions byte for byte, the 580-line prelude untouched as
+  the security property; the `handle_message` half dropped, 77 arms averaging 25 lines; server
+  `09b03ff` to `2ddfe7b`, one commit per arm, each token-compared and suite-green). The three
+  dead wire intents (`StackAll`, `TurnInQuest`, `CancelCast`) come off at the next bump.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
   Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying
@@ -1877,6 +1935,46 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `rtt_ms=50.0` for both players, never 0.0, where the 10-29 lines on the old build in the
   same journal read 0.0; `/ping` still a real number). The zero readout is closed; the entry
   stays open on its public-host items.
+  **The branch MERGED ACROSS THE NOVEMBER BUMP 2026-11-06 (overnight)**: `feat/public-hosting`
+  in both repos now carries the deploy branches (server `df46291`, client `daac86c`; the
+  pre-merge tips kept as `feat/public-hosting-pre-nov`), the Phase 2 branch note's "rebase
+  across the split" done as the branch's own merge-tracking convention. What changed in the
+  port, each re-read against the new code: the restart for a moved world address rides Phase
+  1's stop channel instead of its own signal (the channel carries `Stop`: `Run`, `Signal`,
+  `AddressChanged`; `main` spawns the address watch; `shut_down_world` saves everyone and
+  tells them with the address line; the loop then ends with an error so systemd restarts the
+  process on the new address: one stop path, one save path); `intent_class` is an exhaustive
+  match, so every intent added since the branch was written is placed (the trade window, the
+  spell bar, `UseSkill`, `Consider`, `StopSong` in the budgets; the dev commands stay on the GM
+  command bucket, which refuses a plain account before anything runs) and a new intent does not
+  compile until it is placed; the auth service's three entry points share one accept loop (F6);
+  the lints met (poisoned-lock recovery for `expect`, no string indexing, tungstenite's forced
+  large error type marked with its reason); the invites migration is `0018` (was 0012) so it
+  applies after everything the host has already run; the branch's two world tests live in
+  `tests/world/hosting.rs` on the new harness (the flood test floods says, since Hit/Miss/Evade
+  are dev commands now). fmt, clippy and the whole suite green (420 unit, 183 world, 10 auth, 5
+  persistence, 3 ledger); all 16 client checks green against the merged pair (the hosting
+  worktree's Godot class cache was from 10-12 and had to be rebuilt first). Still off the deploy
+  branches until cutover, as planned; L2 (hashed session tokens, a purge of expired sessions)
+  and L8 (a characters-per-account cap) are not on the branch yet.
+  **L2 and L8 BUILT 2026-11-10 (night, unattended) on `feat/public-hosting`, server `f12052c`**,
+  after the deploy branch (`e358270`) was merged in (`f0178bf`, the branch's convention).
+  A session row is keyed by the SHA-256 of the token the launcher holds (`db::session_key`),
+  so a copy of `world.db` (a backup, the off-host copy) carries no redeemable session, and
+  migration `0019_hashed_sessions.sql` clears the rows stored raw (one fresh login per
+  launcher at the cutover, which the day asks for anyway); the auth service purges expired
+  rows at boot and hourly (`SESSION_PURGE_INTERVAL`; `expired sessions purged` in the journal
+  when any went); the ban-before-password half of L2 was already on the branch (10-12). An
+  account holds at most `MAX_CHARACTERS_PER_ACCOUNT` (8, EQ's count, a knob) live characters,
+  counted inside the create transaction AFTER the insert (the write lock is held, so two
+  creates in flight cannot both pass a count of seven), the next refused with "This account
+  already has 8 characters. Delete one to make another." on the `InvalidInput` wire code, so
+  the launcher shows it unchanged; a refused create writes no row and no kit. Tests: three db
+  unit tests (the stored bytes are the hash and redeem nothing; the purge takes the expired
+  row and keeps the live one; the cap, the refusal writing nothing, a delete making room) and
+  an auth smoke test over the wire; fmt and clippy clean; the suite green on the branch at `f12052c` (423 unit, 185 world, 11 auth, 5 persistence, 3 ledger); its first run failed one world test, the bank ledger test, on a fixed 300 ms sleep before reading the table under the whole suite's load (it passes alone), so the deploy branch's `cef31f0` (test code only, merged forward) has the eight ledger reads poll for their rows (`ledger_rows_at_least`, 50 ms steps, five seconds at most) instead. Two rows in
+  `public_hosting_checklist.md` §4. Still off the deploy branches until cutover; the audit's
+  hosting-branch list is closed with this.
 - [ ] **Exploit-audit finding 10 residuals (Low)** *(`docs/security/exploit_audit_2026-07-08.md`
   §Finding 10; the only audit finding with open parts, never given a To-Do home until
   2026-09-29)*. (a) `InspectPlayer` has no range or line-of-sight gate (any in-world paperdoll
@@ -2028,6 +2126,72 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   spell is out of range at 30.1m"), so a target that walks out between the client's check
   and the server's costs a free refusal and nothing else. `a_nuke_reaches_thirty_metres`
   now refuses just past 30 (it checked at 33).
+- [ ] **A charmed pet that dies just before its charm expires comes back as a dead mob and
+  drops its loot** *(found 2026-11-09 in the part B and C journal; the mechanism verified in
+  the code)*. At 15:57:14 UTC a Bard's charmed Sable the Dark (Siren's Song, 30 s) was killed
+  by a Cave Bat; four seconds later the charm expired and the sweep in `tick/spawning.rs`
+  handed the DEAD pet back as a mob (`released_from_charm` copies the pet's HP, 0), the
+  zero-HP stray sweep killed it the next tick (`loot bag spawned (stray kill) mob=Sable the
+  Dark`), and the bag held 47 copper and whatever `roll_for_mob` gave Sable (a guaranteed
+  Sable Wing Membrane, a 20% Shadow Signet). No XP, since nobody had damaged it. The expiry
+  filter tests only `charm_expires_at`, never the pet's liveness, and a body lingers
+  `ENEMY_DESPAWN_LINGER_SECS` (5 s), so any charmed pet that dies inside the last five
+  seconds of its charm pays its loot for nothing; `despawn_owned_pets` (the charmer leaving)
+  has the same gap. **A loot faucet with no fight:** charm a named mob, let something kill
+  it as the charm runs out, loot its drops, repeat on the den's respawn. Fix: both paths skip
+  a pet that is not alive (the corpse sweep already frees its slot, and a pet's death drops
+  nothing, the 10-08 rule); a test charms, kills the pet, lets the charm expire and asserts
+  no replacement spawn and no bag. Server only, no export; should ride the pre-door
+  redeploy. **BUILT 2026-11-09 (user: "go"), pending the redeploy and the pre-door check**
+  (server `a137b96`, `tick/spawning.rs` and `tick/pet_life.rs`; `pre_door_check_checklist.md` §8): the
+  expiry sweep hands back only a living pet, and `despawn_owned_pets` leaves a dead charmed
+  pet to the corpse sweep, which despawns it and frees its camp slot (the port path already
+  filtered on liveness). Test `a_charmed_pet_that_dies_as_its_charm_runs_out_is_not_handed_back`
+  (a Bard 14 charms a 10 HP dummy and, 26 s into the 30 s charm, sends it at a mob that kills
+  it in one hit; through the expiry and the linger no EnemySpawn replaces the pet, no bag
+  drops, and the corpse sweep despawns the body), failing on the previous code at the
+  hand-back. Server only, no export. **DEPLOYED 2026-11-10 14:56 UTC** (R720 boot line `build="e358270" dev_cmds=false`,
+  nobody online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0` at the boot).
+- [ ] **A caster can hold any number of charmed mobs at once** *(found 2026-11-16 verifying
+  the user's rule during the wandering-wildlife review)*. The user's rule: "If someone casts
+  charm on a second creature, the charm on the first creature should drop immediately, and when
+  a creature comes out of charm it should be aggressive towards the caster." The second half
+  already holds (every charm ending goes through `pet_life::return_charmed_mob`, which calls
+  `turn_on(charmer)`). The first does not: the `PET_CHARM` arm in `tick/casting.rs` never
+  looks for a pet the caster already has, so an Enchanter can keep charming and hold a
+  private army. Also found: a summon cast with a charm up kills the charmed mob
+  (`summon_pet_for_owner` marks the first owned pet Dead) instead of handing it back. Fix
+  designed as step 0 of the wildlife build (`docs/design/wandering_wildlife.md` §3.10): the
+  charm arm hands back every charmed pet the caster owns, hostile to the caster, before making
+  the new pet; a test charms A then B and fails on the current arm. **DECIDED 2026-11-16
+  (user): the same rule covers every pairing**: a new pet replaces the old one, and a charmed
+  one is handed back angry (a charm with a summoned pet out dismisses it; a summon with a
+  charmed pet out hands the charmed mob back hostile instead of killing it). One helper in
+  `pet_life.rs` called by the charm arm and `summon_pet_for_owner`. No class has both a charm
+  and a summon today (charmers: Enchanter, Bard; summons: Necromancer, the Beast Master's
+  warder), so the cross pairings are covered by a unit test until one does; flagged for that
+  day: a warder's own respawn would hand a Beast Master's charm back. Not built.
+  **BUILT 2026-11-16 (night), MERGED AND PUSHED 2026-11-17 with the wildlife build, pending
+  the redeploy and the playtest** (server `c1758f0`, on the deploy branch under `f388b96`;
+  `wandering_wildlife_checklist.md` section 9). `pet_life::release_owned_pets` dismisses the
+  owner's living summoned pet and hands back each living charmed one hostile;
+  `pet_life::charm_mob` (the charm arm's body, moved beside `summon_pet_for_owner`) and
+  `summon_pet_for_owner` both call it first. **Corrected in the build: nothing in play could
+  stack charms today**, because each charm spell's cooldown is at least its duration (Charm
+  60 s and 60 s, Siren's Song 45 s against 30 s); only the data prevented it, and the rule now
+  holds whatever the data says. Two things the fourth review added: only LIVING pets are
+  released (a charmed pet that has died is the corpse sweep's; handed back at 0 HP it drops the
+  mob's loot for no fight, the Sable faucet again), and **the mob's damage ledger rides the
+  charm** (`Entity::charm_ledger`, given back by `released_from_charm`, cleared by `wipe_hate`):
+  before, a charm wiped the record of who had hurt a mob and kept its wounds, so charming a
+  nearly dead mob and letting it go took the kill from whoever did the work. Tests (unit, at
+  the helpers, since no cast can reach the pairings today):
+  `a_second_charm_drops_the_first_which_turns_on_the_caster` (fails with the release removed)
+  and `a_new_pet_replaces_the_old_and_a_charmed_one_comes_back_angry` (a summoned pet, a
+  living charmed one and a dead charmed one); the 18 pet integration tests green. Rule C3 in
+  `invariants.md`. **DEPLOYED 2026-11-17 16:55 UTC** with the wildlife build (R720 boot line
+  `build="f388b96" dev_cmds=false roamers=on`); `wandering_wildlife_checklist.md` section 9 is
+  runnable now.
 - [x] **Unclean-kill relogin was not refused** — **RE-TESTED 2026-10-13, the refusal holds;
   ticked on the integration test** (server `f58b796`,
   `an_unclean_drop_refuses_relogin_until_the_body_is_reaped`, 43 s of the server's own
@@ -2469,6 +2633,17 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **Harness lessons:** the position channel clogs through a long wait and a later speed
   measurement reads the stale positions it kept (the heartbeating pumps drain it now), and a
   timing assertion reads the clock, not the windows' nominal lengths.
+  **Open, 2026-11-13: a first sing of Selos' sped the bard up before the bar had filled**
+  (user, on the 11-09 journal's song lines; §70 item 6 had read it as a re-sing inside the
+  12 s linger, and the user says it was a first sing from cold). Read on both sides the same
+  day: nothing applies a song before its release (the client spends no local effect on a song,
+  the server starts and pulses it at the CastSpell after the 3 s cast-time gate, the only
+  speed inputs on the client are the buff, the crouch and the encumbrance), so no mechanism is
+  known. Three debug-log lines added to the client for the next Bard sitting (the bar's start
+  with the speed multiplier at that moment, the release, and every speed buff applied with its
+  name and multiplier): `debug.log` then says whether the speed arrived before or after the
+  release. Instruction for the sitting: stand still, sing Selos' once from cold, and send
+  `debug.log`.
 - [ ] **Dwarf racial ability: Stone Skin** *(user idea 2026-10-19, instead of making Dwarves
   permanently stone; "go ahead with stone skin")*. Active: the skin turns to granite, a large
   cut to physical damage taken and no knockback, paid for by being rooted in place, on a long
@@ -2482,6 +2657,95 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   self buff carrying the cut and the root, and the no-stacking rule with Guard and Dark Bond.
   **Exploit lens:** never a client-side effect, or a modified client gives any race a free
   damage cut; the server checks the race on every use.
+- [ ] **Ranged attacks consume no ammo** *(user 2026-11-09, master H2.3: "Bow fires and does
+  damage, currently does not consume ammo. I also dont think we have an arrow item to act as
+  the ammo.")*. Verified: neither side has an ammo model (the server's swing path never reads
+  one; the client has only the arrow effect), so the Hunter's Shortbow fires forever for free;
+  the Arrow Bundle exists on both sides with nothing that consumes it. EQ: an ammo slot, one
+  arrow a shot, no arrows no shot. Two shapes: an ammo slot on the paperdoll (a new equip slot
+  on both sides) or the first Arrow Bundle in slot order consumed per shot, as food is eaten
+  (no new slot). A design call; not a friends-build item, and not a dupe (a missing cost, not
+  a mint). **DECIDED 2026-11-13 (user): an ammo slot**, EQ's shape: a new equip slot on the
+  paperdoll on both sides (the slot tables in lockstep; the death strip, the corpse re-equip
+  and the ledger cover it like any worn slot), one arrow taken from it per shot, no arrows no
+  shot; the Arrow Bundle is the first ammo. Both sides and the paperdoll UI change, so it
+  rides a zip and a redeploy: recommended for the bump after the door, not the Nov 19 zip (a
+  new slot the friends would be the first to test). **Into the zip after all (user, the same
+  day: "lets add it", the zip open until the 17th), BUILT AND EXPORTED 2026-11-13, pending the
+  Monday redeploy and the pre-door check** (`pre_door_check_checklist.md` §9; server `d3cceef`,
+  client `f5b8b24`, both on the deploy branches, PD_W0030; the zip
+  `builds/ProjectDawn-alpha-f5b8b24.zip`, refused by the R720 until it runs `d3cceef`). *(Superseded the same evening: the 4 km zone merged on top, so the build to deploy and send is server `162c151` and `builds/ProjectDawn-alpha-68c3e13.zip`, and the boot line reads `terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f`.)* `EquipSlot::Ammo` appended last (slot 9; the slot index
+  rides the existing `EquipItem` bytes, so the protocol id is the only wire change, and the DLL
+  moves with the server). An `ItemType::Ammo` / `ItemData.Type.AMMO` that fits the ammo slot
+  alone, nothing else fitting it (`items::is_equippable_in_slot`, the client's slot picker);
+  the Arrow Bundle is the first, its count the arrows (weight 0.1 and 1 copper per arrow, so a
+  full bundle of twenty is 2.0 and 20 copper; the 06-12 weight ruling's "bundle of twenty" unit
+  is superseded, noted in `item_weight_proposal.md`); Elara sells arrows and Hadrik the
+  Hunter's Shortbow (no vendor sold a bow). The server takes one arrow from the slot on every
+  bow shot (`tick/melee.rs::spend_arrow`, after the PvP gate so an unflagged target costs
+  none, before the reach and the roll so a miss or an out-of-reach shot costs one: the arrow
+  flies), fans the slot's delta and queues a `shoot` ledger row (delta -1); with the slot empty
+  there is no shot and "You have no ammunition." (a bow skill is refused the same way before
+  its stamina); a melee swing spends nothing. The death strip, the corpse re-equip and the
+  persistence cover the slot as any worn one (`restore_worn` puts the arrows back in it). The
+  client refuses a bow shot or a bow skill with an empty quiver before sending (the same line,
+  at the swing cadence as the range line is), keeps the slot's count from the deltas
+  (`Equipment.equipped_counts`), shows "Arrow Bundle (17)" on the paperdoll's new Ammo cell
+  and the inspect window's tenth row. Tests: `ammo_fits_the_ammo_slot_alone`,
+  `the_quiver_gives_one_arrow_a_shot_until_empty`, and the integration test
+  `a_bow_shot_takes_an_arrow_and_an_empty_quiver_fires_nothing` (arrows refused for the main
+  hand and a bow for the quiver, two arrows worn, a sword swing spending none, two shots each
+  taking one with the second emptying the slot, a third shot refused with the line and no Hit
+  or Miss, two `shoot` rows in the books), failing on the previous server at the first equip;
+  `tools/probe_ammo_slot.gd` (16 checks). Rule I6 in `docs/reference/invariants.md`. **Not
+  built, flagged:** arrows add no damage (EQ's did); no arrow is dropped on a miss to be picked
+  up; the Fletcher's recipes still make the bundle as before; a crossbow or a thrown weapon has
+  no ammo of its own.
+- [ ] **A weapon swap with no target keeps the old swing interval for one swing** *(found
+  2026-11-09 in the journal: one `Attack rejected — swing-rate limit (too fast)` for a Druid at
+  15:30:08 UTC, `weapon_delay=3.0 min_interval=2.65`, nineteen seconds after swapping the
+  Trainee's Club (no `weapon_delay` in the data, so the 2.0 s default) for the Hunter's
+  Shortbow with nothing targeted)*. `Combat._on_equipment_changed` returns before re-timing
+  when `current_target` is null, and `_sync_auto_attack_timer` starts the timer with whatever
+  `wait_time` the last swing left, so the first interval of the next fight is the old weapon's
+  and the server drops the second swing. One honest arrow lost per such swap; a forged client
+  gains nothing (the server's gate is the rule). Fix: refresh both intervals in
+  `_sync_auto_attack_timer` before the timers start. Client only, a few lines; could ride the
+  Wednesday zip. **BUILT 2026-11-09 (user: "go"), pending the next export and the pre-door
+  check** (`pre_door_check_checklist.md` §8): the sync reads both intervals fresh before
+  starting the timers, so every fight starts on the weapon worn now, and the equipment hook no
+  longer needs a target to matter. `tools/probe_swing_retime.gd` (6 checks, 2 failing on the
+  old code: a bow fight after a club fight started on the club's 2.0 s).
+- [ ] **A mob whose only attacker was a pet walks home when the pet dies: should the owner
+  be on its hate list?** *(user 2026-11-09, on the master's F9.7 row: "When a charmed mob
+  vanishes and the player who charmed it hasnt engaged with the enemy, the enemy does not
+  aggro the player when the charm wears off. Does this make sense?"; the event itself was
+  the morning's dead-pet charm return, the Security entry, but the question stands on its
+  own)*. Today a pet's hits are the pet's: a mob's threat map names the pet, the owner gets
+  the kill credit and no hate, so a mob that fought only a pet turns on whoever else hit it
+  when the pet dies or is dismissed, or walks home; a charmed pet's victim the same. An EQ
+  pet pull works exactly because of it (send the pet, the mob follows it, you were never on
+  its list), and the cost is a pet class that can farm with the pet alone at no risk to
+  itself. The alternative is a token hate on the owner the moment their pet engages, so a
+  mob whose pet-tank dies comes for the owner. A design call, after the door.
+  **DECIDED 2026-11-09 (user: "The owner should receive hate token as you said. Go ahead.")
+  and BUILT the same night, pending the redeploy and the pre-door check** (server `e358270`;
+  `pre_door_check_checklist.md` §8). `PET_OWNER_HATE_TOKEN` (1.0, `world/mod.rs`, the point a
+  miss adds for the swinger): the pet swing path puts the owner on the mob's threat map at
+  the token when the pet's first hit lands, inserted once and never added to, so a mob whose
+  only attacker was the pet turns on the owner when the pet dies (`next_hater_or_home`)
+  instead of walking home, while anyone who fought it outranks the owner. Threat only: the
+  damage ledger decides credit and already names the owner for the pet's hits, so XP, quest
+  credit and faction hits are unchanged. A hidden or feigning owner stays off the list (their
+  own hate was wiped), and only a world mob takes the token (a pet's own threat map steers
+  nothing). Charmed pets go through the same path, so a charmed mob's victim comes for the
+  charmer when the charm ends or the pet dies. The EQ pet pull is gone with it: send the
+  pet at a mob and you are on its list. Test
+  `a_mob_that_fought_only_a_pet_turns_on_the_owner_when_the_pet_dies` (a Necromancer 6 sends
+  its skeleton at a 1 m-aggro mob that kills it in one hit; the mob then targets the owner
+  and hits them), failing on the previous code at the EntityTarget. Server only, no export.
+  **DEPLOYED 2026-11-10 14:56 UTC** (R720 boot line `build="e358270" dev_cmds=false`,
+  nobody online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0` at the boot).
 - [ ] **Two-handed damage arc (cleave)** — large 2H weapons (axes/polearms) hit multiple
   enemies in a frontal cone on auto-attack, giving 2H its own identity vs. dual-wield.
   Per-weapon opt-in flag (not all 2H), narrow cone + secondary-target damage/cap so it
@@ -2861,7 +3125,15 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   XP value landed to the digit in play, and the gates (level_req, proximity, bag-space
   pre-flight, round-robin, dead-state) all refused correctly under real use. Standing
   watch item: Flamebrand's Flaming Strike procs have not yet been observed in a server
-  log — check on the next melee session with it equipped. `xp_mult` on named mobs was removed
+  log — check on the next melee session with it equipped. **2026-11-09: they never will be from
+  the journal.** The proc path (`tick/melee.rs`, `fan_out_proc_triggered`) writes no log line,
+  so a melee session with Flamebrand worn (the Bard's, 16:04 to 16:17 UTC, four kills) shows
+  nothing either way; the client's chat "<proc> for N" line is the only witness. A one-line
+  `tracing::info!` at the proc would close the watch. **The line BUILT 2026-11-09 (user: "go"),
+  pending the redeploy** (server `a137b96`): `weapon proc` with `char_id`, `target`, `proc`, `amount` and `crit`
+  (`tick/melee.rs`); the watch closes on the first such line in a journal
+  (`pre_door_check_checklist.md` §8); the server carrying it is live since the redeploy of
+  `e358270` on 2026-11-10 14:56 UTC. `xp_mult` on named mobs was removed
   2026-10-13 (user decision; a named kill pays by level alone).
 - [x] **Enemy AOI cell-crossing spawn/despawn gap** — **DONE + playtested 2026-10-07**
   (`scale_readiness_checklist.md` §3, the two-seat rows, all four PASS: a partner's pet
@@ -2893,7 +3165,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   for every visible pet riding the pet's Positions; and the spawn-by-kind choice now lives in
   one `fan_out_entity_spawn` used by both the player crossing and the entity crossing, so no
   partition-test ordering can swallow a kind again.
-- [ ] **The server height model** *(phase 5, Track D item 1; the user, 2026-11-03: "Claude
+- [x] **The server height model** — **DONE + playtested 2026-11-09** (`height_model_checklist.md`,
+  all 23 rows, and `first_hills_checklist.md`, every row, across the master sheet's parts A to
+  E on 11-06 and 11-09, one and two seats; what exists is in systems_overview, World &
+  environment, "The server height model and the first hills". The two flags the hills sheet
+  left, the knoll-ridge climb and the body pushed into a face, are the entry after this one;
+  Levitate and Feather Fall stay under "Fall damage follow-ups".) *(Original entry:)* *(phase 5, Track D item 1; the user, 2026-11-03: "Claude
   will be building the height model")*. **DESIGNED 2026-11-03: `docs/design/server_height_model.md`**,
   six decisions waiting on the user (§8), nothing built. The server learns the ground so its 3D
   range checks stop measuring a fiction: today it zeroes Y on every Move and keeps a mob's camp Y
@@ -3109,7 +3386,486 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   export `builds/ProjectDawn-alpha-da83ea8.zip`; R720 boot line `build="267065f" dev_cmds=false
   terrain=40x40 cells of 10 m, floor 0, hash f2bd278da1c3` at 22:29 UTC, nobody online at the
   stop. `height_model_checklist.md` and `first_hills_checklist.md` are runnable now; nothing
-  ticked.
+  ticked. **Parts B and C of the master sheet run 2026-11-09, every row passing** (the one-seat
+  rows of both sheets; the falls read the formula to the point). **Two flags from F2.2:** the
+  ridge's south face can be climbed where the bandit knoll meets it (the knoll, radius 25 at
+  z = 60, reaches the ridge's foot at z = 70 and lifts it, so the face there is under the 60°
+  rule; content: a smaller or more southerly knoll in `terrain_features.toml`, re-authored and
+  re-exported, a server rebuild and an export; the crest is the known perch and the evade
+  rule covers it), and walking into a face pushes the client's body a little into it until the
+  player stops (the server holds the foot; the reconciliation pulls the body out), cosmetic.
+  **Parts D and E run 2026-11-09 (two seats): every remaining row of both sheets passes**
+  (`height_model_checklist.md` all 23 rows across 11-06 and 11-09, `first_hills_checklist.md`
+  every row): the group-mate heal at range, the resurrection (the character landed at a
+  quarter HP beside the skeleton that had killed it and died again twelve seconds later, the
+  P99 landing by design), the partner drawn on the hills and seen falling off the cliff (18 m,
+  40% of max HP in the journal, five falls across both seats), the sight rows at the Wraith
+  Gate (refused from the foot, landed from the top, the server agreeing with the client on
+  the lip, a bow's arrow missing a hidden mob), the mob held below the crest giving up after
+  8 s and healing at home, the evade refusals on nukes and swings (`Your target is evading.`
+  on Smites from the plateau at mobs below its edge), the hate list turning on the next
+  attacker, the pet warping to its owner, `/camp` and the window X, the journal clean. **Ticked
+  2026-11-09 (user: "go ahead")**; the what-exists note is in systems_overview.
+- [ ] **The starting zone at 4 km** *(user, 2026-11-13: "build the updated 3D zone using the
+  comp made by a previous session"; the comp is `docs/design/starting_area_comp_sketches.html`;
+  the five calls the same day: 10 m cells, keep the 54 spawns and tune after, the three painted
+  concept sheets reviewed, "put it in front of the friends", placeholder shapes and trees)*.
+  **BUILT, MERGED AND EXPORTED 2026-11-13, pending the redeploy and the playtest** (built on
+  `feat/zone-4km` in both repos, the deploy branch with the ammo slot merged into it, both
+  deploy branches then fast-forwarded: server `162c151`, client `68c3e13`; the export
+  `builds/ProjectDawn-alpha-68c3e13.zip`, stamped `68c3e13`, a release export;
+  `zone_4km_checklist.md`; session note `session_2026_11_13_zone_4km.md`; both sides move
+  together, no wire change of its own and no migration; **the R720's boot line must read
+  `terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f`**, and this zip replaces
+  `f5b8b24` as the one to send).
+  **The ground:** `data/terrain_features.toml` is the comp's plate, 400 x 400 cells of 10 m:
+  the western hills to 110 m with the Sunken Barrow dug 45 m into them, the Greywood ridge as a
+  wall 62 m high with the pass cut through it, the Wraith Gate plateau at 60 m (its cliff a
+  lethal fall), rolling ground everywhere but the town's 150 m, mountains round the edge.
+  `tools/author_terrain.gd` gained the shapes for it and a walk report (from the town every
+  camp is reached, the plate's edge and the ridge's crest are not), and paints the ground
+  texture (roads, farms, forest floor) from `data/zone_layout.gd`. `TerrainMesh` builds its
+  meshes and colliders from the heights at load in chunks of 40 cells (the scene stores the
+  heights alone; baked in, the mesh was 55 MB of text), same triangles in the same order, so
+  the server samples the same surface. **The server:** `terrain.toml` re-exported (hash
+  `35a3f1a15f4f`), every camp at the comp's position with its spawns three times wider, the
+  town's safe area 60 m (was 10). **Scenery, client only** (`scripts/zone/`): 40,908 scattered
+  trees, bushes, boulders and bones; the walled town with its gates, banner tower, houses and
+  what each NPC keeps; a set piece at every camp (the barrow's ward stones and glowing door,
+  the Ossuary's spires, the Wraith Gate's arch at the cliff's lip, the crypt, the gnolls' and
+  bandits' camps, graves, dens). All placeholder shapes built in code by `LowPoly`, none of
+  them a physics body (rule L2 in `docs/reference/invariants.md`, held by
+  `tools/check_zone_scenery.gd`): the walls and trees are walked through until the server
+  knows obstacles. The fog thinned so the ridge and the hills read from the town; the sun now
+  rises east and sets west. Tests: server 408 unit and 183 world (the camp-walking tests enter
+  beside the Bonepile's new place; the compiled-ground perch test moved to the plateau ramp's
+  edge); client 16 checks and 21 probes, the lockstep and sight checks building the real
+  chunked node, two planted faults caught. **Exploit lens:** the ground is the server's own
+  compiled file; scenery never collides, so the client and the server never disagree about
+  where a body is; the ridge's crest and the cliff are out of every spell's reach, the one
+  reachable perch (the ramp's side wall) is under the evade rule and its test; nobody leaves
+  the plate. **Flagged, not built:** server obstacles (so walls stop a body on both sides);
+  the mob count (54 spawns in 16 square km is thin between camps: tune after the first walk);
+  the 120 to 240 m view distance for players and mobs in a zone with kilometre sightlines;
+  water; the world reads mirrored against the comp's map (+Z north with +X east puts east on
+  the left when facing north); `systems_overview.md`'s terrain paragraphs move with the tick;
+  the planner's page is republished at the merge.
+  **DEPLOYED 2026-11-14** (the user's redeploy; R720 boot line `build="162c151" dev_cmds=false
+  terrain=400x400 cells of 10 m, floor 0, hash 35a3f1a15f4f`, `ledger check mismatches=0`; the
+  old process's last health line read `slope_refusals=308`, the old edge refusing steps 180 m
+  from the square, which was the "invisible wall" reported that morning with the floating mobs:
+  a new client on the old server).
+  **The outline, the roads and the doors BUILT, MERGED AND EXPORTED 2026-11-14, pending the
+  redeploy and the playtest** (both deploy branches fast-forwarded and pushed, server `9a7e0fa`,
+  client `7c7a810`; the export `builds/ProjectDawn-alpha-7c7a810.zip`, stamped `7c7a810`, a
+  release export, which replaces `68c3e13` as the zip for the door; the zip and the redeploy go
+  together, since either side alone stands people on the other's ground; user, on the outline sketches at https://claude.ai/artifact/HFL7DK4yvDe1SjkGPrXF91:
+  "outline: Two basins with arms", "i prefered the way Greywood Ridge is designed in the B
+  option", "making the roads mor interesting. Winding between and avoiding points of interest",
+  "south door: Sounds good", "Go ahead!"; server `9a7e0fa`, client `8c09944`, built on
+  `feat/zone-outline` in both repos; `zone_4km_checklist.md` §7; session note
+  `session_2026_11_14_zone_outline.md`; both sides move together, no wire change, no
+  migration; **the boot line must read `terrain=400x400 cells of 10 m, floor 0, hash
+  a9942be36dff`**). **The edge:** the walkable world is two basins the mountains close round,
+  joined only by the pass (`data/zone_layout.gd` `BASINS`, 8.25 square km of the plate's 16, so
+  the same 54 spawns stand at 6.5 a square km against 3.6): the town's basin with an east arm
+  (the road's door at its end), a vale that holds the gnoll war camp, and the barrow hills
+  running up into the range; north of the ridge the Greywood, a shelf with one arm up to the
+  north door. The ridge runs from mountain to mountain. No camp, hill or cliff moved.
+  `tools/author_terrain.gd` marks each grid vertex inside or outside the edge (a ridge's own
+  footprint counts as inside), takes each outside vertex's distance to the nearest inside one
+  (an exact distance transform) and raises it: 30 m in the first 10 (72 degrees, so every
+  triangle with a corner on each side of the edge is a face whatever the ground under it does),
+  a 60 m cliff at the foot, then the flank climbing to between 180 and 440 m, with crags; the
+  square rim is gone.
+  The ground paint turns to rock outside the edge and the shader lays bare rock above the hills
+  and snow on the tops; nothing is scattered outside (`ZoneLayout.inside`). **The roads** run
+  into no camp: the north road bends east of Bat Hollow and swings east round the Broken
+  Crypt's bowl (it climbed the bowl's wall and ran through the crypt, 12 m from its middle; now
+  204 m); the south road passes west of Rotfang's rocks and round the foot of the war camp's
+  shelf to a new south door (it ran through the den at 2 m and ended inside the camp; now 227
+  and 294 m); the barrow track skirts the bone fields and stops at an overlook on the hill
+  between the barrow's pit (329 m) and the Ossuary (403 m) (it ended on the pit's wall); the
+  east road keeps its line past the wagon wreck and runs under the Wraith Gate cliff. Three
+  doors (north fallen trees, east rockslide, south the gnolls' stake barricade) and the
+  overlook's waystones are set pieces. **The pass:** its floor is at the level of the ground
+  at its mouths (6 m); cut to 0 it was a trench with an 8 m step at the south mouth and a 16 m
+  bank at 58 degrees at the north one. **Server:** `terrain.toml` re-exported;
+  `nobody_climbs_out_over_the_rim` becomes `nobody_walks_out_of_the_zone` (the slope rule read
+  over every triangle from the town must reach about half the plate and none of its outer
+  rows; then walkers with the real `player_step`, three from every walked triangle beside
+  unreached ground (more than 3,000 in all), heading for it and 45 degrees either side, never
+  stand on ground the walk did not reach), and `a_gap_in_the_mountains_is_a_way_out` plants a level corridor
+  behind the east door and requires the same reading to see it. Suites: server 411 unit and
+  184 world, clippy and fmt clean; client 16 checks and the zone probes. **Exploit lens:** the
+  edge is the server's own compiled ground, so a modified client walks the server's mountains,
+  not its own; the foot is a face on every boundary triangle by construction and by test, the
+  author's report fails on any walked triangle outside the edge, and nothing behind the foot
+  is reachable, so its shape is free; scenery still never collides (L2). **Found on the way:**
+  `check_zone_scenery.gd`'s SCATTER rules read flora positions back from the MultiMeshes,
+  which the headless renderer returns as identity, so they tested each batch's origin and
+  nothing else since the zone was built; `ZoneFlora` keeps what it planted and the check reads
+  that (16,350 things now, the Greywood being a third of its old size). The Godot editor had
+  switched the ground paint to VRAM compression in the main checkout (uncommitted); its import
+  now has `detect_3d` off. **At the redeploy, one statement during the stop** (a character
+  saved or bound where the mountains now stand would log in on top of them, and the only way
+  down is a lethal fall): `sqlite3 /opt/projectdawn/world.db "UPDATE characters SET pos_x=0,
+  pos_y=0, pos_z=0, bind_x=NULL, bind_y=NULL, bind_z=NULL; UPDATE corpses SET pos_x=0,
+  pos_z=20;"` (everyone back to the square and bound there; old corpses beside it). No server
+  rule was written for it (the no-fix rule for older characters). **Flagged, not built:** the
+  far fog tints the range tan (a scene setting from the first build); the mountains' foot is
+  one unbroken cliff 60 m high, which reads as a wall up close in the arms; mob count, view
+  distance, server obstacles and water as before.
+  **DEPLOYED 2026-11-14 21:07 UTC** (R720 boot line `build="9a7e0fa" dev_cmds=false
+  terrain=400x400 cells of 10 m, floor 0, hash a9942be36dff`, nobody online at the stop,
+  `saved=0 unsaved=0`, `ledger check mismatches=0`; the user's character logged in at the town
+  square on the `7c7a810` zip); `zone_4km_checklist.md` is runnable now, section 7 with it.
+  **Superseded the same night by the compass build** (the entry directly below): the zip to send
+  is `fd17ff1`, and after its redeploy the boot line reads `hash 6bedde1c663e`; run the sheet
+  on that pair.
+  **Rolling hills BUILT 2026-11-16, MERGED AND EXPORTED the same day for the door zip, pending
+  the redeploy and the playtest** (user: "Do you think you could add
+  rolling hills? right now the sight line allows a player to see across the entire flat land",
+  then "12, 25, 35. Also have variation between those or everything will look static.";
+  `feat/rolling-hills` in both repos, client `dfbda40` + `260f42c`, server `86aa72a` + `a3b226d`; session note
+  `session_2026_11_16_rolling_hills.md`; both sides move together, no wire change, no
+  migration and no SQL, since a login, a respawn and a saved corpse all land on the ground as
+  it is now; **the boot line must read `terrain=400x400 cells of 10 m, floor 0, hash
+  f569ade0c331`**). Three layers of rolling ground in place of the old 3.5 m and 9 m ones:
+  swells about 12 m every 280 m, rolls about 25 m every 650 m and broad rises about 35 m every
+  1,300 m, each varied by a broad noise of its own from half to one and a half times its
+  height, so stretches of meadow alternate with hill country; the town stays flat. The plateau
+  and the pass now shape the ground before the rolling ground is laid over them
+  (`tools/author_terrain.gd`, `rolling_at`), so the Wraith Gate cliff keeps a 58 m drop and
+  the pass floor follows the ground at its mouths (its floor is 0 under the noise, and the cut
+  ends at the ridge's north foot so its rounded ends lie on level base ground; two earlier cuts
+  left a bank at a mouth).
+  Measured from 60 standing players: 79% of the ground within 250 m is in sight (89% before),
+  39% at 250 to 500 m (62%), 30% at 500 m to 1 km (44%). The author report is clean (every
+  camp spawn and NPC on a floor, the roads at most 17.3 degrees, nobody walks out of the zone);
+  camps now stand as high as 148 m (the Ossuary), and the highest walkable ground is 151 m,
+  under the shader's rock line at 190 m. Server: the compiled-terrain test holds the cliff by its
+  drop and walks the line through the pass every 2 m for a step past 30 degrees (it caught
+  both earlier cuts); the plateau-ramp perch test moved 14 m down the
+  ramp (the wall at its old perch grew to about 30 m, which put the dummy past Smite's reach);
+  412 unit and 191 world green, fmt and clippy clean; all 17 client checks and the zone probes
+  green. **What changes in play:** line of sight is the server's rule, so a swell now blocks a
+  spell, an arrow and an idle mob noticing you. Not built: the GM flight client is on its own
+  branch, so the hills branch is walked on foot.
+  **Reviewed before the merge** (the user asked; session note §10): the camera, flight, fling,
+  falls, the edge, perches, the landmarks' visibility from the town and the roads, and spell
+  sight lines all checked on both grounds (a sight line inside 30 m blocked 1.4% of the time,
+  1.2% before; no new face beside walkable ground but six triangles on the plateau ramps'
+  sides). Two visual effects, both left as they are: a set piece stands at one anchor point, so
+  on a slope it floats or sinks up to about a metre at a corner (worst, the Wraith Gate arch's
+  stone base, -1.0 to +0.7 m); and the plateau ramps' side walls are about 5 m taller (8.6 m at
+  the very bottom, about 16% of max HP to step off). **DECIDED 2026-11-16 (user): "they will
+  go into the door zip." Merged the same day** (both deploy branches fast-forwarded to
+  `feat/rolling-hills` and pushed: server `a3b226d`, client `397e207`, the deploy branch's
+  records merged into the hills branch first); all 17 client checks green against the merged
+  server; **the export `builds/ProjectDawn-alpha-397e207.zip`** (stamped `397e207`, a release
+  export from the clean hills worktree, booting clean headless, the DLL unchanged: no wire
+  change), **which replaces `fd17ff1` as the zip for the door**. The zip and the redeploy go
+  together; no SQL. `zone_4km_checklist.md` (its header, the pass row, sections 7 and 8) and
+  `pre_door_check_checklist.md` §9 name the new pair; section 7's passed rows are walked again.
+  **DEPLOYED 2026-11-16 22:34 UTC** (R720 boot line `build="a3b226d" dev_cmds=false
+  terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331`, nobody online at the stop,
+  `saved=0 unsaved=0`, 14 corpses loaded, `ledger check mismatches=0`); the zip to send is
+  `397e207`, and both sheets are runnable on that pair.
+- [ ] **The compass is mirrored: facing north, east is on your left** *(user, 2026-11-14: "If
+  the Greywood ridge is North, then the gnoll raider camp is currently to the west, when it
+  should be to the east. Please confirm before changing any thing.")*. **Confirmed the same
+  day, nothing changed.** The ridge is at +Z and the gnoll raiders at +X; in a right-handed
+  engine, facing +Z puts +X on the left, so against a real compass anchored on "the ridge is
+  north" the gnolls are west. The game's own labels still call +X east (`/sense`, the east
+  road, the sunrise), by the 2026-09-27 ruling "+Z is north, +X is east", whose note in
+  `autoloads/sense_heading.gd` already recorded the mirror as "invisible in game". It was, on a
+  flat world; with a ridge, roads and a map it shows, and the comp's map (north up, east right)
+  cannot be built on those two labels without it. **The fix is to mirror the whole world
+  once**; the player sees the same world either way and only the numbers differ: (1) north
+  becomes -Z, so x still grows east and z grows going south (Godot's own layout, the editor's
+  top view then matches the comp's map; my recommendation), or (2) east becomes -X, so z still
+  grows north and x grows going west (how EverQuest's `/loc` printed it: y north, x west).
+  About a day: every position on both sides (the features, the layout and its roads and
+  edge, the camps, the NPC row, the scenery's hand-set places and yaws, the sun's path, the
+  sense ring, the tests' coordinates, the checklists' `/loc` numbers), a new terrain file, a
+  redeploy with a new zip, and the saved positions, binds and corpses mirrored by hand in the
+  same stop. **The user asked back (2026-11-14): "isnt Z indicative of altitude and XY are
+  latitude/longitude?"**: in EverQuest, yes (`/loc` printed y, x, z with z the height); in
+  Godot the height is Y and the ground is X and Z, and our `/loc` prints x, y, z in that
+  order. `/loc` could print EQ's order and letters whatever the engine's axes are, a display
+  change of a few lines. **Waits on the user: mirror or not, which numbering, and whether
+  `/loc` reads the EQ way.** Best decided before the door: afterwards the friends will have
+  learned the mirrored world.
+  **DECIDED 2026-11-14 (user, on the handoff's two questions: "yes, please" to both): mirror
+  the world with north = -Z, and `/loc` the EverQuest way. BUILT, MERGED AND EXPORTED the same
+  night, pending the redeploy with its SQL and the playtest** (built on `feat/compass-mirror` in
+  both repos; both deploy branches fast-forwarded and pushed, server `27d5ea7`, client `fd17ff1`;
+  the export `builds/ProjectDawn-alpha-fd17ff1.zip`, stamped `fd17ff1`, a release export, which
+  replaces `7c7a810` as the zip for the door; the zip and the redeploy go together, since either
+  side alone stands people on the other's ground; `zone_4km_checklist.md` §8; session note
+  `session_2026_11_14_compass_mirror.md`; **the boot line must read `terrain=400x400 cells of
+  10 m, floor 0, hash 6bedde1c663e`**). The ruling of 2026-09-27 ("+Z is north") is replaced:
+  north is the world's -Z and east its +X, so facing north, east is on your right, as on the
+  comp. **One mapping, the authored data unchanged:** `ZoneLayout.to_world` / `to_world_xz` /
+  `to_map` / `to_map_xz` / `yaw_to_world` (`PI - yaw`) carry every map point and map facing
+  into the world; `data/zone_layout.gd` and `data/terrain_features.toml` keep their numbers
+  (rewriting them would not mirror: the noise is sampled at the map point and the plateau's
+  ramps are keyed by compass name), so the ground is the exact mirror of the old one, hill for
+  hill. The client: `ZoneDressing`'s `ground` / `on_ground` / `stand` (the choke point for the
+  town and the set pieces), the flora sampling the ground at the world point, the graves' wall
+  boxes, the town's and the crypt's walls drawn the other way round so their merlons stay
+  outside, the six NPC nodes at z = -5 and turned to face the square again, `SenseHeading`'s ring (rotation.y = 0 faces North),
+  `tools/author_terrain.gd` (the vertex read at its map point; the report converting every map
+  point and printing world coordinates; a set piece drifted 80 m from its camp is now a FAIL,
+  the check that catches a half-mirrored pair; the paint painted on the map and flipped once
+  before the mountains' rock), the zone tools' viewpoints and drop points, and the top view
+  north-up. The server: every z in `zone_camps.toml` (54 spawns) and `npcs.toml` (6) negated by
+  a script that counted them, `terrain.toml` re-exported, five tests' positions mirrored (the
+  camp-pull constants, the plateau ramp perch, the compiled terrain's ridge and pass, the gap
+  test's corridor) and one hard-coded walk derived from the constants instead; no code change.
+  `/loc` prints `north, west, height` (`-z, -x, y`, never `-0.0`), `/loc raw` (or `/location raw`) the world's `x, y, z`. The town's four signposts now all point out along their roads (half had pointed back at the town, before and after the mirror). The sun
+  needed nothing (it arcs east to west with no north-south lean). New check
+  `tools/check_compass.gd` (in `check_all.ps1`, rule L3): the ridge read from the scene's
+  ground is where `/sense` says North, the server's Gnoll Raider Camp is on the right facing
+  it, the map's frame reaches the world the same way round, and the raiders' set piece stands
+  at the server's camp; it failed on the old world at the chirality row, and on a mirrored
+  client against the unmirrored server at the set-piece row. Suites: server 411 unit and 184
+  world, fmt and clippy clean; client 17 checks, the zone probes. **At the redeploy, during the
+  stop, after a `.backup`,** one statement mirrors every saved position, bind, facing and
+  corpse with the world, and leaves a one-row `compass_mirrored` table so a second run (a
+  repeated stop-and-start) changes nothing (tested twice on a copy of the dev database):
+  `sudo -u projectdawn sqlite3 /opt/projectdawn/world.db "BEGIN; UPDATE characters SET pos_z =
+  -pos_z, bind_z = -bind_z, yaw = 3.141592653589793 - yaw WHERE NOT EXISTS (SELECT 1 FROM
+  sqlite_master WHERE type = 'table' AND name = 'compass_mirrored'); UPDATE corpses SET pos_z =
+  -pos_z WHERE NOT EXISTS (SELECT 1 FROM sqlite_master WHERE type = 'table' AND name =
+  'compass_mirrored'); CREATE TABLE IF NOT EXISTS compass_mirrored (at TEXT NOT NULL); INSERT
+  INTO compass_mirrored (at) SELECT datetime('now') WHERE NOT EXISTS (SELECT 1 FROM
+  compass_mirrored); COMMIT;"` (one line when pasted; no server code for older characters,
+  the standing rule). **Flagged:** pieces turn but never mirror, so an asymmetric piece keeps its own
+  handedness (a banner, a door's rubble); the triangle diagonals do not mirror, so a few faces
+  changed shape (the pass's west mouth shows one long facet), and the report barely moved
+  (8.81 square km inside both times; 51.1% of the triangles walked to against 51.2%; 9,423
+  faces against 9,335; the steepest road 15.2 degrees both times).
+  **DEPLOYED 2026-11-15 13:47 UTC** (R720 boot line `build="27d5ea7" dev_cmds=false
+  terrain=400x400 cells of 10 m, floor 0, hash 6bedde1c663e`, nobody online at the stop,
+  `saved=0 unsaved=0`, 11 corpses loaded, `ledger check mismatches=0`; the backup taken before
+  the SQL is `/opt/projectdawn/world.db.pre-compass`). The first start, at 13:34, ran the old
+  binary (the pull and build had been skipped, so the `cp` copied `9a7e0fa` back in) on the
+  already-mirrored database for four minutes with nobody connected, so nothing was written;
+  the SQL was not run twice. `zone_4km_checklist.md` (sections 7 and 8) is runnable now on
+  the `fd17ff1` zip. **Section 7's nine one-seat rows PASS 2026-11-15** (the user, on the
+  compass build, the same afternoon as the redeploy: the four roads walked to their doors with
+  the camps left alone from the road, the mountains' foot held in four places, the ridge closed
+  at both ends so the pass is the only way north, the doors passed through as scenery with the
+  cliff behind them, the range seen from the square and from inside the Greywood), **and the
+  journal row** (`slope_refusals` only in the minutes at the cliffs, no error). Still to run:
+  section 7's two-seat row and the GM fling-and-relog row, and sections 1 to 6 and 8.
+- [ ] **Wandering wildlife to fill the open ground** *(user, 2026-11-15: "We need wandering NPCs
+  to fill the open spaces. Wolves, bears, snakes, rats etc.")*. **DESIGNED 2026-11-15:
+  `docs/design/wandering_wildlife.md`, eight decisions waiting on the user (its section 9),
+  nothing built.** Today every one of the 54 spawns stands on its spot (`tick_idle` only scans).
+  The shape: a roam table (`data/zone_roam.toml` since the review; species, a region circle or ring, count,
+  respawn, temperament, pack size); the test-only walkable flood fill (`terrain_content.rs::
+  walk_from_town`) moved to runtime; spawn spots drawn walkable and clear of the town (150 m),
+  every camp (60 m) and every player (60 m); roaming inside `Idle` (pause, a 20 to 80 m leg at
+  0.4 of the mob's speed, the same scan on the way), so a roamer is never evading; the leash
+  home rewritten to where a fight began; passive animals need no code (`aggro = 0` with a leash
+  of at least 35 m, enforced at load). Proposed population 70 animals in five level bands
+  following the camp rings (rats and grass snakes by town, wolf packs, bears and vipers further
+  out), 124 mobs in all. Found while reading: the Snake and Bear loot tables and all their
+  items already exist; quest kills match by substring, so a wandering wolf counts for the wolf
+  quests (decision 6). Server only: no wire change, no export, no migration. Slices: the
+  roamers (about a day), wolf packs with pack-scoped social aggro, then optional night spawns
+  and new species.
+  **ALL EIGHT DECIDED 2026-11-16 (user), recorded in the design's §9:** as recommended, except
+  no camp clearance (roamers may spawn and walk through camps); wolves count for the wolf
+  quests, rats do not (the rat quest's target becomes `"Plague Rat"` on both sides; the same
+  read found that "Rattlesnake" would have counted as a rat and rolled rat loot, so the snake
+  is a Prairie Adder); build now, before the door (server only, the zip unaffected); night
+  animals in scope: bats and ghosts. Build-ready; not built.
+  **REVIEWED three times against the code 2026-11-16 and corrected in the design** (its §10 lists
+  each finding and where it was fixed). The ones that would have shipped wrong: adders and
+  vipers matched no loot table and no beast word (no snake loot, coin like a humanoid), fixed
+  by adding `adder` and `viper` to `loot.rs`'s rules with a load check over every name; a home
+  reset in `transition` would fire on a charm ending in town, so it lives in `tick_idle`'s
+  acquire paths only; the integration harness runs the real camp file, so a `Config::roamers`
+  switch keeps roamers out of every test but their own. Also added: the spawner gets player
+  positions and per-slot member counts (packs refill rather than wait for the last member); a
+  roam map of floors reachable both ways, and roam steps refused onto a face in either
+  direction (mobs never fall, so they could walk down cliffs); a stray rule (idle, outside its
+  region, unseen for 120 s, respawned in region); night as 21:00 to 05:00 in lockstep with the
+  client's sky, with Bat, Wandering Shade and Barrow Shade numbers; a `PD_NO_ROAMERS=1`
+  off switch for the R720. The third pass: a slot's head count includes its charmed members
+  (else charm, wait for the refill, release: a charm-and-wait farm); social aggro only to a
+  packmate whose leash reaches the target; the roam data in its own file, since the client
+  tools' camp parser would read appended entries as part of the last camp. Still build-ready;
+  not built.
+  **Reviewed a fourth time (Fable) and BUILT 2026-11-16 (night, unattended; user: "what can you
+  run tonight? go ahead"); MERGED AND PUSHED 2026-11-17 (user: "go ahead"), pending the
+  redeploy and the playtest** (built on `feat/wandering-wildlife` in both repos; both deploy
+  branches fast-forwarded and pushed: server `f388b96`, client `b73a6a9`, all 17 client checks
+  green on the merged pair; `wandering_wildlife_checklist.md`, 39 rows; the design's section
+  10 has the fourth review's table and section 11 the as-built summary). The review's corrections: the stray rule cut (every fight ends with the
+  walk home, and home is ground the roamer stood on in its region); no roam stuck clock (a
+  refused step ends the leg at once); snare applied by hand (`move_speed` carries none); the
+  clock-driven work in the spawn step (the AI step sleeps on an empty server); packs held
+  together (social aggro moves the joiner's home and is asked every tick; a follower regathers
+  on its leader); regions take a z band (a ring round the town crosses the ridge). What exists:
+  `world/roam_map.rs` (the floors reachable from the town without crossing a face in either
+  direction, 55 degrees, shared edges: 51.1% of the plate; the one answer to where a wanderer
+  may appear, where a leg may end and whether a roam step may be taken); `world/roam.rs` and
+  `data/zone_roam.toml` (66 slots: 70 animals by day, 30 of them wolves in 12 packs, and 14 at
+  night; a region is a circle, a ring round the town and a z band, with the 150 m town
+  clearance part of every region; unknown keys and a passive mob without a 35 m leash are
+  refused at load); the spawner's roam slots (a slot counts heads by looking at the world,
+  charmed members included; a pack is refilled beside its leader when no player is within
+  60 m of it; a night slot waits for dusk); `Entity::tick_roam` (inside Idle, after the idle
+  scan; pause 5 to 25 s, a leg of 20 to 80 m at 0.4 of its speed, every step onto the roam
+  map), `roam_fight_began` (home becomes where the fight began, set when it picks a target
+  while idle or joins a packmate's fight, never by a charm ending) and `join_pack_fight`;
+  packs (the leader is the lowest id, read fresh each tick; followers stand within 4 m, amble
+  after it, run past 12 m, and never take a line through the town); night (`clock::is_night`,
+  21:00 to 05:00, the pair `NIGHT_START_HOUR` / `NIGHT_END_HOUR` in lockstep with the client's
+  sky; a night animal that is idle, unhurt and unseen by day is removed and its slot waits for
+  dusk); `adder` and `viper` in `loot.rs`; the rat quest's target `"Plague Rat"` on both sides
+  (the client's objective text now names the Rat Warrens); `Config::roamers`
+  (`PD_NO_ROAMERS=1`, boot line `roamers=on|off`, and a `wandering wildlife slots=66
+  animals=84 roam_map_share=51.1%` line at world start) and `Config::roam_table` for the
+  harness, which runs with roaming off except in `tests/world/roam.rs`. Tests: 31 unit and
+  four integration (a wanderer seen walking its region; home is where the fight began, not the
+  first spawn; six respawns in a row past 60 m of a player; a passive packmate joining its
+  smitten packmate's fight), 19 planted faults each caught; the suite 445 unit and 195 world,
+  fmt and clippy clean, all 17 client checks green against the branch; the real binary booted
+  with roaming on and off. Rules C1 to C4 in `invariants.md`. **Calls
+  made in the build, the user's to overrule:** Field Rats stay aggressive but see only 6 m (a
+  level 1 has 17 to 28 HP and their ring holds the three starter camps; one line makes them
+  passive); the far reaches (the war camp's vale, the barrow hills, the east arm) are one ring
+  region past 1,350 m. **Deploy shape:** the server half needs no zip, no SQL and no client
+  change: the usual redeploy, the boot line reading `build="f388b96"` and `roamers=on`, then
+  `wandering wildlife slots=66 animals=84`; `PD_NO_ROAMERS=1` in the server's `.env` and a
+  restart turns the animals off. The client half (the rat quest's objective text and tooling)
+  rides the next zip; the door zip `397e207` works without it. **Flagged, not built:** a
+  stunned leader's followers keep following; wanderers stand still on an empty server and are
+  placed afresh at a restart; a pack split by a cliff can stay split for a while; no species
+  shape or tint on the client.
+  **DEPLOYED 2026-11-17 16:55 UTC** (R720 boot line `build="f388b96" dev_cmds=false roamers=on
+  terrain=400x400 cells of 10 m, floor 0, hash f569ade0c331`, then `wandering wildlife
+  roamers=on slots=66 animals=84 roam_map_share=51.1%`; nobody online at the stop, `saved=0
+  unsaved=0`, 14 corpses loaded, `ledger check mismatches=0`);
+  `wandering_wildlife_checklist.md` is runnable now on the door zip `397e207`.
+- [ ] **Obstacle collision: trees, rocks, walls and set pieces that stop a body** *(user,
+  2026-11-17: "Currently players are able to run through structures and trees etc.. We need
+  something for collision. Can you write a plan for this? or perhaps Godot has something built
+  in?")*. **DESIGNED AND BUILT 2026-11-17 (user, on the eight calls: "build it now, please");
+  MERGED, PUSHED AND EXPORTED the same day (user: "lets go for it"): both deploy branches
+  fast-forwarded and pushed, server `87c58fe`, client `a1a154e`; the export
+  `builds/ProjectDawn-alpha-a1a154e.zip`, stamped `a1a154e`, a release export, which replaces
+  `54ca951`. Pending the R720 redeploy (both sides together; boot line `build="87c58fe"`,
+  `obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4`) and the playtest**
+  (planner rows b64, o30 and v65; built on `feat/obstacles` in both repos, worktrees
+  `F:\Projects\Project_Dawn-obstacles` and `F:\Projects\server-obstacles`; design as
+  built: `docs/design/obstacle_collision.md`; `obstacle_collision_checklist.md`; session note
+  `session_2026_11_17_obstacle_collision.md`; no wire change, no DLL rebuild, no migration, no
+  SQL). Godot's built-in collision would stop the client's body only: the server moves every
+  player from the direction sent, so it would walk the player through the wall and the client
+  would snap after it, and a modified client deletes its own walls. So the server holds the
+  obstacles. **The user's calls:** everything solid blocks (the first plan left bushes, bones,
+  fences and clutter out); boundaries mirror each object's own geometry; a tree or a rock that
+  is in the line blocks a cast; mobs and pets collide; bodies still pass through each other;
+  the camera stops at walls and buildings, not trees. **What exists:** every closed solid the
+  `LowPoly` builder makes records its corners; `ZoneObstacleBake` turns each, and every planted
+  tree, bush, boulder and bone, into a prism (its outline from above, its base and top);
+  `tools/export_obstacles.gd` writes the same bytes to the client's `data/zone_obstacles.bin`
+  and the server's `data/obstacles.bin` (33,199 prisms, 2.2 MB, compiled in, hash checked,
+  boot line `obstacles=33199 prisms (19580 walk, 31012 sight), hash f97d25964ce4`). One rule on
+  both sides (`world/obstacles.rs`, `scripts/zone/zone_obstacles.gd`): a step is taken in 0.1 m
+  pieces and a body inside an outline grown by its radius is moved out the shortest way, a
+  slide; no piece may move a body much further than it asked, which makes crossing a solid
+  impossible whatever the scenery. The server resolves every player step (on the ground and in
+  the air), every placement stands clear and out of any gap it could not leave (`place`,
+  `can_leave`: login, respawn, ports, the resurrection summon, camp, dev and wanderer spawns; a
+  pet is summoned on its owner's side of a wall), the ground carries the obstacles so every
+  sight check includes them, and mobs and pets use the same rule at the same radius: a held
+  mob scouts both ways along the wall, sets off the shorter and keeps to the wall until 3 m of
+  its run at the goal is clear, so it comes round (no pathfinder); only a step that does not
+  get on with it feeds the stuck clock and the evade rule (after 1 s it takes no damage, after
+  8 s it gives up, as below a cliff), and a second of clean steps ends the clock, so a wood
+  sheds no mob. A sight line that begins or ends inside a prism is not blocked by it (a body
+  beside a small tree on a slope has its eye in the crown). Client: the player's body
+  runs the rule after the blend toward the server; a cast is refused before the bar when a
+  solid is in the line; 630 big solids are camera blockers on physics layer 5, which only the
+  spring arm reads (click targeting unchanged); the Test Panel's **Obstacle Outlines** draws
+  every prism (red stops a body, blue blocks sight only). For walking a prism is a column:
+  **nothing is stood on or jumped over** (the data carries real heights, so that is an added
+  rule later, with the server simulating the jump). Floors (the Ossuary's dais, the Wraith
+  Gate's and the crypt's steps) are built `solid = false`. Scenery changed: fences follow the
+  ground in 3 m stretches and each field has a 4 m gateway on its town side. Checks:
+  `check_obstacle_lockstep.gd` (the three copies are one file; every preset ships it; the
+  camera's layer and the body's are apart) and `check_obstacle_rule.gd` (the server's answers
+  for 600 steps, 150 placements and 400 sight lines, replayed through the GDScript rule; it
+  caught a slip in the port the day it was written), both in `check_all.ps1` (19 checks
+  green); thirteen constant pairs. Tests: server 481 unit and 201 world, clippy and fmt clean
+  (41 new: the rule, the file, the real zone's gates, spawns and pockets, mobs round a house,
+  a long wall and a trunk, five with a real client); each player, sight, mob and spawn test
+  was run against the rule switched off and failed. **Reviewed the same day** (`/code-review`,
+  ten findings, nine fixed: the first wall-follow never rounded a wall with its target close
+  behind it, one bump on a tree ended a chase 8 s later, and a crown blinded a body standing
+  under it on a slope, at 653 trees; session note 4b). Rules A6, C5 and a rewritten L2 in
+  `invariants.md`. Closes the wall half of
+  exploit-audit finding 10 (b). **Exploit lens:** the server takes every step itself; a
+  hand-edited file fails its hash at boot; one body radius for everything, so nowhere a player
+  fits and a mob does not; a mob that cannot reach its target is immune after a second.
+  **Residuals, none a free kill:** a mob sliding along a long low fence is damageable for the
+  slide plus the grace; a building sheds a chasing mob in 8 s if it finds no way round; a
+  space sealed between solids and a cliff is not found by the pocket test (the road doors).
+  **Flagged:** a body run square into a flat face stops until it steers, and a low-poly trunk
+  has five or six flat faces; the rule's lookups allocate on every pass (unmeasured in play);
+  the obstacle file is rewritten whole (2.2 MB in each repo) on every scenery
+  change, and `export_obstacles.gd` must be run after any scenery or terrain edit; when the
+  GM flight client (`feat/gm-flight`) merges, its flying body must skip the obstacle step in
+  `player.gd`; nobody has walked the zone with it yet. The tester README and checklist in the
+  zip now say scenery is solid and blocks spells (they said walking through it was not a bug).
+  The exported build was booted headless and passes `probe_obstacle_walk.gd` from inside the
+  export, so the obstacle data is in the pack.
+  **DEPLOYED 2026-11-17 22:21 UTC** with the group levels (R720 boot line `build="87c58fe"
+  dev_cmds=false roamers=on`, `obstacles=33199 prisms (19580 walk, 31012 sight), hash
+  f97d25964ce4`, nobody online at the stop, `saved=0 unsaved=0`, `ledger check mismatches=0`);
+  the zip to send is `a1a154e`, and `obstacle_collision_checklist.md` is runnable now.
+- [ ] **The ridge's south face climbs where the bandit knoll meets it, and a body walked into
+  a face sinks into it a little** *(the hills sheet's F2.2, 2026-11-09; recorded here when the
+  height model entry ticked)*. (a) The knoll (radius 25 at z = 60) reaches the ridge's foot at
+  z = 70 and lifts it, so the face there is under the 60° rule and can be walked up: content, a
+  smaller or more southerly knoll in `terrain_features.toml`, re-authored
+  (`tools/author_terrain.gd`) and re-exported, a server rebuild and an export; the crest is the
+  known perch and the evade rule covers it. (b) Walking into a face pushes the client's body a
+  little into it until the player stops (the server holds the foot; the reconciliation pulls
+  the body out): cosmetic. Both after the door. **(a) BUILT 2026-11-13 (the zip open until the
+  17th), BUILT AND EXPORTED 2026-11-13, pending the Monday redeploy and the pre-door check**
+  (`pre_door_check_checklist.md` §9; server `d3cceef`, client `f5b8b24`): the knoll is at `[-58, 48]` with radius 22 (was `[-58, 60]`, 25), so its
+  north edge ends at the foot row (z = 70 reads 0.0 along it, checked from the exported file)
+  and the camp sits on its north slope (spawns at 5.9, 2.4 and 0.9 m, the steepest 25.9°, the
+  route from town 25.6°, no WARN); every triangle of the ridge's south face is a face again
+  (the shallowest outside the pass 60.7°, checked from the exported file). `world.tscn`
+  re-authored, `terrain.toml` re-exported (`hash 5324d5d0c754`; the boot line must read it),
+  the lockstep check green. (b) stays. **Superseded the same evening by the 4 km zone** (the
+  entry "The starting zone at 4 km"): that plate replaces this ground whole, its knoll stands
+  at (-600, 640), 150 m clear of the ridge's foot, every triangle of the ridge's faces is a
+  face (the author's walk report holds the crest unreachable), and the boot line reads `hash
+  35a3f1a15f4f`.
+- [ ] **NPC placeholder capsules sit half in the ground** *(user, 2026-11-06, part A of the master
+  sheet, with a screenshot: "This isnt an issue now, but i want to make sure it wont be an issue
+  when they get models")*. Verified: `dialogue_npc.tscn`, `vendor_npc.tscn` and `banker_npc.tscn`
+  draw a centred 1.8 m `CapsuleMesh` at the node origin, so 0.9 m of it is below the ground
+  (`remote_player.tscn` raises its capsule 1 m). Always so, nothing to do with the hills: the
+  town is flat at 0 and the server derives each NPC's height from the ground. A real model will
+  not sink: its origin sits at its feet (Blender's export convention; the gnome body in the same
+  screenshot stands right) and the node origin is on the ground. The placeholder fix is a 0.9 m
+  offset on the mesh in the three scenes, three lines; waits on the go. **BUILT 2026-11-09 (user:
+  "go ahead"), pending the next export** (`pre_door_check_checklist.md` §1): the click capsule
+  and the mesh raised 0.9 m and the name label to 2 m in the three scenes, so an NPC stands on
+  the node origin as a player does; `tools/probe_npc_capsule_stand.gd` (12 checks) fails on the
+  old scenes. Nothing on the server or the wire.
 - [ ] **Multi-zone epic** *(deliberately out of every phase so far: phase 4 plan §4.5, phase 5
   plan Track D item 5, the procedural dungeon memory; audit 2026-09-29 gives it a home)*.
   The server simulates one zone (`conn.zone` unpopulated, `npcs.toml` has no zone field);
@@ -3346,6 +4102,56 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   dummies for a bystander, leaves the bystander's warder, reports the count, writes one
   audit row; a Smite at a removed id is refused) that fails on a no-op despawn, and a
   headless probe of both button paths that fails on the old button.
+- [ ] **GM flight: Minecraft Creative-mode movement for geometry tests** *(user, 2026-11-15:
+  "the ability to fly and quickly would be very helpful in these geometry tests")*.
+  **DESIGNED 2026-11-15: `docs/design/handoff_gm_flight.md`; all eight calls (its section 9)
+  DECIDED the same day as recommended** (user: "sounds good" to 1 to 7, and to 8, "lets get it
+  done"). The shape: a `fly <m/s>` / `fly off` sub-command of the
+  existing `GmCommand` line (dev-gated, one audit row per toggle) and the vertical riding the
+  existing `Move.direction.y`, so no protocol change and the door zip is unaffected; the server
+  integrates the flight in 3D, clamped above its own ground, inside the plate and under a
+  ceiling, and saves a flier at the ground under it; mobs ignore a flier and a flier cannot
+  fight; any server move ends flight with a `Teleport`. The client flies its body on Space,
+  Shift and Ctrl (double-tap Space to toggle, as in Minecraft) and needs a sequence-keyed
+  reconciler, since the walking one would snap the body back on every Position at flight speed.
+  **BUILT 2026-11-15 (both halves), pending the redeploy, a client build and the playtest**
+  (`feat/gm-flight` in both repos, from the deploy tips: server `5a0cf7e` + the review pass
+  `8d1dc67`, client `a414978` + the review pass `73cfd8e`; `gm_flight_checklist.md`, 30 rows; session note
+  `session_2026_11_15_gm_flight.md`, its 5b and 5c the two review passes).
+  As designed, every call as recommended. Server: `PerConnection.flight`, the `fly` branch of
+  `GmCommand` (`parse_fly_arg`, the dead refused there since the line is whitelisted for the
+  dead, one audit row per toggle), the Move handler keeping a flier's vertical clamped to
+  `FLY_BOOST`, the flying gate (a swing dropped, a cast and a skill refused privately with
+  "You cannot do that while flying."), the flight branch of the movement step (3D at the
+  flier's speed, `Terrain::clamp_to_plate`, the ground, `FLY_CEILING`), fliers out of the
+  mobs' target list, the takeoff's hate wipe, `saved_pos` (the ground below), `teleport_to`
+  (every server move ends flight, through one `end_flight`), `fall::harmless_drop` for `fly
+  off`; from the server review: the takeoff stands the flier's pets down, stops a Bard's song
+  and clears the last-attacked fields, `/pet attack` from the air is refused, a flier takes no
+  XP share, and a pet's follow distance is measured on the ground. Seven integration tests in
+  `tests/world/flight.rs`, each failing with its rule disabled; 412 unit, 191 world. Client:
+  `FlyReconciler` (sequence-keyed, the prediction advanced one tick along the direction sent,
+  since the echoing Position is fanned after the tick that took it; every applied correction
+  shifts the predictions still in flight, the client review's catch; a dead band of 1.5
+  ticks, a snap past 8, floors for a body holding still), `player.gd`'s `_fly_tick`,
+  `start_flight` (cancels a running cast) / `stop_flight` / `toggle_flight`, the double tap,
+  the Teleport and death hooks (a dead flier is put on the ground); `/fly`, the HUD line, the
+  Test Panel row, `fly_down` (Shift) and `fly_boost` (Ctrl); the local refusals in Combat,
+  Spells, Skills and the pet panel, said once per flight. Probes `probe_fly_reconciler.gd` (a
+  20 Hz server model at 100 m/s with 100 ms each way: no correction needed on a clear
+  track, the body at rest at an edge the server holds; with the shift disabled it ran off to
+  millions of metres) and `probe_flight_toggle.gd` (20 checks); the five lockstep pairs; all
+  17 checks green against the branch's server. **Deploy shape:** the server half is wire-compatible with
+  every client in the field (the door zip included) and can merge and redeploy any time; the
+  client half stays out of the door zip (it rewrites `player.gd`'s movement) and reaches the
+  user through the editor or a personal export until the bump after the door.
+  **Server half MERGED AND DEPLOYED 2026-11-16 02:29 UTC** (the server deploy branch
+  fast-forwarded to `8d1dc67`; R720 boot line `build="8d1dc67" dev_cmds=false
+  terrain=400x400 cells of 10 m, floor 0, hash 6bedde1c663e`, nobody online at the stop,
+  `saved=0 unsaved=0`). No wire change, so the door zip `fd17ff1` connects as before and a
+  player sees nothing new. The client half stays on `feat/gm-flight`: fly from the Godot
+  editor in `F:\Projects\Project_Dawn-zone`, which `gm_flight_checklist.md` runs on (planner
+  row v63).
 
 ### UI polish
 - [x] **Sticky chat channel, WoW style** — **DONE + playtested 2026-10-27**
@@ -3412,7 +4218,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   jump relay in place of the three copies of the AOI-neighbourhood filter. Test
   `a_say_carries_fifty_metres_and_no_further` (a listener at 40 m hears, walked to 60 m hears
   nothing while a shout still arrives), failing on the previous server at the 60 m assertion.
-- [ ] **Other players never turn** *(user 2026-10-27, `chat_channel_checklist.md` notes: "Dip
+- [x] **Other players never turn** — **DONE + playtested 2026-11-09** (`remote_facing_checklist.md`,
+  all nine rows passing on two seats, parts D and E of the master sheet; what exists is in
+  systems_overview, Networking, "Facing". The one gap the sheet found, the own body's facing at
+  login, is its own entry directly below.) *(Original entry:)* *(user 2026-10-27, `chat_channel_checklist.md` notes: "Dip
   does not see Bun's character models spinning, or looking in different directions.")*.
   Verified in the server: `Move` carries a direction and no facing, and nothing on the server
   ever sets a player's `yaw` after login, so every Position it fans carries the facing the
@@ -3439,7 +4248,32 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (sees 1.25, keeps it through a NaN Move, sees 4.0 wrapped), failing with the yaw ignored.
   Both sides deploy together; the export comes from the merged branch with the rebuilt DLL.
   **DEPLOYED 2026-11-05 with the November bump** (server `267065f`, client `da83ea8`);
-  `remote_facing_checklist.md` is runnable now.
+  `remote_facing_checklist.md` is runnable now. **The sheet RUN 2026-11-09, every row marked**
+  (two seats, parts D and E of the master: turning in place, the circle, strafing, backing up,
+  the camera orbit leaving the body, the facing kept across a relog, a late joiner seeing the
+  facing from the first frame, the running, jump and sit regression on the hills, all PASS;
+  the Test Panel spawn row on 11-06). **One gap from the relog row, read in the code the same
+  day** (user: "character appears to login facing the correct direction then is suddenly
+  rotated a small amount"): the client's own body never reads its facing back from the
+  server. It logs in facing the scene's default, and its first Move (sent every 50 ms, input
+  or not) overwrites the facing the server saved, so the watcher sees the saved facing for a
+  tick and then a turn, and the player's own screen never showed the saved facing at all.
+  Older than the bump (the facing's first build). Fix, client only, a few lines in
+  `player.gd`: seed the body's `rotation.y` from the first server Position's yaw and send no
+  Move before that Position has arrived (a probe for both); could ride the Wednesday zip with
+  the swing re-time. **BUILT 2026-11-09 (user: "go"), the entry directly below.**
+- [ ] **The own body never read its facing back at login** *(the relog row of the facing
+  sheet, 2026-11-09; user: "character appears to login facing the correct direction then is
+  suddenly rotated a small amount")*. The client's body logged in facing the scene's default
+  and its first Move (sent every 50 ms, input or not) overwrote the facing the server had
+  saved, so a watcher saw the saved facing for a tick and then a turn, and the player's own
+  screen never showed it. Older than the bump. **BUILT 2026-11-09, pending the next export
+  and the pre-door check** (client, `player.gd`; `pre_door_check_checklist.md` §8): the body
+  takes its `rotation.y` from the first server Position's yaw (the first only; from then on
+  its own facing is the truth the Moves carry), and sends no Move until that Position has
+  arrived. `tools/probe_login_facing.gd` (8 checks, 2 failing on the old code: six Moves went
+  out before the first Position, and the body kept the scene's 0.3 against the saved 1.25).
+  Nothing on the server or the wire.
 - [x] **"You cannot do that while dead." flooded the chat** — **DONE + playtested 2026-10-26**
   (`dead_gate_checklist.md`, every row passing: server `8127a70` and client `6ddeddc`). The
   flood was the client's `EquipUpdate`, one per gear slot as a death strips the gear, which the
@@ -3632,6 +4466,28 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   dials now exist (`LOGIN_UI_SCALE` in login.gd, `GAME_UI_SCALE` in hud.gd); expose the game
   one as a slider persisted in `GameSettings`. Also from the same notes: window backgrounds
   should scale with the display, and "be critical" about HUD scaling at every resolution.
+  **STALE ENTRY, CORRECTED 2026-11-10: the slider has existed since 2026-05-05** (client
+  `145aa8e`, the day it was asked for: `options_screen.gd` builds a UI Scale row, 75% to
+  150% in 5% steps, and `README_FOR_TESTERS.md` has pointed testers at it under
+  Troubleshooting since). The 09-29 audit filed it from the notes without reading the options
+  screen. No checklist row has ever named it, so it is not ticked here; it ticks on the
+  user's word or on a row. The two HUD-scaling asks (backgrounds scaling with the display,
+  HUD scaling at every resolution) belong to the UI layout entry.
+  **Verified before the tick 2026-11-11 (user: "good to tick the UI"), and the tick was not
+  earned: the saved value never took effect at login.** `hud.gd`'s `_ready` reset the window's
+  scale to a constant 1.0 on every world load (`ae48504`, 2026-09-23, the launcher-vs-game
+  split), so a saved 125% showed in the slider while the HUD ran at 100% until an Apply in
+  that session, and `/camp` and Quit end the session. **BUILT 2026-11-11 (user: "build it
+  now"), pending the next export and the pre-door check** (`pre_door_check_checklist.md` §8,
+  its last row): `GameSettings` owns the in-game scale (`GAME_UI_SCALE` moved there, the dial
+  times the slider, and one `apply_ui_scale` that the options screen's Apply and the HUD's
+  `_ready` both land on), so the saved value is the window's scale the moment the world is on
+  screen; the login flow keeps its own 1.6 (the 09-23 call unchanged). Client only.
+  `tools/probe_ui_scale_persists.gd` (6 checks; on the old code the settings autoload has no
+  scale and the HUD check reads 1.0 against a saved 1.25). The tester README's line now says
+  the setting is kept for every later login, true from that zip. **EXPORTED 2026-11-11 evening**
+  (`builds/ProjectDawn-alpha-919671b.zip`, the Wednesday zip: this fix is its one game-file
+  change over `e0d0c65`); the row is runnable once the testers hold it.
 - [ ] **Nameplate and targeting polish** *(user 2026-05-01/05; audit 2026-09-29)*. (a) NPC and
   enemy name labels are visible through walls ("not good"; the dungeon checklist called it
   intentional-for-now, fix before ship). (b) Merchant/guard NPC names do not flash when
@@ -3702,6 +4558,29 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   carries no level); a player's level reaches others only in `EntitySpawn`, and `LevelUp` goes to
   the player alone, so a level gained in view is never seen. Shape: a level on the group state
   and a level relay to the players who can see the leveller (a wire addition, so a bump day).
+  **Designed 2026-11-16: `docs/design/peer_levels.md`** (three shapes; it also found the group
+  panel showing "Lv 0" for every member but yourself). **DECIDED 2026-11-17 (user): "Players
+  should see the class and level of their group mates. Class should be abbreviated by using
+  three letters. Warrior = WAR and Necromancer = NEC"** (the note's shape A plus the class; the
+  target frame keeps the 2026-05-12 rule, no peer level there). **BUILT, MERGED AND EXPORTED the
+  same day, pending the redeploy and the playtest** (server `58332bb` + the review pass
+  `7e0095f`, client `54ca951`, both on the deploy branches; PD_W0031; the zip
+  `builds/ProjectDawn-alpha-54ca951.zip` replaces `397e207`, refused by the new server, so the
+  redeploy and the send go together; `group_levels_checklist.md`; session note
+  `session_2026_11_17_group_levels.md`). `GroupRoster`'s members are `GroupMember { id, name,
+  level, class }`; `progression::award_xp` marks a level move and a tick step after the death
+  sweep re-sends that member's group roster (up and down); every live roster goes through
+  `handlers::fan_current_roster`, every ended one through `fan_group_ended`. The panel shows
+  "12 WAR" (`CharacterData.CLASS_ABBREV`: EQ's letters where a class has an EQ counterpart, WHT,
+  SOR and BLM for ours; nothing before a level is known, never "Lv 0"); a re-sent roster keeps
+  known bars; `check_wire_layer.gd` reports a DLL with the old argument count. Tests: the
+  integration test `group_mates_see_each_others_level_and_class_both_ways` (a level-up and a
+  death's de-level each reach the partner, an ungrouped player beside them is sent nothing;
+  fails with the re-send step removed and with the roster sent to everyone) and
+  `tools/probe_group_levels.gd`. Not built: a level relay to players in view, `/who`, `/anon`.
+  **DEPLOYED 2026-11-17 22:21 UTC** with the obstacle collision on top (R720 boot line
+  `build="87c58fe" dev_cmds=false`); the zip carrying both is `a1a154e` (it replaces
+  `54ca951`), and `group_levels_checklist.md` is runnable on it.
 - [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
@@ -3999,13 +4878,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   defaults (proc fields compared only on items that proc). First run: one drift, the Arrow
   Bundle's stack (200 on the server, 20 in the `.tres`), fixed in the TOML the same day (server
   `93f5360`); the exporter itself stays stale and unrun. Both checks are in `commands.md`.
-- [ ] **Docs debt** *(audit 2026-09-29)*: `server/README.md` is "badly stale" (still claims the
+- [x] **Docs debt** *(audit 2026-09-29; DONE 2026-11-13, the last part a user decision)*: `server/README.md` is "badly stale" (still claims the
   world sim is unbuilt, per `deployment_linux.md`); `server/docs/flaky_integration_tests.md`
   still describes the flaky trio the 09-16 fix retired; `docs/concepts/passive_skills/*` says
   casting passives are "not yet implemented" while `CastingSkills` has shipped for months;
   `docs/deployment/` remains untracked by decision and CLAUDE.md links it as canonical (decide
   one way). Small, but each is a trap for the next reader.
-  **Checked 2026-10-12:** three of the four are closed. `server/README.md` was rewritten on 10-08 (`c6fccd1`, no unbuilt-world claim remains); `flaky_integration_tests.md` has carried a RESOLVED header since 10-01 with no known-flaky test; `casting_passive.md` now says the system is implemented and where (client `CastingSkills`, server `world/skills.rs`). The `weapons_passive.md` line is about Parry and Riposte, which really are unbuilt. **Open: whether `docs/deployment/` stays untracked** (a user decision; CLAUDE.md links it as canonical and `public_hosting_sitting.md` joined it on 2026-10-12).
+  **Checked 2026-10-12:** three of the four are closed. `server/README.md` was rewritten on 10-08 (`c6fccd1`, no unbuilt-world claim remains); `flaky_integration_tests.md` has carried a RESOLVED header since 10-01 with no known-flaky test; `casting_passive.md` now says the system is implemented and where (client `CastingSkills`, server `world/skills.rs`). The `weapons_passive.md` line is about Parry and Riposte, which really are unbuilt. **Closed 2026-11-13 (user): `docs/deployment/` is tracked.** The four runbooks are committed (placeholders only, checked); `test_accounts.md`, a temporary credential, is deleted and its name kept in `.gitignore`; the password it held is in the private repo's history since `0beb8e2` (the 11-02 sweep), so the `spelltest` account wants a `reset_password` or a ban on the host. The entry's last open part; ticked on the edit, as doc lines are.
 - [x] **The cast arms duplicate the pre-flight** — **DONE 2026-10-14, ticked on the suites**
   (server `c377a66` on the deploy branch; server-only, no wire change, no behaviour change, so no
   checklist: a refactor with no playtest surface, and a test suite is its own checklist, the

@@ -113,19 +113,16 @@ var _tot_entity: Node = null
 
 var _self_targeted: bool = false
 
-# In-game UI scale, deliberately separate from login.gd's LOGIN_UI_SCALE
-# (user call, 2026-09-23): the launcher flow sets the window's
-# content_scale_factor for itself, and this resets it the moment the world
-# (which instances this HUD) is on screen. Turn this dial for the HUD only.
-const GAME_UI_SCALE := 1.0
-
 # How far away /inspect works, in metres. Tighter than the server's own
 # INSPECT_RANGE (30 m) on purpose: the server gate is the backstop against a
 # modified client, and this one is what an honest player actually meets.
 const INSPECT_RANGE := 20.0
 
 func _ready() -> void:
-	get_window().content_scale_factor = GAME_UI_SCALE
+	# The launcher scales the window for itself (login.gd's LOGIN_UI_SCALE);
+	# the world takes the player's saved UI scale back the moment it is on
+	# screen (GameSettings.GAME_UI_SCALE times the options slider).
+	GameSettings.apply_ui_scale()
 	_style_panel()
 	_hp_label  = UITheme.style_bar(health_bar,  UITheme.C_BAR_HP)
 	_sta_label = UITheme.style_bar(stamina_bar, UITheme.C_BAR_STAMINA)
@@ -1539,17 +1536,25 @@ func _handle_chat_input(text: String) -> void:
 			BardSongs.stop_singing()
 		return
 
-	if lower == "/loc" or lower == "/location":
-		# EQ-style position print (docs/design/location_command.md). Printed
-		# x, y, z — NOT EQ's Y-first — so the line pastes straight into
-		# zone_camps.toml / npcs.toml. Coordinates only (user, 2026-10-09):
-		# which way you face is the Sense Heading skill's job, on /sense.
-		# Works while dead on purpose: a corpse run is exactly when you want it.
+	if lower in ["/loc", "/location", "/loc raw", "/location raw"]:
+		# EverQuest's position print (docs/design/location_command.md): north,
+		# then west, then height, so a larger first number is further north
+		# and a larger second one further west, as EQ printed it (user,
+		# 2026-11-14). North is the world's -z and east its +x
+		# (ZoneLayout.to_world). `/loc raw` prints the world's x, y, z, which
+		# paste straight into zone_camps.toml / npcs.toml. Coordinates only
+		# (user, 2026-10-09): which way you face is /sense's job. Works while
+		# dead on purpose: a corpse run is exactly when you want it.
 		if is_instance_valid(_player):
 			var p: Vector3 = _player.global_position
-			CombatLog.add_line(
-				"Your location is %.1f, %.1f, %.1f (x, y, z)." % [p.x, p.y, p.z],
-				CombatLog.MsgType.INFO)
+			if lower.ends_with(" raw"):
+				CombatLog.add_line(
+					"Your world position is %.1f, %.1f, %.1f (x, y, z)." % [p.x, p.y, p.z],
+					CombatLog.MsgType.INFO)
+			else:
+				CombatLog.add_line(
+					"Your location is %.1f, %.1f, %.1f (north, west, height)." % [_loc_number(-p.z), _loc_number(-p.x), _loc_number(p.y)],
+					CombatLog.MsgType.INFO)
 		else:
 			# A triage tool must never be silent — say why there is no
 			# answer instead of swallowing the command.
@@ -1835,6 +1840,11 @@ func _handle_chat_input(text: String) -> void:
 		return
 
 	CombatLog.add_line("Unknown command: %s" % text, CombatLog.MsgType.INFO)
+
+# A /loc number to one decimal, never "-0.0" (/loc negates two of the axes, and a
+# body a hair south of the line would otherwise print a minus on a zero).
+static func _loc_number(v: float) -> float:
+	return snappedf(v, 0.1) + 0.0
 
 # The display name an NPC node carries, for /con (the client holds no server
 # ids for NPCs). `npc_name` first: the vendor and banker labels carry a role

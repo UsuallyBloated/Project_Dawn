@@ -10,8 +10,10 @@ cutover evening, run once the user's host sitting (slice 4) is done.
 branch once it is merged) running on the R720 with Caddy in front; the client exported
 from the same branch; the router forwarding TCP 443 and UDP 7777. **Deploy order:** the
 server first (an old client still registers while `PROJECTDAWN_REQUIRE_INVITE` is unset),
-then the export. Migration `0012_invites.sql` is forward-only: once this server has booted
-on `world.db`, an older binary refuses to start on it.
+then the export. Migrations `0018_invites.sql` and `0019_hashed_sessions.sql` are
+forward-only: once this server has booted on `world.db`, an older binary refuses to start on
+it. The second clears every session row (they were stored raw before), so every launcher
+logs in fresh on cutover day.
 
 | Thing | Where | Notes |
 |---|---|---|
@@ -52,6 +54,8 @@ on `world.db`, an older binary refuses to start on it.
 - [ ] **A banned throwaway account (`admin_account ban`), WRONG password** → `auth_failed`, the same as any wrong password. notes:
 - [ ] **The same account, RIGHT password** → `banned: <reason>`. notes:
 - [ ] **Leave the launcher on character select for 11 minutes, then click Play** → it reconnects on its own and Play works (the idle close costs nothing). notes:
+- [ ] **A ninth character on one account** → the login screen's status line reads `Error (invalid_input): This account already has 8 characters. Delete one to make another.`, the list still shows eight; delete one and the next create works. notes:
+- [ ] **An hour after the first logins (operator)** → `journalctl` has an `expired sessions purged removed=N` line (the hourly purge alive), and `SELECT COUNT(*) FROM sessions` on `world.db` is no more than the launchers logged in within the last half hour. notes:
 
 ## 5 — A network change (optional; only if the home IP really moves, or by pointing the DDNS name at a wrong address for six minutes on purpose)
 - [ ] **The address watch fires** → everyone in the world sees `The server's network address changed. Restarting now; your character is saved...`, is kicked with the Restart reason, and the service is back within a minute (`journalctl`: `restart requested — everyone checkpointed`, then a fresh boot line). notes:

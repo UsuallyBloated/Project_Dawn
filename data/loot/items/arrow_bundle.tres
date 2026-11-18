@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1_item")
 item_name = "Arrow Bundle"
-description = "A bundle of twenty fletched arrows. Used with bows in ranged combat."
-type = 10
+description = "Fletched arrows for a bow, twenty to a full bundle. Worn in the ammo slot; every shot takes one."
+type = 13
 rarity = 0
 stack_size = 20
-vendor_price = 10
-weight = 1.0
+vendor_price = 1
+weight = 0.1

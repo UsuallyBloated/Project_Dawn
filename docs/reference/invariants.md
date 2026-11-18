@@ -67,6 +67,15 @@ Held by: `a_new_character_is_born_dressed_and_the_kit_cannot_leave`, `every_clas
 `the_starting_kit_comes_back_off_its_owners_corpse`, `no_one_is_born_encumbered`,
 `a_fresh_character_holds_only_its_starting_kit`, `probe_no_drop.gd`
 
+### I6. A shot costs an arrow, and the server takes it
+Ammunition goes in the ammo slot and nowhere else, nothing else goes there, and every bow
+shot takes one arrow from it on the server, hit or miss, as a ledger row; with the slot empty
+there is no shot. Why: a bow that fires for nothing has no cost, and a client that decided
+its own ammo could shoot forever.
+Held by: `a_bow_shot_takes_an_arrow_and_an_empty_quiver_fires_nothing`,
+`the_quiver_gives_one_arrow_a_shot_until_empty`, `ammo_fits_the_ammo_slot_alone`,
+`probe_ammo_slot.gd`
+
 ## Saving and leaving
 
 ### S1. A character's stores are saved together, through one path
@@ -165,7 +174,9 @@ climbs nothing a player cannot and gives up on a target above a face, taking no 
 it is held there or walks home (it cannot answer), and nothing targeted
 reaches through the terrain: a spell, an arrow, an AoE's reach or an idle mob's notice. A fall is the server's too: it begins where
 the ground drops away under a step, lands on the server's ground and costs what the height
-says, and neither a Quit nor a port mid-air gets out of the landing. Why: a modified client
+says, and neither a Quit nor a port mid-air gets out of the landing. And the walkable
+world is closed: the mountains outside its edge are a face at their foot all the way
+round, so nobody walks out of the zone or off the plate. Why: a modified client
 that sent its own height, walked up a cliff, cast from behind a hill, or never reported a
 fall.
 Held by: `micro_steps_climb_no_face`, `a_step_up_a_face_too_steep_to_climb_is_refused`,
@@ -175,11 +186,40 @@ Held by: `micro_steps_climb_no_face`, `a_step_up_a_face_too_steep_to_climb_is_re
 `a_walk_off_a_ten_metre_ledge_costs_a_fifth_of_max_hp`,
 `a_quit_in_mid_air_still_takes_the_landing`,
 `a_fall_to_zero_leaves_the_corpse_where_the_body_landed`,
-`a_diagonal_climbs_no_face`, `nobody_climbs_out_over_the_rim`,
+`a_diagonal_climbs_no_face`, `nobody_walks_out_of_the_zone`,
+`a_gap_in_the_mountains_is_a_way_out`,
 `a_mob_at_a_face_stops_and_gives_up`,
 `a_mob_at_a_face_gives_up_and_walks_home`,
 `a_mob_held_below_a_face_evades_until_it_is_home`,
-`a_mob_below_the_greywood_ridge_gives_up_on_a_player_on_its_crest`
+`a_mob_below_the_plateau_ramp_gives_up_on_a_player_on_its_edge`
+
+### A6. What stands on the ground stops a body and a line of sight, and it is the server's
+The zone's trees, rocks, walls and set pieces are solids the server holds (the client's
+scenery, baked and compiled in). The server takes every step itself and turns it aside or
+stops it at a solid, so a client that ignores its own obstacles is held at the server's. No
+step crosses a solid, however fast or however squeezed. Everything put somewhere without
+walking there (a login, a respawn, a port, a resurrection summon, a spawn, a landing) stands
+at a point clear of every solid that a body can also walk away from, and a pet is summoned
+on its owner's side of a wall. Nothing targeted reaches through a solid: every sight check
+asks the ground, and the ground carries what stands on it. And nothing in the zone closes
+ground a body could be put on and never leave. Why: a modified client that walked through
+a wall, a cast or a pet sent through one, a body or a mob put where nothing can reach it.
+Held by: `a_direction_held_through_a_house_ends_at_its_face`,
+`a_body_slides_round_a_trunk_and_carries_on`,
+`the_largest_step_crosses_nothing`,
+`a_body_squeezed_between_solids_is_never_squirted_across_one`,
+`random_walks_never_end_inside_anything`,
+`a_body_is_never_put_in_a_gap_it_cannot_leave`,
+`a_login_inside_a_solid_lands_beside_it`,
+`a_spawn_under_scenery_stands_beside_it`,
+`a_pet_summoned_at_a_wall_appears_on_its_owners_side`,
+`a_spell_through_a_house_is_refused_and_lands_round_the_corner`,
+`a_line_through_a_solid_is_blocked_and_one_over_it_is_not`,
+`the_four_gates_are_open_and_the_wall_beside_them_is_not`,
+`nothing_in_the_zone_closes_a_pocket_a_body_could_be_put_in`,
+`a_file_round_trips_and_a_damaged_one_is_refused`,
+`a_body_moved_out_of_a_solid_is_stood_on_a_floor`,
+`a_line_from_inside_a_crown_sees_out_and_other_solids_still_block`
 
 ### D1. Dev tools are gated and audited, or refused
 A dev command runs only for a GM account or a dev-mode server, and only if its audit row
@@ -189,6 +229,68 @@ them from being anyone else's.
 Held by: `is_gm_gates_dev_commands`, `gm_commands_are_audited_only_when_authorized`,
 `gm_command_burst_is_recorded_whole`, `death_broadcast_is_a_dev_command`,
 `a_flung_gm_lands_for_the_formulas_damage`
+
+## Creatures
+
+### C1. A wanderer never chooses ground inside the town
+The wandering animals of the roam table pick where they appear and where they walk, and none
+of it is ever within 150 m of the town's middle: not a spawn spot, not the end of a leg, not a
+leg's line, not a pack follower's line to its leader, and never the home a fight or a charm
+leaves it with. A chase can still bring one in, as it can a camp mob, and it walks home after.
+Why: an aggressive animal that settled among the vendors would kill everyone who logs in there.
+Held by: `a_wanderer_never_chooses_ground_inside_the_town_ring`,
+`a_follower_keeps_to_its_leader_and_never_cuts_through_the_town`,
+`a_wanderers_home_is_where_its_fight_began_and_never_where_a_charm_ended`,
+`a_line_through_the_town_is_refused_and_one_round_it_is_not`
+
+### C2. A wanderer stays on ground it can walk back from
+Wanderers appear and walk only on the roam map: floors reachable from the town without
+crossing a face, in either direction. A mob never falls and the slope rule refuses only a step
+that rises onto a face, so without this an animal would walk down a cliff into a pocket it can
+never leave, or out onto a perch. Why: a mob somewhere no path leads is a mob nobody can reach
+or one that can be hit from where it cannot answer.
+Held by: `a_roam_step_onto_a_face_is_refused_going_down_as_well_as_up`,
+`a_pit_reachable_only_downhill_is_not_roamable`,
+`a_face_is_never_roamable_and_the_ground_behind_it_is_not_reached`,
+`an_idle_wanderer_off_the_map_steps_onto_its_home`
+
+### C3. One pet at a time, and a charm takes nothing from anyone
+A new pet replaces the old one: a summoned pet is dismissed, a charmed one is handed back as
+the mob it was, hostile to its charmer, with its HP and with the record of who had hurt it. A
+charmed pet that has died stays a body. A charmed mob holds its place in its camp or its pack
+for the charm's life. Why: each is a way a charm paid for nothing. A dead pet handed back
+dropped its loot with no fight; a charm that wiped the damage record took the kill from
+whoever did the work; a slot that refilled during a charm held one mob more after it, every
+cast.
+Held by: `a_second_charm_drops_the_first_which_turns_on_the_caster`,
+`a_new_pet_replaces_the_old_and_a_charmed_one_comes_back_angry`,
+`a_charmed_member_holds_its_head_so_a_charm_never_overfills_a_slot`,
+`a_charmed_pet_that_dies_as_its_charm_runs_out_is_not_handed_back`
+
+### C4. A respawn is never handed to whoever waits for it
+A wanderer comes back at a fresh spot in its region, at least 60 m from every player's body,
+and a pack short of members is refilled without waiting for its last one to die. Why: a spawn
+that appears beside the player who killed it is a farm, one that appears on a fight is a
+death nobody earned, and a pack that waits for its last member can be kept out of the world
+by anyone who leaves one alive.
+Held by: `a_respawn_never_lands_beside_a_player`,
+`a_wanderer_appears_in_its_region_clear_of_every_body`,
+`a_pack_is_refilled_beside_its_leader_while_one_member_lives`
+
+### C5. A mob is as wide as a player, and one that cannot reach its target takes no damage
+A mob or a pet is stopped by the same solids as a player, at the same body radius, so there
+is nowhere a player fits and a mob does not. A mob held at a wall tries to walk round it;
+while its steps are not going as aimed, past a second's grace, it takes no damage, and after
+eight seconds with no way found it gives up on that target (the rule for a mob below a
+cliff, A5). A tree on the way costs it a step aside and never makes it immune. Why: a wall
+with a gap too narrow for a mob, or a spot a mob pushes at forever, is a place to kill from
+in safety.
+Held by: `a_mob_walks_round_a_house_to_its_target`,
+`a_mob_rounds_a_long_wall_to_a_target_close_behind_it`,
+`a_mob_slides_round_a_trunk_and_never_evades`,
+`a_mob_glancing_along_a_wall_is_not_held`,
+`a_clean_second_ends_the_stuck_clock`,
+`a_mob_in_a_dead_end_evades_and_gives_up`
 
 ## Client and server agree
 
@@ -200,4 +302,28 @@ thing and gets another.
 Held by: `check_spell_lockstep.gd`, `check_item_lockstep.gd`, `check_vendor_lockstep.gd`,
 `check_active_skill_lockstep.gd`, `check_character_lockstep.gd`, `check_constant_lockstep.gd`,
 `check_discipline_lockstep.gd`, `check_faction_lockstep.gd`, `check_skill_table_lockstep.gd`,
-`check_wire_layer.gd`, `check_terrain_lockstep.gd`, `check_terrain_sight.gd`
+`check_wire_layer.gd`, `check_terrain_lockstep.gd`, `check_terrain_sight.gd`,
+`check_obstacle_lockstep.gd`, `check_obstacle_rule.gd`
+
+### L2. What stops a body is one set of data and one rule, the same on both sides
+The zone's obstacles are exported once from the scenery and held as the same bytes by the
+client and the server; the rule that turns a step aside at them is written once on each
+side, and the client's copy gives the server's answers. What stops the client's body is that
+rule on that data and nothing else: no scenery node is a physics body the player's body
+reads (the one set of physics shapes made from the scenery, the camera's blockers, is on a
+layer of its own). Why: the client sends a direction and the server moves the player; a
+wall that stopped the client's body and not the server's, or stood in a different place,
+would leave the player drawn in one place and standing in another, and the next correction
+would pull them through it.
+Held by: `check_obstacle_lockstep.gd`, `check_obstacle_rule.gd`, `check_zone_scenery.gd`,
+`the_rule_fixtures_are_current`
+
+### L3. The world is its map, the right way round
+The zone is authored on a map (north up, east right) and reaches the world through one
+mapping (`ZoneLayout.to_world`: north is the world's -Z, east its +X). Facing north, east is
+on the right; `/sense` names the directions the map names; the client's set pieces stand at
+the server's camps.
+Why: Godot is right-handed, so a world with north at +Z is the map's mirror image (the zone
+stood that way until 2026-11-14). A half-mirrored pair, the client's ground one way and the
+server's camps the other, puts every mob where the zone shows nothing.
+Held by: `check_compass.gd`

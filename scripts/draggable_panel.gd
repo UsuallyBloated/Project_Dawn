@@ -231,6 +231,8 @@ func _append_stat_lines(item: ItemData, lines: Array) -> void:
 			lines.append("%s: %d%% chance / %d dmg" % [
 				item.proc_name if item.proc_name != "" else "Proc",
 				int(item.proc_chance * 100), item.proc_damage])
+	if item.type == ItemData.Type.AMMO:
+		lines.append("Ammunition: worn in the ammo slot, one per shot")
 	if item.bonus_armor > 0:
 		lines.append("Armor: +%d" % item.bonus_armor)
 	var checks := [

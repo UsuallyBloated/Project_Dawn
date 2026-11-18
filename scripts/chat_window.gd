@@ -618,17 +618,6 @@ func get_layout() -> Dictionary:
 		"is_active_tab":   is_active_tab,
 	}
 
-func apply_layout(d: Dictionary) -> void:
-	window_id = int(d.get("id", window_id))
-	set_window_name(String(d.get("name", window_name)))
-	position = Vector2(float(d.get("x", position.x)), float(d.get("y", position.y)))
-	size = Vector2(float(d.get("w", size.x)), float(d.get("h", size.y)))
-	group_id = int(d.get("group_id", group_id))
-	var saved_filters = d.get("filters", null)
-	if saved_filters is Dictionary:
-		filters = _merge_filters_with_defaults(saved_filters)
-	set_display_settings(d)
-
 func set_filters(new_filters: Dictionary) -> void:
 	filters = _merge_filters_with_defaults(new_filters)
 

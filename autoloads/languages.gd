@@ -1,5 +1,10 @@
 extends Node
 
+# Languages: the character's skill in each language and the one they speak in.
+# hear_language, garble and grant_language have no caller yet; they wait on the
+# chat-receive wiring and trainer NPCs (the "Language system wiring" To-Do) and
+# are kept on purpose (user call 2026-11-18): unfinished, not dead.
+
 signal skill_improved(language: String, new_skill: int)
 signal active_language_changed(language: String)
 
