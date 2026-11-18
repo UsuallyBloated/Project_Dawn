@@ -85,3 +85,15 @@ Client: the plan, the findings, the assessment, this note and the index; the thr
 (`systems_overview.md`, `server_operations.md`, `commands.md`); `tools/author_terrain.gd` (the
 "Next" line); CLAUDE.md's housekeeping entry (a pointer). Server: `tests/world/flight.rs`,
 `tests/world/roam.rs`. Flight branch: the merge `231a8ac`.
+
+## 7. The morning after (2026-11-18): the strays, recounted
+
+The user asked why `tools/probe_group_levels.gd.uid` was not on the findings doc. It was,
+as H6's "five checkouts carry an untracked `.uid` stray", which was the wrong count and
+named no file. Recounted file by file: ten client worktrees carry `.uid` strays and only
+the deploy branch's matters (the one `tools/` script without a tracked uid; committed,
+`1646a55`). The same sweep found two things the night missed: an uncommitted editor
+resave of `scenes/world.tscn` in the flight worktree (discarded; no node or height had
+changed) and the server's `target-gdext/` (717 MB of DLL build output) untracked and
+unignored in three worktrees (ignored, server `cee43ed`). H6 corrected in the findings.
+Both deploy branches pushed. Next, at the user's word: R1 of the structure assessment.

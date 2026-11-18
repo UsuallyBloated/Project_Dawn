@@ -61,7 +61,7 @@ exists, and three smaller doc gaps. Those are §3.
 | H3 | `docs/reference/commands.md:176`: the Test Panel's button list is the old one (Full Heal, Level Up, give-coins); Fling, Despawn All Enemies, Obstacle Outlines and (on the flight branch) Fly and Land are missing. `/fly` is on the flight branch's copy only, as it should be. | OPEN: one list. |
 | H4 | `tools/author_terrain.gd`'s report does not say to run `export_obstacles.gd` after a re-author, though every scenery or terrain edit needs it (the obstacle session's own note); `check_all.ps1` catches the omission, after the fact. | OPEN: one line in the tool's report. |
 | H5 | `feat/public-hosting` (server) is 19 commits behind the deploy branch and 17 ahead; its `intent_class` match is exhaustive, so the merge-forward is where the post-bump intents meet the budgets. The branch's convention is to merge the deploy tip in; nothing has since 2026-11-10. | OPEN: the merge-forward, before cutover work resumes. |
-| H6 | Fourteen client worktrees exist; eleven sit at tips already merged (`bump`, `height`, `hills`, `hunger`, `jump`, `levels`, `obstacles`, `speed`, `trade`, `wildlife`, the agent worktree). Five checkouts carry an untracked `.uid` stray. | OPEN: prune and commit or drop the strays; keep `-zone` (flight) and `-hosting`. |
+| H6 | Fourteen client worktrees exist; eleven sit at tips already merged (`bump`, `height`, `hills`, `hunger`, `jump`, `levels`, `obstacles`, `speed`, `trade`, `wildlife`, the agent worktree). **Corrected 2026-11-18, on the user's question:** the night's row said "five checkouts carry an untracked `.uid` stray" and named no file. The recount: TEN client worktrees carry `.uid` strays (every one of them but `-hills`, `-hosting`, `-trade` and `-wildlife`), and only one matters, `tools/probe_group_levels.gd.uid` on the deploy branch, the one script in `tools/` whose uid was not tracked (51 are); the rest are editor by-products in worktrees that will be pruned. The same sweep, run file by file this time, found two things the night's row missed: `Project_Dawn-zone` had an uncommitted editor resave of `scenes/world.tscn` (an unused `player.gd` reference dropped, uids added, the header rewritten `format=4` to `format=3`; no node or height changed), and the server's `target-gdext/` (717 MB of DLL build output from a hand-typed `--target-dir`) sat untracked and unignored in three server worktrees (`server`, `-bump`, `-levels`), one careless `git add .` from a 2 GB commit. | FIXED 2026-11-18 for the strays (the uid tracked, client `1646a55`; `/target-gdext/` ignored, server `cee43ed`; the resave discarded). The prune itself stays OPEN; keep `-zone` (flight) and `-hosting`. |
 | H7 | The planner page has not been republished since the obstacle records (`45d19db`). | OPEN. |
 
 ## 4. Runs
@@ -81,6 +81,12 @@ table rows for what each must read, and the compass SQL recorded as a one-time s
 run), H3 (the Test Panel list in `commands.md`), H4 (`author_terrain.gd` prints the two
 exports to run after a clean write) were edited the same night; the overview's missing
 paragraphs still land with their ticks. H5 to H7 stay OPEN.
+
+**The morning after (2026-11-18).** The user asked why the deploy branch's stray uid was not
+on this doc. It was, as H6's unnamed "five checkouts", which was the wrong count and named
+nothing; the lesson is in the row: a stray sweep is done file by file, not by counting
+checkouts. The recount fixed the three strays H6 now lists (the uid, the ignore line, the
+resave); H5, the prune half of H6, and H7 stay OPEN.
 
 ## 5. What this audit did not do
 
