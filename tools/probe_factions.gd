@@ -72,7 +72,7 @@ func _run() -> void:
 	_check(is_equal_approx(al.exact_score, 400.0), "a new character takes its class seed until the server speaks")
 
 	# The /con NPC-name helper: npc_name first, the role after a dash trimmed.
-	var hud = load("res://scripts/hud.gd").new()
+	var commands = load("res://scripts/hud_chat_commands.gd").new()
 	var cases := {
 		"var npc_name = \"Brom\"\nvar vendor_name = \"Brom — Provisioner\"": "Brom",
 		"var banker_name = \"Thalia Mourne — Banker\"": "Thalia Mourne",
@@ -84,9 +84,9 @@ func _run() -> void:
 		gs.source_code = "extends Node\n" + src + "\n"
 		gs.reload()
 		var n: Node = gs.new()
-		_check(hud._npc_display_name(n) == cases[src], "/con names %s" % (cases[src] if cases[src] != "" else "nothing for a mob"))
+		_check(commands._npc_display_name(n) == cases[src], "/con names %s" % (cases[src] if cases[src] != "" else "nothing for a mob"))
 		n.free()
-	hud.free()
+	commands.free()
 
 	_check(load("res://scripts/test_panel.gd") != null, "the Test Panel script loads")
 	_check(FactionDefinitions.ALL.size() == 6, "six factions on the client")
