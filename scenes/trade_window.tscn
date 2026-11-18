@@ -1,0 +1,53 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/trade_window.gd" id="1_trade"]
+
+[node name="TradeWindow" type="Panel"]
+visible = false
+custom_minimum_size = Vector2(560, 360)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -180.0
+offset_right = 280.0
+offset_bottom = 180.0
+theme_type_variation = &"WindowPanel"
+script = ExtResource("1_trade")
+
+[node name="Root" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = -12.0
+
+[node name="Title" type="Label" parent="Root"]
+theme_override_font_sizes/font_size = 20
+text = "Trade"
+
+[node name="Columns" type="HBoxContainer" parent="Root"]
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="Lights" type="HBoxContainer" parent="Root"]
+theme_override_constants/separation = 24
+
+[node name="MyAccept" type="Label" parent="Root/Lights"]
+text = "You: not accepted"
+
+[node name="TheirAccept" type="Label" parent="Root/Lights"]
+text = "Them: not accepted"
+
+[node name="Buttons" type="HBoxContainer" parent="Root"]
+theme_override_constants/separation = 12
+
+[node name="AcceptButton" type="Button" parent="Root/Buttons"]
+text = "Trade"
+
+[node name="CancelButton" type="Button" parent="Root/Buttons"]
+text = "Cancel"

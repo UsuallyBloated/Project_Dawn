@@ -6,21 +6,21 @@ const _VendorWindowScript   := preload("res://scripts/vendor_window.gd")
 const _BankWindowScript     := preload("res://scripts/bank_window.gd")
 const _HudDeathScreen       := preload("res://scripts/hud_death_screen.gd")
 const _HudDisconnectNotice  := preload("res://scripts/hud_disconnect_notice.gd")
-const _HudCastBar           := preload("res://scripts/hud_cast_bar.gd")
+const _HudCastBarScene      := preload("res://scenes/hud_cast_bar.tscn")
 const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
 const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
-const _HudPetPanel          := preload("res://scripts/hud_pet_panel.gd")
+const _HudPetPanelScene     := preload("res://scenes/hud_pet_panel.tscn")
 const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
 # The hunger window sits this far below the player's information bar.
 const HUNGER_PANEL_GAP := 4.0
 const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
 const _HudChatCommands      := preload("res://scripts/hud_chat_commands.gd")
-const _TrackWindowScript    := preload("res://scripts/track_window.gd")
+const _TrackWindowScene     := preload("res://scenes/track_window.tscn")
 const _SpellBookScript      := preload("res://scripts/spell_book.gd")
 const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
-const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
+const _DialogueWindowScene  := preload("res://scenes/dialogue_window.tscn")
 const _InspectWindowScene   := preload("res://scenes/inspect_window.tscn")
-const _TradeWindowScript    := preload("res://scripts/trade_window.gd")
+const _TradeWindowScene     := preload("res://scenes/trade_window.tscn")
 const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 
 @onready var health_bar: ProgressBar = $Panel/VBoxContainer/HPRow/HealthBar
@@ -194,7 +194,7 @@ func _build_components() -> void:
 
 	add_child(_HudDisconnectNotice.new())
 
-	var cast_bar := _HudCastBar.new()
+	var cast_bar := _HudCastBarScene.instantiate()
 	add_child(cast_bar)
 
 	var buff_bar := _HudBuffBar.new()
@@ -206,7 +206,7 @@ func _build_components() -> void:
 	_group_panel = _HudGroupPanel.new()
 	add_child(_group_panel)
 
-	_pet_panel = _HudPetPanel.new()
+	_pet_panel = _HudPetPanelScene.instantiate()
 	add_child(_pet_panel)
 
 	# The hunger window (food design section 8), by default directly below
@@ -216,7 +216,7 @@ func _build_components() -> void:
 	add_child(_hunger_panel)
 	_place_hunger_panel.call_deferred()
 
-	_track_window = _TrackWindowScript.new()
+	_track_window = _TrackWindowScene.instantiate()
 	add_child(_track_window)
 
 	_spell_book = _SpellBookScript.new()
@@ -229,8 +229,7 @@ func _build_components() -> void:
 	add_child(_quest_journal)
 	_watch_window(_quest_journal)
 
-	_dialogue_window = _DialogueWindowScript.new()
-	_dialogue_window.visible = false
+	_dialogue_window = _DialogueWindowScene.instantiate()
 	add_child(_dialogue_window)
 
 	_inspect_window = _InspectWindowScene.instantiate()
@@ -241,7 +240,7 @@ func _build_components() -> void:
 	# PD_W0028 — the trade window opens itself on `world_trade_opened` (a
 	# holding-click on a player) and closes on `world_trade_closed`. Mounted
 	# here so it survives with the HUD; it drives its own visibility.
-	_trade_window = _TradeWindowScript.new()
+	_trade_window = _TradeWindowScene.instantiate()
 	add_child(_trade_window)
 	_watch_window(_trade_window)
 

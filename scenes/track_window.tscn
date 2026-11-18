@@ -1,0 +1,50 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/track_window.gd" id="1_track"]
+
+[sub_resource type="StyleBoxFlat" id="frame"]
+bg_color = Color(0.04, 0.04, 0.06, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.55, 0.25, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="TrackWindow" type="Panel"]
+visible = false
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -200.0
+offset_top = 60.0
+offset_right = -10.0
+offset_bottom = 300.0
+theme_override_styles/panel = SubResource("frame")
+script = ExtResource("1_track")
+
+[node name="Title" type="Label" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 8.0
+offset_top = 4.0
+offset_bottom = 20.0
+theme_override_colors/font_color = Color(0.55, 0.9, 0.45, 1)
+theme_override_font_sizes/font_size = 11
+text = "Track"
+
+[node name="Scroll" type="ScrollContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 22.0
+offset_right = -4.0
+offset_bottom = -4.0
+
+[node name="List" type="VBoxContainer" parent="Scroll"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
