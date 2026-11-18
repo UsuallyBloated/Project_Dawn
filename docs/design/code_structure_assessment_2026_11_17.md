@@ -548,7 +548,10 @@ check 469. No server or wire change; it rides the next export. The door zip
   before the server has answered (`/kick Nobody` as leader prints "Kicked Nobody from the
   group."). The vendor window had the same fault and was changed on 2026-08-24 to describe
   the request, never the outcome. Older than R4, and the check pins today's wording, so
-  the rows move when the wording does. A To-Do entry under UI polish.
+  the rows move when the wording does. A To-Do entry under UI polish. **Answered the same
+  day** (user: "Can you change the success lines to send at the correct time?"): built on
+  `feat/command-confirm` in both repos, the server saying each line when it has done the
+  thing; the To-Do entry has it.
 - `ChatWindowManager.show_chat_input(prefill)`: the `/r` reopen half was the only caller
   that passed a prefill. The parameter has no caller now; left in place (the R1 rule: a
   candidate, not a verdict).

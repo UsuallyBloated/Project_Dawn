@@ -4570,6 +4570,38 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   where the server already answers with one of its own; `tools/check_chat_commands.gd` pins
   today's wording, so its rows move with it. Client only. The user's call on the wording; not
   built.
+  **DECIDED 2026-11-18 (user: "Can you change the success lines to send at the correct
+  time?") and BUILT the same day on `feat/command-confirm` in BOTH repos, pending the merge,
+  the export and the redeploy together, and the playtest** (server `406b10c` in
+  `F:\Projects\server-confirm`, client `524e623` in `F:\Projects\Project_Dawn-confirm`,
+  committed locally, not pushed; `command_confirm_checklist.md`, 26 rows, on the client
+  branch; session note `session_2026_11_18_command_confirm.md`). Not client only after all:
+  the server answered these commands' refusals and never their successes, so the right time
+  did not exist on the wire. Now the server says each line, to the player who gave the
+  command, when it has done the thing (the System chat line, no wire change): "You invite
+  <Name> to join your group." (EQ's line, under the invitee's own name), "You have joined the
+  group.", "You have left the group.", "<Name> has been removed from the group.", "Loot mode
+  set to Round Robin.", "Auto-split loot: on" (whether or not the flag moved; the group notice
+  to the others unchanged) and "PvP override: on"; three cases that were silent now answer
+  (inviting yourself, an accept with no open invitation, a leave with no group). The client
+  prints none of them itself (`/invite`, `/accept`, `/leave`, `/kick`, `/loot rr|ffa`,
+  `/autosplit`, `/pvp`, and the group panel's Invite button). The same fault in five more
+  places than the review named: accept, leave, the loot mode, and `/damage` and `/heal`, which
+  the server never answers by design (no oracle for a plain account) and which now say what
+  was asked ("Requested 5 damage to yourself from the server."). Tests: the integration test
+  `the_server_confirms_a_group_command_when_it_is_done` (two clients through every command,
+  each success told once to its giver, a command that did nothing given no success line),
+  failing on the previous server at its first line; 481 unit and 202 world, fmt and clippy
+  clean; `check_chat_commands.gd` 155 checks, all 20 checks and 25 probes green against the
+  server branch. **Both sides move together:** this client on the deployed server says
+  nothing for these commands, and the door zip on the new server says each line twice, so
+  neither branch is on a deploy branch; they merge at the bump after the door. Exploit lens:
+  every line goes only to the player who gave the command and names only what they already
+  named or their own group (the invitee's real spelling is of a name they typed and that is
+  online, which "isn't online." already told apart). **Flagged:** the others in a group still
+  get no line when someone joins, leaves or is removed (their panel changes; EQ told them),
+  not asked for and not built; `GroupManager.leave_group` still clears the panel before the
+  server answers.
 - [ ] **Other players' levels** *(user 2026-11-02, `overnight_2026_11_01_checklist.md` §3:
   "We cant currently see eachother's levels in game")*. Read in the code, not yet designed: the
   group panel seeds every member at level 0 (`GroupManager`, the row's "Lv %d"; `GroupState`

@@ -1105,6 +1105,9 @@ text = "Phase 5's own plan (docs/design/phase5_plan.md), decided November 3 and 
 text = "The server height model, built by Claude (user, November 3), designed the same day and decided in full (docs/design/server_height_model.md): slices 0 to 3 built November 4 on feat/height-model in both repos (the ground compiled in, everything pinned, sight for every targeted spell, arrow, AoE victim and idle mob, falls, the first hills with the fling tool and mobs giving up below a face), then the evade and the hate-list turn of November 5. It rides the November bump (row o20, in front of the door since November 5) and its sheets are v58 and v59. What follows the door: Levitate and Feather Fall at the landing, the bow's own sight check on the client, the next hills, chunking and a navmesh when the world grows. The capability the large world waits on."
 
 [[after]]
+text = "Command confirmations, built November 18 on feat/command-confirm in both repos (server 406b10c, client 524e623): the group, loot, auto-split and PvP commands' success lines are said by the server when it has done the thing, not by the client when the command is typed. Both sides move together, so it merges at the bump after the door with the export and the redeploy in one step; then a two-seat sitting of command_confirm_checklist.md (26 rows, about 45 minutes)."
+
+[[after]]
 text = "Trade slice 2: handing items to NPCs."
 
 [[after]]
