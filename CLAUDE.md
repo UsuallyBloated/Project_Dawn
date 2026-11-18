@@ -1175,7 +1175,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   token-identical; `tools/check_chat_commands.gd` in `check_all.ps1` holds every command and
   fails on one with no row; bare `/give`, `/lang`, `/kick`, `/damage`, `/heal` and `/tell` print
   their usage; client `1cc2088` to `13b795a` and the commit after; rides the next export;
-  `feat/gm-flight`'s `/fly` arm is re-added by hand at its merge, the flight handoff says how). The three
+  `feat/gm-flight`'s `/fly` arm is re-added by hand at its merge, the flight handoff says how); **R5
+  re-analyzed 2026-11-18** (the assessment's §11): a rule, not a task, nothing built (25 of 27 UI
+  scripts are code, the rule has held once in four since 06-09, a scene saves a quarter of a window
+  script with no shared seam, and every window converted before the theming pass is laid out
+  twice); R6 has nothing to measure while the health line reads `over_budget=0`. **The assessment's
+  list is finished.** The three
   dead wire intents (`StackAll`, `TurnInQuest`, `CancelCast`) come off at the next bump.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.

@@ -110,3 +110,24 @@ scene's default for one tick); the probe's one miss on the old code was that lin
 checks and all 25 probes green after each half. 801 to 678 lines on the entity side, 88 out
 on the manager side. Left alone: `get_enemy` and `get_pet`, second names for `get_by_id`
 with 14 callers between them.
+
+## 8. R5 re-analyzed (the evening; user: "Proceed re-analysis of R5 and prepare to proceed")
+
+R4 confirmed first from the deploy branch: six commits `1cc2088` to `762d94b`, the tree
+clean and pushed, `tools/check_chat_commands.gd` run alone headless, `ALL OK`.
+
+R5 (assessment section 11) is a rule, not a task, and the read says it stays one: 25 of the
+27 UI scripts are built in code and two are scenes (`character_window.tscn`,
+`hud_hunger_panel.tscn`); the rule has held once in four since it entered CLAUDE.md on
+2026-06-09 (bank, trade and the disconnect notice are code, the hunger panel a scene) and
+nothing checks it; a scene takes about a quarter of a window script's lines (the `.new()`,
+`add_child`, anchor and size lines) and leaves the logic, with no shared seam between
+windows; and the two To-Do items that bear on it (the merged character window, the layout
+pass) mean any window converted before the theming pass is laid out twice. Nothing built. No
+check either: a scene is not always right (the cast bar and the pet panel are a handful of
+nodes), so the rule's holder is the row and the reviewer. The first step of the theming pass,
+whenever it gets a direction, is one `Theme` resource for the 47 `UITheme` colours, a panel
+style box and the font. R6 read the same way: the health line has shown `over_budget=0` and a
+sub-millisecond median since 11-02, so there is nothing to measure. With R4 the assessment's
+list is finished. Also fixed: the R3 table row still read "stays parked" while section 9.4
+said built.

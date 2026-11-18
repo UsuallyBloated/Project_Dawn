@@ -124,9 +124,9 @@ none is a friends-build item.
 |---|---|---|---|---|
 | R1 | **Delete the 25 dead functions** after a glance at each (`Languages.hear_language` is the hook the open language item names; deleting it loses nothing, git has it, and the item's text already says it is not called). **DONE 2026-11-18** (two commits on the deploy branch; `session_2026_11_18_r1_dead_code.md`): 20 deleted with what only they used (the `SlotRef` and `Vec3` helper constants, crafting's XP constants and map, and the whole `MobileCharacter` script, whose two subclasses left with the offline code). Five kept on the user's read of the list: `DebugLog.combat` (a documented log level the console colours), the three `Languages` functions (unfinished, not dead: the wiring item), and `fail_quest` (for the failable quests to come), each with a comment saying so. The floating XP number, whose options checkbox existed and did nothing, was wired to `xp_gained` instead of deleted (off by default). All 19 checks and 24 probes green after. The lesson for the next sweep: "defined, never called" is the lower bound; a function waiting on an unbuilt feature is unfinished, and the glance is for telling the two apart. | Any quiet hour; one commit. | Small | No dead code is the rule; a dead wire send (`broadcast_split_stack`) is a trap for the next reader. |
 | R2 | **`apply_casts` into one function per target-type arm** (`cast_enemy`, `cast_ally`, `cast_pet_charm`, ...), same file, moves only, the pre-flight's `ResolvedTarget` already the seam. ~~Then `handle_message` by message family the same way.~~ **DONE 2026-11-18 (section 8.5; server `09b03ff` to `2ddfe7b`, eleven commits, each token-compared and suite-green).** **Re-analyzed 2026-11-18 (section 8): the cast half stands, about a day, the 580-line prelude untouched, a `CastContext` lent to each arm, biggest arm first, after the door and in a window with no branch on the file. The handler half is dropped: its 1,930 lines are 77 arms averaging 25, a family split buys nothing to read and conflicts with `feat/public-hosting`; its four arms over 80 lines move out when next touched, and the three dead wire intents come off at the next bump.** | One function per sitting, as its own commit, in a quiet window after the door, before the next spell feature. | About a day | The next spell feature and every review of one gets a 200-line read instead of 1,950. |
-| R3 | **A `RemoteEntityManager` base** under the five `remote_*_manager.gd` (and a `RemoteEntity` base under the three remote scripts), lifting the identical bodies. **Re-read 2026-11-18 (user: "Are we ready with R3?"): the §2 row overstated the sharing.** `_instantiate_into` is five different bodies (11 to 30 lines, each building its own scene); what is identical is `clear_all` (7 lines, all five, a local's name apart), `get_by_id` (3 lines, three files) and `_scene_hosts_local_player` (3 lines, three files, a 5-line variant in the player manager): about 13 lines a file. A base class for that alone is §6's building for its own sake. **Stays parked at its moment**, and becomes a half-hour inside the animation-channel work rather than a task. | When the remote animation-state channel (the jump relay's successor) next touches them. | Half an hour, inside that work | The next per-entity message lands once. |
+| R3 | **A `RemoteEntityManager` base** under the five `remote_*_manager.gd` (and a `RemoteEntity` base under the three remote scripts), lifting the identical bodies. **Re-read 2026-11-18 (user: "Are we ready with R3?"): the §2 row overstated the sharing.** `_instantiate_into` is five different bodies (11 to 30 lines, each building its own scene); what is identical is `clear_all` (7 lines, all five, a local's name apart), `get_by_id` (3 lines, three files) and `_scene_hosts_local_player` (3 lines, three files, a 5-line variant in the player manager): about 13 lines a file. A base class for that alone is §6's building for its own sake. ~~Stays parked at its moment~~ **DONE 2026-11-18 the same afternoon (section 9.4; client `5b1347a` and `23e7898`; user: "Lets review R3 the way R2 was and then proceed with R3")**: both bases built from the re-read's list, a probe first, every moved body token-compared; the one behaviour change is the remote player's cold-start yaw. | When the remote animation-state channel (the jump relay's successor) next touches them. | Half an hour, inside that work | The next per-entity message lands once. |
 | R4 | **`_handle_chat_input` as a command table** (`Dictionary` of name to Callable, each command its own small function). **DONE 2026-11-18 (section 10.5; client `1cc2088` to `13b795a` and the check's last commit, six commits).** **Re-analyzed 2026-11-18 (section 10): stands, reshaped.** It is 40 arms averaging 9 lines, so the gain is not length; it is that a string if-chain has no compiler and no test, and it shows: about ten unreachable lines since the sticky channel, five commands answering their bare form wrong, eight autoloads the HUD reaches only for commands. A probe first, then the dispatcher out of `hud.gd` into the HUD family, then two lookup tables with the bodies moved verbatim, then five listed changes as their own commit. | The next time a command is added (`/fly` is written and waiting on `feat/gm-flight`), or now on the user's call. | Half a day, not an hour | 475 lines become a table and twenty short functions; the audit's "does a prefix swallow" question becomes a lookup. |
-| R5 | **New windows as `.tscn`, existing ones left alone** until the deferred UI theming pass, which is the one moment converting them earns its cost. | The theming pass. | Per window | Already the rule; stated here so nobody converts a working window on its own. |
+| R5 | **New windows as `.tscn`, existing ones left alone** until the deferred UI theming pass, which is the one moment converting them earns its cost. **Re-analyzed 2026-11-18 (section 11): a rule, not a task; nothing built.** 25 of 27 UI scripts are code; the rule has held once in four since it was written (the bank, trade and disconnect windows are code, the hunger panel a scene); a scene saves about a quarter of a window script's lines with no shared seam, and every window converted before the pass is laid out twice. When the pass gets a direction: one `Theme` resource first, then windows in the order the pass touches them. | The theming pass. | Per window | Already the rule; stated here so nobody converts a working window on its own. |
 | R6 | **Measure before touching allocations.** A `tracing` span count or a `perf` run on the R720 under two seats before any `.clone()` hunt. | Only if the `world health` line ever shows `over_budget` or the median climbs past a few ms. | Small to measure | The tick runs at 1 to 2% of its budget; there is nothing to win today. |
 
 ## 6. Not worth doing
@@ -560,3 +560,73 @@ check 469. No server or wire change; it rides the next export. The door zip
 **What the check cannot see:** what a command sends to the server (it has no world
 connection). Those lines moved token for token, so the next sitting's ordinary use of the
 commands is their evidence; nothing here wants a sheet of its own.
+
+## 11. R5 re-analyzed the same way (2026-11-18)
+
+The user, after R4: "Proceed re-analysis of R5 and prepare to proceed." R5 as written is not
+a job; it is a rule ("new windows as `.tscn`, existing ones left alone until the theming
+pass"). The read below asks whether the rule is true, whether it has held, and whether
+anything short of the theming pass is worth building. Numbers from the tree at `d1ccc11`.
+
+### 11.1 What the windows actually are
+
+27 UI scripts extend `DraggablePanel`, `Panel` or `Control` (26 windows and HUD pieces plus
+`hud.gd`); two are scene-backed, 25 are built in code.
+
+| Measure | Value |
+|---|---|
+| Scene-backed | `character_window.tscn` (2026-04-27, instanced by `hud.tscn`) and `hud_hunger_panel.tscn` (2026-10-13, 8 nodes, 141 lines of script) |
+| Built in code | the other 25, from `hud_cast_bar.gd` (63 lines) to `hotbar.gd` (959); `hud.gd` mounts 17 of them with `.new()` |
+| `hud.gd`'s own build share | 14 `_build_` / `_make_` functions, 345 of its 1,380 lines (25%); the longest `_build_components` at 78 |
+| Colour literals outside `UITheme` | 178 `Color(` across the 27 (`test_panel.gd` 32, `chat_window.gd` 22, `hud.gd` 21, `hud_buff_bar.gd` 14); `UITheme` (104 lines, 47 constants) is read by 14 scripts |
+| Style boxes made in code | 53 `StyleBoxFlat.new()` |
+| `hud.tscn` itself | 27 nodes: the player bars and the target frame; everything else arrives from scripts |
+
+The rule entered CLAUDE.md on 2026-06-09 (`6fb4fbb`). **Four windows were built after it:**
+the bank window (06-18, code, 11 build functions, 503 lines), the trade window (09-29, code),
+the disconnect notice (10-04, code) and the hunger panel (10-13, a scene). So the rule has
+held once in four, and nothing noticed, because nothing checks it: the click-blocking check
+runs whatever windows exist, scene or code, and passes either way.
+
+What a scene buys, measured on the one window that has both forms to compare against: the
+hunger panel's 141 lines against the code-built pet panel (91) and debuff bar (120) of the
+same size. The lines that leave a script are the `.new()`, `add_child`, anchor and size
+lines, about a quarter to a third of a window script; the logic (the server-driven refresh,
+the signals, the tooltips) stays where it was. That is a reading gain, not a behaviour one,
+and it is per window with no shared seam: converting one teaches the next nothing.
+
+### 11.2 What holds them, and who else has them open
+
+`tools/check_window_click_blocking.gd` loads the real `hud.tscn`, the hotbar, the Test Panel
+and the chat windows headless and clicks 26 windows on a 16 px grid; the placement probes
+(`probe_cast_bar_place.gd`, `probe_trade_window_place.gd`, the hunger panel's 17 checks) pin
+where the newer ones sit. A conversion of any one window has that net. Nobody has the window
+scripts open on a branch except `feat/gm-flight` (one HUD line) and `feat/command-confirm`
+(none of these files).
+
+Two To-Do items decide what a conversion would be worth: **"Combine character, equipment and
+inventory into one window"** (asked twice, 2026-05) deletes two of the windows a conversion
+would spend time on, and **"In-game UI layout is pretty busted"** has no specifics yet and is
+folded into the theming pass, whose direction is not chosen (framework decided 2026-10-29:
+Godot's own Controls and Theme resources, no addon). Every window converted before that pass
+is laid out twice.
+
+### 11.3 The shape, re-ranked
+
+**R5 stands as a rule and is not a task; nothing is built for it.** The measurement says why
+in both directions: the gain per window is a quarter of a script's lines with no shared seam,
+and the moment the rule names (the theming pass) is the only one at which the layout work is
+not paid twice. The one finding the read adds is that the rule has not held (three of four
+windows since it was written are code), and the honest answer to that is not a check (a scene
+is not always right: the cast bar and the pet panel are a handful of nodes each, and a check
+would police the HUD pieces that are legitimately code) but the row itself, now that it says
+so, and the reviewer. **When the theming pass gets its direction**, its first step is the
+shared piece every window needs whatever the direction, a `Theme` resource holding the 47
+`UITheme` colours, a panel style box and the font, and the second is converting windows in
+the order the pass touches them, the merged character window first.
+
+**R6 the same reading, for the record:** the `world health` line on the R720 has read
+`over_budget=0` with the median tick at 0.5 to 0.8 ms since 2026-11-02 (the obstacle rule's
+allocation per pass is the one new cost since, unmeasured in play and flagged in its entry).
+Nothing to measure until that line moves. **With R4 built, the assessment's list is
+finished:** R1 to R4 done, R5 and R6 standing rules whose moment has not come.
