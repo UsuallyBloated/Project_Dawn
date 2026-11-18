@@ -4633,6 +4633,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `54ca951`), and `group_levels_checklist.md` is runnable on it.
 - [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
+  **The `/` key BUILT 2026-11-18, pending the next export and the playtest** (user, on being
+  asked whether the chat line's unused prefill should go: "yes i want this", EQ's "/" key;
+  client only, on the deploy branch; `tell_reply_and_inspect_click_checklist.md` §4b, 5 rows).
+  With the chat line closed, the bare `/` key opens it with the slash already typed and the
+  caret after it (`hud.gd`'s key handler, through `CombatLog.show_chat_input(prefill)`, the
+  prefill the chat line already took and nothing used since R4). With the line open, or any
+  other text field focused, the key is typed as usual; a chord on it (Shift, Ctrl, Alt) does
+  nothing. `/` joined Enter and Escape in `RESERVED_KEYS`, so no action can be bound to it.
+  `tools/probe_slash_opens_chat.gd` (11 checks, 5 failing on the old code). Nothing on the
+  server or the wire.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
   ~5 minutes", 2026-05-26; audit 2026-09-29)*. Rides with the `/r` + TAB item.
   **Mostly existed already; the gap is closed 2026-10-02, pending playtest**

@@ -8,14 +8,15 @@ extends Node
 # Public API preserved for existing callers (~30 files):
 # - add_line(text, type)          → fan out to windows
 # - add_damage_out / add_evade    → convenience helpers
-# - show_chat_input()             → asks the manager to focus the input
+# - show_chat_input(prefill)      → asks the manager to focus the input,
+#                                   optionally already holding some text
 # - is_chat_input_focused()       → manager state passthrough
 # - chat_submitted (signal)       → emitted by the manager on submit
 # - MsgType (enum)                → the canonical message taxonomy
 
 signal line_added(text: String, type: int)
 signal chat_submitted(text: String)
-signal show_chat_input_requested()
+signal show_chat_input_requested(prefill: String)
 
 enum MsgType { DAMAGE_OUT, DAMAGE_IN, HEAL, INFO, LEVEL_UP, LOOT, EVADE,
 			   SAY, SHOUT, OOC, TELL_OUT, TELL_IN, GROUP_CHAT, CRIT,
@@ -58,8 +59,10 @@ func add_evade(attacker_name: String) -> void:
 
 # ── Chat input delegation ────────────────────────────────────────────────────
 
-func show_chat_input() -> void:
-	show_chat_input_requested.emit()
+## Open the chat line, already holding `prefill` when one is given (the "/"
+## key opens it on a slash).
+func show_chat_input(prefill: String = "") -> void:
+	show_chat_input_requested.emit(prefill)
 
 func is_chat_input_focused() -> bool:
 	return ChatWindowManager.is_chat_input_focused()

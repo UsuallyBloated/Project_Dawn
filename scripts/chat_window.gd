@@ -352,9 +352,9 @@ func _apply_typed(new_text: String) -> void:
 	_chat_input.text = remaining
 	_chat_input.caret_column = mini(caret, remaining.length())
 
-## Open the chat line, optionally already holding `prefill` (a bare `/r`
-## opens it on "/tell <name> ", which becomes the Tell channel) with the
-## caret at the end.
+## Open the chat line, optionally already holding `prefill` (the "/" key
+## opens it on a slash; a prefill that is a channel command, "/tell <name> ",
+## becomes the line's channel) with the caret at the end.
 func show_input(prefill: String = "") -> void:
 	if _chat_input == null:
 		return

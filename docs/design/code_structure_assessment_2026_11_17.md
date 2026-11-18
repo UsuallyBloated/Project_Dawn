@@ -554,7 +554,8 @@ check 469. No server or wire change; it rides the next export. The door zip
   thing; the To-Do entry has it.
 - `ChatWindowManager.show_chat_input(prefill)`: the `/r` reopen half was the only caller
   that passed a prefill. The parameter has no caller now; left in place (the R1 rule: a
-  candidate, not a verdict).
+  candidate, not a verdict). **Kept (user, 2026-11-18: "yes i want this", EQ's "/" key):**
+  the bare `/` key now opens the chat line with the slash typed, through that prefill.
 
 **What the check cannot see:** what a command sends to the server (it has no world
 connection). Those lines moved token for token, so the next sitting's ordinary use of the

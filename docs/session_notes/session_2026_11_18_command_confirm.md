@@ -82,3 +82,27 @@ as the export and the redeploy. No wire change, no DLL rebuild, no migration, no
 holding. Its one user was the `/r` reopen that R4 deleted as unreachable. The call is delete
 or keep. Nothing in the To-Do waits on it; an EQ-style "/" key that opens the chat line with
 the slash typed would use it. Answered to the user with a recommendation; not changed.
+
+## 8. The slash key (the user's answer: "yes i want this")
+
+So the prefill stays and has a user again. Client only, on the deploy branch (it does not
+touch the files the confirmation branch changes).
+
+- `hud.gd`'s key handler: the bare `/` key, with the chat line closed, calls
+  `CombatLog.show_chat_input("/")`. Not with Shift, Ctrl, Alt or Meta held, so a chord on
+  the key stays free. With the line open the key never reaches the handler (the line types
+  it), and the same is true of any other focused text field.
+- `CombatLog.show_chat_input` and its signal carry the prefill to
+  `ChatWindowManager.show_chat_input`, which already took one. The HUD still reaches the
+  chat line through `CombatLog` only.
+- `/` is in `RESERVED_KEYS` with Enter and Escape: the keybind screen refuses it, and a
+  saved binding on it falls back to its default at load.
+- `tools/probe_slash_opens_chat.gd`: the real HUD and the manager's chat windows, key presses
+  pushed into the root window. 11 checks; on the code before the change 5 fail (the line
+  does not open, and the key is not reserved). All 20 checks and all 26 probes green.
+- Docs: the controls README, `commands.md`, the tester README; five rows in
+  `tell_reply_and_inspect_click_checklist.md` §4b (and its `/tell B` row corrected for the
+  sticky channel and R4's bare `/tell`).
+- What the probe cannot see: a real keyboard. The press that opens the line must not also
+  be typed into it; the engine delivers one event per press and Enter has always opened the
+  line the same way without submitting it, but the sheet's first row is the evidence.

@@ -116,6 +116,8 @@ var _self_targeted: bool = false
 # INSPECT_RANGE (30 m) on purpose: the server gate is the backstop against a
 # modified client, and this one is what an honest player actually meets.
 const INSPECT_RANGE := 20.0
+# What the "/" key opens the chat line holding.
+const CHAT_COMMAND_PREFIX := "/"
 
 func _ready() -> void:
 	# The launcher scales the window for itself (login.gd's LOGIN_UI_SCALE);
@@ -679,6 +681,14 @@ func _unhandled_input(event: InputEvent) -> void:
 				CombatLog.show_chat_input()
 				get_viewport().set_input_as_handled()
 				return
+		# EQ's command key: "/" opens the chat line with the slash already
+		# typed. The bare key only, so a chord on it stays free. With the
+		# line open the key never gets here: the line types it.
+		if event.keycode == KEY_SLASH and not CombatLog.is_chat_input_focused() \
+				and not (event.shift_pressed or event.ctrl_pressed or event.alt_pressed or event.meta_pressed):
+			CombatLog.show_chat_input(CHAT_COMMAND_PREFIX)
+			get_viewport().set_input_as_handled()
+			return
 		if CombatLog.is_chat_input_focused():
 			get_viewport().set_input_as_handled()
 			return

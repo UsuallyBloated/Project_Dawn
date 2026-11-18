@@ -197,6 +197,7 @@ Fixed keys (in code):
 |---|---|
 | `` ` `` (backtick) | Toggle the debug console (`ESC` closes; `/console` is the fallback). |
 | `Enter` | Open / send chat. |
+| `/` | Open the chat line with `/` already typed, ready for a command. Not rebindable. |
 | `Tab` (chat line open) | Cycle tell reply targets: an empty line becomes `/tell <newest sender> `, and on a tell it moves to the next older sender, keeping the message. With the chat line closed, Tab is still Cycle Target (rebindable). |
 | `1`–`0` | Hotbar slots 1-10. |
 | `Alt` + `1`–`0` | Spell-bar slots. |

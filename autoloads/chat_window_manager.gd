@@ -596,8 +596,8 @@ func is_chat_input_focused() -> bool:
 			return true
 	return false
 
-func _on_show_chat_input() -> void:
-	show_chat_input()
+func _on_show_chat_input(prefill: String) -> void:
+	show_chat_input(prefill)
 
 func _on_window_text_submitted(_id: int, text: String) -> void:
 	CombatLog.chat_submitted.emit(text)

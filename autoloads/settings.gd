@@ -2,9 +2,10 @@ extends Node
 
 const SAVE_PATH := "user://settings.cfg"
 
-# Reserved keys cannot be rebound — they're hardcoded for chat (Enter) and
-# menu navigation (Escape). Enforced at both rebind-commit and load time.
-const RESERVED_KEYS: Array[int] = [KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE]
+# Reserved keys cannot be rebound: they're hardcoded for chat (Enter, and
+# "/", which opens the chat line with the slash typed) and menu navigation
+# (Escape). Enforced at both rebind-commit and load time.
+const RESERVED_KEYS: Array[int] = [KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE, KEY_SLASH]
 
 const RESOLUTIONS: Array[Vector2i] = [
 	Vector2i(1280, 720),

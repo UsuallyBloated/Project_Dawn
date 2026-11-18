@@ -153,11 +153,12 @@ This is the single biggest thing to know before you play.
 | **F2** to **F6** | Target group member 1 to 5 |
 | **Q** | Toggle auto-attack |
 | **Enter** | Open chat input |
+| **/** | Open chat input with the slash already typed, ready for a command |
 | **C / I / P / K / B / J** | Character / Inventory / Paperdoll / Tradeskill / Spellbook / Quest Journal |
 | **Esc** | Options menu |
 
-Rebindable in **Options > Keybinds**, except Enter, Numpad Enter and Escape, which the chat
-and menu systems own.
+Rebindable in **Options > Keybinds**, except Enter, Numpad Enter, the slash key and Escape,
+which the chat and menu systems own.
 
 ---
 
