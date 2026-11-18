@@ -69,12 +69,7 @@ func _build_ui() -> void:
 	var vp := get_viewport_rect().size
 	position = Vector2((vp.x - W) * 0.5, (vp.y - H) * 0.5)
 
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = UITheme.C_WINDOW_BG
-	bg.border_color = UITheme.C_BORDER
-	bg.set_border_width_all(2)
-	bg.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", bg)
+	theme_type_variation = &"WindowPanel"
 
 	var root := VBoxContainer.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -117,14 +112,13 @@ func _build_header(parent: VBoxContainer) -> void:
 	_title_lbl = Label.new()
 	_title_lbl.text = "Bank"
 	_title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_title_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_title_lbl.theme_type_variation = &"TitleLabel"
 	_title_lbl.add_theme_font_size_override("font_size", 14)
 	row.add_child(_title_lbl)
 
 	var close := Button.new()
 	close.text = "✕"
 	close.flat = true
-	close.add_theme_color_override("font_color", UITheme.C_TEXT)
 	close.pressed.connect(func(): visible = false)
 	row.add_child(close)
 
@@ -171,7 +165,6 @@ func _build_deposit_withdraw(parent: VBoxContainer) -> void:
 		var lbl := Label.new()
 		lbl.text = tier_label
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 		lbl.add_theme_font_size_override("font_size", 11)
 		col.add_child(lbl)
 		var spin := SpinBox.new()
@@ -219,7 +212,6 @@ func _build_exchange(parent: VBoxContainer) -> void:
 
 	var arrow := Label.new()
 	arrow.text = "to"
-	arrow.add_theme_color_override("font_color", UITheme.C_TEXT)
 	row.add_child(arrow)
 
 	_to_opt = OptionButton.new()
@@ -235,7 +227,6 @@ func _build_exchange(parent: VBoxContainer) -> void:
 
 	var hint := Label.new()
 	hint.text = "100 copper = 1 silver. Up-conversions take whole multiples; any remainder stays put."
-	hint.add_theme_color_override("font_color", UITheme.C_TEXT)
 	hint.add_theme_font_size_override("font_size", 10)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	parent.add_child(hint)
@@ -243,7 +234,6 @@ func _build_exchange(parent: VBoxContainer) -> void:
 func _make_section_label(text: String) -> Label:
 	var lbl := Label.new()
 	lbl.text = text
-	lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	lbl.add_theme_font_size_override("font_size", 12)
 	return lbl
 
@@ -270,7 +260,6 @@ func _build_items(parent: VBoxContainer) -> void:
 
 	var hint := Label.new()
 	hint.text = "Right-click a vault item to withdraw it. With the bank open, right-click an item in your bags to deposit it, or click a vault slot while holding one."
-	hint.add_theme_color_override("font_color", UITheme.C_TEXT)
 	hint.add_theme_font_size_override("font_size", 10)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	parent.add_child(hint)

@@ -55,12 +55,7 @@ func _build_ui() -> void:
 	var vp := get_viewport_rect().size
 	position = Vector2((vp.x - W) * 0.5, (vp.y - H) * 0.5)
 
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = UITheme.C_WINDOW_BG
-	bg.border_color = UITheme.C_BORDER
-	bg.set_border_width_all(2)
-	bg.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", bg)
+	theme_type_variation = &"WindowPanel"
 
 	var root := VBoxContainer.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -84,7 +79,7 @@ func _build_header(parent: VBoxContainer) -> void:
 	_title_lbl = Label.new()
 	_title_lbl.text = "Merchant"
 	_title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_title_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_title_lbl.theme_type_variation = &"TitleLabel"
 	_title_lbl.add_theme_font_size_override("font_size", 14)
 	row.add_child(_title_lbl)
 
@@ -97,7 +92,6 @@ func _build_header(parent: VBoxContainer) -> void:
 	var close := Button.new()
 	close.text = "✕"
 	close.flat = true
-	close.add_theme_color_override("font_color", UITheme.C_TEXT)
 	close.pressed.connect(func(): visible = false)
 	row.add_child(close)
 
@@ -153,7 +147,6 @@ func _build_footer(parent: VBoxContainer) -> void:
 
 	_result_lbl = Label.new()
 	_result_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_result_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	_result_lbl.add_theme_font_size_override("font_size", 12)
 	_result_lbl.clip_text = true
 	row.add_child(_result_lbl)
@@ -326,7 +319,6 @@ func _refresh_detail() -> void:
 	_qty_label.text = str(_qty)
 	_qty_label.custom_minimum_size = Vector2(32, 0)
 	_qty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_qty_label.add_theme_color_override("font_color", UITheme.C_TEXT)
 	_qty_label.add_theme_font_size_override("font_size", 13)
 	qty_row.add_child(_qty_label)
 

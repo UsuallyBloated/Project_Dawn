@@ -32,12 +32,7 @@ func _build_ui() -> void:
 	offset_right  =  W * 0.5
 	offset_bottom =  H * 0.5
 
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = UITheme.C_WINDOW_BG
-	bg.border_color = UITheme.C_GOLDEN_BORDER
-	bg.set_border_width_all(2)
-	bg.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", bg)
+	theme_type_variation = &"WindowPanel"
 
 	# Title bar
 	var title_row := HBoxContainer.new()
@@ -51,14 +46,13 @@ func _build_ui() -> void:
 	var title := Label.new()
 	title.text = "Quest Journal"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.add_theme_color_override("font_color", UITheme.C_TITLE)
+	title.theme_type_variation = &"TitleLabel"
 	title.add_theme_font_size_override("font_size", 15)
 	title_row.add_child(title)
 
 	var close_btn := Button.new()
 	close_btn.text = "✕"
 	close_btn.flat = true
-	close_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	close_btn.pressed.connect(func() -> void: visible = false)
 	title_row.add_child(close_btn)
 
@@ -97,12 +91,7 @@ func _build_ui() -> void:
 	# Left: quest list
 	var left_panel := Panel.new()
 	left_panel.custom_minimum_size = Vector2(160.0, 0.0)
-	var left_style := StyleBoxFlat.new()
-	left_style.bg_color = UITheme.C_PANEL_BG
-	left_style.border_color = UITheme.C_BORDER
-	left_style.set_border_width_all(1)
-	left_style.set_corner_radius_all(3)
-	left_panel.add_theme_stylebox_override("panel", left_style)
+	left_panel.theme_type_variation = &"SectionPanel"
 	split.add_child(left_panel)
 
 	var left_scroll := ScrollContainer.new()
@@ -118,12 +107,7 @@ func _build_ui() -> void:
 
 	# Right: quest details
 	var right_panel := Panel.new()
-	var right_style := StyleBoxFlat.new()
-	right_style.bg_color = UITheme.C_PANEL_BG
-	right_style.border_color = UITheme.C_BORDER
-	right_style.set_border_width_all(1)
-	right_style.set_corner_radius_all(3)
-	right_panel.add_theme_stylebox_override("panel", right_style)
+	right_panel.theme_type_variation = &"SectionPanel"
 	split.add_child(right_panel)
 
 	var right_scroll := ScrollContainer.new()
@@ -138,20 +122,19 @@ func _build_ui() -> void:
 	right_scroll.add_child(right_vbox)
 
 	_title_lbl = Label.new()
-	_title_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_title_lbl.theme_type_variation = &"TitleLabel"
 	_title_lbl.add_theme_font_size_override("font_size", 13)
 	_title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	right_vbox.add_child(_title_lbl)
 
 	_desc_lbl = Label.new()
-	_desc_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	_desc_lbl.add_theme_font_size_override("font_size", 11)
 	_desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	right_vbox.add_child(_desc_lbl)
 
 	# "Ready to turn in" callout (PD_W0024: rewards pay at the turn-in NPC).
 	_status_lbl = Label.new()
-	_status_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_status_lbl.theme_type_variation = &"TitleLabel"
 	_status_lbl.add_theme_font_size_override("font_size", 11)
 	_status_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_status_lbl.visible = false
@@ -159,7 +142,7 @@ func _build_ui() -> void:
 
 	var obj_header := Label.new()
 	obj_header.text = "Objectives"
-	obj_header.add_theme_color_override("font_color", UITheme.C_TITLE)
+	obj_header.theme_type_variation = &"TitleLabel"
 	obj_header.add_theme_font_size_override("font_size", 11)
 	right_vbox.add_child(obj_header)
 
@@ -180,7 +163,6 @@ func _build_ui() -> void:
 
 	_empty_lbl = Label.new()
 	_empty_lbl.text = "No quests."
-	_empty_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	_empty_lbl.add_theme_font_size_override("font_size", 11)
 	_empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_empty_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

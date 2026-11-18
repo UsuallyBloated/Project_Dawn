@@ -49,7 +49,7 @@ func _build_ui() -> void:
 	_title_label = Label.new()
 	_title_label.text = "Inspect"
 	_title_label.add_theme_font_size_override("font_size", 11)
-	_title_label.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_title_label.theme_type_variation = &"TitleLabel"
 	_title_label.anchor_left = 0.0; _title_label.anchor_right = 1.0
 	_title_label.offset_left = 6; _title_label.offset_right = -24
 	_title_label.offset_top = 2; _title_label.offset_bottom = 20
@@ -69,7 +69,7 @@ func _build_ui() -> void:
 
 	_name_label = Label.new()
 	_name_label.add_theme_font_size_override("font_size", 13)
-	_name_label.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_name_label.theme_type_variation = &"TitleLabel"
 	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name_label.anchor_left = 0.0; _name_label.anchor_right = 1.0
 	_name_label.offset_left = 6; _name_label.offset_right = -6
@@ -90,7 +90,6 @@ func _build_ui() -> void:
 		var slot_label := Label.new()
 		slot_label.text = label_text
 		slot_label.add_theme_font_size_override("font_size", 12)
-		slot_label.add_theme_color_override("font_color", UITheme.C_TEXT)
 		grid.add_child(slot_label)
 
 		var value_label := Label.new()
@@ -138,7 +137,6 @@ func _on_inspect_result(
 		var item_name := _resolve_item_name(path)
 		var lbl := _slot_value_labels[slot]
 		lbl.text = item_name
-		lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 
 func _clear_slots() -> void:
 	for lbl in _slot_value_labels:

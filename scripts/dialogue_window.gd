@@ -22,12 +22,7 @@ func _build_ui() -> void:
 	offset_right  =  W * 0.5
 	offset_bottom =  H * 0.5
 
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = UITheme.C_WINDOW_BG
-	bg.border_color = UITheme.C_GOLDEN_BORDER
-	bg.set_border_width_all(2)
-	bg.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", bg)
+	theme_type_variation = &"WindowPanel"
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -85,7 +80,6 @@ func _build_ui() -> void:
 	_text_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_text_lbl.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_text_lbl.add_theme_font_size_override("font_size", 13)
-	_text_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	text_panel.add_child(_text_lbl)
 
 	vbox.add_child(HSeparator.new())

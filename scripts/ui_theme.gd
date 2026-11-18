@@ -1,40 +1,46 @@
 class_name UITheme
 
-# Shared color palette used across all UI windows and the character creation screen.
-# Reference these constants instead of hardcoding colors in individual scripts.
+# The UI palette: dark wood and brass (the direction chosen 2026-11-18). Deep
+# walnut fields, brass bands and titles, candle-amber text. The project theme
+# (assets/ui/dark_wood_brass.tres, set in project.godot) carries the same
+# palette into every Control with no override: a Label is amber, a Button a
+# brass plate, and a window names a variation (WindowPanel, SectionPanel,
+# SlotCell, Tooltip, TitleLabel) instead of building its own style box. These
+# constants are for code that colours things at runtime (bars, states,
+# rarities); tools/check_ui_theme_lockstep.gd keeps the two in step.
 
-# Common window chrome
-const C_BORDER       := Color(0.30, 0.22, 0.08)
-const C_GOLDEN_BORDER := Color(0.55, 0.40, 0.10)  # loot window, confirm button
-const C_TITLE        := Color(0.95, 0.78, 0.25)
-const C_TEXT         := Color(0.90, 0.82, 0.65)
+# Brass, three weights, and the body text
+const C_BORDER       := Color(0.50, 0.37, 0.15)  # dim brass: hairlines, slot cells, sections
+const C_GOLDEN_BORDER := Color(0.78, 0.60, 0.26)  # brass: the band round a window, a lit button
+const C_TITLE        := Color(0.94, 0.78, 0.40)  # bright brass: titles
+const C_TEXT         := Color(0.92, 0.84, 0.66)  # candle amber
 
-# Panel backgrounds (vary slightly by window type)
-const C_WINDOW_BG  := Color(0.07, 0.06, 0.04, 0.95)  # inventory, paperdoll, loot
-const C_SCREEN_BG  := Color(0.04, 0.03, 0.02)          # character creation full-screen
-const C_PANEL_BG   := Color(0.10, 0.08, 0.06)          # raised section panels
+# Wood, three depths
+const C_WINDOW_BG  := Color(0.13, 0.085, 0.05, 0.96)  # a window's field, deep walnut
+const C_SCREEN_BG  := Color(0.06, 0.04, 0.025)         # character creation full-screen
+const C_PANEL_BG   := Color(0.20, 0.13, 0.075)         # raised section panels
 
-# Slot cells (inventory grid, equipment frames)
-const C_SLOT_BG := Color(0.12, 0.10, 0.07)
+# Slot cells (inventory grid, equipment frames): oiled dark wood
+const C_SLOT_BG := Color(0.09, 0.06, 0.035)
 
 # Tooltip / overlay
-const C_TOOLTIP := Color(0.04, 0.03, 0.02, 0.95)
+const C_TOOLTIP := Color(0.10, 0.065, 0.04, 0.97)
 
-# Character creation — selection states
-const C_SELECTED  := Color(0.60, 0.44, 0.12)
-const C_BTN_NORM  := Color(0.14, 0.11, 0.07)
-const C_BTN_HOVER := Color(0.22, 0.17, 0.09)
+# Buttons (brass plates) and the selected state
+const C_SELECTED  := Color(0.55, 0.40, 0.16)
+const C_BTN_NORM  := Color(0.26, 0.17, 0.09)
+const C_BTN_HOVER := Color(0.36, 0.24, 0.12)
 
-# Character creation — locked (unavailable) race/class buttons
-const C_BTN_LOCKED_BG     := Color(0.07, 0.05, 0.04)
-const C_BTN_LOCKED_BORDER := Color(0.22, 0.12, 0.10)
-const C_BTN_LOCKED_TEXT   := Color(0.38, 0.26, 0.22)
+# Character creation: locked (unavailable) race/class buttons
+const C_BTN_LOCKED_BG     := Color(0.10, 0.07, 0.05)
+const C_BTN_LOCKED_BORDER := Color(0.30, 0.16, 0.12)
+const C_BTN_LOCKED_TEXT   := Color(0.45, 0.32, 0.26)
 
-# Character creation — "Begin Adventure" confirm button states
-const C_CONFIRM_BG          := Color(0.18, 0.12, 0.03)
-const C_CONFIRM_BG_HOVER    := Color(0.35, 0.25, 0.07)
-const C_CONFIRM_BG_DISABLED := Color(0.10, 0.08, 0.04)
-const C_CONFIRM_BORDER_DISABLED := Color(0.25, 0.18, 0.06)
+# Character creation: "Begin Adventure" confirm button states
+const C_CONFIRM_BG          := Color(0.30, 0.20, 0.08)
+const C_CONFIRM_BG_HOVER    := Color(0.45, 0.32, 0.12)
+const C_CONFIRM_BG_DISABLED := Color(0.14, 0.10, 0.06)
+const C_CONFIRM_BORDER_DISABLED := Color(0.32, 0.24, 0.11)
 
 # Stat delta colours
 const C_POSITIVE := Color(0.40, 0.90, 0.40)
@@ -61,7 +67,7 @@ static func style_bar(bar: ProgressBar, color: Color, with_label: bool = true) -
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = C_BAR_BG
 	bg.set_corner_radius_all(4)
-	bg.border_color = Color(0.25, 0.18, 0.06, 0.85)
+	bg.border_color = Color(C_BORDER.r, C_BORDER.g, C_BORDER.b, 0.85)
 	bg.set_border_width_all(1)
 	bar.add_theme_stylebox_override("background", bg)
 	if not with_label:
@@ -79,14 +85,11 @@ static func style_bar(bar: ProgressBar, color: Color, with_label: bool = true) -
 	bar.add_child(lbl)
 	return lbl
 
+# A standard button: the theme's brass plate, at the standard size.
 static func make_button(label_text: String) -> Button:
 	var btn := Button.new()
 	btn.text = label_text
 	btn.custom_minimum_size = Vector2(96.0, 34.0)
-	btn.add_theme_stylebox_override("normal",  make_stylebox(C_BTN_NORM))
-	btn.add_theme_stylebox_override("hover",   make_stylebox(C_BTN_HOVER))
-	btn.add_theme_stylebox_override("pressed", make_stylebox(C_BTN_HOVER))
-	btn.add_theme_color_override("font_color", C_TITLE)
 	return btn
 
 static func make_stylebox(bg: Color) -> StyleBoxFlat:

@@ -42,8 +42,7 @@ var _casting_skill_rows: Dictionary = {}  # casting skill_key -> {name: Label, v
 
 func _ready() -> void:
 	_apply_panel_style()
-	_title_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
-	_close_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
+	_title_lbl.theme_type_variation = &"TitleLabel"
 	_close_btn.pressed.connect(func() -> void: visible = false)
 
 	PlayerStats.hp_changed.connect(_on_hp_changed)
@@ -71,12 +70,7 @@ func _ready() -> void:
 	CastingSkills.snapshot_applied.connect(_refresh_casting_skills)
 
 func _apply_panel_style() -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = UITheme.C_WINDOW_BG
-	style.border_color = UITheme.C_GOLDEN_BORDER
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	add_theme_stylebox_override("panel", style)
+	theme_type_variation = &"WindowPanel"
 
 func _setup_tooltips() -> void:
 	_l_hp.tooltip_text = "Hit Points — your life force. Reaching 0 HP means death."
@@ -190,7 +184,7 @@ func _build_skills_section() -> void:
 
 	var header := Label.new()
 	header.text = "Combat Skills"
-	header.add_theme_color_override("font_color", UITheme.C_TITLE)
+	header.theme_type_variation = &"TitleLabel"
 	header.add_theme_font_size_override("font_size", 12)
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	inner.add_child(header)
@@ -206,13 +200,11 @@ func _build_skills_section() -> void:
 		var name_lbl := Label.new()
 		name_lbl.text = WeaponSkillDefinitions.DISPLAY.get(skill, skill)
 		name_lbl.add_theme_font_size_override("font_size", 11)
-		name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		grid.add_child(name_lbl)
 
 		var val_lbl := Label.new()
 		val_lbl.add_theme_font_size_override("font_size", 11)
-		val_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		grid.add_child(val_lbl)
 		_skills_rows[skill] = {"name": name_lbl, "val": val_lbl}
@@ -223,7 +215,7 @@ func _build_skills_section() -> void:
 
 	var armor_header := Label.new()
 	armor_header.text = "Armor Skills"
-	armor_header.add_theme_color_override("font_color", UITheme.C_TITLE)
+	armor_header.theme_type_variation = &"TitleLabel"
 	armor_header.add_theme_font_size_override("font_size", 12)
 	armor_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	inner.add_child(armor_header)
@@ -239,13 +231,11 @@ func _build_skills_section() -> void:
 		var name_lbl := Label.new()
 		name_lbl.text = ArmorSkillDefinitions.DISPLAY.get(skill, skill)
 		name_lbl.add_theme_font_size_override("font_size", 11)
-		name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		armor_grid.add_child(name_lbl)
 
 		var val_lbl := Label.new()
 		val_lbl.add_theme_font_size_override("font_size", 11)
-		val_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		armor_grid.add_child(val_lbl)
 		_armor_skill_rows[skill] = {"name": name_lbl, "val": val_lbl}
@@ -256,7 +246,7 @@ func _build_skills_section() -> void:
 
 	var casting_header := Label.new()
 	casting_header.text = "Casting Skills"
-	casting_header.add_theme_color_override("font_color", UITheme.C_TITLE)
+	casting_header.theme_type_variation = &"TitleLabel"
 	casting_header.add_theme_font_size_override("font_size", 12)
 	casting_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	inner.add_child(casting_header)
@@ -272,13 +262,11 @@ func _build_skills_section() -> void:
 		var name_lbl := Label.new()
 		name_lbl.text = CastingSkillDefinitions.DISPLAY.get(skill, skill)
 		name_lbl.add_theme_font_size_override("font_size", 11)
-		name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 		name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		casting_grid.add_child(name_lbl)
 
 		var val_lbl := Label.new()
 		val_lbl.add_theme_font_size_override("font_size", 11)
-		val_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 		val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		casting_grid.add_child(val_lbl)
 		_casting_skill_rows[skill] = {"name": name_lbl, "val": val_lbl}

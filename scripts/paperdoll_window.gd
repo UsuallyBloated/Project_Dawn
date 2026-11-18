@@ -38,12 +38,7 @@ func _ready() -> void:
 func _build_ui() -> void:
 	custom_minimum_size = Vector2(220, 280)
 
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = C_BG
-	panel_style.border_color = UITheme.C_BORDER
-	panel_style.set_border_width_all(2)
-	panel_style.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", panel_style)
+	theme_type_variation = &"WindowPanel"
 
 	var vbox := VBoxContainer.new()
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -57,7 +52,7 @@ func _build_ui() -> void:
 
 	var title := Label.new()
 	title.text = "Equipment"
-	title.add_theme_color_override("font_color", UITheme.C_TITLE)
+	title.theme_type_variation = &"TitleLabel"
 	title.add_theme_font_size_override("font_size", 14)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
@@ -65,7 +60,6 @@ func _build_ui() -> void:
 	var close_btn := Button.new()
 	close_btn.text = "✕"
 	close_btn.flat = true
-	close_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	close_btn.pressed.connect(func(): visible = false)
 	header.add_child(close_btn)
 
@@ -105,12 +99,7 @@ func _make_slot_frame(slot_name: String) -> Panel:
 	frame.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
 	frame.set_meta("slot_name", slot_name)
 
-	var s := StyleBoxFlat.new()
-	s.bg_color = UITheme.C_SLOT_BG
-	s.border_color = UITheme.C_BORDER
-	s.set_border_width_all(1)
-	s.set_corner_radius_all(2)
-	frame.add_theme_stylebox_override("panel", s)
+	frame.theme_type_variation = &"SlotCell"
 
 	var icon := TextureRect.new()
 	icon.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -127,7 +116,6 @@ func _make_slot_frame(slot_name: String) -> Panel:
 	lbl.anchor_bottom = 1.0
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.add_theme_font_size_override("font_size", 8)
-	lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	lbl.set_meta("is_label", true)
 	frame.add_child(lbl)
 
@@ -139,7 +127,7 @@ func _make_slot_frame(slot_name: String) -> Panel:
 	item_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	item_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	item_lbl.add_theme_font_size_override("font_size", 7)
-	item_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+	item_lbl.theme_type_variation = &"TitleLabel"
 	item_lbl.set_meta("is_item_label", true)
 	item_lbl.visible = false
 	frame.add_child(item_lbl)

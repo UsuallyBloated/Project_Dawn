@@ -57,7 +57,7 @@ func _ready() -> void:
 	_title.text = TITLE
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.add_theme_font_size_override("font_size", 22)
-	_title.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_title.theme_type_variation = &"TitleLabel"
 	vbox.add_child(_title)
 
 	_reason = Label.new()

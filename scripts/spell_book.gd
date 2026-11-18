@@ -35,12 +35,7 @@ func _build() -> void:
 	custom_minimum_size = Vector2(300, 320)
 	position = Vector2(220, 80)
 
-	var style := StyleBoxFlat.new()
-	style.bg_color = C_BG
-	style.border_color = UITheme.C_BORDER
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", style)
+	theme_type_variation = &"WindowPanel"
 
 	var outer := VBoxContainer.new()
 	outer.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -56,13 +51,12 @@ func _build() -> void:
 	title.text = "Spellbook"
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_size_override("font_size", 14)
-	title.add_theme_color_override("font_color", UITheme.C_TITLE)
+	title.theme_type_variation = &"TitleLabel"
 	header.add_child(title)
 
 	var close_btn := Button.new()
 	close_btn.text = "✕"
 	close_btn.flat = true
-	close_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	close_btn.pressed.connect(func(): visible = false)
 	header.add_child(close_btn)
 
@@ -83,7 +77,6 @@ func _build() -> void:
 	var hint := Label.new()
 	hint.text = "Sit, click a spell, then click a Spell Bar slot to memorize."
 	hint.add_theme_font_size_override("font_size", 10)
-	hint.add_theme_color_override("font_color", UITheme.C_TEXT)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	spells_tab.add_child(hint)
 
@@ -113,7 +106,6 @@ func _build() -> void:
 	var skill_hint := Label.new()
 	skill_hint.text = "Click a skill to pick it up, then click an empty hotbar slot to place it. ESC cancels."
 	skill_hint.add_theme_font_size_override("font_size", 10)
-	skill_hint.add_theme_color_override("font_color", UITheme.C_TEXT)
 	skill_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	skills_tab.add_child(skill_hint)
 
@@ -138,7 +130,7 @@ func _add_col_hdr(parent: HBoxContainer, text: String, min_w: float, expand: boo
 	var lbl := Label.new()
 	lbl.text = text
 	lbl.add_theme_font_size_override("font_size", 10)
-	lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+	lbl.theme_type_variation = &"TitleLabel"
 	if min_w > 0:
 		lbl.custom_minimum_size.x = min_w
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -228,7 +220,6 @@ Stamina: %d  CD: %s%s" % [
 	name_lbl.text = skill.skill_name
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_lbl.add_theme_font_size_override("font_size", 12)
-	name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	name_lbl.clip_text = true
 	row.add_child(name_lbl)
 
@@ -245,7 +236,6 @@ Stamina: %d  CD: %s%s" % [
 	cd_lbl.custom_minimum_size.x = 44
 	cd_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	cd_lbl.add_theme_font_size_override("font_size", 11)
-	cd_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	row.add_child(cd_lbl)
 
 	bg.mouse_entered.connect(func() -> void:
@@ -302,7 +292,6 @@ func _make_row(spell: SpellData) -> Panel:
 	name_lbl.text = spell.spell_name
 	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_lbl.add_theme_font_size_override("font_size", 12)
-	name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	name_lbl.clip_text = true
 	row.add_child(name_lbl)
 
@@ -319,7 +308,6 @@ func _make_row(spell: SpellData) -> Panel:
 	cd_lbl.custom_minimum_size.x = 44
 	cd_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	cd_lbl.add_theme_font_size_override("font_size", 11)
-	cd_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	row.add_child(cd_lbl)
 
 	var data := {

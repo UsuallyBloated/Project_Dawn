@@ -96,12 +96,7 @@ func _build_hotkey_bar(bar_h: float) -> DraggablePanel:
 	panel.offset_top    = -(bar_h + extra_h) - BAR_GAP / 2.0
 	panel.offset_bottom = -BAR_GAP / 2.0
 
-	var style := StyleBoxFlat.new()
-	style.bg_color = C_BG
-	style.border_color = UITheme.C_BORDER
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	panel.add_theme_stylebox_override("panel", style)
+	panel.theme_type_variation = &"WindowPanel"
 	add_child(panel)
 
 	var vbox := VBoxContainer.new()
@@ -128,7 +123,7 @@ func _build_hotkey_bar(bar_h: float) -> DraggablePanel:
 	_bank_label = Label.new()
 	_bank_label.text = "Bank 1"
 	_bank_label.add_theme_font_size_override("font_size", 10)
-	_bank_label.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_bank_label.theme_type_variation = &"TitleLabel"
 	_bank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_bank_label.custom_minimum_size.x = 50
 	nav_row.add_child(_bank_label)
@@ -192,7 +187,7 @@ func _build_hotkey_bar(bar_h: float) -> DraggablePanel:
 		key_lbl.anchor_bottom = 0.35
 		key_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		key_lbl.add_theme_font_size_override("font_size", 9)
-		key_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+		key_lbl.theme_type_variation = &"TitleLabel"
 		key_lbl.offset_left = 3
 		frame.add_child(key_lbl)
 		sd["key_label"] = key_lbl
@@ -203,7 +198,6 @@ func _build_hotkey_bar(bar_h: float) -> DraggablePanel:
 		name_lbl.anchor_bottom = 1.0
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_font_size_override("font_size", 8)
-		name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 		name_lbl.clip_text = true
 		frame.add_child(name_lbl)
 		sd["name_label"] = name_lbl
@@ -230,12 +224,7 @@ func _build_spell_bar(bar_h: float) -> DraggablePanel:
 	panel.offset_top    = -total_h / 2.0
 	panel.offset_bottom =  total_h / 2.0
 
-	var style := StyleBoxFlat.new()
-	style.bg_color = C_BG
-	style.border_color = UITheme.C_BORDER
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	panel.add_theme_stylebox_override("panel", style)
+	panel.theme_type_variation = &"WindowPanel"
 	add_child(panel)
 
 	var box := VBoxContainer.new()
@@ -306,7 +295,7 @@ func _build_spell_bar(bar_h: float) -> DraggablePanel:
 		key_lbl.anchor_bottom = 0.35
 		key_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		key_lbl.add_theme_font_size_override("font_size", 9)
-		key_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+		key_lbl.theme_type_variation = &"TitleLabel"
 		key_lbl.offset_left = 3
 		frame.add_child(key_lbl)
 		sd["key_label"] = key_lbl
@@ -317,7 +306,6 @@ func _build_spell_bar(bar_h: float) -> DraggablePanel:
 		name_lbl.anchor_bottom = 1.0
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_font_size_override("font_size", 8)
-		name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 		name_lbl.clip_text = true
 		frame.add_child(name_lbl)
 		sd["name_label"] = name_lbl
@@ -457,7 +445,7 @@ func _build_social_editor() -> void:
 	var left_hdr := Label.new()
 	left_hdr.text = "Library"
 	left_hdr.add_theme_font_size_override("font_size", 12)
-	left_hdr.add_theme_color_override("font_color", UITheme.C_TITLE)
+	left_hdr.theme_type_variation = &"TitleLabel"
 	left.add_child(left_hdr)
 
 	_social_list = ItemList.new()
@@ -490,7 +478,7 @@ func _build_social_editor() -> void:
 
 	_social_status = Label.new()
 	_social_status.add_theme_font_size_override("font_size", 11)
-	_social_status.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_social_status.theme_type_variation = &"TitleLabel"
 	right.add_child(_social_status)
 
 	var lbl_row := HBoxContainer.new()
@@ -508,7 +496,6 @@ func _build_social_editor() -> void:
 	var help := Label.new()
 	help.text = "Commands: /say /yell /shout /group /tell name msg\n/sit  /stand  /attack\nVars: %t = target name,  %n = your name"
 	help.add_theme_font_size_override("font_size", 10)
-	help.add_theme_color_override("font_color", UITheme.C_TEXT)
 	help.autowrap_mode = TextServer.AUTOWRAP_WORD
 	right.add_child(help)
 

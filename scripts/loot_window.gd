@@ -25,12 +25,7 @@ func _ready() -> void:
 	position = (get_viewport_rect().size * 0.5) - (size * 0.5) + Vector2(-80.0, -60.0)
 
 func _build_ui() -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = C_BG
-	style.border_color = UITheme.C_GOLDEN_BORDER
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", style)
+	theme_type_variation = &"WindowPanel"
 	custom_minimum_size = Vector2(320.0, 80.0)
 
 	var vbox := VBoxContainer.new()
@@ -45,7 +40,7 @@ func _build_ui() -> void:
 
 	var title := Label.new()
 	title.text = "Loot"
-	title.add_theme_color_override("font_color", UITheme.C_TITLE)
+	title.theme_type_variation = &"TitleLabel"
 	title.add_theme_font_size_override("font_size", 14)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
@@ -59,7 +54,6 @@ func _build_ui() -> void:
 	var close_btn := Button.new()
 	close_btn.text = "✕"
 	close_btn.flat = true
-	close_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	close_btn.pressed.connect(func(): visible = false)
 	header.add_child(close_btn)
 

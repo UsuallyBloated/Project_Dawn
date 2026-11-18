@@ -49,12 +49,7 @@ func _build() -> void:
 	offset_right  =  W * 0.5
 	offset_bottom =  H * 0.5
 
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = UITheme.C_WINDOW_BG
-	bg.border_color = UITheme.C_GOLDEN_BORDER
-	bg.set_border_width_all(2)
-	bg.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", bg)
+	theme_type_variation = &"WindowPanel"
 
 	var title := Label.new()
 	title.text = "OPTIONS"
@@ -62,7 +57,7 @@ func _build() -> void:
 	title.offset_top    = 12.0
 	title.offset_bottom = 38.0
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", UITheme.C_TITLE)
+	title.theme_type_variation = &"TitleLabel"
 	title.add_theme_font_size_override("font_size", 18)
 	add_child(title)
 
@@ -114,11 +109,7 @@ func _on_report_bug_pressed() -> void:
 	OS.shell_open(BUG_REPORT_URL)
 
 func _style_tabs() -> void:
-	var panel_s := StyleBoxFlat.new()
-	panel_s.bg_color = UITheme.C_PANEL_BG
-	panel_s.border_color = UITheme.C_BORDER
-	panel_s.set_border_width_all(1)
-	_tab_container.add_theme_stylebox_override("panel", panel_s)
+	_tab_container.theme_type_variation = &"SectionPanel"
 
 	var sel := StyleBoxFlat.new()
 	sel.bg_color = UITheme.C_PANEL_BG
@@ -193,7 +184,6 @@ func _build_graphics_tab() -> void:
 	_ui_scale_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_ui_scale_label = Label.new()
 	_ui_scale_label.custom_minimum_size = Vector2(48.0, 0.0)
-	_ui_scale_label.add_theme_color_override("font_color", UITheme.C_TEXT)
 	_ui_scale_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_ui_scale_slider.value_changed.connect(func(v: float) -> void:
 		_ui_scale_label.text = "%d%%" % int(v * 100.0))
@@ -217,7 +207,6 @@ func _build_interface_tab() -> void:
 	var master_row := HBoxContainer.new()
 	_ft_master_cb = CheckBox.new()
 	_ft_master_cb.text = "Floating Combat Text"
-	_ft_master_cb.add_theme_color_override("font_color", UITheme.C_TEXT)
 	master_row.add_child(_ft_master_cb)
 	vbox.add_child(master_row)
 
@@ -242,7 +231,6 @@ func _build_interface_tab() -> void:
 func _make_sub_checkbox(label: String, parent: VBoxContainer) -> CheckBox:
 	var cb := CheckBox.new()
 	cb.text = label
-	cb.add_theme_color_override("font_color", UITheme.C_TEXT)
 	parent.add_child(cb)
 	return cb
 
@@ -280,7 +268,7 @@ func _build_keybinds_tab() -> void:
 func _add_keybind_header(parent: VBoxContainer, category: String) -> void:
 	var lbl := Label.new()
 	lbl.text = category.to_upper()
-	lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+	lbl.theme_type_variation = &"TitleLabel"
 	lbl.add_theme_font_size_override("font_size", 12)
 	parent.add_child(lbl)
 	parent.add_child(HSeparator.new())
@@ -292,7 +280,6 @@ func _add_keybind_row(parent: VBoxContainer, action: Dictionary) -> void:
 	var lbl := Label.new()
 	lbl.text = action.label
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	row.add_child(lbl)
 
 	var btn := Button.new()
@@ -300,7 +287,6 @@ func _add_keybind_row(parent: VBoxContainer, action: Dictionary) -> void:
 	btn.add_theme_stylebox_override("normal",  UITheme.make_stylebox(UITheme.C_BTN_NORM))
 	btn.add_theme_stylebox_override("hover",   UITheme.make_stylebox(UITheme.C_BTN_HOVER))
 	btn.add_theme_stylebox_override("pressed", UITheme.make_stylebox(UITheme.C_BTN_HOVER))
-	btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	btn.pressed.connect(_start_listening.bind(action.id, btn))
 	_keybind_btns[action.id] = btn
 	row.add_child(btn)
@@ -335,7 +321,6 @@ func _cancel_listening() -> void:
 		return
 	_listening_btn.text = _key_label(_listening_action)
 	_listening_btn.add_theme_stylebox_override("normal", UITheme.make_stylebox(UITheme.C_BTN_NORM))
-	_listening_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	_listening_action = ""
 	_listening_btn = null
 
@@ -350,7 +335,6 @@ func _commit_listening(keycode: int) -> void:
 	GameSettings.apply_keybinds()
 	_listening_btn.text = _key_label(_listening_action)
 	_listening_btn.add_theme_stylebox_override("normal", UITheme.make_stylebox(UITheme.C_BTN_NORM))
-	_listening_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	_listening_action = ""
 	_listening_btn = null
 
@@ -376,7 +360,6 @@ func _make_row(label_text: String) -> HBoxContainer:
 	var lbl := Label.new()
 	lbl.text = label_text
 	lbl.custom_minimum_size = Vector2(160.0, 0.0)
-	lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	row.add_child(lbl)
 	return row
 
@@ -391,7 +374,6 @@ func _make_slider_row(parent: VBoxContainer, label_text: String) -> Array:
 
 	var pct := Label.new()
 	pct.custom_minimum_size = Vector2(48.0, 0.0)
-	pct.add_theme_color_override("font_color", UITheme.C_TEXT)
 	pct.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	slider.value_changed.connect(func(v: float) -> void:

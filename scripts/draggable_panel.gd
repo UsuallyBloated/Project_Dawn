@@ -184,8 +184,14 @@ func setup(pos: Vector2, sz: Vector2, min_sz: Vector2 = MIN_SIZE) -> void:
 	size = sz
 	custom_minimum_size = min_sz
 
-func apply_style(bg: Color = Color(0.07, 0.05, 0.03, 0.92),
-				 border: Color = UITheme.C_BORDER) -> void:
+# The window's look. With no arguments it is the theme's WindowPanel (the
+# brass band on walnut); a caller with colours of its own (the HUD's bars,
+# the buff bars, a chat window's tint) keeps a style box built from them.
+func apply_style(bg: Color = UITheme.C_WINDOW_BG,
+				 border: Color = UITheme.C_GOLDEN_BORDER) -> void:
+	if bg == UITheme.C_WINDOW_BG and border == UITheme.C_GOLDEN_BORDER:
+		theme_type_variation = &"WindowPanel"
+		return
 	var s := StyleBoxFlat.new()
 	s.bg_color = bg
 	s.border_color = border
@@ -198,19 +204,9 @@ func make_tooltip() -> Array:
 	var panel := PanelContainer.new()
 	panel.visible = false
 	panel.z_index = 20
-	var style := StyleBoxFlat.new()
-	style.bg_color = UITheme.C_TOOLTIP
-	style.border_color = UITheme.C_BORDER
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	style.content_margin_left = 8
-	style.content_margin_top = 6
-	style.content_margin_right = 8
-	style.content_margin_bottom = 6
-	panel.add_theme_stylebox_override("panel", style)
+	panel.theme_type_variation = &"Tooltip"
 	var label := Label.new()
 	label.add_theme_font_size_override("font_size", 12)
-	label.add_theme_color_override("font_color", UITheme.C_TEXT)
 	panel.add_child(label)
 	add_child(panel)
 	return [panel, label]

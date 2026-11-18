@@ -306,7 +306,7 @@ func _build_tot_frame() -> void:
 
 	_tot_name_label = Label.new()
 	_tot_name_label.add_theme_font_size_override("font_size", 10)
-	_tot_name_label.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_tot_name_label.theme_type_variation = &"TitleLabel"
 	_tot_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tot_name_label.clip_text = true
 	name_row.add_child(_tot_name_label)
@@ -769,12 +769,7 @@ func _on_window_visibility_changed(window: Panel) -> void:
 # ── Styling helpers ───────────────────────────────────────────────────────────
 
 func _style_panel() -> void:
-	var s := StyleBoxFlat.new()
-	s.bg_color = Color(0.07, 0.05, 0.03, 0.92)
-	s.border_color = UITheme.C_BORDER
-	s.set_border_width_all(1)
-	s.set_corner_radius_all(4)
-	$Panel.add_theme_stylebox_override("panel", s)
+	$Panel.theme_type_variation = &"WindowPanel"
 
 # ── Stat bar callbacks ────────────────────────────────────────────────────────
 

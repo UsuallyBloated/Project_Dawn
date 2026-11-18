@@ -104,7 +104,6 @@ func _add_icon(type: String, spell_name: String) -> Label:
 	name_lbl.text = spell_name.left(7)
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.add_theme_font_size_override("font_size", 8)
-	name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_lbl.clip_text = true
 	vbox.add_child(name_lbl)
