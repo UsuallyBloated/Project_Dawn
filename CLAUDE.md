@@ -1169,7 +1169,13 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `5940a0b`) and **R2 re-analyzed and DONE 2026-11-18** (the assessment's §8: `apply_casts`'s
   eleven arms moved into `cast_*` functions byte for byte, the 580-line prelude untouched as
   the security property; the `handle_message` half dropped, 77 arms averaging 25 lines; server
-  `09b03ff` to `2ddfe7b`, one commit per arm, each token-compared and suite-green); **R3 DONE 2026-11-18** the same way (`RemoteEntity` under the three remote bodies, `RemoteEntityManager` under the five managers, a probe first; client `5b1347a` and the commit after). The three
+  `09b03ff` to `2ddfe7b`, one commit per arm, each token-compared and suite-green); **R3 DONE 2026-11-18** the same way (`RemoteEntity` under the three remote bodies, `RemoteEntityManager` under the five managers, a probe first; client `5b1347a` and the commit after); **R4 re-analyzed
+  and DONE 2026-11-18** (the assessment's §10: the chat commands out of `hud.gd` into
+  `scripts/hud_chat_commands.gd` as two lookup tables and one function per command, every body
+  token-identical; `tools/check_chat_commands.gd` in `check_all.ps1` holds every command and
+  fails on one with no row; bare `/give`, `/lang`, `/kick`, `/damage`, `/heal` and `/tell` print
+  their usage; client `1cc2088` to `13b795a` and the commit after; rides the next export;
+  `feat/gm-flight`'s `/fly` arm is re-added by hand at its merge, the flight handoff says how). The three
   dead wire intents (`StackAll`, `TurnInQuest`, `CancelCast`) come off at the next bump.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
@@ -4552,6 +4558,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **DECIDED 2026-10-07 (user): "dont make named mobs charm-immune."** Named mobs stay
   charmable; no flag. (EQ's other gate, a maximum target level on each charm rank, was
   described but not asked about and is not decided; charm today has no level cap at all.)
+- [ ] **Four chat commands say they succeeded before the server has answered** *(found
+  2026-11-18 by the review pass on R4; older than it)*. `/kick <name>` as leader prints "Kicked
+  <name> from the group." and `/invite <name>` "Invited <name> to your group." the moment they
+  send, whatever the server then decides (a name that is not in the group, or not online, gets
+  the same line, followed by the server's refusal if it sends one); `/pvp on` and `/autosplit
+  on` print their "on" line with no world connection at all. The vendor window had the same
+  fault and was changed on 2026-08-24 to describe the request, never the outcome ("Asked the
+  merchant for ..."). Display only: the server decides every one of these, so nothing here is
+  exploitable. Fix shape: word each as a request ("Asked to kick <name>."), or drop the line
+  where the server already answers with one of its own; `tools/check_chat_commands.gd` pins
+  today's wording, so its rows move with it. Client only. The user's call on the wording; not
+  built.
 - [ ] **Other players' levels** *(user 2026-11-02, `overnight_2026_11_01_checklist.md` §3:
   "We cant currently see eachother's levels in game")*. Read in the code, not yet designed: the
   group panel seeds every member at level 0 (`GroupManager`, the row's "Lv %d"; `GroupState`

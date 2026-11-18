@@ -25,6 +25,7 @@ extends SceneTree
 # for writing a new row.
 
 const HUD_SCENE := "res://scenes/hud.tscn"
+const REMOTE_PLAYER_SCENE := "res://scenes/remote_player.tscn"
 const WATCHDOG_SECS := 120.0
 const TESTER_NAME := "Tester"
 const STUB_POSITION := Vector3(12.34, 5.0, -67.8)
@@ -320,6 +321,7 @@ func _run() -> void:
 	_table()
 	_silent_commands()
 	_tables_are_sound()
+	_inspect()
 	_no_body()
 
 	if _dump:
@@ -435,6 +437,27 @@ func _tables_are_sound() -> void:
 				unheld.append(String(key))
 	_check(unheld.is_empty(), "every command in the tables is typed by a row of this check%s"
 		% ("" if unheld.is_empty() else " (no row for: %s)" % str(unheld)))
+
+# /inspect on a targeted player goes through the HUD's own inspect (the window
+# and its range check), which the HUD hands the commands as a call.
+func _inspect() -> void:
+	var combat := root.get_node("/root/Combat")
+	var peer = load(REMOTE_PLAYER_SCENE).instantiate()
+	peer.char_id = 7
+	peer.player_name = "Bob"
+	root.add_child(peer)
+	peer.global_position = STUB_POSITION + Vector3(3.0, 0.0, 0.0)
+	combat.set_target(peer)
+	var window = _hud._inspect_window
+	var said := _type("/inspect")
+	_check(said.is_empty() and window.visible,
+		"/inspect on a targeted player in reach opens the inspect window")
+	window.visible = false
+	peer.global_position = STUB_POSITION + Vector3(60.0, 0.0, 0.0)
+	_check(_matches(["INFO|You are too far away to inspect Bob."], _type("/inspect")) and not window.visible,
+		"/inspect on one out of reach says so and opens nothing")
+	combat.set_target(null)
+	peer.free()
 
 # With no body in the world (the instant before it spawns, or after it is
 # freed) a command says so or does nothing; it never errors.

@@ -125,7 +125,7 @@ none is a friends-build item.
 | R1 | **Delete the 25 dead functions** after a glance at each (`Languages.hear_language` is the hook the open language item names; deleting it loses nothing, git has it, and the item's text already says it is not called). **DONE 2026-11-18** (two commits on the deploy branch; `session_2026_11_18_r1_dead_code.md`): 20 deleted with what only they used (the `SlotRef` and `Vec3` helper constants, crafting's XP constants and map, and the whole `MobileCharacter` script, whose two subclasses left with the offline code). Five kept on the user's read of the list: `DebugLog.combat` (a documented log level the console colours), the three `Languages` functions (unfinished, not dead: the wiring item), and `fail_quest` (for the failable quests to come), each with a comment saying so. The floating XP number, whose options checkbox existed and did nothing, was wired to `xp_gained` instead of deleted (off by default). All 19 checks and 24 probes green after. The lesson for the next sweep: "defined, never called" is the lower bound; a function waiting on an unbuilt feature is unfinished, and the glance is for telling the two apart. | Any quiet hour; one commit. | Small | No dead code is the rule; a dead wire send (`broadcast_split_stack`) is a trap for the next reader. |
 | R2 | **`apply_casts` into one function per target-type arm** (`cast_enemy`, `cast_ally`, `cast_pet_charm`, ...), same file, moves only, the pre-flight's `ResolvedTarget` already the seam. ~~Then `handle_message` by message family the same way.~~ **DONE 2026-11-18 (section 8.5; server `09b03ff` to `2ddfe7b`, eleven commits, each token-compared and suite-green).** **Re-analyzed 2026-11-18 (section 8): the cast half stands, about a day, the 580-line prelude untouched, a `CastContext` lent to each arm, biggest arm first, after the door and in a window with no branch on the file. The handler half is dropped: its 1,930 lines are 77 arms averaging 25, a family split buys nothing to read and conflicts with `feat/public-hosting`; its four arms over 80 lines move out when next touched, and the three dead wire intents come off at the next bump.** | One function per sitting, as its own commit, in a quiet window after the door, before the next spell feature. | About a day | The next spell feature and every review of one gets a 200-line read instead of 1,950. |
 | R3 | **A `RemoteEntityManager` base** under the five `remote_*_manager.gd` (and a `RemoteEntity` base under the three remote scripts), lifting the identical bodies. **Re-read 2026-11-18 (user: "Are we ready with R3?"): the §2 row overstated the sharing.** `_instantiate_into` is five different bodies (11 to 30 lines, each building its own scene); what is identical is `clear_all` (7 lines, all five, a local's name apart), `get_by_id` (3 lines, three files) and `_scene_hosts_local_player` (3 lines, three files, a 5-line variant in the player manager): about 13 lines a file. A base class for that alone is §6's building for its own sake. **Stays parked at its moment**, and becomes a half-hour inside the animation-channel work rather than a task. | When the remote animation-state channel (the jump relay's successor) next touches them. | Half an hour, inside that work | The next per-entity message lands once. |
-| R4 | **`_handle_chat_input` as a command table** (`Dictionary` of name to Callable, each command its own small function). **Re-analyzed 2026-11-18 (section 10): stands, reshaped.** It is 40 arms averaging 9 lines, so the gain is not length; it is that a string if-chain has no compiler and no test, and it shows: about ten unreachable lines since the sticky channel, five commands answering their bare form wrong, eight autoloads the HUD reaches only for commands. A probe first, then the dispatcher out of `hud.gd` into the HUD family, then two lookup tables with the bodies moved verbatim, then five listed changes as their own commit. | The next time a command is added (`/fly` is written and waiting on `feat/gm-flight`), or now on the user's call. | Half a day, not an hour | 475 lines become a table and twenty short functions; the audit's "does a prefix swallow" question becomes a lookup. |
+| R4 | **`_handle_chat_input` as a command table** (`Dictionary` of name to Callable, each command its own small function). **DONE 2026-11-18 (section 10.5; client `1cc2088` to `13b795a` and the check's last commit, six commits).** **Re-analyzed 2026-11-18 (section 10): stands, reshaped.** It is 40 arms averaging 9 lines, so the gain is not length; it is that a string if-chain has no compiler and no test, and it shows: about ten unreachable lines since the sticky channel, five commands answering their bare form wrong, eight autoloads the HUD reaches only for commands. A probe first, then the dispatcher out of `hud.gd` into the HUD family, then two lookup tables with the bodies moved verbatim, then five listed changes as their own commit. | The next time a command is added (`/fly` is written and waiting on `feat/gm-flight`), or now on the user's call. | Half a day, not an hour | 475 lines become a table and twenty short functions; the audit's "does a prefix swallow" question becomes a lookup. |
 | R5 | **New windows as `.tscn`, existing ones left alone** until the deferred UI theming pass, which is the one moment converting them earns its cost. | The theming pass. | Per window | Already the rule; stated here so nobody converts a working window on its own. |
 | R6 | **Measure before touching allocations.** A `tracing` span count or a `perf` run on the R720 under two seats before any `.clone()` hunt. | Only if the `world health` line ever shows `over_budget` or the median climbs past a few ms. | Small to measure | The tick runs at 1 to 2% of its budget; there is nothing to win today. |
 
@@ -493,3 +493,66 @@ lines) or the probe and item 4 alone (about three hours, the if-chain stays).
 and a half, the listed changes half an hour), one commit per item, all 19 checks and the
 probes green after each. It can go now: no server or wire change, no redeploy, nothing for
 the door. The cost of going before the flight merge is the `/fly` re-add above.
+
+### 10.5 Built (2026-11-18, the same day; user: "Stick with the full shape, as you recommended. Go ahead.")
+
+On the client deploy branch, one commit per item, the command check, all checks and all
+probes run green after each:
+
+1. **The probe first** (`1cc2088`): the real `hud.tscn`, a stub body in the `player` group,
+   each line typed in where a player's goes (`CombatLog.chat_submitted`) and the lines the
+   game prints back compared with a table. 144 checks, all passing on `hud.gd` as it stood;
+   two planted faults (a renamed command, a dropped alias) each failed it.
+2. **The move** (`7542359`): the dispatcher, `_send_tell`, `_loc_number` and
+   `_npc_display_name` cut out of `hud.gd` by script into `scripts/hud_chat_commands.gd`, a
+   Node the HUD builds with its family and that answers `chat_submitted` itself. Token for
+   token identical to the originals but for the inspect call, a Callable in its new home;
+   every line that left or entered either file listed and accounted for. `hud.gd` 1,860
+   lines to 1,363; the eight autoloads it reached only for commands are no longer its
+   business. `probe_factions.gd` calls the NPC-name helper where it now lives.
+3. **The tables** (`7eeed82`): forty `_cmd_<name>(text, lower)` functions and two
+   dictionaries, `_exact` (the whole lowered line, 50 keys) and `_with_args` (the first
+   word, 18). Generated by script from the committed dispatcher, every body cut from its
+   line range and dedented, never retyped; the generator refuses to write unless each
+   function's tokens equal its arm's (apart from the arm's closing `return`, dropped in 35,
+   and the sender's name, which the four channel commands now ask for themselves) and the
+   hand-written tables hold exactly the command words read out of the old conditions. No
+   probe row changed. Two more planted faults (a dropped key, a key on the wrong function)
+   each failed it.
+4. **The listed changes** (`710c040`), each a probe row that flips (eight rows): bare
+   `/give`, `/lang`, `/kick`, `/damage`, `/heal`, `/tell` and `/t` print their usage (a
+   first-word command is found with or without anything after it); `/itemsfoo` is no
+   command; the `/s`, `/sh` and `/group` alias checks and the `/r` command's two unreachable
+   halves deleted; four stale comments corrected and eight sprint labels removed.
+   `commands.md` says what a bare `/r` does since the sticky channel, and lists `/gsay`.
+5. **The review pass** (`13b795a`, `/code-review` at medium: eight findings, seven fixed, one
+   recorded). The probe became `tools/check_chat_commands.gd`, so `check_all.ps1` runs it
+   (20 checks): the review's point was that a net nobody runs is not one. It now also fails
+   on a command in the tables with no row and on a word in both tables (each proven on a
+   planted fault; the "shadowed" check it replaced tested a harmless direction). Nine
+   comments and docs that still named `hud.gd` as the command handler corrected. A tell is
+   sliced at its first space, so the `/t` key cannot mis-slice whatever arrives. `/loot`
+   reports and `/loot <mode>` sets, as two functions. The console toggle and its line live
+   once, in `hud.gd`, shared by the backtick key and `/console`. The flight handoff says
+   where `feat/gm-flight`'s `/fly` arm goes at its merge.
+6. **The inspect wiring** (the last commit): the check targets a stub remote player and
+   types `/inspect` in reach and out of it, so every piece the HUD hands the commands (the
+   body, the console toggle, the track window, the inspect call) is exercised. 151 checks.
+
+After: `hud.gd` 1,370 lines, `hud_chat_commands.gd` 571 (41 command functions), the
+check 469. No server or wire change; it rides the next export. The door zip
+(`a1a154e`) is untouched.
+
+**Found and not changed (the user's calls):**
+- `/kick`, `/invite`, `/pvp` and `/autosplit` print a success line the moment they send,
+  before the server has answered (`/kick Nobody` as leader prints "Kicked Nobody from the
+  group."). The vendor window had the same fault and was changed on 2026-08-24 to describe
+  the request, never the outcome. Older than R4, and the check pins today's wording, so
+  the rows move when the wording does. A To-Do entry under UI polish.
+- `ChatWindowManager.show_chat_input(prefill)`: the `/r` reopen half was the only caller
+  that passed a prefill. The parameter has no caller now; left in place (the R1 rule: a
+  candidate, not a verdict).
+
+**What the check cannot see:** what a command sends to the server (it has no world
+connection). Those lines moved token for token, so the next sitting's ordinary use of the
+commands is their evidence; nothing here wants a sheet of its own.
