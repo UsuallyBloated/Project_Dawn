@@ -1,7 +1,6 @@
 extends DraggablePanel
 
 const SLOT_SIZE := 52
-const C_BG := Color(0.07, 0.06, 0.04, 0.95)
 
 # Layout: slot_name -> grid position [col, row] in a 3-column layout
 # Col 0 = left column, Col 1 = center (silhouette), Col 2 = right column
@@ -25,51 +24,23 @@ const SLOT_LABELS: Dictionary = {
 	"ammo": "Ammo",
 }
 
+@onready var _close_btn: Button = $VBox/Header/CloseBtn
+@onready var _grid: GridContainer = $VBox/Grid
 var _slot_frames: Dictionary = {}
 var _tooltip_panel: PanelContainer = null
 var _tooltip_label: Label = null
 
+# The frame is scenes/paperdoll_window.tscn (title row and the 3-column grid);
+# this script fills the grid with the slot frames.
 func _ready() -> void:
+	_close_btn.pressed.connect(func(): visible = false)
 	_build_ui()
 	Equipment.equipment_changed.connect(_on_equipment_changed)
 	for slot_name in SLOT_LAYOUT:
 		_refresh_slot(slot_name)
 
 func _build_ui() -> void:
-	custom_minimum_size = Vector2(220, 280)
-
-	theme_type_variation = &"WindowPanel"
-
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 8; vbox.offset_top = 8
-	vbox.offset_right = -8; vbox.offset_bottom = -8
-	vbox.add_theme_constant_override("separation", 6)
-	add_child(vbox)
-
-	var header := HBoxContainer.new()
-	vbox.add_child(header)
-
-	var title := Label.new()
-	title.text = "Equipment"
-	title.theme_type_variation = &"TitleLabel"
-	title.add_theme_font_size_override("font_size", 14)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
-
-	var close_btn := Button.new()
-	close_btn.text = "✕"
-	close_btn.flat = true
-	close_btn.pressed.connect(func(): visible = false)
-	header.add_child(close_btn)
-
-	# 3-col x 4-row grid
-	var grid := GridContainer.new()
-	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", 6)
-	grid.add_theme_constant_override("v_separation", 6)
-	vbox.add_child(grid)
-
+	var grid := _grid
 	var cells: Array = []
 	for _r in 4:
 		for _c in 3:

@@ -5,7 +5,7 @@ const _CraftingWindowScript := preload("res://scripts/crafting_window.gd")
 const _VendorWindowScript   := preload("res://scripts/vendor_window.gd")
 const _BankWindowScript     := preload("res://scripts/bank_window.gd")
 const _HudDeathScreen       := preload("res://scripts/hud_death_screen.gd")
-const _HudDisconnectNotice  := preload("res://scripts/hud_disconnect_notice.gd")
+const _HudDisconnectNoticeScene := preload("res://scenes/hud_disconnect_notice.tscn")
 const _HudCastBarScene      := preload("res://scenes/hud_cast_bar.tscn")
 const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
 const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
@@ -13,7 +13,7 @@ const _HudPetPanelScene     := preload("res://scenes/hud_pet_panel.tscn")
 const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
 # The hunger window sits this far below the player's information bar.
 const HUNGER_PANEL_GAP := 4.0
-const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
+const _HudGroupPanelScene   := preload("res://scenes/hud_group_panel.tscn")
 const _HudChatCommands      := preload("res://scripts/hud_chat_commands.gd")
 const _TrackWindowScene     := preload("res://scenes/track_window.tscn")
 const _SpellBookScript      := preload("res://scripts/spell_book.gd")
@@ -192,7 +192,7 @@ func _build_components() -> void:
 	var death_screen := _HudDeathScreen.new()
 	add_child(death_screen)
 
-	add_child(_HudDisconnectNotice.new())
+	add_child(_HudDisconnectNoticeScene.instantiate())
 
 	var cast_bar := _HudCastBarScene.instantiate()
 	add_child(cast_bar)
@@ -203,7 +203,7 @@ func _build_components() -> void:
 	var debuff_bar := _HudDebuffBar.new()
 	add_child(debuff_bar)
 
-	_group_panel = _HudGroupPanel.new()
+	_group_panel = _HudGroupPanelScene.instantiate()
 	add_child(_group_panel)
 
 	_pet_panel = _HudPetPanelScene.instantiate()

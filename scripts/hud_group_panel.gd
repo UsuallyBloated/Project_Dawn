@@ -2,63 +2,19 @@ extends DraggablePanel
 
 signal layout_changed
 
-var _header_lbl: Label = null
-var _members_vbox: VBoxContainer = null
-var _action_btn: Button = null
-var _leave_btn: Button = null
+@onready var _header_lbl: Label = $VBox/Header
+@onready var _members_vbox: VBoxContainer = $VBox/Members
+@onready var _action_btn: Button = $VBox/Buttons/ActionBtn
+@onready var _leave_btn: Button = $VBox/Buttons/LeaveBtn
 var _context_menu: PopupMenu = null
 var _context_peer: int = 0
 var _member_bars: Dictionary = {}
 
+# The frame is scenes/hud_group_panel.tscn (header, the member list, the two
+# buttons); this script builds the member rows and the context menu.
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_TOP_LEFT)
-	position = Vector2(10.0, 10.0)
-	size = Vector2(220.0, 60.0)
-
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.03, 0.06, 0.88)
-	style.border_color = Color(0.35, 0.25, 0.55)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	add_theme_stylebox_override("panel", style)
-
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 6; vbox.offset_top = 4
-	vbox.offset_right = -6; vbox.offset_bottom = -4
-	vbox.add_theme_constant_override("separation", 3)
-	add_child(vbox)
-
-	_header_lbl = Label.new()
-	_header_lbl.text = "GROUP"
-	_header_lbl.add_theme_font_size_override("font_size", 11)
-	_header_lbl.add_theme_color_override("font_color", Color(0.75, 0.60, 1.0))
-	_header_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(_header_lbl)
-
-	_members_vbox = VBoxContainer.new()
-	_members_vbox.add_theme_constant_override("separation", 2)
-	_members_vbox.visible = false
-	vbox.add_child(_members_vbox)
-
-	var btn_hbox := HBoxContainer.new()
-	btn_hbox.add_theme_constant_override("separation", 4)
-	vbox.add_child(btn_hbox)
-
-	_action_btn = Button.new()
-	_action_btn.text = "Invite"
-	_action_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_action_btn.add_theme_font_size_override("font_size", 11)
 	_action_btn.pressed.connect(_on_action_pressed)
-	btn_hbox.add_child(_action_btn)
-
-	_leave_btn = Button.new()
-	_leave_btn.text = "Leave"
-	_leave_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_leave_btn.add_theme_font_size_override("font_size", 11)
-	_leave_btn.visible = false
 	_leave_btn.pressed.connect(GroupManager.leave_group)
-	btn_hbox.add_child(_leave_btn)
 
 	_context_menu = PopupMenu.new()
 	_context_menu.add_item("Pass Leadership", 0)
