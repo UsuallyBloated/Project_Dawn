@@ -58,11 +58,6 @@ func _scan_directory(path: String) -> void:
 		entry = dir.get_next()
 	dir.list_dir_end()
 
-# Exact (case-insensitive) match by item_name. Returns the loaded
-# template ItemData; caller must .duplicate() before mutating.
-func find_exact(name: String) -> ItemData:
-	return _by_name.get(name.to_lower())
-
 # Substring fuzzy match. Returns up to `limit` items whose item_name
 # contains `query` (case-insensitive). Useful for "/give iron" → see
 # which "iron" items exist. Empty query returns empty result.

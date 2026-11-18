@@ -137,14 +137,8 @@ func set_slot_spell(slot: int, spell: SpellData) -> void:
 func set_slot_skill(slot: int, skill: SkillData) -> void:
 	_set_slot(slot, TYPE_SKILL, skill.skill_name, skill.skill_name, [], "")
 
-# Track 16.2 — legacy API kept as a one-shot convenience: callers that
-# pass inline lines get a library entry minted for them, and the slot
-# stores a ref. New code should call library_add → set_slot_social_ref
-# directly.
-func set_slot_social(slot: int, label: String, lines: Array) -> void:
-	var id := library_add(label, lines)
-	set_slot_social_ref(slot, id)
-
+# A social slot stores a reference into the macro library (library_add
+# mints the entry), never inline lines.
 func set_slot_social_ref(slot: int, library_id: String) -> void:
 	var entry := library_get(library_id)
 	if entry.is_empty():

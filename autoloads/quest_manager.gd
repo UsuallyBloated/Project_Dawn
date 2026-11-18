@@ -8,7 +8,6 @@ extends Node
 signal quest_added(quest_id: String)
 signal quest_updated(quest_id: String)
 signal quest_completed(quest_id: String)
-signal quest_failed(quest_id: String)
 signal quest_removed(quest_id: String)
 
 # READY = every tracked objective met, reward waiting at the turn-in NPC
@@ -238,12 +237,6 @@ func get_quest_status(quest_id: String) -> int:
 	if _completed_ids.has(quest_id):
 		return Status.COMPLETED  # completed on the server (e.g. before a relog)
 	return -1   # -1 = not accepted
-
-func fail_quest(quest_id: String) -> void:
-	if not _quests.has(quest_id):
-		return
-	_quests[quest_id]["status"] = Status.FAILED
-	quest_failed.emit(quest_id)
 
 func get_quest(quest_id: String) -> Dictionary:
 	return _quests.get(quest_id, {})

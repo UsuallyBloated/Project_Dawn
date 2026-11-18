@@ -68,7 +68,6 @@ var floating_text_enabled: bool = true
 var floating_text_damage:  bool = true
 var floating_text_heals:   bool = true
 var floating_text_misses:  bool = true
-var floating_text_xp:      bool = true
 
 # Keybinds: action_id -> Key enum value
 var keybinds: Dictionary = {}
@@ -169,7 +168,6 @@ func save_settings() -> void:
 	cfg.set_value("interface", "floating_text_damage",  floating_text_damage)
 	cfg.set_value("interface", "floating_text_heals",   floating_text_heals)
 	cfg.set_value("interface", "floating_text_misses",  floating_text_misses)
-	cfg.set_value("interface", "floating_text_xp",      floating_text_xp)
 	for action: Dictionary in REBINDABLE_ACTIONS:
 		cfg.set_value("keybinds", action.id, keybinds.get(action.id, action.default_key))
 	cfg.set_value("chat", "windows", chat_windows)
@@ -194,7 +192,6 @@ func load_settings() -> void:
 	floating_text_damage  = cfg.get_value("interface", "floating_text_damage",  true)
 	floating_text_heals   = cfg.get_value("interface", "floating_text_heals",   true)
 	floating_text_misses  = cfg.get_value("interface", "floating_text_misses",  true)
-	floating_text_xp      = cfg.get_value("interface", "floating_text_xp",      true)
 	var sanitized := false
 	for action: Dictionary in REBINDABLE_ACTIONS:
 		var saved: int = cfg.get_value("keybinds", action.id, action.default_key)

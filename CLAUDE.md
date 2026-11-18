@@ -392,7 +392,6 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 | `data/quest_definitions.gd` | Quest id → objectives, rewards, giver/turn-in NPC |
 | `data/named_mob_definitions.gd` | Boss/named-mob stats, enrage, guaranteed/rare drops |
 | `scripts/spell_data.gd` / `item_data.gd` / `skill_data.gd` | Resource classes |
-| `scripts/mobile_character.gd` | Base for `enemy.gd` + `pet.gd` (shared movement) |
 | `autoloads/passive_skill_tracker.gd` | Base for `WeaponSkills` / `ArmorSkills` / `CastingSkills` |
 
 ---
@@ -970,8 +969,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   layer recorded elsewhere and pulled in by the 2026-09-29 audit: **player-owned towns + guild
   taxes** (user idea 2026-06-18, "revisit later", sparked by the Banker fee mechanic) and a
   **mail system** (server_design.md open question 6, "defer until requested").
-- [ ] **Language system wiring** — `hear_language()` passive gain not yet called from the
-  chat-receive path; needs multiplayer chat RPC + trainer NPCs
+- [ ] **Language system wiring** — the passive gain from hearing speech, the garbling of
+  half-known text and the trainer grant were never called from the chat-receive path and
+  were deleted as dead code 2026-11-18 (R1; `languages.gd` at `6fef33b` has them); the
+  wiring needs the multiplayer chat RPC + trainer NPCs
 - [x] **Quest reward item follow-ups** — **STALE ENTRY, CORRECTED + TICKED 2026-10-02: both
   halves were done and playtested, and this entry never caught up.** (a) The **Tarnished
   Silver Ring's AGI +1 not applying** was fixed on 2026-07-14 (client `b1df906`, "Gear stat
