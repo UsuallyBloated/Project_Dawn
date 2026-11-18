@@ -278,3 +278,87 @@ The suite ran green after every commit (481 unit, 201 world, clippy and fmt clea
 found a fourth flaky roam test, which passed alone and got the sibling's 60 m region
 (`d003fd2`, test code only). No behaviour change; no redeploy needed (it rides the next one).
 
+
+## 9. R3 re-analyzed the same way (2026-11-18)
+
+The user: "Lets review R3 the way R2 was and then proceed with R3." The row named two bases,
+a `RemoteEntityManager` under the five managers and a `RemoteEntity` under the three remote
+entity scripts, "lifting the identical bodies". Read function by function, with each body
+hashed after trailing-whitespace removal:
+
+### 9.1 What the eight files actually share
+
+**The three entity scripts** (`remote_player.gd` 348 lines, `remote_enemy.gd` 210,
+`remote_pet.gd` 243; all `extends CharacterBody3D`, each the root script of its scene):
+
+| Shared | Where it is identical | Lines |
+|---|---|---|
+| The interpolation state: `BUFFER_CAPACITY` 5, `INTERP_LAG` 0.1, `_snapshots`, `_last_seq`, `is_dead` | all three | 5 declarations each |
+| `on_position_update` (drop a stale sequence, ignore while dead, append a snapshot, cap the buffer) | all three (the player's has comments) | 9 |
+| `_physics_process` (cold start on one snapshot, else find the pair straddling now minus the lag and lerp position and yaw) | enemy and pet identical; the player's is the same algorithm with comments and **one line less: on a cold start it sets the position but not the yaw** | 23 |
+| The buff countdown: `buff_names`, `buff_durations`, `_BUFF_INF_SENTINEL`, the `buffs_changed` signal, and the `_process` that ticks the durations down | enemy and pet identical; the player's `_process` is the same loop between its jump advance and its cast-bar auto-end | 10 |
+| `hp_changed(current, maximum)` and `died(self)` signals | all three (the `died` parameter is named peer, enemy and pet; every connection is by position) | 2 |
+
+Not shared, and staying where it is: `apply_health_update`, `apply_buff_snapshot`,
+`get_spell_resist`, `set_targeted`, `flash_spell_hit`, `apply_death` (each type's own
+rules), the pet's allegiance tint, the player's casting, jump and mana and stamina bars.
+
+**The five managers** (138 to 572 lines, all `extends Node`, each wired to its own set of
+`Net` signals in `_ready`): `clear_all` identical in all five (7 lines, a local's name
+apart); `get_by_id` identical in three (3 lines); `_scene_hosts_local_player` identical in
+three with a trailing comment on the player's (3 lines). `_instantiate_into`, which the §2
+row counted as shared, is five different builds (11 to 30 lines, each its own scene and
+fields). About 13 lines a file.
+
+So the sharing the row pointed at is mostly on the entity side, not the manager side: the
+network interpolation rule (how a remote body is drawn 100 ms behind the server's stream,
+the rule the 10-02 enemy-stream note reasons about) and the buff countdown exist three
+times, byte for byte but for comments.
+
+### 9.2 Who has the files open, and what holds them
+
+No branch carries an unmerged edit to any of the eight (`feat/public-hosting` and
+`feat/gm-flight` both clean on them); churn is low (12 manager commits and 4 entity commits
+in 45 days). What exercises them headless: `check_nameplates.gd` instantiates all three
+remote scenes (so a script that fails to load fails the check), `probe_swing_retime.gd` and
+`probe_ammo_slot.gd` instantiate `remote_enemy.tscn`, `probe_fizzle_cooldown.gd` reaches the
+player manager. **Nothing drives the interpolation or the buff countdown**: those have only
+ever been verified in play (two seats). A base-class move with no net under the one
+behaviour that matters would be the R2 split without its token compare.
+
+### 9.3 The shape, re-ranked
+
+1. **`RemoteEntity` (a `class_name`, `extends CharacterBody3D`) under the three entity
+   scripts: yes, the real R3.** It carries the interpolation state and both of its functions,
+   the buff countdown state, its signal and its `_process`, `is_dead`, and the two signals.
+   Enemy and pet lose their copies outright. The player keeps its `_process` as jump advance,
+   `super(delta)`, cast-bar auto-end, and loses its `_physics_process` and
+   `on_position_update`. **One deliberate change rides it:** a remote player on a cold start
+   (its first snapshot after entering view) takes the snapshot's yaw as the other two do,
+   instead of facing the scene's default for the one tick until the second snapshot. The
+   facing sheet's late-joiner row passed on the old behaviour because the second snapshot is
+   50 ms behind; the unified one is the better of the two and is called out, not hidden.
+2. **`RemoteEntityManager` (`extends Node`) under the five managers: yes, but the minor
+   half.** `_by_id`, `_spawn_data`, `clear_all`, `get_by_id`, `_scene_hosts_local_player`.
+   Its value is one home for the "does this scene host the local player" rule (a real rule
+   with a four-line comment in four places), not the line count.
+3. **A probe first, before anything moves:** `tools/probe_remote_interpolation.gd`, run
+   against the three scenes as they are today: a cold start snaps to the one snapshot; two
+   snapshots interpolate toward the newer and arrive; a stale sequence is dropped; a dead
+   body takes no snapshot and does not move; a buff duration ticks down and emits, the
+   infinite sentinel does not. The one check the old player fails is the cold-start yaw,
+   item 1's deliberate change. Then the moves, compared token-wise as R2's were, the probe
+   and all 19 checks green after each commit, one commit per base.
+4. **Moment:** its stated one has not come, and the user has called it now; the cost is a
+   few hours and the files are quiet, so nothing argues against it beyond the principle,
+   which the user has weighed.
+
+### 9.4 Built
+
+Both bases, the same afternoon, two commits on the client deploy branch.
+
+**`RemoteEntity`** (`scripts/remote_entity.gd`, 124 lines, `class_name`, `extends CharacterBody3D`; the three scripts `extends` it by path, which needs no class cache): the interpolation state and both of its functions, the buff countdown state, its signal and its `_process`, `is_dead`, `hp_changed` and `died(entity)`. The player keeps `_process` as `_advance_jump(delta)`, `super(delta)`, its cast-bar auto-end. Code-token compare (comments and whitespace removed): `on_position_update` identical to all three originals, the buff tick identical to enemy and pet, `_physics_process` identical to enemy and pet and one line apart from the player (the cold-start yaw, item 1 of 9.3). The probe written first against the old scripts (`tools/probe_remote_interpolation.gd`, 33 checks: 32 of 33 on the old code, the miss that yaw line) is 33 of 33 after. The four files 801 lines to 678.
+
+**`RemoteEntityManager`** (`autoloads/remote_entity_manager.gd`, `extends Node`; the five managers extend it by path): `_spawn_data`, `_by_id`, `get_by_id`, `_scene_hosts_local_player`, `clear_all`, with the comments that sat above them in the player manager; the corpse and loot managers' spawn-dict shapes, which sat beside the deleted declarations, moved into their headers. Five files 88 lines out, 9 in; every removed line read and matched to a move. (`get_enemy` and `get_pet`, each a second name for `get_by_id` with callers, were left: a rename for another day.)
+
+After each half: all 19 checks and all 25 probes green. No wire or server change; rides the next export. The one behaviour change is the cold-start yaw, called out above.

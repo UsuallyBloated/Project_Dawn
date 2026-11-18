@@ -90,3 +90,23 @@ build dirs with theirs), after a status read of each: nothing uncommitted beyond
 `.uid` by-products and that build output. Kept: the two deploy checkouts, both `-hosting`
 (unmerged until cutover) and the client `-zone` (`feat/gm-flight`, the flight client).
 The merged branches stay; they cost nothing and hold the history.
+
+## 7. R3 the same way, then built (the same afternoon; user: "Lets review R3 the way R2 was and then proceed with R3")
+
+The read (assessment §9) corrected the row twice: `_instantiate_into` is not shared across
+the managers (five different builds), and the real duplication is on the entity side,
+where the three remote scripts carried the same snapshot interpolation
+(`on_position_update`, `_physics_process`, the buffer and lag constants), the same buff
+countdown (`_process` and its arrays), `is_dead` and the `hp_changed` / `died` signals, byte
+for byte but for comments. No branch had any of the eight files open; nothing headless drove
+the interpolation. So: a probe first (`tools/probe_remote_interpolation.gd`, 33 checks on the
+three scenes as they were: a cold start snaps, two snapshots interpolate and arrive, a stale
+sequence is dropped, a dead body stays put, a duration ticks and emits, the sentinel does
+not), then `RemoteEntity` under the three bodies (client `5b1347a`) and
+`RemoteEntityManager` under the five managers (the commit after), each body compared at the
+code-token level with its originals. **One deliberate behaviour change:** a remote player on a
+cold start takes its snapshot's yaw as the enemy and pet always did (the old player faced the
+scene's default for one tick); the probe's one miss on the old code was that line. All 19
+checks and all 25 probes green after each half. 801 to 678 lines on the entity side, 88 out
+on the manager side. Left alone: `get_enemy` and `get_pet`, second names for `get_by_id`
+with 14 callers between them.

@@ -1169,7 +1169,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `5940a0b`) and **R2 re-analyzed and DONE 2026-11-18** (the assessment's §8: `apply_casts`'s
   eleven arms moved into `cast_*` functions byte for byte, the 580-line prelude untouched as
   the security property; the `handle_message` half dropped, 77 arms averaging 25 lines; server
-  `09b03ff` to `2ddfe7b`, one commit per arm, each token-compared and suite-green). The three
+  `09b03ff` to `2ddfe7b`, one commit per arm, each token-compared and suite-green); **R3 DONE 2026-11-18** the same way (`RemoteEntity` under the three remote bodies, `RemoteEntityManager` under the five managers, a probe first; client `5b1347a` and the commit after). The three
   dead wire intents (`StackAll`, `TurnInQuest`, `CancelCast`) come off at the next bump.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
