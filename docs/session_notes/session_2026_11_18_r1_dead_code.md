@@ -51,12 +51,38 @@ DLL refers to GDScript names.
 names, and the console colours COMBAT lines; a level with no writer today is API, not dead
 code. The user's call if it should go too.
 
-**Left, flagged:** `LanguageDefinitions.GARBLE_CIPHERS` (data) has no reader now; it is the
-content the language wiring needs and R1 is about functions. `Crafting.skill_level_changed`
-has two listeners (the crafting window, the HUD) and no emitter until tradeskills move to the
-server; it is the seam that build fills.
+**Left, flagged:** `Crafting.skill_level_changed` has two listeners (the crafting window, the
+HUD) and no emitter until tradeskills move to the server; it is the seam that build fills.
+(Section 3 below reverses three of the deletions above; this section is the record of the
+first commit as made.)
 
-## 3. Evidence
+## 3. Three of them come back (the user's read of the list)
+
+The user, on the first commit: "some of this stuff sounds like we made it for a reason."
+Three calls, each made the same morning:
+
+- **The floating XP number is restored and WIRED** ("Restore the XP numbers and wire them up
+  on/off"). `spawn_xp`, `DamageNumber.Type.XP`, the `floating_text_xp` setting and the "XP
+  Gains" checkbox are back, and `DamageNumbers` now connects to `PlayerStats.xp_gained` (the
+  signal every server XP award already fires for the chat line), so the checkbox does what it
+  says for the first time. **Default off** (the var and the load fallback): the number was
+  unhooked as visual noise, so it is there for whoever wants it. Caveat: a tester whose
+  settings file was saved under the old default carries `floating_text_xp=true` and will see
+  the numbers until they untick it; the old checkbox did nothing, so that saved value was
+  never a choice they made.
+- **The language functions are kept** ("Lets keep the language structure for now; i think
+  this is something we just havent completed yet"): `hear_language`, `garble`,
+  `grant_language`, `_apply_cipher` and `skill_improved` restored as they were, with a file
+  header saying they are unfinished, not dead, so the next sweep does not take them again.
+  CLAUDE.md's wiring entry back to its wording with the same note.
+- **`fail_quest` and `quest_failed` are kept** ("We will have quests that are able to be
+  failed, we just currently dont have any"): restored with the journal's connect line and a
+  comment naming the reason and the date.
+
+So the count is 20 functions deleted, 5 kept on purpose (`DebugLog.combat` and these four),
+and one dead toggle made real.
+
+## 4. Evidence
 
 All 19 checks (`tools/check_all.ps1` against the deploy server) and all 24 `tools/probe_*.gd`
 green, no script errors in any probe's output. 19 files, 24 lines in and 263 out, plus the

@@ -34,6 +34,7 @@ var _ft_master_cb: CheckBox = null
 var _ft_damage_cb: CheckBox = null
 var _ft_heals_cb:  CheckBox = null
 var _ft_misses_cb: CheckBox = null
+var _ft_xp_cb:     CheckBox = null
 
 func _ready() -> void:
 	_build()
@@ -231,8 +232,9 @@ func _build_interface_tab() -> void:
 	_ft_damage_cb = _make_sub_checkbox("Damage Numbers", sub_vbox)
 	_ft_heals_cb  = _make_sub_checkbox("Heals",          sub_vbox)
 	_ft_misses_cb = _make_sub_checkbox("Misses",         sub_vbox)
+	_ft_xp_cb     = _make_sub_checkbox("XP Gains",       sub_vbox)
 
-	var sub_cbs := [_ft_damage_cb, _ft_heals_cb, _ft_misses_cb]
+	var sub_cbs := [_ft_damage_cb, _ft_heals_cb, _ft_misses_cb, _ft_xp_cb]
 	_ft_master_cb.toggled.connect(func(on: bool) -> void:
 		for cb: CheckBox in sub_cbs:
 			cb.disabled = not on)
@@ -414,7 +416,8 @@ func _load_from_settings() -> void:
 	_ft_damage_cb.button_pressed = GameSettings.floating_text_damage
 	_ft_heals_cb.button_pressed  = GameSettings.floating_text_heals
 	_ft_misses_cb.button_pressed = GameSettings.floating_text_misses
-	for cb: CheckBox in [_ft_damage_cb, _ft_heals_cb, _ft_misses_cb]:
+	_ft_xp_cb.button_pressed     = GameSettings.floating_text_xp
+	for cb: CheckBox in [_ft_damage_cb, _ft_heals_cb, _ft_misses_cb, _ft_xp_cb]:
 		cb.disabled = not GameSettings.floating_text_enabled
 	for id: String in _keybind_btns:
 		_keybind_btns[id].text = _key_label(id)
@@ -431,5 +434,6 @@ func _on_apply() -> void:
 	GameSettings.floating_text_damage  = _ft_damage_cb.button_pressed
 	GameSettings.floating_text_heals   = _ft_heals_cb.button_pressed
 	GameSettings.floating_text_misses  = _ft_misses_cb.button_pressed
+	GameSettings.floating_text_xp      = _ft_xp_cb.button_pressed
 	GameSettings.apply_all()
 	GameSettings.save_settings()

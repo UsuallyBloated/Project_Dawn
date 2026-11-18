@@ -21,6 +21,7 @@ func _ready() -> void:
 	QuestManager.quest_added.connect(_on_quests_changed)
 	QuestManager.quest_updated.connect(_on_quests_changed)
 	QuestManager.quest_completed.connect(_on_quests_changed)
+	QuestManager.quest_failed.connect(_on_quests_changed)
 	QuestManager.quest_removed.connect(_on_quests_changed)
 	visibility_changed.connect(_on_visibility_changed)
 

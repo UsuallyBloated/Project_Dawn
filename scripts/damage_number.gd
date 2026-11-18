@@ -1,7 +1,7 @@
 class_name DamageNumber
 extends Label3D
 
-enum Type { DAMAGE, CRIT, INCOMING, MISS, HEAL }
+enum Type { DAMAGE, CRIT, INCOMING, MISS, HEAL, XP }
 
 const FLOAT_SPEED := 1.8
 const LIFETIME    := 1.2
@@ -33,6 +33,10 @@ func setup(amount: int, type: Type) -> void:
 			text      = "+%d" % amount
 			font_size = 48
 			modulate  = Color(0.30, 1.00, 0.40)
+		Type.XP:
+			text      = "+%d XP" % amount
+			font_size = 36
+			modulate  = Color(0.40, 0.80, 1.00)
 
 func _process(delta: float) -> void:
 	_age       += delta

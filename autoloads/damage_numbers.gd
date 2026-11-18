@@ -4,9 +4,12 @@ const _Script := preload("res://scripts/damage_number.gd")
 
 func _ready() -> void:
 	PlayerStats.healed.connect(spawn_heal)
-	# XP gain is announced in chat (CombatLog subscribes to xp_gained);
-	# a floating number above the player read as visual noise and was
-	# removed with its options checkbox on 2026-11-18.
+	# XP gain is announced in chat (CombatLog subscribes to xp_gained); the
+	# floating number above the player is the "XP Gains" checkbox under
+	# floating text in Options, off by default since it reads as noise to
+	# most. Wired 2026-11-18 (user call); before that the checkbox did nothing.
+	PlayerStats.xp_gained.connect(func(amount: int, _source: String) -> void:
+		spawn_xp(amount))
 
 func spawn_damage(pos: Vector3, amount: int, is_crit: bool) -> void:
 	if not GameSettings.floating_text_enabled or not GameSettings.floating_text_damage:
@@ -36,6 +39,14 @@ func spawn_heal(amount: int) -> void:
 	if players.is_empty():
 		return
 	_spawn((players[0] as Node3D).global_position, amount, _Script.Type.HEAL)
+
+func spawn_xp(amount: int) -> void:
+	if not GameSettings.floating_text_enabled or not GameSettings.floating_text_xp:
+		return
+	var players := get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		return
+	_spawn((players[0] as Node3D).global_position, amount, _Script.Type.XP)
 
 func _spawn(pos: Vector3, amount: int, type: DamageNumber.Type) -> void:
 	var scene: Node = get_tree().current_scene
