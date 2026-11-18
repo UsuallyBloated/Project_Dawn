@@ -5,7 +5,10 @@ extends Node
 # hud.gd builds it and hands it the few HUD pieces a command needs (setup,
 # set_player). A command only prints from local state or asks the server,
 # which judges every request itself; nothing decided here is trusted.
-# Held by tools/probe_chat_commands.gd.
+#
+# To add a command: write `_cmd_<name>(text, lower)`, give it a key in one of
+# the two tables in _init, and add its rows to tools/probe_chat_commands.gd
+# (which holds every command here) and to docs/reference/commands.md.
 
 # Dev Test Panel, mounted on demand by `/testpanel` (world.gd also mounts it at
 # world entry for GMs).
@@ -52,7 +55,6 @@ func _init() -> void:
 		"/languages": _cmd_languages,
 		"/stopsong": _cmd_stopsong,
 		# Groups and loot.
-		"/invite": _cmd_invite,
 		"/accept": _cmd_accept, "/accept invite": _cmd_accept,
 		"/leave": _cmd_leave, "/leave group": _cmd_leave,
 		"/loot": _cmd_loot,
@@ -60,23 +62,25 @@ func _init() -> void:
 		"/loot ffa": _cmd_loot, "/loot freeforall": _cmd_loot,
 		"/autosplit": _cmd_autosplit, "/autosplit on": _cmd_autosplit, "/autosplit off": _cmd_autosplit,
 		"/pvp": _cmd_pvp, "/pvp on": _cmd_pvp, "/pvp off": _cmd_pvp,
-		# A reply with nobody to reply to (ChatChannel turns every other /r into a tell).
-		"/r": _cmd_reply, "/reply": _cmd_reply,
 		# The link, the build, the dev tools.
 		"/ping": _cmd_ping, "/latency": _cmd_ping,
 		"/version": _cmd_version, "/build": _cmd_version,
 		"/testpanel": _cmd_testpanel, "/gm": _cmd_testpanel,
 		"/console": _cmd_console,
-		"/items": _cmd_items,
 	}
 	# A command that takes a name, a message or a number: its first word.
+	# Typed with nothing after it, it says how it is used.
 	_with_args = {
-		# The channels, in the one form ChatChannel hands each line on.
-		"/say": _cmd_say, "/s": _cmd_say,
-		"/shout": _cmd_shout, "/sh": _cmd_shout,
+		# The channels, in the one form ChatChannel hands each line on
+		# (whatever alias was typed, and never with nothing to say).
+		"/say": _cmd_say,
+		"/shout": _cmd_shout,
 		"/ooc": _cmd_ooc,
-		"/g": _cmd_group, "/group": _cmd_group,
+		"/g": _cmd_group,
+		# A tell arrives as `/tell <name> <message>`; `/t` only ever bare.
 		"/tell": _cmd_tell, "/t": _cmd_tell,
+		# A reply arrives only when there is nobody to reply to (ChatChannel
+		# turns every other /r into a tell).
 		"/r": _cmd_reply, "/reply": _cmd_reply,
 		# Languages, groups.
 		"/lang": _cmd_lang,
@@ -103,7 +107,8 @@ func set_player(player: Node3D) -> void:
 	_player = player
 
 # Every submitted line. A command that takes nothing is found by its whole
-# line; one that takes a name, a message or a number by its first word.
+# line; one that takes a name, a message or a number by its first word,
+# with or without anything after it.
 func _handle_chat_input(text: String) -> void:
 	# One canonical form for every line (ChatChannel): plain text is a /say,
 	# and stacked channel commands collapse to the last, so "/say /say hi"
@@ -115,12 +120,9 @@ func _handle_chat_input(text: String) -> void:
 	var lower := text.to_lower()
 
 	var command: Callable = _exact.get(lower, Callable())
-	var space := lower.find(" ")
-	if not command.is_valid() and space > 0:
-		command = _with_args.get(lower.substr(0, space), Callable())
-	# `/items` was matched without its space, so "/itemsfoo" lists "foo".
-	if not command.is_valid() and lower.begins_with("/items"):
-		command = _cmd_items
+	if not command.is_valid():
+		var space := lower.find(" ")
+		command = _with_args.get(lower if space < 0 else lower.substr(0, space), Callable())
 	if command.is_valid():
 		command.call(text, lower)
 		return
@@ -137,10 +139,9 @@ func _cmd_stand(_text: String, _lower: String) -> void:
 	if is_instance_valid(_player):
 		_player.stand()
 
-# Camp slice B — voluntary sit-gated logout. The server is authoritative on
-# the gate and the countdown; we pre-check sit state locally for a fast
-# rejection line so a standing player never spams the wire. `/camp cancel`
-# aborts an in-progress countdown.
+# The sit-gated logout. The server decides the gate and runs the countdown;
+# sitting is checked here first so a standing player gets the line at once
+# and sends nothing. `/camp cancel` stops a countdown.
 func _cmd_camp(_text: String, _lower: String) -> void:
 	if Combat.is_player_seated():
 		Net.broadcast_camp()
@@ -162,31 +163,27 @@ func _cmd_pet_passive(_text: String, _lower: String) -> void:
 func _cmd_pet_dismiss(_text: String, _lower: String) -> void:
 	PetManager.dismiss_pet()
 
-# Track 12 Piece A — direct pet commands. /pet attack uses the
-# current target; /pet back returns to follow.
+# /pet attack sends the pet at the current target; /pet back calls it to
+# follow again.
 func _cmd_pet_attack(_text: String, _lower: String) -> void:
 	PetManager.command_attack()
 
 func _cmd_pet_back(_text: String, _lower: String) -> void:
 	PetManager.command_back()
 
-func _cmd_say(text: String, lower: String) -> void:
+# The channels. ChatChannel hands each line on in one form (`/say`, `/shout`,
+# `/ooc`, `/g`, `/tell <name>`), whatever alias was typed.
+func _cmd_say(text: String, _lower: String) -> void:
 	var my_name := _sender_name()
-	for prefix in ["/say ", "/s "]:
-		if lower.begins_with(prefix):
-			var msg := text.substr(prefix.length())
-			CombatLog.add_line("%s says, '%s'" % [my_name, msg], CombatLog.MsgType.SAY)
-			Net.broadcast_chat(Net.CHAT_CHANNEL_SAY, msg)
-			return
+	var msg := text.substr("/say ".length())
+	CombatLog.add_line("%s says, '%s'" % [my_name, msg], CombatLog.MsgType.SAY)
+	Net.broadcast_chat(Net.CHAT_CHANNEL_SAY, msg)
 
-func _cmd_shout(text: String, lower: String) -> void:
+func _cmd_shout(text: String, _lower: String) -> void:
 	var my_name := _sender_name()
-	for prefix in ["/shout ", "/sh "]:
-		if lower.begins_with(prefix):
-			var msg := text.substr(prefix.length())
-			CombatLog.add_line("%s shouts, '%s'" % [my_name, msg], CombatLog.MsgType.SHOUT)
-			Net.broadcast_chat(Net.CHAT_CHANNEL_SHOUT, msg)
-			return
+	var msg := text.substr("/shout ".length())
+	CombatLog.add_line("%s shouts, '%s'" % [my_name, msg], CombatLog.MsgType.SHOUT)
+	Net.broadcast_chat(Net.CHAT_CHANNEL_SHOUT, msg)
 
 func _cmd_ooc(text: String, _lower: String) -> void:
 	var my_name := _sender_name()
@@ -194,44 +191,30 @@ func _cmd_ooc(text: String, _lower: String) -> void:
 	CombatLog.add_line("[OOC] %s: %s" % [my_name, msg], CombatLog.MsgType.OOC)
 	Net.broadcast_chat(Net.CHAT_CHANNEL_OOC, msg)
 
-func _cmd_tell(text: String, lower: String) -> void:
-	for prefix in CombatLog.TELL_PREFIXES:
-		if lower.begins_with(prefix):
-			var rest := text.substr(prefix.length())
-			var space_idx := rest.find(" ")
-			if space_idx > 0:
-				_send_tell(rest.substr(0, space_idx), rest.substr(space_idx + 1))
-			else:
-				CombatLog.add_line("Usage: /tell <name> <message>", CombatLog.MsgType.INFO)
-			return
-
-# EQ-style reply. `/r <message>` answers whoever last sent us a tell; a
-# bare `/r` reopens the chat line already addressed to them. TAB in the
-# chat line walks the older senders (CombatLog.cycle_tell_text).
-func _cmd_reply(text: String, _lower: String) -> void:
-	var reply_to := CombatLog.last_tell_sender()
-	if reply_to == "":
-		CombatLog.add_line("No one has sent you a tell yet.", CombatLog.MsgType.INFO)
-		return
-	var space_idx := text.find(" ")
-	var msg := "" if space_idx < 0 else text.substr(space_idx + 1).strip_edges()
-	if msg == "":
-		# Deferred: this runs inside the chat line's own submit, which
-		# hides the line again as soon as we return.
-		ChatWindowManager.show_chat_input.call_deferred("/tell %s " % reply_to)
+# A tell arrives as `/tell <name> <message>`. A bare `/tell` or `/t` is all
+# that arrives without both, and is told how a tell is written.
+func _cmd_tell(text: String, _lower: String) -> void:
+	var rest := text.substr("/tell ".length())
+	var space_idx := rest.find(" ")
+	if space_idx > 0:
+		_send_tell(rest.substr(0, space_idx), rest.substr(space_idx + 1))
 	else:
-		_send_tell(reply_to, msg)
+		CombatLog.add_line("Usage: /tell <name> <message>", CombatLog.MsgType.INFO)
 
-func _cmd_group(text: String, lower: String) -> void:
+# EQ's reply, when there is nobody to reply to. With a tell sender on file
+# ChatChannel turns `/r <message>` into a tell to them and a bare `/r` into
+# the chat line's own channel, so neither arrives here. TAB in the chat line
+# walks the older senders (CombatLog.cycle_tell_text).
+func _cmd_reply(_text: String, _lower: String) -> void:
+	CombatLog.add_line("No one has sent you a tell yet.", CombatLog.MsgType.INFO)
+
+func _cmd_group(text: String, _lower: String) -> void:
 	var my_name := _sender_name()
-	for prefix in ["/g ", "/group "]:
-		if lower.begins_with(prefix):
-			var msg := text.substr(prefix.length())
-			CombatLog.add_line("[Group] %s: %s" % [my_name, msg], CombatLog.MsgType.GROUP_CHAT)
-			# Server fans this to every other group member via the Group
-			# arm in the chat handler.
-			Net.broadcast_chat(Net.CHAT_CHANNEL_GROUP, msg)
-			return
+	var msg := text.substr("/g ".length())
+	CombatLog.add_line("[Group] %s: %s" % [my_name, msg], CombatLog.MsgType.GROUP_CHAT)
+	# Server fans this to every other group member via the Group
+	# arm in the chat handler.
+	Net.broadcast_chat(Net.CHAT_CHANNEL_GROUP, msg)
 
 func _cmd_inspect(_text: String, _lower: String) -> void:
 	var target = Combat.current_target
@@ -338,13 +321,11 @@ func _cmd_lang(text: String, _lower: String) -> void:
 	else:
 		CombatLog.add_line("You do not know the language '%s'." % lang_name, CombatLog.MsgType.INFO)
 
-# Dev command — drop any ItemRegistry-known item into inventory.
-# Syntax: `/give <substring> [count]`. Empty query lists nothing
-# (the registry has ~100 entries; a dedicated /items command can
-# dump them later). Ambiguous query lists candidates and bails
-# without giving so the dev can refine. Single-match → gives.
-# Inventory authority is client-only today; when it goes server
-# side, this should gate on `accounts.is_gm`.
+# Dev command: ask the server for any item the registry knows.
+# `/give <substring> [count]`. A name that matches several items lists
+# them and gives nothing, so it can be refined (`/items` lists without
+# giving). It is a GM command on the wire: the server grants it only to
+# a GM account and records it.
 func _cmd_give(text: String, _lower: String) -> void:
 	var rest := text.substr("/give ".length()).strip_edges()
 	if rest == "":
@@ -370,17 +351,15 @@ func _cmd_give(text: String, _lower: String) -> void:
 		CombatLog.add_line("Refine your search.", CombatLog.MsgType.INFO)
 		return
 	var item_name := (matches[0] as ItemData).item_name
-	# Track 15.2 follow-up — /give goes through the wire (a GM command)
-	# so the spawned item exists server-side. The server fans
-	# InventoryDelta which Inventory autoload applies.
+	# The server makes the item, so it exists there; the InventoryDelta
+	# it sends back is what puts it in the bags.
 	Net.broadcast_gm_command("give %s %d" % [item_name, count])
 	var suffix := " x%d" % count if count > 1 else ""
 	CombatLog.add_line("Requested %s%s from server." % [item_name, suffix], CombatLog.MsgType.INFO)
 
-# Track 6 sub-task 3 dev — toggle PvP authorization on this client.
-# Both attacker and target need /pvp on for combat::can_attack to
-# allow damage. Used to verify the PvP HP application path before
-# the duel / PvP-zone / PvP-server design lands.
+# The PvP toggle. Both the attacker and the target need /pvp on before
+# the server lets one hurt the other. A plain player toggle until PvP
+# flagging is designed.
 func _cmd_pvp(_text: String, lower: String) -> void:
 	var on := lower != "/pvp off"
 	Net.broadcast_pvp_toggle(on)
@@ -478,9 +457,8 @@ func _cmd_testpanel(_text: String, _lower: String) -> void:
 		CombatLog.MsgType.INFO,
 	)
 
-# Dev-only — backup trigger for the in-game debug console when the
-# F2 keybind isn't reaching the game window (editor focus, OS
-# steals, etc.). Round-7B fallback.
+# The in-game debug console, for when its backtick key is not reaching
+# the game window (editor focus, the OS taking the key).
 func _cmd_console(_text: String, _lower: String) -> void:
 	if _debug_console != null:
 		_debug_console.toggle()
@@ -492,10 +470,9 @@ func _cmd_console(_text: String, _lower: String) -> void:
 			CombatLog.MsgType.INFO,
 		)
 
-# Track 6 sub-task 3 dev — bypass-the-spell-system self damage.
-# Routes through the same server damage path PvP and (future) spells
-# use, exercising regen + death detection end-to-end. Replaced by
-# proper CastSpell handling once the spell table is server-side.
+# Dev command: damage yourself by an amount, through the server (a dev
+# command there, ignored for a plain account). For testing regen and
+# death.
 func _cmd_damage(text: String, _lower: String) -> void:
 	var arg := text.substr("/damage ".length()).strip_edges()
 	if not arg.is_valid_int():
@@ -504,7 +481,7 @@ func _cmd_damage(text: String, _lower: String) -> void:
 	Net.broadcast_damage_self(int(arg))
 	CombatLog.add_line("Dev damage self: %s" % arg, CombatLog.MsgType.INFO)
 
-# Track 6 sub-task 5 — group commands, resolved by the server.
+# The group commands. The server resolves each.
 func _cmd_invite(text: String, lower: String) -> void:
 	var target_name := ""
 	if lower.begins_with("/invite "):
@@ -545,9 +522,8 @@ func _cmd_kick(text: String, _lower: String) -> void:
 	GroupManager.kick_member_by_name(target_name)
 	CombatLog.add_line("Kicked %s from the group." % target_name, CombatLog.MsgType.INFO)
 
-# Track 6 sub-task 3 dev — bypass-the-spell-system self heal.
-# Verifies that server-applied heals stick (the regression we noted
-# during sub-task 1 verification) before the CastSpell port lands.
+# Dev command: heal yourself by an amount, through the server (a dev
+# command there, ignored for a plain account).
 func _cmd_heal(text: String, _lower: String) -> void:
 	var arg := text.substr("/heal ".length()).strip_edges()
 	if not arg.is_valid_int():
@@ -556,9 +532,8 @@ func _cmd_heal(text: String, _lower: String) -> void:
 	Net.broadcast_heal_self(int(arg))
 	CombatLog.add_line("Dev heal self: %s" % arg, CombatLog.MsgType.INFO)
 
-# Dev command — list items whose name matches a substring without
-# spawning. Pairs with /give for discoverability without flooding
-# the inventory.
+# Dev command: list the items whose name matches a substring, giving
+# nothing. Pairs with /give.
 func _cmd_items(text: String, _lower: String) -> void:
 	var rest := text.substr("/items".length()).strip_edges()
 	if rest == "":

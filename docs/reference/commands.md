@@ -128,8 +128,8 @@ Parsed in `scripts/hud.gd::_handle_chat_input`. Press Enter to open chat, type t
 | `/shout <msg>` (`/sh`) | Shout. |
 | `/ooc <msg>` | Out-of-character channel. |
 | `/tell <name> <msg>` (`/t`) | Private tell. The recipient sees it in their Tells (In) channel. |
-| `/r <msg>` (`/reply`) | Reply to whoever last sent you a tell. `/r` alone reopens the chat line holding `/tell <name> `. Reply targets last for the session and reset when you enter the world. |
-| `/group <msg>` (`/g`) | Group chat. |
+| `/r <msg>` (`/reply`) | Reply to whoever last sent you a tell. `/r` alone puts the chat line on `[Tell: <name>]` and sends nothing. Reply targets last for the session and reset when you enter the world. |
+| `/group <msg>` (`/g`, `/gsay`) | Group chat. |
 
 ### Social / info
 | Command | Effect |

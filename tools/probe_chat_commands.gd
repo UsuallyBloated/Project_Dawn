@@ -1,8 +1,12 @@
 extends SceneTree
 # Probe (run headless, exits 1 on failure): every chat command, typed into the
-# real HUD, does what it is meant to. Nothing else drives the chat command
-# dispatcher, so this is its net: written against the dispatcher as it stood
-# on 2026-11-18, before it moved out of hud.gd, and kept green through the move.
+# real HUD, does what it is meant to. Nothing else drives the chat
+# commands (scripts/hud_chat_commands.gd), so this is their net: written
+# against the dispatcher as it stood in hud.gd on 2026-11-18 and kept green
+# through its move and its turn into lookup tables. Eight rows changed on
+# purpose the same day: a command that takes something says how it is used
+# when typed bare (/give, /lang, /kick, /damage, /heal, /tell, /t), and
+# "/itemsfoo" is no command.
 #
 # What runs: the real hud.tscn with a stub body in the "player" group. Each
 # input goes in where a typed line does (CombatLog.chat_submitted), and the
@@ -66,8 +70,9 @@ const TABLE := [
 	["/g", []],
 	["/tell Bob", []],
 	["   ", []],
-	["/tell", [UNKNOWN % "/tell"]],
-	["/t", [UNKNOWN % "/t"]],
+	# A tell with no name says how one is written.
+	["/tell", ["INFO|Usage: /tell <name> <message>"]],
+	["/t", ["INFO|Usage: /tell <name> <message>"]],
 
 	# ── Replies ───────────────────────────────────────────────────────────
 	"@no_senders",
@@ -112,7 +117,7 @@ const TABLE := [
 	"@languages off",
 	["/languages", ["INFO|You know no languages."]],
 	["/lang zzzz", ["INFO|You do not know the language 'zzzz'."]],
-	["/lang", [UNKNOWN % "/lang"]],
+	["/lang", ["INFO|Usage: /lang [language name]"]],
 	"@languages on",
 	["/languages", ["INFO|Known languages:", "INFO|  Common — 100 (active)", "INFO|  Elvish — 25"]],
 	["/lang Elvish", ["INFO|You are now speaking Elvish."]],
@@ -127,17 +132,17 @@ const TABLE := [
 	["/give iron short sword 3", ["INFO|Requested Iron Short Sword x3 from server."]],
 	["/give  zzzz", ["INFO|No items match 'zzzz'."]],
 	["/GIVE zzzz", ["INFO|No items match 'zzzz'."]],
-	["/give", [UNKNOWN % "/give"]],
+	["/give", ["INFO|Usage: /give <item name> [count]"]],
 	["/items zzzz", ["INFO|No items match 'zzzz'."]],
 	["/items sword", ["INFO|Items matching 'sword' (*", REST]],
 	["/items", ["INFO|Usage: /items <substring> (registry has *"]],
-	["/itemsfoo", ["INFO|No items match 'foo'."]],
+	["/itemsfoo", [UNKNOWN % "/itemsfoo"]],
 	["/damage 5", ["INFO|Dev damage self: 5"]],
 	["/damage x", ["INFO|Usage: /damage <amount>"]],
-	["/damage", [UNKNOWN % "/damage"]],
+	["/damage", ["INFO|Usage: /damage <amount>"]],
 	["/heal 5", ["INFO|Dev heal self: 5"]],
 	["/heal x", ["INFO|Usage: /heal <amount>"]],
-	["/heal", [UNKNOWN % "/heal"]],
+	["/heal", ["INFO|Usage: /heal <amount>"]],
 	["/testpanel", ["INFO|Test Panel unavailable (GM: no).*"]],
 	["/gm", ["INFO|Test Panel unavailable (GM: no).*"]],
 
@@ -163,7 +168,7 @@ const TABLE := [
 	["/leave", ["INFO|You aren't in a group."]],
 	["/leave group", ["INFO|You aren't in a group."]],
 	["/kick Bob", ["INFO|Only the group leader can kick."]],
-	["/kick", [UNKNOWN % "/kick"]],
+	["/kick", ["INFO|Usage: /kick <character name>"]],
 	"@leader on",
 	["/loot ffa", ["INFO|Loot mode set to Free-for-all."]],
 	["/loot rr", ["INFO|Loot mode set to Round Robin."]],
