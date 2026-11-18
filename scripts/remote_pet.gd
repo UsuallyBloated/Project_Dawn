@@ -1,23 +1,17 @@
-extends CharacterBody3D
+extends "res://scripts/remote_entity.gd"
 class_name RemotePet
 
 # Track 11 — visual stand-in for a server-spawned player-owned pet.
 # Render-only: no AI, no physics, no local HP. Position / HP / death
 # state arrive as server broadcasts via RemotePetManager.
 #
-# Mirrors RemoteEnemy's surface (snapshot-interp buffer, hp_changed
-# signal) so the client code that handles targets treats pets the same.
+# Shares RemoteEntity's surface with RemoteEnemy (the snapshot interpolation,
+# the buff countdown, hp_changed) so the client code that handles targets
+# treats pets the same.
 #
 # Pet ids land in PET_ID_BASE (3_000_000_000+); ongoing Position /
 # HealthUpdate / EntityDied / EntityDespawn route through the
 # manager by id partition.
-
-signal hp_changed(current: float, maximum: float)
-signal died(pet)
-# Track 13 — pet buff bar. Server fans a BuffSnapshot under the pet id
-# (haste / Spirit of Wolf / stat buffs / HoT / Thorns); the HUD target
-# frame renders these when the pet is targeted, same as a peer's buffs.
-signal buffs_changed
 
 # Network identity. Set by RemotePetManager *before* add_child fires
 # _ready, so _ready can read them.
@@ -27,21 +21,6 @@ var pet_name: String = ""
 var level: int = 1
 var hp: float = 0.0
 var max_hp: float = 0.0
-
-var is_dead: bool = false
-
-# Track 13 — buff snapshot mirror (matches RemotePlayer's surface so the
-# HUD target frame's `_refresh_target_buffs_label` reads it uniformly).
-const _BUFF_INF_SENTINEL := 999999.0
-var buff_names: PackedStringArray = PackedStringArray()
-var buff_durations: PackedFloat32Array = PackedFloat32Array()
-
-# Snapshot interpolation buffer of { time, pos, yaw } dicts. Identical
-# pattern to RemoteEnemy — see that file's header for rationale.
-const BUFFER_CAPACITY := 5
-const INTERP_LAG := 0.1
-var _snapshots: Array[Dictionary] = []
-var _last_seq: int = -1
 
 @onready var _name_label: Label3D = $NameLabel
 @onready var _mesh: MeshInstance3D = $MeshInstance3D
@@ -183,18 +162,6 @@ func apply_buff_snapshot(names: PackedStringArray, durations: PackedFloat32Array
 # Tick buff durations down between snapshots so a targeted pet shows a
 # live countdown (the server only re-fans on set changes). Mirrors the
 # RemotePlayer countdown.
-func _process(delta: float) -> void:
-	if buff_durations.is_empty():
-		return
-	var any_changed := false
-	for i in buff_durations.size():
-		var d: float = buff_durations[i]
-		if d > 0.0 and d < _BUFF_INF_SENTINEL:
-			buff_durations[i] = maxf(0.0, d - delta)
-			any_changed = true
-	if any_changed:
-		buffs_changed.emit()
-
 func apply_death() -> void:
 	if is_dead:
 		return
@@ -206,38 +173,3 @@ func apply_death() -> void:
 		var faded := Color(0.6, 0.6, 0.6, 1.0)
 		tw.parallel().tween_property(_name_label, "modulate", faded, 0.5)
 
-func on_position_update(pos: Vector3, yaw: float, sequence: int) -> void:
-	if sequence <= _last_seq:
-		return
-	_last_seq = sequence
-	if is_dead:
-		return
-	var now := Time.get_unix_time_from_system()
-	_snapshots.append({"time": now, "pos": pos, "yaw": yaw})
-	if _snapshots.size() > BUFFER_CAPACITY:
-		_snapshots.pop_front()
-
-func _physics_process(_delta: float) -> void:
-	if is_dead:
-		return
-	if _snapshots.size() < 2:
-		if _snapshots.size() == 1:
-			global_position = _snapshots[0]["pos"]
-			rotation.y = _snapshots[0]["yaw"]
-		return
-	var target_time := Time.get_unix_time_from_system() - INTERP_LAG
-	var a: Dictionary = _snapshots[_snapshots.size() - 2]
-	var b: Dictionary = _snapshots[_snapshots.size() - 1]
-	for i in range(_snapshots.size() - 1):
-		if _snapshots[i]["time"] <= target_time and _snapshots[i + 1]["time"] >= target_time:
-			a = _snapshots[i]
-			b = _snapshots[i + 1]
-			break
-	var span: float = b["time"] - a["time"]
-	if span <= 0.0:
-		global_position = b["pos"]
-		rotation.y = b["yaw"]
-		return
-	var t: float = clampf((target_time - a["time"]) / span, 0.0, 1.0)
-	global_position = (a["pos"] as Vector3).lerp(b["pos"], t)
-	rotation.y = lerp_angle(a["yaw"], b["yaw"], t)
