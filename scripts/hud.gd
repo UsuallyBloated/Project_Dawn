@@ -19,7 +19,7 @@ const _TrackWindowScript    := preload("res://scripts/track_window.gd")
 const _SpellBookScript      := preload("res://scripts/spell_book.gd")
 const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
 const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
-const _InspectWindowScript  := preload("res://scripts/inspect_window.gd")
+const _InspectWindowScene   := preload("res://scenes/inspect_window.tscn")
 const _TradeWindowScript    := preload("res://scripts/trade_window.gd")
 const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 
@@ -233,8 +233,7 @@ func _build_components() -> void:
 	_dialogue_window.visible = false
 	add_child(_dialogue_window)
 
-	_inspect_window = _InspectWindowScript.new()
-	_inspect_window.visible = false
+	_inspect_window = _InspectWindowScene.instantiate()
 	add_child(_inspect_window)
 	_watch_window(_inspect_window)
 	Targeting.inspect_requested.connect(_inspect_player)

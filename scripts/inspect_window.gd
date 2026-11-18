@@ -4,7 +4,9 @@ class_name InspectWindow
 # Read-only paperdoll view of another player's equipped items. Opened
 # by the /inspect command or HUD wire-up; populated by the
 # `Net.world_inspect_result` signal. Bag contents are not exposed —
-# only the 10 paperdoll slots are public.
+# only the 10 paperdoll slots are public. The frame (title bar, close
+# button, name line, the slot grid) is scenes/inspect_window.tscn; this
+# script fills the grid and the names.
 
 # Slot order matches the EquipSlot discriminants on the wire
 # (server's protocol.rs ChatChannel comment lists them). Display labels
@@ -22,70 +24,23 @@ const SLOT_LABELS: Array[String] = [
 	"Ammo",     # 9
 ]
 
-const C_TITLE_BG := Color(0.10, 0.08, 0.05, 0.95)
 const C_EMPTY    := Color(0.55, 0.55, 0.55)
 
-var _title_label: Label = null
-var _name_label: Label = null
-var _close_btn: Button = null
+@onready var _title_label: Label = $TitleLabel
+@onready var _name_label: Label = $NameLabel
+@onready var _close_btn: Button = $CloseBtn
+@onready var _grid: GridContainer = $Grid
 var _slot_value_labels: Array[Label] = []
 var _current_target_char_id: int = 0
 
 func _ready() -> void:
-	apply_style()
-	setup(Vector2(440, 120), Vector2(260, 320))
-	_build_ui()
+	_close_btn.pressed.connect(func(): visible = false)
+	_build_rows()
 	Net.world_inspect_result.connect(_on_inspect_result)
 
-func _build_ui() -> void:
-	var title_bg := ColorRect.new()
-	title_bg.color = C_TITLE_BG
-	title_bg.anchor_left = 0.0; title_bg.anchor_right = 1.0
-	title_bg.offset_left = 1; title_bg.offset_right = -1
-	title_bg.offset_top = 1; title_bg.offset_bottom = 20
-	title_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(title_bg)
-
-	_title_label = Label.new()
-	_title_label.text = "Inspect"
-	_title_label.add_theme_font_size_override("font_size", 11)
-	_title_label.theme_type_variation = &"TitleLabel"
-	_title_label.anchor_left = 0.0; _title_label.anchor_right = 1.0
-	_title_label.offset_left = 6; _title_label.offset_right = -24
-	_title_label.offset_top = 2; _title_label.offset_bottom = 20
-	_title_label.clip_text = true
-	_title_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_title_label)
-
-	_close_btn = Button.new()
-	_close_btn.text = "×"
-	_close_btn.flat = true
-	_close_btn.add_theme_font_size_override("font_size", 14)
-	_close_btn.anchor_left = 1.0; _close_btn.anchor_right = 1.0
-	_close_btn.offset_left = -20; _close_btn.offset_right = -2
-	_close_btn.offset_top = 1; _close_btn.offset_bottom = 20
-	_close_btn.pressed.connect(func(): visible = false)
-	add_child(_close_btn)
-
-	_name_label = Label.new()
-	_name_label.add_theme_font_size_override("font_size", 13)
-	_name_label.theme_type_variation = &"TitleLabel"
-	_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_name_label.anchor_left = 0.0; _name_label.anchor_right = 1.0
-	_name_label.offset_left = 6; _name_label.offset_right = -6
-	_name_label.offset_top = 26; _name_label.offset_bottom = 46
-	_name_label.clip_text = true
-	add_child(_name_label)
-
-	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 12)
-	grid.add_theme_constant_override("v_separation", 4)
-	grid.anchor_left = 0.0; grid.anchor_right = 1.0
-	grid.offset_left = 12; grid.offset_right = -12
-	grid.offset_top = 52; grid.offset_bottom = -8
-	add_child(grid)
-
+# One row per paperdoll slot, from SLOT_LABELS, so the list is data-driven.
+func _build_rows() -> void:
+	var grid := _grid
 	for label_text in SLOT_LABELS:
 		var slot_label := Label.new()
 		slot_label.text = label_text
