@@ -123,7 +123,7 @@ none is a friends-build item.
 | # | What | When | Size | Why it pays |
 |---|---|---|---|---|
 | R1 | **Delete the 25 dead functions** after a glance at each (`Languages.hear_language` is the hook the open language item names; deleting it loses nothing, git has it, and the item's text already says it is not called). **DONE 2026-11-18** (two commits on the deploy branch; `session_2026_11_18_r1_dead_code.md`): 20 deleted with what only they used (the `SlotRef` and `Vec3` helper constants, crafting's XP constants and map, and the whole `MobileCharacter` script, whose two subclasses left with the offline code). Five kept on the user's read of the list: `DebugLog.combat` (a documented log level the console colours), the three `Languages` functions (unfinished, not dead: the wiring item), and `fail_quest` (for the failable quests to come), each with a comment saying so. The floating XP number, whose options checkbox existed and did nothing, was wired to `xp_gained` instead of deleted (off by default). All 19 checks and 24 probes green after. The lesson for the next sweep: "defined, never called" is the lower bound; a function waiting on an unbuilt feature is unfinished, and the glance is for telling the two apart. | Any quiet hour; one commit. | Small | No dead code is the rule; a dead wire send (`broadcast_split_stack`) is a trap for the next reader. |
-| R2 | **`apply_casts` into one function per target-type arm** (`cast_enemy`, `cast_ally`, `cast_pet_charm`, ...), same file, moves only, the pre-flight's `ResolvedTarget` already the seam. Then `handle_message` by message family the same way. | One function per sitting, as its own commit, BEFORE the next feature in that file (the next spell work; the next wire bump). | A few hours each | The next spell feature and every review of one gets a 200-line read instead of 1,950. |
+| R2 | **`apply_casts` into one function per target-type arm** (`cast_enemy`, `cast_ally`, `cast_pet_charm`, ...), same file, moves only, the pre-flight's `ResolvedTarget` already the seam. ~~Then `handle_message` by message family the same way.~~ **Re-analyzed 2026-11-18 (section 8): the cast half stands, about a day, the 580-line prelude untouched, a `CastContext` lent to each arm, biggest arm first, after the door and in a window with no branch on the file. The handler half is dropped: its 1,930 lines are 77 arms averaging 25, a family split buys nothing to read and conflicts with `feat/public-hosting`; its four arms over 80 lines move out when next touched, and the three dead wire intents come off at the next bump.** | One function per sitting, as its own commit, in a quiet window after the door, before the next spell feature. | About a day | The next spell feature and every review of one gets a 200-line read instead of 1,950. |
 | R3 | **A `RemoteEntityManager` base** under the five `remote_*_manager.gd` (and a `RemoteEntity` base under the three remote scripts), lifting the identical bodies. | When the remote animation-state channel (the jump relay's successor) next touches them. | Half a day | Removes about a dozen copies; the next per-entity message lands once. |
 | R4 | **`_handle_chat_input` as a command table** (`Dictionary` of name to Callable, each command its own small function). | The next time a command is added. | An hour | 475 lines become a table and twenty short functions; the audit's "does a prefix swallow" question becomes a lookup. |
 | R5 | **New windows as `.tscn`, existing ones left alone** until the deferred UI theming pass, which is the one moment converting them earns its cost. | The theming pass. | Per window | Already the rule; stated here so nobody converts a working window on its own. |
@@ -150,3 +150,110 @@ or a test module inflates the enclosing function in a few cases (the four server
 were confirmed by reading their files' function lists). The dead-function sweep matches
 names, so a function sharing a name with a live one elsewhere is not listed: 25 is a floor.
 No runtime profile was taken; the efficiency reading rests on the `world health` line.
+
+## 8. R2 re-analyzed after R1 (2026-11-18)
+
+The user, before starting R2: "can we re-analyze the plan for R2 knowing what we learned
+from R1?" R1's lesson was that a measurement produces candidates, not verdicts: "no callers"
+listed five functions the project had made for a reason. R2's measurement is "two functions
+of 1,900 lines". This section reads the two functions for the reasons they have that shape,
+who else has them open, and what holds them, before anything moves.
+
+### 8.1 What the two functions actually are
+
+**`apply_casts` (casting.rs, 1,952 lines, the file's only function)** is a per-cast
+pipeline with the arms at its end:
+
+| Part | Lines | What it is |
+|---|---|---|
+| The per-cast prelude | about 580 (lines 33 to 580) | Every gate in the order the audits fixed: a corpse casts nothing; class and level; the memorized bar; the cast-time gate; the per-spell cooldown; mana; the alignment off-side copy of the spell; `cast_target_refusal` (presence, reach, liveness, the PvP gates, one home since 10-14); the instant-cast fizzle; THEN the mana and HP come off, the cooldown is stamped, a hostile cast ends Hide, the casting skill advances, a song starts. |
+| The `match` on the target type | about 1,370 | Eleven arms: ENEMY 401, PORT about 200, ALLY 155, AOE 94, SUMMON_ITEM 91, SELF 80, PET_SUMMON 72, PET_CHARM 67, BIND 56, CORPSE 44, PET_HEAL 39. |
+
+The prelude's ORDER is the security property ("a refusal costs nothing": every check before
+anything is spent). The arms only apply. The 10-14 refactor that collapsed the arms' private
+copies of the checks into the pre-flight is why the arms are safe to move and the prelude is
+not: the one choke point the audits lean on must stay one body. So the shape has a reason,
+and the reason covers 580 of the 1,952 lines. The other 1,370 are eleven bodies inline
+because Rust makes extraction a chore, not because anything binds them: each arm reads about
+fourteen prelude locals (`caster_cid`, `caster_pos`, `mana_cost`, `hp_cost`, `dmg_type`,
+`caster_int`, `resolved`, the penalised `spell`, `new_mp`, `discipline`, ...) plus the eight
+`WorldState` fields the function destructures and `in_world_recipients_now`. Moving an arm
+means either a function of twenty-odd parameters (the crate allows `too_many_arguments`; 19
+sites do it already) or a `CastContext` struct built once per cast and lent to the arm. Either
+works; neither is a one-line change.
+
+**`handle_message` (handlers.rs, 1,930 lines)** is a different animal, and the measurement
+misled here the way "no callers" did in R1. It is a 99-line prelude (the kicked gate, the
+dead-state whitelist) and then 77 arms, one per client message, whose sizes are:
+
+| Arm | Lines |
+|---|---|
+| `CastStartBroadcast` | 126 |
+| `DevSpawnMob` | 110 |
+| `Move` | 99 |
+| `GmCommand` | 88 |
+| `UseSkill`, `CastSpell`, `BindAtCurrentLocation`, `DevSetFaction`, `GiveCoins`, `Respawn` | 49 to 55 |
+| The other 67 | under 40, most under 25 |
+
+It is long because the protocol has 77 messages, not because the arms are entangled. A split
+"by message family" would turn one 1,930-line function into eight 250-line ones that each
+still read as a list of small arms: the per-arm read is already 25 lines. The reading cost the
+assessment counted is real only for the four arms over 80 lines, and one of those
+(`CastStartBroadcast`) is the relay the 10-30 cast-relay hardening wrote, read twice since.
+
+### 8.2 Who else has the files open
+
+| File | Unmerged edits on a branch | What that means for a split |
+|---|---|---|
+| `casting.rs` | None. | Free to move now. |
+| `handlers.rs` | `feat/public-hosting`: +140 lines (the intent budgets, `intent_class`'s exhaustive match, the GM command bucket), already 19 commits behind the deploy branch. | A split of `handle_message` before the hosting merge-forward puts a conflict in the repo's biggest function on the branch the cutover depends on. The merge-forward goes first, whatever else is decided. |
+
+Churn: `handlers.rs` has 49 commits in 45 days, the cast path 96. The R2 row's moment,
+"BEFORE the next feature in that file", names a moving target: there is always a next
+feature in these two (Sneak, Stone Skin, target-of-target heals, the per-spell DoT resist
+and group songs all land in `casting.rs`; every new intent lands in `handlers.rs`). The real
+condition is a quiet window with no open branch touching the file, which is neither the
+door (2026-11-19) nor the bump after it.
+
+### 8.3 What holds them
+
+- `apply_casts`: 219 world tests, 192 cast sends across 12 of the test files (`spells.rs`,
+  `songs.rs`, `pets.rs`, `death.rs`, `height.rs`, `obstacles.rs`, ...), every exploit the
+  audits closed pinned by a test that fails on the old code. **No fuzz target reaches it**:
+  the seeded soak and both `cargo-fuzz` targets stop at `handle_message` (a cast is queued as
+  an intent and applied by the tick, which the soak does not run).
+- `handle_message`: the same suite, the 20,000-message seeded soak in every `cargo test`, the
+  two `cargo-fuzz` targets (`decode_and_handle`, `handle_arbitrary`), and invariants S4 and X2
+  name it by function.
+
+So a cast split's only net is the suite, and the tick split's standard applies in full:
+moves only, every arm's body and its comments verbatim (the project keeps its history
+comments; cleaning them up while moving is the mixed-purpose diff the touch-hygiene rule
+forbids), the diff read with `git diff --color-moved` so a moved block shows as a move and a
+changed line shows as a change, the suite green after every arm, and a run of the twelve
+spell test files three times at the end (the flaky rule: a failure that passes alone is load
+sensitivity, one that fails alone has a cause).
+
+### 8.4 The re-ranked recommendation
+
+1. **`apply_casts`: yes, as a deliberate pass, in a quiet window after the door and before the
+   next spell feature.** The arms are big, nothing binds them, no branch has the file open, and
+   the spell queue is long enough that the read is paid back several times. Shape: a
+   `CastContext` (the prelude's locals, built once per cast) lent to one `fn cast_<arm>` per
+   target type in the same file, the prelude untouched, one arm per commit, biggest first so
+   the shape is proven on ENEMY (its PvP half and its mob half are the two 200-line reads
+   inside it, and may be two functions). About a day, not "a few hours".
+2. **`handle_message`: drop the family split.** The length is 77 small arms; a split buys a
+   file layout, not a shorter read, and costs a conflict with the hosting branch. Instead: the
+   four arms over 80 lines move out to their own functions WHEN each is next touched (the
+   touch-hygiene rule), and `StackAll`, `TurnInQuest` and `CancelCast`, declared on the wire
+   with no handler since 08-24, come off the protocol at the next bump (the R1 lesson's other
+   half: that one IS dead, and has been recorded as deletable for three months). After the
+   hosting merge-forward in every case.
+3. **Nothing in either function is deleted by R2.** The R1 trap (a stub for a planned feature
+   read as dead) has no purchase on a pure move; the trap here is the opposite one, a line
+   changed under cover of a move. `--color-moved` and the per-arm commits are the guard.
+4. **Say before doing, per arm:** the `CastContext` shape goes in front of the user before the
+   first commit, since it is the one design choice in the pass.
+
+The R2 row in section 5 is amended to point here.
