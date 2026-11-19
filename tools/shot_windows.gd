@@ -10,7 +10,8 @@ extends SceneTree
 # Files: <dir>/ui_items.png and <dir>/ui_reading.png. With `--theme <id>` (a
 # palette id from data/ui_theme_palettes.gd) the theme is applied first and
 # one combined shot of seven windows is written to <dir>/ui_<id>.png, for
-# comparing the themes side by side.
+# comparing the themes side by side. `--login` shoots the login screen instead
+# (ui_login_<id>.png), the one screen built entirely from UITheme's colours.
 
 const HUD_SCENE := "res://scenes/hud.tscn"
 const SCREEN := Vector2i(1920, 1080)
@@ -18,6 +19,7 @@ const SCREEN := Vector2i(1920, 1080)
 var _out := ""
 var _theme := ""
 var _saved_theme := ""
+var _login := false
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
@@ -26,6 +28,8 @@ func _initialize() -> void:
 			_out = args[i + 1]
 		elif args[i] == "--theme" and i + 1 < args.size():
 			_theme = args[i + 1]
+		elif args[i] == "--login":
+			_login = true
 	if _out == "":
 		_out = OS.get_user_data_dir()
 	process_frame.connect(_run, CONNECT_ONE_SHOT)
@@ -79,6 +83,17 @@ func _run() -> void:
 		_saved_theme = settings.ui_theme
 		settings.ui_theme = _theme
 		settings.apply_ui_theme()
+	# `--login`: the login screen alone (it reads UITheme for its whole look),
+	# as ui_login_<id>.png; no server, so it shows the form before any connect.
+	if _login:
+		var login_scene := load("res://scenes/login.tscn") as PackedScene
+		var login := login_scene.instantiate()
+		root.add_child(login)
+		await _shoot("ui_login_%s.png" % (_theme if _theme != "" else "default"))
+		if _theme != "":
+			root.get_node("/root/GameSettings").ui_theme = _saved_theme
+		quit(0)
+		return
 	var hud: CanvasLayer = (load(HUD_SCENE) as PackedScene).instantiate()
 	root.add_child(hud)
 	await process_frame

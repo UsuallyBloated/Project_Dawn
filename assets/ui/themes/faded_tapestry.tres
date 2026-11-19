@@ -260,6 +260,7 @@ LineEdit/colors/font_color = Color(0.9, 0.84, 0.72, 1)
 LineEdit/colors/font_placeholder_color = Color(0.7, 0.62, 0.52, 0.8)
 LineEdit/styles/focus = SubResource("focus_ring")
 LineEdit/styles/normal = SubResource("field")
+Panel/styles/panel = SubResource("section")
 SectionPanel/base_type = &"Panel"
 SectionPanel/styles/panel = SubResource("section")
 SlotCell/base_type = &"Panel"

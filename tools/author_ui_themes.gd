@@ -120,6 +120,9 @@ static func render(id: String) -> String:
 	out += "LineEdit/colors/font_color = %s\n" % text
 	out += "LineEdit/colors/font_placeholder_color = %s\n" % _c(d["placeholder"])
 	out += 'LineEdit/styles/focus = SubResource("focus_ring")\nLineEdit/styles/normal = SubResource("field")\n'
+	# A plain Panel with no variation (the login screen's frame, a frame nobody
+	# styled) is a raised section, never the engine's grey.
+	out += 'Panel/styles/panel = SubResource("section")\n'
 	out += 'SectionPanel/base_type = &"Panel"\nSectionPanel/styles/panel = SubResource("section")\n'
 	out += 'SlotCell/base_type = &"Panel"\nSlotCell/styles/panel = SubResource("slot")\n'
 	out += 'SpeechPanel/base_type = &"PanelContainer"\nSpeechPanel/styles/panel = SubResource("speech")\n'
