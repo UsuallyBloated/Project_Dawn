@@ -74,6 +74,7 @@ Steps 1 to 6 DONE 2026-11-18 the same night (branch `feat/ui-theme`, commits `34
 
 ## 3. Traps
 
+- **An unstyled `Panel` or `PanelContainer` shows the engine's grey under every theme.** The template now gives `Panel` the section box as its type default; a `PanelContainer` built in code with no variation (the login frame was one) still needs a variation named, because a `PanelContainer` default would move every container's contents by its margins.
 - **A Control under a `CanvasLayer` inherits nothing from the root window's `theme`**: it has no theme owner and falls back to the project theme. Switching themes at runtime means pouring the chosen theme INTO the project theme resource (`ThemeDB.get_project_theme()`, `clear()`, `merge_with()`), never setting `root.theme`. The first build set the root and every HUD window stayed walnut; a probe under the root alone passed, so the probe now tests under a CanvasLayer.
 
 - `theme_type_variation` on a node whose class differs from the variation's base still

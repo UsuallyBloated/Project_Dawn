@@ -155,3 +155,15 @@ All ten shots went to the user. Open for them: which to keep, retune or drop; th
 labels and a few hard-coded tints still read as dark wood under the light palettes; fonts are
 one per game (a serif for parchment, a sans for flat would want the per-theme font slot the
 Theme already has, and a font file); textures as before.
+
+## 8. The night's unattended pass (user: "Any thing you think you can knock out tonight?")
+
+Two things, both on the branch (`6f35917`). **The login screen under the ten themes:** the
+shot tool gained `--login`, and the first parchment shot showed ink-dark labels on a
+near-black frame: the login's frame is a `PanelContainer` built in code with no style, so it
+wore the engine's grey under every palette (invisible under dark wood). Two fixes, neither a
+palette retune: the template now gives a plain `Panel` the section box (no more engine grey
+on an unstyled panel anywhere), and the login frame names `WindowPanel`. Regenerated, every
+gate green, all ten login shots re-taken into the scratchpad for the morning. **A fuzz hour
+on the server tip `94d755a`** (the first since R2's cast split) ran in WSL overnight; its
+result is in the morning's message and below when it lands.
