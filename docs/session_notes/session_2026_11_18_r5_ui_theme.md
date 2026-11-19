@@ -166,4 +166,4 @@ palette retune: the template now gives a plain `Panel` the section box (no more 
 on an unstyled panel anywhere), and the login frame names `WindowPanel`. Regenerated, every
 gate green, all ten login shots re-taken into the scratchpad for the morning. **A fuzz hour
 on the server tip `94d755a`** (the first since R2's cast split) ran in WSL overnight; its
-result is in the morning's message and below when it lands.
+result: **20.9 million messages through `handle_arbitrary` in 3,601 s (about 5,800 a second), no crash, no artifact**, coverage 5,127 edges; the first fuzz hour on the split cast handler.
