@@ -127,7 +127,7 @@ none is a friends-build item.
 | R3 | **A `RemoteEntityManager` base** under the five `remote_*_manager.gd` (and a `RemoteEntity` base under the three remote scripts), lifting the identical bodies. **Re-read 2026-11-18 (user: "Are we ready with R3?"): the §2 row overstated the sharing.** `_instantiate_into` is five different bodies (11 to 30 lines, each building its own scene); what is identical is `clear_all` (7 lines, all five, a local's name apart), `get_by_id` (3 lines, three files) and `_scene_hosts_local_player` (3 lines, three files, a 5-line variant in the player manager): about 13 lines a file. A base class for that alone is §6's building for its own sake. ~~Stays parked at its moment~~ **DONE 2026-11-18 the same afternoon (section 9.4; client `5b1347a` and `23e7898`; user: "Lets review R3 the way R2 was and then proceed with R3")**: both bases built from the re-read's list, a probe first, every moved body token-compared; the one behaviour change is the remote player's cold-start yaw. | When the remote animation-state channel (the jump relay's successor) next touches them. | Half an hour, inside that work | The next per-entity message lands once. |
 | R4 | **`_handle_chat_input` as a command table** (`Dictionary` of name to Callable, each command its own small function). **DONE 2026-11-18 (section 10.5; client `1cc2088` to `13b795a` and the check's last commit, six commits).** **Re-analyzed 2026-11-18 (section 10): stands, reshaped.** It is 40 arms averaging 9 lines, so the gain is not length; it is that a string if-chain has no compiler and no test, and it shows: about ten unreachable lines since the sticky channel, five commands answering their bare form wrong, eight autoloads the HUD reaches only for commands. A probe first, then the dispatcher out of `hud.gd` into the HUD family, then two lookup tables with the bodies moved verbatim, then five listed changes as their own commit. | The next time a command is added (`/fly` is written and waiting on `feat/gm-flight`), or now on the user's call. | Half a day, not an hour | 475 lines become a table and twenty short functions; the audit's "does a prefix swallow" question becomes a lookup. |
 | R5 | **New windows as `.tscn`, existing ones left alone** until the deferred UI theming pass, which is the one moment converting them earns its cost. **Re-analyzed 2026-11-18 (section 11): a rule, not a task; nothing built.** 25 of 27 UI scripts are code; the rule has held once in four since it was written (the bank, trade and disconnect windows are code, the hunger panel a scene); a scene saves about a quarter of a window script's lines with no shared seam, and every window converted before the pass is laid out twice. When the pass gets a direction: one `Theme` resource first, then windows in the order the pass touches them. | The theming pass. | Per window | Already the rule; stated here so nobody converts a working window on its own. |
-| R6 | **Measure before touching allocations.** A `tracing` span count or a `perf` run on the R720 under two seats before any `.clone()` hunt. | Only if the `world health` line ever shows `over_budget` or the median climbs past a few ms. | Small to measure | The tick runs at 1 to 2% of its budget; there is nothing to win today. |
+| R6 | **Measure before touching allocations.** A `tracing` span count or a `perf` run on the R720 under two seats before any `.clone()` hunt. **Re-analyzed 2026-11-18 (section 12): a rule whose first step is a reading, not code.** The health line has not been read since the 4 km zone, the roamers and the obstacle rule landed (last reading 11-11: median 0.5 ms, worst 19.1 ms, two players); the wildlife sheet's row is that reading. If it has climbed, the first instrument is a per-step breakdown in the health line (about forty lines), then and only then the obstacle gather's allocation. | Only if the `world health` line ever shows `over_budget` or the median climbs past a few ms. | Small to measure | The tick runs at 1 to 2% of its budget; there is nothing to win today. |
 
 ## 6. Not worth doing
 
@@ -630,3 +630,82 @@ the order the pass touches them, the merged character window first.
 allocation per pass is the one new cost since, unmeasured in play and flagged in its entry).
 Nothing to measure until that line moves. **With R4 built, the assessment's list is
 finished:** R1 to R4 done, R5 and R6 standing rules whose moment has not come.
+
+## 12. R6 re-analyzed the same way (2026-11-18)
+
+The user: "Review R6." R6 as written: measure before touching allocations; act only if the
+`world health` line shows `over_budget` or the median climbs past a few ms. The read below
+asks what that line can see, what has been added to the tick since it last read, and what
+the cheapest honest next measurement is. Code facts from the server at `94d755a`.
+
+### 12.1 What the measurement actually is
+
+`world/health.rs` and `tick/upkeep.rs`: once a minute while anyone is online, and in any
+minute with an overrun or a slope refusal, one line with the tick's median, 99th percentile
+and worst (whole-tick wall time, measured at the top of the loop so every path out of the
+body counts), the count over the 50 ms budget, the checkpoint's time and connection count,
+`slope_refusals` and the players in world. It cannot say WHICH step cost the time: the loop
+calls 46 step functions in a fixed order (`tick/mod.rs`) and nothing times them one by one.
+There is no bench, no per-step span (one `info_span` exists, around a message's handling),
+and `[profile.release]` carries `lto = "thin"` and `codegen-units = 1` with no `debug`
+line, so a `perf` run on the R720 would have no symbols.
+
+### 12.2 What the line last said, and what has landed since
+
+| Reading | When | Players | Median | Worst | `over_budget` |
+|---|---|---|---|---|---|
+| Phase 6's first | 2026-11-02 | 2 | 0.5 to 0.8 ms | 13.3 ms | 0 |
+| The pre-door check | 2026-11-11 | 2 | 0.5 ms | 19.1 ms | 0 |
+
+Nothing since. Three of the four largest changes to what a tick does have landed after that
+reading, and no sitting has read the line on them: the 4 km zone (11-13: a 400 by 400 terrain
+every ground and sight check samples), the wandering wildlife (11-17: 70 roamers on the 54
+camp mobs, 124 bodies stepping and scanning), and the obstacle rule (11-17: every player, mob
+and pet step resolved in 0.1 m pieces against 33,199 prisms, and every sight check including
+them). `wandering_wildlife_checklist.md` already carries the row for it ("`world health`
+lines with everyone online: `over_budget=0`, the median in low single milliseconds with 124
+to 138 mobs"), unrun.
+
+### 12.3 The new costs, by construction
+
+- **The obstacle rule** (`world/obstacles.rs`): an 8 m grid; a step gathers the prism ids of
+  the cells its bounding box touches (a `Vec` per gather, sorted and deduplicated), tests
+  the body against each, and takes at most 0.1 m per piece; at 5 m/s and 20 Hz a player's
+  tick is 0.25 m, three pieces, so three gathers and three allocations per mover per tick
+  (the entry's own flagged residual). A sight check gathers the cells of the segment's
+  bounding box (16 cells for a 30 m diagonal), capped at 1,024 cells before it tests every
+  sight prism. Idle mobs run the sight check only for a player already inside their aggro
+  radius (`nearest_target_within`), so a quiet camp costs nothing.
+- **The roamers**: a leg every 5 to 25 s at 0.4 of the mob's speed, each step through the
+  roam map and the obstacle rule; a pack's followers regather every tick.
+- **The terrain**: exact triangle sampling, a few multiplies per sample; the sight march
+  crosses every cell edge of the segment.
+
+All of it is bounded and local; none of it is a loop over the whole world per tick. The
+honest expectation is a median still under a few milliseconds with two players, and the
+honest statement is that nobody has looked.
+
+### 12.4 The shape, re-ranked
+
+**R6 stands as a rule, and its first step is a reading, not code.** The next sitting on the
+R720 answers it with the row the wildlife sheet already has: two players walking through
+camps and the Greywood for ten minutes, then the `world health` lines from the journal (the
+dev box cannot reach the host: the tailnet address timed out from here today, so the lines
+are pasted or read on the host). Three outcomes:
+
+1. **Median under a few ms, `over_budget=0`** (the expected one): R6 is closed as a rule,
+   re-read after each of the next large tick changes (server obstacles with jumping, the
+   multi-zone split), nothing built.
+2. **The median has climbed or the 99th percentile sits in the tens of ms:** the first
+   instrument is a **per-step breakdown**, not a profiler: time the 46 step calls in the
+   loop (one `Instant` each, a fixed array of accumulators) and add the three costliest
+   steps by name to the once-a-minute line. About forty lines, no behaviour change, and it
+   says which step before anyone guesses at an allocation. A `debug = 1` line in
+   `[profile.release]` beside it, so a later `perf` run on the R720 has symbols.
+3. **Only after 2 names the obstacle step:** the one allocation worth removing is the
+   gather's `Vec`, reused from a scratch buffer on the `Obstacles` value per call site; the
+   grid and the piece size stay. Anything else waits for its own reading.
+
+Not worth doing, as §6 said: a `.clone()` hunt, an allocator change, or a `perf` run before
+the line has moved. With this, every recommendation in §5 has been read a second time: R1
+to R5 done, R6 a rule with its next step named.
