@@ -83,7 +83,7 @@ enabled=PackedStringArray("res://addons/procedural_dungeon/plugin.cfg", "res://a
 
 [gui]
 
-theme/custom="res://assets/ui/dark_wood_brass.tres"
+theme/custom="res://assets/ui/themes/dark_wood_brass.tres"
 
 [layer_names]
 

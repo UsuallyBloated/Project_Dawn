@@ -31,6 +31,7 @@ var _listening_action: String = ""
 var _listening_btn: Button = null
 
 # Interface controls
+var _ui_theme_btn: OptionButton = null
 var _ft_master_cb: CheckBox = null
 var _ft_damage_cb: CheckBox = null
 var _ft_heals_cb:  CheckBox = null
@@ -156,6 +157,23 @@ func _build_interface_tab() -> void:
 	_ft_master_cb.toggled.connect(func(on: bool) -> void:
 		for cb: CheckBox in sub_cbs:
 			cb.disabled = not on)
+
+	# The UI theme: one of the palettes in data/ui_theme_palettes.gd, applied on
+	# Apply to every window at once; pieces coloured from the palette as they
+	# are built (bars, slot tints) take it on the next login.
+	var theme_row := _make_row("UI Theme")
+	_ui_theme_btn = OptionButton.new()
+	_ui_theme_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for id: String in UIThemePalettes.ORDER:
+		_ui_theme_btn.add_item(UIThemePalettes.ALL[id]["display"])
+		_ui_theme_btn.set_item_metadata(_ui_theme_btn.item_count - 1, id)
+	theme_row.add_child(_ui_theme_btn)
+	vbox.add_child(theme_row)
+	var theme_note := Label.new()
+	theme_note.text = "Applies to every window on Apply; a few pieces take the new colours on the next login."
+	theme_note.add_theme_font_size_override("font_size", 11)
+	theme_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(theme_note)
 
 func _make_sub_checkbox(label: String, parent: VBoxContainer) -> CheckBox:
 	var cb := CheckBox.new()
@@ -328,6 +346,7 @@ func _load_from_settings() -> void:
 	_ft_heals_cb.button_pressed  = GameSettings.floating_text_heals
 	_ft_misses_cb.button_pressed = GameSettings.floating_text_misses
 	_ft_xp_cb.button_pressed     = GameSettings.floating_text_xp
+	_ui_theme_btn.selected = maxi(0, UIThemePalettes.ORDER.find(GameSettings.ui_theme))
 	for cb: CheckBox in [_ft_damage_cb, _ft_heals_cb, _ft_misses_cb, _ft_xp_cb]:
 		cb.disabled = not GameSettings.floating_text_enabled
 	for id: String in _keybind_btns:
@@ -346,5 +365,7 @@ func _on_apply() -> void:
 	GameSettings.floating_text_heals   = _ft_heals_cb.button_pressed
 	GameSettings.floating_text_misses  = _ft_misses_cb.button_pressed
 	GameSettings.floating_text_xp      = _ft_xp_cb.button_pressed
+	if _ui_theme_btn.selected >= 0:
+		GameSettings.ui_theme = str(_ui_theme_btn.get_item_metadata(_ui_theme_btn.selected))
 	GameSettings.apply_all()
 	GameSettings.save_settings()

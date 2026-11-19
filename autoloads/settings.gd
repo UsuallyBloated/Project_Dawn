@@ -70,6 +70,11 @@ var floating_text_damage:  bool = true
 var floating_text_heals:   bool = true
 var floating_text_misses:  bool = true
 var floating_text_xp:      bool = false
+# The UI theme (Options, Interface): a palette id from data/ui_theme_palettes.gd.
+# The Theme resource under assets/ui/themes/ goes on the root window, so every
+# Control inherits it, and UITheme takes the same palette for the code that
+# colours at runtime (those pieces change when they are next built).
+var ui_theme: String = UIThemePalettes.DEFAULT_ID
 
 # Keybinds: action_id -> Key enum value
 var keybinds: Dictionary = {}
@@ -86,6 +91,19 @@ func apply_all() -> void:
 	apply_audio()
 	apply_graphics()
 	apply_keybinds()
+	apply_ui_theme()
+
+# ── UI theme ─────────────────────────────────────────────────────────────────
+
+func apply_ui_theme() -> void:
+	if not UIThemePalettes.is_known(ui_theme):
+		ui_theme = UIThemePalettes.DEFAULT_ID
+	var theme := load(UIThemePalettes.theme_path(ui_theme)) as Theme
+	if theme == null:
+		push_warning("GameSettings: no theme file for %s" % ui_theme)
+		return
+	get_tree().root.theme = theme
+	UITheme.apply_palette(ui_theme)
 
 # ── Audio ─────────────────────────────────────────────────────────────────────
 
@@ -171,6 +189,7 @@ func save_settings() -> void:
 	cfg.set_value("interface", "floating_text_heals",   floating_text_heals)
 	cfg.set_value("interface", "floating_text_misses",  floating_text_misses)
 	cfg.set_value("interface", "floating_text_xp",      floating_text_xp)
+	cfg.set_value("interface", "ui_theme",              ui_theme)
 	for action: Dictionary in REBINDABLE_ACTIONS:
 		cfg.set_value("keybinds", action.id, keybinds.get(action.id, action.default_key))
 	cfg.set_value("chat", "windows", chat_windows)
@@ -196,6 +215,7 @@ func load_settings() -> void:
 	floating_text_heals   = cfg.get_value("interface", "floating_text_heals",   true)
 	floating_text_misses  = cfg.get_value("interface", "floating_text_misses",  true)
 	floating_text_xp      = cfg.get_value("interface", "floating_text_xp",      false)
+	ui_theme              = str(cfg.get_value("interface", "ui_theme", UIThemePalettes.DEFAULT_ID))
 	var sanitized := false
 	for action: Dictionary in REBINDABLE_ACTIONS:
 		var saved: int = cfg.get_value("keybinds", action.id, action.default_key)

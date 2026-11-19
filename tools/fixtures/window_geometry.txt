@@ -276,6 +276,10 @@ hud/options_screen.gd | TabContainer[1]/MarginContainer[2]/VBoxContainer[0]/Marg
 hud/options_screen.gd | TabContainer[1]/MarginContainer[2]/VBoxContainer[0]/MarginContainer[1]/VBoxContainer[0]/CheckBox[1] | 650,338 71x31 | shown
 hud/options_screen.gd | TabContainer[1]/MarginContainer[2]/VBoxContainer[0]/MarginContainer[1]/VBoxContainer[0]/CheckBox[2] | 650,338 80x31 | shown
 hud/options_screen.gd | TabContainer[1]/MarginContainer[2]/VBoxContainer[0]/MarginContainer[1]/VBoxContainer[0]/CheckBox[3] | 650,338 96x31 | shown
+hud/options_screen.gd | TabContainer[1]/MarginContainer[2]/VBoxContainer[0]/HBoxContainer[2] | 650,338 378x31 | shown
+hud/options_screen.gd | TabContainer[1]/MarginContainer[2]/VBoxContainer[0]/HBoxContainer[2]/Label[0] | 650,338 160x23 | shown
+hud/options_screen.gd | TabContainer[1]/MarginContainer[2]/VBoxContainer[0]/HBoxContainer[2]/OptionButton[1] | 650,338 206x31 | shown
+hud/options_screen.gd | TabContainer[1]/MarginContainer[2]/VBoxContainer[0]/Label[3] | 650,338 1x1631 | shown
 hud/options_screen.gd | TabContainer[1]/MarginContainer[3] | 650,338 20x20 | hidden
 hud/options_screen.gd | TabContainer[1]/MarginContainer[3]/ScrollContainer[0] | 650,338 0x0 | shown
 hud/options_screen.gd | TabContainer[1]/MarginContainer[3]/ScrollContainer[0]/VBoxContainer[0] | 650,338 0x0 | shown
