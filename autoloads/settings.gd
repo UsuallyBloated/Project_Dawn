@@ -102,7 +102,18 @@ func apply_ui_theme() -> void:
 	if theme == null:
 		push_warning("GameSettings: no theme file for %s" % ui_theme)
 		return
-	get_tree().root.theme = theme
+	# The HUD's Controls sit under CanvasLayers, which break theme inheritance
+	# from the root window (a Control under a CanvasLayer has no theme owner),
+	# so a theme on the root would reach almost nothing. Every Control falls
+	# back to the PROJECT theme (gui/theme/custom) instead, so the chosen
+	# theme is poured into that resource in place; its change signal repaints
+	# every Control at once.
+	var project := ThemeDB.get_project_theme()
+	if project != null and project != theme:
+		project.clear()
+		project.merge_with(theme)
+	else:
+		get_tree().root.theme = theme
 	UITheme.apply_palette(ui_theme)
 
 # ── Audio ─────────────────────────────────────────────────────────────────────

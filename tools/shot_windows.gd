@@ -7,18 +7,25 @@ extends SceneTree
 # character) and the reading windows (quest journal, spell book, options,
 # vendor). Run from a desktop session (it opens a window):
 #   godot --path . -s tools/shot_windows.gd -- --out <dir>
-# Files: <dir>/ui_items.png and <dir>/ui_reading.png.
+# Files: <dir>/ui_items.png and <dir>/ui_reading.png. With `--theme <id>` (a
+# palette id from data/ui_theme_palettes.gd) the theme is applied first and
+# one combined shot of seven windows is written to <dir>/ui_<id>.png, for
+# comparing the themes side by side.
 
 const HUD_SCENE := "res://scenes/hud.tscn"
 const SCREEN := Vector2i(1920, 1080)
 
 var _out := ""
+var _theme := ""
+var _saved_theme := ""
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	for i in args.size():
 		if args[i] == "--out" and i + 1 < args.size():
 			_out = args[i + 1]
+		elif args[i] == "--theme" and i + 1 < args.size():
+			_theme = args[i + 1]
 	if _out == "":
 		_out = OS.get_user_data_dir()
 	process_frame.connect(_run, CONNECT_ONE_SHOT)
@@ -60,6 +67,18 @@ func _run() -> void:
 	back.color = Color(0.22, 0.26, 0.24)
 	back.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(back)
+	if _theme != "":
+		var theme := load(UIThemePalettes.theme_path(_theme)) as Theme
+		if theme == null:
+			printerr("no theme for " + _theme)
+			quit(1)
+			return
+		# Through the real path, then back: something saves the settings at
+		# exit, and a screenshot must not change the dev box's own theme.
+		var settings: Node = root.get_node("/root/GameSettings")
+		_saved_theme = settings.ui_theme
+		settings.ui_theme = _theme
+		settings.apply_ui_theme()
 	var hud: CanvasLayer = (load(HUD_SCENE) as PackedScene).instantiate()
 	root.add_child(hud)
 	await process_frame
@@ -68,6 +87,18 @@ func _run() -> void:
 	var panel: Control = hud.get_node_or_null("Panel")
 	if panel != null:
 		panel.visible = true
+
+	if _theme != "":
+		_place(hud, "inventory_window.gd", Vector2(60, 180))
+		_place(hud, "bank_window.gd", Vector2(560, 180))
+		_place(hud, "character_window.gd", Vector2(1340, 180))
+		_place(hud, "quest_journal.gd", Vector2(30, 640))
+		_place(hud, "spell_book.gd", Vector2(700, 756))
+		_place(hud, "vendor_window.gd", Vector2(1180, 620))
+		await _shoot("ui_%s.png" % _theme)
+		root.get_node("/root/GameSettings").ui_theme = _saved_theme
+		quit(0)
+		return
 
 	_place(hud, "inventory_window.gd", Vector2(60, 200))
 	_place(hud, "bank_window.gd", Vector2(560, 200))

@@ -120,3 +120,38 @@ tints the user has not ruled on (below). All 21 checks and every probe green on 
   they drop into the same Theme.
 - **Merge:** at the bump after the door, with the export after it; client only.
 - Not built: the hotbar, Test Panel, console, bag and chat windows as scenes (above).
+
+## 7. The other nine themes and the picker (the same night; user: "I would like the other UI options you listed designed and the option to change added to the options screen -> interface. You might want to write a plan that an opus 5.5 could follow.")
+
+The plan first, `docs/design/handoff_ui_theme_picker.md` (the shape, seven steps each with
+its "done when" and its check, the traps), then the build on the same branch (`3445bfb` and
+the commit after). **Palettes as data, themes generated:** `data/ui_theme_palettes.gd` holds
+the ten palettes (about sixteen colours each plus a corner radius and a shadow; the derived
+states, disabled buttons, the speech panel, the buff strip, the tabs, come from one rule in
+the same file), and `tools/author_ui_themes.gd` renders each into `assets/ui/themes/<id>.tres`
+through one template, so their structural numbers agree and the geometry fixture holds for
+all ten; the hand-written dark wood file is gone, its generated twin equal in its hand-picked
+values and differing only in the derived ones. **`UITheme` is runtime:** its colours are
+`static var`s whose defaults come from the table, and `apply_palette(id)` fills them for any
+palette; every `UITheme.C_X` read compiles unchanged. **Switching:** `GameSettings.ui_theme`
+(persisted in `settings.cfg`) and `apply_ui_theme()`, called by `apply_all()` at boot and on
+Apply. **The picker:** a UI Theme row on the Interface tab under the floating-text block, with
+a line saying the pieces coloured at build time take the new colours on the next login.
+**The check** grew the rows the plan named (a stale file, a structural drift, a missing
+variation in any theme, `UITheme` off the table; a planted wider band in ironbound failed
+it), and `tools/probe_ui_theme_picker.gd` covers the switch, the fallback and the picker.
+
+**The bug the screenshots caught:** the first build put the theme on the root window, and
+the parchment shot showed every window still walnut while the runtime-coloured cells had
+turned to paper. A Control under a `CanvasLayer` (every HUD window) has no theme owner and
+inherits nothing from the root window; it falls back to the PROJECT theme. So
+`apply_ui_theme` now pours the chosen theme into that resource in place (`clear` and
+`merge_with`), whose change signal repaints every Control at once; the probe tests a Label
+and a `WindowPanel` under a CanvasLayer, which the first probe (a Label under the root) had
+not. Also found: something saves `settings.cfg` at exit (the chat layout), so the shot tool
+puts the dev box's theme id back before it quits.
+
+All ten shots went to the user. Open for them: which to keep, retune or drop; the HUD's bar
+labels and a few hard-coded tints still read as dark wood under the light palettes; fonts are
+one per game (a serif for parchment, a sans for flat would want the per-theme font slot the
+Theme already has, and a font file); textures as before.

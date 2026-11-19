@@ -4470,7 +4470,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   read too dark for wood (one number); the identity tints on the group, pet and track panels
   (walnut with an accent, or as they are); real wood-grain and brass textures (two nine-slice
   PNGs into the same Theme). No playtest sheet yet: the look is the user's eye, the geometry
-  the fixture's.
+  the fixture's. **The other nine themes and a picker BUILT the same night** (user: "I would
+  like the other UI options you listed designed and the option to change added to the options
+  screen -> interface"; plan `docs/design/handoff_ui_theme_picker.md`, session note §7):
+  `data/ui_theme_palettes.gd` holds ten palettes, `tools/author_ui_themes.gd` renders them to
+  `assets/ui/themes/<id>.tres` through one template (the structural numbers agree, so one
+  geometry fixture holds for all), `UITheme` is runtime (`apply_palette`), `GameSettings.ui_theme`
+  persists the choice and `apply_ui_theme()` pours the theme into the PROJECT theme in place
+  (Controls under a CanvasLayer inherit nothing from the root window, which the first build
+  missed and the parchment screenshot caught), and Options, Interface has a UI Theme row.
+  `check_ui_theme_lockstep.gd` fails on a stale or structurally drifted theme file, a missing
+  variation in any theme, or `UITheme` off the table; `probe_ui_theme_picker.gd` covers the
+  switch. All ten shots went to the user; which to keep, retune or drop is theirs.
 - [ ] **In-game UI layout is "pretty busted"** *(user, machine day 2026-09-22, on the fresh
   1280x720 startup window)*. No specifics captured yet — needs a screenshot pass naming which
   windows/anchors misbehave at which sizes. Belongs to the deferred cohesive UI theming/polish

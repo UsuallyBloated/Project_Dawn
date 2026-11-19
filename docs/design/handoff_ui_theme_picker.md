@@ -68,7 +68,13 @@ one theme that exists was built and what holds it.*
 | 6 | `shot_windows.gd -- --theme`; shoot all ten; send to the user | twenty PNGs | the user's eye |
 | 7 | records: session note, To-Do entry (the UI theme entry under UI polish), `commands.md` for the author tool and the shot tool, memory | | |
 
+## 2b. Status
+
+Steps 1 to 6 DONE 2026-11-18 the same night (branch `feat/ui-theme`, commits `3445bfb` and the one after); step 7's records in `session_2026_11_18_r5_ui_theme.md` §7, `commands.md` and the To-Do entry. One trap found on the way is now the first bullet below.
+
 ## 3. Traps
+
+- **A Control under a `CanvasLayer` inherits nothing from the root window's `theme`**: it has no theme owner and falls back to the project theme. Switching themes at runtime means pouring the chosen theme INTO the project theme resource (`ThemeDB.get_project_theme()`, `clear()`, `merge_with()`), never setting `root.theme`. The first build set the root and every HUD window stayed walnut; a probe under the root alone passed, so the probe now tests under a CanvasLayer.
 
 - `theme_type_variation` on a node whose class differs from the variation's base still
   resolves (the lookup walks the variation first); the editor merely filters the list.

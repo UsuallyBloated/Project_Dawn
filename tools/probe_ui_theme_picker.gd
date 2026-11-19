@@ -31,9 +31,10 @@ func _run() -> void:
 	# 1. apply_ui_theme puts the palette's theme on the root and into UITheme.
 	settings.ui_theme = "carved_stone"
 	settings.apply_ui_theme()
-	var root_theme: Theme = root.theme
-	_check(root_theme != null and root_theme.resource_path == UIThemePalettes.theme_path("carved_stone"),
-		"the root window wears carved_stone (%s)" % (root_theme.resource_path if root_theme else "none"))
+	var root_theme: Theme = ThemeDB.get_project_theme()
+	var stone_file := load(UIThemePalettes.theme_path("carved_stone")) as Theme
+	_check(root_theme != null and _same(root_theme.get_color("font_color", "TitleLabel"), stone_file.get_color("font_color", "TitleLabel")),
+		"the project theme carries carved_stone's values")
 	var stone := UIThemePalettes.runtime_colors("carved_stone")
 	_check(_same(UITheme.C_TITLE, stone["C_TITLE"]) and _same(UITheme.C_WINDOW_BG, stone["C_WINDOW_BG"]),
 		"UITheme carries carved_stone's title and field colours")
@@ -41,18 +42,28 @@ func _run() -> void:
 	var title_from_theme := root_theme.get_color("font_color", "TitleLabel")
 	_check(_same(title_from_theme, UITheme.C_TITLE), "the Theme's title colour and UITheme's agree (%s / %s)" % [title_from_theme, UITheme.C_TITLE])
 
-	# 2. A label under the root now resolves the new body colour with no override.
+	# 2. A label and a window panel UNDER A CANVASLAYER (as the HUD's are: a
+	#    CanvasLayer breaks theme inheritance from the root window) resolve the
+	#    new colours with no override.
+	var layer := CanvasLayer.new()
+	root.add_child(layer)
 	var lbl := Label.new()
-	root.add_child(lbl)
+	layer.add_child(lbl)
+	var pane := Panel.new()
+	pane.theme_type_variation = &"WindowPanel"
+	layer.add_child(pane)
 	await process_frame
-	_check(_same(lbl.get_theme_color("font_color"), stone["C_TEXT"]), "a plain Label reads carved_stone's text colour (%s)" % lbl.get_theme_color("font_color"))
-	lbl.queue_free()
+	_check(_same(lbl.get_theme_color("font_color"), stone["C_TEXT"]), "a plain Label under a CanvasLayer reads carved_stone's text colour (%s)" % lbl.get_theme_color("font_color"))
+	var box := pane.get_theme_stylebox("panel") as StyleBoxFlat
+	_check(box != null and _same(box.bg_color, stone["C_WINDOW_BG"]), "a WindowPanel under a CanvasLayer wears carved_stone's field (%s)" % (box.bg_color if box else Color()))
+	layer.queue_free()
 
 	# 3. An unknown id falls back to the default palette.
 	settings.ui_theme = "no_such_theme"
 	settings.apply_ui_theme()
 	_check(settings.ui_theme == UIThemePalettes.DEFAULT_ID, "an unknown id falls back to %s (%s)" % [UIThemePalettes.DEFAULT_ID, settings.ui_theme])
-	_check(root.theme.resource_path == UIThemePalettes.theme_path(UIThemePalettes.DEFAULT_ID), "and the root wears the default theme")
+	var default_file := load(UIThemePalettes.theme_path(UIThemePalettes.DEFAULT_ID)) as Theme
+	_check(_same(ThemeDB.get_project_theme().get_color("font_color", "Label"), default_file.get_color("font_color", "Label")), "and the project theme is the default again")
 
 	# 4. Every palette has a theme file that loads and defines the variations.
 	for id: String in UIThemePalettes.ORDER:
@@ -75,7 +86,8 @@ func _run() -> void:
 	options._on_apply()
 	await process_frame
 	_check(settings.ui_theme == "ironbound", "Apply moves the choice into GameSettings (%s)" % settings.ui_theme)
-	_check(root.theme.resource_path == UIThemePalettes.theme_path("ironbound"), "and the root wears ironbound")
+	var iron_file := load(UIThemePalettes.theme_path("ironbound")) as Theme
+	_check(_same(ThemeDB.get_project_theme().get_color("font_color", "Label"), iron_file.get_color("font_color", "Label")), "and the project theme is ironbound")
 	_check(_same(UITheme.C_TEXT, UIThemePalettes.runtime_colors("ironbound")["C_TEXT"]), "and UITheme followed")
 	# Reopening the tab shows the saved choice.
 	options._load_from_settings()
