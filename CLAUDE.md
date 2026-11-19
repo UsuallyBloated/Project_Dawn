@@ -1179,8 +1179,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   re-analyzed 2026-11-18** (the assessment's §11): a rule, not a task, nothing built (25 of 27 UI
   scripts are code, the rule has held once in four since 06-09, a scene saves a quarter of a window
   script with no shared seam, and every window converted before the theming pass is laid out
-  twice); R6 has nothing to measure while the health line reads `over_budget=0`. **The assessment's
-  list is finished.** The three
+  twice); **R6 re-analyzed 2026-11-18 (the assessment's §12): a rule whose first step is a reading, not
+  code.** The health line has not been read since the 4 km zone, the roamers and the obstacle rule
+  landed (last: 11-11, median 0.5 ms, worst 19.1 ms, two players); the wildlife sheet's `world
+  health` row is that reading; a per-step breakdown in the line only if it has climbed. **The
+  assessment's list is finished; R5 was then executed on the user's call on `feat/ui-theme` (the
+  UI theme entry it carries).** The three
   dead wire intents (`StackAll`, `TurnInQuest`, `CancelCast`) come off at the next bump.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.

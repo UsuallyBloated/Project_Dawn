@@ -131,3 +131,7 @@ style box and the font. R6 read the same way: the health line has shown `over_bu
 sub-millisecond median since 11-02, so there is nothing to measure. With R4 the assessment's
 list is finished. Also fixed: the R3 table row still read "stays parked" while section 9.4
 said built.
+
+## 9. R6 re-analyzed (later the same evening; user: "Review R6")
+
+Assessment section 12. The health line measures the whole tick and nothing per step; it was last read on 11-11 (two players, median 0.5 ms, worst 19.1 ms), before the 4 km zone, the 70 roamers and the obstacle rule, the three largest additions to what a tick does; the new costs are bounded and local by construction (an 8 m grid, three gathers per mover per tick, sight checks only inside an aggro radius). R6 stands as a rule whose first step is the reading the wildlife sheet already asks for; if the median has climbed, the first instrument is a per-step breakdown in the health line (about forty lines) and a `debug = 1` in the release profile for symbols, and only after that the obstacle gather's allocation. Nothing built. Every recommendation in the assessment has now been read a second time.
