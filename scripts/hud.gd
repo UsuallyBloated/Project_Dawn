@@ -1,26 +1,26 @@
 extends CanvasLayer
 
-const _OptionsScreenScript  := preload("res://scripts/options_screen.gd")
-const _CraftingWindowScript := preload("res://scripts/crafting_window.gd")
-const _VendorWindowScript   := preload("res://scripts/vendor_window.gd")
-const _BankWindowScript     := preload("res://scripts/bank_window.gd")
+const _OptionsScreenScene   := preload("res://scenes/options_screen.tscn")
+const _CraftingWindowScene  := preload("res://scenes/crafting_window.tscn")
+const _VendorWindowScene    := preload("res://scenes/vendor_window.tscn")
+const _BankWindowScene      := preload("res://scenes/bank_window.tscn")
 const _HudDeathScreen       := preload("res://scripts/hud_death_screen.gd")
-const _HudDisconnectNotice  := preload("res://scripts/hud_disconnect_notice.gd")
-const _HudCastBar           := preload("res://scripts/hud_cast_bar.gd")
-const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
-const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
-const _HudPetPanel          := preload("res://scripts/hud_pet_panel.gd")
+const _HudDisconnectNoticeScene := preload("res://scenes/hud_disconnect_notice.tscn")
+const _HudCastBarScene      := preload("res://scenes/hud_cast_bar.tscn")
+const _HudBuffBarScene      := preload("res://scenes/hud_buff_bar.tscn")
+const _HudDebuffBarScene    := preload("res://scenes/hud_debuff_bar.tscn")
+const _HudPetPanelScene     := preload("res://scenes/hud_pet_panel.tscn")
 const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
 # The hunger window sits this far below the player's information bar.
 const HUNGER_PANEL_GAP := 4.0
-const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
+const _HudGroupPanelScene   := preload("res://scenes/hud_group_panel.tscn")
 const _HudChatCommands      := preload("res://scripts/hud_chat_commands.gd")
-const _TrackWindowScript    := preload("res://scripts/track_window.gd")
-const _SpellBookScript      := preload("res://scripts/spell_book.gd")
-const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
-const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
-const _InspectWindowScript  := preload("res://scripts/inspect_window.gd")
-const _TradeWindowScript    := preload("res://scripts/trade_window.gd")
+const _TrackWindowScene     := preload("res://scenes/track_window.tscn")
+const _SpellBookScene       := preload("res://scenes/spell_book.tscn")
+const _QuestJournalScene    := preload("res://scenes/quest_journal.tscn")
+const _DialogueWindowScene  := preload("res://scenes/dialogue_window.tscn")
+const _InspectWindowScene   := preload("res://scenes/inspect_window.tscn")
+const _TradeWindowScene     := preload("res://scenes/trade_window.tscn")
 const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 
 @onready var health_bar: ProgressBar = $Panel/VBoxContainer/HPRow/HealthBar
@@ -192,21 +192,21 @@ func _build_components() -> void:
 	var death_screen := _HudDeathScreen.new()
 	add_child(death_screen)
 
-	add_child(_HudDisconnectNotice.new())
+	add_child(_HudDisconnectNoticeScene.instantiate())
 
-	var cast_bar := _HudCastBar.new()
+	var cast_bar := _HudCastBarScene.instantiate()
 	add_child(cast_bar)
 
-	var buff_bar := _HudBuffBar.new()
+	var buff_bar := _HudBuffBarScene.instantiate()
 	add_child(buff_bar)
 
-	var debuff_bar := _HudDebuffBar.new()
+	var debuff_bar := _HudDebuffBarScene.instantiate()
 	add_child(debuff_bar)
 
-	_group_panel = _HudGroupPanel.new()
+	_group_panel = _HudGroupPanelScene.instantiate()
 	add_child(_group_panel)
 
-	_pet_panel = _HudPetPanel.new()
+	_pet_panel = _HudPetPanelScene.instantiate()
 	add_child(_pet_panel)
 
 	# The hunger window (food design section 8), by default directly below
@@ -216,25 +216,21 @@ func _build_components() -> void:
 	add_child(_hunger_panel)
 	_place_hunger_panel.call_deferred()
 
-	_track_window = _TrackWindowScript.new()
+	_track_window = _TrackWindowScene.instantiate()
 	add_child(_track_window)
 
-	_spell_book = _SpellBookScript.new()
-	_spell_book.visible = false
+	_spell_book = _SpellBookScene.instantiate()
 	add_child(_spell_book)
 	_watch_window(_spell_book)
 
-	_quest_journal = _QuestJournalScript.new()
-	_quest_journal.visible = false
+	_quest_journal = _QuestJournalScene.instantiate()
 	add_child(_quest_journal)
 	_watch_window(_quest_journal)
 
-	_dialogue_window = _DialogueWindowScript.new()
-	_dialogue_window.visible = false
+	_dialogue_window = _DialogueWindowScene.instantiate()
 	add_child(_dialogue_window)
 
-	_inspect_window = _InspectWindowScript.new()
-	_inspect_window.visible = false
+	_inspect_window = _InspectWindowScene.instantiate()
 	add_child(_inspect_window)
 	_watch_window(_inspect_window)
 	Targeting.inspect_requested.connect(_inspect_player)
@@ -242,7 +238,7 @@ func _build_components() -> void:
 	# PD_W0028 — the trade window opens itself on `world_trade_opened` (a
 	# holding-click on a player) and closes on `world_trade_closed`. Mounted
 	# here so it survives with the HUD; it drives its own visibility.
-	_trade_window = _TradeWindowScript.new()
+	_trade_window = _TradeWindowScene.instantiate()
 	add_child(_trade_window)
 	_watch_window(_trade_window)
 
@@ -306,7 +302,7 @@ func _build_tot_frame() -> void:
 
 	_tot_name_label = Label.new()
 	_tot_name_label.add_theme_font_size_override("font_size", 10)
-	_tot_name_label.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_tot_name_label.theme_type_variation = &"TitleLabel"
 	_tot_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tot_name_label.clip_text = true
 	name_row.add_child(_tot_name_label)
@@ -412,13 +408,13 @@ func _refresh_portrait() -> void:
 # ── Utility windows ───────────────────────────────────────────────────────────
 
 func _build_options_screen() -> void:
-	_options_screen = _OptionsScreenScript.new()
+	_options_screen = _OptionsScreenScene.instantiate()
 	_options_screen.visible = false
 	add_child(_options_screen)
 	_watch_window(_options_screen)
 
 func _build_crafting_window() -> void:
-	_crafting_window = _CraftingWindowScript.new()
+	_crafting_window = _CraftingWindowScene.instantiate()
 	_crafting_window.visible = false
 	add_child(_crafting_window)
 	_watch_window(_crafting_window)
@@ -433,7 +429,7 @@ func _build_crafting_window() -> void:
 			CombatLog.MsgType.INFO))
 
 func _build_vendor_window() -> void:
-	_vendor_window = _VendorWindowScript.new()
+	_vendor_window = _VendorWindowScene.instantiate()
 	_vendor_window.visible = false
 	add_child(_vendor_window)
 	_watch_window(_vendor_window)
@@ -443,7 +439,7 @@ func _build_vendor_window() -> void:
 # Banker slice 1 — same lifecycle as the vendor window; opens on
 # BankerManager.banker_opened (hud NPC-interact path / BankerNPC proximity).
 func _build_bank_window() -> void:
-	_bank_window = _BankWindowScript.new()
+	_bank_window = _BankWindowScene.instantiate()
 	_bank_window.visible = false
 	add_child(_bank_window)
 	_watch_window(_bank_window)
@@ -769,12 +765,7 @@ func _on_window_visibility_changed(window: Panel) -> void:
 # ── Styling helpers ───────────────────────────────────────────────────────────
 
 func _style_panel() -> void:
-	var s := StyleBoxFlat.new()
-	s.bg_color = Color(0.07, 0.05, 0.03, 0.92)
-	s.border_color = UITheme.C_BORDER
-	s.set_border_width_all(1)
-	s.set_corner_radius_all(4)
-	$Panel.add_theme_stylebox_override("panel", s)
+	$Panel.theme_type_variation = &"WindowPanel"
 
 # ── Stat bar callbacks ────────────────────────────────────────────────────────
 

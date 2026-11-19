@@ -1,0 +1,98 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/crafting_window.gd" id="1_crafting"]
+
+[node name="CraftingWindow" type="Panel"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -200.0
+offset_right = 260.0
+offset_bottom = 200.0
+theme_type_variation = &"WindowPanel"
+script = ExtResource("1_crafting")
+
+[node name="Root" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+theme_override_constants/separation = 6
+
+[node name="TitleRow" type="HBoxContainer" parent="Root"]
+
+[node name="Title" type="Label" parent="Root/TitleRow"]
+size_flags_horizontal = 3
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 14
+text = "Tradeskill Window"
+
+[node name="CloseBtn" type="Button" parent="Root/TitleRow"]
+text = "✕"
+flat = true
+
+[node name="Rule1" type="HSeparator" parent="Root"]
+
+[node name="TradeskillRow" type="HBoxContainer" parent="Root"]
+theme_override_constants/separation = 8
+
+[node name="Caption" type="Label" parent="Root/TradeskillRow"]
+theme_override_font_sizes/font_size = 12
+text = "Tradeskill:"
+
+[node name="TradeskillOpt" type="OptionButton" parent="Root/TradeskillRow"]
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+
+[node name="SkillLabel" type="Label" parent="Root/TradeskillRow"]
+custom_minimum_size = Vector2(120, 0)
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 2
+
+[node name="Rule2" type="HSeparator" parent="Root"]
+
+[node name="Body" type="HBoxContainer" parent="Root"]
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="ListScroll" type="ScrollContainer" parent="Root/Body"]
+custom_minimum_size = Vector2(175, 0)
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Recipes" type="VBoxContainer" parent="Root/Body/ListScroll"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Divider" type="VSeparator" parent="Root/Body"]
+
+[node name="DetailScroll" type="ScrollContainer" parent="Root/Body"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Detail" type="VBoxContainer" parent="Root/Body/DetailScroll"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Rule3" type="HSeparator" parent="Root"]
+
+[node name="Footer" type="HBoxContainer" parent="Root"]
+theme_override_constants/separation = 8
+
+[node name="CombineBtn" type="Button" parent="Root/Footer"]
+custom_minimum_size = Vector2(96, 34)
+disabled = true
+text = "Combine"
+
+[node name="ResultLabel" type="Label" parent="Root/Footer"]
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+clip_text = true

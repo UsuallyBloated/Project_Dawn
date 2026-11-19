@@ -22,12 +22,7 @@ func _build_ui() -> void:
 	var cols := mini(num_slots, COLS)
 	var rows := ceili(float(num_slots) / float(cols))
 
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.07, 0.06, 0.04, 0.95)
-	style.border_color = UITheme.C_BORDER
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", style)
+	theme_type_variation = &"WindowPanel"
 
 	custom_minimum_size = Vector2(cols * SLOT_SIZE + 24, rows * SLOT_SIZE + 54)
 
@@ -43,7 +38,7 @@ func _build_ui() -> void:
 
 	var title := Label.new()
 	title.text = bag["item"].item_name
-	title.add_theme_color_override("font_color", UITheme.C_TITLE)
+	title.theme_type_variation = &"TitleLabel"
 	title.add_theme_font_size_override("font_size", 14)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(title)
@@ -51,7 +46,6 @@ func _build_ui() -> void:
 	var close_btn := Button.new()
 	close_btn.text = "✕"
 	close_btn.flat = true
-	close_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	close_btn.pressed.connect(func(): visible = false)
 	header.add_child(close_btn)
 
@@ -78,12 +72,7 @@ func _build_ui() -> void:
 func _make_slot_cell(index: int) -> Panel:
 	var cell := Panel.new()
 	cell.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
-	var s := StyleBoxFlat.new()
-	s.bg_color = UITheme.C_SLOT_BG
-	s.border_color = UITheme.C_BORDER
-	s.set_border_width_all(1)
-	s.set_corner_radius_all(2)
-	cell.add_theme_stylebox_override("panel", s)
+	cell.theme_type_variation = &"SlotCell"
 	cell.set_meta("slot_index", index)
 
 	var icon_rect := TextureRect.new()

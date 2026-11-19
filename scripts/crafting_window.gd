@@ -1,14 +1,12 @@
 extends DraggablePanel
 
-const W := 520.0
-const H := 400.0
-
-var _tradeskill_opt: OptionButton = null
-var _skill_label: Label = null
-var _recipe_vbox: VBoxContainer = null
-var _detail_vbox: VBoxContainer = null
-var _combine_btn: Button = null
-var _result_label: Label = null
+@onready var _close_btn: Button = $Root/TitleRow/CloseBtn
+@onready var _tradeskill_opt: OptionButton = $Root/TradeskillRow/TradeskillOpt
+@onready var _skill_label: Label = $Root/TradeskillRow/SkillLabel
+@onready var _recipe_vbox: VBoxContainer = $Root/Body/ListScroll/Recipes
+@onready var _detail_vbox: VBoxContainer = $Root/Body/DetailScroll/Detail
+@onready var _combine_btn: Button = $Root/Footer/CombineBtn
+@onready var _result_label: Label = $Root/Footer/ResultLabel
 
 var _tradeskill_names: Array[String] = []
 var _current_tradeskill: String = ""
@@ -16,130 +14,17 @@ var _filtered_recipes: Array = []
 var _selected_recipe: Dictionary = {}
 var _recipe_btns: Array[Button] = []
 
+# The frame is scenes/crafting_window.tscn (title row, the tradeskill picker,
+# the recipe and detail panes, the Combine footer); this script fills them.
 func _ready() -> void:
-	_build_ui()
+	_close_btn.pressed.connect(func(): visible = false)
+	_tradeskill_opt.item_selected.connect(_on_tradeskill_selected)
+	_combine_btn.pressed.connect(_on_combine_pressed)
+	_populate_tradeskills()
 	Inventory.inventory_changed.connect(_refresh_detail)
 	Crafting.skill_level_changed.connect(_on_skill_changed)
 	Alignment.alignment_changed.connect(func(_tier, _score): _populate_tradeskills())
 	visibility_changed.connect(_on_visibility_changed)
-
-func _build_ui() -> void:
-	size = Vector2(W, H)
-	var vp := get_viewport_rect().size
-	position = Vector2((vp.x - W) * 0.5, (vp.y - H) * 0.5)
-
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = UITheme.C_WINDOW_BG
-	bg.border_color = UITheme.C_BORDER
-	bg.set_border_width_all(2)
-	bg.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", bg)
-
-	var root := VBoxContainer.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 8; root.offset_top = 8
-	root.offset_right = -8; root.offset_bottom = -8
-	root.add_theme_constant_override("separation", 6)
-	add_child(root)
-
-	_build_title_row(root)
-	root.add_child(HSeparator.new())
-	_build_tradeskill_row(root)
-	root.add_child(HSeparator.new())
-	_build_body(root)
-	root.add_child(HSeparator.new())
-	_build_footer(root)
-
-	_populate_tradeskills()
-
-func _build_title_row(parent: VBoxContainer) -> void:
-	var row := HBoxContainer.new()
-	parent.add_child(row)
-
-	var lbl := Label.new()
-	lbl.text = "Tradeskill Window"
-	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
-	lbl.add_theme_font_size_override("font_size", 14)
-	row.add_child(lbl)
-
-	var close := Button.new()
-	close.text = "✕"
-	close.flat = true
-	close.add_theme_color_override("font_color", UITheme.C_TEXT)
-	close.pressed.connect(func(): visible = false)
-	row.add_child(close)
-
-func _build_tradeskill_row(parent: VBoxContainer) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	parent.add_child(row)
-
-	var lbl := Label.new()
-	lbl.text = "Tradeskill:"
-	lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
-	lbl.add_theme_font_size_override("font_size", 12)
-	row.add_child(lbl)
-
-	_tradeskill_opt = OptionButton.new()
-	_tradeskill_opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_tradeskill_opt.add_theme_font_size_override("font_size", 12)
-	_tradeskill_opt.item_selected.connect(_on_tradeskill_selected)
-	row.add_child(_tradeskill_opt)
-
-	_skill_label = Label.new()
-	_skill_label.custom_minimum_size = Vector2(120, 0)
-	_skill_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_skill_label.add_theme_color_override("font_color", UITheme.C_TEXT)
-	_skill_label.add_theme_font_size_override("font_size", 11)
-	row.add_child(_skill_label)
-
-func _build_body(parent: VBoxContainer) -> void:
-	var body := HBoxContainer.new()
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 6)
-	parent.add_child(body)
-
-	var list_scroll := ScrollContainer.new()
-	list_scroll.custom_minimum_size = Vector2(175, 0)
-	list_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	body.add_child(list_scroll)
-
-	_recipe_vbox = VBoxContainer.new()
-	_recipe_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_recipe_vbox.add_theme_constant_override("separation", 2)
-	list_scroll.add_child(_recipe_vbox)
-
-	body.add_child(VSeparator.new())
-
-	var detail_scroll := ScrollContainer.new()
-	detail_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	detail_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	detail_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	body.add_child(detail_scroll)
-
-	_detail_vbox = VBoxContainer.new()
-	_detail_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_detail_vbox.add_theme_constant_override("separation", 4)
-	detail_scroll.add_child(_detail_vbox)
-
-func _build_footer(parent: VBoxContainer) -> void:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	parent.add_child(row)
-
-	_combine_btn = UITheme.make_button("Combine")
-	_combine_btn.disabled = true
-	_combine_btn.pressed.connect(_on_combine_pressed)
-	row.add_child(_combine_btn)
-
-	_result_label = Label.new()
-	_result_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_result_label.add_theme_color_override("font_color", UITheme.C_TEXT)
-	_result_label.add_theme_font_size_override("font_size", 12)
-	_result_label.clip_text = true
-	row.add_child(_result_label)
 
 func _populate_tradeskills() -> void:
 	_tradeskill_names.clear()
@@ -252,7 +137,6 @@ func _refresh_detail() -> void:
 		item_lbl.text = item_name
 		item_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		item_lbl.add_theme_font_size_override("font_size", 11)
-		item_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 		item_lbl.clip_text = true
 		row.add_child(item_lbl)
 

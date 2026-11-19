@@ -1,0 +1,79 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/spell_book.gd" id="1_book"]
+
+[node name="SpellBook" type="Panel"]
+visible = false
+custom_minimum_size = Vector2(300, 320)
+offset_left = 220.0
+offset_top = 80.0
+offset_right = 520.0
+offset_bottom = 400.0
+theme_type_variation = &"WindowPanel"
+script = ExtResource("1_book")
+
+[node name="Outer" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+theme_override_constants/separation = 4
+
+[node name="Header" type="HBoxContainer" parent="Outer"]
+
+[node name="Title" type="Label" parent="Outer/Header"]
+size_flags_horizontal = 3
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 14
+text = "Spellbook"
+
+[node name="CloseBtn" type="Button" parent="Outer/Header"]
+text = "✕"
+flat = true
+
+[node name="Rule" type="HSeparator" parent="Outer"]
+
+[node name="Tabs" type="TabContainer" parent="Outer"]
+size_flags_vertical = 3
+
+[node name="Spells" type="VBoxContainer" parent="Outer/Tabs"]
+theme_override_constants/separation = 4
+
+[node name="Hint" type="Label" parent="Outer/Tabs/Spells"]
+theme_override_font_sizes/font_size = 10
+text = "Sit, click a spell, then click a Spell Bar slot to memorize."
+autowrap_mode = 3
+
+[node name="ColRow" type="HBoxContainer" parent="Outer/Tabs/Spells"]
+theme_override_constants/separation = 4
+
+[node name="Scroll" type="ScrollContainer" parent="Outer/Tabs/Spells"]
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="List" type="VBoxContainer" parent="Outer/Tabs/Spells/Scroll"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="Skills" type="VBoxContainer" parent="Outer/Tabs"]
+visible = false
+theme_override_constants/separation = 4
+
+[node name="Hint" type="Label" parent="Outer/Tabs/Skills"]
+theme_override_font_sizes/font_size = 10
+text = "Click a skill to pick it up, then click an empty hotbar slot to place it. ESC cancels."
+autowrap_mode = 3
+
+[node name="ColRow" type="HBoxContainer" parent="Outer/Tabs/Skills"]
+theme_override_constants/separation = 4
+
+[node name="Scroll" type="ScrollContainer" parent="Outer/Tabs/Skills"]
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="List" type="VBoxContainer" parent="Outer/Tabs/Skills/Scroll"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 2

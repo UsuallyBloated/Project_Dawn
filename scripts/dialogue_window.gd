@@ -1,99 +1,19 @@
 extends DraggablePanel
 
-const W := 520.0
-const H := 340.0
-
-var _npc_name_lbl: Label = null
-var _npc_title_lbl: Label = null
-var _text_lbl: Label = null
-var _response_vbox: VBoxContainer = null
+@onready var _npc_name_lbl: Label = $Margin/VBox/TitleRow/NameCol/NpcName
+@onready var _npc_title_lbl: Label = $Margin/VBox/TitleRow/NameCol/NpcTitle
+@onready var _close_btn: Button = $Margin/VBox/TitleRow/CloseBtn
+@onready var _text_lbl: Label = $Margin/VBox/TextPanel/Text
+@onready var _response_vbox: VBoxContainer = $Margin/VBox/Responses
 
 var _current_npc: String = ""
 var _current_tree: Dictionary = {}
 
+# The frame is scenes/dialogue_window.tscn (title row, the speech panel, the
+# response list); this script fills it from the dialogue tree.
 func _ready() -> void:
-	_build_ui()
+	_close_btn.pressed.connect(func(): visible = false)
 	DialogueManager.dialogue_opened.connect(open_for)
-
-func _build_ui() -> void:
-	set_anchors_preset(Control.PRESET_CENTER)
-	offset_left   = -W * 0.5
-	offset_top    = -H * 0.5
-	offset_right  =  W * 0.5
-	offset_bottom =  H * 0.5
-
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = UITheme.C_WINDOW_BG
-	bg.border_color = UITheme.C_GOLDEN_BORDER
-	bg.set_border_width_all(2)
-	bg.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", bg)
-
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_bottom", 10)
-	add_child(margin)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-	margin.add_child(vbox)
-
-	# ── Title row ────────────────────────────────────────────────────────────────
-	var title_row := HBoxContainer.new()
-	vbox.add_child(title_row)
-
-	var name_col := VBoxContainer.new()
-	name_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_row.add_child(name_col)
-
-	_npc_name_lbl = Label.new()
-	_npc_name_lbl.add_theme_font_size_override("font_size", 15)
-	_npc_name_lbl.add_theme_color_override("font_color", UITheme.C_GOLDEN_BORDER)
-	name_col.add_child(_npc_name_lbl)
-
-	_npc_title_lbl = Label.new()
-	_npc_title_lbl.add_theme_font_size_override("font_size", 11)
-	_npc_title_lbl.add_theme_color_override("font_color", UITheme.C_NEUTRAL)
-	name_col.add_child(_npc_title_lbl)
-
-	var close_btn := Button.new()
-	close_btn.text = "✕"
-	close_btn.flat = true
-	close_btn.add_theme_color_override("font_color", UITheme.C_NEUTRAL)
-	close_btn.pressed.connect(func(): visible = false)
-	title_row.add_child(close_btn)
-
-	vbox.add_child(HSeparator.new())
-
-	# ── NPC speech area ───────────────────────────────────────────────────────────
-	var text_panel := PanelContainer.new()
-	text_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var text_style := StyleBoxFlat.new()
-	text_style.bg_color = Color(0.07, 0.07, 0.11, 0.90)
-	text_style.set_corner_radius_all(4)
-	text_style.content_margin_left   = 10
-	text_style.content_margin_top    = 8
-	text_style.content_margin_right  = 10
-	text_style.content_margin_bottom = 8
-	text_panel.add_theme_stylebox_override("panel", text_style)
-	vbox.add_child(text_panel)
-
-	_text_lbl = Label.new()
-	_text_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_text_lbl.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	_text_lbl.add_theme_font_size_override("font_size", 13)
-	_text_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
-	text_panel.add_child(_text_lbl)
-
-	vbox.add_child(HSeparator.new())
-
-	# ── Response buttons ──────────────────────────────────────────────────────────
-	_response_vbox = VBoxContainer.new()
-	_response_vbox.add_theme_constant_override("separation", 3)
-	vbox.add_child(_response_vbox)
 
 # ── Public API ────────────────────────────────────────────────────────────────
 

@@ -42,7 +42,7 @@ func _run() -> void:
 	await process_frame
 
 	# ── The bank ────────────────────────────────────────────────────────────
-	var bank = load("res://scripts/bank_window.gd").new()
+	var bank = load("res://scenes/bank_window.tscn").instantiate()
 	hud.add_child(bank)
 	await process_frame
 	var asked: Array = []
@@ -77,7 +77,7 @@ func _run() -> void:
 	_check(asked.size() == 3, "a left click with an empty hand asks nothing")
 
 	# ── The merchant ────────────────────────────────────────────────────────
-	var vendor = load("res://scripts/vendor_window.gd").new()
+	var vendor = load("res://scenes/vendor_window.tscn").instantiate()
 	hud.add_child(vendor)
 	await process_frame
 	vendor.open_for("Brom", "no_such_vendor_type")

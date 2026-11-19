@@ -1,8 +1,5 @@
 extends DraggablePanel
 
-const W := 640.0
-const H := 500.0
-
 const BUG_REPORT_URL := "https://discord.gg/xpAv5Ra4aT"
 
 const _AUDIO_CHANNELS := [
@@ -12,7 +9,11 @@ const _AUDIO_CHANNELS := [
 	{id = "ui",     label = "UI Volume"},
 ]
 
-var _tab_container: TabContainer
+@onready var _tab_container: TabContainer = $Tabs
+@onready var _bug_btn: Button = $BtnRow/BugBtn
+@onready var _quit_btn: Button = $BtnRow/QuitBtn
+@onready var _apply_btn: Button = $BtnRow/ApplyBtn
+@onready var _close_btn: Button = $BtnRow/CloseBtn
 
 # Graphics controls
 var _win_mode_btn: OptionButton
@@ -30,6 +31,7 @@ var _listening_action: String = ""
 var _listening_btn: Button = null
 
 # Interface controls
+var _ui_theme_btn: OptionButton = null
 var _ft_master_cb: CheckBox = null
 var _ft_damage_cb: CheckBox = null
 var _ft_heals_cb:  CheckBox = null
@@ -42,69 +44,19 @@ func _ready() -> void:
 
 # ── Build ─────────────────────────────────────────────────────────────────────
 
+# The frame is scenes/options_screen.tscn (title, the tab container, the
+# button row); this script builds the four tabs' contents.
 func _build() -> void:
-	set_anchors_preset(Control.PRESET_CENTER)
-	offset_left   = -W * 0.5
-	offset_top    = -H * 0.5
-	offset_right  =  W * 0.5
-	offset_bottom =  H * 0.5
-
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = UITheme.C_WINDOW_BG
-	bg.border_color = UITheme.C_GOLDEN_BORDER
-	bg.set_border_width_all(2)
-	bg.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", bg)
-
-	var title := Label.new()
-	title.text = "OPTIONS"
-	title.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	title.offset_top    = 12.0
-	title.offset_bottom = 38.0
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", UITheme.C_TITLE)
-	title.add_theme_font_size_override("font_size", 18)
-	add_child(title)
-
-	_tab_container = TabContainer.new()
-	_tab_container.position = Vector2(10.0, 48.0)
-	_tab_container.size = Vector2(W - 20.0, H - 108.0)
-	_style_tabs()
-	add_child(_tab_container)
-
 	_build_graphics_tab()
 	_build_audio_tab()
 	_build_interface_tab()
 	_build_keybinds_tab()
-
-	var btn_row := HBoxContainer.new()
-	btn_row.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	btn_row.offset_left   = -460.0
-	btn_row.offset_top    = -52.0
-	btn_row.offset_right  = -12.0
-	btn_row.offset_bottom = -12.0
-	btn_row.alignment = BoxContainer.ALIGNMENT_END
-	btn_row.add_theme_constant_override("separation", 10)
-	add_child(btn_row)
-
-	var bug_btn := UITheme.make_button("Report a Bug")
-	bug_btn.tooltip_text = "Opens Discord. Attach debug.log from %APPDATA%\\Godot\\app_userdata\\Project_Dawn\\"
-	bug_btn.pressed.connect(_on_report_bug_pressed)
-	btn_row.add_child(bug_btn)
-
-	var quit_btn := UITheme.make_button("Quit Game")
-	quit_btn.pressed.connect(_on_quit_pressed)
-	btn_row.add_child(quit_btn)
-
-	var apply_btn := UITheme.make_button("Apply")
-	apply_btn.pressed.connect(_on_apply)
-	btn_row.add_child(apply_btn)
-
-	var close_btn := UITheme.make_button("Close")
-	close_btn.pressed.connect(func() -> void:
+	_bug_btn.pressed.connect(_on_report_bug_pressed)
+	_quit_btn.pressed.connect(_on_quit_pressed)
+	_apply_btn.pressed.connect(_on_apply)
+	_close_btn.pressed.connect(func() -> void:
 		_cancel_listening()
 		visible = false)
-	btn_row.add_child(close_btn)
 
 func _on_quit_pressed() -> void:
 	Net.leave_session()
@@ -112,37 +64,6 @@ func _on_quit_pressed() -> void:
 
 func _on_report_bug_pressed() -> void:
 	OS.shell_open(BUG_REPORT_URL)
-
-func _style_tabs() -> void:
-	var panel_s := StyleBoxFlat.new()
-	panel_s.bg_color = UITheme.C_PANEL_BG
-	panel_s.border_color = UITheme.C_BORDER
-	panel_s.set_border_width_all(1)
-	_tab_container.add_theme_stylebox_override("panel", panel_s)
-
-	var sel := StyleBoxFlat.new()
-	sel.bg_color = UITheme.C_PANEL_BG
-	sel.border_color = UITheme.C_GOLDEN_BORDER
-	sel.set_border_width_all(1)
-	sel.border_width_bottom = 0
-	sel.content_margin_left   = 10.0
-	sel.content_margin_right  = 10.0
-	sel.content_margin_top    = 4.0
-	sel.content_margin_bottom = 6.0
-	_tab_container.add_theme_stylebox_override("tab_selected", sel)
-
-	var unsel := StyleBoxFlat.new()
-	unsel.bg_color = UITheme.C_BTN_NORM
-	unsel.border_color = UITheme.C_BORDER
-	unsel.set_border_width_all(1)
-	unsel.content_margin_left   = 10.0
-	unsel.content_margin_right  = 10.0
-	unsel.content_margin_top    = 4.0
-	unsel.content_margin_bottom = 6.0
-	_tab_container.add_theme_stylebox_override("tab_unselected", unsel)
-
-	_tab_container.add_theme_color_override("font_selected_color",   UITheme.C_TITLE)
-	_tab_container.add_theme_color_override("font_unselected_color", UITheme.C_TEXT)
 
 func _make_tab(tab_name: String) -> VBoxContainer:
 	var margin := MarginContainer.new()
@@ -193,7 +114,6 @@ func _build_graphics_tab() -> void:
 	_ui_scale_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_ui_scale_label = Label.new()
 	_ui_scale_label.custom_minimum_size = Vector2(48.0, 0.0)
-	_ui_scale_label.add_theme_color_override("font_color", UITheme.C_TEXT)
 	_ui_scale_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_ui_scale_slider.value_changed.connect(func(v: float) -> void:
 		_ui_scale_label.text = "%d%%" % int(v * 100.0))
@@ -217,7 +137,6 @@ func _build_interface_tab() -> void:
 	var master_row := HBoxContainer.new()
 	_ft_master_cb = CheckBox.new()
 	_ft_master_cb.text = "Floating Combat Text"
-	_ft_master_cb.add_theme_color_override("font_color", UITheme.C_TEXT)
 	master_row.add_child(_ft_master_cb)
 	vbox.add_child(master_row)
 
@@ -239,10 +158,26 @@ func _build_interface_tab() -> void:
 		for cb: CheckBox in sub_cbs:
 			cb.disabled = not on)
 
+	# The UI theme: one of the palettes in data/ui_theme_palettes.gd, applied on
+	# Apply to every window at once; pieces coloured from the palette as they
+	# are built (bars, slot tints) take it on the next login.
+	var theme_row := _make_row("UI Theme")
+	_ui_theme_btn = OptionButton.new()
+	_ui_theme_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for id: String in UIThemePalettes.ORDER:
+		_ui_theme_btn.add_item(UIThemePalettes.ALL[id]["display"])
+		_ui_theme_btn.set_item_metadata(_ui_theme_btn.item_count - 1, id)
+	theme_row.add_child(_ui_theme_btn)
+	vbox.add_child(theme_row)
+	var theme_note := Label.new()
+	theme_note.text = "Applies to every window on Apply; a few pieces take the new colours on the next login."
+	theme_note.add_theme_font_size_override("font_size", 11)
+	theme_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	vbox.add_child(theme_note)
+
 func _make_sub_checkbox(label: String, parent: VBoxContainer) -> CheckBox:
 	var cb := CheckBox.new()
 	cb.text = label
-	cb.add_theme_color_override("font_color", UITheme.C_TEXT)
 	parent.add_child(cb)
 	return cb
 
@@ -280,7 +215,7 @@ func _build_keybinds_tab() -> void:
 func _add_keybind_header(parent: VBoxContainer, category: String) -> void:
 	var lbl := Label.new()
 	lbl.text = category.to_upper()
-	lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
+	lbl.theme_type_variation = &"TitleLabel"
 	lbl.add_theme_font_size_override("font_size", 12)
 	parent.add_child(lbl)
 	parent.add_child(HSeparator.new())
@@ -292,7 +227,6 @@ func _add_keybind_row(parent: VBoxContainer, action: Dictionary) -> void:
 	var lbl := Label.new()
 	lbl.text = action.label
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	row.add_child(lbl)
 
 	var btn := Button.new()
@@ -300,7 +234,6 @@ func _add_keybind_row(parent: VBoxContainer, action: Dictionary) -> void:
 	btn.add_theme_stylebox_override("normal",  UITheme.make_stylebox(UITheme.C_BTN_NORM))
 	btn.add_theme_stylebox_override("hover",   UITheme.make_stylebox(UITheme.C_BTN_HOVER))
 	btn.add_theme_stylebox_override("pressed", UITheme.make_stylebox(UITheme.C_BTN_HOVER))
-	btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	btn.pressed.connect(_start_listening.bind(action.id, btn))
 	_keybind_btns[action.id] = btn
 	row.add_child(btn)
@@ -335,7 +268,6 @@ func _cancel_listening() -> void:
 		return
 	_listening_btn.text = _key_label(_listening_action)
 	_listening_btn.add_theme_stylebox_override("normal", UITheme.make_stylebox(UITheme.C_BTN_NORM))
-	_listening_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	_listening_action = ""
 	_listening_btn = null
 
@@ -350,7 +282,6 @@ func _commit_listening(keycode: int) -> void:
 	GameSettings.apply_keybinds()
 	_listening_btn.text = _key_label(_listening_action)
 	_listening_btn.add_theme_stylebox_override("normal", UITheme.make_stylebox(UITheme.C_BTN_NORM))
-	_listening_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
 	_listening_action = ""
 	_listening_btn = null
 
@@ -376,7 +307,6 @@ func _make_row(label_text: String) -> HBoxContainer:
 	var lbl := Label.new()
 	lbl.text = label_text
 	lbl.custom_minimum_size = Vector2(160.0, 0.0)
-	lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	row.add_child(lbl)
 	return row
 
@@ -391,7 +321,6 @@ func _make_slider_row(parent: VBoxContainer, label_text: String) -> Array:
 
 	var pct := Label.new()
 	pct.custom_minimum_size = Vector2(48.0, 0.0)
-	pct.add_theme_color_override("font_color", UITheme.C_TEXT)
 	pct.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
 	slider.value_changed.connect(func(v: float) -> void:
@@ -417,6 +346,7 @@ func _load_from_settings() -> void:
 	_ft_heals_cb.button_pressed  = GameSettings.floating_text_heals
 	_ft_misses_cb.button_pressed = GameSettings.floating_text_misses
 	_ft_xp_cb.button_pressed     = GameSettings.floating_text_xp
+	_ui_theme_btn.selected = maxi(0, UIThemePalettes.ORDER.find(GameSettings.ui_theme))
 	for cb: CheckBox in [_ft_damage_cb, _ft_heals_cb, _ft_misses_cb, _ft_xp_cb]:
 		cb.disabled = not GameSettings.floating_text_enabled
 	for id: String in _keybind_btns:
@@ -435,5 +365,7 @@ func _on_apply() -> void:
 	GameSettings.floating_text_heals   = _ft_heals_cb.button_pressed
 	GameSettings.floating_text_misses  = _ft_misses_cb.button_pressed
 	GameSettings.floating_text_xp      = _ft_xp_cb.button_pressed
+	if _ui_theme_btn.selected >= 0:
+		GameSettings.ui_theme = str(_ui_theme_btn.get_item_metadata(_ui_theme_btn.selected))
 	GameSettings.apply_all()
 	GameSettings.save_settings()

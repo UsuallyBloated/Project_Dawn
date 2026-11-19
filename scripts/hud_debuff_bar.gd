@@ -18,30 +18,13 @@ const _CC_SPELL_NAMES := {
 	"Spellbreak": "silence",
 }
 
-var _hbox: HBoxContainer = null
+@onready var _hbox: HBoxContainer = $HBox
 # {spell_name -> {label: Label, remaining: float}}
 var _entries: Dictionary = {}
 
+# The strip is scenes/hud_debuff_bar.tscn (above the hotbars, left of
+# centre); this script fills it with the target's debuff icons.
 func _ready() -> void:
-	anchor_left   = 0.0
-	anchor_top    = 1.0
-	anchor_right  = 0.0
-	anchor_bottom = 1.0
-	offset_left   = 320.0
-	offset_right  = 620.0
-	offset_bottom = -152.0
-	offset_top    = -200.0
-	clip_contents = true
-
-	apply_style(Color(0.04, 0.02, 0.02, 0.70), UITheme.C_BORDER)
-
-	_hbox = HBoxContainer.new()
-	_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_hbox.offset_left = 3; _hbox.offset_top = 3
-	_hbox.offset_right = -3; _hbox.offset_bottom = -3
-	_hbox.add_theme_constant_override("separation", 4)
-	add_child(_hbox)
-
 	Net.world_buff_snapshot.connect(_on_buff_snapshot)
 
 func _process(delta: float) -> void:
@@ -106,7 +89,6 @@ func _add_icon(spell_name: String, kind: String) -> Array:
 	name_lbl.text = spell_name.left(7)
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.add_theme_font_size_override("font_size", 8)
-	name_lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
 	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	name_lbl.clip_text = true
 	vbox.add_child(name_lbl)

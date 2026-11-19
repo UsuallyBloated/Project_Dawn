@@ -30,7 +30,7 @@ func _run() -> void:
 	hud.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(hud)
 	await process_frame
-	var bar = load("res://scripts/hud_cast_bar.gd").new()
+	var bar = load("res://scenes/hud_cast_bar.tscn").instantiate()
 	hud.add_child(bar)
 	await process_frame
 	await process_frame

@@ -4454,6 +4454,39 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Consider page calls accurate. **Open:** the page's per-band wording (its phrases change with
   the player's level band); coloured con lines in chat; a keybind; conning players; and a
   design call on whether the con colour decides XP as EQ's light blue and green did.
+- [ ] **The UI theme: dark wood and brass** *(R5 of the structure assessment, executed 2026-11-18
+  on the user's call: "lets get into R5... lets execute"; the direction chosen the same evening
+  from a list of ten: "dark wood and brass sounds good")*. **BUILT 2026-11-18 on `feat/ui-theme`
+  (worktree `F:\Projects\Project_Dawn-theme`, client only, from the deploy tip `dd9098a`) and
+  MERGED into the deploy branch 2026-11-19 (user: "lets merge"); rides the next export**
+  (session note `session_2026_11_18_r5_ui_theme.md`; assessment §11.4). One `Theme` resource,
+  `assets/ui/dark_wood_brass.tres`, is the project theme (`gui/theme/custom`): walnut fields
+  with a brass band and shadow, brass titles, amber text, brass-plate buttons, wood input
+  fields, brass tab strips; eight named variations (`WindowPanel`, `SectionPanel`, `SlotCell`,
+  `Tooltip`, `SpeechPanel`, `BarStrip`, `TitleLabel`, `CoinsLabel`); `UITheme` retuned to the
+  same palette and `tools/check_ui_theme_lockstep.gd` (in `check_all.ps1`) holding the two
+  together and failing on a variation a script names that the theme lacks. Nineteen window
+  frames moved into scenes (21 of the 27 UI scripts are scene-backed; the hotbar, Test Panel,
+  console, bag and chat windows stay code, being dynamic through and through); 564 theme
+  overrides became 323, 53 style boxes 25, the UI scripts 9,737 lines to 8,422. The net:
+  `tools/probe_window_geometry.gd` and its fixture (28 windows, 962 controls); every step at
+  zero drift but two named 2 px moves. `tools/shot_windows.gd` takes the two screenshots the
+  user saw. All 21 checks and every probe green on the branch. **Open (user):** the fields may
+  read too dark for wood (one number); the identity tints on the group, pet and track panels
+  (walnut with an accent, or as they are); real wood-grain and brass textures (two nine-slice
+  PNGs into the same Theme). No playtest sheet yet: the look is the user's eye, the geometry
+  the fixture's. **The other nine themes and a picker BUILT the same night** (user: "I would
+  like the other UI options you listed designed and the option to change added to the options
+  screen -> interface"; plan `docs/design/handoff_ui_theme_picker.md`, session note §7):
+  `data/ui_theme_palettes.gd` holds ten palettes, `tools/author_ui_themes.gd` renders them to
+  `assets/ui/themes/<id>.tres` through one template (the structural numbers agree, so one
+  geometry fixture holds for all), `UITheme` is runtime (`apply_palette`), `GameSettings.ui_theme`
+  persists the choice and `apply_ui_theme()` pours the theme into the PROJECT theme in place
+  (Controls under a CanvasLayer inherit nothing from the root window, which the first build
+  missed and the parchment screenshot caught), and Options, Interface has a UI Theme row.
+  `check_ui_theme_lockstep.gd` fails on a stale or structurally drifted theme file, a missing
+  variation in any theme, or `UITheme` off the table; `probe_ui_theme_picker.gd` covers the
+  switch. All ten shots went to the user; which to keep, retune or drop is theirs.
 - [ ] **In-game UI layout is "pretty busted"** *(user, machine day 2026-09-22, on the fresh
   1280x720 startup window)*. No specifics captured yet — needs a screenshot pass naming which
   windows/anchors misbehave at which sizes. Belongs to the deferred cohesive UI theming/polish

@@ -233,15 +233,14 @@ func _run() -> void:
 			continue   # its own section below: it blocks only its panel
 		await _scan_window(w, pair[1])
 
-	# A window whose constructor takes an argument must still run the base
-	# one, or it opens without the stacking hook (LootWindow, 2026-10-29).
-	var stub_bag := Node.new()
-	var loot_window: DraggablePanel = load("res://scripts/loot_window.gd").new(stub_bag)
+	# The loot window is opened per bag from its scene (Loot.show_window);
+	# it must carry the base's stacking hook like every other window (its old
+	# constructor once skipped the base one, 2026-10-29).
+	var loot_window: DraggablePanel = load("res://scenes/loot_window.tscn").instantiate()
 	var hook := Callable(loot_window, "_on_draggable_visibility_changed")
 	_check(loot_window.has_method("_on_draggable_visibility_changed") and loot_window.visibility_changed.is_connected(hook),
-		"the loot window's constructor runs the base one (the raise-on-show hook)")
+		"the loot window carries the raise-on-show hook")
 	loot_window.free()
-	stub_bag.free()
 
 	# From here every window starts hidden; each section shows what it needs.
 	for pair in windows:
