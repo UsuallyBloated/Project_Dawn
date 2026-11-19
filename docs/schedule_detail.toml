@@ -1108,7 +1108,7 @@ text = "The server height model, built by Claude (user, November 3), designed th
 text = "Command confirmations, built November 18 on feat/command-confirm in both repos (server 406b10c, client 524e623): the group, loot, auto-split and PvP commands' success lines are said by the server when it has done the thing, not by the client when the command is typed. Both sides move together, so it merges at the bump after the door with the export and the redeploy in one step; then a two-seat sitting of command_confirm_checklist.md (26 rows, about 45 minutes)."
 
 [[after]]
-text = "The UI theme, dark wood and brass, built November 18 on feat/ui-theme (client only; the user chose the direction from a list of ten). One Theme resource is the project theme, nineteen window frames are scenes, and a geometry fixture held every window in place. Merges at the bump after the door and rides the export after it; the look is the user's eye to pass (the fields' darkness, the identity tints on the group, pet and track panels, real wood-grain textures are the open calls), the geometry the fixture's."
+text = "The UI theme, dark wood and brass, built November 18 on feat/ui-theme (client only; the user chose the direction from a list of ten). One Theme resource is the project theme, nineteen window frames are scenes, and a geometry fixture held every window in place. Merged into the deploy branch November 19 (the day of the door) and rides the next export; the look is the user's eye to pass (the fields' darkness, the identity tints on the group, pet and track panels, real wood-grain textures are the open calls), the geometry the fixture's."
 
 [[after]]
 text = "Trade slice 2: handing items to NPCs."
