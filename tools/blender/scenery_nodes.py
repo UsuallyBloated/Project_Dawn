@@ -96,9 +96,14 @@ class Graph:
                 self.link(scale, sock)
         return n.outputs[0]
 
-    def random(self, data_type, lo, hi, seed, offset):
-        """A seeded random value per element; `offset` keeps two draws apart."""
+    def random(self, data_type, lo, hi, seed, offset, fixed=False):
+        """A seeded random value per element; `offset` keeps two draws apart.
+        `fixed` gives every element the same value (one draw for the whole
+        object, such as a trunk's girth)."""
         n = self.node("FunctionNodeRandomValue", data_type=data_type)
+        if fixed:
+            n.inputs["ID"].default_value = 0
+            self.link(self.node("FunctionNodeInputInt").outputs[0], n.inputs["ID"])
         mins = [s for s in n.inputs if s.name == "Min" and s.enabled]
         maxs = [s for s in n.inputs if s.name == "Max" and s.enabled]
         for sock, v in ((mins[0], lo), (maxs[0], hi)):

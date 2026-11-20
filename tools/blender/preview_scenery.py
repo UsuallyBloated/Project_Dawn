@@ -1,7 +1,9 @@
 # Renders a generator's variants side by side for review (workbench, read-only:
 # the .blend is never saved). A 1.8 m column stands at the left for scale.
 #
-#   blender --background <kind>.blend --python tools/blender/preview_scenery.py -- <out.png>
+#   blender --background <kind>.blend --python tools/blender/preview_scenery.py -- <out.png> [high]
+#
+# "high" looks down from 40 degrees, the angle that shows a tier poking out.
 #
 # Prints each variant's bounds, so the base sitting at 0 and the crown base can
 # be checked without opening Blender.
@@ -21,8 +23,9 @@ HUMAN_HEIGHT = 1.8
 
 def main():
     args = sn.script_args()
-    if len(args) != 1:
-        raise SystemExit("usage: preview_scenery.py -- <out.png>")
+    if len(args) not in (1, 2) or (len(args) == 2 and args[1] != "high"):
+        raise SystemExit("usage: preview_scenery.py -- <out.png> [high]")
+    high = len(args) == 2
     out = os.path.abspath(args[0])
     scene = bpy.context.scene
     variants = [o for o in scene.objects if o.type == "MESH"]
@@ -72,7 +75,7 @@ def main():
     cam = bpy.data.objects.new("pv", cam_data)
     scene.collection.objects.link(cam)
     scene.camera = cam
-    cam.location = (mid.x, -60.0, mid.z + 6.0)
+    cam.location = (mid.x, -60.0, mid.z + (50.0 if high else 6.0))
     cam.rotation_euler = (mathutils.Vector((mid.x, 0.0, mid.z)) - cam.location).to_track_quat("-Z", "Y").to_euler()
     cam_data.clip_end = 500.0
     scene.render.filepath = out
