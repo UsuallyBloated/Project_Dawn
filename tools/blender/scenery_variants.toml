@@ -6,49 +6,67 @@
 [[pine]]
 variant = 1
 Seed = 101
-"Trunk Radius" = 0.3
+Height = 10.0
+Tiers = 4
+"Crown Base" = 2.6
+"Tier Radius" = 3.1
+"Trunk Radius" = 0.55
 
 [[pine]]
 variant = 2
 Seed = 202
+Height = 14.0
 Tiers = 5
-Height = 10.0
-"Trunk Radius" = 0.22
+"Crown Base" = 3.4
+"Tier Radius" = 3.9
+"Trunk Radius" = 0.75
 Spire = 0.8
+"Skirt Droop" = 0.8
 
 [[pine]]
 variant = 3
 Seed = 303
-Tiers = 3
 Height = 8.0
+Tiers = 3
 Taper = 0.6
-"Tier Radius" = 2.9
-"Trunk Radius" = 0.44
+"Crown Base" = 2.4
+"Tier Radius" = 3.3
+"Trunk Radius" = 0.7
 Spire = 0.2
 
 [[pine]]
 variant = 4
 Seed = 404
-Lean = 0.6
-"Skirt Droop" = 0.7
-"Trunk Radius" = 0.36
+Height = 18.0
+Tiers = 5
+Lean = 1.2
+"Crown Base" = 4.4
+"Tier Radius" = 4.8
+"Trunk Radius" = 0.95
+"Skirt Droop" = 1.1
 
 [[pine]]
 variant = 5
 Seed = 505
-Height = 8.5
-"Skirt Points" = 6
-"Tier Tilt" = 0.08
-"Trunk Radius" = 0.26
-Spire = 0.3
+Height = 22.0
+Tiers = 6
+"Crown Base" = 5.2
+"Tier Radius" = 5.6
+"Trunk Radius" = 1.15
+"Skirt Points" = 10
+"Skirt Droop" = 1.2
+Spire = 0.4
 
 [[pine]]
 variant = 6
 Seed = 606
-Tiers = 5
-Height = 11.0
+Height = 26.0
+Tiers = 7
 Taper = 0.8
-"Tier Radius" = 2.3
-"Crown Base" = 2.8
-"Trunk Radius" = 0.18
-Spire = 1.0
+"Crown Base" = 6.4
+"Tier Radius" = 6.2
+"Trunk Radius" = 1.4
+"Skirt Points" = 10
+"Skirt Droop" = 1.4
+Spire = 0.9
+"Trunk Sides" = 9

@@ -69,20 +69,21 @@ def build_pine():
     tier, with nothing above it, stretches into a spire."""
     g = sn.Graph("PD Pine")
     seed = g.slider("Seed", "INT", 1)
-    height = g.slider("Height", "FLOAT", 9.0, 3.0, 30.0)
-    crown_base = g.slider("Crown Base", "FLOAT", 2.3, 2.2, 10.0)
+    height = g.slider("Height", "FLOAT", 12.0, 3.0, 40.0)
+    crown_base = g.slider("Crown Base", "FLOAT", 3.0, 2.2, 15.0)
     tiers = g.slider("Tiers", "INT", 4, 2, 7)
     overlap = g.slider("Overlap", "FLOAT", 0.55, 0.3, 0.75)
     spire = g.slider("Spire", "FLOAT", 0.5, 0.0, 1.5)
-    tier_radius = g.slider("Tier Radius", "FLOAT", 2.6, 0.3, 6.0)
+    tier_radius = g.slider("Tier Radius", "FLOAT", 3.6, 0.3, 14.0)
     taper = g.slider("Taper", "FLOAT", 0.7, 0.0, 0.95)
     tier_jitter = g.slider("Tier Jitter", "FLOAT", 0.12, 0.0, 0.5)
     tier_tilt = g.slider("Tier Tilt", "FLOAT", 0.04, 0.0, 0.2)
     skirt_points = g.slider("Skirt Points", "INT", 8, 4, 16)
-    skirt_droop = g.slider("Skirt Droop", "FLOAT", 0.45, 0.0, 2.0)
+    skirt_droop = g.slider("Skirt Droop", "FLOAT", 0.6, 0.0, 3.0)
     skirt_flare = g.slider("Skirt Flare", "FLOAT", 0.15, 0.0, 0.6)
-    trunk_radius = g.slider("Trunk Radius", "FLOAT", 0.3, 0.05, 1.0)
-    trunk_variation = g.slider("Trunk Variation", "FLOAT", 0.25, 0.0, 0.6)
+    trunk_radius = g.slider("Trunk Radius", "FLOAT", 0.6, 0.05, 3.0)
+    trunk_sides = g.slider("Trunk Sides", "INT", 7, 4, 12)
+    trunk_variation = g.slider("Trunk Variation", "FLOAT", 0.2, 0.0, 0.6)
     lean = g.slider("Lean", "FLOAT", 0.0, 0.0, 2.0)
     facet = g.slider("Facet Jitter", "FLOAT", 0.05, 0.0, 0.3)
 
@@ -157,7 +158,7 @@ def build_pine():
     # The trunk runs from the ground into the second tier. Its thickness is
     # Trunk Radius, give or take up to Trunk Variation of it per seed.
     trunk_depth = g.math("ADD", base0, g.math("MULTIPLY", tier_height, g.math("ADD", overlap, 0.3)))
-    trunk, _bottom, trunk_uv = _cone_standing(g, 6, trunk_radius, g.math("MULTIPLY", trunk_radius, 0.45), trunk_depth)
+    trunk, _bottom, trunk_uv = _cone_standing(g, trunk_sides, trunk_radius, g.math("MULTIPLY", trunk_radius, 0.45), trunk_depth)
     girth = g.math("ADD", 1.0, g.random("FLOAT", g.math("MULTIPLY", trunk_variation, -1.0), trunk_variation, seed, 16, fixed=True))
     tpos = g.node("GeometryNodeInputPosition").outputs["Position"]
     thick = g.node("GeometryNodeSetPosition")
