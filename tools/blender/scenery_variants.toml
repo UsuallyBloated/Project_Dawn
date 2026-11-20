@@ -1,0 +1,46 @@
+# The fixed set of scenery variants: every row is one exported model, rebuilt
+# exactly from its seed and sliders (tools/blender/gen_*.py). Sliders a row
+# leaves out take the generator's default. Changing a row changes that model's
+# collision, which ships as a server redeploy and a new zip.
+
+[[pine]]
+variant = 1
+Seed = 101
+
+[[pine]]
+variant = 2
+Seed = 202
+Tiers = 5
+Height = 9.0
+"Tier Height" = 3.0
+
+[[pine]]
+variant = 3
+Seed = 303
+Tiers = 3
+Height = 7.0
+"Tier Radius" = 2.9
+Taper = 0.6
+
+[[pine]]
+variant = 4
+Seed = 404
+Lean = 0.6
+"Skirt Droop" = 0.7
+
+[[pine]]
+variant = 5
+Seed = 505
+Tiers = 4
+Height = 7.5
+"Skirt Points" = 6
+"Tier Tilt" = 0.12
+
+[[pine]]
+variant = 6
+Seed = 606
+Tiers = 5
+Height = 9.5
+"Tier Radius" = 2.3
+Taper = 0.8
+"Crown Base" = 2.8
