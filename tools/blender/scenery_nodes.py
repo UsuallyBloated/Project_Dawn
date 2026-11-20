@@ -19,7 +19,10 @@ VARIANTS_FILE = os.path.join(HERE, "scenery_variants.toml")
 
 
 class Graph:
-    """A node group being built: nodes are placed left to right as they come."""
+    """A node group being built. Nodes are tagged with the section they were
+    made in (see `section`); `finish` lays them out in columns by how far they
+    sit from the inputs, each section in its own labelled frame, so the group
+    reads left to right in Blender's node editor."""
 
     def __init__(self, name):
         old = bpy.data.node_groups.get(name)
@@ -27,7 +30,9 @@ class Graph:
             bpy.data.node_groups.remove(old)
         self.tree = bpy.data.node_groups.new(name, "GeometryNodeTree")
         self.tree.is_modifier = True
-        self._column = 0
+        self._section = None
+        self._sections = []
+        self._section_of = {}
         self.inp = self.node("NodeGroupInput")
         self.out = self.node("NodeGroupOutput")
         self.tree.interface.new_socket("Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
@@ -47,9 +52,14 @@ class Graph:
         n = self.tree.nodes.new(bl_idname)
         for key, value in props.items():
             setattr(n, key, value)
-        n.location = (self._column * 220, 0)
-        self._column += 1
+        if self._section is not None:
+            self._section_of[n.name] = self._section
         return n
+
+    def section(self, label):
+        """Nodes made from here on belong to a frame called `label`."""
+        self._section = label
+        self._sections.append(label)
 
     def link(self, from_socket, to_socket):
         lk = self.tree.links.new(from_socket, to_socket)
@@ -118,7 +128,60 @@ class Graph:
 
     def finish(self, geometry):
         self.link(geometry, self.out.inputs["Geometry"])
+        self._layout()
         return self.tree
+
+    # Spacing of the layout, in node editor units.
+    COLUMN_WIDTH = 210
+    ROW_HEIGHT = 175
+    SECTION_GAP = 140
+
+    def _layout(self):
+        nodes = self.tree.nodes
+        feeds = {n.name: [] for n in nodes}
+        for lk in self.tree.links:
+            feeds[lk.to_node.name].append(lk.from_node.name)
+        depth = {}
+
+        def depth_of(name):
+            if name not in depth:
+                depth[name] = 0  # guards a cycle, which a node tree cannot have
+                parents = [p for p in feeds[name] if p != self.inp.name]
+                depth[name] = 1 + max((depth_of(p) for p in parents), default=0)
+            return depth[name]
+
+        for n in nodes:
+            depth_of(n.name)
+        depth[self.inp.name] = 0
+        last = max(depth.values()) + 1
+        depth[self.out.name] = last
+
+        # Each section is a band: its nodes in columns by depth, stacked.
+        y = 0.0
+        frames = {}
+        for label in self._sections:
+            members = [n for n in nodes if self._section_of.get(n.name) == label]
+            if not members:
+                continue
+            rows = {}
+            for n in sorted(members, key=lambda n: n.name):
+                d = depth[n.name]
+                n.location = (d * self.COLUMN_WIDTH, y - rows.get(d, 0) * self.ROW_HEIGHT)
+                rows[d] = rows.get(d, 0) + 1
+            frame = nodes.new("NodeFrame")
+            frame.label = label
+            frame.label_size = 28
+            frames[label] = (frame, members)
+            y -= max(rows.values()) * self.ROW_HEIGHT + self.SECTION_GAP
+        self.inp.location = (-self.COLUMN_WIDTH * 1.5, 0)
+        self.out.location = (last * self.COLUMN_WIDTH, y / 2)
+        for frame, members in frames.values():
+            for n in members:
+                where = n.location.copy()
+                n.parent = frame
+                # Blender 4.4 and later: a framed node's location is relative
+                # to its frame, so the absolute place is set separately.
+                n.location_absolute = where
 
 
 def variants(kind):

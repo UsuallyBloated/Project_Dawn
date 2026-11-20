@@ -86,6 +86,7 @@ def build_pine():
     lean = g.slider("Lean", "FLOAT", 0.0, 0.0, 2.0)
     facet = g.slider("Facet Jitter", "FLOAT", 0.05, 0.0, 0.3)
 
+    g.section("Tier size (solved from Height)")
     # Tier i has scale s_i = 1 - Taper * i / (n - 1) and stands Overlap of the
     # way up tier i - 1. The tier height TH is whatever makes the top tier,
     # spire included, end at Height:
@@ -98,6 +99,7 @@ def build_pine():
     span = g.math("ADD", g.math("MULTIPLY", overlap, lower_sum), g.math("MULTIPLY", s_last, g.math("ADD", spire, 1.0)))
     tier_height = g.math("DIVIDE", g.math("SUBTRACT", height, base0), span)
 
+    g.section("One tier (cone with a star skirt)")
     # One tier, the star skirt pulled from its bottom rim.
     tier, bottom, tier_uv = _cone_standing(g, skirt_points, tier_radius, 0.0, tier_height)
     index = g.node("GeometryNodeInputIndex").outputs["Index"]
@@ -117,6 +119,7 @@ def build_pine():
     g.link(flare, pull.inputs["Offset"])
     tier = _store(g, pull.outputs["Geometry"], "UVMap", "FLOAT2", "CORNER", tier_uv)
 
+    g.section("Where the tiers stand")
     # The tier points: z_i = base0 + Overlap * TH * (i - Taper * i (i - 1) / (2 (n - 1))),
     # each nudged sideways by up to Tier Jitter times its own scale.
     shrink = g.math("SUBTRACT", 1.0, g.math("MULTIPLY", taper, g.math("DIVIDE", index, steps)))
@@ -130,6 +133,7 @@ def build_pine():
     nudge = g.vmath("SCALE", nudge_xy, scale=g.math("MULTIPLY", tier_jitter, shrink))
     g.link(g.vmath("ADD", nudge, g.vec(z=tier_z)), place.inputs["Position"])
 
+    g.section("Crown (a tier on every point)")
     tilt = g.math("MULTIPLY", tier_tilt, shrink)
     neg_t = g.math("MULTIPLY", tilt, -1.0)
     rotation = g.vec(g.random("FLOAT", neg_t, tilt, seed, 12),
@@ -149,6 +153,7 @@ def build_pine():
     realize = g.node("GeometryNodeRealizeInstances")
     g.link(crown, realize.inputs["Geometry"])
 
+    g.section("Trunk")
     # The trunk runs from the ground into the second tier. Its thickness is
     # Trunk Radius, give or take up to Trunk Variation of it per seed.
     trunk_depth = g.math("ADD", base0, g.math("MULTIPLY", tier_height, g.math("ADD", overlap, 0.3)))
@@ -162,6 +167,7 @@ def build_pine():
     trunk = _store(g, trunk, "part", "INT", "POINT", 0)
     trunk = _store(g, trunk, "Col", "FLOAT_COLOR", "POINT", BARK)
 
+    g.section("Lean and facets")
     join = g.node("GeometryNodeJoinGeometry")
     g.link(realize.outputs["Geometry"], join.inputs[0])
     g.link(trunk, join.inputs[0])
@@ -200,6 +206,11 @@ def main():
     for i, row in enumerate(sn.variants(kind)):
         obj = sn.apply_variant(tree, "%s_%d" % (kind, row["variant"]), row, (i * 14.0, 0.0, 0.0))
         print("%s: %d triangles" % (obj.name, sn.triangles(obj)))
+    # Saved with the first variant selected and active, so Blender's Geometry
+    # Nodes workspace opens on its node group.
+    first = bpy.data.objects["%s_%d" % (kind, sn.variants(kind)[0]["variant"])]
+    first.select_set(True)
+    bpy.context.view_layer.objects.active = first
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(out))
     print("saved", out)
