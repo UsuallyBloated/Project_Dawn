@@ -337,7 +337,9 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
    regenerate the planner's week-by-week detail: `python tools/schedule_detail.py` (edit
    `docs/schedule_detail.toml` first if a row needs to move), commit the plan file with both
    outputs, and republish the page at the link recorded in the plan file. The detail carries
-   dates and dependencies only, never status.
+   dates and dependencies only, never status. In the same sessions, sync the Trello board
+   with `python tools/trello_board.py` (the user's planner reads it too; it is regenerated
+   from the To-Do, never edited by hand). If its token has expired, say so and move on.
 5. Run a review pass (`/code-review`) if the session touches 5+ files or a core system
    (combat, inventory, spells, PlayerStats, networking).
 6. **Tick only on playtest evidence.** An item earns `[x]` when a filled checklist in
