@@ -70,3 +70,134 @@ Taper = 0.8
 "Skirt Droop" = 1.4
 Spire = 0.9
 "Trunk Sides" = 9
+
+# Boulders: twelve shapes of about the placeholder's size; ZoneFlora's scale
+# (0.5 to 2.6, most of them small) makes the size range.
+
+# A rounded field boulder
+[[boulder]]
+variant = 1
+Seed = 1101
+
+# A blocky cube
+[[boulder]]
+variant = 2
+Seed = 1202
+Squareness = 0.85
+Length = 2.2
+Width = 2.0
+Height = 1.9
+Cuts = 2
+"Cut Depth" = 0.25
+Lumpiness = 0.05
+
+# A flat slab
+[[boulder]]
+variant = 3
+Seed = 1303
+Length = 3.0
+Width = 2.4
+Height = 1.1
+Squareness = 0.8
+Cuts = 3
+"Cut Depth" = 0.35
+"Cut Tilt" = 0.8
+
+# A standing stone
+[[boulder]]
+variant = 4
+Seed = 1404
+Length = 1.2
+Width = 1.0
+Height = 3.2
+Bury = 0.5
+Squareness = 0.6
+Cuts = 4
+"Cut Tilt" = -0.5
+
+# A long ridge
+[[boulder]]
+variant = 5
+Seed = 1505
+Length = 3.6
+Width = 1.4
+Height = 1.4
+Squareness = 0.5
+Cuts = 4
+
+# A wedge
+[[boulder]]
+variant = 6
+Seed = 1606
+Length = 2.4
+Width = 2.0
+Height = 1.8
+Cuts = 2
+"Cut Depth" = 0.7
+"Cut Tilt" = 0.6
+
+# A shattered stone, many facets
+[[boulder]]
+variant = 7
+Seed = 1707
+Points = 48
+Cuts = 8
+"Cut Depth" = 0.25
+Squareness = 0.3
+
+# A low mound
+[[boulder]]
+variant = 8
+Seed = 1808
+Length = 2.8
+Width = 2.6
+Height = 1.4
+Squareness = 0.1
+Lumpiness = 0.2
+Cuts = 1
+"Base Cut" = 0.65
+
+# A cube with chipped corners
+[[boulder]]
+variant = 9
+Seed = 1909
+Squareness = 1.0
+Cuts = 6
+"Cut Depth" = 0.15
+Lumpiness = 0.03
+
+# A dome
+[[boulder]]
+variant = 10
+Seed = 2010
+Length = 2.4
+Width = 2.2
+Height = 2.0
+"Base Cut" = 0.5
+Squareness = 0.15
+Cuts = 2
+
+# A shard
+[[boulder]]
+variant = 11
+Seed = 2111
+Length = 1.6
+Width = 1.3
+Height = 3.0
+Squareness = 0.3
+Cuts = 5
+"Cut Depth" = 0.4
+"Cut Tilt" = -0.3
+"Base Cut" = 0.6
+Points = 24
+
+# A split block
+[[boulder]]
+variant = 12
+Seed = 2212
+Length = 2.6
+Width = 1.8
+Height = 1.6
+Squareness = 0.75
+Cuts = 3
+"Cut Depth" = 0.5

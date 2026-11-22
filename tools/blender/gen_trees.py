@@ -32,18 +32,6 @@ BARK = (0.33, 0.25, 0.18, 1.0)
 PINE_GREEN = (0.14, 0.27, 0.17, 1.0)
 
 
-def _store(g, geometry, name, data_type, domain, value):
-    n = g.node("GeometryNodeStoreNamedAttribute", data_type=data_type, domain=domain)
-    n.inputs["Name"].default_value = name
-    g.link(geometry, n.inputs["Geometry"])
-    sock = n.inputs["Value"]
-    if isinstance(value, (int, float, tuple, list)):
-        sock.default_value = value
-    else:
-        g.link(value, sock)
-    return n.outputs["Geometry"]
-
-
 def _cone_standing(g, vertices, radius_bottom, radius_top, depth):
     """A cone or tapered column with its base at the origin. Returns
     (mesh, bottom selection, uv map)."""
@@ -118,7 +106,7 @@ def build_pine():
     g.link(tier, pull.inputs["Geometry"])
     g.link(star.outputs[0], pull.inputs["Selection"])
     g.link(flare, pull.inputs["Offset"])
-    tier = _store(g, pull.outputs["Geometry"], "UVMap", "FLOAT2", "CORNER", tier_uv)
+    tier = g.store(pull.outputs["Geometry"], "UVMap", "FLOAT2", "CORNER", tier_uv)
 
     g.section("Where the tiers stand")
     # The tier points: z_i = base0 + Overlap * TH * (i - Taper * i (i - 1) / (2 (n - 1))),
@@ -147,9 +135,9 @@ def build_pine():
     g.link(tier, inst.inputs["Instance"])
     g.link(rotation, inst.inputs["Rotation"])
     g.link(g.vec(shrink, shrink, tall), inst.inputs["Scale"])
-    crown = _store(g, inst.outputs["Instances"], "part", "INT", "INSTANCE", g.math("ADD", index, 1.0))
+    crown = g.store(inst.outputs["Instances"], "part", "INT", "INSTANCE", g.math("ADD", index, 1.0))
     shade = g.math("ADD", 1.0, g.math("MULTIPLY", index, 0.12))
-    crown = _store(g, crown, "Col", "FLOAT_COLOR", "INSTANCE",
+    crown = g.store(crown, "Col", "FLOAT_COLOR", "INSTANCE",
                    g.vmath("SCALE", g.vec(*PINE_GREEN[:3]), scale=shade))
     realize = g.node("GeometryNodeRealizeInstances")
     g.link(crown, realize.inputs["Geometry"])
@@ -164,9 +152,9 @@ def build_pine():
     thick = g.node("GeometryNodeSetPosition")
     g.link(trunk, thick.inputs["Geometry"])
     g.link(g.vmath("MULTIPLY", tpos, g.vec(girth, girth, 1.0)), thick.inputs["Position"])
-    trunk = _store(g, thick.outputs["Geometry"], "UVMap", "FLOAT2", "CORNER", trunk_uv)
-    trunk = _store(g, trunk, "part", "INT", "POINT", 0)
-    trunk = _store(g, trunk, "Col", "FLOAT_COLOR", "POINT", BARK)
+    trunk = g.store(thick.outputs["Geometry"], "UVMap", "FLOAT2", "CORNER", trunk_uv)
+    trunk = g.store(trunk, "part", "INT", "POINT", 0)
+    trunk = g.store(trunk, "Col", "FLOAT_COLOR", "POINT", BARK)
 
     g.section("Lean and facets")
     join = g.node("GeometryNodeJoinGeometry")

@@ -44,3 +44,6 @@ docs/deployment/test_accounts.md
 # The harness makes a worktree per agent here (the tick-split and offline-removal
 # builds ran in one); a registered worktree, never content to commit.
 .claude/worktrees/
+
+# Python bytecode (the Blender scenery generators import each other).
+__pycache__/

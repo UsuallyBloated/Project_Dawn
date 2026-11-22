@@ -106,6 +106,33 @@ class Graph:
                 self.link(scale, sock)
         return n.outputs[0]
 
+    def dot(self, a, b):
+        n = self.node("ShaderNodeVectorMath", operation="DOT_PRODUCT")
+        self.link(a, n.inputs[0])
+        self.link(b, n.inputs[1])
+        return n.outputs["Value"]
+
+    def xyz(self, vector):
+        """The X, Y and Z sockets of a vector."""
+        n = self.node("ShaderNodeSeparateXYZ")
+        self.link(vector, n.inputs[0])
+        return n.outputs["X"], n.outputs["Y"], n.outputs["Z"]
+
+    def position(self):
+        return self.node("GeometryNodeInputPosition").outputs["Position"]
+
+    def store(self, geometry, name, data_type, domain, value):
+        """Stores a named attribute; returns the geometry with it."""
+        n = self.node("GeometryNodeStoreNamedAttribute", data_type=data_type, domain=domain)
+        n.inputs["Name"].default_value = name
+        self.link(geometry, n.inputs["Geometry"])
+        sock = n.inputs["Value"]
+        if isinstance(value, (int, float, tuple, list)):
+            sock.default_value = value
+        else:
+            self.link(value, sock)
+        return n.outputs["Geometry"]
+
     def random(self, data_type, lo, hi, seed, offset, fixed=False):
         """A seeded random value per element; `offset` keeps two draws apart.
         `fixed` gives every element the same value (one draw for the whole
