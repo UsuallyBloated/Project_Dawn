@@ -201,3 +201,75 @@ Height = 1.6
 Squareness = 0.75
 Cuts = 3
 "Cut Depth" = 0.5
+
+# Broadleaves: six deciduous trees, from the placeholder's size (about 9 m)
+# up to a giant; ZoneFlora's scale narrows to about 0.85 to 1.15 around them.
+
+# A round field tree
+[[broadleaf]]
+variant = 1
+Seed = 3101
+
+# A spreading oak, low and wide
+[[broadleaf]]
+variant = 2
+Seed = 3202
+"Fork Height" = 3.0
+"Trunk Radius" = 0.7
+"Trunk Sides" = 7
+Limbs = 6
+"Limb Length" = 5.5
+Spread = 1.15
+Upturn = 0.2
+"Clump Size" = 2.8
+"Clump Squash" = 0.6
+
+# A tall, narrow tree
+[[broadleaf]]
+variant = 3
+Seed = 3303
+"Fork Height" = 5.5
+"Trunk Radius" = 0.55
+Limbs = 4
+"Limb Length" = 5.0
+Spread = 0.55
+Leader = 0.1
+"Clump Size" = 2.6
+"Clump Squash" = 0.9
+
+# A crooked, leaning tree
+[[broadleaf]]
+variant = 4
+Seed = 3404
+"Fork Height" = 3.2
+"Trunk Radius" = 0.5
+Limbs = 3
+"Limb Length" = 4.0
+Crook = 0.8
+Lean = 1.5
+"Clump Size" = 2.4
+
+# A big old tree
+[[broadleaf]]
+variant = 5
+Seed = 3505
+"Fork Height" = 5.0
+"Trunk Radius" = 1.0
+"Trunk Sides" = 8
+Limbs = 6
+"Limb Length" = 7.0
+Spread = 0.95
+"Clump Size" = 3.9
+
+# A giant
+[[broadleaf]]
+variant = 6
+Seed = 3606
+"Fork Height" = 6.5
+"Trunk Radius" = 1.35
+"Trunk Sides" = 9
+Limbs = 7
+"Limb Length" = 9.0
+Spread = 1.0
+Upturn = 0.5
+"Clump Size" = 4.8
