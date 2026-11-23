@@ -77,6 +77,14 @@ After it: a sync rewrote 174 cards and reordered two lists; a second run found n
 
 ## 5. Not done
 
-- The gap list is unsorted (the user's call).
 - The board is private: the planner needs a board invite to see it (the user's, from Share).
 - Committed and pushed on the user's word (2026-11-21).
+
+## 6. The gap list sorted (2026-11-22)
+
+The user: "everything they've done would probably be the way". All 50 open rows of
+`mnm_roadmap_gap_list.md` are marked add. The To-Do carries them as ten Backlog entries, one per
+area, in a new section "From the Monsters and Memories roadmap" (one per feature would have put
+50 undesigned entries into a file every session loads; the user kept it per area). Each new
+title has its place in `JOURNEY`; a sync made the ten cards, and a second run found nothing to
+change.

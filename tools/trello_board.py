@@ -65,20 +65,22 @@ JOURNEY = [
     ('accounts', 'Accounts & Login', [
         'Camp / kick', 'Reconnect grace', 'Tell testers about', 'Login rate limit',
         'No way to reset', 'Self-serve change-password', 'Account admin tooling',
-        'Kick by account', 'Unclean-kill relogin']),
+        'Kick by account', 'Unclean-kill relogin',
+        'M&M roadmap: support']),
     ('creation', 'Character Creation', [
         'Character creation follow-ups', 'Change your appearance', 'The starting kit',
-        'Fae gear line']),
+        'Fae gear line', 'M&M roadmap: character']),
     ('world', 'The World', [
         'Phase 4 content', 'The starting zone at 4 km', 'The compass is mirrored',
         'Wandering wildlife', 'Obstacle collision', "The ridge's south face",
         'NPC placeholder capsules', 'Multi-zone epic', 'Time of day is per-client',
         'Weather system', 'Zone transition effects', 'Enemy AOI cell-crossing',
-        'Idle enemies rebroadcast', 'The server height model']),
+        'Idle enemies rebroadcast', 'The server height model',
+        'M&M roadmap: the world', 'M&M roadmap: mounts', 'M&M roadmap: bigger']),
     ('movement', 'Movement & Exploration', [
         'Remote players never show a jump', 'A jump should be seen', 'Other players never turn',
         'The own body never read its facing', 'Fall damage follow-ups', 'Mount system',
-        '/loc command']),
+        '/loc command', 'M&M roadmap: getting']),
     ('chat', 'Chat & Social', [
         'Incoming /tell', 'EQ-style /r', 'LFG flag', 'Language system wiring',
         'Sticky chat channel', 'The chat box must match', '/say reaches',
@@ -90,11 +92,12 @@ JOURNEY = [
         'Buying and granting ignore bag space', 'Banker exchange fee bands', 'Gem sockets',
         'Itemization oddities', 'Research: the Monsters and Memories item log',
         'Bank Items-tab', 'Bags open on left-click', 'Inventory desyncs',
-        'The vendor window claims', 'Client crashed moving items']),
+        'The vendor window claims', 'Client crashed moving items',
+        'M&M roadmap: items']),
     ('npcs', 'NPCs, Quests & Factions', [
         'Trade slice 2', 'Faction system', 'The consider command',
         'Quest and loot content plumbing', 'Quest reward item follow-ups',
-        'No server-side proximity gate']),
+        'No server-side proximity gate', 'M&M roadmap: NPCs']),
     ('spells', 'Classes, Spells & Abilities', [
         'The spell batch', 'Cast-code findings', 'Bard song rework', 'Dwarf racial ability',
         'Heal magnitude', 'EQ parity', 'Client-only spell backlog', 'Gate and the Soul Binder',
@@ -105,7 +108,7 @@ JOURNEY = [
         'Two-handed damage arc', 'Seated-combat penalties', 'Named mobs lost enrage',
         'Regen model', 'Dual wield as', 'Class-restricted equipping', 'A two-hander needs',
         'Dual-wielding two-handers', 'Facing and view angle', 'Two small verifies',
-        'PvP flagging']),
+        'PvP flagging', 'M&M roadmap: combat']),
     ('pets', 'Pets & Charm', [
         'Pet persistence', "An owner's own pet", 'Pet buffs', 'Pet level does not scale',
         'Beast Master taming', 'A charm that ends', 'A mob whose only attacker was a pet',
@@ -127,7 +130,8 @@ JOURNEY = [
         'Player portrait', 'Hotbar + socials bleed', 'Confirm what can become', 'Sound system']),
     ('security', 'Security & Anti-cheat', [
         'Housekeeping audit', 'Client-decided outcomes', 'Assorted trust gaps', 'Silent refusals',
-        'NaN Move direction', 'Exploit-audit finding 10', 'Spells had no reach']),
+        'NaN Move direction', 'Exploit-audit finding 10', 'Spells had no reach',
+        'M&M roadmap: suspicious']),
     ('ops', 'Server, Hosting & Tools', [
         'Stand up a deploy target', 'Public-host hardening', 'GM action audit log',
         'Test Panel "Despawn All', 'GM flight', 'Audit the schedule', 'Exporter drift',
