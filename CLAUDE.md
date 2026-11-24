@@ -337,7 +337,9 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
    regenerate the planner's week-by-week detail: `python tools/schedule_detail.py` (edit
    `docs/schedule_detail.toml` first if a row needs to move), commit the plan file with both
    outputs, and republish the page at the link recorded in the plan file. The detail carries
-   dates and dependencies only, never status.
+   dates and dependencies only, never status. In the same sessions, sync the Trello board
+   with `python tools/trello_board.py` (the user's planner reads it too; it is regenerated
+   from the To-Do, never edited by hand). If its token has expired, say so and move on.
 5. Run a review pass (`/code-review`) if the session touches 5+ files or a core system
    (combat, inventory, spells, PlayerStats, networking).
 6. **Tick only on playtest evidence.** An item earns `[x]` when a filled checklist in
@@ -5091,3 +5093,55 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   alone is load-sensitivity, whichever test it is.** Closing this item means making them
   deterministic (the harness waits on enemy AI reaching the player) rather than maintaining a list;
   see `server/docs/flaky_integration_tests.md`.
+
+### From the Monsters and Memories roadmap
+> Added 2026-11-22 from `docs/design/mnm_roadmap_gap_list.md` (user: "everything they've done
+> would probably be the way"). One entry per area, naming the M&M features no other entry
+> covers; the gap list says what we have today for each. A feature picked up for real gets its
+> own entry then. None is a friends-build item.
+
+- [ ] **M&M roadmap: support and safety tools**. An in-game `/bug` form; `/petition` to a GM;
+  `/report` for a player and for a chat line; `/ignore` (block a player's messages); a chat word
+  filter, and a name filter at character creation; account deletion by the player (pairs with
+  the delete/purge half of "Account admin tooling"); data export and erase, for a public host; a
+  landing page and an installer in place of the zip; a customer-service tool. Exploit lens: a
+  report or a petition is player-written text sent to the server, so it takes chat's length cap
+  and a rate limit.
+- [ ] **M&M roadmap: character creation**. Choosing a deity and a starting city; EQ's free
+  attribute points at creation; resist types (the server has no resist model, which "Proc
+  follow-ups" needs too). Racial traits sit in "Dwarf racial ability".
+- [ ] **M&M roadmap: the world**. A moon cycle and a night sky that changes; seasons (weather,
+  textures, spawns, forage); scheduled world events and the changes they leave; indoor and
+  outdoor areas with their own rules for spells and weather; hazards (lava, currents, strong
+  wind); forage and fishing tables online; non-combat animations for NPCs. Weather and water sit
+  in "Weather system".
+- [ ] **M&M roadmap: getting around**. `/stuck` (wanted more now that scenery is solid);
+  climbing; dragging a corpse (EQ's `/corpse` drag); boats; text interaction with objects (M&M's
+  "MUD objects"). Exploit lens: `/stuck` moves a player, so the server picks the spot (a nearby
+  open one, never the player's choice), and it must be no way out of a fight or a fall.
+- [ ] **M&M roadmap: items**. Light sources (held torches and lanterns, fuel, a slot, and a
+  darkness rule for them to matter); click effects on items; treasure maps; artifacts and relics
+  (one-of-a-kind items); storage placed in the world (a chest you own); consignment containers
+  (pairs with "Auction / bazaar"). Spell reagents sit in "Consumables system". Exploit lens: a
+  relic is unique, so every move, drop, trade and death path must keep it one item, held by the
+  item ledger's books.
+- [ ] **M&M roadmap: NPCs and quests**. Trainer NPCs for skills and languages ("Language system
+  wiring" needs them); merchant prices that move with faction; a faction window; NPCs that
+  remember you; NPC names unknown until you ask "Who are you?"; quest flags that gate
+  progression ("Quest and loot content plumbing", item (a)); spell scrolls and scribing in place
+  of spells learned by level.
+- [ ] **M&M roadmap: combat and PvP**. Mobs that cast and use special attacks; more mob
+  behaviour (fleeing, calling for help; wolf packs already join each other's fights); combat
+  animations; PvP arenas, PvP nametag colours, a PvP server ruleset, guild wars and PvP-flagged
+  NPCs (the "PvP flagging" entry has no plan yet).
+- [ ] **M&M roadmap: mounts, homes and rest**. Pack animals, pulled carts and vessels; player
+  and guild housing ("player-owned towns" is an idea in the social-layer entry); buildable
+  campfires and inn rooms that give a rested buff; a benefit for chatting in a tavern; non-combat
+  pets; transformations (the offline-era system was removed 2026-11-01).
+- [ ] **M&M roadmap: bigger ideas**. Monster cities (a city for the evil races, with its own
+  factions and services); playing as an NPC (M&M's "Project N"); a storyteller system where
+  trusted players run events and spawn NPCs (beyond GM tools, with its own audit and limits like
+  `gm_actions`).
+- [ ] **M&M roadmap: suspicious-pattern metrics**. Flag accounts whose kills, coin or items move
+  unusually fast, and currency outliers. The item ledger's daily balance check and the nightly
+  dupe query named in "Public-host hardening" are the start.
