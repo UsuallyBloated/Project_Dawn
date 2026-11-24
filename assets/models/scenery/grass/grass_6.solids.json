@@ -1,0 +1,8 @@
+{
+  "kind": "grass",
+  "variant": 6,
+  "source": "tools/blender/gen_grass.py",
+  "triangles": 80,
+  "solids": [
+  ]
+}

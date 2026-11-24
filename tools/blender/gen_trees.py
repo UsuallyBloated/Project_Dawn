@@ -675,4 +675,6 @@ BUILDERS = {"pine": build_pine, "broadleaf": build_broadleaf, "dark_tree": build
 # Room between variants in the built .blend (a broadleaf's crown is wide).
 SPACING = {"pine": 14.0, "broadleaf": 24.0, "dark_tree": 22.0, "dead_tree": 16.0}
 
-sn.build_main(BUILDERS, SPACING, "gen_trees.py")
+# Run as a script it builds a kind; export_scenery.py imports BUILDERS instead.
+if __name__ == "__main__":
+    sn.build_main(BUILDERS, SPACING, "gen_trees.py")

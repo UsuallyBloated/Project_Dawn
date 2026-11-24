@@ -109,4 +109,6 @@ def build_grass():
 BUILDERS = {"grass": build_grass}
 SPACING = {"grass": 1.2}
 
-sn.build_main(BUILDERS, SPACING, "gen_grass.py")
+# Run as a script it builds a kind; export_scenery.py imports BUILDERS instead.
+if __name__ == "__main__":
+    sn.build_main(BUILDERS, SPACING, "gen_grass.py")

@@ -345,4 +345,6 @@ def build_skeleton():
 BUILDERS = {"skeleton": build_skeleton}
 SPACING = {"skeleton": 4.0}
 
-sn.build_main(BUILDERS, SPACING, "gen_skeleton.py")
+# Run as a script it builds a kind; export_scenery.py imports BUILDERS instead.
+if __name__ == "__main__":
+    sn.build_main(BUILDERS, SPACING, "gen_skeleton.py")

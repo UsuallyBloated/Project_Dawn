@@ -134,4 +134,6 @@ def build_boulder():
 BUILDERS = {"boulder": build_boulder}
 SPACING = {"boulder": 6.0}
 
-sn.build_main(BUILDERS, SPACING, "gen_rocks.py")
+# Run as a script it builds a kind; export_scenery.py imports BUILDERS instead.
+if __name__ == "__main__":
+    sn.build_main(BUILDERS, SPACING, "gen_rocks.py")
