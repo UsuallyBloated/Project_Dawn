@@ -4699,9 +4699,12 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   are deferred there per the atlas. Nothing in it is on any schedule.
 - [ ] **Scenery models from our own Blender generators** *(user, 2026-11-20: the tutorial
   generators are not used; we write our own)*. **BUILT 2026-11-20 to 11-24 on
-  `feat/scenery-generators` in both repos (worktrees `F:\Projects\Project_Dawn-scenery` and
-  `F:\Projects\server-scenery`, local commits), pending the merge, the export with the
-  redeploy (the obstacle file changed, so both move together) and `scenery_models_checklist.md`**
+  `feat/scenery-generators` in both repos; MERGED, PUSHED AND EXPORTED 2026-11-24 (user: "go
+  ahead!"; both deploy branches fast-forwarded, server `9a7c3ba`, client `074ab5b`; the zip
+  `builds/ProjectDawn-alpha-074ab5b.zip`, stamped `074ab5b`, a release export, which replaces
+  `a1a154e`), pending the R720 redeploy (the obstacle file changed, so the zip and the redeploy go
+  together; the boot line must read `obstacles=45620 prisms (30512 walk, 32976 sight), hash
+  c4df3370b3ca`) and `scenery_models_checklist.md`**
   (session note `session_2026_11_24_scenery_generators.md`; plan
   `C:\Users\tyler\.claude\plans\cosmic-marinating-prism.md`). Python scripts in `tools/blender/`
   build Geometry Nodes generators headless in Blender 5.3, every variant one row of

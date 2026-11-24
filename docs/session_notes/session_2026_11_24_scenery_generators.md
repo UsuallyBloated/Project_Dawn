@@ -108,10 +108,31 @@ to about 60 m ("I'll let you know if we can adjust after I see it").
 - Server suite on the new `obstacles.bin` (`F:\Projects\server-scenery`, no code change): 481
   unit and 201 world tests green, the real zone's spawns, pockets and gates among them.
 
+## Merged and exported (11-24, evening)
+
+The user: "go ahead!". Both deploy branches were at this branch's cut points (the client's
+had been merged in), so both merges were fast-forwards: server `94d755a` to `9a7c3ba`, client
+`59c0532` to `074ab5b`. Pushed, with `feat/scenery-generators` in both repos.
+
+- `check_all.ps1` on the merged main checkouts: 21 of 21.
+- The export, `--export-release` from the main checkout clean at `074ab5b`:
+  `[BuildStamp] stamped 074ab5b`, not a debug export, the DLL unchanged (md5 `097ace2a`,
+  PD_W0031; nothing here touches the wire). The exe grew by 3.4 MB (the models and the larger
+  obstacle file).
+- Run from inside the exported build: `check_zone_scenery.gd` passes whole (the models are in
+  the pack and nothing at runtime reads a `.solids.json`), and `check_obstacle_lockstep.gd`
+  finds the packed obstacle file byte-identical to the server's; its EXPORT row fails there
+  only because `export_presets.cfg` is not in a pack (it passes in the checkout).
+- `README_FOR_TESTERS.md` gained a sentence: grass blocks nothing; small bones and skeletons are
+  stepped over, a big skeleton's ribs are not.
+- The zip `builds/ProjectDawn-alpha-074ab5b.zip` (41,778,413 bytes: the exe, the console exe,
+  the DLL, the tester README and the players' checklist) replaces `a1a154e`.
+
+Both sides together: the redeploy and the new zip. No migration, no SQL. The boot line must
+read `build="9a7c3ba" dev_cmds=false roamers=on`, the terrain hash unchanged
+(`f569ade0c331`), and `obstacles=45620 prisms (30512 walk, 32976 sight), hash c4df3370b3ca`.
+
 ## Not done
 
-- The playtest: walking the zone (the trees, the bones and skeletons underfoot, the grass's
-  density and draw distance).
-- The merge into the deploy branches, the export and the redeploy (one step: the obstacle file
-  changed, so the server and the zip move together).
+- The R720 redeploy (the user's), then the walk: `scenery_models_checklist.md`.
 - Hand-placed poses (a skeleton against a wall or a tree).
