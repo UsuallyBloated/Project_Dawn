@@ -560,6 +560,10 @@ Seed = 6202
 "Cage Height" = 0.85
 "Rib Thickness" = 0.09
 "Skull Size" = 0.55
+Vertebrae = 16
+Curvature = -0.2
+Wave = 0.3
+"Neck Rise" = 0.3
 
 # A half-sunk cage
 [[bones]]
@@ -580,12 +584,16 @@ Spine = false
 "Long Bones" = 6
 Scatter = 1.0
 
-# A spine and skull
+# A snaking spine and skull
 [[bones]]
 variant = 5
 Seed = 6505
 "Rib Pairs" = 0
-"Cage Length" = 1.4
+"Cage Length" = 1.6
+Vertebrae = 14
+Curvature = 0.6
+Wave = 0.5
+"Neck Rise" = 0.25
 "Long Bones" = 1
 
 # A collapsed cage
@@ -595,66 +603,79 @@ Seed = 6606
 "Rib Pairs" = 4
 Disorder = 0.5
 "Rib Curl" = 1.6
+Curvature = -0.5
+"Neck Rise" = 0.0
 "Long Bones" = 3
 
-# Grass: eight tufts, 0.3 to 0.6 m (stalks to about 0.7 m); no solids.
+# Grass: eight tufts from a few short blades to a dense tall patch (0.15 to
+# about 0.8 m with stalks); no solids.
 
 # A short tuft
 [[grass]]
 variant = 1
 Seed = 7101
 
-# Sparse and thin
+# A few sparse blades
 [[grass]]
 variant = 2
 Seed = 7202
-Blades = 5
-"Blade Width" = 0.035
-Height = 0.5
+Blades = 4
+"Blade Width" = 0.03
+Height = 0.25
+Footprint = 0.12
 
-# Lush and wide
+# A lush, wide clump
 [[grass]]
 variant = 3
 Seed = 7303
-Blades = 10
+Blades = 14
 "Blade Width" = 0.065
 Height = 0.4
 Spread = 0.55
+Footprint = 0.12
 
 # Tall, curling over
 [[grass]]
 variant = 4
 Seed = 7404
-Height = 0.6
-Blades = 8
+Height = 0.7
+Blades = 9
 Curl = 0.25
+"Height Variation" = 0.4
 
-# Short and dense
+# A low, dense mat
 [[grass]]
 variant = 5
 Seed = 7505
-Height = 0.3
-Blades = 11
-Spread = 0.65
+Height = 0.18
+Blades = 15
+Spread = 0.5
+Footprint = 0.15
+"Blade Width" = 0.045
 
-# Dry
+# Dry and ragged
 [[grass]]
 variant = 6
 Seed = 7606
 Dry = 0.8
 Blades = 8
+Height = 0.5
+"Height Variation" = 0.55
 
 # With seed stalks
 [[grass]]
 variant = 7
 Seed = 7707
 Stalks = 3
-Blades = 9
+Blades = 10
+Height = 0.4
 
-# Windswept, flopping over
+# A windswept patch
 [[grass]]
 variant = 8
 Seed = 7808
 Curl = 0.45
 Spread = 0.3
-Height = 0.5
+Height = 0.55
+Blades = 12
+Footprint = 0.25

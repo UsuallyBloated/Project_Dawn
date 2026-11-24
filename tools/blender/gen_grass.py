@@ -9,7 +9,7 @@
 # The .blend can be opened in Blender: each variant's modifier shows the sliders
 # and the Seed. The game never reads it; export_scenery.py makes the .glb files.
 #
-# Grass blocks nothing and hides nobody (0.3 to 0.6 m), so every corner is part
+# Grass blocks nothing and hides nobody (0.15 to 0.8 m), so every corner is part
 # -1, decoration with no solid. A blade is a flat strip, drawn on both faces
 # (a back-facing copy) so it shows from either side whatever the material's
 # culling. "Col" is darker at the root and lighter at the tip; "UVMap" runs up
@@ -33,17 +33,20 @@ def build_grass():
     """Blades fan out of one point, each tilted out from upright (Spread),
     turned evenly round the tuft, and curling over toward its tip (Curl, a
     share of its height). The first Stalks blades are seed stalks: half again
-    as tall, thinner and straw-coloured. Dry moves every blade toward straw."""
+    as tall, thinner and straw-coloured. Dry moves every blade toward straw.
+    Footprint is how far apart the blades' roots stand: a tight tuft or a
+    loose patch."""
     g = sn.Graph("PD Grass")
     seed = g.slider("Seed", "INT", 1)
     height = g.slider("Height", "FLOAT", 0.45, 0.1, 1.5)
     height_var = g.slider("Height Variation", "FLOAT", 0.3, 0.0, 0.8)
-    blades = g.slider("Blades", "INT", 7, 3, 12)
+    blades = g.slider("Blades", "INT", 7, 3, 15)
     width = g.slider("Blade Width", "FLOAT", 0.05, 0.01, 0.2)
     spread = g.slider("Spread", "FLOAT", 0.45, 0.0, 1.2)
     curl = g.slider("Curl", "FLOAT", 0.15, 0.0, 0.6)
     stalks = g.slider("Stalks", "INT", 0, 0, 4)
     dry = g.slider("Dry", "FLOAT", 0.0, 0.0, 1.0)
+    footprint = g.slider("Footprint", "FLOAT", 0.04, 0.0, 0.5)
 
     g.section("One blade (unit height and width)")
     # A strip from a grid: x across the blade, t from 0 at the root to 1 at
@@ -80,7 +83,8 @@ def build_grass():
     h = g.math("MULTIPLY", height, g.math("ADD", 1.0, g.random("FLOAT", neg_v, height_var, seed, 143)))
     h = g.math("MULTIPLY", h, g.math("ADD", 1.0, g.math("MULTIPLY", is_stalk, 0.5)))
     w = g.math("MULTIPLY", width, g.math("SUBTRACT", 1.0, g.math("MULTIPLY", is_stalk, 0.5)))
-    base = g.random("FLOAT_VECTOR", (-0.04, -0.04, 0.0), (0.04, 0.04, 0.0), seed, 144)
+    neg_f = g.math("MULTIPLY", footprint, -1.0)
+    base = g.random("FLOAT_VECTOR", g.vec(neg_f, neg_f, 0.0), g.vec(footprint, footprint, 0.0), seed, 144)
     tuft = sn.instance_on(g, sn.at(g, pts, base), blade, g.vec(tilt, 0.0, heading), g.vec(w, h, h))
     green = g.vmath("SCALE", g.vec(*GRASS_GREEN[:3]), scale=g.random("FLOAT", 0.85, 1.15, seed, 145))
     straw = g.vec(*STRAW[:3])

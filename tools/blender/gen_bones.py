@@ -9,14 +9,15 @@
 # The .blend can be opened in Blender: each variant's modifier shows the sliders
 # and the Seed. The game never reads it; export_scenery.py makes the .glb files.
 #
-# A pile is a kit of pieces: a spine lying along the ground, ribs curling up
-# from it in pairs (a beast's ribcage), a skull past the spine's end, and long
-# bones scattered round. Sizes follow the placeholder in
-# scripts/zone/zone_flora.gd (a ribcage about 2.4 m long and 1.1 m wide, a
-# skull at one end). Every straight piece is its own solid ("part"; the
-# numbers are distinct, not consecutive: the spine 0, the rib segments from 1,
-# the skull 200 and 201, the long bones from 300). "Col" is a flat
-# placeholder colour; "UVMap" is laid out for the texture pass.
+# A pile is a kit of pieces: a spine of separate vertebrae lying along the
+# ground in a gentle curve, ribs curling up from it in pairs (a beast's
+# ribcage), a skull past the spine's head, and long bones scattered round.
+# Sizes follow the placeholder in scripts/zone/zone_flora.gd (a ribcage about
+# 2.4 m long and 1.1 m wide, a skull at one end). Every piece is its own solid
+# ("part"; the numbers are distinct, not consecutive: the rib segments from 1,
+# the vertebrae from 100, the skull 200 and 201, the long bones from 300).
+# "Col" is a flat placeholder colour; "UVMap" is laid out for the texture
+# pass.
 
 import math
 import os
@@ -29,6 +30,7 @@ import scenery_nodes as sn  # noqa: E402
 BONE = (0.84, 0.81, 0.70, 1.0)
 # Each rib is drawn as this many straight segments along its curve.
 RIB_SEGMENTS = 3
+VERTEBRA_PART = 100
 SKULL_PART = 200
 LONG_BONE_PART = 300
 
@@ -42,7 +44,12 @@ def build_bones():
     rib point at angle a is (side x Width x sin a, y, Height x (1 - cos a)),
     run from 0 to Rib Curl. The ribcage narrows toward both ends; Disorder
     knocks each rib out of line (a carcass picked over and fallen in); Sink
-    lowers the whole cage into the ground."""
+    lowers the whole cage into the ground.
+
+    The spine bows sideways (Curvature) and snakes (Wave), and its neck lifts
+    toward the skull (Neck Rise); the ribs and the skull follow it. Each
+    vertebra is a short block with a fin on its back (Fins), largest at the
+    middle of the back and smaller toward the tail and the neck."""
     g = sn.Graph("PD Bones")
     seed = g.slider("Seed", "INT", 1)
     pairs = g.slider("Rib Pairs", "INT", 4, 0, 8)
@@ -54,6 +61,11 @@ def build_bones():
     disorder = g.slider("Disorder", "FLOAT", 0.15, 0.0, 0.8)
     sink = g.slider("Sink", "FLOAT", 0.0, 0.0, 0.6)
     spine_on = g.slider("Spine", "BOOL", True)
+    vertebrae = g.slider("Vertebrae", "INT", 12, 3, 30)
+    curvature = g.slider("Curvature", "FLOAT", 0.3, -1.0, 1.0)
+    wave = g.slider("Wave", "FLOAT", 0.0, -1.0, 1.0)
+    neck_rise = g.slider("Neck Rise", "FLOAT", 0.12, 0.0, 1.0)
+    fins = g.slider("Fins", "BOOL", True)
     skull_on = g.slider("Skull", "BOOL", True)
     skull_size = g.slider("Skull Size", "FLOAT", 0.35, 0.1, 1.5)
     long_bones = g.slider("Long Bones", "INT", 0, 0, 8)
@@ -64,6 +76,24 @@ def build_bones():
     spine_r = g.math("MULTIPLY", rib_thickness, 1.5)
     spine_z = g.math("SUBTRACT", spine_r, sink)
     half = g.math("MULTIPLY", length, 0.5)
+    # The spine runs from the tail at y0 to the head at y0 + its length, 0.3 m
+    # past the cage at each end; s is the share of the way along it.
+    spine_len = g.math("ADD", length, 0.6)
+    y0 = g.math("SUBTRACT", g.math("MULTIPLY", half, -1.0), 0.3)
+
+    def share(y):
+        return g.math("DIVIDE", g.math("SUBTRACT", y, y0), spine_len)
+
+    def bend(s):
+        """How far the spine sits to the side at s (zero at both ends)."""
+        bow = g.math("MULTIPLY", g.math("MULTIPLY", curvature, 0.2), g.math("SINE", g.math("MULTIPLY", s, math.pi)))
+        snake = g.math("MULTIPLY", g.math("MULTIPLY", wave, 0.1), g.math("SINE", g.math("MULTIPLY", s, 2.0 * math.pi)))
+        return g.math("MULTIPLY", spine_len, g.math("ADD", bow, snake))
+
+    def neck(s):
+        """How far the spine rises at s: nothing until three quarters along."""
+        u = g.math("MAXIMUM", g.math("DIVIDE", g.math("SUBTRACT", s, 0.75), 0.25), 0.0)
+        return g.math("MULTIPLY", neck_rise, g.math("MULTIPLY", u, u))
 
     g.section("Ribs")
     # Point i: rib pair k = i / (2 x segments), side s (left or right),
@@ -88,12 +118,16 @@ def build_bones():
     # A fallen rib leans along the spine by up to Disorder of its height.
     slump = g.math("MULTIPLY", g.random("FLOAT", neg_d, disorder, seed, 122, id=rib), h)
 
+    # Each rib grows from where the curved spine is at its y.
+    rib_x = bend(share(y))
+    rib_z = g.math("ADD", spine_z, neck(share(y)))
+
     def rib_point(step):
         a = g.math("MULTIPLY", curl, g.math("DIVIDE", step, float(RIB_SEGMENTS)))
         rise = g.math("SUBTRACT", 1.0, g.math("COSINE", a))
-        return g.vec(g.math("MULTIPLY", g.math("MULTIPLY", side, w), g.math("SINE", a)),
+        return g.vec(g.math("ADD", rib_x, g.math("MULTIPLY", g.math("MULTIPLY", side, w), g.math("SINE", a))),
                      g.math("ADD", y, g.math("MULTIPLY", slump, rise)),
-                     g.math("ADD", g.math("MULTIPLY", h, rise), spine_z))
+                     g.math("ADD", g.math("MULTIPLY", h, rise), rib_z))
 
     a_pt = rib_point(j)
     b_pt = rib_point(g.math("ADD", j, 1.0))
@@ -107,14 +141,39 @@ def build_bones():
     ribs = sn.instance_on(g, sn.at(g, pts, start), piece, sn.facing(g, dir_), g.vec(seg_r, seg_r, seg_len))
     ribs = sn.dressed(g, ribs, g.math("ADD", i, 1.0), _bone_colour(g, seed, 123, 0.92, 1.02))
 
-    g.section("Spine")
-    # It lies along the cage, 0.3 m past it at each end.
-    spine_len = g.math("ADD", length, 0.6)
-    spine_mesh = sn.with_uv(g, sn.cone_standing(g, 5, spine_r, g.math("MULTIPLY", spine_r, 0.75), spine_len))
-    tail = g.vec(0.0, g.math("SUBTRACT", g.math("MULTIPLY", half, -1.0), 0.3), spine_z)
-    spine = sn.instance_on(g, sn.at(g, sn.one_point(g), tail), spine_mesh, sn.facing(g, g.vec(y=1.0)),
-                           g.vec(1.0, 1.0, 1.0))
-    spine = sn.dressed(g, spine, 0, BONE)
+    g.section("Spine (vertebrae)")
+    # Vertebra v sits at s = (v + 0.5) / Vertebrae on the curve, turned along
+    # it (the curve's slope, worked out from bend and neck), with a gap to the
+    # next. Size: 55% at the tail, full from 40% along, easing to 75% at the
+    # neck.
+    knots = sn.line(g, vertebrae)
+    v = g.index()
+    s = g.math("DIVIDE", g.math("ADD", v, 0.5), vertebrae)
+    where = g.vec(bend(s), g.math("ADD", y0, g.math("MULTIPLY", s, spine_len)), g.math("ADD", spine_z, neck(s)))
+    d_bend = g.math("MULTIPLY", spine_len, g.math("ADD",
+        g.math("MULTIPLY", g.math("MULTIPLY", curvature, 0.2 * math.pi), g.math("COSINE", g.math("MULTIPLY", s, math.pi))),
+        g.math("MULTIPLY", g.math("MULTIPLY", wave, 0.2 * math.pi), g.math("COSINE", g.math("MULTIPLY", s, 2.0 * math.pi)))))
+    u = g.math("MAXIMUM", g.math("DIVIDE", g.math("SUBTRACT", s, 0.75), 0.25), 0.0)
+    d_neck = g.math("MULTIPLY", neck_rise, g.math("MULTIPLY", u, 8.0))
+    along = g.vmath("NORMALIZE", g.vec(d_bend, spine_len, d_neck))
+    grow = g.math("MINIMUM", g.math("DIVIDE", s, 0.4), 1.0)
+    shrink = g.math("MULTIPLY", g.math("MAXIMUM", g.math("DIVIDE", g.math("SUBTRACT", s, 0.8), 0.2), 0.0), 0.25)
+    vr = g.math("MULTIPLY", spine_r, g.math("SUBTRACT", g.math("ADD", 0.55, g.math("MULTIPLY", grow, 0.45)), shrink))
+    body_len = g.math("MULTIPLY", g.math("DIVIDE", spine_len, vertebrae), 0.62)
+    body_mesh = sn.with_uv(g, sn.cone_standing(g, 4, 1.0, 0.9, 1.0))
+    body_at = g.vmath("SUBTRACT", where, g.vmath("SCALE", along, scale=g.math("MULTIPLY", body_len, 0.5)))
+    wide = g.math("MULTIPLY", vr, 1.3)
+    bodies = sn.instance_on(g, sn.at(g, knots, body_at), body_mesh, sn.facing(g, along), g.vec(wide, wide, body_len))
+    # The fin stands on the vertebra's back, raked toward the tail.
+    fin_mesh = sn.with_uv(g, sn.cone_standing(g, 3, 1.0, 0.0, 1.0))
+    rake = g.vmath("NORMALIZE", g.vmath("SUBTRACT", g.vec(z=1.0), g.vmath("SCALE", along, scale=0.35)))
+    fin_r = g.math("MULTIPLY", vr, 0.55)
+    finned = sn.instance_on(g, sn.at(g, knots, where), fin_mesh, sn.facing(g, rake),
+                            g.vec(fin_r, fin_r, g.math("MULTIPLY", vr, 2.4)), selection=fins)
+    vertebra_part = g.math("ADD", v, float(VERTEBRA_PART))
+    vertebra_tone = _bone_colour(g, seed, 132, 0.94, 1.03)
+    spine = sn.join(g, sn.dressed(g, bodies, vertebra_part, vertebra_tone),
+                    sn.dressed(g, finned, vertebra_part, vertebra_tone))
     spine = sn.switch(g, spine_on, spine)
 
     g.section("Skull")
@@ -124,7 +183,10 @@ def build_bones():
     skull_y = g.math("MULTIPLY", has_body, g.math("ADD", half, g.math("ADD", 0.3, g.math("MULTIPLY", skull_size, 0.8))))
     turn = g.random("FLOAT", -0.6, 0.6, seed, 124, fixed=True)
     face = g.vec(g.math("SINE", turn), g.math("COSINE", turn), -0.35)
-    cranium_at = g.vec(0.0, skull_y, g.math("SUBTRACT", g.math("MULTIPLY", skull_size, 0.7), g.math("MULTIPLY", sink, 0.5)))
+    # A skull on a spine is held up by its neck.
+    held = g.math("MULTIPLY", g.math("MULTIPLY", neck_rise, spine_on), has_body)
+    cranium_at = g.vec(0.0, skull_y, g.math("ADD", g.math("SUBTRACT", g.math("MULTIPLY", skull_size, 0.7),
+                                                                g.math("MULTIPLY", sink, 0.5)), held))
     ico = g.node("GeometryNodeMeshIcoSphere")
     ico.inputs["Radius"].default_value = 1.0
     ico.inputs["Subdivisions"].default_value = 1
