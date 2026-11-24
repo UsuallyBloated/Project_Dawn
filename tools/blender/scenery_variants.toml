@@ -273,3 +273,388 @@ Limbs = 7
 Spread = 1.0
 Upturn = 0.5
 "Clump Size" = 4.8
+
+# Dark trees: six gnarled trees of the dark woods, from the placeholder's
+# size (about 6.5 m) up to an old giant.
+
+# A gnarled tree
+[[dark_tree]]
+variant = 1
+Seed = 4101
+
+# Bent far over
+[[dark_tree]]
+variant = 2
+Seed = 4202
+Lean = 3.0
+Twist = 0.5
+Limbs = 5
+"Clump Size" = 1.5
+
+# Tall and twisted
+[[dark_tree]]
+variant = 3
+Seed = 4303
+"Trunk Height" = 7.0
+"Trunk Radius" = 0.8
+Segments = 5
+Twist = 0.6
+Limbs = 6
+"Limb Length" = 3.8
+"Clump Size" = 1.9
+
+# A low, wide umbrella
+[[dark_tree]]
+variant = 4
+Seed = 4404
+"Trunk Height" = 4.2
+"Trunk Radius" = 0.75
+Lean = 0.6
+Limbs = 7
+"Limb Length" = 4.2
+"Limb Tilt" = 1.35
+"Limb Sag" = 0.45
+"Clump Size" = 1.6
+Droop = 0.7
+
+# Webbed
+[[dark_tree]]
+variant = 5
+Seed = 4505
+Lean = 2.0
+Web = true
+
+# An old giant, webbed
+[[dark_tree]]
+variant = 6
+Seed = 4606
+"Trunk Height" = 8.0
+"Trunk Radius" = 1.3
+"Trunk Sides" = 7
+Segments = 5
+Lean = 2.4
+Limbs = 8
+"Limb Length" = 6.0
+"Limb Sag" = 0.7
+"Clump Size" = 2.8
+Web = true
+"Web Drop" = 2.6
+
+# Dead trees: six bare trees, from the placeholder's size (about 6 m) up.
+
+# A bare snag
+[[dead_tree]]
+variant = 1
+Seed = 5101
+
+# A snapped stump
+[[dead_tree]]
+variant = 2
+Seed = 5202
+Height = 4.0
+"Trunk Radius" = 0.55
+Branches = 2
+Twigs = 1
+Snapped = true
+
+# Tall and gaunt
+[[dead_tree]]
+variant = 3
+Seed = 5303
+Height = 11.0
+"Trunk Radius" = 0.6
+Branches = 6
+"Branch Length" = 3.5
+"Branch Tilt" = 0.6
+
+# Leaning
+[[dead_tree]]
+variant = 4
+Seed = 5404
+Height = 7.0
+"Trunk Radius" = 0.45
+Branches = 3
+"Branch Tilt" = 1.1
+Lean = 2.0
+
+# A big old snag, broken off
+[[dead_tree]]
+variant = 5
+Seed = 5505
+Height = 14.0
+"Trunk Radius" = 1.0
+"Trunk Sides" = 7
+Branches = 6
+"Branch Length" = 5.0
+Twigs = 3
+Snapped = true
+"Snap Jag" = 0.9
+
+# Sprawling
+[[dead_tree]]
+variant = 6
+Seed = 5606
+Height = 6.0
+"Trunk Radius" = 0.42
+Branches = 7
+"Branch Low" = 0.4
+"Branch Length" = 3.2
+"Branch Tilt" = 1.2
+Twigs = 3
+
+# Bushes: eight leafy mounds of about the placeholder's size; ZoneFlora's
+# scale (0.7 to 1.5) makes the size range.
+
+# A round bush
+[[bush]]
+variant = 1
+Seed = 8101
+
+# Low and wide
+[[bush]]
+variant = 2
+Seed = 8202
+Size = 1.3
+Height = 0.6
+Blobs = 6
+Spread = 1.1
+
+# Tall and tight
+[[bush]]
+variant = 3
+Seed = 8303
+Size = 0.9
+Height = 1.3
+Blobs = 3
+Spread = 0.5
+
+# A ragged bush
+[[bush]]
+variant = 4
+Seed = 8404
+Blobs = 5
+Jag = 0.3
+
+# A berry bush
+[[bush]]
+variant = 5
+Seed = 8505
+Blobs = 5
+Berries = 9
+
+# A lone blob
+[[bush]]
+variant = 6
+Seed = 8606
+Size = 0.9
+Height = 0.8
+Blobs = 1
+Jag = 0.3
+
+# A big, sprawling bush
+[[bush]]
+variant = 7
+Seed = 8707
+Size = 1.5
+Height = 1.1
+Blobs = 7
+Spread = 1.2
+
+# A low berry bush
+[[bush]]
+variant = 8
+Seed = 8808
+Size = 1.1
+Height = 0.65
+Blobs = 4
+Berries = 6
+
+# Scrub: eight dry twiggy shrubs, knee high, about the placeholder's size.
+
+# A twiggy scrub
+[[scrub]]
+variant = 1
+Seed = 9101
+
+# A spiky fan
+[[scrub]]
+variant = 2
+Seed = 9202
+Twigs = 11
+"Twig Length" = 1.2
+Spread = 0.7
+Clumps = 2
+
+# A dense dry tuft
+[[scrub]]
+variant = 3
+Seed = 9303
+Twigs = 9
+"Twig Length" = 0.7
+Clumps = 5
+"Clump Size" = 0.3
+Dryness = 0.9
+
+# A greener scrub
+[[scrub]]
+variant = 4
+Seed = 9404
+Dryness = 0.3
+Clumps = 4
+
+# Bare twigs
+[[scrub]]
+variant = 5
+Seed = 9505
+Twigs = 8
+Clumps = 0
+"Mound Height" = 0.25
+Size = 0.4
+
+# Wide and low
+[[scrub]]
+variant = 6
+Seed = 9606
+Size = 0.8
+"Mound Height" = 0.3
+Twigs = 10
+Spread = 1.2
+"Twig Length" = 1.1
+
+# A tall stand
+[[scrub]]
+variant = 7
+Seed = 9707
+Twigs = 6
+"Twig Length" = 1.6
+Spread = 0.45
+Clumps = 3
+"Clump Size" = 0.3
+
+# A small dry clump
+[[scrub]]
+variant = 8
+Seed = 9808
+Size = 0.4
+"Mound Height" = 0.25
+Twigs = 5
+"Twig Length" = 0.6
+Clumps = 2
+"Clump Size" = 0.25
+Dryness = 1.0
+
+# Bones: six piles, from the placeholder's ribcage to a scatter of long bones.
+
+# A ribcage with its spine and skull
+[[bones]]
+variant = 1
+Seed = 6101
+
+# A big beast's carcass
+[[bones]]
+variant = 2
+Seed = 6202
+"Rib Pairs" = 6
+"Cage Length" = 3.6
+"Cage Width" = 0.95
+"Cage Height" = 0.85
+"Rib Thickness" = 0.09
+"Skull Size" = 0.55
+
+# A half-sunk cage
+[[bones]]
+variant = 3
+Seed = 6303
+"Rib Pairs" = 5
+Sink = 0.25
+Disorder = 0.3
+Skull = false
+"Long Bones" = 2
+
+# A scattered pile
+[[bones]]
+variant = 4
+Seed = 6404
+"Rib Pairs" = 0
+Spine = false
+"Long Bones" = 6
+Scatter = 1.0
+
+# A spine and skull
+[[bones]]
+variant = 5
+Seed = 6505
+"Rib Pairs" = 0
+"Cage Length" = 1.4
+"Long Bones" = 1
+
+# A collapsed cage
+[[bones]]
+variant = 6
+Seed = 6606
+"Rib Pairs" = 4
+Disorder = 0.5
+"Rib Curl" = 1.6
+"Long Bones" = 3
+
+# Grass: eight tufts, 0.3 to 0.6 m (stalks to about 0.7 m); no solids.
+
+# A short tuft
+[[grass]]
+variant = 1
+Seed = 7101
+
+# Sparse and thin
+[[grass]]
+variant = 2
+Seed = 7202
+Blades = 5
+"Blade Width" = 0.035
+Height = 0.5
+
+# Lush and wide
+[[grass]]
+variant = 3
+Seed = 7303
+Blades = 10
+"Blade Width" = 0.065
+Height = 0.4
+Spread = 0.55
+
+# Tall, curling over
+[[grass]]
+variant = 4
+Seed = 7404
+Height = 0.6
+Blades = 8
+Curl = 0.25
+
+# Short and dense
+[[grass]]
+variant = 5
+Seed = 7505
+Height = 0.3
+Blades = 11
+Spread = 0.65
+
+# Dry
+[[grass]]
+variant = 6
+Seed = 7606
+Dry = 0.8
+Blades = 8
+
+# With seed stalks
+[[grass]]
+variant = 7
+Seed = 7707
+Stalks = 3
+Blades = 9
+
+# Windswept, flopping over
+[[grass]]
+variant = 8
+Seed = 7808
+Curl = 0.45
+Spread = 0.3
+Height = 0.5

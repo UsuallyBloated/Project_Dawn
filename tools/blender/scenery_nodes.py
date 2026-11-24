@@ -121,6 +121,9 @@ class Graph:
     def position(self):
         return self.node("GeometryNodeInputPosition").outputs["Position"]
 
+    def index(self):
+        return self.node("GeometryNodeInputIndex").outputs["Index"]
+
     def store(self, geometry, name, data_type, domain, value):
         """Stores a named attribute; returns the geometry with it."""
         n = self.node("GeometryNodeStoreNamedAttribute", data_type=data_type, domain=domain)
@@ -133,14 +136,17 @@ class Graph:
             self.link(value, sock)
         return n.outputs["Geometry"]
 
-    def random(self, data_type, lo, hi, seed, offset, fixed=False):
+    def random(self, data_type, lo, hi, seed, offset, fixed=False, id=None):
         """A seeded random value per element; `offset` keeps two draws apart.
         `fixed` gives every element the same value (one draw for the whole
-        object, such as a trunk's girth)."""
+        object, such as a trunk's girth). `id` draws for another element's
+        number instead of this one's (a twig repeating its branch's draws)."""
         n = self.node("FunctionNodeRandomValue", data_type=data_type)
         if fixed:
             n.inputs["ID"].default_value = 0
             self.link(self.node("FunctionNodeInputInt").outputs[0], n.inputs["ID"])
+        elif id is not None:
+            self.link(id, n.inputs["ID"])
         mins = [s for s in n.inputs if s.name == "Min" and s.enabled]
         maxs = [s for s in n.inputs if s.name == "Max" and s.enabled]
         for sock, v in ((mins[0], lo), (maxs[0], hi)):
@@ -211,6 +217,154 @@ class Graph:
                 n.location_absolute = where
 
 
+# --- shapes and placement, shared by the generators -----------------------
+
+def enabled(sockets, name):
+    """The socket called `name` that is in use (some nodes keep one socket per
+    data type under the same name and hide the others)."""
+    return [s for s in sockets if s.name == name and s.enabled][0]
+
+
+def _set(g, socket, value):
+    if isinstance(value, (int, float, tuple, list)):
+        socket.default_value = value
+    else:
+        g.link(value, socket)
+
+
+def cone_standing(g, vertices, radius_bottom, radius_top, depth, fill="NGON", side_segments=1):
+    """A cone or tapered column standing on its base at the origin (Blender's
+    Cone node runs from z 0 to Depth). Returns the node: its outputs are Mesh,
+    Top, Bottom, Side and UV Map. `fill` "NONE" leaves the ends open."""
+    cone = g.node("GeometryNodeMeshCone", fill_type=fill)
+    for name, v in (("Vertices", vertices), ("Radius Bottom", radius_bottom),
+                    ("Radius Top", radius_top), ("Depth", depth), ("Side Segments", side_segments)):
+        _set(g, cone.inputs[name], v)
+    return cone
+
+
+def with_uv(g, node):
+    """A primitive's mesh with its UV map stored as "UVMap"."""
+    return g.store(node.outputs["Mesh"], "UVMap", "FLOAT2", "CORNER", node.outputs["UV Map"])
+
+
+def instance_on(g, points, mesh, rotation, scale, selection=None):
+    inst = g.node("GeometryNodeInstanceOnPoints")
+    g.link(points, inst.inputs["Points"])
+    g.link(mesh, inst.inputs["Instance"])
+    g.link(rotation, inst.inputs["Rotation"])
+    g.link(scale, inst.inputs["Scale"])
+    if selection is not None:
+        g.link(selection, inst.inputs["Selection"])
+    return inst.outputs["Instances"]
+
+
+def at(g, geometry, position):
+    """The geometry with every point moved to `position` (a field)."""
+    n = g.node("GeometryNodeSetPosition")
+    g.link(geometry, n.inputs["Geometry"])
+    g.link(position, n.inputs["Position"])
+    return n.outputs["Geometry"]
+
+
+def offset(g, geometry, by, selection=None):
+    """The geometry with every point moved by `by` (a field)."""
+    n = g.node("GeometryNodeSetPosition")
+    g.link(geometry, n.inputs["Geometry"])
+    g.link(by, n.inputs["Offset"])
+    if selection is not None:
+        g.link(selection, n.inputs["Selection"])
+    return n.outputs["Geometry"]
+
+
+def facing(g, vector):
+    """A rotation that turns +Z onto `vector`."""
+    n = g.node("FunctionNodeAlignRotationToVector")
+    n.axis = "Z"
+    g.link(vector, n.inputs["Vector"])
+    return n.outputs["Rotation"]
+
+
+def dressed(g, instances, part, colour):
+    """Instances with their part numbers and placeholder colour, realized."""
+    instances = g.store(instances, "part", "INT", "INSTANCE", part)
+    instances = g.store(instances, "Col", "FLOAT_COLOR", "INSTANCE", colour)
+    realize = g.node("GeometryNodeRealizeInstances")
+    g.link(instances, realize.inputs["Geometry"])
+    return realize.outputs["Geometry"]
+
+
+def line(g, count):
+    """`count` points, one per element to be placed (their index numbers them)."""
+    n = g.node("GeometryNodeMeshLine")
+    _set(g, n.inputs["Count"], count)
+    return n.outputs["Mesh"]
+
+
+def one_point(g):
+    n = g.node("GeometryNodePoints")
+    n.inputs["Count"].default_value = 1
+    return n.outputs["Points"]
+
+
+def statistic(g, geometry, value, output, data_type="FLOAT_VECTOR"):
+    """One number (Sum, Min, Max, ...) of a field over a geometry's points:
+    a single value that can be used anywhere, unlike the field itself."""
+    n = g.node("GeometryNodeAttributeStatistic", data_type=data_type, domain="POINT")
+    g.link(geometry, n.inputs["Geometry"])
+    g.link(value, enabled(n.inputs, "Attribute"))
+    return enabled(n.outputs, output)
+
+
+def sample(g, geometry, value, index, data_type="FLOAT_VECTOR"):
+    """A field's value at one point of a geometry."""
+    n = g.node("GeometryNodeSampleIndex", data_type=data_type, domain="POINT")
+    g.link(geometry, n.inputs["Geometry"])
+    g.link(value, enabled(n.inputs, "Value"))
+    _set(g, n.inputs["Index"], index)
+    return enabled(n.outputs, "Value")
+
+
+def switch(g, on, geometry):
+    """The geometry when `on` is true, nothing otherwise."""
+    n = g.node("GeometryNodeSwitch", input_type="GEOMETRY")
+    g.link(on, n.inputs["Switch"])
+    g.link(geometry, n.inputs["True"])
+    return n.outputs["Output"]
+
+
+def join(g, *pieces):
+    n = g.node("GeometryNodeJoinGeometry")
+    for piece in pieces:
+        g.link(piece, n.inputs[0])
+    return n.outputs[0]
+
+
+def keep_colour(g, mesh, domain="POINT"):
+    """Stores "Col" again on the finished mesh. A colour that only arrived on
+    realized instances is not marked as the mesh's colour, so Blender's
+    preview and the glTF export would skip it; storing it on the mesh itself
+    marks it."""
+    read = g.node("GeometryNodeInputNamedAttribute", data_type="FLOAT_COLOR")
+    read.inputs["Name"].default_value = "Col"
+    return g.store(mesh, "Col", "FLOAT_COLOR", domain, enabled(read.outputs, "Attribute"))
+
+
+def flat_shaded(g, mesh):
+    n = g.node("GeometryNodeSetShadeSmooth")
+    g.link(mesh, n.inputs["Mesh"])
+    n.inputs["Shade Smooth"].default_value = False
+    return n.outputs["Mesh"]
+
+
+def jitter(g, geometry, amount, seed, offset_number):
+    """Every corner moved a random way by up to `amount`: facets, not a smooth
+    surface."""
+    neg = g.math("MULTIPLY", amount, -1.0)
+    return offset(g, geometry, g.random("FLOAT_VECTOR", g.vec(neg, neg, neg), g.vec(amount, amount, amount),
+                                        seed, offset_number))
+
+
 def variants(kind):
     """The rows of scenery_variants.toml for one kind, in variant order."""
     with open(VARIANTS_FILE, "rb") as f:
@@ -254,3 +408,28 @@ def triangles(obj):
 
 def script_args():
     return sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+
+
+def build_main(builders, spacing, script):
+    """The command line every generator shares: build the group for one kind
+    and one object per variant row, laid out in a row `spacing[kind]` apart,
+    and save the .blend."""
+    args = script_args()
+    if len(args) != 2 or args[0] not in builders:
+        raise SystemExit("usage: %s -- <%s> <out.blend>" % (script, "|".join(builders)))
+    kind, out = args
+    for obj in list(bpy.data.objects):
+        bpy.data.objects.remove(obj)
+    group = builders[kind]()
+    rows = variants(kind)
+    for i, row in enumerate(rows):
+        obj = apply_variant(group, "%s_%d" % (kind, row["variant"]), row, (i * spacing[kind], 0.0, 0.0))
+        print("%s: %d triangles" % (obj.name, triangles(obj)))
+    # Saved with the first variant selected and active, so Blender's Geometry
+    # Nodes workspace opens on its node group.
+    first = bpy.data.objects["%s_%d" % (kind, rows[0]["variant"])]
+    first.select_set(True)
+    bpy.context.view_layer.objects.active = first
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(out))
+    print("saved", out)

@@ -29,7 +29,6 @@ STONE = (0.47, 0.46, 0.44, 1.0)
 # Cut planes are unrolled into the group (a node group has no loop that a
 # slider can size without a repeat zone); the Cuts slider turns them on.
 MAX_CUTS = 8
-SPACING = 6.0
 
 
 def build_boulder():
@@ -133,28 +132,6 @@ def build_boulder():
 
 
 BUILDERS = {"boulder": build_boulder}
+SPACING = {"boulder": 6.0}
 
-
-def main():
-    args = sn.script_args()
-    if len(args) != 2 or args[0] not in BUILDERS:
-        raise SystemExit("usage: gen_rocks.py -- <%s> <out.blend>" % "|".join(BUILDERS))
-    kind, out = args
-    for obj in list(bpy.data.objects):
-        bpy.data.objects.remove(obj)
-    group = BUILDERS[kind]()
-    rows = sn.variants(kind)
-    for i, row in enumerate(rows):
-        obj = sn.apply_variant(group, "%s_%d" % (kind, row["variant"]), row, (i * SPACING, 0.0, 0.0))
-        print("%s: %d triangles" % (obj.name, sn.triangles(obj)))
-    # Saved with the first variant selected and active, so Blender's Geometry
-    # Nodes workspace opens on its node group.
-    first = bpy.data.objects["%s_%d" % (kind, rows[0]["variant"])]
-    first.select_set(True)
-    bpy.context.view_layer.objects.active = first
-    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(out))
-    print("saved", out)
-
-
-main()
+sn.build_main(BUILDERS, SPACING, "gen_rocks.py")
