@@ -40,7 +40,7 @@ def build_grass():
     seed = g.slider("Seed", "INT", 1)
     height = g.slider("Height", "FLOAT", 0.45, 0.1, 1.5)
     height_var = g.slider("Height Variation", "FLOAT", 0.3, 0.0, 0.8)
-    blades = g.slider("Blades", "INT", 7, 3, 15)
+    blades = g.slider("Blades", "INT", 7, 3, 32)
     width = g.slider("Blade Width", "FLOAT", 0.05, 0.01, 0.2)
     spread = g.slider("Spread", "FLOAT", 0.45, 0.0, 1.2)
     curl = g.slider("Curl", "FLOAT", 0.15, 0.0, 0.6)

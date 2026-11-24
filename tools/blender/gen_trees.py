@@ -38,6 +38,8 @@ DEAD_WOOD = (0.37, 0.33, 0.29, 1.0)
 # ZoneFlora draws the dark tree's trunk as DEAD_WOOD darkened by a quarter.
 DARK_BARK = (0.28, 0.25, 0.22, 1.0)
 WEB = (0.62, 0.64, 0.63, 1.0)
+# The colour a trunk's solids are drawn in when Solids is on.
+SOLID_SHOWN = (0.85, 0.15, 0.15, 1.0)
 # The golden angle, radians: branches turning by it round a trunk never line up.
 GOLDEN_ANGLE = 2.39996
 
@@ -337,6 +339,102 @@ def _out(g, tilt, heading):
                  g.math("COSINE", tilt))
 
 
+def _trunk(g, seed, offset_number, height, radius, sides, segments, twist, lean, top_ratio, solids):
+    """A twisted trunk as one continuous piece of geometry.
+
+    Its line is a chain of Segments steps: each rises Height / Segments and
+    steps sideways by the lean (growing with height, so the top sits about
+    Lean off the foot) plus a random wander of up to Twist of its rise. A
+    smooth curve through the joints is swept with a ring of Sides corners,
+    narrowing from Radius at the foot to Radius x top_ratio at the top, and
+    capped at both ends.
+
+    A bent piece's own outline would wall off the space under its bend, so
+    the trunk's solids are straight columns along its steps instead
+    ("proxy" pieces, parts 0..Segments-1), drawn only when `solids` is on.
+    The drawn trunk is part -1, no solid of its own.
+
+    Returns (trunk, proxies, curve, top): the drawn trunk; the proxies (empty
+    unless `solids`); the swept curve, for finding a point at a height; and
+    the top of the line (one value)."""
+    pts = sn.line(g, g.math("ADD", segments, 1.0))
+    i = g.index()
+    rise = g.math("DIVIDE", height, segments)
+    t = g.math("DIVIDE", g.math("ADD", i, 0.5), segments)
+    slope = g.math("MULTIPLY", g.math("DIVIDE", lean, height), g.math("MULTIPLY", t, 2.0))
+    wx, wy, _wz = g.xyz(g.random("FLOAT_VECTOR", (-1.0, -1.0, 0.0), (1.0, 1.0, 0.0), seed, offset_number))
+    step = g.vmath("SCALE", g.vec(g.math("ADD", slope, g.math("MULTIPLY", wx, twist)),
+                                  g.math("MULTIPLY", wy, twist), 1.0), scale=rise)
+    acc = g.node("GeometryNodeAccumulateField", data_type="FLOAT_VECTOR", domain="POINT")
+    g.link(step, sn.enabled(acc.inputs, "Value"))
+    joint = sn.enabled(acc.outputs, "Trailing")
+    joints = sn.at(g, pts, joint)
+    top = sn.sample(g, joints, g.position(), segments)
+
+    # The swept trunk.
+    to_curve = g.node("GeometryNodeMeshToCurve")
+    g.link(joints, to_curve.inputs["Mesh"])
+    smooth = g.node("GeometryNodeCurveSplineType", spline_type="CATMULL_ROM")
+    g.link(to_curve.outputs["Curve"], smooth.inputs["Curve"])
+    resample = g.node("GeometryNodeResampleCurve")
+    g.link(smooth.outputs["Curve"], resample.inputs["Curve"])
+    g.link(g.math("ADD", g.math("MULTIPLY", segments, 3.0), 1.0), resample.inputs["Count"])
+    along = g.node("GeometryNodeSplineParameter").outputs["Factor"]
+    curve = g.store(resample.outputs["Curve"], "pd_along", "FLOAT", "POINT", along)
+    ring = g.node("GeometryNodeCurvePrimitiveCircle")
+    g.link(sides, ring.inputs["Resolution"])
+    ring.inputs["Radius"].default_value = 1.0
+    profile = g.store(ring.outputs["Curve"], "pd_around", "FLOAT", "POINT",
+                      g.node("GeometryNodeSplineParameter").outputs["Factor"])
+    sweep = g.node("GeometryNodeCurveToMesh")
+    g.link(curve, sweep.inputs["Curve"])
+    g.link(profile, sweep.inputs["Profile Curve"])
+    sweep.inputs["Fill Caps"].default_value = True
+    # Blender 5 sizes the ring by the sweep's Scale (a field along the
+    # curve), not by the curve's radius.
+    g.link(g.math("MULTIPLY", radius, g.math("SUBTRACT", 1.0, g.math("MULTIPLY", g.math("SUBTRACT", 1.0, top_ratio), along))),
+           sweep.inputs["Scale"])
+    read_u = g.node("GeometryNodeInputNamedAttribute", data_type="FLOAT")
+    read_u.inputs["Name"].default_value = "pd_around"
+    read_v = g.node("GeometryNodeInputNamedAttribute", data_type="FLOAT")
+    read_v.inputs["Name"].default_value = "pd_along"
+    trunk = g.store(sweep.outputs["Mesh"], "UVMap", "FLOAT2", "CORNER",
+                    g.vec(sn.enabled(read_u.outputs, "Attribute"), sn.enabled(read_v.outputs, "Attribute"), 0.0))
+    trunk = g.store(trunk, "part", "INT", "POINT", -1)
+
+    # The solids: a column along each step.
+    r_seg = g.math("MULTIPLY", radius, g.math("SUBTRACT", 1.0, g.math("MULTIPLY", g.math("SUBTRACT", 1.0, top_ratio),
+                                                                         g.math("DIVIDE", i, segments))))
+    columns = sn.instance_on(g, joints, sn.with_uv(g, sn.cone_standing(g, sides, 1.0, 1.0, 1.0)), sn.facing(g, step),
+                             g.vec(r_seg, r_seg, g.math("SQRT", g.dot(step, step))),
+                             selection=g.math("LESS_THAN", i, segments))
+    columns = g.store(columns, "part", "INT", "INSTANCE", i)
+    realize = g.node("GeometryNodeRealizeInstances")
+    g.link(columns, realize.inputs["Geometry"])
+    proxies = g.store(realize.outputs["Geometry"], "proxy", "BOOLEAN", "POINT", True)
+    proxies = g.store(proxies, "Col", "FLOAT_COLOR", "POINT", SOLID_SHOWN)
+    return trunk, sn.switch(g, solids, proxies), curve, top
+
+
+def _at_height(g, curve, factor):
+    """The point a share `factor` of the way along a trunk's curve."""
+    n = g.node("GeometryNodeSampleCurve", mode="FACTOR")
+    g.link(curve, n.inputs["Curves"])
+    g.link(factor, n.inputs["Factor"])
+    return n.outputs["Position"]
+
+
+def _finish_wood(g, trunk, colour):
+    """A drawn trunk coloured, with the sweep's working attributes removed."""
+    trunk = g.store(trunk, "Col", "FLOAT_COLOR", "POINT", colour)
+    for name in ("pd_along", "pd_around"):
+        remove = g.node("GeometryNodeRemoveAttribute")
+        g.link(trunk, remove.inputs["Geometry"])
+        remove.inputs["Name"].default_value = name
+        trunk = remove.outputs["Geometry"]
+    return trunk
+
+
 def build_dark_tree():
     """A gnarled tree of the dark woods: a thick trunk flaring at its foot,
     made of stacked segments that each wander off the last (Twist) while the
@@ -346,9 +444,9 @@ def build_dark_tree():
     visible limbs. Web strings a sheet of spider web between two limbs, as the
     placeholder had.
 
-    Part numbers: the trunk segments from 0, then each limb's inner and outer
-    segment, then the clumps (the centre clump last); the web is -1,
-    decoration with no solid."""
+    Part numbers: the trunk's solids from 0 (see _trunk; Solids shows them),
+    then each limb's inner and outer segment, then the clumps (the centre
+    clump last); the drawn trunk and the web are -1, no solid of their own."""
     g = sn.Graph("PD Dark Tree")
     seed = g.slider("Seed", "INT", 1)
     height = g.slider("Trunk Height", "FLOAT", 4.4, 2.2, 14.0)
@@ -370,35 +468,19 @@ def build_dark_tree():
     web = g.slider("Web", "BOOL", False)
     web_drop = g.slider("Web Drop", "FLOAT", 1.6, 0.3, 4.0)
     facet = g.slider("Facet Jitter", "FLOAT", 0.05, 0.0, 0.4)
+    solids = g.slider("Solids", "BOOL", False)
 
-    g.section("Trunk (a chain of segments)")
-    # Segment i rises Trunk Height / Segments and steps sideways: the lean,
-    # growing with height so the top sits about Lean off the foot, plus a
-    # random wander of up to Twist of its rise. Each segment starts where the
-    # ones below it end (their steps added up).
-    pts = sn.line(g, segments)
-    i = g.index()
-    rise = g.math("DIVIDE", height, segments)
-    t = g.math("DIVIDE", g.math("ADD", i, 0.5), segments)
-    slope = g.math("MULTIPLY", g.math("DIVIDE", lean, height), g.math("MULTIPLY", t, 2.0))
-    wx, wy, _wz = g.xyz(g.random("FLOAT_VECTOR", (-1.0, -1.0, 0.0), (1.0, 1.0, 0.0), seed, 41))
-    step = g.vmath("SCALE", g.vec(g.math("ADD", slope, g.math("MULTIPLY", wx, twist)),
-                                  g.math("MULTIPLY", wy, twist), 1.0), scale=rise)
-    acc = g.node("GeometryNodeAccumulateField", data_type="FLOAT_VECTOR", domain="POINT")
-    g.link(step, sn.enabled(acc.inputs, "Value"))
-    start = sn.enabled(acc.outputs, "Trailing")
-    top = sn.statistic(g, pts, step, "Sum")
-    seg = sn.with_uv(g, sn.cone_standing(g, trunk_sides, 1.0, 0.85, 1.0))
-    r_seg = g.math("MULTIPLY", trunk_radius, g.math("SUBTRACT", 1.0, g.math("MULTIPLY", 0.45, g.math("DIVIDE", i, segments))))
-    # Each segment runs a little past its end, so the bends show no gap.
-    seg_len = g.math("ADD", g.math("SQRT", g.dot(step, step)), g.math("MULTIPLY", trunk_radius, 0.3))
-    trunk = sn.instance_on(g, sn.at(g, pts, start), seg, sn.facing(g, step), g.vec(r_seg, r_seg, seg_len))
-    trunk = sn.dressed(g, trunk, i, DARK_BARK)
+    g.section("Trunk (one twisted piece)")
+    trunk, proxies, _curve, top = _trunk(g, seed, 41, height, trunk_radius, trunk_sides, segments, twist, lean,
+                                         0.55, solids)
+    trunk = _finish_wood(g, trunk, DARK_BARK)
     # The foot flares: corners in the lowest 1.5 m are pushed out from the
-    # trunk's axis by up to Root Flare of their distance.
+    # trunk's axis by up to Root Flare of their distance (its solid too).
     px, py, pz = g.xyz(g.position())
     widen = g.math("ADD", 1.0, g.math("MULTIPLY", flare, g.math("MAXIMUM", g.math("SUBTRACT", 1.0, g.math("DIVIDE", pz, 1.5)), 0.0)))
-    trunk = sn.at(g, trunk, g.vec(g.math("MULTIPLY", px, widen), g.math("MULTIPLY", py, widen), pz))
+    flared = g.vec(g.math("MULTIPLY", px, widen), g.math("MULTIPLY", py, widen), pz)
+    trunk = sn.at(g, trunk, flared)
+    proxies = sn.at(g, proxies, flared)
 
     g.section("Limbs (reach out, then sag)")
     # A limb leaves the trunk's top Limb Tilt from straight up, then its
@@ -480,7 +562,7 @@ def build_dark_tree():
     sheet = sn.switch(g, web, sheet)
 
     g.section("Facets")
-    tree = sn.jitter(g, sn.join(g, leaves, outer, inner, trunk, sheet), facet, seed, 52)
+    tree = sn.jitter(g, sn.join(g, leaves, outer, inner, trunk, sheet, proxies), facet, seed, 52)
     return g.finish(sn.keep_colour(g, sn.flat_shaded(g, tree)))
 
 
@@ -492,13 +574,18 @@ def build_dead_tree():
 
     Every branch and twig works out its own place from its number, and a twig
     repeats its branch's random draws (the same ID) to find where it grows,
-    so nothing is hand placed. Part numbers: 0 the trunk, 1.. the branches,
-    then the twigs."""
+    so nothing is hand placed. The trunk is one twisted piece (see _trunk),
+    and the branches grow from it wherever its twist has taken it.
+
+    Part numbers: the trunk's solids from 0 (Solids shows them), the
+    branches from 10, the twigs from 20; the drawn trunk is -1."""
     g = sn.Graph("PD Dead Tree")
     seed = g.slider("Seed", "INT", 1)
     height = g.slider("Height", "FLOAT", 5.6, 2.5, 25.0)
     trunk_radius = g.slider("Trunk Radius", "FLOAT", 0.34, 0.05, 3.0)
     trunk_sides = g.slider("Trunk Sides", "INT", 5, 4, 10)
+    segments = g.slider("Segments", "INT", 4, 2, 6)
+    twist = g.slider("Twist", "FLOAT", 0.2, 0.0, 1.0)
     branches = g.slider("Branches", "INT", 4, 0, 8)
     branch_low = g.slider("Branch Low", "FLOAT", 0.45, 0.2, 0.9)
     branch_length = g.slider("Branch Length", "FLOAT", 2.4, 0.3, 12.0)
@@ -509,17 +596,21 @@ def build_dead_tree():
     snap_jag = g.slider("Snap Jag", "FLOAT", 0.4, 0.0, 1.5)
     lean = g.slider("Lean", "FLOAT", 0.4, 0.0, 4.0)
     facet = g.slider("Facet Jitter", "FLOAT", 0.04, 0.0, 0.3)
+    solids = g.slider("Solids", "BOOL", False)
 
-    g.section("Trunk")
+    g.section("Trunk (one twisted piece)")
     # A whole trunk narrows to a quarter of its foot; a snapped one stays
-    # thick to its broken end, whose rim is pulled down unevenly.
+    # thick to its broken end, whose rim is pulled down unevenly. (The lean
+    # bends the whole tree at the end, so the trunk's own line only twists.)
     top_ratio = g.math("ADD", 0.25, g.math("MULTIPLY", snapped, 0.35))
-    cone = sn.cone_standing(g, trunk_sides, trunk_radius, g.math("MULTIPLY", trunk_radius, top_ratio), height)
-    trunk = sn.with_uv(g, cone)
+    trunk, proxies, curve, _top = _trunk(g, seed, 66, height, trunk_radius, trunk_sides, segments, twist, 0.0,
+                                         top_ratio, solids)
+    read_v = g.node("GeometryNodeInputNamedAttribute", data_type="FLOAT")
+    read_v.inputs["Name"].default_value = "pd_along"
+    at_top = g.math("GREATER_THAN", sn.enabled(read_v.outputs, "Attribute"), 0.999)
     break_by = g.math("MULTIPLY", g.random("FLOAT", g.math("MULTIPLY", snap_jag, -1.0), 0.0, seed, 60), snapped)
-    trunk = sn.offset(g, trunk, g.vec(z=break_by), selection=cone.outputs["Top"])
-    trunk = g.store(trunk, "part", "INT", "POINT", 0)
-    trunk = g.store(trunk, "Col", "FLOAT_COLOR", "POINT", DEAD_WOOD)
+    trunk = sn.offset(g, trunk, g.vec(z=break_by), selection=at_top)
+    trunk = _finish_wood(g, trunk, DEAD_WOOD)
 
     def branch(ix):
         """Branch number `ix` (a field): its root, direction, length and
@@ -537,7 +628,7 @@ def build_dead_tree():
                         g.random("FLOAT", 0.8, 1.2, seed, 64, id=ix))
         taper = g.math("SUBTRACT", 1.0, g.math("MULTIPLY", g.math("SUBTRACT", 1.0, top_ratio), g.math("DIVIDE", h, height)))
         radius = g.math("MULTIPLY", g.math("MULTIPLY", trunk_radius, taper), 0.5)
-        return g.vec(z=h), out, length, radius
+        return _at_height(g, curve, g.math("DIVIDE", h, height)), out, length, radius
 
     g.section("Branches")
     roots = sn.line(g, branches)
@@ -546,7 +637,7 @@ def build_dead_tree():
     stick = sn.with_uv(g, sn.cone_standing(g, 4, 1.0, 0.3, 1.0))
     wood = g.vmath("SCALE", g.vec(*DEAD_WOOD[:3]), scale=g.random("FLOAT", 0.9, 1.1, seed, 65))
     limb = sn.instance_on(g, sn.at(g, roots, root), stick, sn.facing(g, out), g.vec(radius, radius, length))
-    limb = sn.dressed(g, limb, g.math("ADD", i, 1.0), wood)
+    limb = sn.dressed(g, limb, g.math("ADD", i, 10.0), wood)
 
     g.section("Twigs")
     # Twig k of a branch grows from between 45% and 90% along it, turned off
@@ -566,17 +657,17 @@ def build_dead_tree():
     t_len = g.math("MULTIPLY", g.math("MULTIPLY", p_len, twig_length), g.random("FLOAT", 0.7, 1.2, seed, 73))
     t_rad = g.math("MULTIPLY", p_rad, g.math("MULTIPLY", g.math("SUBTRACT", 1.0, g.math("MULTIPLY", f, 0.7)), 0.7))
     twig = sn.instance_on(g, sn.at(g, shoots, start), stick, sn.facing(g, t_out), g.vec(t_rad, t_rad, t_len))
-    twig = sn.dressed(g, twig, g.math("ADD", g.math("ADD", tix, branches), 1.0),
+    twig = sn.dressed(g, twig, g.math("ADD", tix, 20.0),
                       g.vmath("SCALE", g.vec(*DEAD_WOOD[:3]), scale=g.random("FLOAT", 0.95, 1.15, seed, 74)))
 
     g.section("Lean and facets")
-    tree = sn.join(g, twig, limb, trunk)
+    tree = sn.join(g, twig, limb, trunk, proxies)
     z = g.xyz(g.position())[2]
     reach = g.math("ADD", height, branch_length)
     bend = g.math("DIVIDE", g.math("MULTIPLY", lean, g.math("MULTIPLY", z, z)), g.math("MULTIPLY", reach, reach))
     tree = sn.offset(g, tree, g.vec(bend, 0.0, 0.0))
     tree = sn.jitter(g, tree, facet, seed, 75)
-    return g.finish(sn.flat_shaded(g, tree))
+    return g.finish(sn.keep_colour(g, sn.flat_shaded(g, tree)))
 
 
 BUILDERS = {"pine": build_pine, "broadleaf": build_broadleaf, "dark_tree": build_dark_tree,

@@ -356,6 +356,7 @@ Height = 4.0
 Branches = 2
 Twigs = 1
 Snapped = true
+Twist = 0.35
 
 # Tall and gaunt
 [[dead_tree]]
@@ -376,6 +377,7 @@ Height = 7.0
 Branches = 3
 "Branch Tilt" = 1.1
 Lean = 2.0
+Twist = 0.4
 
 # A big old snag, broken off
 [[dead_tree]]
@@ -389,6 +391,8 @@ Branches = 6
 Twigs = 3
 Snapped = true
 "Snap Jag" = 0.9
+Segments = 5
+Twist = 0.3
 
 # Sprawling
 [[dead_tree]]
@@ -550,7 +554,7 @@ Dryness = 1.0
 variant = 1
 Seed = 6101
 
-# A big beast's carcass
+# A big horned beast's carcass
 [[bones]]
 variant = 2
 Seed = 6202
@@ -560,6 +564,8 @@ Seed = 6202
 "Cage Height" = 0.85
 "Rib Thickness" = 0.09
 "Skull Size" = 0.55
+Horns = 1
+"Horn Length" = 1.1
 Vertebrae = 16
 Curvature = -0.2
 Wave = 0.3
@@ -584,7 +590,7 @@ Spine = false
 "Long Bones" = 6
 Scatter = 1.0
 
-# A snaking spine and skull
+# A snaking spine and an antlered skull
 [[bones]]
 variant = 5
 Seed = 6505
@@ -594,6 +600,8 @@ Vertebrae = 14
 Curvature = 0.6
 Wave = 0.5
 "Neck Rise" = 0.25
+Horns = 2
+"Horn Length" = 1.8
 "Long Bones" = 1
 
 # A collapsed cage
@@ -679,3 +687,208 @@ Spread = 0.3
 Height = 0.55
 Blades = 12
 Footprint = 0.25
+
+# Humanoid skeletons: one per playable race, at the middle of its height range
+# in docs/reference/creature_heights.md, with its build.
+
+# Fae, 0.72 m: delicate, a large head
+[[skeleton]]
+variant = 1
+Seed = 10101
+Height = 0.72
+Head = 0.16
+Leg = 0.48
+Shoulders = 0.22
+Build = 0.75
+Chest = 0.9
+"Arm Spread" = 0.9
+
+# Gnome, 0.98 m: a head a quarter of the height, short legs
+[[skeleton]]
+variant = 2
+Seed = 10202
+Height = 0.98
+Head = 0.25
+Leg = 0.36
+Arm = 0.38
+Build = 0.9
+"Leg Spread" = 0.3
+
+# Halfling, 1.02 m: compact and slim
+[[skeleton]]
+variant = 3
+Seed = 10303
+Height = 1.02
+Head = 0.155
+Leg = 0.47
+Arm = 0.42
+Shoulders = 0.23
+Build = 0.85
+"Arm Spread" = 0.2
+
+# Kobold, 1.10 m: a dog's muzzle, digitigrade legs, a tail
+[[skeleton]]
+variant = 4
+Seed = 10404
+Height = 1.10
+Head = 0.17
+Snout = 0.8
+Brow = 0.2
+"Jaw Open" = 0.25
+Digitigrade = true
+Tail = 12
+"Tail Length" = 0.4
+Build = 0.8
+
+# Dwarf, 1.28 m: massive shoulders, a barrel chest, thick bones
+[[skeleton]]
+variant = 5
+Seed = 10505
+Height = 1.28
+Head = 0.17
+Leg = 0.42
+Arm = 0.42
+Shoulders = 0.32
+Hips = 0.23
+Build = 1.45
+Chest = 1.35
+"Arm Spread" = 0.25
+
+# Wood Elf, 1.50 m: lean and athletic
+[[skeleton]]
+variant = 6
+Seed = 10606
+Height = 1.50
+Head = 0.13
+Leg = 0.53
+Build = 0.9
+"Arm Spread" = 1.1
+
+# Elf, 1.68 m: long limbs, a light frame
+[[skeleton]]
+variant = 7
+Seed = 10707
+Height = 1.68
+Head = 0.13
+Leg = 0.55
+Arm = 0.46
+Shoulders = 0.22
+Build = 0.82
+"Leg Spread" = 0.25
+
+# Dark Elf, 1.72 m: lithe, angular
+[[skeleton]]
+variant = 8
+Seed = 10808
+Height = 1.72
+Head = 0.13
+Leg = 0.54
+Build = 0.85
+Brow = 0.3
+"Arm Spread" = 0.15
+
+# Half-Elf, 1.72 m
+[[skeleton]]
+variant = 9
+Seed = 10909
+Height = 1.72
+Head = 0.133
+Leg = 0.53
+
+# Human, 1.78 m: the baseline
+[[skeleton]]
+variant = 10
+Seed = 11010
+Height = 1.78
+
+# Felhari, 1.85 m: a short feline muzzle, digitigrade legs
+[[skeleton]]
+variant = 11
+Seed = 11111
+Height = 1.85
+Head = 0.125
+Snout = 0.4
+Digitigrade = true
+Leg = 0.55
+Build = 0.95
+"Arm Spread" = 0.7
+
+# Kel`varath, 1.98 m: a long reptile's snout, a long tail
+[[skeleton]]
+variant = 12
+Seed = 11212
+Height = 1.98
+Head = 0.12
+Snout = 1.1
+Brow = 0.15
+"Jaw Open" = 0.3
+Tail = 18
+"Tail Length" = 0.55
+
+# Half-Ogre, 2.12 m: massive, less brutish
+[[skeleton]]
+variant = 13
+Seed = 11313
+Height = 2.12
+Head = 0.12
+Arm = 0.47
+Shoulders = 0.28
+Hips = 0.22
+Build = 1.3
+Chest = 1.2
+Brow = 0.4
+
+# Minotaur, 2.35 m: a bull's skull and horns, hooves, a tail
+[[skeleton]]
+variant = 14
+Seed = 11414
+Height = 2.35
+Head = 0.115
+Snout = 0.7
+Horns = 1
+"Horn Length" = 0.9
+Shoulders = 0.3
+Hips = 0.22
+Build = 1.4
+Chest = 1.3
+Digitigrade = true
+Tail = 12
+"Tail Length" = 0.3
+
+# Troll, 2.45 m: long arms, a jutting brow
+[[skeleton]]
+variant = 15
+Seed = 11515
+Height = 2.45
+Head = 0.11
+Arm = 0.56
+Shoulders = 0.27
+Build = 1.2
+Brow = 1.0
+Snout = 0.15
+"Arm Spread" = 0.3
+
+# Ogre, 2.55 m: massive shoulders, long arms, thick bones
+[[skeleton]]
+variant = 16
+Seed = 11616
+Height = 2.55
+Head = 0.11
+Arm = 0.52
+Shoulders = 0.32
+Hips = 0.24
+Build = 1.6
+Chest = 1.4
+Brow = 0.6
+"Leg Spread" = 0.3
+
+# A wide, very dense patch
+[[grass]]
+variant = 9
+Seed = 7909
+Blades = 32
+Height = 0.38
+"Height Variation" = 0.35
+Spread = 0.3
+Footprint = 0.32
+"Blade Width" = 0.065
