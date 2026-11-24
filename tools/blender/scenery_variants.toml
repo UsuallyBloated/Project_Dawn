@@ -689,9 +689,9 @@ Blades = 12
 Footprint = 0.25
 
 # Humanoid skeletons: one per playable race, at the middle of its height range
-# in docs/reference/creature_heights.md, with its build.
+# in docs/reference/creature_heights.md, with its build, each in its own pose.
 
-# Fae, 0.72 m: delicate, a large head
+# Fae, 0.72 m: delicate, a large head, curled up on its side
 [[skeleton]]
 variant = 1
 Seed = 10101
@@ -701,9 +701,16 @@ Leg = 0.48
 Shoulders = 0.22
 Build = 0.75
 Chest = 0.9
-"Arm Spread" = 0.9
+Roll = 1.57
+Curl = 0.9
+"Curl Span" = 0.9
+"Hip Bend" = 1.5
+"Knee Bend" = 2.0
+"Arm Spread" = 0.4
+"Arm Lift" = 1.2
+"Elbow Bend" = 1.2
 
-# Gnome, 0.98 m: a head a quarter of the height, short legs
+# Gnome, 0.98 m: a head a quarter of the height, short legs, sitting huddled, hugging its knees
 [[skeleton]]
 variant = 2
 Seed = 10202
@@ -712,9 +719,16 @@ Head = 0.25
 Leg = 0.36
 Arm = 0.38
 Build = 0.9
+Curl = 2.0
+"Curl Span" = 0.35
+"Hip Bend" = 0.9
+"Knee Bend" = 2.0
+"Arm Spread" = 0.2
+"Arm Lift" = 0.6
+"Elbow Bend" = 0.8
 "Leg Spread" = 0.3
 
-# Halfling, 1.02 m: compact and slim
+# Halfling, 1.02 m: compact and slim, on its back, relaxed
 [[skeleton]]
 variant = 3
 Seed = 10303
@@ -724,9 +738,13 @@ Leg = 0.47
 Arm = 0.42
 Shoulders = 0.23
 Build = 0.85
+Roll = 0.25
+"Hip Bend" = 0.1
+"Knee Bend" = 0.3
 "Arm Spread" = 0.2
+Asymmetry = 0.3
 
-# Kobold, 1.10 m: a dog's muzzle, digitigrade legs, a tail
+# Kobold, 1.10 m: a dog's muzzle, digitigrade legs, a tail, sprawled on its side
 [[skeleton]]
 variant = 4
 Seed = 10404
@@ -739,8 +757,17 @@ Digitigrade = true
 Tail = 12
 "Tail Length" = 0.4
 Build = 0.8
+Roll = -1.4
+Curl = 0.4
+"Curl Span" = 0.8
+"Hip Bend" = 0.6
+"Knee Bend" = 1.0
+Asymmetry = 0.8
+Stride = 0.8
+"Arm Lift" = 0.8
+"Tail Curl" = 0.6
 
-# Dwarf, 1.28 m: massive shoulders, a barrel chest, thick bones
+# Dwarf, 1.28 m: massive shoulders, a barrel chest, thick bones, face down, arms flung out
 [[skeleton]]
 variant = 5
 Seed = 10505
@@ -752,9 +779,13 @@ Shoulders = 0.32
 Hips = 0.23
 Build = 1.45
 Chest = 1.35
-"Arm Spread" = 0.25
+Roll = 3.14
+"Arm Spread" = 1.4
+"Elbow Bend" = 0.5
+"Leg Spread" = 0.25
+"Head Roll" = 1.3
 
-# Wood Elf, 1.50 m: lean and athletic
+# Wood Elf, 1.50 m: lean and athletic, on its back, one arm over its head
 [[skeleton]]
 variant = 6
 Seed = 10606
@@ -762,9 +793,13 @@ Height = 1.50
 Head = 0.13
 Leg = 0.53
 Build = 0.9
-"Arm Spread" = 1.1
+Roll = 0.2
+Asymmetry = 1.2
+"Arm Spread" = 1.0
+"Hip Bend" = 0.2
+"Knee Bend" = 0.4
 
-# Elf, 1.68 m: long limbs, a light frame
+# Elf, 1.68 m: long limbs, a light frame, face down, reaching ahead
 [[skeleton]]
 variant = 7
 Seed = 10707
@@ -774,9 +809,14 @@ Leg = 0.55
 Arm = 0.46
 Shoulders = 0.22
 Build = 0.82
-"Leg Spread" = 0.25
+Roll = 3.14
+"Arm Spread" = 2.7
+"Elbow Bend" = 0.3
+Asymmetry = 0.3
+"Leg Spread" = 0.2
+"Head Roll" = -1.2
 
-# Dark Elf, 1.72 m: lithe, angular
+# Dark Elf, 1.72 m: lithe, angular, curled up on its other side
 [[skeleton]]
 variant = 8
 Seed = 10808
@@ -785,23 +825,41 @@ Head = 0.13
 Leg = 0.54
 Build = 0.85
 Brow = 0.3
-"Arm Spread" = 0.15
+Roll = -1.57
+Curl = 1.1
+"Curl Span" = 0.9
+"Hip Bend" = 1.6
+"Knee Bend" = 2.2
+"Arm Lift" = 1.3
+"Elbow Bend" = 1.5
 
-# Half-Elf, 1.72 m
+# Half-Elf, 1.72 m, slumped forward over its legs
 [[skeleton]]
 variant = 9
 Seed = 10909
 Height = 1.72
 Head = 0.133
 Leg = 0.53
+Curl = 2.4
+"Curl Span" = 0.3
+"Hip Bend" = 0.1
+"Knee Bend" = 0.2
+"Arm Spread" = 0.3
+"Arm Lift" = 0.4
+"Leg Spread" = 0.2
 
-# Human, 1.78 m: the baseline
+# Human, 1.78 m: the baseline, on its back, knees up and fallen aside
 [[skeleton]]
 variant = 10
 Seed = 11010
 Height = 1.78
+Roll = 0.5
+"Hip Bend" = 0.5
+"Knee Bend" = 1.0
+"Arm Spread" = 0.5
+Asymmetry = 0.2
 
-# Felhari, 1.85 m: a short feline muzzle, digitigrade legs
+# Felhari, 1.85 m: a short feline muzzle, digitigrade legs, on its side, mid-stride
 [[skeleton]]
 variant = 11
 Seed = 11111
@@ -811,9 +869,16 @@ Snout = 0.4
 Digitigrade = true
 Leg = 0.55
 Build = 0.95
-"Arm Spread" = 0.7
+Roll = 1.5
+Asymmetry = 1.2
+Stride = 1.2
+"Hip Bend" = 0.6
+"Knee Bend" = 1.2
+"Arm Spread" = 0.6
+"Arm Lift" = 0.7
+"Elbow Bend" = 1.0
 
-# Kel`varath, 1.98 m: a long reptile's snout, a long tail
+# Kel`varath, 1.98 m: a long reptile's snout, a long tail, face down, tail curled
 [[skeleton]]
 variant = 12
 Seed = 11212
@@ -824,8 +889,14 @@ Brow = 0.15
 "Jaw Open" = 0.3
 Tail = 18
 "Tail Length" = 0.55
+Roll = 3.14
+"Arm Spread" = 0.9
+"Elbow Bend" = 1.0
+"Tail Curl" = 0.9
+"Head Roll" = 3.14
+"Leg Spread" = 0.3
 
-# Half-Ogre, 2.12 m: massive, less brutish
+# Half-Ogre, 2.12 m: massive, less brutish, sitting, toppled to one side
 [[skeleton]]
 variant = 13
 Seed = 11313
@@ -837,8 +908,13 @@ Hips = 0.22
 Build = 1.3
 Chest = 1.2
 Brow = 0.4
+Curl = 1.4
+"Curl Span" = 0.4
+Roll = 0.6
+"Hip Bend" = 0.3
+"Knee Bend" = 0.6
 
-# Minotaur, 2.35 m: a bull's skull and horns, hooves, a tail
+# Minotaur, 2.35 m: a bull's skull and horns, hooves, a tail, sprawled on its back
 [[skeleton]]
 variant = 14
 Seed = 11414
@@ -854,8 +930,13 @@ Chest = 1.3
 Digitigrade = true
 Tail = 12
 "Tail Length" = 0.3
+"Arm Spread" = 1.2
+Asymmetry = 0.5
+"Leg Spread" = 0.45
+"Knee Bend" = 0.3
+"Tail Curl" = -0.5
 
-# Troll, 2.45 m: long arms, a jutting brow
+# Troll, 2.45 m: long arms, a jutting brow, face down, crawling
 [[skeleton]]
 variant = 15
 Seed = 11515
@@ -866,9 +947,14 @@ Shoulders = 0.27
 Build = 1.2
 Brow = 1.0
 Snout = 0.15
-"Arm Spread" = 0.3
+Roll = 3.14
+Asymmetry = 1.3
+"Arm Spread" = 1.4
+"Elbow Bend" = 0.8
+"Leg Spread" = 0.35
+"Head Roll" = 1.0
 
-# Ogre, 2.55 m: massive shoulders, long arms, thick bones
+# Ogre, 2.55 m: massive shoulders, long arms, thick bones, curled up on its side
 [[skeleton]]
 variant = 16
 Seed = 11616
@@ -880,7 +966,13 @@ Hips = 0.24
 Build = 1.6
 Chest = 1.4
 Brow = 0.6
-"Leg Spread" = 0.3
+Roll = 1.57
+Curl = 0.7
+"Curl Span" = 0.8
+"Hip Bend" = 1.2
+"Knee Bend" = 1.6
+"Arm Lift" = 1.0
+"Elbow Bend" = 1.2
 
 # A wide, very dense patch
 [[grass]]
