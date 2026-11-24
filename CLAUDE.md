@@ -4695,6 +4695,32 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   checkbox list, `docs/design/art_assets_checklist.md` (the one deliberate exception to
   "one checkbox list", since it is an asset manifest, not a task queue); "future zone themes"
   are deferred there per the atlas. Nothing in it is on any schedule.
+- [ ] **Scenery models from our own Blender generators** *(user, 2026-11-20: the tutorial
+  generators are not used; we write our own)*. **BUILT 2026-11-20 to 11-24 on
+  `feat/scenery-generators` in both repos (worktrees `F:\Projects\Project_Dawn-scenery` and
+  `F:\Projects\server-scenery`, local commits), pending the merge, the export with the
+  redeploy (the obstacle file changed, so both move together) and `scenery_models_checklist.md`**
+  (session note `session_2026_11_24_scenery_generators.md`; plan
+  `C:\Users\tyler\.claude\plans\cosmic-marinating-prism.md`). Python scripts in `tools/blender/`
+  build Geometry Nodes generators headless in Blender 5.3, every variant one row of
+  `scenery_variants.toml` (built twice, identical); `export_scenery.py` writes 83 variants to
+  `assets/models/scenery/<kind>/` as a `.glb` and a `.solids.json` each: pine and broadleaf,
+  dark and dead trees with one-piece twisted trunks (six each), twelve boulders, eight bushes,
+  eight scrub, six beast-bone piles (horns, antlers), sixteen humanoid skeletons (one per race
+  at its height, each posed), nine grass tufts. `ZoneFlora` draws them (`SceneryModels` loads
+  them): the variant from a hash of the spot, at most three per 400 m cell, the regular pine
+  variants 1 to 3 and the tall pine 4 to 6 (user), about one tree in 40 colossal (1.5 to 2.0),
+  far stand-ins fitted per variant; skeletons among the bone fields, round the four undead camps
+  and beside the roads (user). The bake: trees each trunk piece alone plus a sight-only crown
+  (the old merge would have let a small dark tree's whole canopy stop a body), bones and
+  skeletons every piece alone (user: a body steps over the low ones). `ZoneGrass` grows grass
+  round the camera from per-square dice (the same on every client), up to 0.6 tufts a square
+  metre, thin under the woods, dry on the steppe and as the hills climb, none on roads, the town,
+  fields or camp middles, faded out by 60 m (user: adjust after seeing it). 16,554 things in
+  1,021 batches; 45,620 prisms (hash `c4df3370b3ca`, was `f97d25964ce4`); `check_zone_scenery.gd`
+  gained VARIANTS and GRASS; 21 checks, 481 unit and 201 world tests green; about 1 ms a frame
+  on the dev machine in the densest spots. Not built: hand-placed poses (a skeleton against a
+  wall), ferns and mushrooms, textures (UVs are laid out for them).
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
 - [x] **`/loc` command** — **DONE + playtested 2026-10-09** (`loc_command_checklist.md`, all five rows
   PASS on the 10-05 build: matches Sister Maelis's position, the four facings, `/sense`, works

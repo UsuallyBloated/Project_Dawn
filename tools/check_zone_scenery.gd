@@ -14,6 +14,12 @@ extends SceneTree
 #   SCATTER    the flora is the same every time it is built (every client
 #              plants the same wood), stands on the ground, and keeps off the
 #              roads, out of the town and off the rim.
+#   VARIANTS   every planted thing is one of its kind's models, a cell holds
+#              no more of a kind's variants than ZoneFlora allows, and every
+#              variant grows somewhere.
+#   GRASS      a square of grass (zone_grass.gd) grows the same tufts every
+#              time, on the ground, off the roads and the town, no thicker
+#              than GRASS_PER_M2, thinner under the Greywood than on the plain.
 #   PIECES     every set piece the layout names was built.
 #   BUDGET     lights, smoke columns, triangles and draw batches stay inside
 #              what a modest machine draws.
@@ -25,7 +31,7 @@ extends SceneTree
 
 const WORLD_SCENE := "res://scenes/world.tscn"
 const SKIP_NODES := ["HUD", "Hotbar", "LevelUpPopup", "Players"]
-const DRESSING_NODES := ["Flora", "Town", "Landmarks"]
+const DRESSING_NODES := ["Flora", "Grass", "Town", "Landmarks"]
 const TOWN_PIECES := ["Walls", "Houses", "Square", "Farms", "Barn", "Mill", "MillSails"]
 const LANDMARK_PIECES := [
 	"Pass", "WardStones", "BarrowDoor", "Ossuary", "WraithGate", "WraithGateLight", "BrokenCrypt",
@@ -80,6 +86,8 @@ func _run() -> void:
 	_check_ground(terrain)
 	_check_collides(world)
 	_check_scatter(world, terrain)
+	_check_variants(world)
+	_check_grass(world, terrain)
 	_check_pieces(world)
 	_check_budget(world)
 
@@ -145,6 +153,99 @@ func _check_scatter(world: Node, terrain: TerrainMesh) -> void:
 	_check(on_rim == 0, "SCATTER nothing is planted outside the edge, on the mountains (%d)" % on_rim)
 	_check(on_road == 0, "SCATTER nothing is planted on a road (%d of the sample)" % on_road)
 	_check(off_ground == 0, "SCATTER everything stands on the ground (%d do not)" % off_ground)
+
+
+func _check_variants(world: Node) -> void:
+	var flora := world.get_node_or_null("Flora") as ZoneFlora
+	if flora == null:
+		return
+	var kinds := flora.placed_kinds()
+	var points := flora.planted()
+	var unknown := 0
+	var seen: Dictionary = {}
+	var per_cell: Dictionary = {}
+	for i in kinds.size():
+		var kind := kinds[i].get_slice("#", 0)
+		var variant := int(kinds[i].get_slice("#", 1))
+		if not ZoneFlora.KINDS.has(kind) or not (ZoneFlora.KINDS[kind]["variants"] as Array).has(variant):
+			unknown += 1
+			continue
+		seen[kinds[i]] = true
+		var cell := Vector2i(int(floor(points[i].x / ZoneFlora.CELL)), int(floor(points[i].z / ZoneFlora.CELL)))
+		var key := "%s %s" % [cell, kind]
+		if not per_cell.has(key):
+			per_cell[key] = {}
+		per_cell[key][variant] = true
+	_check(unknown == 0, "VARIANTS every planted thing is one of its kind's models (%d are not)" % unknown)
+	var crowded := 0
+	for key in per_cell:
+		if (per_cell[key] as Dictionary).size() > ZoneFlora.MAX_VARIANTS_PER_CELL:
+			crowded += 1
+	_check(crowded == 0, "VARIANTS no cell holds more than %d variants of a kind (%d do)" % [ZoneFlora.MAX_VARIANTS_PER_CELL, crowded])
+	var missing: Array[String] = []
+	for kind in ZoneFlora.KINDS:
+		for variant in ZoneFlora.KINDS[kind]["variants"]:
+			if not seen.has("%s#%d" % [kind, variant]):
+				missing.append("%s#%d" % [kind, variant])
+	_check(missing.is_empty(), "VARIANTS every variant grows somewhere%s" % ("" if missing.is_empty() else "; none of " + ", ".join(missing)))
+
+
+# Squares of grass on open plain, in the Greywood, and under every road's
+# middle: grown twice and held to the rules.
+func _check_grass(world: Node, terrain: TerrainMesh) -> void:
+	var grass := world.get_node_or_null("Grass") as ZoneGrass
+	var flora := world.get_node_or_null("Flora") as ZoneFlora
+	if grass == null or flora == null:
+		_check(false, "GRASS world.tscn has a Grass node")
+		return
+	var plain := [Vector2(300, -300), Vector2(-700, 300), Vector2(900, -1000), Vector2(-400, -900)]
+	var wood := [Vector2(0, 1400), Vector2(-900, 1500), Vector2(900, 1300), Vector2(400, 1700)]
+	var spots: Array = plain + wood
+	for curve in ZoneLayout.road_curves():
+		var pts: PackedVector2Array = curve["points"]
+		spots.append(pts[pts.size() / 2])
+	var per_square := int(ZoneGrass.CELL * ZoneGrass.CELL * ZoneLayout.GRASS_PER_M2)
+	var differ := 0
+	var too_thick := 0
+	var off_ground := 0
+	var blocked := 0
+	var bodies := 0
+	var batches := 0
+	var counts: Array[int] = []
+	for spot in spots:
+		var w := ZoneLayout.to_world_xz(spot)
+		var cell := Vector2i(int(floor(w.x / ZoneGrass.CELL)), int(floor(w.y / ZoneGrass.CELL)))
+		var first := grass.grow_cell(cell)
+		var second := grass.grow_cell(cell)
+		var a: PackedVector3Array = first.get_meta("tufts")
+		var b: PackedVector3Array = second.get_meta("tufts")
+		if a != b:
+			differ += 1
+		if a.size() > per_square:
+			too_thick += 1
+		counts.append(a.size())
+		for t in a:
+			if absf(t.y - terrain.height_at(t.x, t.z)) > GROUND_SLACK:
+				off_ground += 1
+			if flora.is_blocked(ZoneLayout.to_map(t)):
+				blocked += 1
+		batches = maxi(batches, first.get_child_count())
+		for n in _descendants(first):
+			if n is CollisionObject3D or n is CollisionShape3D:
+				bodies += 1
+		first.free()
+		second.free()
+	var plain_total := 0
+	var wood_total := 0
+	for i in plain.size():
+		plain_total += counts[i]
+		wood_total += counts[plain.size() + i]
+	_check(differ == 0, "GRASS a square grows the same tufts every time (%d differ)" % differ)
+	_check(plain_total > 0 and wood_total < plain_total, "GRASS the plain grows grass, the Greywood less (%d against %d tufts)" % [plain_total, wood_total])
+	_check(too_thick == 0, "GRASS no square holds more than %d tufts (%d do)" % [per_square, too_thick])
+	_check(off_ground == 0, "GRASS every tuft stands on the ground (%d do not)" % off_ground)
+	_check(blocked == 0, "GRASS no tuft grows where the flora may not: a road, the town, a field (%d do)" % blocked)
+	_check(bodies == 0 and batches <= ZoneGrass.VARIANTS_PER_CELL, "GRASS a square is at most %d batches and no physics body" % ZoneGrass.VARIANTS_PER_CELL)
 
 
 # The world position of every near-mesh flora instance, in build order.

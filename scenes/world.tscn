@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=4 uid="uid://h1lkpabnydg3"]
+[gd_scene load_steps=19 format=4 uid="uid://h1lkpabnydg3"]
 
 [ext_resource type="Script" uid="uid://td3xlala4836" path="res://scripts/player.gd" id="1_a202f"]
 [ext_resource type="PackedScene" uid="uid://bm4x7kpqr2n5" path="res://scenes/hud.tscn" id="2_hudsc"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scripts/zone/zone_flora.gd" id="9_flora"]
 [ext_resource type="Script" path="res://scripts/zone/zone_town.gd" id="11_town"]
 [ext_resource type="Script" path="res://scripts/zone/zone_landmarks.gd" id="12_landmarks"]
+[ext_resource type="Script" path="res://scripts/zone/zone_grass.gd" id="16_grass"]
 
 [sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_1"]
 rayleigh_color = Color(0.35, 0.48, 0.62, 1)
@@ -76,6 +77,9 @@ shape = SubResource("WorldBoundaryShape3D_floor")
 
 [node name="Flora" type="Node3D" parent="."]
 script = ExtResource("9_flora")
+
+[node name="Grass" type="Node3D" parent="."]
+script = ExtResource("16_grass")
 
 [node name="Town" type="Node3D" parent="."]
 script = ExtResource("11_town")
