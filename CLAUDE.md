@@ -4702,9 +4702,10 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `feat/scenery-generators` in both repos; MERGED, PUSHED AND EXPORTED 2026-11-24 (user: "go
   ahead!"; both deploy branches fast-forwarded, server `9a7c3ba`, client `074ab5b`; the zip
   `builds/ProjectDawn-alpha-074ab5b.zip`, stamped `074ab5b`, a release export, which replaces
-  `a1a154e`), pending the R720 redeploy (the obstacle file changed, so the zip and the redeploy go
-  together; the boot line must read `obstacles=45620 prisms (30512 walk, 32976 sight), hash
-  c4df3370b3ca`) and `scenery_models_checklist.md`**
+  `a1a154e`); DEPLOYED 2026-11-25 16:08 UTC (R720 boot line `build="9a7c3ba" dev_cmds=false
+  roamers=on`, terrain hash `f569ade0c331`, `obstacles=45620 prisms (30512 walk, 32976 sight),
+  hash c4df3370b3ca`, nobody online at the stop, `saved=0 unsaved=0`, `ledger check
+  mismatches=0`), so the zip to send is `074ab5b`; pending `scenery_models_checklist.md`**
   (session note `session_2026_11_24_scenery_generators.md`; plan
   `C:\Users\tyler\.claude\plans\cosmic-marinating-prism.md`). Python scripts in `tools/blender/`
   build Geometry Nodes generators headless in Blender 5.3, every variant one row of
