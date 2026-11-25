@@ -6,6 +6,8 @@ lands. The server flies the body and clamps it; the client predicts it. **Needs 
 redeployed from `feat/gm-flight` (or its merge) AND a client built from the same branch**: on
 the old client `/fly` does not exist, and on the old server the body flies alone until the
 next Position snaps it back. GM account only (`grant_gm`); a plain account sees nothing.
+**Since 2026-11-25 both halves are in the deploy branches:** the R720 (`9a7c3ba`) and the zip
+`builds/ProjectDawn-alpha-c4f5aa4.zip` are the pair to run this on.
 
 | Thing | Value | Where |
 |---|---|---|

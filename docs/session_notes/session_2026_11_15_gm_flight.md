@@ -217,3 +217,25 @@ Records: the To-Do entry, the same text on both client branches so the later mer
 the three server holders' `(on feat/gm-flight)` tags dropped from `invariants.md` (the tests
 are on the server deploy branch now); the pre-door sheet's section 9 names `8d1dc67`; the
 planner gained b61 (the build), o27 (this redeploy) and v63 (the flight sheet).
+
+## 10. The client half merged and exported (2026-11-25)
+
+The user asked for better movement and for the flight to come in now ("go ahead"); the door's
+date has been paused since 11-19, so the wait for the bump after the door no longer held. In
+`F:\Projects\Project_Dawn-zone` the deploy branch (`7de52ce`: the UI themes, R1 to R4, the `/` key, the
+scenery models) was merged into `feat/gm-flight`. One conflict, `scripts/hud.gd`: the flight
+label's constants kept beside the deploy branch's scene preloads, and the `/fly` arm, whose
+function had moved to `scripts/hud_chat_commands.gd` with R4, re-added there as `_cmd_fly`
+(body unchanged) under one `_with_args` key, with three rows in `tools/check_chat_commands.gd`
+(a plain account's `/fly`, `/fly 50` and `/fly off` each answer "Flight is not available.").
+`player.gd`, `test_panel.gd`, `net.gd` and `settings.gd` merged on their own. Merge commit
+`c4f5aa4`; the deploy branch fast-forwarded to it and pushed.
+
+Checks: all 21 of `check_all.ps1 -ServerRoot F:\Projects\server` (the deploy branch, `9a7c3ba`);
+the probes `probe_fly_reconciler`, `probe_flight_toggle`, `probe_obstacle_walk`,
+`probe_slash_opens_chat`, `probe_ui_theme_picker`, `probe_group_levels` and `probe_login_facing`
+green. The export from the worktree clean at `c4f5aa4`: `[BuildStamp] stamped c4f5aa4`,
+`--export-release`, booting clean headless (300 frames, exit 0), the DLL byte-identical to the
+one in the `074ab5b` zip. The zip `builds/ProjectDawn-alpha-c4f5aa4.zip` (41,983,189 bytes; the
+exe, the console exe, the DLL, the tester README and the players' checklist) replaces `074ab5b`.
+No server change: the R720's `9a7c3ba` has carried the server half since 11-16.

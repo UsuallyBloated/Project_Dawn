@@ -4169,6 +4169,19 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   player sees nothing new. The client half stays on `feat/gm-flight`: fly from the Godot
   editor in `F:\Projects\Project_Dawn-zone`, which `gm_flight_checklist.md` runs on (planner
   row v63).
+  **Client half MERGED AND EXPORTED 2026-11-25** (user, asking for better movement: "go
+  ahead"; the door's date paused, so the bump-after-the-door wait no longer held): the deploy
+  branch merged into `feat/gm-flight` (the only conflict was `hud.gd`'s `/fly` arm, re-added
+  as `_cmd_fly` in `scripts/hud_chat_commands.gd` with three rows in
+  `tools/check_chat_commands.gd`, as the flight handoff said), then the deploy branch
+  fast-forwarded to it and pushed (client `c4f5aa4`). All 21 checks green against the server
+  deploy branch, the flight probes and the obstacle, slash, theme, levels and facing probes
+  green. The zip `builds/ProjectDawn-alpha-c4f5aa4.zip`, stamped `c4f5aa4`, a release export
+  booting clean headless, the DLL unchanged, replaces `074ab5b`. Client only: the R720's
+  `9a7c3ba` already carries the server half, so no redeploy. A plain account sees nothing new
+  (every control is gated on `Net.is_gm()`, and the server refuses the `fly` line for anyone
+  else); the keybind list shows Fly Down (GM) and Fly Boost (GM) to everyone.
+  `gm_flight_checklist.md` runs on the zip now.
 
 ### UI polish
 - [x] **Sticky chat channel, WoW style** — **DONE + playtested 2026-10-27**
