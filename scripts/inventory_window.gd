@@ -2,7 +2,6 @@ extends DraggablePanel
 
 const SLOT_SIZE := 48
 const COLS := 2
-const C_BG := Color(0.07, 0.06, 0.04, 0.95)
 
 # The base inventory window. Every move goes through the server's cursor slot
 # (PD_W0027): a left-click lifts a stack into the hand or places the held one,
@@ -15,8 +14,15 @@ var _tooltip: PanelContainer = null
 var _tooltip_label: Label = null
 var _trash_cell: Panel = null
 var _delete_dialog: ConfirmationDialog = null
-var _wallet_label: Label = null
+@onready var _grid: GridContainer = $VBox/Grid
+@onready var _wallet_label: Label = $VBox/WalletLabel
+@onready var _bottom_row: HBoxContainer = $VBox/BottomRow
+@onready var _stack_btn: Button = $VBox/Header/StackBtn
+@onready var _close_btn: Button = $VBox/Header/CloseBtn
 
+# The frame is scenes/inventory_window.tscn (header with Stack All, the slot
+# grid, the wallet line, the bottom row); this script fills the grid, the
+# trash cell and the tooltip.
 func _ready() -> void:
 	_bag_windows.resize(Inventory.BASE_SLOT_COUNT)
 	_bag_windows.fill(null)
@@ -33,84 +39,23 @@ func _ready() -> void:
 	position = ((vp_size - size) * 0.5).round()
 
 func _build_ui() -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = C_BG
-	style.border_color = UITheme.C_BORDER
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", style)
-
 	var rows := ceili(float(Inventory.BASE_SLOT_COUNT) / float(COLS))
 	# header (24) + grid + wallet line (20) + trash slot + margins (24)
 	custom_minimum_size = Vector2(COLS * SLOT_SIZE + 24, rows * SLOT_SIZE + 24 + 20 + SLOT_SIZE + 32)
-
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 4)
-	vbox.offset_left = 8; vbox.offset_top = 8
-	vbox.offset_right = -8; vbox.offset_bottom = -8
-	add_child(vbox)
-
-	var header := HBoxContainer.new()
-	vbox.add_child(header)
-
-	var title := Label.new()
-	title.text = "Inventory"
-	title.add_theme_color_override("font_color", UITheme.C_TITLE)
-	title.add_theme_font_size_override("font_size", 14)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
-
-	var stack_btn := Button.new()
-	stack_btn.text = "Stack All"
-	stack_btn.flat = true
-	stack_btn.add_theme_font_size_override("font_size", 10)
-	stack_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
-	stack_btn.tooltip_text = "Consolidate stackable items into fewest stacks"
-	stack_btn.pressed.connect(Inventory.stack_all)
-	header.add_child(stack_btn)
-
-	var close_btn := Button.new()
-	close_btn.text = "✕"
-	close_btn.flat = true
-	close_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
-	close_btn.pressed.connect(func(): visible = false)
-	header.add_child(close_btn)
-
-	var grid := GridContainer.new()
-	grid.columns = COLS
-	grid.add_theme_constant_override("h_separation", 4)
-	grid.add_theme_constant_override("v_separation", 4)
-	vbox.add_child(grid)
-
+	_stack_btn.pressed.connect(Inventory.stack_all)
+	_close_btn.pressed.connect(func(): visible = false)
 	for i in Inventory.BASE_SLOT_COUNT:
 		var cell := _make_slot_cell(i)
-		grid.add_child(cell)
+		_grid.add_child(cell)
 		_base_cells.append(cell)
-
-	# Wallet line — raw per-tier stacks, same format as the vendor window
+	# Wallet line: raw per-tier stacks, same format as the vendor window
 	# footer. Never the reduced form: a 4,000-copper hoard reads "4000c".
-	_wallet_label = Label.new()
 	_wallet_label.text = _wallet_text()
-	_wallet_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_wallet_label.add_theme_font_size_override("font_size", 12)
-	_wallet_label.add_theme_color_override("font_color", UITheme.C_COINS)
-	# PASS (not STOP): tooltips need a non-IGNORE filter, and clicks should
-	# still fall through so the window can be dragged from the wallet line.
-	_wallet_label.mouse_filter = Control.MOUSE_FILTER_PASS
-	_wallet_label.tooltip_text = "Your coins, as carried — stacks are never consolidated automatically. Every coin has weight."
-	vbox.add_child(_wallet_label)
-
 	# Trash (destroy) sits on the bottom row. The Drop cell that used to sit
 	# beside it is gone (2026-08-28): dropping is clicking the world while
 	# holding, which is where a player reaches for it anyway.
-	var bottom_row := HBoxContainer.new()
-	bottom_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	bottom_row.add_theme_constant_override("separation", 8)
 	_trash_cell = _make_trash_cell()
-	bottom_row.add_child(_trash_cell)
-	vbox.add_child(bottom_row)
-
+	_bottom_row.add_child(_trash_cell)
 	var tip := make_tooltip()
 	_tooltip = tip[0]
 	_tooltip_label = tip[1]

@@ -26,7 +26,7 @@ func _run() -> void:
 	hud.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(hud)
 	await process_frame
-	var tw = load("res://scripts/trade_window.gd").new()
+	var tw = load("res://scenes/trade_window.tscn").instantiate()
 	hud.add_child(tw)
 	await process_frame
 	await process_frame

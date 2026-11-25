@@ -34,13 +34,4 @@ func get_cap(skill_name: String) -> int:
 # The casting skills no longer scale a spell's damage, duration or absorb: as
 # on P99 a spell does its listed number and a low skill makes it FIZZLE, which
 # the server rolls at the cast's start (the EQ parity audit of 2026-10-20).
-
-# Probability [0.10, 0.70] that an incoming hit interrupts an active cast.
-# At channeling skill 0: 70%. At max skill: 10%.
-# Returns 1.0 for non-casters (cap = 0) — should never be reached in practice.
-func get_interrupt_chance() -> float:
-	var cap := get_cap("channeling")
-	if cap == 0:
-		return 1.0
-	var ratio := float(get_current("channeling")) / float(cap)
-	return maxf(0.10, 0.70 - ratio * 0.60)
+# The channeling skill's interrupt roll is the server's too.

@@ -20,31 +20,26 @@ const SLOT_PX := 44
 var _partner_id: int = -1
 var _my_slots: Array[Button] = []
 var _their_slots: Array[Button] = []
-var _my_accept_light: Label = null
-var _their_accept_light: Label = null
-var _accept_button: Button = null
+@onready var _my_accept_light: Label = $Root/Lights/MyAccept
+@onready var _their_accept_light: Label = $Root/Lights/TheirAccept
+@onready var _accept_button: Button = $Root/Buttons/AcceptButton
+@onready var _cancel_button: Button = $Root/Buttons/CancelButton
+@onready var _columns: HBoxContainer = $Root/Columns
+@onready var _title: Label = $Root/Title
 var _coin_fields: Dictionary = {}  # tier name -> SpinBox
 var _their_coins_label: Label = null
-var _title: Label = null
 # The last coin offer the SERVER confirmed for my side. Pushes only fire when
 # a field differs from this, so re-committing an unchanged value (or a
 # refused overdraft the server never applied) cannot fire a no-op edit that
 # clears both accepts.
 var _my_coins_confirmed: Array[int] = [0, 0, 0, 0]
 
+# The frame is scenes/trade_window.tscn, centred on screen (anchored at the
+# midpoint with offsets: a `position` set here would be measured from the
+# screen's corner, which once put it at (-280, -180)); this script builds the
+# two sides and drives everything from the server's messages.
 func _ready() -> void:
-	custom_minimum_size = Vector2(560, 360)
-	# Centered on screen: anchored at the midpoint, offset half the size each
-	# way (as the dialogue window and quest journal do). Setting `position`
-	# here instead put it at (-280, -180): this runs inside the HUD, so
-	# `position` is measured from the screen's corner, not the anchor.
-	set_anchors_preset(Control.PRESET_CENTER)
-	offset_left = -custom_minimum_size.x / 2.0
-	offset_top = -custom_minimum_size.y / 2.0
-	offset_right = custom_minimum_size.x / 2.0
-	offset_bottom = custom_minimum_size.y / 2.0
 	_build()
-	visible = false
 	Net.world_trade_opened.connect(_on_trade_opened)
 	Net.world_trade_offer_update.connect(_on_offer_update)
 	Net.world_trade_accept_state.connect(_on_accept_state)
@@ -62,50 +57,10 @@ func _on_visibility_changed() -> void:
 		Net.broadcast_trade_cancel()
 
 func _build() -> void:
-	var root := VBoxContainer.new()
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 12
-	root.offset_top = 12
-	root.offset_right = -12
-	root.offset_bottom = -12
-	add_child(root)
-
-	_title = Label.new()
-	_title.text = "Trade"
-	_title.add_theme_font_size_override("font_size", 20)
-	root.add_child(_title)
-
-	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 24)
-	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(columns)
-
-	columns.add_child(_build_side("Your offer", _my_slots, true))
-	columns.add_child(_build_side("Their offer", _their_slots, false))
-
-	# Accept lights.
-	var lights := HBoxContainer.new()
-	lights.add_theme_constant_override("separation", 24)
-	root.add_child(lights)
-	_my_accept_light = Label.new()
-	_my_accept_light.text = "You: not accepted"
-	lights.add_child(_my_accept_light)
-	_their_accept_light = Label.new()
-	_their_accept_light.text = "Them: not accepted"
-	lights.add_child(_their_accept_light)
-
-	# Buttons.
-	var buttons := HBoxContainer.new()
-	buttons.add_theme_constant_override("separation", 12)
-	root.add_child(buttons)
-	_accept_button = Button.new()
-	_accept_button.text = "Trade"
+	_columns.add_child(_build_side("Your offer", _my_slots, true))
+	_columns.add_child(_build_side("Their offer", _their_slots, false))
 	_accept_button.pressed.connect(func(): Net.broadcast_trade_accept())
-	buttons.add_child(_accept_button)
-	var cancel := Button.new()
-	cancel.text = "Cancel"
-	cancel.pressed.connect(func(): Net.broadcast_trade_cancel())
-	buttons.add_child(cancel)
+	_cancel_button.pressed.connect(func(): Net.broadcast_trade_cancel())
 
 func _build_side(heading: String, slot_arr: Array[Button], mine: bool) -> Control:
 	var col := VBoxContainer.new()

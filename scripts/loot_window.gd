@@ -1,73 +1,29 @@
 class_name LootWindow
 extends DraggablePanel
 
-const C_BG := Color(0.07, 0.06, 0.04, 0.95)
-
 # Duck-typed: a LootBag OR a Corpse (corpse / resurrection Slice 2). Both expose
 # `items`, `coin_*` + `has_coins()`, `bag_id` (loot-target id), and an
 # `items_changed` signal, so this window drives either without caring which.
+# Set by the opener (Loot.show_window) before the window joins the tree.
 var bag
-var _rows: VBoxContainer
+@onready var _rows: VBoxContainer = $VBox/Rows
+@onready var _take_all_btn: Button = $VBox/Header/TakeAllBtn
+@onready var _close_btn: Button = $VBox/Header/CloseBtn
 
-func _init(b) -> void:
-	super()   # a subclass constructor skips the base's unless asked; the stacking hook lives there
-	bag = b
-
+# The frame is scenes/loot_window.tscn (title, Take All, close, the row list);
+# this script fills the rows from the bag.
 func _ready() -> void:
 	bag.tree_exiting.connect(queue_free)
 	# Track 5 sub-task 4: server re-broadcasts a fresh bag snapshot
 	# every time a slot is claimed. Manager updates bag.items, then
 	# emits items_changed; we re-render the row list.
 	bag.items_changed.connect(refresh)
-	_build_ui()
+	_take_all_btn.pressed.connect(_take_all)
+	_close_btn.pressed.connect(func(): visible = false)
+	refresh()
 	await get_tree().process_frame
 	size = Vector2(360.0, 220.0)
 	position = (get_viewport_rect().size * 0.5) - (size * 0.5) + Vector2(-80.0, -60.0)
-
-func _build_ui() -> void:
-	var style := StyleBoxFlat.new()
-	style.bg_color = C_BG
-	style.border_color = UITheme.C_GOLDEN_BORDER
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", style)
-	custom_minimum_size = Vector2(320.0, 80.0)
-
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 4)
-	vbox.offset_left = 8; vbox.offset_top = 8
-	vbox.offset_right = -8; vbox.offset_bottom = -8
-	add_child(vbox)
-
-	var header := HBoxContainer.new()
-	vbox.add_child(header)
-
-	var title := Label.new()
-	title.text = "Loot"
-	title.add_theme_color_override("font_color", UITheme.C_TITLE)
-	title.add_theme_font_size_override("font_size", 14)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(title)
-
-	var take_all_btn := Button.new()
-	take_all_btn.text = "Take All"
-	take_all_btn.add_theme_font_size_override("font_size", 11)
-	take_all_btn.pressed.connect(_take_all)
-	header.add_child(take_all_btn)
-
-	var close_btn := Button.new()
-	close_btn.text = "✕"
-	close_btn.flat = true
-	close_btn.add_theme_color_override("font_color", UITheme.C_TEXT)
-	close_btn.pressed.connect(func(): visible = false)
-	header.add_child(close_btn)
-
-	_rows = VBoxContainer.new()
-	_rows.add_theme_constant_override("separation", 3)
-	vbox.add_child(_rows)
-
-	refresh()
 
 func refresh() -> void:
 	if not is_instance_valid(bag):

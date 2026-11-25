@@ -1,37 +1,19 @@
-extends CharacterBody3D
+extends "res://scripts/remote_entity.gd"
 class_name RemotePlayer
 
 # Visual stand-in for another player whose state lives on the server. No
-# input handling, no physics integration — just a position-interpolation
+# input handling, no physics integration — RemoteEntity's position-interpolation
 # buffer fed by Net.world_position broadcasts via RemotePlayerManager,
 # plus a cache of the peer's latest resources / cast / buffs (delivered
 # the same way) that the HUD reads when the local player targets this peer.
-#
-# Why interpolation (not snap-or-lerp like the local player)? The local
-# player has client-side prediction to lerp from. Remote players don't —
-# we have no idea what the future will hold, so we render INTERP_LAG
-# seconds in the past and interpolate between the two snapshots that
-# straddle the render time. That guarantees a smooth path through every
-# server-confirmed position, at the cost of a ~100 ms render delay.
 
-# Mirrors the per-resource signals RemoteEnemy emits so hud.gd's existing
-# target-tracking can subscribe via the same `hp_changed(current, maximum)`
-# pattern without a target-type switch.
-signal hp_changed(current: float, maximum: float)
 signal mp_changed(current: float, maximum: float)
 signal stamina_changed(current: float, maximum: float)
-# Emitted from `apply_death` so listeners (Combat auto-attack
-# disengage, target frame clears, etc.) react when this peer dies.
-signal died(peer)
 # Track 4 sub-task 2 cast bar. cast_started fires when a fresh CastStart
 # arrives (or a late-joiner seed mid-cast). cast_ended fires on Complete /
 # Fail and on the defensive duration-elapsed timeout in _process.
 signal cast_started(spell_name: String, duration: float)
 signal cast_ended
-# Track 4 sub-task 3 — replicated buff snapshot. Fires whenever the peer's
-# buff list mutates server-side. Subscribers (HUD target frame) re-render
-# from `buff_names` / `buff_durations`.
-signal buffs_changed
 
 # Track 22.H — fires when the server's EntityTarget broadcast for
 # this peer lands. ToT HUD subscribes so it can resolve what tracked
@@ -63,9 +45,7 @@ var max_stamina: float = 0.0
 # the local target points at. RemotePlayer exposes player_name through the
 # same field name so the existing target-frame code reads cleanly. Set in
 # _ready since both fields are populated by RemotePlayerManager pre-add.
-# Track 4 leaves PvP off — `is_dead` stays false; sub-task 5 wires death.
 var mob_name: String = ""
-var is_dead: bool = false
 
 # Cast state cache. cast_spell_name is "" when not casting; cast_start_time
 # is in seconds (Time.get_unix_time_from_system clock). HUD reads these
@@ -74,27 +54,6 @@ var is_dead: bool = false
 var cast_spell_name: String = ""
 var cast_duration: float = 0.0
 var cast_start_time: float = 0.0
-
-# Buff snapshot — parallel arrays from the wire. Durations were the
-# remaining time at the moment of the broadcast; we tick them down
-# locally between snapshots so the target HUD shows a live countdown.
-# Server fans a fresh snapshot when the set changes (apply / expire /
-# strip / dispel), which re-anchors these values.
-var buff_names: PackedStringArray = PackedStringArray()
-var buff_durations: PackedFloat32Array = PackedFloat32Array()
-# Infinite-duration sentinel from the server (Lich Form, Absorb pool).
-# We skip these in the local tick so they don't drift away from
-# "permanent" semantics.
-const _BUFF_INF_SENTINEL := 999999.0
-
-# Interpolation buffer of { time: float, pos: Vector3, yaw: float } dicts
-# ordered by `time`. Kept short — only the two snapshots straddling
-# (now - INTERP_LAG) actually matter; the rest is in-flight headroom.
-const BUFFER_CAPACITY := 5
-# Render INTERP_LAG seconds behind the latest snapshot so we always have
-# two snapshots to lerp between. 100 ms = 2 server ticks at 20 Hz; per
-# Track 3 handoff open question 2 (user-confirmed).
-const INTERP_LAG := 0.1
 
 # The hop a relayed jump plays on this body: the local player's own jump
 # arc (player.gd's JUMP_VELOCITY and GRAVITY, kept in step by hand), drawn
@@ -107,8 +66,6 @@ const JUMP_AIRTIME := -2.0 * JUMP_VELOCITY / GRAVITY
 var _jump_t := -1.0
 var _visual_base_y := 0.0
 var _label_base_y := 0.0
-var _snapshots: Array[Dictionary] = []
-var _last_seq: int = -1
 
 @onready var name_label: Label3D = $NameLabel
 
@@ -241,24 +198,6 @@ func _apply_respawn() -> void:
 	if name_label:
 		tw.parallel().tween_property(name_label, "modulate", Color.WHITE, 0.3)
 
-func on_position_update(pos: Vector3, yaw: float, sequence: int) -> void:
-	# Position channel is Unreliable; drop reorders and dupes. Sequence is
-	# the server's `last_move_seq` per sender — monotone within one
-	# session, but resets to 0 if the same char rejoins.
-	if sequence <= _last_seq:
-		return
-	_last_seq = sequence
-	# Track 4 sub-task 5: while dead, freeze the corpse at the death
-	# location. The dying client's respawn fires apply_health_update
-	# (hp > 0) → _apply_respawn() clears the buffer, so the next
-	# Position after that arrives in cold-start mode and snaps.
-	if is_dead:
-		return
-	var now := Time.get_unix_time_from_system()
-	_snapshots.append({"time": now, "pos": pos, "yaw": yaw})
-	if _snapshots.size() > BUFFER_CAPACITY:
-		_snapshots.pop_front()
-
 ## The jump relay's cue: play the hop from the start (a second cue mid-air
 ## restarts it, which is what a real double-tap looks like too). A corpse
 ## does not jump.
@@ -266,7 +205,6 @@ func play_jump() -> void:
 	if is_dead:
 		return
 	_jump_t = 0.0
-
 
 func _advance_jump(delta: float) -> void:
 	if _jump_t < 0.0:
@@ -281,25 +219,9 @@ func _advance_jump(delta: float) -> void:
 	if name_label:
 		name_label.position.y = _label_base_y + lift
 
-
 func _process(delta: float) -> void:
 	_advance_jump(delta)
-	# Tick buff durations down so the target HUD shows a live countdown
-	# between server snapshots (server only fans BuffSnapshot when the
-	# set changes — apply / expire / strip — so otherwise values would
-	# freeze at the last snapshotted remaining). Floor at 0; the next
-	# snapshot will drop the entry. Skip infinite-duration sentinels.
-	if buff_durations.size() > 0:
-		var any_changed := false
-		for i in buff_durations.size():
-			var d: float = buff_durations[i]
-			if d > 0.0 and d < _BUFF_INF_SENTINEL:
-				var new_d: float = maxf(0.0, d - delta)
-				buff_durations[i] = new_d
-				any_changed = true
-		if any_changed:
-			buffs_changed.emit()
-
+	super(delta)
 	# Defensive cast-bar auto-end: if the casting peer crashed before
 	# sending CastComplete / CastFail, the cast bar would linger
 	# indefinitely without this. 0.5 s grace so a slightly-late server
@@ -312,37 +234,3 @@ func _process(delta: float) -> void:
 		cast_duration = 0.0
 		cast_ended.emit()
 
-func _physics_process(_delta: float) -> void:
-	if is_dead:
-		return
-	if _snapshots.size() < 2:
-		# Cold start: render at the only known position. Two snapshots
-		# arrive after at most one server tick (50 ms), so this branch
-		# is the visual on entering AOI and nothing more.
-		if _snapshots.size() == 1:
-			global_position = _snapshots[0]["pos"]
-		return
-
-	var target_time := Time.get_unix_time_from_system() - INTERP_LAG
-	# Default to the most recent snapshot pair; replace if an earlier pair
-	# actually straddles target_time. Walking the buffer linearly is fine
-	# at BUFFER_CAPACITY = 5.
-	var a: Dictionary = _snapshots[_snapshots.size() - 2]
-	var b: Dictionary = _snapshots[_snapshots.size() - 1]
-	for i in range(_snapshots.size() - 1):
-		if _snapshots[i]["time"] <= target_time and _snapshots[i + 1]["time"] >= target_time:
-			a = _snapshots[i]
-			b = _snapshots[i + 1]
-			break
-
-	var span: float = b["time"] - a["time"]
-	if span <= 0.0:
-		# Snapshots have identical timestamps — degenerate but harmless;
-		# snap to the newer one.
-		global_position = b["pos"]
-		rotation.y = b["yaw"]
-		return
-
-	var t: float = clampf((target_time - a["time"]) / span, 0.0, 1.0)
-	global_position = (a["pos"] as Vector3).lerp(b["pos"], t)
-	rotation.y = lerp_angle(a["yaw"], b["yaw"], t)

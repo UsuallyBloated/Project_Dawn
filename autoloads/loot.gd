@@ -4,6 +4,8 @@ extends Node
 # own Corpse. The server owns every roll and every item; the window shows what
 # the server sent and sends Loot intents back.
 
+const LootWindowScene := preload("res://scenes/loot_window.tscn")
+
 var _ui_layer: CanvasLayer
 
 func _ready() -> void:
@@ -16,5 +18,6 @@ func show_window(bag) -> void:  # bag: LootBag or Corpse (Slice 2 corpse loot)
 		if child is LootWindow and child.bag == bag:
 			child.visible = true
 			return
-	var window := LootWindow.new(bag)
+	var window: LootWindow = LootWindowScene.instantiate()
+	window.bag = bag
 	_ui_layer.add_child(window)

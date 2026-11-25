@@ -49,8 +49,15 @@ target name.
 ## 4 — Chat tab memory
 - [ ] **With two chat windows docked as tabs, click the second tab, then close the game with the window X (not /camp) and relaunch** → the second tab is the one showing. notes:
 
+## 4b — The slash key (added 2026-11-18; needs the next export)
+- [ ] **With the chat line closed, press `/`** → the chat line opens holding one `/`, the caret after it; type `loc` and Enter and `/loc` answers. notes:
+- [ ] **With the chat line open, type `/`** → it is typed like any character; the line does not reset. notes:
+- [ ] **Press Enter with the line closed** → it still opens empty. notes:
+- [ ] **Options > Keybinds: try to bind any action to `/`** → refused, as Enter and Escape are. notes:
+- [ ] **Click into another text field (the bank's coin amount) and type `/`** → it goes into that field; the chat line does not open. notes:
+
 ## 5 — Regression: nearby behavior unchanged
-- [ ] **`/tell B hi` and `/t B hi`** → both still send; `/tell B` with no message still prints the usage line. notes:
+- [ ] **`/tell B hi` and `/t B hi`** → both still send; `/tell B` with no message puts the line on `[Tell: B]` and sends nothing (the sticky channel); a bare `/tell` prints the usage line. notes:
 - [ ] **Right-click an NPC, a corpse and a loot bag** → talk / loot exactly as before. notes:
 - [ ] **Log out and in on the same client as a different character, then press Enter, TAB** → the line stays empty: the previous character's tell partners are gone. (Only reachable once a return-to-lobby flow exists; today a relaunch clears it anyway. Mark `[-]` if not testable.) notes:
 

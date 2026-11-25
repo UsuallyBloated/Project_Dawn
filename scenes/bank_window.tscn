@@ -1,0 +1,152 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/bank_window.gd" id="1_bank"]
+
+[node name="BankWindow" type="Panel"]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -230.0
+offset_top = -280.0
+offset_right = 230.0
+offset_bottom = 280.0
+theme_type_variation = &"WindowPanel"
+script = ExtResource("1_bank")
+
+[node name="Root" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="Root"]
+
+[node name="TitleLbl" type="Label" parent="Root/Header"]
+size_flags_horizontal = 3
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 14
+text = "Bank"
+
+[node name="CloseBtn" type="Button" parent="Root/Header"]
+text = "✕"
+flat = true
+
+[node name="Tabs" type="TabContainer" parent="Root"]
+size_flags_vertical = 3
+
+[node name="Coins" type="VBoxContainer" parent="Root/Tabs"]
+theme_override_constants/separation = 6
+
+[node name="WalletRow" type="HBoxContainer" parent="Root/Tabs/Coins"]
+theme_override_constants/separation = 8
+
+[node name="Caption" type="Label" parent="Root/Tabs/Coins/WalletRow"]
+theme_override_font_sizes/font_size = 12
+text = "Carried:"
+
+[node name="BankRow" type="HBoxContainer" parent="Root/Tabs/Coins"]
+theme_override_constants/separation = 8
+
+[node name="Caption" type="Label" parent="Root/Tabs/Coins/BankRow"]
+theme_override_font_sizes/font_size = 12
+text = "Bank:"
+
+[node name="Rule1" type="HSeparator" parent="Root/Tabs/Coins"]
+
+[node name="DWHeader" type="Label" parent="Root/Tabs/Coins"]
+theme_override_font_sizes/font_size = 12
+text = "Deposit / Withdraw"
+
+[node name="SpinsRow" type="HBoxContainer" parent="Root/Tabs/Coins"]
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="BtnRow" type="HBoxContainer" parent="Root/Tabs/Coins"]
+theme_override_constants/separation = 6
+
+[node name="DepositBtn" type="Button" parent="Root/Tabs/Coins/BtnRow"]
+size_flags_horizontal = 3
+text = "Deposit"
+
+[node name="WithdrawBtn" type="Button" parent="Root/Tabs/Coins/BtnRow"]
+size_flags_horizontal = 3
+text = "Withdraw"
+
+[node name="Rule2" type="HSeparator" parent="Root/Tabs/Coins"]
+
+[node name="ExHeader" type="Label" parent="Root/Tabs/Coins"]
+theme_override_font_sizes/font_size = 12
+text = "Exchange coin (free)"
+
+[node name="ExRow" type="HBoxContainer" parent="Root/Tabs/Coins"]
+theme_override_constants/separation = 6
+
+[node name="QtySpin" type="SpinBox" parent="Root/Tabs/Coins/ExRow"]
+custom_minimum_size = Vector2(96, 0)
+min_value = 1.0
+max_value = 1e+09
+value = 100.0
+
+[node name="FromOpt" type="OptionButton" parent="Root/Tabs/Coins/ExRow"]
+
+[node name="ToCaption" type="Label" parent="Root/Tabs/Coins/ExRow"]
+text = "to"
+
+[node name="ToOpt" type="OptionButton" parent="Root/Tabs/Coins/ExRow"]
+
+[node name="ExchangeBtn" type="Button" parent="Root/Tabs/Coins/ExRow"]
+text = "Exchange"
+
+[node name="ExHint" type="Label" parent="Root/Tabs/Coins"]
+theme_override_font_sizes/font_size = 10
+text = "100 copper = 1 silver. Up-conversions take whole multiples; any remainder stays put."
+autowrap_mode = 3
+
+[node name="Items" type="VBoxContainer" parent="Root/Tabs"]
+visible = false
+theme_override_constants/separation = 6
+
+[node name="TgtRow" type="HBoxContainer" parent="Root/Tabs/Items"]
+theme_override_constants/separation = 6
+
+[node name="Caption" type="Label" parent="Root/Tabs/Items/TgtRow"]
+theme_override_font_sizes/font_size = 12
+text = "Deposit to:"
+
+[node name="PersonalBtn" type="Button" parent="Root/Tabs/Items/TgtRow"]
+toggle_mode = true
+button_pressed = true
+text = "Personal"
+
+[node name="SharedBtn" type="Button" parent="Root/Tabs/Items/TgtRow"]
+toggle_mode = true
+text = "Shared"
+
+[node name="PersonalHeader" type="Label" parent="Root/Tabs/Items"]
+theme_override_font_sizes/font_size = 12
+text = "Bank vault (this character)"
+
+[node name="PersonalGrid" type="GridContainer" parent="Root/Tabs/Items"]
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 5
+
+[node name="SharedHeader" type="Label" parent="Root/Tabs/Items"]
+theme_override_font_sizes/font_size = 12
+text = "Shared vault (all your characters)"
+
+[node name="SharedGrid" type="GridContainer" parent="Root/Tabs/Items"]
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 5
+
+[node name="ItemsHint" type="Label" parent="Root/Tabs/Items"]
+theme_override_font_sizes/font_size = 10
+autowrap_mode = 3

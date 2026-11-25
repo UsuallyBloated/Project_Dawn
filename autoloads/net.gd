@@ -582,11 +582,6 @@ func broadcast_cast_fail(reason: String) -> void:
 		return
 	send_cast_fail_broadcast(reason)
 
-func broadcast_buff_snapshot(names: PackedStringArray, durations: PackedFloat32Array) -> void:
-	if _state != State.CONNECTED_APP:
-		return
-	send_buff_snapshot_broadcast(names, durations)
-
 # Track 4 sub-task 4 combat broadcasts.
 func broadcast_hit(target: int, amount: int, crit: bool, dmg_type: int) -> void:
 	if _state != State.CONNECTED_APP:
@@ -616,7 +611,7 @@ func broadcast_set_target(target_id: int) -> void:
 # `/tell` recipient; pass "" for the other channels. Server fans
 # `ChatMessage` to recipients (AOI peers for Say, every in-world peer for
 # Shout/Ooc, the single target for Tell). The sender's own echo is added
-# locally by `hud.gd`, not via the server.
+# locally by the chat commands (`hud_chat_commands.gd`), not via the server.
 func broadcast_chat(channel: int, text: String, target_name: String = "") -> void:
 	if _state != State.CONNECTED_APP:
 		return
@@ -824,14 +819,6 @@ func broadcast_trade_cancel() -> void:
 	if _state != State.CONNECTED_APP:
 		return
 	send_trade_cancel()
-
-# Track 13.2.b — split `count` items off the src stack into dst. Dst
-# must be empty or hold the same item_path; the server rejects
-# different-item dst (use broadcast_move_item for swaps).
-func broadcast_split_stack(src_location: String, src_slot: int, dst_location: String, dst_slot: int, count: int) -> void:
-	if _state != State.CONNECTED_APP:
-		return
-	send_split_stack(src_location, src_slot, dst_location, dst_slot, count)
 
 # Track 13.2.b — drop `count` of the entry at (location, slot) at the
 # player's feet as a server-owned LootBag. `count <= 0` drops the

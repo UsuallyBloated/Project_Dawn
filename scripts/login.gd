@@ -135,6 +135,10 @@ func _make_view() -> Control:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	var panel := PanelContainer.new()
+	# The frame wears the theme's window box: with no style of its own it showed
+	# the engine's grey under every palette (dark text on a dark field under
+	# parchment, 2026-11-18).
+	panel.theme_type_variation = &"WindowPanel"
 	panel.custom_minimum_size = Vector2(VIEW_PANEL_WIDTH, 0)
 	center.add_child(panel)
 	var m := MarginContainer.new()

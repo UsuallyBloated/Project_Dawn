@@ -1,0 +1,986 @@
+# The fixed set of scenery variants: every row is one exported model, rebuilt
+# exactly from its seed and sliders (tools/blender/gen_*.py). Sliders a row
+# leaves out take the generator's default. Changing a row changes that model's
+# collision, which ships as a server redeploy and a new zip.
+
+[[pine]]
+variant = 1
+Seed = 101
+Height = 10.0
+Tiers = 4
+"Crown Base" = 2.6
+"Tier Radius" = 3.1
+"Trunk Radius" = 0.55
+
+[[pine]]
+variant = 2
+Seed = 202
+Height = 14.0
+Tiers = 5
+"Crown Base" = 3.4
+"Tier Radius" = 3.9
+"Trunk Radius" = 0.75
+Spire = 0.8
+"Skirt Droop" = 0.8
+
+[[pine]]
+variant = 3
+Seed = 303
+Height = 8.0
+Tiers = 3
+Taper = 0.6
+"Crown Base" = 2.4
+"Tier Radius" = 3.3
+"Trunk Radius" = 0.7
+Spire = 0.2
+
+[[pine]]
+variant = 4
+Seed = 404
+Height = 18.0
+Tiers = 5
+Lean = 1.2
+"Crown Base" = 4.4
+"Tier Radius" = 4.8
+"Trunk Radius" = 0.95
+"Skirt Droop" = 1.1
+
+[[pine]]
+variant = 5
+Seed = 505
+Height = 22.0
+Tiers = 6
+"Crown Base" = 5.2
+"Tier Radius" = 5.6
+"Trunk Radius" = 1.15
+"Skirt Points" = 10
+"Skirt Droop" = 1.2
+Spire = 0.4
+
+[[pine]]
+variant = 6
+Seed = 606
+Height = 26.0
+Tiers = 7
+Taper = 0.8
+"Crown Base" = 6.4
+"Tier Radius" = 6.2
+"Trunk Radius" = 1.4
+"Skirt Points" = 10
+"Skirt Droop" = 1.4
+Spire = 0.9
+"Trunk Sides" = 9
+
+# Boulders: twelve shapes of about the placeholder's size; ZoneFlora's scale
+# (0.5 to 2.6, most of them small) makes the size range.
+
+# A rounded field boulder
+[[boulder]]
+variant = 1
+Seed = 1101
+
+# A blocky cube
+[[boulder]]
+variant = 2
+Seed = 1202
+Squareness = 0.85
+Length = 2.2
+Width = 2.0
+Height = 1.9
+Cuts = 2
+"Cut Depth" = 0.25
+Lumpiness = 0.05
+
+# A flat slab
+[[boulder]]
+variant = 3
+Seed = 1303
+Length = 3.0
+Width = 2.4
+Height = 1.1
+Squareness = 0.8
+Cuts = 3
+"Cut Depth" = 0.35
+"Cut Tilt" = 0.8
+
+# A standing stone
+[[boulder]]
+variant = 4
+Seed = 1404
+Length = 1.2
+Width = 1.0
+Height = 3.2
+Bury = 0.5
+Squareness = 0.6
+Cuts = 4
+"Cut Tilt" = -0.5
+
+# A long ridge
+[[boulder]]
+variant = 5
+Seed = 1505
+Length = 3.6
+Width = 1.4
+Height = 1.4
+Squareness = 0.5
+Cuts = 4
+
+# A wedge
+[[boulder]]
+variant = 6
+Seed = 1606
+Length = 2.4
+Width = 2.0
+Height = 1.8
+Cuts = 2
+"Cut Depth" = 0.7
+"Cut Tilt" = 0.6
+
+# A shattered stone, many facets
+[[boulder]]
+variant = 7
+Seed = 1707
+Points = 48
+Cuts = 8
+"Cut Depth" = 0.25
+Squareness = 0.3
+
+# A low mound
+[[boulder]]
+variant = 8
+Seed = 1808
+Length = 2.8
+Width = 2.6
+Height = 1.4
+Squareness = 0.1
+Lumpiness = 0.2
+Cuts = 1
+"Base Cut" = 0.65
+
+# A cube with chipped corners
+[[boulder]]
+variant = 9
+Seed = 1909
+Squareness = 1.0
+Cuts = 6
+"Cut Depth" = 0.15
+Lumpiness = 0.03
+
+# A dome
+[[boulder]]
+variant = 10
+Seed = 2010
+Length = 2.4
+Width = 2.2
+Height = 2.0
+"Base Cut" = 0.5
+Squareness = 0.15
+Cuts = 2
+
+# A shard
+[[boulder]]
+variant = 11
+Seed = 2111
+Length = 1.6
+Width = 1.3
+Height = 3.0
+Squareness = 0.3
+Cuts = 5
+"Cut Depth" = 0.4
+"Cut Tilt" = -0.3
+"Base Cut" = 0.6
+Points = 24
+
+# A split block
+[[boulder]]
+variant = 12
+Seed = 2212
+Length = 2.6
+Width = 1.8
+Height = 1.6
+Squareness = 0.75
+Cuts = 3
+"Cut Depth" = 0.5
+
+# Broadleaves: six deciduous trees, from the placeholder's size (about 9 m)
+# up to a giant; ZoneFlora's scale narrows to about 0.85 to 1.15 around them.
+
+# A round field tree
+[[broadleaf]]
+variant = 1
+Seed = 3101
+
+# A spreading oak, low and wide
+[[broadleaf]]
+variant = 2
+Seed = 3202
+"Fork Height" = 3.0
+"Trunk Radius" = 0.7
+"Trunk Sides" = 7
+Limbs = 6
+"Limb Length" = 5.5
+Spread = 1.15
+Upturn = 0.2
+"Clump Size" = 2.8
+"Clump Squash" = 0.6
+
+# A tall, narrow tree
+[[broadleaf]]
+variant = 3
+Seed = 3303
+"Fork Height" = 5.5
+"Trunk Radius" = 0.55
+Limbs = 4
+"Limb Length" = 5.0
+Spread = 0.55
+Leader = 0.1
+"Clump Size" = 2.6
+"Clump Squash" = 0.9
+
+# A crooked, leaning tree
+[[broadleaf]]
+variant = 4
+Seed = 3404
+"Fork Height" = 3.2
+"Trunk Radius" = 0.5
+Limbs = 3
+"Limb Length" = 4.0
+Crook = 0.8
+Lean = 1.5
+"Clump Size" = 2.4
+
+# A big old tree
+[[broadleaf]]
+variant = 5
+Seed = 3505
+"Fork Height" = 5.0
+"Trunk Radius" = 1.0
+"Trunk Sides" = 8
+Limbs = 6
+"Limb Length" = 7.0
+Spread = 0.95
+"Clump Size" = 3.9
+
+# A giant
+[[broadleaf]]
+variant = 6
+Seed = 3606
+"Fork Height" = 6.5
+"Trunk Radius" = 1.35
+"Trunk Sides" = 9
+Limbs = 7
+"Limb Length" = 9.0
+Spread = 1.0
+Upturn = 0.5
+"Clump Size" = 4.8
+
+# Dark trees: six gnarled trees of the dark woods, from the placeholder's
+# size (about 6.5 m) up to an old giant.
+
+# A gnarled tree
+[[dark_tree]]
+variant = 1
+Seed = 4101
+
+# Bent far over
+[[dark_tree]]
+variant = 2
+Seed = 4202
+Lean = 3.0
+Twist = 0.5
+Limbs = 5
+"Clump Size" = 1.5
+
+# Tall and twisted
+[[dark_tree]]
+variant = 3
+Seed = 4303
+"Trunk Height" = 7.0
+"Trunk Radius" = 0.8
+Segments = 5
+Twist = 0.6
+Limbs = 6
+"Limb Length" = 3.8
+"Clump Size" = 1.9
+
+# A low, wide umbrella
+[[dark_tree]]
+variant = 4
+Seed = 4404
+"Trunk Height" = 4.2
+"Trunk Radius" = 0.75
+Lean = 0.6
+Limbs = 7
+"Limb Length" = 4.2
+"Limb Tilt" = 1.35
+"Limb Sag" = 0.45
+"Clump Size" = 1.6
+Droop = 0.7
+
+# Webbed
+[[dark_tree]]
+variant = 5
+Seed = 4505
+Lean = 2.0
+Web = true
+
+# An old giant, webbed
+[[dark_tree]]
+variant = 6
+Seed = 4606
+"Trunk Height" = 8.0
+"Trunk Radius" = 1.3
+"Trunk Sides" = 7
+Segments = 5
+Lean = 2.4
+Limbs = 8
+"Limb Length" = 6.0
+"Limb Sag" = 0.7
+"Clump Size" = 2.8
+Web = true
+"Web Drop" = 2.6
+
+# Dead trees: six bare trees, from the placeholder's size (about 6 m) up.
+
+# A bare snag
+[[dead_tree]]
+variant = 1
+Seed = 5101
+
+# A snapped stump
+[[dead_tree]]
+variant = 2
+Seed = 5202
+Height = 4.0
+"Trunk Radius" = 0.55
+Branches = 2
+Twigs = 1
+Snapped = true
+Twist = 0.35
+
+# Tall and gaunt
+[[dead_tree]]
+variant = 3
+Seed = 5303
+Height = 11.0
+"Trunk Radius" = 0.6
+Branches = 6
+"Branch Length" = 3.5
+"Branch Tilt" = 0.6
+
+# Leaning
+[[dead_tree]]
+variant = 4
+Seed = 5404
+Height = 7.0
+"Trunk Radius" = 0.45
+Branches = 3
+"Branch Tilt" = 1.1
+Lean = 2.0
+Twist = 0.4
+
+# A big old snag, broken off
+[[dead_tree]]
+variant = 5
+Seed = 5505
+Height = 14.0
+"Trunk Radius" = 1.0
+"Trunk Sides" = 7
+Branches = 6
+"Branch Length" = 5.0
+Twigs = 3
+Snapped = true
+"Snap Jag" = 0.9
+Segments = 5
+Twist = 0.3
+
+# Sprawling
+[[dead_tree]]
+variant = 6
+Seed = 5606
+Height = 6.0
+"Trunk Radius" = 0.42
+Branches = 7
+"Branch Low" = 0.4
+"Branch Length" = 3.2
+"Branch Tilt" = 1.2
+Twigs = 3
+
+# Bushes: eight leafy mounds of about the placeholder's size; ZoneFlora's
+# scale (0.7 to 1.5) makes the size range.
+
+# A round bush
+[[bush]]
+variant = 1
+Seed = 8101
+
+# Low and wide
+[[bush]]
+variant = 2
+Seed = 8202
+Size = 1.3
+Height = 0.6
+Blobs = 6
+Spread = 1.1
+
+# Tall and tight
+[[bush]]
+variant = 3
+Seed = 8303
+Size = 0.9
+Height = 1.3
+Blobs = 3
+Spread = 0.5
+
+# A ragged bush
+[[bush]]
+variant = 4
+Seed = 8404
+Blobs = 5
+Jag = 0.3
+
+# A berry bush
+[[bush]]
+variant = 5
+Seed = 8505
+Blobs = 5
+Berries = 9
+
+# A lone blob
+[[bush]]
+variant = 6
+Seed = 8606
+Size = 0.9
+Height = 0.8
+Blobs = 1
+Jag = 0.3
+
+# A big, sprawling bush
+[[bush]]
+variant = 7
+Seed = 8707
+Size = 1.5
+Height = 1.1
+Blobs = 7
+Spread = 1.2
+
+# A low berry bush
+[[bush]]
+variant = 8
+Seed = 8808
+Size = 1.1
+Height = 0.65
+Blobs = 4
+Berries = 6
+
+# Scrub: eight dry twiggy shrubs, knee high, about the placeholder's size.
+
+# A twiggy scrub
+[[scrub]]
+variant = 1
+Seed = 9101
+
+# A spiky fan
+[[scrub]]
+variant = 2
+Seed = 9202
+Twigs = 11
+"Twig Length" = 1.2
+Spread = 0.7
+Clumps = 2
+
+# A dense dry tuft
+[[scrub]]
+variant = 3
+Seed = 9303
+Twigs = 9
+"Twig Length" = 0.7
+Clumps = 5
+"Clump Size" = 0.3
+Dryness = 0.9
+
+# A greener scrub
+[[scrub]]
+variant = 4
+Seed = 9404
+Dryness = 0.3
+Clumps = 4
+
+# Bare twigs
+[[scrub]]
+variant = 5
+Seed = 9505
+Twigs = 8
+Clumps = 0
+"Mound Height" = 0.25
+Size = 0.4
+
+# Wide and low
+[[scrub]]
+variant = 6
+Seed = 9606
+Size = 0.8
+"Mound Height" = 0.3
+Twigs = 10
+Spread = 1.2
+"Twig Length" = 1.1
+
+# A tall stand
+[[scrub]]
+variant = 7
+Seed = 9707
+Twigs = 6
+"Twig Length" = 1.6
+Spread = 0.45
+Clumps = 3
+"Clump Size" = 0.3
+
+# A small dry clump
+[[scrub]]
+variant = 8
+Seed = 9808
+Size = 0.4
+"Mound Height" = 0.25
+Twigs = 5
+"Twig Length" = 0.6
+Clumps = 2
+"Clump Size" = 0.25
+Dryness = 1.0
+
+# Bones: six piles, from the placeholder's ribcage to a scatter of long bones.
+
+# A ribcage with its spine and skull
+[[bones]]
+variant = 1
+Seed = 6101
+
+# A big horned beast's carcass
+[[bones]]
+variant = 2
+Seed = 6202
+"Rib Pairs" = 6
+"Cage Length" = 3.6
+"Cage Width" = 0.95
+"Cage Height" = 0.85
+"Rib Thickness" = 0.09
+"Skull Size" = 0.55
+Horns = 1
+"Horn Length" = 1.1
+Vertebrae = 16
+Curvature = -0.2
+Wave = 0.3
+"Neck Rise" = 0.3
+
+# A half-sunk cage
+[[bones]]
+variant = 3
+Seed = 6303
+"Rib Pairs" = 5
+Sink = 0.25
+Disorder = 0.3
+Skull = false
+"Long Bones" = 2
+
+# A scattered pile
+[[bones]]
+variant = 4
+Seed = 6404
+"Rib Pairs" = 0
+Spine = false
+"Long Bones" = 6
+Scatter = 1.0
+
+# A snaking spine and an antlered skull
+[[bones]]
+variant = 5
+Seed = 6505
+"Rib Pairs" = 0
+"Cage Length" = 1.6
+Vertebrae = 14
+Curvature = 0.6
+Wave = 0.5
+"Neck Rise" = 0.25
+Horns = 2
+"Horn Length" = 1.8
+"Long Bones" = 1
+
+# A collapsed cage
+[[bones]]
+variant = 6
+Seed = 6606
+"Rib Pairs" = 4
+Disorder = 0.5
+"Rib Curl" = 1.6
+Curvature = -0.5
+"Neck Rise" = 0.0
+"Long Bones" = 3
+
+# Grass: eight tufts from a few short blades to a dense tall patch (0.15 to
+# about 0.8 m with stalks); no solids.
+
+# A short tuft
+[[grass]]
+variant = 1
+Seed = 7101
+
+# A few sparse blades
+[[grass]]
+variant = 2
+Seed = 7202
+Blades = 4
+"Blade Width" = 0.03
+Height = 0.25
+Footprint = 0.12
+
+# A lush, wide clump
+[[grass]]
+variant = 3
+Seed = 7303
+Blades = 14
+"Blade Width" = 0.065
+Height = 0.4
+Spread = 0.55
+Footprint = 0.12
+
+# Tall, curling over
+[[grass]]
+variant = 4
+Seed = 7404
+Height = 0.7
+Blades = 9
+Curl = 0.25
+"Height Variation" = 0.4
+
+# A low, dense mat
+[[grass]]
+variant = 5
+Seed = 7505
+Height = 0.18
+Blades = 15
+Spread = 0.5
+Footprint = 0.15
+"Blade Width" = 0.045
+
+# Dry and ragged
+[[grass]]
+variant = 6
+Seed = 7606
+Dry = 0.8
+Blades = 8
+Height = 0.5
+"Height Variation" = 0.55
+
+# With seed stalks
+[[grass]]
+variant = 7
+Seed = 7707
+Stalks = 3
+Blades = 10
+Height = 0.4
+
+# A windswept patch
+[[grass]]
+variant = 8
+Seed = 7808
+Curl = 0.45
+Spread = 0.3
+Height = 0.55
+Blades = 12
+Footprint = 0.25
+
+# Humanoid skeletons: one per playable race, at the middle of its height range
+# in docs/reference/creature_heights.md, with its build, each in its own pose.
+
+# Fae, 0.72 m: delicate, a large head, curled up on its side
+[[skeleton]]
+variant = 1
+Seed = 10101
+Height = 0.72
+Head = 0.16
+Leg = 0.48
+Shoulders = 0.22
+Build = 0.75
+Chest = 0.9
+Roll = 1.57
+Curl = 0.9
+"Curl Span" = 0.9
+"Hip Bend" = 1.5
+"Knee Bend" = 2.0
+"Arm Spread" = 0.4
+"Arm Lift" = 1.2
+"Elbow Bend" = 1.2
+
+# Gnome, 0.98 m: a head a quarter of the height, short legs, sitting huddled, hugging its knees
+[[skeleton]]
+variant = 2
+Seed = 10202
+Height = 0.98
+Head = 0.25
+Leg = 0.36
+Arm = 0.38
+Build = 0.9
+Curl = 2.0
+"Curl Span" = 0.35
+"Hip Bend" = 0.9
+"Knee Bend" = 2.0
+"Arm Spread" = 0.2
+"Arm Lift" = 0.6
+"Elbow Bend" = 0.8
+"Leg Spread" = 0.3
+
+# Halfling, 1.02 m: compact and slim, on its back, relaxed
+[[skeleton]]
+variant = 3
+Seed = 10303
+Height = 1.02
+Head = 0.155
+Leg = 0.47
+Arm = 0.42
+Shoulders = 0.23
+Build = 0.85
+Roll = 0.25
+"Hip Bend" = 0.1
+"Knee Bend" = 0.3
+"Arm Spread" = 0.2
+Asymmetry = 0.3
+
+# Kobold, 1.10 m: a dog's muzzle, digitigrade legs, a tail, sprawled on its side
+[[skeleton]]
+variant = 4
+Seed = 10404
+Height = 1.10
+Head = 0.17
+Snout = 0.8
+Brow = 0.2
+"Jaw Open" = 0.25
+Digitigrade = true
+Tail = 12
+"Tail Length" = 0.4
+Build = 0.8
+Roll = -1.4
+Curl = 0.4
+"Curl Span" = 0.8
+"Hip Bend" = 0.6
+"Knee Bend" = 1.0
+Asymmetry = 0.8
+Stride = 0.8
+"Arm Lift" = 0.8
+"Tail Curl" = 0.6
+
+# Dwarf, 1.28 m: massive shoulders, a barrel chest, thick bones, face down, arms flung out
+[[skeleton]]
+variant = 5
+Seed = 10505
+Height = 1.28
+Head = 0.17
+Leg = 0.42
+Arm = 0.42
+Shoulders = 0.32
+Hips = 0.23
+Build = 1.45
+Chest = 1.35
+Roll = 3.14
+"Arm Spread" = 1.4
+"Elbow Bend" = 0.5
+"Leg Spread" = 0.25
+"Head Roll" = 1.3
+
+# Wood Elf, 1.50 m: lean and athletic, on its back, one arm over its head
+[[skeleton]]
+variant = 6
+Seed = 10606
+Height = 1.50
+Head = 0.13
+Leg = 0.53
+Build = 0.9
+Roll = 0.2
+Asymmetry = 1.2
+"Arm Spread" = 1.0
+"Hip Bend" = 0.2
+"Knee Bend" = 0.4
+
+# Elf, 1.68 m: long limbs, a light frame, face down, reaching ahead
+[[skeleton]]
+variant = 7
+Seed = 10707
+Height = 1.68
+Head = 0.13
+Leg = 0.55
+Arm = 0.46
+Shoulders = 0.22
+Build = 0.82
+Roll = 3.14
+"Arm Spread" = 2.7
+"Elbow Bend" = 0.3
+Asymmetry = 0.3
+"Leg Spread" = 0.2
+"Head Roll" = -1.2
+
+# Dark Elf, 1.72 m: lithe, angular, curled up on its other side
+[[skeleton]]
+variant = 8
+Seed = 10808
+Height = 1.72
+Head = 0.13
+Leg = 0.54
+Build = 0.85
+Brow = 0.3
+Roll = -1.57
+Curl = 1.1
+"Curl Span" = 0.9
+"Hip Bend" = 1.6
+"Knee Bend" = 2.2
+"Arm Lift" = 1.3
+"Elbow Bend" = 1.5
+
+# Half-Elf, 1.72 m, slumped forward over its legs
+[[skeleton]]
+variant = 9
+Seed = 10909
+Height = 1.72
+Head = 0.133
+Leg = 0.53
+Curl = 2.4
+"Curl Span" = 0.3
+"Hip Bend" = 0.1
+"Knee Bend" = 0.2
+"Arm Spread" = 0.3
+"Arm Lift" = 0.4
+"Leg Spread" = 0.2
+
+# Human, 1.78 m: the baseline, on its back, knees up and fallen aside
+[[skeleton]]
+variant = 10
+Seed = 11010
+Height = 1.78
+Roll = 0.5
+"Hip Bend" = 0.5
+"Knee Bend" = 1.0
+"Arm Spread" = 0.5
+Asymmetry = 0.2
+
+# Felhari, 1.85 m: a short feline muzzle, digitigrade legs, on its side, mid-stride
+[[skeleton]]
+variant = 11
+Seed = 11111
+Height = 1.85
+Head = 0.125
+Snout = 0.4
+Digitigrade = true
+Leg = 0.55
+Build = 0.95
+Roll = 1.5
+Asymmetry = 1.2
+Stride = 1.2
+"Hip Bend" = 0.6
+"Knee Bend" = 1.2
+"Arm Spread" = 0.6
+"Arm Lift" = 0.7
+"Elbow Bend" = 1.0
+
+# Kel`varath, 1.98 m: a long reptile's snout, a long tail, face down, tail curled
+[[skeleton]]
+variant = 12
+Seed = 11212
+Height = 1.98
+Head = 0.12
+Snout = 1.1
+Brow = 0.15
+"Jaw Open" = 0.3
+Tail = 18
+"Tail Length" = 0.55
+Roll = 3.14
+"Arm Spread" = 0.9
+"Elbow Bend" = 1.0
+"Tail Curl" = 0.9
+"Head Roll" = 3.14
+"Leg Spread" = 0.3
+
+# Half-Ogre, 2.12 m: massive, less brutish, sitting, toppled to one side
+[[skeleton]]
+variant = 13
+Seed = 11313
+Height = 2.12
+Head = 0.12
+Arm = 0.47
+Shoulders = 0.28
+Hips = 0.22
+Build = 1.3
+Chest = 1.2
+Brow = 0.4
+Curl = 1.4
+"Curl Span" = 0.4
+Roll = 0.6
+"Hip Bend" = 0.3
+"Knee Bend" = 0.6
+
+# Minotaur, 2.35 m: a bull's skull and horns, hooves, a tail, sprawled on its back
+[[skeleton]]
+variant = 14
+Seed = 11414
+Height = 2.35
+Head = 0.115
+Snout = 0.7
+Horns = 1
+"Horn Length" = 0.9
+Shoulders = 0.3
+Hips = 0.22
+Build = 1.4
+Chest = 1.3
+Digitigrade = true
+Tail = 12
+"Tail Length" = 0.3
+"Arm Spread" = 1.2
+Asymmetry = 0.5
+"Leg Spread" = 0.45
+"Knee Bend" = 0.3
+"Tail Curl" = -0.5
+
+# Troll, 2.45 m: long arms, a jutting brow, face down, crawling
+[[skeleton]]
+variant = 15
+Seed = 11515
+Height = 2.45
+Head = 0.11
+Arm = 0.56
+Shoulders = 0.27
+Build = 1.2
+Brow = 1.0
+Snout = 0.15
+Roll = 3.14
+Asymmetry = 1.3
+"Arm Spread" = 1.4
+"Elbow Bend" = 0.8
+"Leg Spread" = 0.35
+"Head Roll" = 1.0
+
+# Ogre, 2.55 m: massive shoulders, long arms, thick bones, curled up on its side
+[[skeleton]]
+variant = 16
+Seed = 11616
+Height = 2.55
+Head = 0.11
+Arm = 0.52
+Shoulders = 0.32
+Hips = 0.24
+Build = 1.6
+Chest = 1.4
+Brow = 0.6
+Roll = 1.57
+Curl = 0.7
+"Curl Span" = 0.8
+"Hip Bend" = 1.2
+"Knee Bend" = 1.6
+"Arm Lift" = 1.0
+"Elbow Bend" = 1.2
+
+# A wide, very dense patch
+[[grass]]
+variant = 9
+Seed = 7909
+Blades = 32
+Height = 0.38
+"Height Variation" = 0.35
+Spread = 0.3
+Footprint = 0.32
+"Blade Width" = 0.065

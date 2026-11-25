@@ -24,6 +24,7 @@
 title = "Project Dawn: Week by Week to the Friends Build"
 start = 2026-10-05
 target = 2026-11-19
+target_paused = "since November 19, the friends busy that evening; no new date yet"
 hours_per_week = 30
 minutes_per_checklist_row = 6
 stale_checklist_days = 30
@@ -58,7 +59,7 @@ text = "The user has about thirty hours a week. Weeks here never schedule more t
 source = "docs/schedule.md header."
 
 [[assumption]]
-text = "Every date here except November 19 is a proposal. The milestones were placed by working back from November 8 at the measured pace with the fifth week left as slack; on November 5 the door moved to Thursday November 12 (the friends are busy on the 8th) and the user put the November bump in front of it, so a sixth week holds the door. On November 13 it moved a fourth time, to Thursday November 19: the invites had not gone out, and the week sends the share links early and runs the last pre-door rows, so a seventh week holds the door."
+text = "Every date here except November 19 is a proposal. The milestones were placed by working back from November 8 at the measured pace with the fifth week left as slack; on November 5 the door moved to Thursday November 12 (the friends are busy on the 8th) and the user put the November bump in front of it, so a sixth week holds the door. On November 13 it moved a fourth time, to Thursday November 19: the invites had not gone out, and the week sends the share links early and runs the last pre-door rows, so a seventh week holds the door. On November 19 the door did not open (the friends were busy) and the user paused setting a new date, so the door has none for now."
 source = "The handoff's instruction; docs/schedule.md section 1."
 
 # ---------------------------------------------------------------------------------------
@@ -136,8 +137,9 @@ means = "A fresh character plays the starter book for 45 minutes on the exact bu
 [[milestone]]
 id = "m5"
 date = 2026-11-19
+paused = true
 name = "The door opens"
-means = "The full friend group's first evening. The only fixed date on this page. Thursday November 19 since November 13 (the invites had not gone out, so the user held them a week); November 12 since November 5 before that (the friends were busy on Sunday the 8th)."
+means = "The full friend group's first evening. No date for now: on November 19 the friends were busy and the user paused setting a new one (the date in the plan file is kept only for ordering). Before that, Thursday November 19 since November 13 (the invites had not gone out, so the user held them a week); November 12 since November 5 before that (the friends were busy on Sunday the 8th)."
 
 # ---------------------------------------------------------------------------------------
 # Weeks.
@@ -182,7 +184,7 @@ summary = "Added November 5: the friends are busy on Sunday the 8th, so the door
 id = "w7"
 starts = 2026-11-16
 title = "The door, a week later"
-summary = "Added November 13: the user held the invites back on the 12th, so the door is Thursday the 19th. Early in the week the pre-door rerun's last rows run on the zip, then the share links, the zip and the players' checklist go out to all four (the plan's own advice from October: the network part settled days before the evening), and Thursday evening the door opens."
+summary = "Added November 13: the user held the invites back on the 12th, so the door is Thursday the 19th. Early in the week the pre-door rerun's last rows run on the zip, then the share links, the zip and the players' checklist go out to all four (the plan's own advice from October: the network part settled days before the evening), and Thursday evening the door opens. Redrawn November 19: the friends were busy, the door did not open, and the user paused setting a new date; the zip stamped `a1a154e` stays the one to send."
 
 # ---------------------------------------------------------------------------------------
 # Week 1: October 5 to 11
@@ -747,7 +749,7 @@ done_when = "Every checklist in that table carries a dated note at its top sayin
 id = "o8"
 week = "w7"
 lane = "operate"
-day = "Thu Nov 19, afternoon"
+day = "The door's day, afternoon (date paused)"
 what = "Health and backup check, dev_cmds=false confirmed, the console open for the evening."
 who = "user at a desk"
 hours = 0.5
@@ -757,7 +759,7 @@ done_when = "All checks pass."
 id = "p5"
 week = "w7"
 lane = "people"
-day = "Thu Nov 19, evening"
+day = "The door's evening (date paused)"
 what = "The door opens: the full group's first evening."
 who = "user at a desk, friends"
 hours = 4.0
@@ -769,10 +771,11 @@ done_when = "A session note records it; the phase 5 row in schedule.md section 7
 id = "d7"
 week = "w5"
 lane = "decide"
-day = "by Thu Nov 19"
+day = "before the door (date paused)"
 what = "Phase 5's four questions (docs/design/phase5_plan.md, last section): is the height model the headline; does phase 5 get a date box; who builds the height model; which unscheduled candidates come in."
 who = "user and planner"
 by = 2026-11-19
+by_paused = true
 blocks = "The \"after the door opens\" list below becoming a dated plan."
 done_when = "Answers recorded in the plan doc; its bullet list freezes; one row joins schedule.md section 7."
 
@@ -791,10 +794,11 @@ done_when = "Each of the eight answered on the To-Do entry (Combat / weapons, EQ
 id = "d10"
 week = "w5"
 lane = "decide"
-day = "by Thu Nov 19"
+day = "before the door (date paused)"
 what = "The factions and alignment design's nine decisions (docs/design/factions_and_alignment.md, section 6): the first six factions and the hit rule, who gets a kill's hits (the XP rule or EQ's hate list), the nine level thresholds, the v1 refusals (vendors at Dubious, quest givers at Apprehensive), alignment seeded from the class start, the Paladin and Shadow Knight off-side penalty kept on the server, no starting standings by race in v1, the mob and quest values, no GM freeze."
 who = "user"
 by = 2026-11-19
+by_paused = true
 blocks = "The factions build (a migration and a bump), on the after-the-door strip."
 done_when = "Each of the nine answered on the Faction system To-Do entry."
 
@@ -1103,6 +1107,12 @@ text = "Phase 5's own plan (docs/design/phase5_plan.md), decided November 3 and 
 
 [[after]]
 text = "The server height model, built by Claude (user, November 3), designed the same day and decided in full (docs/design/server_height_model.md): slices 0 to 3 built November 4 on feat/height-model in both repos (the ground compiled in, everything pinned, sight for every targeted spell, arrow, AoE victim and idle mob, falls, the first hills with the fling tool and mobs giving up below a face), then the evade and the hate-list turn of November 5. It rides the November bump (row o20, in front of the door since November 5) and its sheets are v58 and v59. What follows the door: Levitate and Feather Fall at the landing, the bow's own sight check on the client, the next hills, chunking and a navmesh when the world grows. The capability the large world waits on."
+
+[[after]]
+text = "Command confirmations, built November 18 on feat/command-confirm in both repos (server 406b10c, client 524e623): the group, loot, auto-split and PvP commands' success lines are said by the server when it has done the thing, not by the client when the command is typed. Both sides move together, so it merges at the bump after the door with the export and the redeploy in one step; then a two-seat sitting of command_confirm_checklist.md (26 rows, about 45 minutes)."
+
+[[after]]
+text = "The UI theme, dark wood and brass, built November 18 on feat/ui-theme (client only; the user chose the direction from a list of ten). One Theme resource is the project theme, nineteen window frames are scenes, and a geometry fixture held every window in place. Merged into the deploy branch November 19 (the day of the door) and rides the next export; the look is the user's eye to pass (the fields' darkness, the identity tints on the group, pet and track panels, real wood-grain textures are the open calls), the geometry the fixture's."
 
 [[after]]
 text = "Trade slice 2: handing items to NPCs."
@@ -1676,10 +1686,11 @@ todo = "Housekeeping audit 2026-10-23"
 id = "d11"
 week = "w4"
 lane = "decide"
-day = "by Thu Nov 19 (the first is best answered before the bump's redeploy)"
+day = "before the door (date paused; the first is best answered before the bump's redeploy)"
 what = "Fall damage on the server (docs/design/server_fall_damage.md, section 7): close the instant-death message now rather than after hills (reverses the agreed order, because its reason turned out not to hold online), the damage formula (flat by impact speed, or a share of max HP), whether shields soak a fall, whether GMs take falls, Safe Fall later."
 who = "user"
 by = 2026-11-19
+by_paused = true
 blocks = "Slice 0 (one server handler now, the Test Panel's death button with the export); slice 1 waits on the server height model."
 done_when = "Each of the five answered on the Housekeeping audit To-Do entry."
 

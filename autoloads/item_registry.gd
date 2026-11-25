@@ -5,7 +5,7 @@ extends Node
 # and loading each .tres file; subsequent lookups are O(1) by lower-case
 # item_name (exact match) or O(n) for substring fuzzy match (n ~ 100).
 #
-# Today's primary consumer is the `/give` chat command in hud.gd — dev
+# Today's primary consumer is the `/give` chat command (hud_chat_commands.gd) — dev
 # workflow to find any item by name (the grant itself is the server's). Future: vendor pricing tables, quest
 # reward indexing, item-stat search tools.
 
@@ -57,11 +57,6 @@ func _scan_directory(path: String) -> void:
 					_by_name[item.item_name.to_lower()] = item
 		entry = dir.get_next()
 	dir.list_dir_end()
-
-# Exact (case-insensitive) match by item_name. Returns the loaded
-# template ItemData; caller must .duplicate() before mutating.
-func find_exact(name: String) -> ItemData:
-	return _by_name.get(name.to_lower())
 
 # Substring fuzzy match. Returns up to `limit` items whose item_name
 # contains `query` (case-insensitive). Useful for "/give iron" → see

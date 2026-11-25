@@ -106,7 +106,7 @@ func _on_world_group_invited(from_id: int, from_name: String) -> void:
 	invite_received.emit(from_id, from_name)
 
 # PD_W0014 — a group-mate's server-side notice (currently /autosplit
-# toggles). The toggler echoes their own change locally (hud.gd), so this
+# toggles). The toggler echoes their own change locally (hud_chat_commands.gd), so this
 # only ever fires for the *other* members; just surface the text.
 func _on_world_group_notice(text: String) -> void:
 	CombatLog.add_line(text, CombatLog.MsgType.INFO)

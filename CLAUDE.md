@@ -337,7 +337,9 @@ Leave a file cleaner than you found it — but keep it *adjacent* and *small*.
    regenerate the planner's week-by-week detail: `python tools/schedule_detail.py` (edit
    `docs/schedule_detail.toml` first if a row needs to move), commit the plan file with both
    outputs, and republish the page at the link recorded in the plan file. The detail carries
-   dates and dependencies only, never status.
+   dates and dependencies only, never status. In the same sessions, sync the Trello board
+   with `python tools/trello_board.py` (the user's planner reads it too; it is regenerated
+   from the To-Do, never edited by hand). If its token has expired, say so and move on.
 5. Run a review pass (`/code-review`) if the session touches 5+ files or a core system
    (combat, inventory, spells, PlayerStats, networking).
 6. **Tick only on playtest evidence.** An item earns `[x]` when a filled checklist in
@@ -392,7 +394,6 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 | `data/quest_definitions.gd` | Quest id → objectives, rewards, giver/turn-in NPC |
 | `data/named_mob_definitions.gd` | Boss/named-mob stats, enrage, guaranteed/rare drops |
 | `scripts/spell_data.gd` / `item_data.gd` / `skill_data.gd` | Resource classes |
-| `scripts/mobile_character.gd` | Base for `enemy.gd` + `pet.gd` (shared movement) |
 | `autoloads/passive_skill_tracker.gd` | Base for `WeaponSkills` / `ArmorSkills` / `CastingSkills` |
 
 ---
@@ -400,7 +401,7 @@ Per-autoload responsibilities and the combat/spell deep dive live in
 ## Where things are documented
 
 - **Current plan, dates & sequencing** → `docs/schedule.md` — the push to a playable friends
-  build (target **2026-11-19**, slipped from 09-14 on 09-09, from 10-05 on 09-27, from 11-08 on 11-05, then from 11-12 on 11-13), with the phases, the critical path, and the velocity the estimates
+  build (target **paused since 2026-11-19**, the friends busy that evening and no new date set; before that 11-19, slipped from 09-14 on 09-09, from 10-05 on 09-27, from 11-08 on 11-05, then from 11-12 on 11-13), with the phases, the critical path, and the velocity the estimates
   are measured against. **There is one checkbox list in this project and it's the To-Do below.**
   The schedule holds no boxes: its per-phase bullets are the plan, and its status table is just a
   progress readout of what the To-Do already says. (Restructured 2026-09-09: the schedule's
@@ -971,7 +972,9 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   taxes** (user idea 2026-06-18, "revisit later", sparked by the Banker fee mechanic) and a
   **mail system** (server_design.md open question 6, "defer until requested").
 - [ ] **Language system wiring** — `hear_language()` passive gain not yet called from the
-  chat-receive path; needs multiplayer chat RPC + trainer NPCs
+  chat-receive path; needs multiplayer chat RPC + trainer NPCs. (`hear_language`, `garble`
+  and `grant_language` have no caller yet and are kept on purpose, user call 2026-11-18:
+  unfinished, not dead.)
 - [x] **Quest reward item follow-ups** — **STALE ENTRY, CORRECTED + TICKED 2026-10-02: both
   halves were done and playtested, and this entry never caught up.** (a) The **Tarnished
   Silver Ring's AGI +1 not applying** was fixed on 2026-07-14 (client `b1df906`, "Gear stat
@@ -1155,6 +1158,36 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   sheets (`overnight_2026_11_01_checklist.md` §2 and §3 among them) and a second pre-door check
   follow before the last zip goes out.
   Status per finding: the findings doc's §5.
+  **The cross-over audit of 2026-11-17** (user: confirm "no cross-overs or trips" after the ten
+  parallel-session pieces since the bump; plan `docs/security/crossover_audit_plan_2026_11_17.md`,
+  findings `crossover_audit_2026_11_17.md`): every code seam read clean; the trips were records
+  (fixed the same night: the overview's compass line, the runbook's boot line, the Test Panel
+  list, the author tool's "Next" line); three flaky tests found by a ten-run loop and made
+  deterministic (test code only). Open from it: the hosting branch's merge-forward, the eleven
+  worktrees at merged tips, the planner republish, and the fuzz and live-roamers hours. The
+  companion structure assessment (`docs/design/code_structure_assessment_2026_11_17.md`) has six
+  ranked recommendations; **R1 DONE 2026-11-18** (20 dead client functions deleted, five kept
+  on the user's read as unfinished, the floating XP toggle wired instead; client `9f6c775` +
+  `5940a0b`) and **R2 re-analyzed and DONE 2026-11-18** (the assessment's §8: `apply_casts`'s
+  eleven arms moved into `cast_*` functions byte for byte, the 580-line prelude untouched as
+  the security property; the `handle_message` half dropped, 77 arms averaging 25 lines; server
+  `09b03ff` to `2ddfe7b`, one commit per arm, each token-compared and suite-green); **R3 DONE 2026-11-18** the same way (`RemoteEntity` under the three remote bodies, `RemoteEntityManager` under the five managers, a probe first; client `5b1347a` and the commit after); **R4 re-analyzed
+  and DONE 2026-11-18** (the assessment's §10: the chat commands out of `hud.gd` into
+  `scripts/hud_chat_commands.gd` as two lookup tables and one function per command, every body
+  token-identical; `tools/check_chat_commands.gd` in `check_all.ps1` holds every command and
+  fails on one with no row; bare `/give`, `/lang`, `/kick`, `/damage`, `/heal` and `/tell` print
+  their usage; client `1cc2088` to `13b795a` and the commit after; rides the next export;
+  `feat/gm-flight`'s `/fly` arm is re-added by hand at its merge, the flight handoff says how); **R5
+  re-analyzed 2026-11-18** (the assessment's §11): a rule, not a task, nothing built (25 of 27 UI
+  scripts are code, the rule has held once in four since 06-09, a scene saves a quarter of a window
+  script with no shared seam, and every window converted before the theming pass is laid out
+  twice); **R6 re-analyzed 2026-11-18 (the assessment's §12): a rule whose first step is a reading, not
+  code.** The health line has not been read since the 4 km zone, the roamers and the obstacle rule
+  landed (last: 11-11, median 0.5 ms, worst 19.1 ms, two players); the wildlife sheet's `world
+  health` row is that reading; a per-step breakdown in the line only if it has climbed. **The
+  assessment's list is finished; R5 was then executed on the user's call on `feat/ui-theme` (the
+  UI theme entry it carries).** The three
+  dead wire intents (`StackAll`, `TurnInQuest`, `CancelCast`) come off at the next bump.
 - [ ] **Client-decided outcomes (audit 2026-10-19)** *(user, 2026-10-19: "Events happening on
   the client are a no-go")*. Findings, verified by hand: `docs/security/client_authority_audit_2026_10_19.md`.
   Order, worst first (user: "go ahead with recommendations"): (1) the server stops relaying
@@ -4423,6 +4456,39 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   Consider page calls accurate. **Open:** the page's per-band wording (its phrases change with
   the player's level band); coloured con lines in chat; a keybind; conning players; and a
   design call on whether the con colour decides XP as EQ's light blue and green did.
+- [ ] **The UI theme: dark wood and brass** *(R5 of the structure assessment, executed 2026-11-18
+  on the user's call: "lets get into R5... lets execute"; the direction chosen the same evening
+  from a list of ten: "dark wood and brass sounds good")*. **BUILT 2026-11-18 on `feat/ui-theme`
+  (worktree `F:\Projects\Project_Dawn-theme`, client only, from the deploy tip `dd9098a`) and
+  MERGED into the deploy branch 2026-11-19 (user: "lets merge"); rides the next export**
+  (session note `session_2026_11_18_r5_ui_theme.md`; assessment §11.4). One `Theme` resource,
+  `assets/ui/dark_wood_brass.tres`, is the project theme (`gui/theme/custom`): walnut fields
+  with a brass band and shadow, brass titles, amber text, brass-plate buttons, wood input
+  fields, brass tab strips; eight named variations (`WindowPanel`, `SectionPanel`, `SlotCell`,
+  `Tooltip`, `SpeechPanel`, `BarStrip`, `TitleLabel`, `CoinsLabel`); `UITheme` retuned to the
+  same palette and `tools/check_ui_theme_lockstep.gd` (in `check_all.ps1`) holding the two
+  together and failing on a variation a script names that the theme lacks. Nineteen window
+  frames moved into scenes (21 of the 27 UI scripts are scene-backed; the hotbar, Test Panel,
+  console, bag and chat windows stay code, being dynamic through and through); 564 theme
+  overrides became 323, 53 style boxes 25, the UI scripts 9,737 lines to 8,422. The net:
+  `tools/probe_window_geometry.gd` and its fixture (28 windows, 962 controls); every step at
+  zero drift but two named 2 px moves. `tools/shot_windows.gd` takes the two screenshots the
+  user saw. All 21 checks and every probe green on the branch. **Open (user):** the fields may
+  read too dark for wood (one number); the identity tints on the group, pet and track panels
+  (walnut with an accent, or as they are); real wood-grain and brass textures (two nine-slice
+  PNGs into the same Theme). No playtest sheet yet: the look is the user's eye, the geometry
+  the fixture's. **The other nine themes and a picker BUILT the same night** (user: "I would
+  like the other UI options you listed designed and the option to change added to the options
+  screen -> interface"; plan `docs/design/handoff_ui_theme_picker.md`, session note §7):
+  `data/ui_theme_palettes.gd` holds ten palettes, `tools/author_ui_themes.gd` renders them to
+  `assets/ui/themes/<id>.tres` through one template (the structural numbers agree, so one
+  geometry fixture holds for all), `UITheme` is runtime (`apply_palette`), `GameSettings.ui_theme`
+  persists the choice and `apply_ui_theme()` pours the theme into the PROJECT theme in place
+  (Controls under a CanvasLayer inherit nothing from the root window, which the first build
+  missed and the parchment screenshot caught), and Options, Interface has a UI Theme row.
+  `check_ui_theme_lockstep.gd` fails on a stale or structurally drifted theme file, a missing
+  variation in any theme, or `UITheme` off the table; `probe_ui_theme_picker.gd` covers the
+  switch. All ten shots went to the user; which to keep, retune or drop is theirs.
 - [ ] **In-game UI layout is "pretty busted"** *(user, machine day 2026-09-22, on the fresh
   1280x720 startup window)*. No specifics captured yet — needs a screenshot pass naming which
   windows/anchors misbehave at which sizes. Belongs to the deferred cohesive UI theming/polish
@@ -4536,6 +4602,50 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   **DECIDED 2026-10-07 (user): "dont make named mobs charm-immune."** Named mobs stay
   charmable; no flag. (EQ's other gate, a maximum target level on each charm rank, was
   described but not asked about and is not decided; charm today has no level cap at all.)
+- [ ] **Four chat commands say they succeeded before the server has answered** *(found
+  2026-11-18 by the review pass on R4; older than it)*. `/kick <name>` as leader prints "Kicked
+  <name> from the group." and `/invite <name>` "Invited <name> to your group." the moment they
+  send, whatever the server then decides (a name that is not in the group, or not online, gets
+  the same line, followed by the server's refusal if it sends one); `/pvp on` and `/autosplit
+  on` print their "on" line with no world connection at all. The vendor window had the same
+  fault and was changed on 2026-08-24 to describe the request, never the outcome ("Asked the
+  merchant for ..."). Display only: the server decides every one of these, so nothing here is
+  exploitable. Fix shape: word each as a request ("Asked to kick <name>."), or drop the line
+  where the server already answers with one of its own; `tools/check_chat_commands.gd` pins
+  today's wording, so its rows move with it. Client only. The user's call on the wording; not
+  built.
+  **DECIDED 2026-11-18 (user: "Can you change the success lines to send at the correct
+  time?") and BUILT the same day on `feat/command-confirm` in BOTH repos, pending the merge,
+  the export and the redeploy together, and the playtest** (server `406b10c` in
+  `F:\Projects\server-confirm`, client `524e623` in `F:\Projects\Project_Dawn-confirm`,
+  committed locally, not pushed; `command_confirm_checklist.md`, 26 rows, on the client
+  branch; session note `session_2026_11_18_command_confirm.md`). Not client only after all:
+  the server answered these commands' refusals and never their successes, so the right time
+  did not exist on the wire. Now the server says each line, to the player who gave the
+  command, when it has done the thing (the System chat line, no wire change): "You invite
+  <Name> to join your group." (EQ's line, under the invitee's own name), "You have joined the
+  group.", "You have left the group.", "<Name> has been removed from the group.", "Loot mode
+  set to Round Robin.", "Auto-split loot: on" (whether or not the flag moved; the group notice
+  to the others unchanged) and "PvP override: on"; three cases that were silent now answer
+  (inviting yourself, an accept with no open invitation, a leave with no group). The client
+  prints none of them itself (`/invite`, `/accept`, `/leave`, `/kick`, `/loot rr|ffa`,
+  `/autosplit`, `/pvp`, and the group panel's Invite button). The same fault in five more
+  places than the review named: accept, leave, the loot mode, and `/damage` and `/heal`, which
+  the server never answers by design (no oracle for a plain account) and which now say what
+  was asked ("Requested 5 damage to yourself from the server."). Tests: the integration test
+  `the_server_confirms_a_group_command_when_it_is_done` (two clients through every command,
+  each success told once to its giver, a command that did nothing given no success line),
+  failing on the previous server at its first line; 481 unit and 202 world, fmt and clippy
+  clean; `check_chat_commands.gd` 155 checks, all 20 checks and 25 probes green against the
+  server branch. **Both sides move together:** this client on the deployed server says
+  nothing for these commands, and the door zip on the new server says each line twice, so
+  neither branch is on a deploy branch; they merge at the bump after the door. Exploit lens:
+  every line goes only to the player who gave the command and names only what they already
+  named or their own group (the invitee's real spelling is of a name they typed and that is
+  online, which "isn't online." already told apart). **Flagged:** the others in a group still
+  get no line when someone joins, leaves or is removed (their panel changes; EQ told them),
+  not asked for and not built; `GroupManager.leave_group` still clears the panel before the
+  server answers.
 - [ ] **Other players' levels** *(user 2026-11-02, `overnight_2026_11_01_checklist.md` §3:
   "We cant currently see eachother's levels in game")*. Read in the code, not yet designed: the
   group panel seeds every member at level 0 (`GroupManager`, the row's "Lv %d"; `GroupState`
@@ -4567,6 +4677,16 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   `54ca951`), and `group_levels_checklist.md` is runnable on it.
 - [ ] **Remaining EQ keybinds** *(`docs/concepts/controls/README.md`:179; audit 2026-09-29)*:
   F7/F8 nearest PC/NPC target, F10 UI toggle, and the rest of that list are not mirrored.
+  **The `/` key BUILT 2026-11-18, pending the next export and the playtest** (user, on being
+  asked whether the chat line's unused prefill should go: "yes i want this", EQ's "/" key;
+  client only, on the deploy branch; `tell_reply_and_inspect_click_checklist.md` §4b, 5 rows).
+  With the chat line closed, the bare `/` key opens it with the slash already typed and the
+  caret after it (`hud.gd`'s key handler, through `CombatLog.show_chat_input(prefill)`, the
+  prefill the chat line already took and nothing used since R4). With the line open, or any
+  other text field focused, the key is typed as usual; a chord on it (Shift, Ctrl, Alt) does
+  nothing. `/` joined Enter and Escape in `RESERVED_KEYS`, so no action can be bound to it.
+  `tools/probe_slash_opens_chat.gd` (11 checks, 5 failing on the old code). Nothing on the
+  server or the wire.
 - [ ] **Chat: persist the active tab per window group** *(22G chunk 4 follow-up, "small,
   ~5 minutes", 2026-05-26; audit 2026-09-29)*. Rides with the `/r` + TAB item.
   **Mostly existed already; the gap is closed 2026-10-02, pending playtest**
@@ -4577,6 +4697,36 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   checkbox list, `docs/design/art_assets_checklist.md` (the one deliberate exception to
   "one checkbox list", since it is an asset manifest, not a task queue); "future zone themes"
   are deferred there per the atlas. Nothing in it is on any schedule.
+- [ ] **Scenery models from our own Blender generators** *(user, 2026-11-20: the tutorial
+  generators are not used; we write our own)*. **BUILT 2026-11-20 to 11-24 on
+  `feat/scenery-generators` in both repos; MERGED, PUSHED AND EXPORTED 2026-11-24 (user: "go
+  ahead!"; both deploy branches fast-forwarded, server `9a7c3ba`, client `074ab5b`; the zip
+  `builds/ProjectDawn-alpha-074ab5b.zip`, stamped `074ab5b`, a release export, which replaces
+  `a1a154e`); DEPLOYED 2026-11-25 16:08 UTC (R720 boot line `build="9a7c3ba" dev_cmds=false
+  roamers=on`, terrain hash `f569ade0c331`, `obstacles=45620 prisms (30512 walk, 32976 sight),
+  hash c4df3370b3ca`, nobody online at the stop, `saved=0 unsaved=0`, `ledger check
+  mismatches=0`), so the zip to send is `074ab5b`; pending `scenery_models_checklist.md`**
+  (session note `session_2026_11_24_scenery_generators.md`; plan
+  `C:\Users\tyler\.claude\plans\cosmic-marinating-prism.md`). Python scripts in `tools/blender/`
+  build Geometry Nodes generators headless in Blender 5.3, every variant one row of
+  `scenery_variants.toml` (built twice, identical); `export_scenery.py` writes 83 variants to
+  `assets/models/scenery/<kind>/` as a `.glb` and a `.solids.json` each: pine and broadleaf,
+  dark and dead trees with one-piece twisted trunks (six each), twelve boulders, eight bushes,
+  eight scrub, six beast-bone piles (horns, antlers), sixteen humanoid skeletons (one per race
+  at its height, each posed), nine grass tufts. `ZoneFlora` draws them (`SceneryModels` loads
+  them): the variant from a hash of the spot, at most three per 400 m cell, the regular pine
+  variants 1 to 3 and the tall pine 4 to 6 (user), about one tree in 40 colossal (1.5 to 2.0),
+  far stand-ins fitted per variant; skeletons among the bone fields, round the four undead camps
+  and beside the roads (user). The bake: trees each trunk piece alone plus a sight-only crown
+  (the old merge would have let a small dark tree's whole canopy stop a body), bones and
+  skeletons every piece alone (user: a body steps over the low ones). `ZoneGrass` grows grass
+  round the camera from per-square dice (the same on every client), up to 0.6 tufts a square
+  metre, thin under the woods, dry on the steppe and as the hills climb, none on roads, the town,
+  fields or camp middles, faded out by 60 m (user: adjust after seeing it). 16,554 things in
+  1,021 batches; 45,620 prisms (hash `c4df3370b3ca`, was `f97d25964ce4`); `check_zone_scenery.gd`
+  gained VARIANTS and GRASS; 21 checks, 481 unit and 201 world tests green; about 1 ms a frame
+  on the dev machine in the densest spots. Not built: hand-placed poses (a skeleton against a
+  wall), ferns and mushrooms, textures (UVs are laid out for them).
 - [ ] **Player portrait** in HUD *(slugify + slot landed; art pending)*; **Map / minimap**
 - [x] **`/loc` command** — **DONE + playtested 2026-10-09** (`loc_command_checklist.md`, all five rows
   PASS on the 10-05 build: matches Sister Maelis's position, the four facings, `/sense`, works
@@ -4947,3 +5097,55 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   alone is load-sensitivity, whichever test it is.** Closing this item means making them
   deterministic (the harness waits on enemy AI reaching the player) rather than maintaining a list;
   see `server/docs/flaky_integration_tests.md`.
+
+### From the Monsters and Memories roadmap
+> Added 2026-11-22 from `docs/design/mnm_roadmap_gap_list.md` (user: "everything they've done
+> would probably be the way"). One entry per area, naming the M&M features no other entry
+> covers; the gap list says what we have today for each. A feature picked up for real gets its
+> own entry then. None is a friends-build item.
+
+- [ ] **M&M roadmap: support and safety tools**. An in-game `/bug` form; `/petition` to a GM;
+  `/report` for a player and for a chat line; `/ignore` (block a player's messages); a chat word
+  filter, and a name filter at character creation; account deletion by the player (pairs with
+  the delete/purge half of "Account admin tooling"); data export and erase, for a public host; a
+  landing page and an installer in place of the zip; a customer-service tool. Exploit lens: a
+  report or a petition is player-written text sent to the server, so it takes chat's length cap
+  and a rate limit.
+- [ ] **M&M roadmap: character creation**. Choosing a deity and a starting city; EQ's free
+  attribute points at creation; resist types (the server has no resist model, which "Proc
+  follow-ups" needs too). Racial traits sit in "Dwarf racial ability".
+- [ ] **M&M roadmap: the world**. A moon cycle and a night sky that changes; seasons (weather,
+  textures, spawns, forage); scheduled world events and the changes they leave; indoor and
+  outdoor areas with their own rules for spells and weather; hazards (lava, currents, strong
+  wind); forage and fishing tables online; non-combat animations for NPCs. Weather and water sit
+  in "Weather system".
+- [ ] **M&M roadmap: getting around**. `/stuck` (wanted more now that scenery is solid);
+  climbing; dragging a corpse (EQ's `/corpse` drag); boats; text interaction with objects (M&M's
+  "MUD objects"). Exploit lens: `/stuck` moves a player, so the server picks the spot (a nearby
+  open one, never the player's choice), and it must be no way out of a fight or a fall.
+- [ ] **M&M roadmap: items**. Light sources (held torches and lanterns, fuel, a slot, and a
+  darkness rule for them to matter); click effects on items; treasure maps; artifacts and relics
+  (one-of-a-kind items); storage placed in the world (a chest you own); consignment containers
+  (pairs with "Auction / bazaar"). Spell reagents sit in "Consumables system". Exploit lens: a
+  relic is unique, so every move, drop, trade and death path must keep it one item, held by the
+  item ledger's books.
+- [ ] **M&M roadmap: NPCs and quests**. Trainer NPCs for skills and languages ("Language system
+  wiring" needs them); merchant prices that move with faction; a faction window; NPCs that
+  remember you; NPC names unknown until you ask "Who are you?"; quest flags that gate
+  progression ("Quest and loot content plumbing", item (a)); spell scrolls and scribing in place
+  of spells learned by level.
+- [ ] **M&M roadmap: combat and PvP**. Mobs that cast and use special attacks; more mob
+  behaviour (fleeing, calling for help; wolf packs already join each other's fights); combat
+  animations; PvP arenas, PvP nametag colours, a PvP server ruleset, guild wars and PvP-flagged
+  NPCs (the "PvP flagging" entry has no plan yet).
+- [ ] **M&M roadmap: mounts, homes and rest**. Pack animals, pulled carts and vessels; player
+  and guild housing ("player-owned towns" is an idea in the social-layer entry); buildable
+  campfires and inn rooms that give a rested buff; a benefit for chatting in a tavern; non-combat
+  pets; transformations (the offline-era system was removed 2026-11-01).
+- [ ] **M&M roadmap: bigger ideas**. Monster cities (a city for the evil races, with its own
+  factions and services); playing as an NPC (M&M's "Project N"); a storyteller system where
+  trusted players run events and spawn NPCs (beyond GM tools, with its own audit and limits like
+  `gm_actions`).
+- [ ] **M&M roadmap: suspicious-pattern metrics**. Flag accounts whose kills, coin or items move
+  unusually fast, and currency outliers. The item ledger's daily balance check and the nightly
+  dupe query named in "Public-host hardening" are the start.

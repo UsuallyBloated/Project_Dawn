@@ -47,8 +47,6 @@ func _ready() -> void:
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(3)
 	add_theme_stylebox_override("panel", style)
-	for label in [_food_label, _drink_label]:
-		label.add_theme_color_override("font_color", UITheme.C_TEXT)
 	UITheme.style_bar(_food_bar, C_FED, false)
 	UITheme.style_bar(_drink_bar, C_FED, false)
 	_food_fill = _food_bar.get_theme_stylebox("fill") as StyleBoxFlat

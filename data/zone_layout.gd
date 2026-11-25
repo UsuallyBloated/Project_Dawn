@@ -274,7 +274,43 @@ const SCATTER := [
 		"kinds": {"scrub": 5.0, "boulder": 2.0, "broadleaf": 0.4}},
 	{"name": "the plain", "rect": Rect2(-1920, -1920, 3840, 2880), "per_hectare": 2.4, "clumping": 0.75,
 		"kinds": {"broadleaf": 3.0, "bush": 4.0, "boulder": 1.2, "pine": 0.4}},
+	# The dead: a few among the bone fields' piles, thick round the undead camps
+	# (the camps' own clearings keep their middles bare), and now and then one
+	# beside a road. Each region throws its own dice, so none of this moves a
+	# tree above.
+	{"name": "the bone fields' dead", "rect": Rect2(-1200, -230, 340, 400), "per_hectare": 3.0, "clumping": 0.4,
+		"kinds": {"skeleton": 1.0}},
+	{"name": "the Bonepile's dead", "center": Vector2(-220, 120), "radius": 75.0, "per_hectare": 14.0,
+		"kinds": {"skeleton": 4.0, "bones": 1.0}},
+	{"name": "the Sunken Barrow's dead", "center": Vector2(-1480, -60), "radius": 130.0, "per_hectare": 9.0, "clumping": 0.2,
+		"kinds": {"skeleton": 4.0, "bones": 1.0}},
+	{"name": "the Broken Crypt's dead", "center": Vector2(20, 1250), "radius": 125.0, "per_hectare": 9.0, "clumping": 0.2,
+		"kinds": {"skeleton": 4.0, "bones": 1.0}},
+	{"name": "the Ossuary's dead", "center": Vector2(-1740, 90), "radius": 130.0, "per_hectare": 9.0, "clumping": 0.2,
+		"kinds": {"skeleton": 4.0, "bones": 1.0}},
+	{"name": "the roadside dead", "per_km": 3.0, "offset": Vector2(1.0, 9.0),
+		"kinds": {"skeleton": 1.0}},
 ]
+
+# Grass (scripts/zone/zone_grass.gd): how many tufts grow on a square metre of
+# open ground, and what each ground patch (GROUND_PATCHES, by name) keeps of
+# that: [the share, 0 to 1, and whether it is dry (straw-coloured)]. A patch's
+# share fades in over its feather. It grows only where the flora may (none on
+# the roads, the fields, the town or the mountains) and on no ground steeper
+# than the flora's.
+const GRASS_PER_M2 := 0.6
+const GRASS_PATCHES := {
+	"the Greywood": [0.2, false],
+	"the wood's edge": [0.6, false],
+	"the Spider Copse": [0.15, false],
+	"the Boar Thicket": [0.6, false],
+	"the Gnoll Flats": [0.5, true],
+	"the southern steppe": [0.7, true],
+	"the bone fields": [0.25, true],
+	"the barrow's pit": [0.15, false],
+	"the festering mound": [0.0, false],
+	"the plateau": [0.3, true],
+}
 
 # Nothing is scattered this close to a site's middle (the mobs want to be seen)
 # or to a road's edge. A site with a set piece wider than that names its own

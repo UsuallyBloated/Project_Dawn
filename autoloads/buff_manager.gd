@@ -229,48 +229,6 @@ func toggle_lich_form() -> void:
 func is_lich_form() -> bool:
 	return _lich_form_active
 
-# Track 4 sub-task 3 — walk every buff source the local buff bar shows and
-# emit parallel name/duration arrays for over-the-wire snapshot replication.
-# 0.0 duration means "indefinite / toggle" (Lich, raw Absorb) — receiver
-# displays the name without a countdown.
-func get_snapshot_arrays() -> Dictionary:
-	var names := PackedStringArray()
-	var durations := PackedFloat32Array()
-	for h in _hots:
-		names.append(h.spell_name)
-		durations.append(h.remaining)
-	if _absorb_hp > 0.0:
-		names.append("Shield")
-		durations.append(0.0)
-	if _evade_boost_remaining > 0.0:
-		names.append("Evade")
-		durations.append(_evade_boost_remaining)
-	if not _speed_buff.is_empty():
-		names.append(_speed_buff.get("buff_name", "SoW"))
-		durations.append(_speed_buff.get("remaining", 0.0))
-	if not _haste_buff.is_empty():
-		names.append(_haste_buff.get("buff_name", "Haste"))
-		durations.append(_haste_buff.get("remaining", 0.0))
-	if not _mp_regen_buff.is_empty():
-		names.append(_mp_regen_buff.get("buff_name", "Clarity"))
-		durations.append(_mp_regen_buff.get("remaining", 0.0))
-	if not _stat_buff.is_empty():
-		names.append(_stat_buff.get("buff_name", "Focused"))
-		durations.append(_stat_buff.get("remaining", 0.0))
-	for b in _primary_stat_buffs:
-		names.append(b.get("buff_name", "Bless"))
-		durations.append(b.get("remaining", 0.0))
-	if not _damage_shield.is_empty():
-		names.append(_damage_shield.get("buff_name", "Thorns"))
-		durations.append(_damage_shield.get("remaining", 0.0))
-	if _stealth_remaining > 0.0:
-		names.append("Hidden")
-		durations.append(_stealth_remaining)
-	if _lich_form_active:
-		names.append("Lich")
-		durations.append(0.0)
-	return {"names": names, "durations": durations}
-
 # Resurrection sickness: the server's five-minute debuff after an accepted
 # resurrection (classic EQ's Resurrection Effects, the P99 design). It is not a
 # spell, so the additive reconcile cannot rebuild it from a definition; the cut

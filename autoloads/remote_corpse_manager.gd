@@ -1,4 +1,4 @@
-extends Node
+extends "res://autoloads/remote_entity_manager.gd"
 
 # RemoteCorpseManager — visual + loot replication for every server-owned player
 # corpse in the current zone (corpse / resurrection epic). Mirrors
@@ -9,13 +9,11 @@ extends Node
 #
 # Corpse ids share the loot-bag id partition, so EntityDespawn is shared between
 # this and RemoteLootBagManager — each frees only the ids it actually spawned
-# (we guard on `_spawn_data.has(id)`).
+# (we guard on `_spawn_data.has(id)`). `_spawn_data` holds {pos, owner_id,
+# owner_name, items: Array, coins: Dictionary} per corpse id.
 
 const CORPSE_SCENE := preload("res://scripts/corpse.gd")
 
-# corpse_id -> {pos, owner_id, owner_name, items: Array, coins: Dictionary}
-var _spawn_data: Dictionary = {}
-var _by_id: Dictionary = {}        # corpse_id -> Corpse node
 var _last_scene: Node = null
 var _needs_rehydrate: bool = false
 
@@ -129,10 +127,3 @@ func _materialize_items(paths: PackedStringArray, counts: PackedInt32Array) -> A
 		out.append({"item": item, "count": int(counts[i])})
 	return out
 
-func clear_all() -> void:
-	for id in _by_id:
-		var c = _by_id[id]
-		if is_instance_valid(c):
-			c.queue_free()
-	_by_id.clear()
-	_spawn_data.clear()

@@ -581,8 +581,8 @@ func _on_display_confirmed() -> void:
 #
 # Each ChatWindow owns its own LineEdit at the bottom (matches the legacy
 # single-window layout). Pressing Enter routes to the active window's
-# input. Submit fans back through CombatLog.chat_submitted so existing
-# hud.gd command handlers see the same call shape as before.
+# input. Submit fans back through CombatLog.chat_submitted so the chat
+# commands (hud_chat_commands.gd) see the same call shape as before.
 
 func show_chat_input(prefill: String = "") -> void:
 	var w := get_active_window()
@@ -596,8 +596,8 @@ func is_chat_input_focused() -> bool:
 			return true
 	return false
 
-func _on_show_chat_input() -> void:
-	show_chat_input()
+func _on_show_chat_input(prefill: String) -> void:
+	show_chat_input(prefill)
 
 func _on_window_text_submitted(_id: int, text: String) -> void:
 	CombatLog.chat_submitted.emit(text)

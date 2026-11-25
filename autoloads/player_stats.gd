@@ -338,7 +338,3 @@ func apply_remote_coins(new_platinum: int, new_gold: int, new_silver: int, new_c
 	silver = new_silver
 	copper = new_copper
 	coins_changed.emit(platinum, gold, silver, copper)
-
-func lose_xp(amount: int) -> void:
-	xp = max(0, xp - amount)
-	xp_changed.emit(xp, xp_to_next)

@@ -166,7 +166,16 @@ the R720, near nothing locally).
 **C3. Toggles.** All gated on `Net.is_gm()` (display only; the server's gate is the rule) and
 on being alive:
 - Double-tap `jump` within `FLY_DOUBLE_TAP_SECS` (0.3 s, a knob), Minecraft's gesture.
-- `/fly`, `/fly 50`, `/fly off` in chat (`hud.gd`'s command dispatch, beside `/give`).
+- `/fly`, `/fly 50`, `/fly off` in chat (the chat commands, beside `/give`).
+  **At the client merge (noted 2026-11-18):** the commands left `hud.gd` for
+  `scripts/hud_chat_commands.gd` after this branch was cut (structure assessment R4), so this
+  branch's `/fly` hunk in `hud.gd::_handle_chat_input` has no home and will conflict. Do not
+  drop it: re-add it there as `func _cmd_fly(_text: String, lower: String) -> void:` with the
+  arm's body unchanged (`_player` has the same name), one key `"/fly": _cmd_fly` in the
+  `_with_args` table (a first-word command is found bare too, so the one key answers `/fly`,
+  `/fly 50` and `/fly off`), its rows in `tools/check_chat_commands.gd` (which fails until
+  every table key has a row), and its row in `docs/reference/commands.md`. The branch's other
+  `hud.gd` hunks (the flight label) merge as they are.
 - Test Panel: a FLIGHT row next to the Fling buttons (`test_panel.gd` ~189): Fly 10 / 25 / 50 /
   100 m/s and Land.
 - Landing by descent: holding `fly_down` into the ground ends flight (Minecraft Java). The

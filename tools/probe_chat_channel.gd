@@ -123,7 +123,7 @@ func _window() -> void:
 	w2.queue_free()
 
 # A social macro's lines go to the real chat handler (CombatLog.chat_submitted,
-# which hud.gd answers) instead of being printed locally as "[Say] ...".
+# which hud_chat_commands.gd answers) instead of being printed locally as "[Say] ...".
 func _macros() -> void:
 	var log = root.get_node("/root/CombatLog")
 	var hotkeys = root.get_node("/root/SocialHotkeys")

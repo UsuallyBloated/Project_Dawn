@@ -3,7 +3,8 @@ extends RefCounted
 
 # Makes the zone's obstacle data (zone_obstacles.gd) from the scenery as it is
 # built: every solid the town's and the landmarks' pieces recorded
-# (LowPoly.volumes) and every planted tree, bush, boulder and bone. A solid's
+# (LowPoly.volumes) and every planted tree, bush, boulder and bone (its
+# model's solids, SceneryModels). A solid's
 # boundary is its own shape: the outline of its corners seen from above, with
 # the height of its lowest and highest corner. Nothing is drawn by hand, so a
 # piece that changes shape changes its boundary with it.
@@ -25,8 +26,8 @@ const SIGHT_MIN_HEIGHT := 0.3
 const MIN_AREA := 0.0004
 # Everything is rounded to a millimetre before it is written.
 const SNAP := 0.001
-# A planted thing is at most two prisms: its foot (the solids that start under
-# this height, on a thing of scale 1: a trunk, a bush, a boulder) and its
+# A bush or a rock ("merge", see flora_groups) is at most two prisms: its foot
+# (the solids that start under this height, on a thing of scale 1) and its
 # crown (the rest), each the outline of its solids taken together.
 const FLORA_SPLIT := 1.0
 const DRESSING_NODES := ["Town", "Landmarks"]
@@ -57,17 +58,29 @@ static func bake(world: Node) -> Dictionary:
 	for i in kinds.size():
 		var kind := kinds[i]
 		if not groups_of.has(kind):
-			groups_of[kind] = flora_groups(ZoneFlora.kind_volumes(kind))
+			groups_of[kind] = flora_groups(ZoneFlora.kind_volumes(kind), ZoneFlora.bake_mode(kind))
+		var source := kind.get_slice("#", 0)
 		for group in groups_of[kind]:
-			_emit(floats, stats, kind, transforms[i] * (group[0] as PackedVector3Array), group[1], terrain)
+			_emit(floats, stats, source, transforms[i] * (group[0] as PackedVector3Array), group[1], terrain)
 	stats["bytes"] = ZoneObstacles.encode_file(stats["count"], floats)
 	return stats
 
 
-# One planted kind's solids as its foot and its crown (see FLORA_SPLIT): up to
-# two entries of [corners, sight scale], in the kind's own space. A crown
-# keeps only solids wide enough to hide something (bare branches do not).
-static func flora_groups(volumes: Array) -> Array:
+# One planted kind's solids as the prisms the bake makes of them, in the
+# kind's own space: a list of [corners, sight scale]. By `mode`:
+#   "merge"   a bush or a rock: its foot and its crown (see FLORA_SPLIT).
+#   "trunk"   a tree: every piece that starts under ZoneFlora.CROWN_FROM on
+#             its own (the trunk's lengths, so a bent trunk walls nothing
+#             off), and the rest as one crown. Merged with the trunk, a crown
+#             would come down to the trunk's middle, and on a small tree that
+#             is low enough for the whole crown to stop a body.
+#   "pieces"  bones: every piece on its own, so a body steps over the low ones.
+# A crown keeps only solids wide enough to hide something (bare branches do not).
+static func flora_groups(volumes: Array, mode: String = "merge") -> Array:
+	if mode == "pieces":
+		return volumes.duplicate()
+	var split := ZoneFlora.CROWN_FROM if mode == "trunk" else FLORA_SPLIT
+	var out: Array = []
 	var foot := PackedVector3Array()
 	var crown := PackedVector3Array()
 	var foot_scale := 1.0
@@ -79,13 +92,15 @@ static func flora_groups(volumes: Array) -> Array:
 		for p in pts:
 			lowest = minf(lowest, p.y)
 			flat.append(Vector2(p.x, p.z))
-		if lowest < FLORA_SPLIT:
-			foot.append_array(pts)
-			foot_scale = minf(foot_scale, v[1])
+		if lowest < split:
+			if mode == "trunk":
+				out.append(v)
+			else:
+				foot.append_array(pts)
+				foot_scale = minf(foot_scale, v[1])
 		elif min_width(convex_hull(flat)) >= SIGHT_MIN_WIDTH:
 			crown.append_array(pts)
 			crown_scale = minf(crown_scale, v[1])
-	var out: Array = []
 	if not foot.is_empty():
 		out.append([_unique(foot), foot_scale])
 	if not crown.is_empty():

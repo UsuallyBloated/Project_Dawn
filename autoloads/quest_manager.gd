@@ -239,6 +239,8 @@ func get_quest_status(quest_id: String) -> int:
 		return Status.COMPLETED  # completed on the server (e.g. before a relog)
 	return -1   # -1 = not accepted
 
+# No caller yet: no quest can fail today (the server counts kills only). Kept
+# on purpose for the timed and delivery quests to come (user call 2026-11-18).
 func fail_quest(quest_id: String) -> void:
 	if not _quests.has(quest_id):
 		return

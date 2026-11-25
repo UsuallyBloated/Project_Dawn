@@ -525,7 +525,7 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
     **and `PassLeadership`** all resolve in the tick loop and re-fan `GroupRoster` (the
     leadership handoff was added 2026-06-15 — it had been local-only, a latent bug now
     load-bearing since leadership gates `/loot`).
-  - **Client**: `/autosplit on|off` and leader `/loot rr|ffa` chat commands (`hud.gd`);
+  - **Client**: `/autosplit on|off` and leader `/loot rr|ffa` chat commands (`hud_chat_commands.gd`);
     `GroupManager.loot_mode` mirrors the roster; group-panel header shows `[RR]`/`[FFA]`;
     coin + reject feedback flow through `RemoteLootBagManager`. XP split is unchanged
     (still distance-agnostic — a deliberate asymmetry vs coin's proximity gate).
@@ -827,11 +827,14 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   placement.
 - **Buff/debuff bar:** icons with countdown timers (absorb, HoT, evade, etc.).
 - **`/loc` and the compass** (playtested 2026-10-09, `loc_command_checklist.md`, all five rows):
-  `/loc` (or `/location`) prints your position as `x, y, z` to one decimal, paste-ready for
-  `zone_camps.toml` / `npcs.toml`, free for everyone and working while dead. Coordinates only
-  (user, 2026-10-09): which way you face is the Sense Heading skill's job on `/sense`, whose
-  roll is fuzzy below 75% of its cap. The world compass is settled: **+Z is north, +X is
-  east** (`sense_heading.gd`'s ring, the camp labels and the quest dialogue all agree). Known
+  `/loc` (or `/location`) prints your position the EverQuest way, `north, west, height` to
+  one decimal (since the compass mirror of 2026-11-14; `/loc raw` prints the world's `x, y,
+  z`, paste-ready for `zone_camps.toml` / `npcs.toml`), free for everyone and working while
+  dead. Coordinates only (user, 2026-10-09): which way you face is the Sense Heading skill's
+  job on `/sense`, whose roll is fuzzy below 75% of its cap. The world compass: **north is
+  -Z and east is +X**, so facing north, east is on your right (rule L3 in
+  `docs/reference/invariants.md`, held by `tools/check_compass.gd`; the 2026-09-27 ruling
+  "+Z is north" was replaced by the mirror, user decision 2026-11-14). Known
   quirk: Sense Heading starts at the level-1 cap, so a fresh character always reads exact and
   the skill only shows after leveling; it is also client-local and resets each launch (the
   "L1 cap = starting score" item in the To-Do).
@@ -858,7 +861,7 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   `[Shout]`, `[OOC]`, `[Group]`, `[Tell: Bob]`); a channel command at the start (`/say /s /shout
   /sh /ooc /g /group /gsay /tell /t /r`) switches it the moment its space is typed and leaves the
   text, however many are stacked or pasted; the channel stays until another command moves it;
-  other commands run as typed. The rules live in `scripts/chat_channel.gd`, and `hud.gd` runs
+  other commands run as typed. The rules live in `scripts/chat_channel.gd`, and `hud_chat_commands.gd` runs
   every submitted line through `ChatChannel.normalize` (plain text is a say). **Social macros**
   send each line through the same handler (`CombatLog.chat_submitted`), exactly as if typed.
   **A chat line is at most 250 characters** (user's call, 2026-10-27; playtested the same day,
@@ -936,7 +939,7 @@ you, unretrieved gear is lost for good, and a Cleric/Paladin res refunds part of
   app-heartbeat or 15 s netcode timeout, so a hard crash is ~40-45 s end to end. See
   `docs/design/camp_and_linkdead.md`.
 - **`/camp` (voluntary sit-gated logout, PD_W0017):** the deliberate mirror of linkdead. `/camp`
-  (in `hud.gd::_handle_chat_input`) requires the player to be seated (`Combat.is_player_seated()`,
+  (in `hud_chat_commands.gd`, `_cmd_camp`) requires the player to be seated (`Combat.is_player_seated()`,
   else "You must be sitting to camp."); it sends `ClientWorldMsg::Camp`, the server gates on
   `is_sitting` and starts a `CAMP_SECS` (30 s) countdown (`camp_since`), confirming with
   `ServerWorldMsg::CampUpdate{remaining_secs, active}`. An amber "Making camp... N" HUD label counts

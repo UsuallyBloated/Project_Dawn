@@ -127,7 +127,14 @@ func _run(data_dir: String, report_only: bool) -> int:
 	var paint_code := _write_paint(terrain)
 	if paint_code != 0:
 		return paint_code
-	return _write_scene(terrain)
+	var scene_code := _write_scene(terrain)
+	if scene_code == 0:
+		# The ground changed, so what stands on it moved too: both exports, or
+		# the server runs a different ground and different obstacles from the
+		# client's (check_terrain_lockstep.gd and check_obstacle_lockstep.gd
+		# catch the omission, after the fact).
+		print("\nWritten. Next, so both sides stand on this ground: tools/export_terrain.gd (the server's terrain.toml), then tools/export_obstacles.gd (the scenery's prisms, both repos), then tools/check_all.ps1.")
+	return scene_code
 
 
 # --- The features file ---------------------------------------------------

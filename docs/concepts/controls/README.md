@@ -154,6 +154,7 @@ mouse wheel can also scroll all the way into first-person (`ZOOM_MIN` is 0).
 | Input | Effect | Why fixed |
 |---|---|---|
 | `Enter` / `KP Enter` | Open chat input | Reserved (`RESERVED_KEYS`) |
+| `/` | Open chat input with the slash already typed, ready for a command (EQ's command key). The bare key only. | Reserved (`RESERVED_KEYS`) |
 | `Esc` | Close top window → else toggle Options | Reserved (menu nav) |
 | `` ` `` (backtick) | Toggle in-game debug console | Diagnostic tool, not a gameplay control (`scripts/debug_console.gd`). `F2` used to do this too but is now group-target 1. |
 | `/console` (chat command) | Fallback console toggle when the keybind isn't reaching the window | Same |

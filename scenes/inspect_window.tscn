@@ -1,0 +1,70 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/inspect_window.gd" id="1_inspect"]
+
+[node name="InspectWindow" type="Panel"]
+visible = false
+offset_left = 440.0
+offset_top = 120.0
+offset_right = 700.0
+offset_bottom = 440.0
+theme_type_variation = &"WindowPanel"
+script = ExtResource("1_inspect")
+
+[node name="TitleBg" type="ColorRect" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = -1.0
+offset_bottom = 20.0
+mouse_filter = 2
+color = Color(0.1, 0.08, 0.05, 0.95)
+
+[node name="TitleLabel" type="Label" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 6.0
+offset_top = 2.0
+offset_right = -24.0
+offset_bottom = 20.0
+mouse_filter = 2
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 11
+text = "Inspect"
+clip_text = true
+
+[node name="CloseBtn" type="Button" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -20.0
+offset_top = 1.0
+offset_right = -2.0
+offset_bottom = 20.0
+theme_override_font_sizes/font_size = 14
+text = "×"
+flat = true
+
+[node name="NameLabel" type="Label" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 6.0
+offset_top = 26.0
+offset_right = -6.0
+offset_bottom = 46.0
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+clip_text = true
+
+[node name="Grid" type="GridContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 12.0
+offset_top = 52.0
+offset_right = -12.0
+offset_bottom = -8.0
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 4
+columns = 2

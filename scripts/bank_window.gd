@@ -12,20 +12,14 @@ extends DraggablePanel
 # held (EQ's drop-on-the-banker), into whichever vault was clicked.
 # See docs/concepts/world/currency.md.
 
-const W := 460.0
-const H := 560.0
 const SLOT := 48
 
 # Tier indices match the server's BankExchange (0 = copper … 3 = platinum).
 const TIER_NAMES := ["Copper", "Silver", "Gold", "Platinum"]
 
-var _title_lbl: Label = null
 var _wallet_chips: Array = []   # per-tier clickable coin chips (right-click deposits)
 var _bank_chips: Array = []     # per-tier clickable coin chips (right-click withdraws)
 var _amount_spins: Array[SpinBox] = []   # parallel to [Platinum, Gold, Silver, Copper]
-var _from_opt: OptionButton = null
-var _to_opt: OptionButton = null
-var _qty_spin: SpinBox = null
 
 # Armed by a deposit/withdraw send; the confirming BankSnapshot fan clears the
 # entry spinboxes. A rejected action disarms it so the amounts survive for retry.
@@ -40,8 +34,6 @@ signal held_deposit_requested(shared: bool)
 # from BankerManager's cache; the Personal/Shared toggle picks the deposit target.
 var _personal_cells: Array = []
 var _shared_cells: Array = []
-var _personal_btn: Button = null
-var _shared_btn: Button = null
 
 func _ready() -> void:
 	_build_ui()
@@ -62,86 +54,79 @@ func open_for(banker_name: String) -> void:
 	_refresh_vault(true)
 	visible = true
 
-# ── UI construction ───────────────────────────────────────────────────────────
+# ── UI construction ──────────────────────────────────────
+
+# The frame is scenes/bank_window.tscn (header, the Coins tab with its coin
+# rows, deposit and withdraw spins and the exchange row, the Items tab with
+# the deposit target and the two vault grids); this script fills the chips,
+# the spins, the vault cells and wires the buttons.
+const ITEMS_HINT := "Right-click a vault item to withdraw it. With the bank open, right-click an item in your bags to deposit it, or click a vault slot while holding one."
+
+@onready var _title_lbl: Label = $Root/Header/TitleLbl
+@onready var _close_btn: Button = $Root/Header/CloseBtn
+@onready var _tabs: TabContainer = $Root/Tabs
+@onready var _wallet_row: HBoxContainer = $Root/Tabs/Coins/WalletRow
+@onready var _bank_row: HBoxContainer = $Root/Tabs/Coins/BankRow
+@onready var _spins_row: HBoxContainer = $Root/Tabs/Coins/SpinsRow
+@onready var _deposit_btn: Button = $Root/Tabs/Coins/BtnRow/DepositBtn
+@onready var _withdraw_btn: Button = $Root/Tabs/Coins/BtnRow/WithdrawBtn
+@onready var _qty_spin: SpinBox = $Root/Tabs/Coins/ExRow/QtySpin
+@onready var _from_opt: OptionButton = $Root/Tabs/Coins/ExRow/FromOpt
+@onready var _to_opt: OptionButton = $Root/Tabs/Coins/ExRow/ToOpt
+@onready var _exchange_btn: Button = $Root/Tabs/Coins/ExRow/ExchangeBtn
+@onready var _personal_btn: Button = $Root/Tabs/Items/TgtRow/PersonalBtn
+@onready var _shared_btn: Button = $Root/Tabs/Items/TgtRow/SharedBtn
+@onready var _personal_grid: GridContainer = $Root/Tabs/Items/PersonalGrid
+@onready var _shared_grid: GridContainer = $Root/Tabs/Items/SharedGrid
+@onready var _items_hint: Label = $Root/Tabs/Items/ItemsHint
 
 func _build_ui() -> void:
-	size = Vector2(W, H)
-	var vp := get_viewport_rect().size
-	position = Vector2((vp.x - W) * 0.5, (vp.y - H) * 0.5)
+	_close_btn.pressed.connect(func(): visible = false)
 
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = UITheme.C_WINDOW_BG
-	bg.border_color = UITheme.C_BORDER
-	bg.set_border_width_all(2)
-	bg.set_corner_radius_all(4)
-	add_theme_stylebox_override("panel", bg)
+	# Coins: per-tier clickable coin chips. Right-click a Carried tier to
+	# deposit it, a Bank tier to withdraw it (whole tier; the buttons below do
+	# exact amounts).
+	_wallet_chips = _build_coin_chips(_wallet_row, false)
+	_bank_chips = _build_coin_chips(_bank_row, true)
 
-	var root := VBoxContainer.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 8; root.offset_top = 8
-	root.offset_right = -8; root.offset_bottom = -8
-	root.add_theme_constant_override("separation", 6)
-	add_child(root)
+	# One spinbox per tier, ordered Platinum to Copper to read like a price.
+	for tier_label in ["P", "G", "S", "C"]:
+		var col := VBoxContainer.new()
+		var lbl := Label.new()
+		lbl.text = tier_label
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 11)
+		col.add_child(lbl)
+		var spin := SpinBox.new()
+		spin.min_value = 0
+		spin.max_value = 1_000_000_000
+		spin.step = 1
+		spin.custom_minimum_size = Vector2(80, 0)
+		col.add_child(spin)
+		_amount_spins.append(spin)
+		_spins_row.add_child(col)
+	_deposit_btn.pressed.connect(_do_deposit)
+	_withdraw_btn.pressed.connect(_do_withdraw)
 
-	_build_header(root)
+	for i in TIER_NAMES.size():
+		_from_opt.add_item(TIER_NAMES[i], i)
+		_to_opt.add_item(TIER_NAMES[i], i)
+	_from_opt.select(0)  # Copper
+	_to_opt.select(1)  # Silver
+	_exchange_btn.pressed.connect(_do_exchange)
 
-	# Coins (slice 1) and Items (slice 2) live on separate tabs. Coins stays the
-	# default tab so the _pending_clear deposit/withdraw flow is on the visible
-	# tab when the window opens.
-	var tabs := TabContainer.new()
-	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	root.add_child(tabs)
+	# Items: which vault a right-click quick-transfer deposits to, then the
+	# two vault grids.
+	var group := ButtonGroup.new()
+	_wire_target_button(_personal_btn, group, false)
+	_wire_target_button(_shared_btn, group, true)
+	_personal_cells = _fill_vault_grid(_personal_grid, false, BankerManager.BANK_VAULT_SLOTS)
+	_shared_cells = _fill_vault_grid(_shared_grid, true, BankerManager.ACCOUNT_VAULT_SLOTS)
+	_items_hint.text = ITEMS_HINT
 
-	var coins_tab := VBoxContainer.new()
-	coins_tab.name = "Coins"
-	coins_tab.add_theme_constant_override("separation", 6)
-	tabs.add_child(coins_tab)
-	_build_balances(coins_tab)
-	coins_tab.add_child(HSeparator.new())
-	_build_deposit_withdraw(coins_tab)
-	coins_tab.add_child(HSeparator.new())
-	_build_exchange(coins_tab)
-
-	var items_tab := VBoxContainer.new()
-	items_tab.name = "Items"
-	items_tab.add_theme_constant_override("separation", 6)
-	tabs.add_child(items_tab)
-	_build_items(items_tab)
-
-	tabs.current_tab = 0
-
-func _build_header(parent: VBoxContainer) -> void:
-	var row := HBoxContainer.new()
-	parent.add_child(row)
-
-	_title_lbl = Label.new()
-	_title_lbl.text = "Bank"
-	_title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_title_lbl.add_theme_color_override("font_color", UITheme.C_TITLE)
-	_title_lbl.add_theme_font_size_override("font_size", 14)
-	row.add_child(_title_lbl)
-
-	var close := Button.new()
-	close.text = "✕"
-	close.flat = true
-	close.add_theme_color_override("font_color", UITheme.C_TEXT)
-	close.pressed.connect(func(): visible = false)
-	row.add_child(close)
-
-func _build_balances(parent: VBoxContainer) -> void:
-	# Per-tier clickable coin chips. Right-click a Carried tier to deposit it, a
-	# Bank tier to withdraw it (whole tier; the buttons below do exact amounts).
-	var w_row := HBoxContainer.new()
-	w_row.add_theme_constant_override("separation", 8)
-	parent.add_child(w_row)
-	w_row.add_child(_make_section_label("Carried:"))
-	_wallet_chips = _build_coin_chips(w_row, false)
-
-	var b_row := HBoxContainer.new()
-	b_row.add_theme_constant_override("separation", 8)
-	parent.add_child(b_row)
-	b_row.add_child(_make_section_label("Bank:"))
-	_bank_chips = _build_coin_chips(b_row, true)
+	# Coins stays the default tab so the _pending_clear deposit/withdraw flow
+	# is on the visible tab when the window opens.
+	_tabs.current_tab = 0
 
 func _build_coin_chips(row: HBoxContainer, is_bank: bool) -> Array:
 	var chips: Array = []
@@ -157,146 +142,20 @@ func _build_coin_chips(row: HBoxContainer, is_bank: bool) -> Array:
 		chips.append({"label": chip, "tier": tier})
 	return chips
 
-func _build_deposit_withdraw(parent: VBoxContainer) -> void:
-	var hdr := _make_section_label("Deposit / Withdraw")
-	parent.add_child(hdr)
 
-	# One spinbox per tier, ordered Platinum → Copper to read like a price.
-	var spins_row := HBoxContainer.new()
-	spins_row.add_theme_constant_override("separation", 6)
-	spins_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	parent.add_child(spins_row)
-	for tier_label in ["P", "G", "S", "C"]:
-		var col := VBoxContainer.new()
-		var lbl := Label.new()
-		lbl.text = tier_label
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
-		lbl.add_theme_font_size_override("font_size", 11)
-		col.add_child(lbl)
-		var spin := SpinBox.new()
-		spin.min_value = 0
-		spin.max_value = 1_000_000_000
-		spin.step = 1
-		spin.custom_minimum_size = Vector2(80, 0)
-		col.add_child(spin)
-		_amount_spins.append(spin)
-		spins_row.add_child(col)
-
-	var btn_row := HBoxContainer.new()
-	btn_row.add_theme_constant_override("separation", 6)
-	parent.add_child(btn_row)
-	var dep := Button.new()
-	dep.text = "Deposit"
-	dep.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	dep.pressed.connect(_do_deposit)
-	btn_row.add_child(dep)
-	var wd := Button.new()
-	wd.text = "Withdraw"
-	wd.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	wd.pressed.connect(_do_withdraw)
-	btn_row.add_child(wd)
-
-func _build_exchange(parent: VBoxContainer) -> void:
-	parent.add_child(_make_section_label("Exchange coin (free)"))
-
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
-	parent.add_child(row)
-
-	_qty_spin = SpinBox.new()
-	_qty_spin.min_value = 1
-	_qty_spin.max_value = 1_000_000_000
-	_qty_spin.value = 100
-	_qty_spin.custom_minimum_size = Vector2(96, 0)
-	row.add_child(_qty_spin)
-
-	_from_opt = OptionButton.new()
-	for i in TIER_NAMES.size():
-		_from_opt.add_item(TIER_NAMES[i], i)
-	_from_opt.select(0)  # Copper
-	row.add_child(_from_opt)
-
-	var arrow := Label.new()
-	arrow.text = "to"
-	arrow.add_theme_color_override("font_color", UITheme.C_TEXT)
-	row.add_child(arrow)
-
-	_to_opt = OptionButton.new()
-	for i in TIER_NAMES.size():
-		_to_opt.add_item(TIER_NAMES[i], i)
-	_to_opt.select(1)  # Silver
-	row.add_child(_to_opt)
-
-	var ex := Button.new()
-	ex.text = "Exchange"
-	ex.pressed.connect(_do_exchange)
-	row.add_child(ex)
-
-	var hint := Label.new()
-	hint.text = "100 copper = 1 silver. Up-conversions take whole multiples; any remainder stays put."
-	hint.add_theme_color_override("font_color", UITheme.C_TEXT)
-	hint.add_theme_font_size_override("font_size", 10)
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	parent.add_child(hint)
-
-func _make_section_label(text: String) -> Label:
-	var lbl := Label.new()
-	lbl.text = text
-	lbl.add_theme_color_override("font_color", UITheme.C_TEXT)
-	lbl.add_theme_font_size_override("font_size", 12)
-	return lbl
-
-# ── Items tab (slice 2) ────────────────────────────────────────────────────────
-
-func _build_items(parent: VBoxContainer) -> void:
-	# Deposit-target toggle: which vault a right-click quick-transfer deposits to.
-	var tgt_row := HBoxContainer.new()
-	tgt_row.add_theme_constant_override("separation", 6)
-	parent.add_child(tgt_row)
-	tgt_row.add_child(_make_section_label("Deposit to:"))
-	var group := ButtonGroup.new()
-	_personal_btn = _make_target_button("Personal", group, false)
-	_shared_btn = _make_target_button("Shared", group, true)
-	_personal_btn.button_pressed = true
-	tgt_row.add_child(_personal_btn)
-	tgt_row.add_child(_shared_btn)
-
-	parent.add_child(_make_section_label("Bank vault (this character)"))
-	_personal_cells = _build_vault_grid(parent, false, BankerManager.BANK_VAULT_SLOTS)
-
-	parent.add_child(_make_section_label("Shared vault (all your characters)"))
-	_shared_cells = _build_vault_grid(parent, true, BankerManager.ACCOUNT_VAULT_SLOTS)
-
-	var hint := Label.new()
-	hint.text = "Right-click a vault item to withdraw it. With the bank open, right-click an item in your bags to deposit it, or click a vault slot while holding one."
-	hint.add_theme_color_override("font_color", UITheme.C_TEXT)
-	hint.add_theme_font_size_override("font_size", 10)
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	parent.add_child(hint)
-
-func _build_vault_grid(parent: VBoxContainer, shared: bool, count: int) -> Array:
-	var grid := GridContainer.new()
-	grid.columns = 5
-	grid.add_theme_constant_override("h_separation", 4)
-	grid.add_theme_constant_override("v_separation", 4)
+func _fill_vault_grid(grid: GridContainer, shared: bool, count: int) -> Array:
 	var cells: Array = []
 	for i in count:
 		var cell := _make_vault_cell(shared, i)
 		grid.add_child(cell)
 		cells.append(cell)
-	parent.add_child(grid)
 	return cells
 
-func _make_target_button(text: String, group: ButtonGroup, shared: bool) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.toggle_mode = true
+func _wire_target_button(b: Button, group: ButtonGroup, shared: bool) -> void:
 	b.button_group = group
 	b.toggled.connect(func(on: bool):
 		if on:
 			BankerManager.deposit_to_shared = shared)
-	return b
 
 func _make_vault_cell(shared: bool, slot: int) -> Panel:
 	var cell := Panel.new()

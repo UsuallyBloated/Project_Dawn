@@ -245,9 +245,15 @@ or stays icon-only.
 ## 11. Environment & Props — `assets/models/environment/` + `assets/models/props/`
 
 ### Starter zone (current `scenes/world.tscn`)
-- [ ] Trees (deciduous, pine, dead)
-- [ ] Rocks (small, medium, boulder)
-- [ ] Grass / fern / mushroom clusters (for foliage system)
+- [ ] Trees (deciduous, pine, dead) *(MODELS BUILT 2026-11-24 by our own Blender generators,
+  `tools/blender/`: pine, broadleaf, dark tree, dead tree, six variants each, in
+  `assets/models/scenery/` and wired into `ZoneFlora` on `feat/scenery-generators`; placeholder
+  vertex colours, UVs laid out for the texture pass; ticks when the zone has been walked)*
+- [ ] Rocks (small, medium, boulder) *(the boulder, twelve variants, small to large, same build)*
+- [ ] Grass / fern / mushroom clusters (for foliage system) *(grass: nine tufts, drawn round the
+  camera by `ZoneGrass`, same build; ferns and mushrooms not made)*
+- [ ] Bushes, scrub, beast bones and humanoid skeletons *(eight, eight, six, and sixteen (one per
+  race at its height), same build)*
 - [ ] Ruined crypt entrance — already a camp in `zone_data.gd`
 - [ ] Gnoll war camp props (totem, fire pit, hide tent)
 - [ ] Bandit outpost (wooden palisade, cart)

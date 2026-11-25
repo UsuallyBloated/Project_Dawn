@@ -1,11 +1,9 @@
 extends Node
 
-# NetCombatBroadcaster — owning-client → server fan-out of cast / buff
-# state. Track 6 removed the resource-broadcast path: HP/MP/Stamina are now
-# server-authoritative, so the client receives HealthUpdate / ManaUpdate /
-# StaminaUpdate from the server rather than telling the server what they
-# are. Cast bars and buff snapshots stay client-driven for now (sub-task 4
-# lifts buff authority server-side).
+# NetCombatBroadcaster: the owning client's cast-bar relay to the server
+# (cast start, cast fail). HP/MP/Stamina and buff snapshots are
+# server-authoritative; the client receives HealthUpdate / ManaUpdate /
+# StaminaUpdate / BuffSnapshot rather than telling the server what they are.
 
 var _last_cast_spell_name: String = ""
 
@@ -57,10 +55,4 @@ func _on_casting_cancelled() -> void:
 	# it does, plumb the reason through.
 	Net.broadcast_cast_fail("interrupted")
 	_last_cast_spell_name = ""
-
-# ── Buff snapshot ───────────────────────────────────────────────────
-# (Track 6 sub-task 4a removed _on_buffs_changed — server originates
-# BuffSnapshot from its active_buffs state via tick.rs step 5a. The
-# Net.broadcast_buff_snapshot wrapper stays for now but is unused;
-# sub-task 4b removes the wire variant entirely.)
 

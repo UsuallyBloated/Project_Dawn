@@ -1,4 +1,4 @@
-extends Node
+extends "res://autoloads/remote_entity_manager.gd"
 
 # RemoteEnemyManager — visual replication of every server-spawned enemy
 # in the current zone. Mirrors RemotePlayerManager's two-map / scene-
@@ -29,8 +29,6 @@ const REMOTE_ENEMY_SCENE := preload("res://scenes/remote_enemy.tscn")
 # verification flow surfaces drift instantly (enemies wouldn't render).
 const ENEMY_ID_BASE: int = 1_000_000_000
 
-var _spawn_data: Dictionary = {}   # int enemy_id -> spawn dict
-var _by_id: Dictionary = {}        # int enemy_id -> RemoteEnemy node
 var _last_scene: Node = null
 var _needs_rehydrate: bool = false
 
@@ -42,11 +40,6 @@ func _ready() -> void:
 	Net.world_entity_died.connect(_on_entity_died)
 	Net.world_entity_despawn.connect(_on_entity_despawn)
 	Net.world_buff_snapshot.connect(_on_buff_snapshot)
-
-# Track 21B — public accessor for the target-of-target frame to
-# resolve a server-sent target_id back to a RemoteEnemy node.
-func get_by_id(id: int) -> Node:
-	return _by_id.get(id)
 
 func _process(_delta: float) -> void:
 	var scene: Node = get_tree().current_scene
@@ -169,9 +162,6 @@ func _instantiate_into(id: int, scene: Node) -> void:
 	if data.has("target_id"):
 		re.apply_target_change(data["target_id"])
 
-func _scene_hosts_local_player(_scene: Node) -> bool:
-	return get_tree().get_first_node_in_group("player") != null
-
 func _is_enemy_id(id: int) -> bool:
 	return id >= ENEMY_ID_BASE
 
@@ -183,12 +173,3 @@ func _is_enemy_id(id: int) -> bool:
 func get_enemy(id: int) -> Node:
 	return _by_id.get(id)
 
-# Defensive — call before zone swaps if needed. Scene change already
-# frees the children when the parent scene goes away.
-func clear_all() -> void:
-	for id in _by_id:
-		var re = _by_id[id]
-		if is_instance_valid(re):
-			re.queue_free()
-	_by_id.clear()
-	_spawn_data.clear()

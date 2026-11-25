@@ -1,31 +1,29 @@
 extends CanvasLayer
 
-const _OptionsScreenScript  := preload("res://scripts/options_screen.gd")
-const _CraftingWindowScript := preload("res://scripts/crafting_window.gd")
-const _VendorWindowScript   := preload("res://scripts/vendor_window.gd")
-const _BankWindowScript     := preload("res://scripts/bank_window.gd")
+const _OptionsScreenScene   := preload("res://scenes/options_screen.tscn")
+const _CraftingWindowScene  := preload("res://scenes/crafting_window.tscn")
+const _VendorWindowScene    := preload("res://scenes/vendor_window.tscn")
+const _BankWindowScene      := preload("res://scenes/bank_window.tscn")
 const _HudDeathScreen       := preload("res://scripts/hud_death_screen.gd")
-const _HudDisconnectNotice  := preload("res://scripts/hud_disconnect_notice.gd")
-const _HudCastBar           := preload("res://scripts/hud_cast_bar.gd")
-const _HudBuffBar           := preload("res://scripts/hud_buff_bar.gd")
-const _HudDebuffBar         := preload("res://scripts/hud_debuff_bar.gd")
-const _HudPetPanel          := preload("res://scripts/hud_pet_panel.gd")
+const _HudDisconnectNoticeScene := preload("res://scenes/hud_disconnect_notice.tscn")
+const _HudCastBarScene      := preload("res://scenes/hud_cast_bar.tscn")
+const _HudBuffBarScene      := preload("res://scenes/hud_buff_bar.tscn")
+const _HudDebuffBarScene    := preload("res://scenes/hud_debuff_bar.tscn")
+const _HudPetPanelScene     := preload("res://scenes/hud_pet_panel.tscn")
 const _HudHungerPanelScene  := preload("res://scenes/hud_hunger_panel.tscn")
 # The hunger window sits this far below the player's information bar.
 const HUNGER_PANEL_GAP := 4.0
 # The GM flight line ("Flying N m/s") at the top centre while a flight lasts.
 const FLIGHT_LABEL_TOP := 8.0
 const FLIGHT_LABEL_COLOR := Color(0.55, 0.80, 1.0)
-const _HudGroupPanel        := preload("res://scripts/hud_group_panel.gd")
-# Dev Test Panel, mounted on demand by `/testpanel` (world.gd also mounts it at
-# world entry for GMs).
-const TEST_PANEL_GD         := preload("res://scripts/test_panel.gd")
-const _TrackWindowScript    := preload("res://scripts/track_window.gd")
-const _SpellBookScript      := preload("res://scripts/spell_book.gd")
-const _QuestJournalScript   := preload("res://scripts/quest_journal.gd")
-const _DialogueWindowScript := preload("res://scripts/dialogue_window.gd")
-const _InspectWindowScript  := preload("res://scripts/inspect_window.gd")
-const _TradeWindowScript    := preload("res://scripts/trade_window.gd")
+const _HudGroupPanelScene   := preload("res://scenes/hud_group_panel.tscn")
+const _HudChatCommands      := preload("res://scripts/hud_chat_commands.gd")
+const _TrackWindowScene     := preload("res://scenes/track_window.tscn")
+const _SpellBookScene       := preload("res://scenes/spell_book.tscn")
+const _QuestJournalScene    := preload("res://scenes/quest_journal.tscn")
+const _DialogueWindowScene  := preload("res://scenes/dialogue_window.tscn")
+const _InspectWindowScene   := preload("res://scenes/inspect_window.tscn")
+const _TradeWindowScene     := preload("res://scenes/trade_window.tscn")
 const _DebugConsoleScript   := preload("res://scripts/debug_console.gd")
 
 @onready var health_bar: ProgressBar = $Panel/VBoxContainer/HPRow/HealthBar
@@ -92,6 +90,7 @@ var _bank_window: Panel = null
 
 var _group_panel = null
 var _pet_panel = null
+var _chat_commands = null
 var _hunger_panel: Control = null
 # GM flight: the line at the top of the screen while it lasts, so the state
 # is never a guess. Built on the first takeoff.
@@ -123,6 +122,8 @@ var _self_targeted: bool = false
 # INSPECT_RANGE (30 m) on purpose: the server gate is the backstop against a
 # modified client, and this one is what an honest player actually meets.
 const INSPECT_RANGE := 20.0
+# What the "/" key opens the chat line holding.
+const CHAT_COMMAND_PREFIX := "/"
 
 func _ready() -> void:
 	# The launcher scales the window for itself (login.gd's LOGIN_UI_SCALE);
@@ -186,7 +187,6 @@ func _ready() -> void:
 	_build_encumbrance_indicator()
 	_build_camp_indicator()
 	_build_res_prompt()
-	_build_command_input()
 	_build_options_screen()
 	_build_crafting_window()
 	_build_vendor_window()
@@ -198,21 +198,21 @@ func _build_components() -> void:
 	var death_screen := _HudDeathScreen.new()
 	add_child(death_screen)
 
-	add_child(_HudDisconnectNotice.new())
+	add_child(_HudDisconnectNoticeScene.instantiate())
 
-	var cast_bar := _HudCastBar.new()
+	var cast_bar := _HudCastBarScene.instantiate()
 	add_child(cast_bar)
 
-	var buff_bar := _HudBuffBar.new()
+	var buff_bar := _HudBuffBarScene.instantiate()
 	add_child(buff_bar)
 
-	var debuff_bar := _HudDebuffBar.new()
+	var debuff_bar := _HudDebuffBarScene.instantiate()
 	add_child(debuff_bar)
 
-	_group_panel = _HudGroupPanel.new()
+	_group_panel = _HudGroupPanelScene.instantiate()
 	add_child(_group_panel)
 
-	_pet_panel = _HudPetPanel.new()
+	_pet_panel = _HudPetPanelScene.instantiate()
 	add_child(_pet_panel)
 
 	# The hunger window (food design section 8), by default directly below
@@ -222,25 +222,21 @@ func _build_components() -> void:
 	add_child(_hunger_panel)
 	_place_hunger_panel.call_deferred()
 
-	_track_window = _TrackWindowScript.new()
+	_track_window = _TrackWindowScene.instantiate()
 	add_child(_track_window)
 
-	_spell_book = _SpellBookScript.new()
-	_spell_book.visible = false
+	_spell_book = _SpellBookScene.instantiate()
 	add_child(_spell_book)
 	_watch_window(_spell_book)
 
-	_quest_journal = _QuestJournalScript.new()
-	_quest_journal.visible = false
+	_quest_journal = _QuestJournalScene.instantiate()
 	add_child(_quest_journal)
 	_watch_window(_quest_journal)
 
-	_dialogue_window = _DialogueWindowScript.new()
-	_dialogue_window.visible = false
+	_dialogue_window = _DialogueWindowScene.instantiate()
 	add_child(_dialogue_window)
 
-	_inspect_window = _InspectWindowScript.new()
-	_inspect_window.visible = false
+	_inspect_window = _InspectWindowScene.instantiate()
 	add_child(_inspect_window)
 	_watch_window(_inspect_window)
 	Targeting.inspect_requested.connect(_inspect_player)
@@ -248,7 +244,7 @@ func _build_components() -> void:
 	# PD_W0028 — the trade window opens itself on `world_trade_opened` (a
 	# holding-click on a player) and closes on `world_trade_closed`. Mounted
 	# here so it survives with the HUD; it drives its own visibility.
-	_trade_window = _TradeWindowScript.new()
+	_trade_window = _TradeWindowScene.instantiate()
 	add_child(_trade_window)
 	_watch_window(_trade_window)
 
@@ -260,6 +256,12 @@ func _build_components() -> void:
 	# (see _unhandled_input).
 	_debug_console = _DebugConsoleScript.new()
 	add_child(_debug_console)
+
+	# The chat line's commands (hud_chat_commands.gd): it answers every
+	# submitted line itself and is handed the HUD pieces a command needs.
+	_chat_commands = _HudChatCommands.new()
+	_chat_commands.setup(_toggle_debug_console, _track_window, _inspect_player)
+	add_child(_chat_commands)
 
 	_build_tot_frame()
 
@@ -306,7 +308,7 @@ func _build_tot_frame() -> void:
 
 	_tot_name_label = Label.new()
 	_tot_name_label.add_theme_font_size_override("font_size", 10)
-	_tot_name_label.add_theme_color_override("font_color", UITheme.C_TITLE)
+	_tot_name_label.theme_type_variation = &"TitleLabel"
 	_tot_name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_tot_name_label.clip_text = true
 	name_row.add_child(_tot_name_label)
@@ -412,13 +414,13 @@ func _refresh_portrait() -> void:
 # ── Utility windows ───────────────────────────────────────────────────────────
 
 func _build_options_screen() -> void:
-	_options_screen = _OptionsScreenScript.new()
+	_options_screen = _OptionsScreenScene.instantiate()
 	_options_screen.visible = false
 	add_child(_options_screen)
 	_watch_window(_options_screen)
 
 func _build_crafting_window() -> void:
-	_crafting_window = _CraftingWindowScript.new()
+	_crafting_window = _CraftingWindowScene.instantiate()
 	_crafting_window.visible = false
 	add_child(_crafting_window)
 	_watch_window(_crafting_window)
@@ -433,7 +435,7 @@ func _build_crafting_window() -> void:
 			CombatLog.MsgType.INFO))
 
 func _build_vendor_window() -> void:
-	_vendor_window = _VendorWindowScript.new()
+	_vendor_window = _VendorWindowScene.instantiate()
 	_vendor_window.visible = false
 	add_child(_vendor_window)
 	_watch_window(_vendor_window)
@@ -443,7 +445,7 @@ func _build_vendor_window() -> void:
 # Banker slice 1 — same lifecycle as the vendor window; opens on
 # BankerManager.banker_opened (hud NPC-interact path / BankerNPC proximity).
 func _build_bank_window() -> void:
-	_bank_window = _BankWindowScript.new()
+	_bank_window = _BankWindowScene.instantiate()
 	_bank_window.visible = false
 	add_child(_bank_window)
 	_watch_window(_bank_window)
@@ -631,9 +633,6 @@ func _complete_camp() -> void:
 func _camp_text(seconds_left: float) -> String:
 	return "Making camp... %d" % int(ceil(seconds_left))
 
-func _build_command_input() -> void:
-	CombatLog.chat_submitted.connect(_handle_chat_input)
-
 func _connect_player_state() -> void:
 	var players := get_tree().get_nodes_in_group("player")
 	if players.is_empty():
@@ -642,6 +641,7 @@ func _connect_player_state() -> void:
 	if players.is_empty():
 		return
 	_player = players[0]
+	_chat_commands.set_player(_player)
 	if _player.has_signal("state_changed"):
 		_player.state_changed.connect(_on_player_state_changed)
 	if _player.has_signal("flight_changed"):
@@ -698,6 +698,14 @@ func _unhandled_input(event: InputEvent) -> void:
 				CombatLog.show_chat_input()
 				get_viewport().set_input_as_handled()
 				return
+		# EQ's command key: "/" opens the chat line with the slash already
+		# typed. The bare key only, so a chord on it stays free. With the
+		# line open the key never gets here: the line types it.
+		if event.keycode == KEY_SLASH and not CombatLog.is_chat_input_focused() \
+				and not (event.shift_pressed or event.ctrl_pressed or event.alt_pressed or event.meta_pressed):
+			CombatLog.show_chat_input(CHAT_COMMAND_PREFIX)
+			get_viewport().set_input_as_handled()
+			return
 		if CombatLog.is_chat_input_focused():
 			get_viewport().set_input_as_handled()
 			return
@@ -723,14 +731,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			# rebindable gameplay control. Backtick (`) toggles it; F2 is
 			# now EQ's "target group member 1". `/console` is the fallback.
 			if _debug_console != null:
-				_debug_console.toggle()
-				CombatLog.add_line(
-					"Debug console: %s (%d lines buffered)" % [
-						"ON" if _debug_console.visible else "OFF",
-						DebugLog.recent_lines.size(),
-					],
-					CombatLog.MsgType.INFO,
-				)
+				_toggle_debug_console()
 				get_viewport().set_input_as_handled()
 		elif event.is_action("target_self"):
 			if _self_targeted:
@@ -785,12 +786,7 @@ func _on_window_visibility_changed(window: Panel) -> void:
 # ── Styling helpers ───────────────────────────────────────────────────────────
 
 func _style_panel() -> void:
-	var s := StyleBoxFlat.new()
-	s.bg_color = Color(0.07, 0.05, 0.03, 0.92)
-	s.border_color = UITheme.C_BORDER
-	s.set_border_width_all(1)
-	s.set_corner_radius_all(4)
-	$Panel.add_theme_stylebox_override("panel", s)
+	$Panel.theme_type_variation = &"WindowPanel"
 
 # ── Stat bar callbacks ────────────────────────────────────────────────────────
 
@@ -1361,16 +1357,25 @@ func _on_player_state_changed(new_state: int) -> void:
 	else:
 		_state_label.visible = false
 
-# ── Command input ─────────────────────────────────────────────────────────────
+# ── Shared with the chat commands ─────────────────────────────────────────────
 
-# One tell on the wire plus the sender's own echo line (the server does not
-# echo a tell back to its sender). Shared by /tell and /r.
-func _send_tell(target_name: String, msg: String) -> void:
-	CombatLog.add_line("You -> %s: %s" % [target_name, msg], CombatLog.MsgType.TELL_OUT)
-	Net.broadcast_chat(Net.CHAT_CHANNEL_TELL, msg, target_name)
+# Show or hide the debug console and say which. Shared by the backtick key
+# and `/console` (hud_chat_commands.gd).
+func _toggle_debug_console() -> void:
+	if _debug_console == null:
+		return
+	_debug_console.toggle()
+	CombatLog.add_line(
+		"Debug console: %s (%d lines buffered)" % [
+			"ON" if _debug_console.visible else "OFF",
+			DebugLog.recent_lines.size(),
+		],
+		CombatLog.MsgType.INFO,
+	)
 
-# Open the inspect window on another player. Shared by /inspect and a
-# right-click on the player (Targeting.inspect_requested).
+# Open the inspect window on another player. Shared by /inspect
+# (hud_chat_commands.gd) and a right-click on the player
+# (Targeting.inspect_requested).
 func _inspect_player(rp: RemotePlayer) -> void:
 	if rp.char_id < 0:
 		CombatLog.add_line("Target has no character id.", CombatLog.MsgType.INFO)
@@ -1385,519 +1390,3 @@ func _inspect_player(rp: RemotePlayer) -> void:
 	if _inspect_window != null:
 		_inspect_window.open_for(rp.char_id, rp.player_name)
 	Net.broadcast_inspect_player(rp.char_id)
-
-func _handle_chat_input(text: String) -> void:
-	var my_name := PlayerStats.player_name if PlayerStats.player_name != "" else "You"
-
-	# One canonical form for every line (ChatChannel): plain text is a /say,
-	# and stacked channel commands collapse to the last, so "/say /say hi"
-	# says "hi" and a channel command never reaches anyone inside a message.
-	text = ChatChannel.normalize(text, CombatLog.last_tell_sender())
-	if text == "":
-		return
-
-	var lower := text.to_lower()
-
-	if lower == "/sit":
-		if is_instance_valid(_player):
-			_player.sit()
-		return
-	if lower == "/stand":
-		if is_instance_valid(_player):
-			_player.stand()
-		return
-	# Camp slice B — voluntary sit-gated logout. The server is authoritative on
-	# the gate and the countdown; we pre-check sit state locally for a fast
-	# rejection line so a standing player never spams the wire. `/camp cancel`
-	# aborts an in-progress countdown.
-	if lower == "/camp":
-		if Combat.is_player_seated():
-			Net.broadcast_camp()
-		else:
-			CombatLog.add_line("You must be sitting to camp.", CombatLog.MsgType.INFO)
-		return
-	if lower == "/camp cancel":
-		Net.broadcast_cancel_camp()
-		return
-	if lower == "/pet follow":
-		PetManager.command_follow()
-		return
-	if lower == "/pet guard":
-		PetManager.command_guard()
-		return
-	if lower == "/pet passive" or lower == "/pet sit":
-		PetManager.command_passive()
-		return
-	if lower == "/pet dismiss":
-		PetManager.dismiss_pet()
-		return
-	# Track 12 Piece A — direct pet commands. /pet attack uses the
-	# current target; /pet back returns to follow.
-	if lower == "/pet attack":
-		PetManager.command_attack()
-		return
-	if lower == "/pet back":
-		PetManager.command_back()
-		return
-
-	for prefix in ["/say ", "/s "]:
-		if lower.begins_with(prefix):
-			var msg := text.substr(prefix.length())
-			CombatLog.add_line("%s says, '%s'" % [my_name, msg], CombatLog.MsgType.SAY)
-			Net.broadcast_chat(Net.CHAT_CHANNEL_SAY, msg)
-			return
-
-	for prefix in ["/shout ", "/sh "]:
-		if lower.begins_with(prefix):
-			var msg := text.substr(prefix.length())
-			CombatLog.add_line("%s shouts, '%s'" % [my_name, msg], CombatLog.MsgType.SHOUT)
-			Net.broadcast_chat(Net.CHAT_CHANNEL_SHOUT, msg)
-			return
-
-	if lower.begins_with("/ooc "):
-		var msg := text.substr("/ooc ".length())
-		CombatLog.add_line("[OOC] %s: %s" % [my_name, msg], CombatLog.MsgType.OOC)
-		Net.broadcast_chat(Net.CHAT_CHANNEL_OOC, msg)
-		return
-
-	for prefix in CombatLog.TELL_PREFIXES:
-		if lower.begins_with(prefix):
-			var rest := text.substr(prefix.length())
-			var space_idx := rest.find(" ")
-			if space_idx > 0:
-				_send_tell(rest.substr(0, space_idx), rest.substr(space_idx + 1))
-			else:
-				CombatLog.add_line("Usage: /tell <name> <message>", CombatLog.MsgType.INFO)
-			return
-
-	# EQ-style reply. `/r <message>` answers whoever last sent us a tell; a
-	# bare `/r` reopens the chat line already addressed to them. TAB in the
-	# chat line walks the older senders (CombatLog.cycle_tell_text).
-	if lower == "/r" or lower == "/reply" \
-			or lower.begins_with("/r ") or lower.begins_with("/reply "):
-		var reply_to := CombatLog.last_tell_sender()
-		if reply_to == "":
-			CombatLog.add_line("No one has sent you a tell yet.", CombatLog.MsgType.INFO)
-			return
-		var space_idx := text.find(" ")
-		var msg := "" if space_idx < 0 else text.substr(space_idx + 1).strip_edges()
-		if msg == "":
-			# Deferred: this runs inside the chat line's own submit, which
-			# hides the line again as soon as we return.
-			ChatWindowManager.show_chat_input.call_deferred("/tell %s " % reply_to)
-		else:
-			_send_tell(reply_to, msg)
-		return
-
-	for prefix in ["/g ", "/group "]:
-		if lower.begins_with(prefix):
-			var msg := text.substr(prefix.length())
-			CombatLog.add_line("[Group] %s: %s" % [my_name, msg], CombatLog.MsgType.GROUP_CHAT)
-			# Server fans this to every other group member via the Group
-			# arm in the chat handler.
-			Net.broadcast_chat(Net.CHAT_CHANNEL_GROUP, msg)
-			return
-
-	if lower == "/inspect":
-		var target = Combat.current_target
-		if not is_instance_valid(target) or not (target is RemotePlayer):
-			CombatLog.add_line("Target a player to inspect.", CombatLog.MsgType.INFO)
-			return
-		_inspect_player(target)
-		return
-
-	if lower == "/sense" or lower == "/sense heading":
-		if is_instance_valid(_player):
-			CombatLog.add_line(SenseHeading.query(_player.rotation.y), CombatLog.MsgType.INFO)
-		return
-
-	if lower == "/con" or lower == "/consider":
-		# EQ's consider (factions, 2026-10-23): the server answers with how the
-		# target's faction regards you and, for a mob, how its level reads
-		# against yours. An NPC is named by its display name (the client holds
-		# no server ids for NPCs; the server resolves the name), a mob by its
-		# entity id. The server decides everything; this only asks.
-		if not Net.is_app_ready():
-			CombatLog.add_line("You are not connected to the world.", CombatLog.MsgType.INFO)
-			return
-		var con_target = Combat.current_target
-		if not is_instance_valid(con_target):
-			CombatLog.add_line("You must target something to consider it.", CombatLog.MsgType.INFO)
-			return
-		var npc_name := _npc_display_name(con_target)
-		var entity_id := 0 if npc_name != "" else Combat.target_server_id(con_target)
-		if npc_name == "" and entity_id == 0:
-			CombatLog.add_line("You cannot consider that.", CombatLog.MsgType.INFO)
-			return
-		if not Net.consider(npc_name, entity_id):
-			CombatLog.add_line(
-				"This build's gdext_net.dll predates /con (rebuild it with addons/gdext_net/build.ps1).",
-				CombatLog.MsgType.INFO)
-		return
-
-	if lower == "/factions":
-		# Every standing the server has told us: only the factions a kill, a
-		# quest or the GM panel has moved; the rest sit at Indifferent.
-		if Alignment.factions.is_empty():
-			CombatLog.add_line("You have moved no faction's standing yet.", CombatLog.MsgType.INFO)
-			return
-		var ids: Array = Alignment.factions.keys()
-		ids.sort()
-		for id in ids:
-			var f: Dictionary = Alignment.factions[id]
-			CombatLog.add_line("%s: %d (%s)" % [f["name"], roundi(f["standing"]),
-				Alignment.faction_level_name(int(f["level"]))], CombatLog.MsgType.INFO)
-		return
-
-	if lower == "/stopsong":
-		# EQ's /stopsong: end the song being sung at once. The server pulses
-		# the song, so it is told (and says so); the lingering effects run
-		# out on their own.
-		if Net.stop_song():
-			BardSongs.stop_singing()
-		return
-
-	# GM flight (docs/design/handoff_gm_flight.md): `/fly` at the default speed,
-	# `/fly <m/s>`, `/fly off`. The body does it (player.gd), and tells the
-	# server on the GM line, where the gate and the audit are. A non-GM is told
-	# there is nothing here for them, as /testpanel does.
-	if lower == "/fly" or lower.begins_with("/fly "):
-		if not Net.is_gm():
-			CombatLog.add_line("Flight is not available.", CombatLog.MsgType.INFO)
-			return
-		if not is_instance_valid(_player):
-			CombatLog.add_line("You have no body to fly right now.", CombatLog.MsgType.INFO)
-			return
-		var arg := lower.substr("/fly".length()).strip_edges()
-		if arg == "off":
-			_player.stop_flight()
-		elif arg == "":
-			_player.start_flight(_player.fly_speed)
-		elif arg.is_valid_float():
-			_player.start_flight(float(arg))
-		else:
-			CombatLog.add_line("Usage: /fly [m/s] or /fly off", CombatLog.MsgType.INFO)
-		return
-
-	if lower in ["/loc", "/location", "/loc raw", "/location raw"]:
-		# EverQuest's position print (docs/design/location_command.md): north,
-		# then west, then height, so a larger first number is further north
-		# and a larger second one further west, as EQ printed it (user,
-		# 2026-11-14). North is the world's -z and east its +x
-		# (ZoneLayout.to_world). `/loc raw` prints the world's x, y, z, which
-		# paste straight into zone_camps.toml / npcs.toml. Coordinates only
-		# (user, 2026-10-09): which way you face is /sense's job. Works while
-		# dead on purpose: a corpse run is exactly when you want it.
-		if is_instance_valid(_player):
-			var p: Vector3 = _player.global_position
-			if lower.ends_with(" raw"):
-				CombatLog.add_line(
-					"Your world position is %.1f, %.1f, %.1f (x, y, z)." % [p.x, p.y, p.z],
-					CombatLog.MsgType.INFO)
-			else:
-				CombatLog.add_line(
-					"Your location is %.1f, %.1f, %.1f (north, west, height)." % [_loc_number(-p.z), _loc_number(-p.x), _loc_number(p.y)],
-					CombatLog.MsgType.INFO)
-		else:
-			# A triage tool must never be silent — say why there is no
-			# answer instead of swallowing the command.
-			CombatLog.add_line("You have no location right now.", CombatLog.MsgType.INFO)
-		return
-
-	if lower == "/track":
-		if _track_window != null:
-			_track_window.toggle()
-		return
-
-	if lower == "/languages":
-		var known: Array = []
-		for lang in Languages.skills:
-			if Languages.skills[lang] > 0:
-				known.append(lang)
-		if known.is_empty():
-			CombatLog.add_line("You know no languages.", CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("Known languages:", CombatLog.MsgType.INFO)
-			for lang in known:
-				var active_marker := " (active)" if lang == Languages.active_language else ""
-				CombatLog.add_line("  %s — %d%s" % [lang, Languages.skills[lang], active_marker], CombatLog.MsgType.INFO)
-		return
-
-	if lower.begins_with("/lang "):
-		var lang_name := text.substr(6).strip_edges()
-		if lang_name == "":
-			CombatLog.add_line("Usage: /lang [language name]", CombatLog.MsgType.INFO)
-		elif Languages.get_skill(lang_name) > 0:
-			Languages.set_active_language(lang_name)
-			CombatLog.add_line("You are now speaking %s." % lang_name, CombatLog.MsgType.INFO)
-		else:
-			CombatLog.add_line("You do not know the language '%s'." % lang_name, CombatLog.MsgType.INFO)
-		return
-
-	# Dev command — drop any ItemRegistry-known item into inventory.
-	# Syntax: `/give <substring> [count]`. Empty query lists nothing
-	# (the registry has ~100 entries; a dedicated /items command can
-	# dump them later). Ambiguous query lists candidates and bails
-	# without giving so the dev can refine. Single-match → gives.
-	# Inventory authority is client-only today; when it goes server
-	# side, this should gate on `accounts.is_gm`.
-	if lower.begins_with("/give "):
-		var rest := text.substr("/give ".length()).strip_edges()
-		if rest == "":
-			CombatLog.add_line("Usage: /give <item name> [count]", CombatLog.MsgType.INFO)
-			return
-		var count := 1
-		# Optional trailing integer = stack count. Walks back from the
-		# end so multi-word names with spaces still parse cleanly
-		# ("/give iron short sword 3" → name="iron short sword", count=3).
-		var tokens := rest.split(" ", false)
-		if tokens.size() > 1 and tokens[tokens.size() - 1].is_valid_int():
-			count = int(tokens[tokens.size() - 1])
-			tokens.remove_at(tokens.size() - 1)
-			rest = " ".join(tokens)
-		var matches := ItemRegistry.find_matches(rest, 10)
-		if matches.is_empty():
-			CombatLog.add_line("No items match '%s'." % rest, CombatLog.MsgType.INFO)
-			return
-		if matches.size() > 1:
-			CombatLog.add_line("Multiple matches for '%s':" % rest, CombatLog.MsgType.INFO)
-			for m: ItemData in matches:
-				CombatLog.add_line("  • %s" % m.item_name, CombatLog.MsgType.INFO)
-			CombatLog.add_line("Refine your search.", CombatLog.MsgType.INFO)
-			return
-		var item_name := (matches[0] as ItemData).item_name
-		# Track 15.2 follow-up — /give goes through the wire (a GM command)
-		# so the spawned item exists server-side. The server fans
-		# InventoryDelta which Inventory autoload applies.
-		Net.broadcast_gm_command("give %s %d" % [item_name, count])
-		var suffix := " x%d" % count if count > 1 else ""
-		CombatLog.add_line("Requested %s%s from server." % [item_name, suffix], CombatLog.MsgType.INFO)
-		return
-
-	# Track 6 sub-task 3 dev — toggle PvP authorization on this client.
-	# Both attacker and target need /pvp on for combat::can_attack to
-	# allow damage. Used to verify the PvP HP application path before
-	# the duel / PvP-zone / PvP-server design lands.
-	if lower == "/pvp" or lower == "/pvp on" or lower == "/pvp off":
-		var on := lower != "/pvp off"
-		Net.broadcast_pvp_toggle(on)
-		CombatLog.add_line("PvP override: %s" % ("on" if on else "off"), CombatLog.MsgType.INFO)
-		return
-
-	# Per-player loot auto-split. /autosplit off keeps coin you loot for
-	# yourself instead of splitting it among the nearby group in Round
-	# Robin. See docs/design/group_loot_and_coin.md.
-	if lower == "/autosplit" or lower == "/autosplit on" or lower == "/autosplit off":
-		var split_on := lower != "/autosplit off"
-		Net.broadcast_autosplit(split_on)
-		CombatLog.add_line("Auto-split loot: %s" % ("on" if split_on else "off"), CombatLog.MsgType.INFO)
-		return
-
-	# Group loot distribution mode (leader only). Bare /loot reports the
-	# current mode; /loot rr | ffa sets it. See group_loot_and_coin.md.
-	if lower.begins_with("/loot"):
-		if lower == "/loot":
-			CombatLog.add_line("Loot mode: %s. Leader: /loot rr or /loot ffa." % GroupManager.loot_mode_name(), CombatLog.MsgType.INFO)
-			return
-		if lower == "/loot rr" or lower == "/loot roundrobin" or lower == "/loot ffa" or lower == "/loot freeforall":
-			if not GroupManager.is_leader:
-				CombatLog.add_line("Only the group leader can set the loot mode.", CombatLog.MsgType.INFO)
-				return
-			var ffa := lower == "/loot ffa" or lower == "/loot freeforall"
-			var mode := GroupManager.LOOT_FREE_FOR_ALL if ffa else GroupManager.LOOT_ROUND_ROBIN
-			GroupManager.set_loot_mode(mode)
-			CombatLog.add_line("Loot mode set to %s." % ("Free-for-all" if ffa else "Round Robin"), CombatLog.MsgType.INFO)
-			return
-
-	# Round trip to the world server, from the wire layer's own ack timing (the
-	# UDP path the game plays on, smoothed), with renet's packet-loss estimate.
-	# So a tester on the public host can report a number instead of "it feels
-	# laggy"; the server logs the same figures per player once a minute as a
-	# `player link` line. Not GM-gated, for the same reason as /version.
-	if lower == "/ping" or lower == "/latency":
-		if not Net.is_app_ready():
-			CombatLog.add_line("Not connected to a world server.", CombatLog.MsgType.INFO)
-			return
-		var rtt_ms := Net.get_rtt_ms()
-		if rtt_ms < 0.0:
-			CombatLog.add_line(
-				"This build's gdext_net.dll predates /ping (rebuild it with addons/gdext_net/build.ps1).",
-				CombatLog.MsgType.INFO,
-			)
-			return
-		CombatLog.add_line(
-			"Round trip to the server: %d ms, packet loss %d%%."
-				% [roundi(rtt_ms), roundi(maxf(Net.get_packet_loss(), 0.0) * 100.0)],
-			CombatLog.MsgType.INFO,
-		)
-		return
-
-	# Report which client build this is. The server stamps its own commit onto the
-	# boot line; this is the client half, and it is the quickest way to confirm a
-	# tester actually installed the build we sent them rather than re-running an
-	# older one. Not GM-gated: knowing your own version is not a privilege, and
-	# asking a tester to read it back is the whole point.
-	if lower == "/version" or lower == "/build":
-		for line in BuildInfo.verbose().split("\n"):
-			CombatLog.add_line(line, CombatLog.MsgType.INFO)
-		return
-
-	# Show/hide the dev Test Panel. It mounts only for GM accounts (world.gd),
-	# but a GM previously had no way to get it OFF the
-	# screen: it covers a chunk of the viewport and there is no reason to stare at
-	# it while actually playing. A command rather than a keybind, so it costs no
-	# key and is discoverable by typing.
-	if lower == "/testpanel" or lower == "/gm":
-		var panel := get_tree().get_first_node_in_group("test_panel") as CanvasLayer
-		if panel != null:
-			panel.visible = not panel.visible
-			CombatLog.add_line(
-				"Test Panel: %s" % ("shown" if panel.visible else "hidden"),
-				CombatLog.MsgType.INFO,
-			)
-			return
-		# Not mounted. world.gd only mounts it at world-entry, so anything that
-		# left `Net.is_gm()` false at that instant (a GM grant applied mid-session,
-		# a login path that skipped the LoginOk handler) meant no panel for the
-		# rest of the session with no way to recover. Mount it on demand instead,
-		# so the command works whenever the account is entitled to it rather than
-		# depending on the state at one particular moment.
-		if Net.is_gm():
-			var host := get_tree().current_scene
-			if host != null:
-				host.add_child(TEST_PANEL_GD.new())
-				CombatLog.add_line("Test Panel: shown", CombatLog.MsgType.INFO)
-				return
-		# Genuinely not entitled. Report the deciding flags rather than a flat
-		# "not available" — this is a dev tool, and "why not" is the useful answer.
-		# Nothing here is secret: the server gates every power the panel offers on
-		# the is_gm bit in the signed token, independently of this.
-		CombatLog.add_line(
-			"Test Panel unavailable (GM: %s). GM is per ACCOUNT and is read at login, so if it was granted while you were online, quit to the login screen and sign in again." % [
-				"yes" if Net.is_gm() else "no",
-			],
-			CombatLog.MsgType.INFO,
-		)
-		return
-
-	# Dev-only — backup trigger for the in-game debug console when the
-	# F2 keybind isn't reaching the game window (editor focus, OS
-	# steals, etc.). Round-7B fallback.
-	if lower == "/console":
-		if _debug_console != null:
-			_debug_console.toggle()
-			CombatLog.add_line(
-				"Debug console: %s (%d lines buffered)" % [
-					"ON" if _debug_console.visible else "OFF",
-					DebugLog.recent_lines.size(),
-				],
-				CombatLog.MsgType.INFO,
-			)
-		return
-
-	# Track 6 sub-task 3 dev — bypass-the-spell-system self damage.
-	# Routes through the same server damage path PvP and (future) spells
-	# use, exercising regen + death detection end-to-end. Replaced by
-	# proper CastSpell handling once the spell table is server-side.
-	if lower.begins_with("/damage "):
-		var arg := text.substr("/damage ".length()).strip_edges()
-		if not arg.is_valid_int():
-			CombatLog.add_line("Usage: /damage <amount>", CombatLog.MsgType.INFO)
-			return
-		Net.broadcast_damage_self(int(arg))
-		CombatLog.add_line("Dev damage self: %s" % arg, CombatLog.MsgType.INFO)
-		return
-
-	# Track 6 sub-task 5 — group commands, resolved by the server.
-	if lower == "/invite" or lower.begins_with("/invite "):
-		var target_name := ""
-		if lower.begins_with("/invite "):
-			target_name = text.substr("/invite ".length()).strip_edges()
-		# No name given → fall back to the currently-targeted RemotePlayer.
-		if target_name == "":
-			var target = Combat.current_target
-			if is_instance_valid(target) and target is RemotePlayer:
-				target_name = target.player_name
-		if target_name == "":
-			CombatLog.add_line("Usage: /invite <character name> — or target a player first.", CombatLog.MsgType.INFO)
-			return
-		GroupManager.invite_player_by_name(target_name)
-		CombatLog.add_line("Invited %s to your group." % target_name, CombatLog.MsgType.INFO)
-		return
-
-	if lower == "/accept" or lower == "/accept invite":
-		if GroupManager.pending_invite_from == 0:
-			CombatLog.add_line("No pending group invite.", CombatLog.MsgType.INFO)
-			return
-		GroupManager.accept_invite()
-		CombatLog.add_line("Accepted the group invite.", CombatLog.MsgType.INFO)
-		return
-
-	if lower == "/leave" or lower == "/leave group":
-		if not GroupManager.in_group:
-			CombatLog.add_line("You aren't in a group.", CombatLog.MsgType.INFO)
-			return
-		GroupManager.leave_group()
-		CombatLog.add_line("You left the group.", CombatLog.MsgType.INFO)
-		return
-
-	if lower.begins_with("/kick "):
-		var target_name := text.substr("/kick ".length()).strip_edges()
-		if target_name == "":
-			CombatLog.add_line("Usage: /kick <character name>", CombatLog.MsgType.INFO)
-			return
-		if not GroupManager.is_leader:
-			CombatLog.add_line("Only the group leader can kick.", CombatLog.MsgType.INFO)
-			return
-		GroupManager.kick_member_by_name(target_name)
-		CombatLog.add_line("Kicked %s from the group." % target_name, CombatLog.MsgType.INFO)
-		return
-
-	# Track 6 sub-task 3 dev — bypass-the-spell-system self heal.
-	# Verifies that server-applied heals stick (the regression we noted
-	# during sub-task 1 verification) before the CastSpell port lands.
-	if lower.begins_with("/heal "):
-		var arg := text.substr("/heal ".length()).strip_edges()
-		if not arg.is_valid_int():
-			CombatLog.add_line("Usage: /heal <amount>", CombatLog.MsgType.INFO)
-			return
-		Net.broadcast_heal_self(int(arg))
-		CombatLog.add_line("Dev heal self: %s" % arg, CombatLog.MsgType.INFO)
-		return
-
-	# Dev command — list items whose name matches a substring without
-	# spawning. Pairs with /give for discoverability without flooding
-	# the inventory.
-	if lower.begins_with("/items"):
-		var rest := text.substr("/items".length()).strip_edges()
-		if rest == "":
-			CombatLog.add_line("Usage: /items <substring> (registry has %d items)" % ItemRegistry.count(), CombatLog.MsgType.INFO)
-			return
-		var matches := ItemRegistry.find_matches(rest, 30)
-		if matches.is_empty():
-			CombatLog.add_line("No items match '%s'." % rest, CombatLog.MsgType.INFO)
-			return
-		CombatLog.add_line("Items matching '%s' (%d):" % [rest, matches.size()], CombatLog.MsgType.INFO)
-		for m: ItemData in matches:
-			CombatLog.add_line("  • %s" % m.item_name, CombatLog.MsgType.INFO)
-		return
-
-	CombatLog.add_line("Unknown command: %s" % text, CombatLog.MsgType.INFO)
-
-# A /loc number to one decimal, never "-0.0" (/loc negates two of the axes, and a
-# body a hair south of the line would otherwise print a minus on a zero).
-static func _loc_number(v: float) -> float:
-	return snappedf(v, 0.1) + 0.0
-
-# The display name an NPC node carries, for /con (the client holds no server
-# ids for NPCs). `npc_name` first: the vendor and banker labels carry a role
-# after a dash that npcs.toml does not, so that part is trimmed.
-func _npc_display_name(node) -> String:
-	if not is_instance_valid(node):
-		return ""
-	for key in ["npc_name", "vendor_name", "banker_name"]:
-		if key in node and String(node.get(key)) != "":
-			var n := String(node.get(key))
-			var dash := n.find(" — ")
-			return n.substr(0, dash) if dash >= 0 else n
-	return ""

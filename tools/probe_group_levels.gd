@@ -71,7 +71,7 @@ func _run() -> void:
 	_check(panel_script.member_level_text({"level": 5, "class": ""}) == "5", "a level with no class shows the level alone")
 
 	# And a built row shows it.
-	var panel = panel_script.new()
+	var panel = load("res://scenes/hud_group_panel.tscn").instantiate()
 	root.add_child(panel)
 	var row: Dictionary = panel._build_member_row(mate)
 	var texts: Array[String] = []

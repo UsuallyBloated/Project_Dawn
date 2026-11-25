@@ -1,0 +1,57 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/hud_group_panel.gd" id="1_group"]
+
+[sub_resource type="StyleBoxFlat" id="frame"]
+bg_color = Color(0.04, 0.03, 0.06, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.25, 0.55, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="GroupPanel" type="Panel"]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 230.0
+offset_bottom = 70.0
+theme_override_styles/panel = SubResource("frame")
+script = ExtResource("1_group")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 4.0
+offset_right = -6.0
+offset_bottom = -4.0
+theme_override_constants/separation = 3
+
+[node name="Header" type="Label" parent="VBox"]
+theme_override_colors/font_color = Color(0.75, 0.6, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "GROUP"
+horizontal_alignment = 1
+
+[node name="Members" type="VBoxContainer" parent="VBox"]
+visible = false
+theme_override_constants/separation = 2
+
+[node name="Buttons" type="HBoxContainer" parent="VBox"]
+theme_override_constants/separation = 4
+
+[node name="ActionBtn" type="Button" parent="VBox/Buttons"]
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Invite"
+
+[node name="LeaveBtn" type="Button" parent="VBox/Buttons"]
+visible = false
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Leave"

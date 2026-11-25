@@ -8,14 +8,15 @@ extends Node
 # Public API preserved for existing callers (~30 files):
 # - add_line(text, type)          → fan out to windows
 # - add_damage_out / add_evade    → convenience helpers
-# - show_chat_input()             → asks the manager to focus the input
+# - show_chat_input(prefill)      → asks the manager to focus the input,
+#                                   optionally already holding some text
 # - is_chat_input_focused()       → manager state passthrough
 # - chat_submitted (signal)       → emitted by the manager on submit
 # - MsgType (enum)                → the canonical message taxonomy
 
 signal line_added(text: String, type: int)
 signal chat_submitted(text: String)
-signal show_chat_input_requested()
+signal show_chat_input_requested(prefill: String)
 
 enum MsgType { DAMAGE_OUT, DAMAGE_IN, HEAL, INFO, LEVEL_UP, LOOT, EVADE,
 			   SAY, SHOUT, OOC, TELL_OUT, TELL_IN, GROUP_CHAT, CRIT,
@@ -58,8 +59,10 @@ func add_evade(attacker_name: String) -> void:
 
 # ── Chat input delegation ────────────────────────────────────────────────────
 
-func show_chat_input() -> void:
-	show_chat_input_requested.emit()
+## Open the chat line, already holding `prefill` when one is given (the "/"
+## key opens it on a slash).
+func show_chat_input(prefill: String = "") -> void:
+	show_chat_input_requested.emit(prefill)
 
 func is_chat_input_focused() -> bool:
 	return ChatWindowManager.is_chat_input_focused()
@@ -192,7 +195,7 @@ func _connect_signals() -> void:
 	Net.world_chat_message.connect(_on_remote_chat_message)
 
 # Routes inbound Net.world_chat_message to a typed chat line. Outbound
-# echoes (the sender's own line) are still added directly by hud.gd —
+# echoes (the sender's own line) are still added directly by hud_chat_commands.gd —
 # the server doesn't echo back to the sender to avoid double-rendering.
 func _on_remote_chat_message(speaker: String, channel: int, text: String, _lang: String) -> void:
 	match channel:

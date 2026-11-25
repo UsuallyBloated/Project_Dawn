@@ -1,48 +1,60 @@
 class_name UITheme
 
-# Shared color palette used across all UI windows and the character creation screen.
-# Reference these constants instead of hardcoding colors in individual scripts.
+# The UI palette the runtime code colours with (bars, states, rarities, the
+# character creation screen). The defaults below are dark wood and brass (the
+# direction chosen 2026-11-18); apply_palette(id) swaps them for any palette in
+# data/ui_theme_palettes.gd when the player picks another theme in Options,
+# Interface. The Theme resources under assets/ui/themes/ carry the same
+# palettes into every Control with no override (a Label is the body colour, a
+# Button the plate, a window names a variation: WindowPanel, SectionPanel,
+# SlotCell, Tooltip, SpeechPanel, BarStrip, TitleLabel, CoinsLabel); they are
+# generated from the same table, and tools/check_ui_theme_lockstep.gd keeps
+# the files, the table and these defaults in step. Pieces built from these
+# values at runtime take a new palette when they are next built.
 
-# Common window chrome
-const C_BORDER       := Color(0.30, 0.22, 0.08)
-const C_GOLDEN_BORDER := Color(0.55, 0.40, 0.10)  # loot window, confirm button
-const C_TITLE        := Color(0.95, 0.78, 0.25)
-const C_TEXT         := Color(0.90, 0.82, 0.65)
+# The default palette's runtime colours, from the one table.
+static var _DEFAULTS: Dictionary = UIThemePalettes.runtime_colors(UIThemePalettes.DEFAULT_ID)
 
-# Panel backgrounds (vary slightly by window type)
-const C_WINDOW_BG  := Color(0.07, 0.06, 0.04, 0.95)  # inventory, paperdoll, loot
-const C_SCREEN_BG  := Color(0.04, 0.03, 0.02)          # character creation full-screen
-const C_PANEL_BG   := Color(0.10, 0.08, 0.06)          # raised section panels
+# Brass, three weights, and the body text
+static var C_BORDER       : Color = _DEFAULTS["C_BORDER"]  # dim brass: hairlines, slot cells, sections
+static var C_GOLDEN_BORDER : Color = _DEFAULTS["C_GOLDEN_BORDER"]  # brass: the band round a window, a lit button
+static var C_TITLE        : Color = _DEFAULTS["C_TITLE"]  # bright brass: titles
+static var C_TEXT         : Color = _DEFAULTS["C_TEXT"]  # candle amber
 
-# Slot cells (inventory grid, equipment frames)
-const C_SLOT_BG := Color(0.12, 0.10, 0.07)
+# Wood, three depths
+static var C_WINDOW_BG  : Color = _DEFAULTS["C_WINDOW_BG"]  # a window's field, deep walnut
+static var C_SCREEN_BG  : Color = _DEFAULTS["C_SCREEN_BG"]         # character creation full-screen
+static var C_PANEL_BG   : Color = _DEFAULTS["C_PANEL_BG"]         # raised section panels
+
+# Slot cells (inventory grid, equipment frames): oiled dark wood
+static var C_SLOT_BG : Color = _DEFAULTS["C_SLOT_BG"]
 
 # Tooltip / overlay
-const C_TOOLTIP := Color(0.04, 0.03, 0.02, 0.95)
+static var C_TOOLTIP : Color = _DEFAULTS["C_TOOLTIP"]
 
-# Character creation — selection states
-const C_SELECTED  := Color(0.60, 0.44, 0.12)
-const C_BTN_NORM  := Color(0.14, 0.11, 0.07)
-const C_BTN_HOVER := Color(0.22, 0.17, 0.09)
+# Buttons (brass plates) and the selected state
+static var C_SELECTED  : Color = _DEFAULTS["C_SELECTED"]
+static var C_BTN_NORM  : Color = _DEFAULTS["C_BTN_NORM"]
+static var C_BTN_HOVER : Color = _DEFAULTS["C_BTN_HOVER"]
 
-# Character creation — locked (unavailable) race/class buttons
-const C_BTN_LOCKED_BG     := Color(0.07, 0.05, 0.04)
-const C_BTN_LOCKED_BORDER := Color(0.22, 0.12, 0.10)
-const C_BTN_LOCKED_TEXT   := Color(0.38, 0.26, 0.22)
+# Character creation: locked (unavailable) race/class buttons
+static var C_BTN_LOCKED_BG     : Color = _DEFAULTS["C_BTN_LOCKED_BG"]
+static var C_BTN_LOCKED_BORDER : Color = _DEFAULTS["C_BTN_LOCKED_BORDER"]
+static var C_BTN_LOCKED_TEXT   : Color = _DEFAULTS["C_BTN_LOCKED_TEXT"]
 
-# Character creation — "Begin Adventure" confirm button states
-const C_CONFIRM_BG          := Color(0.18, 0.12, 0.03)
-const C_CONFIRM_BG_HOVER    := Color(0.35, 0.25, 0.07)
-const C_CONFIRM_BG_DISABLED := Color(0.10, 0.08, 0.04)
-const C_CONFIRM_BORDER_DISABLED := Color(0.25, 0.18, 0.06)
+# Character creation: "Begin Adventure" confirm button states
+static var C_CONFIRM_BG          : Color = _DEFAULTS["C_CONFIRM_BG"]
+static var C_CONFIRM_BG_HOVER    : Color = _DEFAULTS["C_CONFIRM_BG_HOVER"]
+static var C_CONFIRM_BG_DISABLED : Color = _DEFAULTS["C_CONFIRM_BG_DISABLED"]
+static var C_CONFIRM_BORDER_DISABLED : Color = _DEFAULTS["C_CONFIRM_BORDER_DISABLED"]
 
 # Stat delta colours
 const C_POSITIVE := Color(0.40, 0.90, 0.40)
 const C_NEGATIVE := Color(0.90, 0.35, 0.35)
-const C_NEUTRAL  := Color(0.75, 0.70, 0.55)
+static var C_NEUTRAL: Color = _DEFAULTS["C_NEUTRAL"]
 
 # Currency & encumbrance
-const C_COINS      := Color(1.00, 0.88, 0.30)  # wallet text (vendor + inventory windows)
+static var C_COINS: Color = _DEFAULTS["C_COINS"]  # wallet text (vendor + inventory windows)
 const C_ENCUMBERED := Color(0.95, 0.85, 0.30)  # weight over capacity — movement slowed
 const C_OVERLOADED := Color(0.95, 0.30, 0.25)  # weight ≥ 2× capacity — stamina regen stopped
 
@@ -53,6 +65,36 @@ const C_BAR_MANA    := Color(0.10, 0.30, 0.90)
 const C_BAR_XP      := Color(0.65, 0.50, 0.10)
 const C_BAR_BG      := Color(0.08, 0.08, 0.08, 0.90)
 
+# The palette id the defaults above belong to.
+static var current_palette: String = UIThemePalettes.DEFAULT_ID
+
+# Take the runtime colours of palette `id` (the Theme resource is applied by
+# GameSettings.apply_ui_theme; this is the half the code reads).
+static func apply_palette(id: String) -> void:
+	var colors := UIThemePalettes.runtime_colors(id)
+	current_palette = id if UIThemePalettes.is_known(id) else UIThemePalettes.DEFAULT_ID
+	C_BORDER = colors["C_BORDER"]
+	C_GOLDEN_BORDER = colors["C_GOLDEN_BORDER"]
+	C_TITLE = colors["C_TITLE"]
+	C_TEXT = colors["C_TEXT"]
+	C_WINDOW_BG = colors["C_WINDOW_BG"]
+	C_SCREEN_BG = colors["C_SCREEN_BG"]
+	C_PANEL_BG = colors["C_PANEL_BG"]
+	C_SLOT_BG = colors["C_SLOT_BG"]
+	C_TOOLTIP = colors["C_TOOLTIP"]
+	C_SELECTED = colors["C_SELECTED"]
+	C_BTN_NORM = colors["C_BTN_NORM"]
+	C_BTN_HOVER = colors["C_BTN_HOVER"]
+	C_BTN_LOCKED_BG = colors["C_BTN_LOCKED_BG"]
+	C_BTN_LOCKED_BORDER = colors["C_BTN_LOCKED_BORDER"]
+	C_BTN_LOCKED_TEXT = colors["C_BTN_LOCKED_TEXT"]
+	C_CONFIRM_BG = colors["C_CONFIRM_BG"]
+	C_CONFIRM_BG_HOVER = colors["C_CONFIRM_BG_HOVER"]
+	C_CONFIRM_BG_DISABLED = colors["C_CONFIRM_BG_DISABLED"]
+	C_CONFIRM_BORDER_DISABLED = colors["C_CONFIRM_BORDER_DISABLED"]
+	C_NEUTRAL = colors["C_NEUTRAL"]
+	C_COINS = colors["C_COINS"]
+
 static func style_bar(bar: ProgressBar, color: Color, with_label: bool = true) -> Label:
 	var fill := StyleBoxFlat.new()
 	fill.bg_color = color
@@ -61,7 +103,7 @@ static func style_bar(bar: ProgressBar, color: Color, with_label: bool = true) -
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = C_BAR_BG
 	bg.set_corner_radius_all(4)
-	bg.border_color = Color(0.25, 0.18, 0.06, 0.85)
+	bg.border_color = Color(C_BORDER.r, C_BORDER.g, C_BORDER.b, 0.85)
 	bg.set_border_width_all(1)
 	bar.add_theme_stylebox_override("background", bg)
 	if not with_label:
@@ -79,14 +121,11 @@ static func style_bar(bar: ProgressBar, color: Color, with_label: bool = true) -
 	bar.add_child(lbl)
 	return lbl
 
+# A standard button: the theme's brass plate, at the standard size.
 static func make_button(label_text: String) -> Button:
 	var btn := Button.new()
 	btn.text = label_text
 	btn.custom_minimum_size = Vector2(96.0, 34.0)
-	btn.add_theme_stylebox_override("normal",  make_stylebox(C_BTN_NORM))
-	btn.add_theme_stylebox_override("hover",   make_stylebox(C_BTN_HOVER))
-	btn.add_theme_stylebox_override("pressed", make_stylebox(C_BTN_HOVER))
-	btn.add_theme_color_override("font_color", C_TITLE)
 	return btn
 
 static func make_stylebox(bg: Color) -> StyleBoxFlat:

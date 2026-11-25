@@ -134,32 +134,6 @@ enum EquipSlot { WEAPON, OFFHAND, HEAD, CHEST, LEGS, FEET, HANDS, RING, NECK, AM
 enum KickCode { SESSION_EXPIRED, RESTART, BANNED_NOW, DUPLICATE_LOGIN, UNKNOWN }
 enum QuestStatus { ACTIVE, COMPLETED, FAILED }
 
-# ─── World: SlotRef (tagged) ────────────────────────────────────────
-
-const SLOT_BASE  := "BaseSlot"
-const SLOT_BAG   := "BagSlot"
-const SLOT_EQUIP := "EquipSlot"
-
-static func slot_base(idx: int) -> Dictionary:
-	return {"kind": SLOT_BASE, "idx": idx}
-
-static func slot_bag(base: int, slot: int) -> Dictionary:
-	return {"kind": SLOT_BAG, "base": base, "slot": slot}
-
-static func slot_equip(equip_slot: int) -> Dictionary:
-	return {"kind": SLOT_EQUIP, "slot": equip_slot}
-
-# ─── World: Vec3 helpers ────────────────────────────────────────────
-
-static func vec3(x: float, y: float, z: float) -> Dictionary:
-	return {"x": x, "y": y, "z": z}
-
-static func vec3_from_godot(v: Vector3) -> Dictionary:
-	return {"x": v.x, "y": v.y, "z": v.z}
-
-static func vec3_to_godot(d: Dictionary) -> Vector3:
-	return Vector3(d.get("x", 0.0), d.get("y", 0.0), d.get("z", 0.0))
-
 # ─── World: Client → Server message tags ────────────────────────────
 
 const W_CONNECT             := "Connect"

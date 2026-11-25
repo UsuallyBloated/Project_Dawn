@@ -81,12 +81,7 @@ func _build_ui() -> void:
 	panel.size = Vector2(240, 480)
 	add_child(panel)
 
-	var style := StyleBoxFlat.new()
-	style.bg_color = C_BG
-	style.border_color = C_BORDER
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	panel.add_theme_stylebox_override("panel", style)
+	panel.theme_type_variation = &"WindowPanel"
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)

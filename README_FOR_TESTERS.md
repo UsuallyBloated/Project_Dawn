@@ -128,7 +128,8 @@ This is the single biggest thing to know before you play.
   can be climbed, stood on or jumped over yet, a low fence included. Monsters are stopped by
   the same things; one that cannot get to you `evades` your attacks until it can, or gives
   up and walks home. This is new, so **do** report anything you get stuck on, pulled through
-  or pulled back at, with a `/loc`.
+  or pulled back at, with a `/loc`. Grass blocks nothing. Bones are solid piece by piece: you
+  step over the low ones and a small skeleton, but a big skeleton's ribs stop you.
 - **You need food and water.** Hunger and thirst tick down slowly (a loaf of bread lasts
   about 48 minutes, a flask of water about 36), and the game eats and drinks from your bags
   on its own, so keep some in them. Out of food your health stops regenerating, out of
@@ -153,11 +154,12 @@ This is the single biggest thing to know before you play.
 | **F2** to **F6** | Target group member 1 to 5 |
 | **Q** | Toggle auto-attack |
 | **Enter** | Open chat input |
+| **/** | Open chat input with the slash already typed, ready for a command |
 | **C / I / P / K / B / J** | Character / Inventory / Paperdoll / Tradeskill / Spellbook / Quest Journal |
 | **Esc** | Options menu |
 
-Rebindable in **Options > Keybinds**, except Enter, Numpad Enter and Escape, which the chat
-and menu systems own.
+Rebindable in **Options > Keybinds**, except Enter, Numpad Enter, the slash key and Escape,
+which the chat and menu systems own.
 
 ---
 

@@ -1,0 +1,35 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/paperdoll_window.gd" id="1_paperdoll"]
+
+[node name="PaperdollWindow" type="Panel"]
+custom_minimum_size = Vector2(220, 280)
+theme_type_variation = &"WindowPanel"
+script = ExtResource("1_paperdoll")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="VBox"]
+
+[node name="Title" type="Label" parent="VBox/Header"]
+size_flags_horizontal = 3
+theme_type_variation = &"TitleLabel"
+theme_override_font_sizes/font_size = 14
+text = "Equipment"
+
+[node name="CloseBtn" type="Button" parent="VBox/Header"]
+text = "✕"
+flat = true
+
+[node name="Grid" type="GridContainer" parent="VBox"]
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 3
