@@ -192,3 +192,142 @@ func _run() -> void:
 		"an error inside the dead band changes nothing")
 	_check(r4.observe(99, Vector3(500.0, 0.0, 0.0)) == Vector3.ZERO,
 		"a sequence never recorded changes nothing")
+
+	_glide()
+
+
+# The eased flight (scripts/fly_glide.gd) through the same server model, in
+# three dimensions, the client drawing at 144 frames a second: a takeoff, a
+# turn, a boost, a climbing diagonal and a stop. The direction each Move
+# carries is where the ease takes the body over the next tick, so the server
+# runs the body's own track a tick late and the reconciler has next to nothing
+# to do. A Move that carried the velocity at the moment it went out instead
+# (the obvious way) leaves the server behind through every ramp; that run is
+# measured too, as the yardstick.
+# Fails with FlyGlide.plan replaced by the velocity of the moment (the
+# comparison), and with flight back to an instant start (the first frame).
+func _glide() -> void:
+	# The ease itself: a gentle first frame, near full speed by a quarter of a
+	# second, and a stop that glides speed / STOP_RATE.
+	var first: Array = FlyGlide.advance(Vector3.ZERO, Vector3(SPEED, 0.0, 0.0), 1.0 / 144.0)
+	_check(first[1].x < SPEED * 0.1, "the first frame of a takeoff is under a tenth of full speed (%.1f m/s)" % first[1].x)
+	var quarter: Array = FlyGlide.advance(Vector3.ZERO, Vector3(SPEED, 0.0, 0.0), 0.25)
+	_check(quarter[1].x >= SPEED * 0.94, "full speed is all but reached in a quarter second (%.1f m/s)" % quarter[1].x)
+	var halt: Array = FlyGlide.advance(Vector3(SPEED, 0.0, 0.0), Vector3.ZERO, 5.0)
+	_check(halt[1] == Vector3.ZERO and absf(halt[0].x - SPEED / FlyGlide.STOP_RATE) < 0.01,
+		"a stop comes to rest after gliding speed / STOP_RATE (%.2f m)" % halt[0].x)
+	# Frame by frame is the same as one step (the closed form composes).
+	var v := Vector3.ZERO
+	var walked := Vector3.ZERO
+	for _i in range(36):
+		var a: Array = FlyGlide.advance(v, Vector3(0.0, SPEED, SPEED), 1.0 / 144.0)
+		walked += a[0]
+		v = a[1]
+	var whole: Array = FlyGlide.advance(Vector3.ZERO, Vector3(0.0, SPEED, SPEED), 36.0 / 144.0)
+	_check(walked.distance_to(whole[0]) < 0.001, "36 frames fly exactly what one quarter second does (%.4f m apart)" % walked.distance_to(whole[0]))
+
+	var planned := _glide_run(true)
+	var naive := _glide_run(false)
+	_check(planned["longest"] <= FLY_BOOST_LEN + 0.0001,
+		"no Move's direction is longer than the boost (%.3f)" % planned["longest"])
+	_check(planned["snaps"] == 0, "the eased flight never snaps (%d)" % planned["snaps"])
+	_check(planned["worst"] < SPEED * TICK * 0.5,
+		"the body never strays half a tick of travel from its own track (worst %.2f m)" % planned["worst"])
+	_check(planned["settled"] < 0.1, "and settles on the server's spot after the stop (%.3f m off)" % planned["settled"])
+	# The error each Position shows against its prediction before any
+	# correction: what is left is the server's own tick jitter (a Move taken
+	# for two ticks and the next for none), which a ramp makes uneven.
+	_check(planned["raw_worst"] < SPEED * TICK,
+		"no Position is a tick of travel off its prediction (worst %.2f m)" % planned["raw_worst"])
+	_check(planned["raw_mean"] < naive["raw_mean"] * 0.6,
+		"about half the error of sending the velocity of the moment (mean %.2f m against %.2f m)" % [planned["raw_mean"], naive["raw_mean"]])
+
+
+const FLY_BOOST_LEN := 2.0
+const FRAME := 1.0 / 144.0
+
+# The keys held at time t: [direction (unit or zero), boost].
+func _keys_at(t: float) -> Array:
+	if t < 0.8:
+		return [Vector3(1.0, 0.0, 0.0), 1.0]
+	if t < 1.6:
+		return [Vector3(0.0, 0.0, 1.0), 1.0]
+	if t < 2.4:
+		return [Vector3(0.0, 0.0, 1.0), FLY_BOOST_LEN]
+	if t < 3.2:
+		return [Vector3(1.0, 1.0, 0.0).normalized(), 1.0]
+	return [Vector3.ZERO, 1.0]
+
+func _glide_run(planned: bool) -> Dictionary:
+	var recon := FlyReconciler.new()
+	var body := Vector3(0.0, 50.0, 0.0)
+	var truth := body
+	var vel := Vector3.ZERO
+	var accum := 0.0
+	var seq := 0
+	var moves: Array = []      # [arrive_at, seq, dir]
+	var positions: Array = []  # [deliver_at, seq, pos]
+	var server_pos := body
+	var server_dir := Vector3.ZERO
+	var server_seq := 0
+	var next_tick := 0.013
+	var worst := 0.0
+	var settled := -1.0
+	var longest := 0.0
+	var pred_truth := {}  # seq -> where the uncorrected track predicts the server
+	var raw_sum := 0.0
+	var raw_n := 0
+	var raw_worst := 0.0
+	for frame in range(int(5.0 / FRAME)):
+		var t := frame * FRAME
+		var keys := _keys_at(t)
+		var target: Vector3 = keys[0] * SPEED * keys[1]
+		var flown: Array = FlyGlide.advance(vel, target, FRAME)
+		vel = flown[1]
+		body += flown[0]
+		truth += flown[0]
+		accum += FRAME
+		if accum >= TICK:
+			accum -= TICK
+			seq += 1
+			var d: Vector3
+			if planned:
+				d = FlyGlide.plan(vel, target, SPEED, TICK, FLY_BOOST_LEN)
+			else:
+				d = (vel / SPEED).limit_length(FLY_BOOST_LEN)
+			longest = maxf(longest, d.length())
+			recon.record(seq, body + d * SPEED * TICK, maxf(vel.length(), target.length()))
+			pred_truth[seq] = truth + d * SPEED * TICK
+			moves.append([t + LATENCY, seq, d])
+		while next_tick <= t:
+			var taken: Array = []
+			for m in moves:
+				if m[0] <= next_tick:
+					taken.append(m)
+			for m in taken:
+				moves.erase(m)
+				server_seq = m[1]
+				server_dir = m[2]
+			server_pos += server_dir * SPEED * TICK
+			positions.append([next_tick + LATENCY, server_seq, server_pos])
+			next_tick += TICK
+		var delivered: Array = []
+		for q in positions:
+			if q[0] <= t:
+				delivered.append(q)
+		for q in delivered:
+			positions.erase(q)
+			if pred_truth.has(q[1]):
+				var raw: float = q[2].distance_to(pred_truth[q[1]])
+				pred_truth.erase(q[1])
+				raw_sum += raw
+				raw_n += 1
+				raw_worst = maxf(raw_worst, raw)
+			body += recon.observe(q[1], q[2])
+		body += recon.step(FRAME)
+		var err := body.distance_to(truth)
+		worst = maxf(worst, err)
+		if t > 4.5:
+			settled = body.distance_to(server_pos)
+	return {"worst": worst, "settled": settled, "snaps": recon.snaps, "longest": longest,
+		"raw_mean": raw_sum / maxf(raw_n, 1), "raw_worst": raw_worst}

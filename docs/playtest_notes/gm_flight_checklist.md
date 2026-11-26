@@ -66,5 +66,13 @@ Diagnostics: the HUD's "Flying N m/s" line at the top of the screen; `/loc` for 
 - [ ] **Walk off a ledge on foot** → the ordinary fall and its damage. notes:
 - [ ] **`admin_report`** → one `fly` row per toggle of the sitting, `speed=N` or `off`, none for the plain account. notes:
 
+## 8 — The ease (added 2026-11-26, the zip after `c4f5aa4`)
+- [ ] **Take off and press W from a hover** → the body gathers speed over about a quarter of a second, no jolt to full speed. notes:
+- [ ] **Release every key at 25 m/s, then at 100 m/s** → the body glides to rest (about 2 m at 25, about 7 m at 100, 13 m boosted), never a dead stop and never a slide back afterwards. notes:
+- [ ] **Turn hard with A or D, and reverse with S at speed** → the body curves through the change instead of snapping to the new heading. notes:
+- [ ] **Press and release Ctrl at speed** → the boost comes in and falls away smoothly. notes:
+- [ ] **Fly low and fast past trees and along a hillside, the camera behind** → the world slides past without judder, on a monitor above 60 Hz too. notes:
+- [ ] **Fly a minute of mixed flying, then check the journal and `debug.log`** → no rubber-banding seen; nothing new in either. notes:
+
 ## Notes / observations
 -

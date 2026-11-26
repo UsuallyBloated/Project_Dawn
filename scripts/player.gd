@@ -89,6 +89,9 @@ var _jump_pending := false
 var is_flying := false
 var fly_speed: float = DEFAULT_FLY_SPEED
 var _fly_recon := FlyReconciler.new()
+# The body's flight velocity (m/s), eased toward what the keys ask for
+# (scripts/fly_glide.gd).
+var _fly_vel := Vector3.ZERO
 var _last_jump_tap_at: float = -1.0
 signal flight_changed(flying: bool, speed: float)
 
@@ -421,8 +424,8 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		move_and_slide()
 		return
+	# Flight moves the body every rendered frame, in _process.
 	if is_flying:
-		_fly_tick(delta, chat_focused)
 		return
 	# Both buttons held → run forward, steered by the right-button mouselook.
 	var mouse_run := is_camera_active and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
@@ -556,6 +559,14 @@ func _physics_process(delta: float) -> void:
 
 # ── GM flight ─────────────────────────────────────────────────────────────────
 
+# Flight moves the body once per rendered frame, not per physics step: it uses
+# no move_and_slide (scenery is never a body, L2), and at 25 to 200 m/s a
+# 60 Hz step is a metre or more of travel, which the camera riding the body
+# shows as judder on any display faster than the physics rate.
+func _process(delta: float) -> void:
+	if is_flying and not PlayerDeath.is_dead:
+		_fly_tick(delta, _is_text_input_focused())
+
 # Whether this body may take to the air: a GM account (display gating; the
 # server's gate is the rule), alive, in the world and past the first Position.
 func can_fly() -> bool:
@@ -587,6 +598,7 @@ func start_flight(speed: float) -> void:
 		return
 	is_flying = true
 	velocity = Vector3.ZERO
+	_fly_vel = Vector3.ZERO
 	_jump_pending = false
 	_autorun = false
 	if state != PlayerState.STANDING:
@@ -608,6 +620,7 @@ func stop_flight(tell_server: bool = true) -> void:
 		return
 	is_flying = false
 	velocity = Vector3.ZERO
+	_fly_vel = Vector3.ZERO
 	_fly_recon.reset()
 	if tell_server:
 		Net.broadcast_gm_command("fly off")
@@ -631,12 +644,14 @@ func _on_died_in_flight() -> void:
 	global_position.y = _fly_ground_at(global_position.x, global_position.z)
 	_server_pos_target = global_position
 
-# One physics frame of flight: WASD in the body's facing, jump up, fly_down
-# down, fly_boost for twice the speed; the body moves itself (no gravity, no
-# move_and_slide: scenery is never a body, L2) and is held above the ground,
-# on the plate and under the ceiling, the server's own clamps. Descending into
-# the ground lands (Minecraft Java). Then the Move, carrying the vertical and
-# the boost as the direction's length, and the flight reconciler's correction.
+# One rendered frame of flight: WASD in the body's facing, jump up, fly_down
+# down, fly_boost for twice the speed; the body's velocity eases toward that
+# (scripts/fly_glide.gd) and the body moves itself (no gravity, no
+# move_and_slide: scenery is never a body, L2), held above the ground, on the
+# plate and under the ceiling, the server's own clamps. Descending into the
+# ground lands (Minecraft Java). Then the Move, carrying where the ease takes
+# the body over the next tick (the vertical and the boost included), and the
+# flight reconciler's correction.
 func _fly_tick(delta: float, chat_focused: bool) -> void:
 	var mouse_run := is_camera_active and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	var direction := Vector3.ZERO
@@ -660,16 +675,31 @@ func _fly_tick(delta: float, chat_focused: bool) -> void:
 	var boost := FLY_BOOST if (not chat_focused and Input.is_action_pressed("fly_boost")) else 1.0
 	if direction != Vector3.ZERO:
 		direction = direction.normalized()
-	var dir_sent := direction * boost
+	var target := direction * fly_speed * boost
 
-	var p := global_position + direction * fly_speed * boost * delta
+	var flown := FlyGlide.advance(_fly_vel, target, delta)
+	_fly_vel = flown[1]
+	var p: Vector3 = global_position + flown[0]
 	var terrain := _fly_terrain()
 	if terrain != null:
 		var half: float = terrain.grid_size * terrain.cell_size * 0.5
-		p.x = clampf(p.x, terrain.global_position.x - half, terrain.global_position.x + half)
-		p.z = clampf(p.z, terrain.global_position.z - half, terrain.global_position.z + half)
+		var x := clampf(p.x, terrain.global_position.x - half, terrain.global_position.x + half)
+		var z := clampf(p.z, terrain.global_position.z - half, terrain.global_position.z + half)
+		# Held at the plate's edge, the velocity into it is spent, so letting
+		# go of the key does not leave the body pressing on.
+		if x != p.x:
+			_fly_vel.x = 0.0
+		if z != p.z:
+			_fly_vel.z = 0.0
+		p.x = x
+		p.z = z
 	var ground := _ground_of(terrain, p.x, p.z)
-	p.y = clampf(p.y, ground, maxf(FLY_CEILING, ground))
+	var ceiling := maxf(FLY_CEILING, ground)
+	if p.y <= ground and _fly_vel.y < 0.0:
+		_fly_vel.y = 0.0
+	elif p.y >= ceiling and _fly_vel.y > 0.0:
+		_fly_vel.y = 0.0
+	p.y = clampf(p.y, ground, ceiling)
 	global_position = p
 
 	if not is_look_active and (is_camera_active or direction != Vector3.ZERO):
@@ -681,14 +711,15 @@ func _fly_tick(delta: float, chat_focused: bool) -> void:
 		_move_send_accum += delta
 		if _move_send_accum >= MOVE_SEND_INTERVAL:
 			_move_send_accum -= MOVE_SEND_INTERVAL
+			var dir_sent := FlyGlide.plan(_fly_vel, target, fly_speed, MOVE_SEND_INTERVAL, FLY_BOOST)
 			var seq := Net.send_movement(dir_sent, false, rotation.y)
 			if seq >= 0:
 				# The Position echoing this sequence is fanned after the tick
 				# that integrated it, so the prediction is this body one server
-				# tick further along the direction it just sent, at the speed
-				# this Move flies at (the bands are sized by it: a body holding
-				# still has no tick jitter, so its band is a hair).
-				var moving := fly_speed * boost if direction != Vector3.ZERO else 0.0
+				# tick further along the direction it just sent, and the bands
+				# are sized by the speed it is flying at (a body at rest has no
+				# tick jitter, so its band is a hair).
+				var moving := maxf(_fly_vel.length(), target.length())
 				_fly_recon.record(seq,
 					global_position + dir_sent * fly_speed * MOVE_SEND_INTERVAL,
 					moving)
