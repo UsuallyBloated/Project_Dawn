@@ -7,7 +7,7 @@ redeployed from `feat/gm-flight` (or its merge) AND a client built from the same
 the old client `/fly` does not exist, and on the old server the body flies alone until the
 next Position snaps it back. GM account only (`grant_gm`); a plain account sees nothing.
 **Since 2026-11-25 both halves are in the deploy branches:** the R720 (`9a7c3ba`) and the zip
-`builds/ProjectDawn-alpha-c4f5aa4.zip` are the pair to run this on.
+`builds/ProjectDawn-alpha-9d81945.zip` (since 2026-11-26; `c4f5aa4` before it, without section 8's ease) are the pair to run this on.
 
 | Thing | Value | Where |
 |---|---|---|
@@ -66,7 +66,7 @@ Diagnostics: the HUD's "Flying N m/s" line at the top of the screen; `/loc` for 
 - [ ] **Walk off a ledge on foot** → the ordinary fall and its damage. notes:
 - [ ] **`admin_report`** → one `fly` row per toggle of the sitting, `speed=N` or `off`, none for the plain account. notes:
 
-## 8 — The ease (added 2026-11-26, the zip after `c4f5aa4`)
+## 8 — The ease (added 2026-11-26, the zip `9d81945`)
 - [ ] **Take off and press W from a hover** → the body gathers speed over about a quarter of a second, no jolt to full speed. notes:
 - [ ] **Release every key at 25 m/s, then at 100 m/s** → the body glides to rest (about 2 m at 25, about 7 m at 100, 13 m boosted), never a dead stop and never a slide back afterwards. notes:
 - [ ] **Turn hard with A or D, and reverse with S at speed** → the body curves through the change instead of snapping to the new heading. notes:

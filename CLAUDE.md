@@ -4182,6 +4182,18 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   (every control is gated on `Net.is_gm()`, and the server refuses the `fly` line for anyone
   else); the keybind list shows Fly Down (GM) and Fly Boost (GM) to everyone.
   `gm_flight_checklist.md` runs on the zip now.
+  **Smoothed 2026-11-26** (user, after flying: "a little clunky... do you think you could
+  smooth it out?"; client `9d81945` on the deploy branch, pushed; client only, no wire or
+  server change; `gm_flight_checklist.md` section 8, six rows): the flight velocity eases toward
+  what the keys ask for (`scripts/fly_glide.gd`, 95% in 0.25 s toward a heading and 0.2 s toward
+  rest, so a stop glides speed / 15 m), each Move carries where the ease takes the body over the
+  next tick (the server flies a direction for one tick, so it runs the same track a tick late),
+  and flight moves the body every rendered frame in `_process` instead of the 60 Hz physics
+  step, the judder the camera showed at speed. `probe_fly_reconciler.gd` gains the ease and a
+  144 fps run through the 20 Hz server model (no snap, no Position a tick off its prediction,
+  about half the error of sending the velocity of the moment); all 21 checks green. The zip
+  `builds/ProjectDawn-alpha-9d81945.zip`, stamped `9d81945`, a release export booting clean
+  headless, the DLL unchanged, replaces `c4f5aa4`; no redeploy.
 
 ### UI polish
 - [x] **Sticky chat channel, WoW style** — **DONE + playtested 2026-10-27**
