@@ -13,8 +13,10 @@ class_name FlyGlide
 # form, not a step), so while the keys hold still the body and the server run
 # the same track a tick apart; a key changed mid-tick costs what it always has,
 # a fraction of a tick, inside the reconciler's dead band. The direction sent is
-# a weighted mean of the velocities flown, never longer than the boosted speed,
-# so it is always a Move the server takes as it is.
+# a weighted mean of the velocities flown, so it is a Move the server takes as
+# it is (no longer than the boost) for as long as the body's velocity is no
+# faster than the boosted speed. The keys can never ask for more; a flight
+# speed lowered mid-flight can leave more, which `carry_over` cuts.
 # Pure (no nodes) so tools/probe_fly_reconciler.gd can replay it.
 
 # How fast the velocity closes on a moving target, per second (95% in 0.25 s).
@@ -49,3 +51,13 @@ static func plan(vel: Vector3, target: Vector3, speed: float, tick: float, max_l
 		return Vector3.ZERO
 	var disp: Vector3 = advance(vel, target, tick)[0]
 	return (disp / (speed * tick)).limit_length(max_len)
+
+
+# The flight speed changed to `speed` mid-flight: the velocity the body keeps.
+# The server flies the new speed from the tick it hears of it and takes no
+# direction longer than `max_len`, so a velocity past `speed * max_len` is one
+# no Move can carry: the body would outrun the server until the ease had bled
+# it off, and be pulled back by the difference (18 m from 100 to 1 m/s with the
+# boost held). Cut to the most the new speed flies, the two stay together.
+static func carry_over(vel: Vector3, speed: float, max_len: float) -> Vector3:
+	return vel.limit_length(maxf(speed, 0.0) * max_len)

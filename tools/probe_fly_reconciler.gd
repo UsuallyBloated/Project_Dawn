@@ -11,8 +11,18 @@ const SPEED := 100.0
 const DT := 1.0 / 60.0
 const TICK := 0.05
 const LATENCY := 0.1
+# The eased runs draw at 144 frames a second.
+const FRAME := 1.0 / 144.0
+# The eased run with the flight speed lowered mid-flight: when (inside the
+# boosted leg of `_keys_at`, the worst case) and to what.
+const DROP_AT := 2.0
+const SLOW := 10.0
 
 var _fails: int = 0
+# PlayerCharacter.FLY_BOOST, the longest direction the server takes. Read off
+# the script as the probe starts: a -s script cannot name the class, because
+# player.gd names autoloads and those are not globals yet when this compiles.
+var _boost: float = 0.0
 
 func _check(ok: bool, what: String) -> void:
 	if ok:
@@ -22,6 +32,7 @@ func _check(ok: bool, what: String) -> void:
 		_fails += 1
 
 func _initialize() -> void:
+	_boost = (load("res://scripts/player.gd") as GDScript).get_script_constant_map()["FLY_BOOST"]
 	_run()
 	print("")
 	print("%d failed" % _fails if _fails > 0 else "all passed")
@@ -206,10 +217,17 @@ func _run() -> void:
 # measured too, as the yardstick.
 # Fails with FlyGlide.plan replaced by the velocity of the moment (the
 # comparison), and with flight back to an instant start (the first frame).
+#
+# Then the same run with the flight speed lowered from 100 to 10 m/s in the
+# middle of the boosted leg (`/fly 10` typed in flight). The server flies the
+# new speed from the tick it hears of it, so the 200 m/s the body carries is
+# ten times what any Move can ask for: FlyGlide.carry_over cuts it. Fails with
+# the cut removed (that run is the yardstick: the body outruns the server and
+# is pulled back several metres).
 func _glide() -> void:
 	# The ease itself: a gentle first frame, near full speed by a quarter of a
 	# second, and a stop that glides speed / STOP_RATE.
-	var first: Array = FlyGlide.advance(Vector3.ZERO, Vector3(SPEED, 0.0, 0.0), 1.0 / 144.0)
+	var first: Array = FlyGlide.advance(Vector3.ZERO, Vector3(SPEED, 0.0, 0.0), FRAME)
 	_check(first[1].x < SPEED * 0.1, "the first frame of a takeoff is under a tenth of full speed (%.1f m/s)" % first[1].x)
 	var quarter: Array = FlyGlide.advance(Vector3.ZERO, Vector3(SPEED, 0.0, 0.0), 0.25)
 	_check(quarter[1].x >= SPEED * 0.94, "full speed is all but reached in a quarter second (%.1f m/s)" % quarter[1].x)
@@ -220,16 +238,17 @@ func _glide() -> void:
 	var v := Vector3.ZERO
 	var walked := Vector3.ZERO
 	for _i in range(36):
-		var a: Array = FlyGlide.advance(v, Vector3(0.0, SPEED, SPEED), 1.0 / 144.0)
+		var a: Array = FlyGlide.advance(v, Vector3(0.0, SPEED, SPEED), FRAME)
 		walked += a[0]
 		v = a[1]
-	var whole: Array = FlyGlide.advance(Vector3.ZERO, Vector3(0.0, SPEED, SPEED), 36.0 / 144.0)
+	var whole: Array = FlyGlide.advance(Vector3.ZERO, Vector3(0.0, SPEED, SPEED), 36.0 * FRAME)
 	_check(walked.distance_to(whole[0]) < 0.001, "36 frames fly exactly what one quarter second does (%.4f m apart)" % walked.distance_to(whole[0]))
 
 	var planned := _glide_run(true)
 	var naive := _glide_run(false)
-	_check(planned["longest"] <= FLY_BOOST_LEN + 0.0001,
-		"no Move's direction is longer than the boost (%.3f)" % planned["longest"])
+	# Measured before plan's own cut, so this is the ease's doing, not the cut's.
+	_check(planned["longest"] <= _boost + 0.0001,
+		"the ease never asks for a direction longer than the boost (longest %.3f of %.1f)" % [planned["longest"], _boost])
 	_check(planned["snaps"] == 0, "the eased flight never snaps (%d)" % planned["snaps"])
 	_check(planned["worst"] < SPEED * TICK * 0.5,
 		"the body never strays half a tick of travel from its own track (worst %.2f m)" % planned["worst"])
@@ -242,9 +261,16 @@ func _glide() -> void:
 	_check(planned["raw_mean"] < naive["raw_mean"] * 0.6,
 		"about half the error of sending the velocity of the moment (mean %.2f m against %.2f m)" % [planned["raw_mean"], naive["raw_mean"]])
 
+	var slowed := _glide_run(true, SLOW, true)
+	var uncut := _glide_run(true, SLOW, false)
+	_check(slowed["longest"] <= _boost + 0.0001,
+		"the speed lowered from %d to %d m/s mid-boost: still no direction longer than the boost (longest %.3f)" % [int(SPEED), int(SLOW), slowed["longest"]])
+	_check(slowed["snaps"] == 0 and slowed["worst"] < SPEED * TICK * 0.5,
+		"and the body is pulled back less than half a tick of the old speed's travel (%.2f m, %d snaps)" % [slowed["worst"], slowed["snaps"]])
+	_check(slowed["settled"] < 0.1, "and settles on the server's spot after the stop (%.3f m off)" % slowed["settled"])
+	_check(uncut["longest"] > _boost and uncut["worst"] > slowed["worst"] * 3.0,
+		"with the velocity kept instead, a Move asks for %.1f times the speed and the body is pulled back %.1f m" % [uncut["longest"], uncut["worst"]])
 
-const FLY_BOOST_LEN := 2.0
-const FRAME := 1.0 / 144.0
 
 # The keys held at time t: [direction (unit or zero), boost].
 func _keys_at(t: float) -> Array:
@@ -253,16 +279,23 @@ func _keys_at(t: float) -> Array:
 	if t < 1.6:
 		return [Vector3(0.0, 0.0, 1.0), 1.0]
 	if t < 2.4:
-		return [Vector3(0.0, 0.0, 1.0), FLY_BOOST_LEN]
+		return [Vector3(0.0, 0.0, 1.0), _boost]
 	if t < 3.2:
 		return [Vector3(1.0, 1.0, 0.0).normalized(), 1.0]
 	return [Vector3.ZERO, 1.0]
 
-func _glide_run(planned: bool) -> Dictionary:
+# One eased run. `planned`: each Move carries FlyGlide.plan (or the velocity of
+# the moment). `slow_to` > 0: the flight speed drops to it at DROP_AT, the GM
+# line reaching the server a latency later like any Move, and `cut` says
+# whether the body's velocity goes through FlyGlide.carry_over as it does.
+func _glide_run(planned: bool, slow_to: float = 0.0, cut: bool = true) -> Dictionary:
 	var recon := FlyReconciler.new()
 	var body := Vector3(0.0, 50.0, 0.0)
 	var truth := body
 	var vel := Vector3.ZERO
+	var speed := SPEED
+	var server_speed := SPEED
+	var dropped := false
 	var accum := 0.0
 	var seq := 0
 	var moves: Array = []      # [arrive_at, seq, dir]
@@ -280,8 +313,13 @@ func _glide_run(planned: bool) -> Dictionary:
 	var raw_worst := 0.0
 	for frame in range(int(5.0 / FRAME)):
 		var t := frame * FRAME
+		if slow_to > 0.0 and not dropped and t >= DROP_AT:
+			dropped = true
+			speed = slow_to
+			if cut:
+				vel = FlyGlide.carry_over(vel, speed, _boost)
 		var keys := _keys_at(t)
-		var target: Vector3 = keys[0] * SPEED * keys[1]
+		var target: Vector3 = keys[0] * speed * keys[1]
 		var flown: Array = FlyGlide.advance(vel, target, FRAME)
 		vel = flown[1]
 		body += flown[0]
@@ -290,16 +328,20 @@ func _glide_run(planned: bool) -> Dictionary:
 		if accum >= TICK:
 			accum -= TICK
 			seq += 1
+			# What the ease asks of the next tick, before plan's own cut.
+			var asked: Vector3 = FlyGlide.advance(vel, target, TICK)[0] / (speed * TICK)
+			longest = maxf(longest, asked.length())
 			var d: Vector3
 			if planned:
-				d = FlyGlide.plan(vel, target, SPEED, TICK, FLY_BOOST_LEN)
+				d = FlyGlide.plan(vel, target, speed, TICK, _boost)
 			else:
-				d = (vel / SPEED).limit_length(FLY_BOOST_LEN)
-			longest = maxf(longest, d.length())
-			recon.record(seq, body + d * SPEED * TICK, maxf(vel.length(), target.length()))
-			pred_truth[seq] = truth + d * SPEED * TICK
+				d = (vel / speed).limit_length(_boost)
+			recon.record(seq, body + d * speed * TICK, maxf(vel.length(), target.length()))
+			pred_truth[seq] = truth + d * speed * TICK
 			moves.append([t + LATENCY, seq, d])
 		while next_tick <= t:
+			if dropped and next_tick >= DROP_AT + LATENCY:
+				server_speed = slow_to
 			var taken: Array = []
 			for m in moves:
 				if m[0] <= next_tick:
@@ -308,7 +350,7 @@ func _glide_run(planned: bool) -> Dictionary:
 				moves.erase(m)
 				server_seq = m[1]
 				server_dir = m[2]
-			server_pos += server_dir * SPEED * TICK
+			server_pos += server_dir * server_speed * TICK
 			positions.append([next_tick + LATENCY, server_seq, server_pos])
 			next_tick += TICK
 		var delivered: Array = []

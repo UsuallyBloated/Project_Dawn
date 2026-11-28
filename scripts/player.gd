@@ -24,6 +24,11 @@ const FLY_BOOST = 2.0
 const FLY_CEILING = 1000.0
 # Two jump presses this close together toggle flight (Minecraft's gesture).
 const FLY_DOUBLE_TAP_SECS = 0.3
+# The body's frame step (_process, which flies it) runs ahead of every node at
+# the default priority 0. Net is one of those: an autoload, so otherwise first
+# in the frame, and its frame step is what puts queued messages on the wire. A
+# flight Move queued after it would wait a whole rendered frame to leave.
+const FRAME_STEP_PRIORITY = -1
 const MOUSE_SENSITIVITY = 0.003
 # Pixels the cursor must travel with the left button held before a click turns
 # into a camera-orbit drag. Below this, a left press is a target-select click.
@@ -149,6 +154,10 @@ var _obstacles: ZoneObstacles
 var _last_server_seq: int = -1
 var _received_first_pos: bool = false
 var _move_send_accum: float = 0.0
+# Whether a text field has the keyboard, as the last physics step found it.
+# The answer walks the whole scene tree (about a millisecond in the zone), so
+# the frame step in flight reads this instead of asking again every frame.
+var _text_focused: bool = false
 
 signal state_changed(new_state: int)
 
@@ -170,6 +179,7 @@ func _ready() -> void:
 	# Swap the capsule for the local player's race model (no-op for races
 	# without a custom model). Remote peers do the same from their own race.
 	RaceModel.apply(visual, PlayerStats.race)
+	process_priority = FRAME_STEP_PRIORITY
 	_obstacles = ZoneObstacles.shared()
 	# The camera stops at walls and buildings (zone_camera_blockers.gd): shapes
 	# on a layer of their own that the spring arm reads and this body does not.
@@ -413,7 +423,8 @@ func _scan_for_text_window(node: Node) -> bool:
 	return false
 
 func _physics_process(delta: float) -> void:
-	var chat_focused := _is_text_input_focused()
+	_text_focused = _is_text_input_focused()
+	var chat_focused := _text_focused
 	_update_mouse_camera(chat_focused)
 	# Death lock, client half. The server already refuses Move while you are dead,
 	# but local prediction still ran here: the body lurched on each keypress and
@@ -518,11 +529,7 @@ func _physics_process(delta: float) -> void:
 	# which would overwrite the facing the server saved at the last logout
 	# (seen as a small turn right after a relogin, 2026-11-09).
 	if Net.is_app_ready() and _received_first_pos:
-		# Throttle to server tick rate (20 Hz). Subtract instead of zeroing so
-		# the average rate stays exact across variable frame times.
-		_move_send_accum += delta
-		if _move_send_accum >= MOVE_SEND_INTERVAL:
-			_move_send_accum -= MOVE_SEND_INTERVAL
+		if _move_due(delta):
 			# Which way, and how much of a run (a crouch is half); the speed
 			# is the server's. The jump flag goes once per jump. The body's
 			# yaw rides along so other players see this one turn.
@@ -557,15 +564,27 @@ func _physics_process(delta: float) -> void:
 		if _obstacles.last_deflected:
 			global_position = Vector3(held.x, global_position.y, held.y)
 
+# Whether a Move is due: one per server tick (20 Hz), whatever the frame rate.
+# What is left over after a send is carried, so the average rate stays exact
+# across uneven frames, but never a whole interval of it: below 20 frames a
+# second (or after one long frame) the time owed would otherwise pile up and be
+# paid back later as a Move on every frame.
+func _move_due(delta: float) -> bool:
+	_move_send_accum += delta
+	if _move_send_accum < MOVE_SEND_INTERVAL:
+		return false
+	_move_send_accum = fmod(_move_send_accum, MOVE_SEND_INTERVAL)
+	return true
+
 # ── GM flight ─────────────────────────────────────────────────────────────────
 
 # Flight moves the body once per rendered frame, not per physics step: it uses
-# no move_and_slide (scenery is never a body, L2), and at 25 to 200 m/s a
-# 60 Hz step is a metre or more of travel, which the camera riding the body
-# shows as judder on any display faster than the physics rate.
+# no move_and_slide (scenery is never a body, L2), and a 60 Hz step is 0.4 m of
+# travel at 25 m/s and 3.3 m at 200, which the camera riding the body shows as
+# judder on any display faster than the physics rate.
 func _process(delta: float) -> void:
 	if is_flying and not PlayerDeath.is_dead:
-		_fly_tick(delta, _is_text_input_focused())
+		_fly_tick(delta, _text_focused)
 
 # Whether this body may take to the air: a GM account (display gating; the
 # server's gate is the rule), alive, in the world and past the first Position.
@@ -594,6 +613,9 @@ func start_flight(speed: float) -> void:
 	fly_speed = snappedf(speed, 0.1)
 	Net.broadcast_gm_command("fly %.1f" % fly_speed)
 	if is_flying:
+		# A lower speed in flight: the velocity still carried from the old one
+		# is cut to what the new one can fly (scripts/fly_glide.gd).
+		_fly_vel = FlyGlide.carry_over(_fly_vel, fly_speed, FLY_BOOST)
 		flight_changed.emit(true, fly_speed)
 		return
 	is_flying = true
@@ -679,27 +701,20 @@ func _fly_tick(delta: float, chat_focused: bool) -> void:
 
 	var flown := FlyGlide.advance(_fly_vel, target, delta)
 	_fly_vel = flown[1]
-	var p: Vector3 = global_position + flown[0]
 	var terrain := _fly_terrain()
-	if terrain != null:
-		var half: float = terrain.grid_size * terrain.cell_size * 0.5
-		var x := clampf(p.x, terrain.global_position.x - half, terrain.global_position.x + half)
-		var z := clampf(p.z, terrain.global_position.z - half, terrain.global_position.z + half)
-		# Held at the plate's edge, the velocity into it is spent, so letting
-		# go of the key does not leave the body pressing on.
-		if x != p.x:
-			_fly_vel.x = 0.0
-		if z != p.z:
-			_fly_vel.z = 0.0
-		p.x = x
-		p.z = z
+	var wanted: Vector3 = global_position + flown[0]
+	var p := _fly_clamp(wanted, terrain)
+	# Held at the plate's edge, the ground or the ceiling, the velocity into it
+	# is spent, so letting go of the key does not leave the body pressing on.
+	if p.x != wanted.x:
+		_fly_vel.x = 0.0
+	if p.z != wanted.z:
+		_fly_vel.z = 0.0
 	var ground := _ground_of(terrain, p.x, p.z)
-	var ceiling := maxf(FLY_CEILING, ground)
 	if p.y <= ground and _fly_vel.y < 0.0:
 		_fly_vel.y = 0.0
-	elif p.y >= ceiling and _fly_vel.y > 0.0:
+	elif p.y >= maxf(FLY_CEILING, ground) and _fly_vel.y > 0.0:
 		_fly_vel.y = 0.0
-	p.y = clampf(p.y, ground, ceiling)
 	global_position = p
 
 	if not is_look_active and (is_camera_active or direction != Vector3.ZERO):
@@ -708,20 +723,22 @@ func _fly_tick(delta: float, chat_focused: bool) -> void:
 		_apply_camera_pivot()
 
 	if Net.is_app_ready() and _received_first_pos:
-		_move_send_accum += delta
-		if _move_send_accum >= MOVE_SEND_INTERVAL:
-			_move_send_accum -= MOVE_SEND_INTERVAL
+		if _move_due(delta):
 			var dir_sent := FlyGlide.plan(_fly_vel, target, fly_speed, MOVE_SEND_INTERVAL, FLY_BOOST)
 			var seq := Net.send_movement(dir_sent, false, rotation.y)
 			if seq >= 0:
 				# The Position echoing this sequence is fanned after the tick
 				# that integrated it, so the prediction is this body one server
-				# tick further along the direction it just sent, and the bands
-				# are sized by the speed it is flying at (a body at rest has no
-				# tick jitter, so its band is a hair).
+				# tick further along the direction it just sent, held as the
+				# server holds what it flies (unclamped, a body skimming up a
+				# steep face predicted itself inside the hill the server had
+				# lifted it over, and the correction left it floating metres
+				# above where the server had it). The bands are sized by the
+				# speed it is flying at (a body at rest has no tick jitter, so
+				# its band is a hair).
 				var moving := maxf(_fly_vel.length(), target.length())
 				_fly_recon.record(seq,
-					global_position + dir_sent * fly_speed * MOVE_SEND_INTERVAL,
+					_fly_clamp(global_position + dir_sent * fly_speed * MOVE_SEND_INTERVAL, terrain),
 					moving)
 		global_position += _fly_recon.step(delta)
 
@@ -732,6 +749,17 @@ func _fly_tick(delta: float, chat_focused: bool) -> void:
 
 func _fly_terrain() -> TerrainMesh:
 	return get_tree().get_first_node_in_group(TerrainMesh.GROUP) as TerrainMesh
+
+# Where a flier may be: on the plate, above the ground under that spot and
+# below the ceiling, the server's own clamps in the server's order.
+func _fly_clamp(p: Vector3, terrain: TerrainMesh) -> Vector3:
+	if terrain != null:
+		var half: float = terrain.grid_size * terrain.cell_size * 0.5
+		p.x = clampf(p.x, terrain.global_position.x - half, terrain.global_position.x + half)
+		p.z = clampf(p.z, terrain.global_position.z - half, terrain.global_position.z + half)
+	var ground := _ground_of(terrain, p.x, p.z)
+	p.y = clampf(p.y, ground, maxf(FLY_CEILING, ground))
+	return p
 
 # The ground under a world point: the zone's TerrainMesh where there is one
 # (its `height_at` is local to the node), the floor at 0 otherwise.
