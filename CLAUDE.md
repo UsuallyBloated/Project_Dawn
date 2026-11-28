@@ -670,6 +670,43 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   encumbrance, every vault move (store, withdraw, lift, swap) through the placer in one
   transaction with the ledger rows, the death strip and the NO DROP rule unchanged (a banked bag
   is the owner's, like the vault), and the bank window opening a banked bag.
+  **BUILT 2026-11-28 (user, asked what could be built unattended: "1 sounds good, go ahead") on
+  `feat/vault-grammar` in BOTH repos, pending the merge, the export and the redeploy together,
+  and the playtest** (server `127f11f` in `F:\Projects\server-vault`, client `b3b4223` in
+  `F:\Projects\Project_Dawn-vault`, committed locally, not pushed, nothing deployed or exported;
+  `vault_grammar_checklist.md`, 40 rows, on the client branch; session note
+  `session_2026_11_28_vault_grammar.md`). Wire `PD_W0032`: `BankMoveItem { shared, vault_slot,
+  inner_slot, to_cursor }` appended last (one click on a vault cell, or on an inner slot of a
+  bag banked in one), a trailing `inner_slot` on `BankWithdrawItem`, a trailing `bag_entries` on
+  `BankItemSnapshot`. `ItemVault` holds a bags map keyed by vault slot and knows whether it is
+  the shared vault (`VaultKind`), so the NO DROP rule is the vault's own on every way in, a
+  bag's contents included; `ItemVault::cursor_move` is the click (lift, place, a capped merge
+  or a swap, a bag with its contents; every refusal decided before anything moves); the
+  vault's placer fills banked bags after the vault's own slots; a bag leaves a vault only by
+  the hand. **Migration `0020_bank_bag_contents.sql`, forward-only** (both vault tables rebuilt
+  with a `bag_slot` key column; an older binary refuses to boot on the migrated database, so
+  the redeploy starts with a `world.db` backup). Client: `BankerManager` mirrors the banked
+  bags and owns the click rules; a left click on a vault slot lifts or places, a right click
+  opens a banked bag (`VaultBagWindow`) or withdraws; with the bank open a carried bag opens on
+  a right click (it used to be sent as a deposit and refused). Tests: a property test of random
+  clicks and moves between the bags, the hand and both vaults (totals conserved, the vaults
+  sound, a refused click changing nothing; 30,000 cases), seventeen unit tests, six end-to-end tests (the
+  click law with its ledger rows, a bag banked and brought back across a relog, NO DROP in a
+  bag refused by the shared vault, the banker and dead gates, a death holding a bag lifted from
+  the vault, a crash after one), the migration on a database that already has vault rows; a
+  dry run on a copy of the dev `world.db`; fourteen planted faults each caught;
+  `tools/probe_vault_grammar.gd` (46 checks); all 21 client checks green against the branch.
+  Reviewed (`/code-review`, eight findings, no dupe or exploit, seven fixed; the one left is a
+  known limit: two clicks inside one 50 ms tick are applied by kind, not in the order sent).
+  **Calls made in the build, the user's to overrule:** a bag moves by hand only (a right click
+  on a banked bag opens it, and the quick deposit and withdraw refuse a bag); a stale click
+  (the second of a double click) is corrected without a chat line; the migration is numbered
+  0020 so the hosting branch's 0018 and 0019 stand; the command confirmations and the three
+  dead wire intents are NOT on this branch. **At the merge:** each Windows server checkout
+  re-checks-out `migrations/` once (the branch pins them to LF and tests it; the main checkout
+  holds four as CRLF), and the hosting branch places `BankMoveItem` in `intent_class`. Rules I1,
+  I2, I5, X2, A4 and a new I7 (a bag moves with what it holds, and never goes inside a bag) in
+  `docs/reference/invariants.md` on the client branch.
 - [ ] **No-drop / no-trade item flag** *(flagged in `inventory_interaction_grammar.md` §8 and by
   the trade design's ledger, which explicitly has no rule "until itemization grows one"; audit
   2026-09-29)*. `ItemData` carries no binding flag; the two account-shared bank slots and the
