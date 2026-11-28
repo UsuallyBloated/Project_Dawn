@@ -4194,6 +4194,24 @@ Per-autoload responsibilities and the combat/spell deep dive live in
   about half the error of sending the velocity of the moment); all 21 checks green. The zip
   `builds/ProjectDawn-alpha-9d81945.zip`, stamped `9d81945`, a release export booting clean
   headless, the DLL unchanged, replaces `c4f5aa4`; no redeploy.
+  **Review pass 2026-11-27** (user: "Please review as Fable."; nine findings, all client only,
+  none exploitable, since the server clamps every Move and every position itself; client
+  `ade04e1` on the deploy branch, pushed; `gm_flight_checklist.md` section 9, three rows;
+  session note `session_2026_11_27_flight_review.md`): a flight speed lowered while moving (a
+  Fly button on the Test Panel with W held) no longer pulls the body back, the velocity carried
+  from the old speed being cut to what the new one can fly (`FlyGlide.carry_over`: 1.5 m left
+  of the 16 m from 100 to 10 m/s with the boost held); under 20 frames a second the Moves a
+  frame could not send are no longer banked and paid back as one a frame (`_move_due`, walking
+  and flight); a Move's recorded prediction is clamped as the server clamps the body
+  (`_fly_clamp`), so skimming into a steep face no longer leaves the body floating above where
+  the server has it (6.8 m at 100 m/s into a 72 degree face, which `/loc` then read); the
+  text-focus scan runs once a physics step, not once a frame; the body's frame step runs before
+  Net's, so a flight Move leaves in the frame that queued it. `probe_flight_toggle.gd` times
+  flight by frame time, holds the climb to a centimetre of the ease and has four new checks,
+  each failing with its fix removed; `probe_fly_reconciler.gd` runs the speed drop with and
+  without the cut. All 21 checks green. The zip `builds/ProjectDawn-alpha-ade04e1.zip`, stamped
+  `ade04e1`, a release export booting clean headless, the DLL unchanged, replaces `9d81945`; no
+  redeploy.
 
 ### UI polish
 - [x] **Sticky chat channel, WoW style** — **DONE + playtested 2026-10-27**

@@ -7,7 +7,7 @@ redeployed from `feat/gm-flight` (or its merge) AND a client built from the same
 the old client `/fly` does not exist, and on the old server the body flies alone until the
 next Position snaps it back. GM account only (`grant_gm`); a plain account sees nothing.
 **Since 2026-11-25 both halves are in the deploy branches:** the R720 (`9a7c3ba`) and the zip
-`builds/ProjectDawn-alpha-9d81945.zip` (since 2026-11-26; `c4f5aa4` before it, without section 8's ease) are the pair to run this on.
+`builds/ProjectDawn-alpha-ade04e1.zip` (since 2026-11-27, the review pass, section 9; `9d81945` before it had section 8's ease, `c4f5aa4` neither) are the pair to run this on.
 
 | Thing | Value | Where |
 |---|---|---|
@@ -73,6 +73,11 @@ Diagnostics: the HUD's "Flying N m/s" line at the top of the screen; `/loc` for 
 - [ ] **Press and release Ctrl at speed** → the boost comes in and falls away smoothly. notes:
 - [ ] **Fly low and fast past trees and along a hillside, the camera behind** → the world slides past without judder, on a monitor above 60 Hz too. notes:
 - [ ] **Fly a minute of mixed flying, then check the journal and `debug.log`** → no rubber-banding seen; nothing new in either. notes:
+
+## 9 — The review pass (added 2026-11-27, the zip `ade04e1`)
+- [ ] **Test Panel open: click Fly 100 m/s, hold W to full speed, and click Fly 10 m/s without letting go of W** → the body slows to the new speed in about a quarter of a second and flies on; it is never pulled backwards. Then Fly 100 m/s again with W held: it gathers speed smoothly. notes:
+- [ ] **Fly low at 100 m/s straight into the foot of the mountains (or any steep hillside), let go once the body has ridden up the face, and type `/loc`** → the body follows the ground up with its feet on it, and when it stops it stays where it is: no drop of several metres a moment later, and `/loc` reads the same height before and after. notes:
+- [ ] **In flight, open the chat line and type `wasd` and a space, then close it** → the letters go to the chat line, the body glides to rest and does not climb; flight keys work again once the line is closed. notes:
 
 ## Notes / observations
 -
